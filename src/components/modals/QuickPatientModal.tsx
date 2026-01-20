@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useTransition, memo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,9 +39,16 @@ interface QuickPatientModalProps {
 }
 
 // ===== Funções utilitárias =====
+// Memoizadas fora do componente para evitar recriação
 const formatPhoneNumber = (value: string): string => {
   if (!value) return '';
-  const numbers = value.replace(/\D/g, '').slice(0, 11);
+  // Remove tudo que não é dígito e limita a 11 dígitos (2 DDD + 9 número)
+  let numbers = value.replace(/\D/g, '').slice(0, 11);
+
+  // Se começar com 55 (código do Brasil), remove
+  if (numbers.startsWith('55')) {
+    numbers = numbers.slice(2);
+  }
 
   if (numbers.length <= 2) {
     return `(${numbers}`;
@@ -85,7 +92,8 @@ const getErrorMessage = (error: { code?: string; message?: string } | null | und
 };
 
 // ===== Componente Principal =====
-export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
+// Usando memo para evitar re-renders desnecessários quando props não mudam
+const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
   open,
   onOpenChange,
   onPatientCreated,
@@ -94,6 +102,8 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganizations();
+  // useTransition para melhor UX durante operações assíncronas (React 18)
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<QuickPatientFormData>({
     resolver: zodResolver(quickPatientSchema),
@@ -165,17 +175,20 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
     onSuccess: (newPatient) => {
       logger.info('Paciente criado com sucesso', { patientId: newPatient.id }, 'QuickPatientModal');
 
-      // Invalidar cache
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      // Usar startTransition para atualizações de estado não urgentes (React 18)
+      startTransition(() => {
+        // Invalidar cache
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
 
-      toast({
-        title: '✅ Paciente criado!',
-        description: `${newPatient.full_name} foi adicionado. Complete o cadastro quando possível.`,
+        toast({
+          title: '✅ Paciente criado!',
+          description: `${newPatient.full_name} foi adicionado. Complete o cadastro quando possível.`,
+        });
+
+        reset();
+        onOpenChange(false);
+        onPatientCreated(newPatient.id, newPatient.full_name);
       });
-
-      reset();
-      onOpenChange(false);
-      onPatientCreated(newPatient.id, newPatient.full_name);
     },
     onError: (error: { code?: string; message?: string } | null | undefined) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
@@ -202,22 +215,22 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
     createPatientMutation.mutate(data);
   }, [createPatientMutation]);
 
-  // ===== Sincronizar nome sugerido =====
-  React.useEffect(() => {
-    if (open && suggestedName) {
-      setValue('name', suggestedName, { shouldValidate: true });
-    }
-  }, [open, suggestedName, setValue]);
-
-  // ===== Reset ao fechar =====
-  React.useEffect(() => {
-    if (!open) {
+  // ===== Gerenciar estado do formulário ao abrir/fechar =====
+  // Combinando dois useEffects em um para melhor performance
+  useEffect(() => {
+    if (open) {
+      // Ao abrir, sincronizar nome sugerido
+      if (suggestedName) {
+        setValue('name', suggestedName, { shouldValidate: true });
+      }
+    } else {
+      // Ao fechar, resetar formulário
       reset();
     }
-  }, [open, reset]);
+  }, [open, suggestedName, setValue, reset]);
 
   // ===== Computed values =====
-  const isFormDisabled = createPatientMutation.isPending;
+  const isFormDisabled = createPatientMutation.isPending || isPending;
   const canSubmit = isValid && !isFormDisabled && nameValue?.trim();
 
   return (
@@ -330,3 +343,15 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
     </Dialog>
   );
 };
+
+// ===== Export com memo para otimização =====
+// Usa memo para evitar re-renders quando as props não mudam
+// Comparação customizada para onOpenChange e onPatientCreated (funções)
+export const QuickPatientModal = memo(QuickPatientModalComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.open === nextProps.open &&
+    prevProps.suggestedName === nextProps.suggestedName
+  );
+});
+
+QuickPatientModal.displayName = 'QuickPatientModal';
