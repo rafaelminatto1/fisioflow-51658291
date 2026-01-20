@@ -21,10 +21,10 @@ export const dailyReportsWorkflow = inngest.createFunction(
     name: 'Daily Reports Generation',
     retries: retryConfig.email.maxAttempts,
   },
-  {
-    event: Events.CRON_DAILY_REPORTS,
-    cron: '0 8 * * *', // 8:00 AM daily
-  },
+  [
+    { event: Events.CRON_DAILY_REPORTS },
+    { cron: '0 8 * * *' }, // 8:00 AM daily
+  ],
   async ({ step }: {
     event: { data: DailyReportPayload }; step: InngestStep
   }) => {

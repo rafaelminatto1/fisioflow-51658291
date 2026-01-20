@@ -20,10 +20,10 @@ export const weeklySummaryWorkflow = inngest.createFunction(
     name: 'Weekly Summary Reports',
     retries: retryConfig.email.maxAttempts,
   },
-  {
-    event: Events.CRON_WEEKLY_SUMMARY,
-    cron: '0 9 * * 1', // 9:00 AM every Monday
-  },
+  [
+    { event: Events.CRON_WEEKLY_SUMMARY },
+    { cron: '0 9 * * 1' }, // 9:00 AM every Monday
+  ],
   async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
