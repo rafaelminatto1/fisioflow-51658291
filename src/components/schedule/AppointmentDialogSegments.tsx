@@ -85,7 +85,7 @@ export const DateTimeSection = ({
     conflictCount: number,
     onAutoSchedule?: () => void
 }) => {
-    const { watch, setValue } = useFormContext<AppointmentFormData>();
+    const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
     const watchedDateStr = watch('appointment_date');
     const watchedTime = watch('appointment_time');
     const watchedDuration = watch('duration');

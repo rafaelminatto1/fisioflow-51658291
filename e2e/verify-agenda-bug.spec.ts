@@ -32,7 +32,7 @@ test.describe('Verificação de Bug na Agenda', () => {
         console.log(`Tentando agendar para: ${dateStr} ${timeStr}`);
 
         // Forçar visualização Semana
-        const semanaBtn = page.locator('button:has-text("Semana")');
+        const semanaBtn = page.locator('button:has-text("Semana")').first();
         if (await semanaBtn.isVisible()) {
             await semanaBtn.click();
         }
