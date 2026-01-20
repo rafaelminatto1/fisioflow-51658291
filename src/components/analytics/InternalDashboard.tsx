@@ -42,7 +42,7 @@ export function InternalDashboard() {
       // Buscar todos os pacientes
       const { data: allPatients } = await supabase
         .from("patients")
-        .select("id, name, phone, email, created_at");
+        .select("id, full_name, phone, email, created_at");
 
       // Buscar pacientes com agendamentos recentes
       const { data: recentAppointments } = await supabase
@@ -95,7 +95,7 @@ export function InternalDashboard() {
           status,
           patients (
             id,
-            name,
+            full_name,
             phone
           )
         `)
@@ -105,7 +105,7 @@ export function InternalDashboard() {
       return packages?.map(pkg => ({
         id: pkg.id,
         patientId: pkg.patient_id,
-        patientName: (pkg.patients as { name?: string } | null)?.name || "N/A",
+        patientName: (pkg.patients as { full_name?: string } | null)?.full_name || "N/A",
         patientPhone: (pkg.patients as { phone?: string } | null)?.phone || null,
         totalSessions: pkg.total_sessions,
         usedSessions: pkg.used_sessions,
