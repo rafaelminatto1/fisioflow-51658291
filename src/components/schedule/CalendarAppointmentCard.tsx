@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useCardSize } from '@/hooks/useCardSize';
+import { useMemo } from 'react';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -148,7 +149,7 @@ const CalendarAppointmentCardBase = ({
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
     const [isHovered, setIsHovered] = useState(false);
-    const { cardSize } = useCardSize();
+    const { cardSize, getEffectiveFontSizes } = useCardSize();
 
     // Status visual config
     const statusStyles = getStatusStyles(appointment.status);
@@ -157,6 +158,9 @@ const CalendarAppointmentCardBase = ({
 
     // Get card size configuration
     const sizeConfig = CARD_SIZE_CONFIGS[cardSize];
+
+    // Get effective font sizes (user-customized or preset defaults)
+    const fontSizes = useMemo(() => getEffectiveFontSizes(), [getEffectiveFontSizes]);
 
     const duration = appointment.duration || 60;
     const isSmall = duration <= 30; // 30 min or less
@@ -289,7 +293,7 @@ const CalendarAppointmentCardBase = ({
                                         "font-mono font-semibold truncate leading-none tracking-tight",
                                         statusStyles.text,
                                     )}
-                                    style={{ fontSize: `${sizeConfig.timeFontSize}px` }}
+                                    style={{ fontSize: `${fontSizes.timeFontSize}px` }}
                                 >
                                     {normalizeTime(appointment.time)}
                                 </span>
@@ -340,7 +344,7 @@ const CalendarAppointmentCardBase = ({
                                         "block font-bold leading-tight line-clamp-2 tracking-tight",
                                         statusStyles.text,
                                     )}
-                                    style={{ fontSize: `${sizeConfig.nameFontSize}px` }}
+                                    style={{ fontSize: `${fontSizes.nameFontSize}px` }}
                                 >
                                     {appointment.patientName}
                                 </span>
@@ -351,7 +355,7 @@ const CalendarAppointmentCardBase = ({
                                             "block truncate opacity-70 mt-0.5 font-medium",
                                             statusStyles.subtext
                                         )}
-                                        style={{ fontSize: `${sizeConfig.typeFontSize}px` }}
+                                        style={{ fontSize: `${fontSizes.typeFontSize}px` }}
                                     >
                                         {appointment.type}
                                     </span>

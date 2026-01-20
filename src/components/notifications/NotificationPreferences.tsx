@@ -4,14 +4,17 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useWebPush } from '@/hooks/useWebPush';
+import { Loader2, CheckCircle2, AlertCircle, Bell, Mail, MessageCircle, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function NotificationPreferences() {
   const { preferences, isLoading, error, updatePreferences, isUpdating } = useNotificationPreferences();
+  const { permission: pushPermission, supported: pushSupported, subscribed: pushSubscribed, requestPermission: requestPushPermission, subscribe: subscribeToPush, unsubscribe: unsubscribeFromPush } = useWebPush();
   const [localPrefs, setLocalPrefs] = React.useState({
     appointment_reminders: true,
     exercise_reminders: true,
@@ -22,6 +25,7 @@ export function NotificationPreferences() {
     quiet_hours_start: '22:00',
     quiet_hours_end: '08:00',
     weekend_notifications: false,
+    preferred_channel: '' as 'email' | 'whatsapp' | 'push' | '',
   });
 
   React.useEffect(() => {
@@ -36,6 +40,7 @@ export function NotificationPreferences() {
         quiet_hours_start: preferences.quiet_hours_start,
         quiet_hours_end: preferences.quiet_hours_end,
         weekend_notifications: preferences.weekend_notifications,
+        preferred_channel: (preferences as any).preferred_channel || '',
       });
     }
   }, [preferences]);
@@ -248,6 +253,100 @@ export function NotificationPreferences() {
             }
           />
         </div>
+
+        <Separator />
+
+        {/* Canal Preferido */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold">Canal Preferido</h3>
+          <p className="text-xs text-muted-foreground">
+            Escolha como você prefere receber notificações
+          </p>
+
+          <Select
+            value={localPrefs.preferred_channel}
+            onValueChange={(value) =>
+              setLocalPrefs(prev => ({ ...prev, preferred_channel: value as 'email' | 'whatsapp' | 'push' }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o canal preferido" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="email">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>Email</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="whatsapp">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>WhatsApp</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="push">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4" />
+                  <span>Push (Navegador/App)</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Separator />
+
+        {/* Push Notifications */}
+        {pushSupported && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  <Label>Notificações Push</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Receba notificações instantâneas no seu navegador
+                </p>
+              </div>
+              <Switch
+                checked={pushSubscribed}
+                disabled={pushPermission === 'denied'}
+                onCheckedChange={async (checked) => {
+                  if (checked) {
+                    if (pushPermission === 'granted') {
+                      await subscribeToPush();
+                    } else {
+                      const perm = await requestPushPermission();
+                      if (perm === 'granted') {
+                        await subscribeToPush();
+                      }
+                    }
+                  } else {
+                    await unsubscribeFromPush();
+                  }
+                }}
+              />
+            </div>
+
+            {pushPermission === 'denied' && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Notificações push foram bloqueadas. Habilite nas configurações do navegador.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {pushSubscribed && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Push ativo - você receberá notificações instantâneas</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <Button
           onClick={handleSave}
