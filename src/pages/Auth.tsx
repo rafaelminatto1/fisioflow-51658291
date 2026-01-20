@@ -1,17 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, CheckCircle, Mail, Stethoscope } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/auth';
 import { logger } from '@/lib/errors/logger';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { RegisterForm } from '@/components/auth/RegisterForm';
+import { OAuthButtons } from '@/components/auth/OAuthButtons';
 
 // Demo credentials removed for security - no hardcoded credentials in production
 
@@ -386,316 +384,97 @@ export default function Auth() {
 
 
   return (
-    <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden">
-      {/* Static background orbs - removed animations for performance */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-400/10 dark:bg-blue-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-300/5 dark:bg-sky-700/5 rounded-full blur-3xl" />
-      </div>
+    <AuthLayout>
+      <Card className="border-border/50 shadow-xl shadow-primary/5 bg-background/80 backdrop-blur-sm">
+        <CardHeader className="space-y-1.5 pb-6">
+          <CardTitle className="text-2xl font-bold text-center">
+            {activeTab === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
+          </CardTitle>
+          <CardDescription className="text-center text-base">
+            {activeTab === 'login'
+              ? 'Entre com suas credenciais para acessar sua conta'
+              : 'Preencha os dados abaixo para começar'}
+          </CardDescription>
+        </CardHeader>
 
-      {/* Left Side - Hero & Branding (Hidden on mobile) */}
-      <div className="hidden lg:flex w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-blue-500/10 to-sky-400/20" />
-          {/* Image removed due to missing asset - relying on CSS gradients */}
-        </div>
+        <CardContent className="space-y-6">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/50">
+              <TabsTrigger
+                value="login"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
+                tabIndex={0}
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
+                tabIndex={-1}
+              >
+                Cadastro
+              </TabsTrigger>
+            </TabsList>
 
-        {/* Overlay Content */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-between p-16">
-          <div className="flex items-center gap-4 animate-fade-in">
-            <div className="w-14 h-14 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
-              <Stethoscope className="w-8 h-8 text-white" />
+            <TabsContent value="login" className="space-y-5 mt-6 focus-visible:outline-none">
+              <LoginForm
+                onSubmit={handleSignIn}
+                email={email}
+                onEmailChange={handleEmailChange}
+                password={password}
+                onPasswordChange={handlePasswordChange}
+                loading={loading}
+                error={error}
+                activeTab={activeTab}
+              />
+            </TabsContent>
+
+            <TabsContent value="register" className="space-y-5 mt-6 focus-visible:outline-none">
+              <RegisterForm
+                onSubmit={handleSignUp}
+                fullName={fullName}
+                onFullNameChange={handleFullNameChange}
+                email={email}
+                onEmailChange={handleEmailWithValidationChange}
+                password={password}
+                onPasswordChange={handlePasswordWithValidationChange}
+                confirmPassword={confirmPassword}
+                onConfirmPasswordChange={handleConfirmPasswordWithValidationChange}
+                loading={loading}
+                error={error}
+                validationErrors={validationErrors}
+                invitationData={invitationData}
+                passwordRequirements={passwordRequirements}
+                activeTab={activeTab}
+              />
+            </TabsContent>
+          </Tabs>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">FisioFlow</h1>
-          </div>
-
-          <div className="space-y-6 max-w-xl animate-slide-up-fade delay-100">
-            <h2 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-foreground">
-              Transforme a gestão
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600 mt-2">da sua clínica.</span>
-            </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Uma plataforma completa para fisioterapeutas que buscam eficiência,
-              organização e a melhor experiência para seus pacientes.
-            </p>
-          </div>
-
-          <div className="flex justify-between items-center text-sm text-muted-foreground animate-fade-in delay-200">
-            <p>© 2026 FisioFlow Inc.</p>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-foreground transition-colors duration-200">Privacidade</a>
-              <a href="#" className="hover:text-foreground transition-colors duration-200">Termos</a>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Ou continue com
+              </span>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Right Side - Auth Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 relative">
-        {/* Mobile Header Branding */}
-        <div className="lg:hidden absolute top-8 left-0 w-full flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Stethoscope className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-foreground">FisioFlow</span>
-          </div>
-        </div>
+          <OAuthButtons
+            loading={loading}
+            onGoogleClick={handleGoogleSignIn}
+            onGithubClick={handleGithubSignIn}
+            activeTab={activeTab}
+          />
+        </CardContent>
+      </Card>
 
-        <div className="w-full max-w-md space-y-6 animate-fade-in relative z-10">
-          <Card className="border-border/50 shadow-xl shadow-primary/5 bg-background/80 backdrop-blur-sm">
-            <CardHeader className="space-y-1.5 pb-6">
-              <CardTitle className="text-2xl font-bold text-center">
-                {activeTab === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
-              </CardTitle>
-              <CardDescription className="text-center text-base">
-                {activeTab === 'login'
-                  ? 'Entre com suas credenciais para acessar sua conta'
-                  : 'Preencha os dados abaixo para começar'}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/50">
-                  <TabsTrigger
-                    value="login"
-                    className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
-                    tabIndex={0}
-                  >
-                    Login
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="register"
-                    className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
-                    tabIndex={-1}
-                  >
-                    Cadastro
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="login" className="space-y-5 mt-6 focus-visible:outline-none">
-                  <form onSubmit={handleSignIn} className="space-y-5">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
-                        <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="nome@exemplo.com"
-                          value={email}
-                          onChange={handleEmailChange}
-                          className="h-11"
-                          required
-                          tabIndex={activeTab === 'login' ? 1 : -1}
-                          autoComplete="email"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Label htmlFor="login-password" className="text-sm font-medium">Senha</Label>
-                          <a
-                            href="#"
-                            className="text-xs text-primary hover:text-primary/80 transition-colors"
-                            tabIndex={activeTab === 'login' ? 5 : -1}
-                          >
-                            Esqueceu a senha?
-                          </a>
-                        </div>
-                        <Input
-                          id="login-password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={password}
-                          onChange={handlePasswordChange}
-                          className="h-11"
-                          required
-                          tabIndex={activeTab === 'login' ? 2 : -1}
-                          autoComplete="current-password"
-                        />
-                      </div>
-                    </div>
-
-                    {error && (
-                      <Alert variant="destructive" className="animate-slide-up-fade">
-                        <AlertDescription className="text-sm">{error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Button
-                      type="submit"
-                      className="w-full h-11 text-sm font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
-                      disabled={loading}
-                      tabIndex={activeTab === 'login' ? 3 : -1}
-                    >
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Entrar na Plataforma
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="register" className="space-y-5 mt-6 focus-visible:outline-none">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    {invitationData && (
-                      <Alert className="bg-primary/5 border-primary/20 text-primary">
-                        <Mail className="h-4 w-4" />
-                        <AlertDescription className="text-sm font-medium">
-                          Convite aceito: <strong>{invitationData.role}</strong>
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="register-name" className="text-sm font-medium">Nome Completo</Label>
-                        <Input
-                          id="register-name"
-                          type="text"
-                          placeholder="Seu nome"
-                          value={fullName}
-                          onChange={handleFullNameChange}
-                          required
-                          className="h-11"
-                          tabIndex={activeTab === 'register' ? 1 : -1}
-                          autoComplete="name"
-                        />
-                        {validationErrors.fullName && <span className="text-xs text-destructive font-medium">{validationErrors.fullName}</span>}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="register-email" className="text-sm font-medium">Email</Label>
-                        <Input
-                          id="register-email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={email}
-                          onChange={handleEmailWithValidationChange}
-                          required
-                          disabled={!!invitationData}
-                          className="h-11"
-                          tabIndex={activeTab === 'register' ? 2 : -1}
-                          autoComplete="email"
-                        />
-                        {validationErrors.email && <span className="text-xs text-destructive font-medium">{validationErrors.email}</span>}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="register-password" className="text-sm font-medium">Senha</Label>
-                          <Input
-                            id="register-password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={handlePasswordWithValidationChange}
-                            required
-                            className="h-11"
-                            tabIndex={activeTab === 'register' ? 3 : -1}
-                            autoComplete="new-password"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="register-confirm-password" className="text-sm font-medium">Confirmar</Label>
-                          <Input
-                            id="register-confirm-password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={confirmPassword}
-                            onChange={handleConfirmPasswordWithValidationChange}
-                            required
-                            className="h-11"
-                            tabIndex={activeTab === 'register' ? 4 : -1}
-                            autoComplete="new-password"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Password Requirements */}
-                      {password && (
-                        <div className="p-3 bg-muted/50 rounded-lg space-y-1.5">
-                          {passwordRequirements.map((req, idx) => (
-                            <div key={idx} className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600 dark:text-green-400 font-medium' : 'text-muted-foreground'}`}>
-                              {req.met ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-3.5 w-3.5 rounded-full border border-current opacity-50" />}
-                              {req.label}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription className="text-sm">{error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Button
-                      type="submit"
-                      className="w-full h-11 text-sm font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
-                      disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
-                      tabIndex={activeTab === 'register' ? 5 : -1}
-                    >
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Criar Conta Gratuita
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Ou continue com
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                  className="w-full h-11 text-sm font-medium transition-all duration-150 active:scale-[0.98]"
-                  tabIndex={activeTab === 'login' ? 4 : 6}
-                >
-                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  Google
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGithubSignIn}
-                  disabled={loading}
-                  className="w-full h-11 text-sm font-medium transition-all duration-150 active:scale-[0.98]"
-                  tabIndex={activeTab === 'login' ? 5 : 7}
-                >
-                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                  </svg>
-                  GitHub
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <p className="text-center text-xs text-muted-foreground px-4">
-            Ao continuar, você concorda com nossos{' '}
-            <a href="#" className="underline hover:text-foreground transition-colors">Termos de Serviço</a>{' '}
-            e <a href="#" className="underline hover:text-foreground transition-colors">Política de Privacidade</a>.
-          </p>
-        </div>
-      </div>
-    </div>
+      <p className="text-center text-xs text-muted-foreground px-4">
+        Ao continuar, você concorda com nossos{' '}
+        <a href="#" className="underline hover:text-foreground transition-colors">Termos de Serviço</a>{' '}
+        e <a href="#" className="underline hover:text-foreground transition-colors">Política de Privacidade</a>.
+      </p>
+    </AuthLayout>
   );
 }

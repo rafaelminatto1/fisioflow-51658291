@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
@@ -22,6 +22,72 @@ interface SOAPData {
   assessment: string;
   plan: string;
 }
+
+interface SOAPFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  description: string;
+  isActive: boolean;
+  onFocus: () => void;
+  disabled?: boolean;
+}
+
+const SOAPField = React.memo(({
+  value,
+  onChange,
+  placeholder,
+  description,
+  isActive,
+  onFocus,
+  disabled
+}: SOAPFieldProps) => {
+  const [localValue, setLocalValue] = useState(value);
+  const lastSentValue = useRef(value);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (value !== localValue && value !== lastSentValue.current) {
+      setLocalValue(value);
+      lastSentValue.current = value;
+    }
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(() => {
+      lastSentValue.current = newValue;
+      onChange(newValue);
+    }, 300);
+  }, [onChange]);
+
+  return (
+    <>
+      <SmartTextarea
+        placeholder={placeholder}
+        value={localValue}
+        onChange={handleChange}
+        onFocus={onFocus}
+        disabled={disabled}
+        rows={isActive ? 5 : 3}
+        className={isActive ? 'min-h-[120px]' : ''}
+      />
+      <p className="text-xs text-muted-foreground mt-1">{description}</p>
+    </>
+  );
+});
+
+SOAPField.displayName = 'SOAPField';
 
 interface SOAPFormPanelProps {
   patientId: string;
@@ -87,9 +153,9 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  const handleFieldChange = (key: keyof SOAPData, value: string) => {
+  const handleFieldChange = useCallback((key: keyof SOAPData, value: string) => {
     onChange({ ...data, [key]: value });
-  };
+  }, [data, onChange]);
 
   const handleSelectConduct = (conductText: string) => {
     handleFieldChange('plan', conductText);
@@ -165,16 +231,15 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
                 )}
               </div>
               <div className="px-3 pb-3">
-                <SmartTextarea
-                  placeholder={section.placeholder}
+                <SOAPField
                   value={data[section.key]}
-                  onChange={(e) => handleFieldChange(section.key, e.target.value)}
+                  onChange={(val) => handleFieldChange(section.key, val)}
+                  placeholder={section.placeholder}
+                  description={section.description}
+                  isActive={isActive}
                   onFocus={() => setActiveSection(section.key)}
                   disabled={disabled}
-                  rows={isActive ? 5 : 3}
-                  className={isActive ? 'min-h-[120px]' : ''}
                 />
-                <p className="text-xs text-muted-foreground mt-1">{section.description}</p>
               </div>
             </div>
           );
