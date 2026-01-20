@@ -16,10 +16,10 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     name: 'Data Integrity Check',
     retries: retryConfig.database.maxAttempts,
   },
-  {
-    event: Events.CRON_DATA_INTEGRITY,
-    cron: '0 */6 * * *', // Every 6 hours
-  },
+  [
+    { event: Events.CRON_DATA_INTEGRITY },
+    { cron: '0 */6 * * *' }, // Every 6 hours
+  ],
   async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,

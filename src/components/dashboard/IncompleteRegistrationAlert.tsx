@@ -124,7 +124,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
                   <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-500" />
                 </div>
                 {!isExpanded && (
-                  <span className="absolute inset-0 rounded-full bg-amber-400/20 dark:bg-amber-500/20 animate-ping duration-[3s]" />
+                  <span className="absolute inset-0 rounded-full bg-amber-400/20 dark:bg-amber-500/20 animate-ping" />
                 )}
               </div>
               <div className="min-w-0">

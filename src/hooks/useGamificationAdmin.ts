@@ -58,7 +58,7 @@ export interface UseGamificationAdminResult {
 /**
  * Hook for gamification administration - statistics, analytics, and management
  */
-export const useGamificationAdmin = (): UseGamificationAdminResult => {
+export const useGamificationAdmin = (days: number = 30): UseGamificationAdminResult => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -66,18 +66,18 @@ export const useGamificationAdmin = (): UseGamificationAdminResult => {
   // 1. Statistics Query
   // -------------------------------------------------------------------------
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['gamification-admin-stats'],
+    queryKey: ['gamification-admin-stats', days],
     queryFn: async (): Promise<GamificationStats> => {
       const today = new Date();
-      const thirtyDaysAgo = subDays(today, 30).toISOString();
-      const sevenDaysAgo = subDays(today, 7).toISOString();
+      const startDate = subDays(today, days).toISOString();
+      const sevenDaysAgo = subDays(today, 7).toISOString(); // Keep for specific "recent" metric
 
       // Parallel queries using Promise.all
       const [
         totalPatientsResult,
         xpDataResult,
         profilesResult,
-        active30DaysResult,
+        activeInPeriodResult,
         active7DaysResult,
         achievementsCountResult,
         atRiskCountResult,
@@ -87,32 +87,34 @@ export const useGamificationAdmin = (): UseGamificationAdminResult => {
           .from('patient_gamification')
           .select('*', { count: 'exact', head: true }),
 
-        // Total XP awarded
+        // Total XP awarded (filtered by date)
         supabase
           .from('xp_transactions')
-          .select('amount, xp_amount'), // Support both column names
+          .select('amount, xp_amount')
+          .gte('created_at', startDate),
 
         // All profiles for averages
         supabase
           .from('patient_gamification')
           .select('level, current_streak, total_points'),
 
-        // Active patients last 30 days
+        // Active patients in selected period
         supabase
           .from('patient_gamification')
           .select('*', { count: 'exact', head: true })
-          .gte('last_activity_date', thirtyDaysAgo),
+          .gte('last_activity_date', startDate),
 
-        // Active patients last 7 days
+        // Active patients last 7 days (fixed metric)
         supabase
           .from('patient_gamification')
           .select('*', { count: 'exact', head: true })
           .gte('last_activity_date', sevenDaysAgo),
 
-        // Total achievements unlocked
+        // Total achievements unlocked (filtered by date)
         supabase
           .from('achievements_log')
-          .select('*', { count: 'exact', head: true }),
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', startDate),
 
         // At-risk patients (no activity in 7+ days)
         supabase
@@ -129,7 +131,7 @@ export const useGamificationAdmin = (): UseGamificationAdminResult => {
         return sum + amount;
       }, 0) || 0;
       const profiles = profilesResult.data || [];
-      const activeLast30Days = active30DaysResult.count || 0;
+      const activeLast30Days = activeInPeriodResult.count || 0; // Renamed var, keeping prop name for compat
       const activeLast7Days = active7DaysResult.count || 0;
       const achievementsUnlocked = achievementsCountResult.count || 0;
       const atRiskPatients = atRiskCountResult.count || 0;
@@ -151,7 +153,7 @@ export const useGamificationAdmin = (): UseGamificationAdminResult => {
         totalXpAwarded,
         averageLevel: Math.round(averageLevel * 10) / 10,
         averageStreak: Math.round(averageStreak * 10) / 10,
-        activeLast30Days,
+        activeLast30Days, // Represents active in "days" period
         activeLast7Days,
         achievementsUnlocked,
         engagementRate: Math.round(engagementRate * 10) / 10,
@@ -166,14 +168,14 @@ export const useGamificationAdmin = (): UseGamificationAdminResult => {
   // 2. Engagement Data Query
   // -------------------------------------------------------------------------
   const { data: engagementData, isLoading: engagementLoading } = useQuery({
-    queryKey: ['gamification-admin-engagement'],
+    queryKey: ['gamification-admin-engagement', days],
     queryFn: async (): Promise<EngagementData[]> => {
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+      const startDate = subDays(new Date(), days).toISOString();
 
       const { data: transactions } = await supabase
         .from('xp_transactions')
         .select('created_at, amount, xp_amount, reason, patient_id')
-        .gte('created_at', thirtyDaysAgo)
+        .gte('created_at', startDate)
         .order('created_at', { ascending: true });
 
       if (!transactions || transactions.length === 0) return [];
