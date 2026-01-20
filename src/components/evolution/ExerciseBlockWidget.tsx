@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { useExercises } from '@/hooks/useExercises';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -440,20 +441,11 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
 }) => {
     const { exercises: availableExercises, loading: isLoading } = useExercises();
     const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, SEARCH_DEBOUNCE_MS);
     const [selectedExerciseId, setSelectedExerciseId] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState<ExerciseFilters>({});
     const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
-
-    // Debounce da busca para melhorar performance
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm);
-        }, SEARCH_DEBOUNCE_MS);
-
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
 
     // Opções de filtros - memoizadas
     const categories = useMemo(() => {
