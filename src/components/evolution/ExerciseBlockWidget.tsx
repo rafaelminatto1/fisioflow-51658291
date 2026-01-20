@@ -78,7 +78,6 @@ const ARIA_LABELS = {
     search: 'Buscar exercícios por nome',
     filters: 'Filtros de exercícios',
     clearFilters: 'Limpar todos os filtros',
-    addExercise: 'Adicionar exercício à sessão',
     suggestExercises: 'Sugerir exercícios baseados na evolução',
     removeExercise: 'Remover exercício',
     toggleCompleted: 'Marcar como concluído',
@@ -294,6 +293,162 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = memo(({
 
 FilterPopoverContent.displayName = 'FilterPopoverContent';
 
+// ============================================================================================
+// EXERCISE AUTOCOMPLETE SEARCH COMPONENT
+// ============================================================================================
+
+interface ExerciseAutocompleteSearchProps {
+    exercises: Exercise[];
+    searchTerm: string;
+    onSearchChange: (value: string) => void;
+    onSelectExercise: (exercise: Exercise) => void;
+    isLoading?: boolean;
+    disabled?: boolean;
+}
+
+const ExerciseAutocompleteSearch = memo<ExerciseAutocompleteSearchProps>(({
+    exercises,
+    searchTerm,
+    onSearchChange,
+    onSelectExercise,
+    isLoading = false,
+    disabled = false
+}) => {
+    const [open, setOpen] = useState(false);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    // Show dropdown when typing
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        onSearchChange(value);
+        if (value.length > 0) {
+            setOpen(true);
+        }
+    }, [onSearchChange]);
+
+    // Handle selecting an exercise
+    const handleSelect = useCallback((exercise: Exercise) => {
+        onSelectExercise(exercise);
+        onSearchChange(''); // Clear the search after selection
+        setOpen(false);
+        inputRef.current?.focus();
+    }, [onSelectExercise, onSearchChange]);
+
+    // Close dropdown when clicking outside
+    const handleOpenChange = useCallback((isOpen: boolean) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+            // Keep search term when closing without selection
+        }
+    }, []);
+
+    // Keyboard navigation
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setOpen(false);
+        } else if (e.key === 'ArrowDown' && !open && searchTerm.length > 0) {
+            setOpen(true);
+        }
+    }, [open, searchTerm]);
+
+    const displayedExercises = useMemo(() => exercises.slice(0, 15), [exercises]);
+
+    return (
+        <Popover open={open} onOpenChange={handleOpenChange}>
+            <PopoverTrigger asChild>
+                <div className="flex-1 min-w-[180px] relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+                    <Input
+                        ref={inputRef}
+                        placeholder="Buscar e adicionar exercícios..."
+                        value={searchTerm}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => searchTerm.length > 0 && setOpen(true)}
+                        className="h-8 pl-9 pr-8 text-xs shadow-sm bg-background border-muted-foreground/20 focus:border-primary/50 transition-colors"
+                        aria-label={ARIA_LABELS.search}
+                        disabled={disabled || isLoading}
+                        autoComplete="off"
+                    />
+                    {isLoading ? (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+                    ) : searchTerm && (
+                        <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                            onClick={() => {
+                                onSearchChange('');
+                                setOpen(false);
+                            }}
+                            aria-label="Limpar busca"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    )}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent
+                className="w-[400px] p-0"
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+                <ScrollArea className="max-h-[320px]">
+                    {displayedExercises.length === 0 ? (
+                        <div className="p-6 text-center text-muted-foreground">
+                            <Dumbbell className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                            <p className="text-sm font-medium">{EMPTY_STATE_MESSAGES.noResults.title}</p>
+                            <p className="text-xs mt-1">{EMPTY_STATE_MESSAGES.noResults.description}</p>
+                        </div>
+                    ) : (
+                        <div className="p-1" role="listbox">
+                            {displayedExercises.map((exercise) => (
+                                <button
+                                    key={exercise.id}
+                                    type="button"
+                                    className="w-full flex items-center gap-3 p-2.5 rounded-md text-left hover:bg-accent focus:bg-accent focus:outline-none transition-colors cursor-pointer"
+                                    onClick={() => handleSelect(exercise)}
+                                    role="option"
+                                >
+                                    <div className="h-12 w-12 flex-shrink-0 rounded-md bg-muted overflow-hidden">
+                                        {exercise.image_url ? (
+                                            <img
+                                                src={exercise.image_url}
+                                                alt={exercise.name}
+                                                className="h-full w-full object-cover"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full flex items-center justify-center">
+                                                <Dumbbell className="h-5 w-5 text-muted-foreground/40" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-sm truncate">{exercise.name}</p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <span className="truncate">{exercise.category}</span>
+                                            <span className="text-[10px]">•</span>
+                                            <span>{exercise.sets}s × {exercise.repetitions}r</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                            {exercises.length > 15 && (
+                                <p className="text-center text-xs text-muted-foreground py-2 border-t">
+                                    +{exercises.length - 15} exercícios. Continue digitando para filtrar.
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </ScrollArea>
+            </PopoverContent>
+        </Popover>
+    );
+});
+
+ExerciseAutocompleteSearch.displayName = 'ExerciseAutocompleteSearch';
+
+
 const ExerciseCard = memo<ExerciseCardProps>(({ exercise, index, disabled, onUpdate, onRemove }) => {
     const handleUpdate = useCallback((field: keyof SessionExercise, value: string | number | boolean) => {
         onUpdate(exercise.id, field, value);
@@ -442,7 +597,6 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
     const { exercises: availableExercises, loading: isLoading } = useExercises();
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, SEARCH_DEBOUNCE_MS);
-    const [selectedExerciseId, setSelectedExerciseId] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState<ExerciseFilters>({});
     const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
@@ -517,13 +671,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
         setSearchTerm('');
     }, []);
 
-    const handleAddExercise = useCallback((exerciseId: string) => {
-        const exercise = availableExercises.find(e => e.id === exerciseId);
-        if (!exercise) return;
 
-        onChange([...exercises, createSessionExercise(exercise)]);
-        setSelectedExerciseId('');
-    }, [availableExercises, exercises, onChange]);
 
     const handleUpdateExercise = useCallback((id: string, field: keyof SessionExercise, value: string | number | boolean) => {
         onChange(exercises.map(e =>
@@ -535,12 +683,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
         onChange(exercises.filter(e => e.id !== id));
     }, [exercises, onChange]);
 
-    // Fechar popover ao adicionar exercício
-    useEffect(() => {
-        if (selectedExerciseId) {
-            setShowFilters(false);
-        }
-    }, [selectedExerciseId]);
+
 
     // Handler to add exercise from the library modal
     const handleAddExerciseFromLibrary = useCallback((exercise: Exercise) => {
@@ -567,20 +710,16 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
             <div className={cn("flex flex-col h-full", className)}>
                 {/* Header: Busca, Filtros e Ações */}
                 <div className="p-2.5 border-b flex flex-wrap items-center gap-x-2 gap-y-2.5 shrink-0 bg-muted/20">
-                    <div className="flex-1 min-w-[120px] relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
-                        <Input
-                            placeholder="Buscar exercícios..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="h-8 sm:h-7 pl-9 text-xs shadow-sm bg-background border-muted-foreground/20 focus:border-primary/50 transition-colors"
-                            aria-label={ARIA_LABELS.search}
-                            disabled={isLoading}
-                        />
-                        {isLoading && (
-                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-                        )}
-                    </div>
+                    <ExerciseAutocompleteSearch
+                        exercises={filteredExercises}
+                        searchTerm={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        onSelectExercise={(exercise) => {
+                            onChange([...exercises, createSessionExercise(exercise)]);
+                        }}
+                        isLoading={isLoading}
+                        disabled={disabled}
+                    />
 
                     <div className="flex flex-wrap items-center gap-2">
                         {/* Filtros */}
@@ -620,55 +759,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                             </PopoverContent>
                         </Popover>
 
-                        {/* Botão Adicionar */}
-                        <Select
-                            value={selectedExerciseId}
-                            onValueChange={handleAddExercise}
-                            disabled={disabled || filteredExercises.length === 0 || isLoading}
-                        >
-                            <SelectTrigger
-                                className="h-8 sm:h-7 w-[120px] sm:w-[130px] text-xs shadow-sm bg-background"
-                                aria-label={ARIA_LABELS.addExercise}
-                            >
-                                <SelectValue placeholder="Adicionar..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {isLoading ? (
-                                    <div className="p-6 text-center text-sm text-muted-foreground">
-                                        <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />
-                                        <p>{EMPTY_STATE_MESSAGES.loading.title}</p>
-                                    </div>
-                                ) : filteredExercises.length === 0 ? (
-                                    <div className="p-6 text-center text-sm text-muted-foreground">
-                                        <Dumbbell className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                                        <p>{EMPTY_STATE_MESSAGES.noResults.title}</p>
-                                        <p className="text-xs mt-1">{EMPTY_STATE_MESSAGES.noResults.description}</p>
-                                    </div>
-                                ) : (
-                                    <ScrollArea className="h-[220px]">
-                                        <div className="p-1.5" role="listbox">
-                                            {filteredExercises.map((exercise) => (
-                                                <SelectItem
-                                                    key={exercise.id}
-                                                    value={exercise.id}
-                                                    className="text-sm cursor-pointer"
-                                                    role="option"
-                                                >
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <span className="font-medium">{exercise.name}</span>
-                                                        <span className="text-[10px] text-muted-foreground">
-                                                            {exercise.sets}s × {exercise.repetitions}r
-                                                        </span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                )}
-                            </SelectContent>
-                        </Select>
 
-                        {/* Botão Repetir Sessão Anterior */}
                         {onRepeatLastSession && hasLastSession && (
                             <Tooltip>
                                 <TooltipTrigger asChild>

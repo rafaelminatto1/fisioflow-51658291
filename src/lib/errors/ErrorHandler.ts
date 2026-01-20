@@ -1,7 +1,7 @@
 
 import { AppError } from './AppError';
 import { logger } from './logger';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 /**
  * Global Error Handler Helper
@@ -45,11 +45,14 @@ export const ErrorHandler = {
      * Show toast notification to user
      */
     notifyUser(error: AppError) {
-        toast({
-            variant: 'destructive',
-            title: this.getTitle(error),
-            description: error.message,
-        });
+        const title = this.getTitle(error);
+        const message = `${title}: ${error.message}`;
+
+        if (error.statusCode === 500) {
+            toast.error(message);
+        } else {
+            toast.warning(message);
+        }
     },
 
     /**

@@ -739,7 +739,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               setSuggestedPatientName('');
             }
           }}
-          onPatientCreated={(patientId) => {
+          onPatientCreated={(patientId, _patientName) => {
             setValue('patient_id', patientId);
             setQuickPatientModalOpen(false);
             setSuggestedPatientName('');
