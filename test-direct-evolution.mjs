@@ -64,7 +64,7 @@ import { writeFileSync } from 'fs';
     const currentUrl = page.url();
     console.log(`URL atual: ${currentUrl}`);
     
-    await page.screenshot({ path: 'screenshots/direct-evolution.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/direct-evolution.avif', fullPage: true });
     
     // Verificar conteúdo da página
     const pageContent = await page.content();
@@ -123,7 +123,7 @@ import { writeFileSync } from 'fs';
     
   } catch (error) {
     console.error('❌ Erro:', error.message);
-    await page.screenshot({ path: 'screenshots/direct-evolution-error.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/direct-evolution-error.avif', fullPage: true });
   } finally {
     await browser.close();
   }

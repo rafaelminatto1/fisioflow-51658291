@@ -370,7 +370,7 @@ CREATE INDEX idx_payments_due_date ON payments(due_date);
 
 ### 6.1 Design System Baseado nas Referências
 
-#### Dashboard (ref_dashboard_fisioflow.png)
+#### Dashboard (ref_dashboard_fisioflow.avif)
 - Layout em grid responsivo
 - Cards com KPIs principais
 - Gráficos interativos com Recharts
@@ -379,7 +379,7 @@ CREATE INDEX idx_payments_due_date ON payments(due_date);
 - Tipografia: Inter ou similar
 - Ícones: Lucide React
 
-#### Gestão de Pacientes (ref_patient_management.png)
+#### Gestão de Pacientes (ref_patient_management.avif)
 - Lista com busca avançada
 - Cards de pacientes com foto
 - Filtros laterais
@@ -387,27 +387,27 @@ CREATE INDEX idx_payments_due_date ON payments(due_date);
 - Modal de detalhes
 - Timeline de evolução
 
-#### Calendário de Agendamentos (ref_appointment_calendar.png)
+#### Calendário de Agendamentos (ref_appointment_calendar.avif)
 - Visualização mensal/semanal/diária
 - Drag-and-drop para reagendamento
 - Cores por tipo de consulta
 - Popup de detalhes
 - Integração com Google Calendar
 
-#### Biblioteca de Exercícios (ref_exercise_library.png)
+#### Biblioteca de Exercícios (ref_exercise_library.avif)
 - Grid de exercícios com thumbnails
 - Filtros por categoria/região
 - Player de vídeo integrado
 - Sistema de favoritos
 - Busca inteligente
 
-#### Dashboard Financeiro (ref_financial_dashboard.png)
+#### Dashboard Financeiro (ref_financial_dashboard.avif)
 - Gráficos de receita/despesa
 - Tabela de pagamentos
 - Indicadores de performance
 - Relatórios exportáveis
 
-#### App Mobile (ref_mobile_patient_app.png)
+#### App Mobile (ref_mobile_patient_app.avif)
 - Design mobile-first
 - Navegação por tabs
 - Cards de exercícios

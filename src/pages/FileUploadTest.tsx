@@ -37,7 +37,7 @@ const FileUploadTest = () => {
       const { error } = await supabase.storage
         .from('documents')
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: '31536000', // 1 ano para documentos
           upsert: false,
         });
 
@@ -95,7 +95,7 @@ const FileUploadTest = () => {
     onDragLeave: () => setIsDragging(false),
     maxSize: 10 * 1024 * 1024, // 10MB
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+      'image/*': ['.avif', '.avif', '.avif', '.gif'],
       'application/pdf': ['.pdf'],
       'application/msword': ['.doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],

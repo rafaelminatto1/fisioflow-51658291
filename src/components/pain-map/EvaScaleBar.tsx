@@ -23,12 +23,12 @@ const EVA_COLORS: Record<number, { bg: string; text: string; label: string }> = 
   10: { bg: '#7f1d1d', text: '#ffffff', label: 'Insuportável' },
 };
 
-export function EvaScaleBar({ 
-  value, 
-  onChange, 
+export function EvaScaleBar({
+  value,
+  onChange,
   className,
   showLabels = true,
-  disabled = false 
+  disabled = false
 }: EvaScaleBarProps) {
   const handleClick = (newValue: number) => {
     if (!disabled) {
@@ -43,7 +43,7 @@ export function EvaScaleBar({
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => {
           const isSelected = value === level;
           const colors = EVA_COLORS[level];
-          
+
           return (
             <button
               key={level}
@@ -62,8 +62,8 @@ export function EvaScaleBar({
                 color: colors.text,
                 transform: isSelected ? 'scale(1.1)' : 'scale(1)',
                 zIndex: isSelected ? 10 : 1,
-                boxShadow: isSelected 
-                  ? `0 0 0 2px ${colors.bg}, 0 0 8px ${colors.bg}80` 
+                boxShadow: isSelected
+                  ? `0 0 0 2px ${colors.bg}, 0 0 8px ${colors.bg}80`
                   : 'none',
               }}
             >
@@ -72,7 +72,7 @@ export function EvaScaleBar({
           );
         })}
       </div>
-      
+
       {/* Labels */}
       {showLabels && (
         <div className="flex justify-between text-[10px] text-muted-foreground px-1">
@@ -83,7 +83,7 @@ export function EvaScaleBar({
           <span>Insuportável</span>
         </div>
       )}
-      
+
       {/* Selected Value Indicator */}
       {!showLabels && value !== undefined && (
         <div className="text-center">
@@ -95,4 +95,3 @@ export function EvaScaleBar({
     </div>
   );
 }
-

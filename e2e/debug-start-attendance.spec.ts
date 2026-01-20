@@ -85,7 +85,7 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
     await page.waitForTimeout(3000);
     
     // Screenshot da agenda
-    await page.screenshot({ path: 'screenshots/debug-agenda.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/debug-agenda.avif', fullPage: true });
     console.log('4. Agenda carregada, procurando agendamentos...');
 
     // Procurar agendamentos de várias formas
@@ -139,7 +139,7 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
 
     if (!appointmentFound) {
       console.error('❌ Nenhum agendamento ou botão encontrado!');
-      await page.screenshot({ path: 'screenshots/debug-no-appointment.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/debug-no-appointment.avif', fullPage: true });
       
       // Salvar logs
       const debugData = {
@@ -184,7 +184,7 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
     console.log(`   É página de evolução? ${isEvolutionPage}`);
 
     // Screenshot após clicar
-    await page.screenshot({ path: 'screenshots/debug-apos-click.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/debug-apos-click.avif', fullPage: true });
 
     // Aguardar mais um pouco para carregar dados
     await page.waitForTimeout(5000);
@@ -208,7 +208,7 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
     console.log(`   - Logs [DEBUG] encontrados: ${debugLogs.length}`);
 
     // Screenshot final
-    await page.screenshot({ path: 'screenshots/debug-final.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/debug-final.avif', fullPage: true });
 
     // Salvar todos os logs para análise
     const debugData = {
@@ -258,7 +258,7 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
 
   } catch (error) {
     console.error('❌ Erro durante o teste:', error);
-    await page.screenshot({ path: 'screenshots/debug-error.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/debug-error.avif', fullPage: true });
     
     // Salvar logs mesmo em caso de erro
     const errorData = {
