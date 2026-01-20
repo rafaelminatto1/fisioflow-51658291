@@ -152,10 +152,10 @@ async function main() {
         // Step 10: Take screenshot before drag
         console.log('\n📸 Step 9: Taking screenshot (before)...');
         await page.screenshot({
-            path: 'test-results/grid-before-drag.png',
+            path: 'test-results/grid-before-drag.avif',
             fullPage: true
         });
-        console.log('  ✅ Screenshot saved to test-results/grid-before-drag.png');
+        console.log('  ✅ Screenshot saved to test-results/grid-before-drag.avif');
 
         // Step 11: Perform drag test
         console.log('\n🖱️  Step 10: Testing drag functionality...');
@@ -191,10 +191,10 @@ async function main() {
         // Step 12: Take screenshot after drag
         console.log('\n📸 Step 11: Taking screenshot (after drag)...');
         await page.screenshot({
-            path: 'test-results/grid-after-drag.png',
+            path: 'test-results/grid-after-drag.avif',
             fullPage: true
         });
-        console.log('  ✅ Screenshot saved to test-results/grid-after-drag.png');
+        console.log('  ✅ Screenshot saved to test-results/grid-after-drag.avif');
 
         // Step 13: Test resize (if possible)
         console.log('\n📐 Step 12: Testing resize functionality...');
@@ -226,10 +226,10 @@ async function main() {
         // Step 14: Final screenshot
         console.log('\n📸 Step 13: Taking final screenshot...');
         await page.screenshot({
-            path: 'test-results/grid-final.png',
+            path: 'test-results/grid-final.avif',
             fullPage: true
         });
-        console.log('  ✅ Screenshot saved to test-results/grid-final.png');
+        console.log('  ✅ Screenshot saved to test-results/grid-final.avif');
 
         // Step 15: Keep browser open for inspection
         console.log('\n✅ Test complete! Browser will remain open for 60 seconds for manual inspection...');

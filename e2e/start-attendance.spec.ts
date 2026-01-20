@@ -19,7 +19,7 @@ test('iniciar atendimento - debug', async ({ page }) => {
   await page.waitForTimeout(2000);
 
   // Capturar screenshot da agenda
-  await page.screenshot({ path: 'screenshots/agenda.png' });
+  await page.screenshot({ path: 'screenshots/agenda.avif' });
 
   // Tentar encontrar o primeiro agendamento
   const appointments = await page.locator('[data-appointment-id]').all();
@@ -41,7 +41,7 @@ test('iniciar atendimento - debug', async ({ page }) => {
       await page.waitForTimeout(3000);
 
       // Capturar screenshot após clicar
-      const screenshot = await page.screenshot({ path: 'screenshots/apos-click-iniciar.png', fullPage: true });
+      const screenshot = await page.screenshot({ path: 'screenshots/apos-click-iniciar.avif', fullPage: true });
 
       // Verificar se há erro na página
       const hasError = await page.locator('text=Ops! Algo deu errado, text=erro, text=Error').count();

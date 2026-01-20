@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Upload, Play, ChevronRight } from 'lucide-react';
 import { detectPoseInImage } from '@/services/ai/poseDetectionService';
@@ -113,7 +114,7 @@ const ClinicalPostureAnalysis = () => {
                     <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 transition-colors relative">
                         <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                         {previewUrl ? (
-                            <img src={previewUrl} className="max-h-40 object-contain rounded" alt="Preview" />
+                            <OptimizedImage src={previewUrl} alt="Preview" className="max-h-40 rounded" aspectRatio="auto" />
                         ) : (
                             <>
                                 <Upload className="w-8 h-8 text-slate-400 mb-2" />

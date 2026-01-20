@@ -319,7 +319,7 @@ await expect(page2.locator('text=Novo agendamento')).toBeVisible({
 ### Performance
 - [Web.dev metrics](https://web.dev/metrics/)
 - [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)
-- [WebPageTest](https://www.webpagetest.org/)
+- [WebPageTest](https://www.avifagetest.org/)
 
 ---
 

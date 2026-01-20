@@ -147,7 +147,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-screenshots-shard-${{ matrix.shard }}
-          path: test-results/**/*.png
+          path: test-results/**/*.avif
           retention-days: 7
 
   # =====================================================================

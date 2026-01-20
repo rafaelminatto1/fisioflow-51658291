@@ -57,7 +57,7 @@ export const useUploadDocument = () => {
       const { error: uploadError } = await supabase.storage
         .from('patient-documents')
         .upload(fileName, file, {
-          cacheControl: '3600',
+          cacheControl: '31536000', // 1 ano para documentos
           upsert: false
         });
 

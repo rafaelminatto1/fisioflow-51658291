@@ -14,6 +14,7 @@ import { CalendarWeekView } from './CalendarWeekView';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { logger } from '@/lib/errors/logger';
+import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -52,6 +53,49 @@ export const CalendarView = memo(({
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Optimistic updates state - maintains a local copy of appointments with pending changes
+  const [optimisticAppointments, setOptimisticAppointments] = useState<Appointment[]>([]);
+  const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<{ id: string; originalDate: string; originalTime: string } | null>(null);
+
+  // Use optimistic appointments when there's a pending update, otherwise use original appointments
+  const displayAppointments = useMemo(() => {
+    if (pendingOptimisticUpdate && optimisticAppointments.length > 0) {
+      return optimisticAppointments;
+    }
+    return appointments;
+  }, [appointments, optimisticAppointments, pendingOptimisticUpdate]);
+
+  // Optimistic update handlers
+  const handleOptimisticUpdate = useCallback((appointmentId: string, newDate: Date, newTime: string) => {
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (!appointment) return;
+
+    // Save original values for potential revert
+    setPendingOptimisticUpdate({
+      id: appointmentId,
+      originalDate: appointment.date,
+      originalTime: appointment.time
+    });
+
+    // Create updated appointment with new date/time
+    const updatedAppointment: Appointment = {
+      ...appointment,
+      date: formatDateToLocalISO(newDate),
+      time: newTime
+    };
+
+    // Update local state immediately (optimistic)
+    setOptimisticAppointments(
+      appointments.map(a => a.id === appointmentId ? updatedAppointment : a)
+    );
+  }, [appointments]);
+
+  const handleRevertUpdate = useCallback((appointmentId: string) => {
+    // Clear optimistic state to revert to original appointments
+    setPendingOptimisticUpdate(null);
+    setOptimisticAppointments([]);
+  }, []);
+
   // Drag and drop logic from hook
   const {
     dragState,
@@ -65,7 +109,11 @@ export const CalendarView = memo(({
     handleDrop,
     handleConfirmReschedule,
     handleCancelReschedule
-  } = useCalendarDrag({ onAppointmentReschedule });
+  } = useCalendarDrag({
+    onAppointmentReschedule,
+    onOptimisticUpdate: handleOptimisticUpdate,
+    onRevertUpdate: handleRevertUpdate
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -74,6 +122,20 @@ export const CalendarView = memo(({
 
     return () => clearInterval(timer);
   }, []);
+
+  // Clear optimistic state when save completes successfully (savingAppointmentId becomes null)
+  useEffect(() => {
+    if (!dragState.savingAppointmentId && !pendingOptimisticUpdate) {
+      // No pending update, nothing to do
+      return;
+    }
+
+    if (!dragState.savingAppointmentId && pendingOptimisticUpdate) {
+      // Save completed successfully - clear optimistic state
+      setPendingOptimisticUpdate(null);
+      setOptimisticAppointments([]);
+    }
+  }, [dragState.savingAppointmentId, pendingOptimisticUpdate]);
 
   const currentTimePosition = useMemo(() => {
     const hours = currentTime.getHours();
@@ -119,7 +181,7 @@ export const CalendarView = memo(({
     let filteredNoDate = 0;
     let filteredInvalidDate = 0;
 
-    const result = (appointments || []).filter(apt => {
+    const result = (displayAppointments || []).filter(apt => {
       if (!apt || !apt.date) {
         filteredNoDate++;
         return false;
@@ -160,7 +222,7 @@ export const CalendarView = memo(({
     }
 
     return result;
-  }, [appointments]);
+  }, [displayAppointments]);
 
   const getStatusColor = useCallback((status: string, isOverCapacity: boolean = false) => {
     // Over-capacity appointments get a special amber/orange pulsing style
@@ -391,9 +453,10 @@ export const CalendarView = memo(({
                 currentTime={currentTime}
                 currentTimePosition={currentTimePosition}
                 getAppointmentsForDate={getAppointmentsForDate}
-                // If we had many appointments, passing full list 'appointments' is okay as reference doesn't change often
+                // If we had many appointments, passing full list 'displayAppointments' is okay as reference doesn't change often
                 // But filtering inside DayView is cleaner if we only render one day
-                appointments={appointments}
+                appointments={displayAppointments}
+                savingAppointmentId={dragState.savingAppointmentId}
                 timeSlots={memoizedTimeSlots}
                 isDayClosed={isDayClosed}
                 onTimeSlotClick={onTimeSlotClick}
@@ -422,7 +485,8 @@ export const CalendarView = memo(({
             {viewType === 'week' && (
               <CalendarWeekView
                 currentDate={currentDate}
-                appointments={appointments}
+                appointments={displayAppointments}
+                savingAppointmentId={dragState.savingAppointmentId}
                 onTimeSlotClick={onTimeSlotClick}
                 onEditAppointment={onEditAppointment}
                 onDeleteAppointment={onDeleteAppointment}
