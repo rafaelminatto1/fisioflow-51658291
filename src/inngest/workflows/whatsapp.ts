@@ -27,7 +27,6 @@ export const sendWhatsAppWorkflow = inngest.createFunction(
     const result = await step.run('send-whatsapp', async () => {
       switch (type) {
         case 'media':
-          // @ts-expect-error - WhatsAppService dynamic method
           return await WhatsAppService.sendMedia(to, {
             url: mediaUrl || '',
             caption: message,
@@ -72,12 +71,12 @@ export const sendAppointmentConfirmationWhatsAppWorkflow = inngest.createFunctio
 
     const result = await step.run('send-confirmation', async () => {
       return await WhatsAppService.sendAppointmentConfirmation(to as string, {
-        patientName,
-        therapistName,
-        date,
-        time,
-        location,
-        organizationName,
+        patientName: patientName as string,
+        therapistName: therapistName as string,
+        date: date as string,
+        time: time as string,
+        location: location as string | undefined,
+        organizationName: organizationName as string,
       });
     });
 
@@ -108,12 +107,12 @@ export const sendAppointmentReminderWhatsAppWorkflow = inngest.createFunction(
 
     const result = await step.run('send-reminder', async () => {
       return await WhatsAppService.sendAppointmentReminder(to as string, {
-        patientName,
-        therapistName,
-        date,
-        time,
-        location,
-        organizationName,
+        patientName: patientName as string,
+        therapistName: therapistName as string,
+        date: date as string,
+        time: time as string,
+        location: location as string | undefined,
+        organizationName: organizationName as string,
       });
     });
 
@@ -144,9 +143,9 @@ export const sendBirthdayGreetingWhatsAppWorkflow = inngest.createFunction(
 
     const result = await step.run('send-birthday-greeting', async () => {
       return await WhatsAppService.sendBirthdayGreeting(to as string, {
-        patientName,
-        organizationName,
-        therapistName,
+        patientName: patientName as string,
+        organizationName: organizationName as string,
+        therapistName: therapistName as string | undefined,
       });
     });
 
@@ -176,10 +175,9 @@ export const sendReactivationWhatsAppWorkflow = inngest.createFunction(
     const { to, patientName, organizationName } = event.data;
 
     const result = await step.run('send-reactivation', async () => {
-      // @ts-expect-error - WhatsAppService dynamic method
       return await WhatsAppService.sendReactivation(to as string, {
-        patientName,
-        organizationName,
+        patientName: patientName as string,
+        organizationName: organizationName as string,
       });
     });
 

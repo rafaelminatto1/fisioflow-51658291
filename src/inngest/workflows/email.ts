@@ -62,15 +62,15 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
       return await ResendService.sendAppointmentConfirmation(
         to as string,
         {
-          patientName,
-          therapistName,
-          date,
-          time,
-          location,
-          onlineMeetingUrl,
-          organizationName,
+          patientName: patientName as string,
+          therapistName: therapistName as string,
+          date: date as string,
+          time: time as string,
+          location: location as string | undefined,
+          onlineMeetingUrl: onlineMeetingUrl as string | undefined,
+          organizationName: organizationName as string,
         },
-        organizationName
+        organizationName as string
       );
     })) as { success: boolean; messageId?: string; error?: any };
 
@@ -103,14 +103,14 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
       return await ResendService.sendAppointmentReminder(
         to as string,
         {
-          patientName,
-          therapistName,
-          date,
-          time,
-          location,
-          organizationName,
+          patientName: patientName as string,
+          therapistName: therapistName as string,
+          date: date as string,
+          time: time as string,
+          location: location as string | undefined,
+          organizationName: organizationName as string,
         },
-        organizationName
+        organizationName as string
       );
     })) as { success: boolean; messageId?: string; error?: any };
 
@@ -143,11 +143,11 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
       return await ResendService.sendBirthdayGreeting(
         to as string,
         {
-          patientName,
-          organizationName,
-          therapistName,
+          patientName: patientName as string,
+          organizationName: organizationName as string,
+          therapistName: therapistName as string | undefined,
         },
-        organizationName
+        organizationName as string
       );
     })) as { success: boolean; messageId?: string; error?: any };
 
@@ -180,8 +180,8 @@ export const sendReactivationEmailWorkflow = inngest.createFunction(
       return await ResendService.sendReactivationEmail(
         to as string,
         {
-          patientName,
-          organizationName,
+          patientName: patientName as string,
+          organizationName: organizationName as string,
         }
       );
     })) as { success: boolean; messageId?: string; error?: any };
@@ -224,15 +224,15 @@ export const sendDailyReportWorkflow = inngest.createFunction(
       return await ResendService.sendDailyReport(
         to as string,
         {
-          therapistName,
-          organizationName,
-          date,
-          totalSessions,
-          completedSessions,
-          cancelledSessions,
-          newPatients,
+          therapistName: therapistName as string,
+          organizationName: organizationName as string,
+          date: date as string,
+          totalSessions: totalSessions as number,
+          completedSessions: completedSessions as number,
+          cancelledSessions: cancelledSessions as number,
+          newPatients: newPatients as number,
         },
-        organizationName
+        organizationName as string
       );
     })) as { success: boolean; messageId?: string; error?: any };
 
