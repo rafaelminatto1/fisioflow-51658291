@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
@@ -52,8 +53,10 @@ export function NewPrescriptionModal({
     equipment: [] as string[]
   });
 
+  const debouncedSearchTerm = useDebounce(filters.searchTerm, 300);
+
   const { exercises: availableExercises } = useExercises({
-    searchTerm: filters.searchTerm,
+    searchTerm: debouncedSearchTerm,
     category: filters.category === 'all' ? undefined : filters.category,
     pathologies: filters.pathologies.length > 0 ? filters.pathologies : undefined,
     bodyParts: filters.bodyParts.length > 0 ? filters.bodyParts : undefined,
