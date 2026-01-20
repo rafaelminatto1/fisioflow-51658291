@@ -20,10 +20,10 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     name: 'Daily Birthday Messages',
     retries: retryConfig.whatsapp.maxAttempts,
   },
-  {
-    event: Events.CRON_BIRTHDAY_MESSAGES,
-    cron: '0 9 * * *', // 9:00 AM daily
-  },
+  [
+    { event: Events.CRON_BIRTHDAY_MESSAGES },
+    { cron: '0 9 * * *' }, // 9:00 AM daily
+  ],
   async ({ step }: {
     event: { data: BirthdayMessagePayload }; step: InngestStep
   }) => {

@@ -106,11 +106,12 @@ import {
     BirthdayMessageData,
     SessionReminderData,
     ReactivationMessageData
-} from './evolution'; // We reuse renderers for text fallback, but Cloud API needs real templates
+} from './evolution.js'; // We reuse renderers for text fallback, but Cloud API needs real templates
 
 export const WhatsAppService = {
     sendText: client.sendText.bind(client),
     sendTemplate: client.sendTemplate.bind(client),
+    sendMedia: client.sendMedia.bind(client),
 
     // High-level methods - For Cloud API, these SHOULD use templates.
     // We will default to text for now but log a warning that templates are recommended.

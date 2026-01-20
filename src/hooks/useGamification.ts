@@ -271,7 +271,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     queryFn: async () => {
       const [allRes, unlockedRes] = await Promise.all([
         supabase.from('achievements').select('*').eq('is_active', true),
-        supabase.from('patient_achievements').select('*').eq('patient_id', patientId)
+        supabase.from('achievements_log').select('*').eq('patient_id', patientId)
       ]);
 
       return {
