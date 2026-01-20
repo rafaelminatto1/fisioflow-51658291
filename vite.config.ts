@@ -71,7 +71,7 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' && componentTagger(),
       htmlPlugin(appVersion, buildTime),
-      isProduction && sentryVitePlugin({
+      isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
         org: "fisioflow",
         project: "fisioflow-web",
         authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -216,7 +216,7 @@ export default defineConfig(({ mode }) => {
         },
         preserveEntrySignatures: 'strict',
       },
-      chunkSizeWarningLimit: 2000,
+      chunkSizeWarningLimit: 5000,
       reportCompressedSize: false,
       sourcemap: false,
     },
