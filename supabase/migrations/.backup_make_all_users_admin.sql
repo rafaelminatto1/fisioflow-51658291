@@ -27,9 +27,13 @@ WHERE id NOT IN (
 
 -- ===== UPDATE RLS POLICIES FOR PRESCRIBED_EXERCISES =====
 
--- Drop existing policies
+-- Drop existing policies including the one that might exist
 DROP POLICY IF EXISTS "Users can view their prescribed exercises" ON public.prescribed_exercises;
 DROP POLICY IF EXISTS "Therapists can manage prescriptions" ON public.prescribed_exercises;
+DROP POLICY IF EXISTS "Authenticated users can view all prescribed exercises" ON public.prescribed_exercises;
+DROP POLICY IF EXISTS "Authenticated users can insert prescribed exercises" ON public.prescribed_exercises;
+DROP POLICY IF EXISTS "Authenticated users can update prescribed exercises" ON public.prescribed_exercises;
+DROP POLICY IF EXISTS "Authenticated users can delete prescribed exercises" ON public.prescribed_exercises;
 
 -- Create new admin-level policies for all authenticated users
 CREATE POLICY "Authenticated users can view all prescribed exercises"
@@ -60,6 +64,7 @@ DROP POLICY IF EXISTS "Authenticated users can view session attachments" ON publ
 DROP POLICY IF EXISTS "Authenticated users can create session attachments" ON public.session_attachments;
 DROP POLICY IF EXISTS "Authenticated users can update session attachments" ON public.session_attachments;
 DROP POLICY IF EXISTS "Authenticated users can delete session attachments" ON public.session_attachments;
+DROP POLICY IF EXISTS "Authenticated users can manage session attachments" ON public.session_attachments;
 
 -- Create admin-level policies
 CREATE POLICY "Authenticated users can manage session attachments"
@@ -73,6 +78,7 @@ CREATE POLICY "Authenticated users can manage session attachments"
 -- Update patient_pain_records policies
 DROP POLICY IF EXISTS "Users can insert their own pain records" ON public.patient_pain_records;
 DROP POLICY IF EXISTS "Users can view their own pain records" ON public.patient_pain_records;
+DROP POLICY IF EXISTS "Authenticated users can manage pain records" ON public.patient_pain_records;
 
 CREATE POLICY "Authenticated users can manage pain records"
     ON public.patient_pain_records FOR ALL
@@ -84,6 +90,7 @@ CREATE POLICY "Authenticated users can manage pain records"
 DROP POLICY IF EXISTS "Users can log their own exercises" ON public.exercise_logs;
 DROP POLICY IF EXISTS "Users can view their own exercise logs" ON public.exercise_logs;
 DROP POLICY IF EXISTS "Therapists can view exercise logs" ON public.exercise_logs;
+DROP POLICY IF EXISTS "Authenticated users can manage exercise logs" ON public.exercise_logs;
 
 CREATE POLICY "Authenticated users can manage exercise logs"
     ON public.exercise_logs FOR ALL
@@ -98,7 +105,6 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-LANGUAGE plpgsql
 AS $$
 DECLARE
     role_exists BOOLEAN;
