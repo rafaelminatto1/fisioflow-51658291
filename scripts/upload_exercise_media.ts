@@ -265,7 +265,13 @@ const images = [
     { id: '8ff5fa14-835c-4a25-b82c-d642782be9f4', file: 'wall_climber_gen_1768820800501.png' }, // Escalada na Parede
     { id: '44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82', file: 'imaginary_jump_rope_gen_1768820815347.png' }, // Pular Corda Imaginária
     { id: 'ff68b19a-3e01-41fe-aa5a-88b1451f6c7d', file: 'step_touch_arms_gen_1768820830506.png' }, // Step Touch com Braços
-    { id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1', file: 'heel_flicks_gen_1768820844797.png' } // Heel Flicks
+    { id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1', file: 'heel_flicks_gen_1768820844797.png' }, // Heel Flicks
+
+    // Batch 23 - Duplicate Resolutions (Unique Images)
+    { id: '3329d2c0-8d1e-46be-9490-c14b2e5fa280', file: 'glute_bridge_bilateral_variant_1768917629658.png' }, // Ponte de Glúteo Bilateral
+    { id: '3541df60-9b9e-4038-85d8-409c0d5304f5', file: 'calf_raise_standing_variant_1768917650017.png' }, // Elevação de Panturrilha em Pé
+    { id: 'c59164bc-13a1-41af-89c0-a4d13efc489e', file: 'forward_lunge_variant_1768917715699.png' }, // Afundo Frontal
+    { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_retraction_1768917741557.png' } // Mobilização de Escápula (Wall Slides)
 ];
 
 async function upload() {

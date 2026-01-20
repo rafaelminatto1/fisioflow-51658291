@@ -90,6 +90,69 @@ const SOAP_SECTIONS: SOAPSection[] = [
     },
 ];
 
+interface SOAPAccordionFieldProps {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    disabled?: boolean;
+    sectionKey: string;
+}
+
+const SOAPAccordionField = React.memo(({
+    value,
+    onChange,
+    placeholder,
+    disabled,
+    sectionKey
+}: SOAPAccordionFieldProps) => {
+    const [localValue, setLocalValue] = useState(value);
+    const lastSentValue = React.useRef(value);
+    const debounceTimer = React.useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (value !== localValue && value !== lastSentValue.current) {
+            setLocalValue(value);
+            lastSentValue.current = value;
+        }
+    }, [value]);
+
+    useEffect(() => {
+        return () => {
+            if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        };
+    }, []);
+
+    const handleChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newValue = e.target.value;
+        setLocalValue(newValue);
+
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        debounceTimer.current = setTimeout(() => {
+            if (newValue !== lastSentValue.current) {
+                lastSentValue.current = newValue;
+                onChange(newValue);
+            }
+        }, 300);
+    }, [onChange]);
+
+    return (
+        <SmartTextarea
+            id={sectionKey}
+            value={localValue}
+            onChange={handleChange}
+            placeholder={placeholder}
+            disabled={disabled}
+            className={cn(
+                'min-h-[120px] sm:min-h-[150px] resize-none',
+                'focus:ring-2 focus:ring-primary/20'
+            )}
+        />
+    );
+});
+
+SOAPAccordionField.displayName = 'SOAPAccordionField';
+
 interface SOAPAccordionProps {
     data: SOAPData;
     onChange: (data: SOAPData) => void;
@@ -109,9 +172,9 @@ export const SOAPAccordion: React.FC<SOAPAccordionProps> = ({
 }) => {
     const [expandedSections, setExpandedSections] = useState<string[]>(['subjective']);
 
-    const handleFieldChange = (key: keyof SOAPData, value: string) => {
+    const handleFieldChange = React.useCallback((key: keyof SOAPData, value: string) => {
         onChange({ ...data, [key]: value });
-    };
+    }, [data, onChange]);
 
     const getWordCount = (text: string): number => {
         return text.split(/\s+/).filter(w => w.length > 0).length;
@@ -241,16 +304,12 @@ export const SOAPAccordion: React.FC<SOAPAccordionProps> = ({
                                             </div>
 
                                             {/* Textarea */}
-                                            <SmartTextarea
-                                                id={section.key}
+                                            <SOAPAccordionField
+                                                sectionKey={section.key}
                                                 value={data[section.key]}
-                                                onChange={(e) => handleFieldChange(section.key, e.target.value)}
+                                                onChange={(val) => handleFieldChange(section.key, val)}
                                                 placeholder={section.placeholder}
                                                 disabled={disabled}
-                                                className={cn(
-                                                    'min-h-[120px] sm:min-h-[150px] resize-none',
-                                                    'focus:ring-2 focus:ring-primary/20'
-                                                )}
                                             />
                                         </div>
                                     </AccordionContent>

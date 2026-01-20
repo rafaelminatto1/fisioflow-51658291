@@ -33,6 +33,7 @@ export const TimeSlotCell = memo(({
 
     return (
         <div
+            data-testid={`time-slot-${day.toISOString().split('T')[0]}-${time}`}
             className={cn(
                 "border-r border-slate-100 dark:border-slate-800 relative transition-all duration-200",
                 isHourStart && "border-t border-slate-100 dark:border-slate-800", // Solid line for hours
