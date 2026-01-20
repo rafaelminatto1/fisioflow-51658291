@@ -7,14 +7,31 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 
-// Plugin para substituir placeholders no HTML
-function htmlPlugin(appVersion: string, buildTime: string): any {
+// Plugin para substituir placeholders no HTML e garantir ordem de carregamento do React
+function htmlPlugin(appVersion: string, buildTime: string, isProduction: boolean): any {
   return {
     name: 'html-transform',
+    apply: 'build',
     transformIndexHtml(html: string) {
-      return html
+      // Primeiro substitui os placeholders
+      let transformed = html
         .replace(/%APP_VERSION%/g, appVersion)
         .replace(/%BUILD_TIME%/g, buildTime);
+
+      // Em produção, move react-vendor para ser o primeiro script carregado
+      // Isso garante que o scheduler esteja disponível antes de outros vendors
+      if (isProduction) {
+        const reactVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/react-vendor-[^"]*"[^>]*><\/script>/);
+        if (reactVendorMatch) {
+          const reactScript = reactVendorMatch[0];
+          // Remove o script da posição original
+          transformed = transformed.replace(reactScript, '');
+          // Insere o script do React logo após o <head>
+          transformed = transformed.replace('<head>', `<head>\n    ${reactScript}`);
+        }
+      }
+
+      return transformed;
     }
   };
 }
@@ -70,7 +87,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mode === 'development' && componentTagger(),
-      htmlPlugin(appVersion, buildTime),
+      htmlPlugin(appVersion, buildTime, isProduction),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
         org: "fisioflow",
         project: "fisioflow-web",
@@ -157,6 +174,10 @@ export default defineConfig(({ mode }) => {
         algorithm: 'gzip',
         ext: '.gz',
         threshold: 10240,
+        filter: (file) => {
+          // Only compress files inside dist, not the absolute path
+          return file.includes('/dist/') || file.includes('\\dist\\');
+        },
       }),
       isProduction && excludeMswPlugin(),
     ].filter(Boolean),
@@ -195,7 +216,7 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               // Agrupamento mais granular para melhor caching
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'react-vendor';
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) return 'react-vendor';
               if (id.includes('@supabase')) return 'supabase-vendor';
               if (id.includes('@tanstack/react-query')) return 'query-vendor';
               if (id.includes('@radix-ui')) return 'ui-vendor';
@@ -225,6 +246,7 @@ export default defineConfig(({ mode }) => {
       include: [
         'react',
         'react-dom/client',
+        'scheduler',
         'react-router-dom',
         '@supabase/supabase-js',
         '@tanstack/react-query',
@@ -233,7 +255,7 @@ export default defineConfig(({ mode }) => {
         'framer-motion',
         'recharts',
         'lucide-react',
-        'lodash-es', // Explicitamente usa lodash-es para otimização
+        'lodash-es',
         'konva',
         'react-konva',
         'react-grid-layout',

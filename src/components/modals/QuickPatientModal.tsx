@@ -69,7 +69,7 @@ const getErrorMessage = (error: { code?: string; message?: string } | null | und
     '23503': 'Erro de referência: organização não encontrada.',
   };
 
-  if (errorMessages[code]) {
+  if (code && errorMessages[code]) {
     return errorMessages[code];
   }
 
@@ -120,32 +120,25 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   const createPatientMutation = useMutation({
     mutationFn: async (data: QuickPatientFormData) => {
       // Verificar autenticação
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
+      if (authError) {
+        logger.error('Erro ao verificar autenticação', authError, 'QuickPatientModal');
+        throw new Error('Erro ao verificar autenticação. Tente novamente.');
+      }
+
+      const user = authData?.user;
       if (!user) {
         throw new Error('Sessão expirada. Faça login novamente.');
       }
 
       // Verificar organização
       if (!currentOrganization?.id) {
+        logger.error('Organização não encontrada', { currentOrganization }, 'QuickPatientModal');
         throw new Error('Organização não encontrada. Tente fazer login novamente.');
       }
 
-      // Verificar permissões (opcional - RLS já cuida disso)
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
-      const allowedRoles = ['admin', 'fisioterapeuta', 'estagiario'];
-      const hasPermission = (roles || []).some((r: { role: string | number }) => allowedRoles.includes(String(r.role)));
-
-      if (!hasPermission) {
-        throw new Error('Você não tem permissão para criar pacientes.');
-      }
-
-      // Criar paciente
+      // Criar paciente (RLS já cuida das permissões)
       const { data: newPatient, error } = await supabase
         .from('patients')
         .insert({
