@@ -1,6 +1,8 @@
 import { PushNotifications, PushNotificationSchema, Token } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Serviço para gerenciar Push Notifications no iOS
@@ -75,21 +77,38 @@ export async function initPushNotifications(): Promise<void> {
  */
 async function savePushTokenToDatabase(token: string): Promise<void> {
   try {
-    // TODO: Implementar quando Supabase client estiver disponível
-    // const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    // if (user) {
-    //   await supabase.from('user_push_tokens').upsert({
-    //     user_id: user.id,
-    //     token: token,
-    //     platform: Capacitor.getPlatform(),
-    //     updated_at: new Date().toISOString(),
-    //   });
-    // }
+    if (authError || !user) {
+      logger.warn('User not authenticated, skipping push token save', authError, 'push-notifications');
+      return;
+    }
 
-    console.log('Token salvo no banco (implementar Supabase)');
+    // Get user profile for organization_id
+    const { data: profile } = await supabase
+      .from('users')
+      .select('organization_id')
+      .eq('id', user.id)
+      .single();
+
+    const { error } = await supabase.from('user_push_tokens').upsert({
+      user_id: user.id,
+      organization_id: profile?.organization_id,
+      token: token,
+      platform: Capacitor.getPlatform(),
+      active: true,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'user_id,token',
+    });
+
+    if (error) {
+      logger.error('Failed to save push token to database', error, 'push-notifications');
+    } else {
+      logger.info('Push token saved successfully', { userId: user.id }, 'push-notifications');
+    }
   } catch (error) {
-    console.error('Erro ao salvar token:', error);
+    logger.error('Error saving push token', error, 'push-notifications');
   }
 }
 

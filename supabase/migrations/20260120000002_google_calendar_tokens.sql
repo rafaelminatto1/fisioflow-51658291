@@ -25,21 +25,25 @@ CREATE INDEX IF NOT EXISTS idx_user_google_tokens_user_id ON user_google_tokens(
 ALTER TABLE user_google_tokens ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: Users can only read/write their own tokens
+DROP POLICY IF EXISTS "Users can view their own Google tokens" ON user_google_tokens;
 CREATE POLICY "Users can view their own Google tokens"
   ON user_google_tokens
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own Google tokens" ON user_google_tokens;
 CREATE POLICY "Users can insert their own Google tokens"
   ON user_google_tokens
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own Google tokens" ON user_google_tokens;
 CREATE POLICY "Users can update their own Google tokens"
   ON user_google_tokens
   FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own Google tokens" ON user_google_tokens;
 CREATE POLICY "Users can delete their own Google tokens"
   ON user_google_tokens
   FOR DELETE
@@ -55,6 +59,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at
+DROP TRIGGER IF EXISTS trigger_update_user_google_tokens_updated_at ON user_google_tokens;
 CREATE TRIGGER trigger_update_user_google_tokens_updated_at
   BEFORE UPDATE ON user_google_tokens
   FOR EACH ROW
@@ -87,6 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_google_calendar_events_google_event_id ON google_
 ALTER TABLE google_calendar_events ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies based on appointment ownership via patient
+DROP POLICY IF EXISTS "Users can view Google events for their appointments" ON google_calendar_events;
 CREATE POLICY "Users can view Google events for their appointments"
   ON google_calendar_events
   FOR SELECT
@@ -99,6 +105,7 @@ CREATE POLICY "Users can view Google events for their appointments"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert Google events for their appointments" ON google_calendar_events;
 CREATE POLICY "Users can insert Google events for their appointments"
   ON google_calendar_events
   FOR INSERT
@@ -111,6 +118,7 @@ CREATE POLICY "Users can insert Google events for their appointments"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update Google events for their appointments" ON google_calendar_events;
 CREATE POLICY "Users can update Google events for their appointments"
   ON google_calendar_events
   FOR UPDATE
@@ -123,6 +131,7 @@ CREATE POLICY "Users can update Google events for their appointments"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete Google events for their appointments" ON google_calendar_events;
 CREATE POLICY "Users can delete Google events for their appointments"
   ON google_calendar_events
   FOR DELETE
@@ -161,11 +170,13 @@ CREATE INDEX IF NOT EXISTS idx_google_sync_logs_status ON google_sync_logs(statu
 ALTER TABLE google_sync_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Users can view their own sync logs" ON google_sync_logs;
 CREATE POLICY "Users can view their own sync logs"
   ON google_sync_logs
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own sync logs" ON google_sync_logs;
 CREATE POLICY "Users can insert their own sync logs"
   ON google_sync_logs
   FOR INSERT

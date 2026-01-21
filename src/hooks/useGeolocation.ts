@@ -1,5 +1,8 @@
 import { Geolocation, Position, PositionOptions } from '@capacitor/geolocation';
 import { useCallback, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/errors/logger';
 
 export interface LocationData {
   latitude: number;
@@ -136,6 +139,7 @@ export function useGeolocation() {
  */
 export function useCheckIn() {
   const { currentLocation, isLoading, getCurrentPosition } = useGeolocation();
+  const { profile } = useAuth();
 
   /**
    * Realiza check-in de um atendimento
@@ -155,11 +159,35 @@ export function useCheckIn() {
       checkedAt: new Date(location.timestamp).toISOString(),
     };
 
-    // TODO: Enviar para Supabase
-    // await supabase.from('appointment_checkins').insert(checkInData);
+    // Save check-in to Supabase
+    if (profile && appointmentId) {
+      try {
+        const { error } = await supabase.from('appointment_checkins').insert({
+          appointment_id: appointmentId,
+          user_id: profile.id,
+          organization_id: profile.organization_id,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy,
+          altitude: location.altitude,
+          altitude_accuracy: location.altitudeAccuracy,
+          heading: location.heading,
+          speed: location.speed,
+          checked_at: checkInData.checkedAt,
+        });
+
+        if (error) {
+          logger.error('Failed to save check-in to database', error, 'useGeolocation');
+        } else {
+          logger.info('Check-in saved successfully', { appointmentId }, 'useGeolocation');
+        }
+      } catch (error) {
+        logger.error('Error saving check-in', error, 'useGeolocation');
+      }
+    }
 
     return checkInData;
-  }, [getCurrentPosition]);
+  }, [getCurrentPosition, profile]);
 
   return {
     currentLocation,

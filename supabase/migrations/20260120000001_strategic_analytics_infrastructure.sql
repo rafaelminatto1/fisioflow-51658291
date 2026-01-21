@@ -20,94 +20,94 @@ DROP MATERIALIZED VIEW IF EXISTS daily_strategic_metrics_snapshot CASCADE;
 CREATE MATERIALIZED VIEW daily_strategic_metrics_snapshot AS
 SELECT
     -- Identificação
-    date,
-    organization_id,
+    d.date,
+    a.organization_id,
     -- Dia da semana e hora para análise de padrões
-    EXTRACT(DOW FROM date) as day_of_week,
-    EXTRACT(ISODOW FROM date) as iso_day_of_week, -- 1=Segunda, 7=Domingo
-    TO_CHAR(date, 'Day') as day_name,
+    EXTRACT(DOW FROM d.date) as day_of_week,
+    EXTRACT(ISODOW FROM d.date) as iso_day_of_week, -- 1=Segunda, 7=Domingo
+    TO_CHAR(d.date, 'Day') as day_name,
     -- Semana do mês (1, 2, 3, 4, 5)
-    CEIL(EXTRACT(DAY FROM date) / 7.0) as week_of_month,
+    CEIL(EXTRACT(DAY FROM d.date) / 7.0) as week_of_month,
 
     -- === AGENDAMENTOS ===
     -- Total de agendamentos
     COUNT(*) as total_appointments,
     -- Por status
-    COUNT(*) FILTER (WHERE status = 'concluido') as appointments_completed,
-    COUNT(*) FILTER (WHERE status = 'cancelado') as appointments_cancelled,
-    COUNT(*) FILTER (WHERE status = 'agendado') as appointments_scheduled,
-    COUNT(*) FILTER (WHERE status = 'confirmado') as appointments_confirmed,
-    COUNT(*) FILTER (WHERE confirmation_status = 'no_show') as appointments_noshow,
+    COUNT(*) FILTER (WHERE a.status = 'concluido') as appointments_completed,
+    COUNT(*) FILTER (WHERE a.status = 'cancelado') as appointments_cancelled,
+    COUNT(*) FILTER (WHERE a.status = 'agendado') as appointments_scheduled,
+    COUNT(*) FILTER (WHERE a.status = 'confirmado') as appointments_confirmed,
+    COUNT(*) FILTER (WHERE a.confirmation_status = 'no_show') as appointments_noshow,
 
     -- Taxas calculadas
     ROUND(
         CASE
             WHEN COUNT(*) > 0 THEN
-                100.0 * COUNT(*) FILTER (WHERE status = 'concluido') / COUNT(*)
+                100.0 * COUNT(*) FILTER (WHERE a.status = 'concluido') / COUNT(*)
             ELSE 0
         END, 2
     ) as completion_rate,
     ROUND(
         CASE
             WHEN COUNT(*) > 0 THEN
-                100.0 * COUNT(*) FILTER (WHERE status = 'cancelado') / COUNT(*)
+                100.0 * COUNT(*) FILTER (WHERE a.status = 'cancelado') / COUNT(*)
             ELSE 0
         END, 2
     ) as cancellation_rate,
 
     -- === PACIENTES ===
-    COUNT(DISTINCT patient_id) as unique_patients,
-    COUNT(DISTINCT patient_id) FILTER (
-        WHERE patient_id IN (
+    COUNT(DISTINCT a.patient_id) as unique_patients,
+    COUNT(DISTINCT a.patient_id) FILTER (
+        WHERE a.patient_id IN (
             SELECT p.id FROM patients p
-            WHERE DATE(p.created_at) = daily_strategic_metrics_snapshot_dates.date
+            WHERE DATE(p.created_at) = d.date
         )
     ) as new_patients,
 
     -- Pacientes retornando vs primeira consulta
-    COUNT(DISTINCT patient_id) FILTER (
-        WHERE patient_id IN (
+    COUNT(DISTINCT a.patient_id) FILTER (
+        WHERE a.patient_id IN (
             SELECT a2.patient_id
             FROM appointments a2
-            WHERE a2.appointment_date < daily_strategic_metrics_snapshot_dates.date
+            WHERE a2.appointment_date < d.date
             GROUP BY a2.patient_id
             HAVING COUNT(*) > 0
         )
     ) as returning_patients,
 
     -- === RECEITA ===
-    COALESCE(SUM(payment_amount) FILTER (WHERE payment_status = 'paid'), 0) as revenue_collected,
-    COALESCE(SUM(payment_amount) FILTER (WHERE payment_status = 'pending'), 0) as revenue_pending,
-    COALESCE(SUM(payment_amount) FILTER (WHERE payment_status = 'overdue'), 0) as revenue_overdue,
-    COALESCE(SUM(payment_amount), 0) as revenue_total,
+    COALESCE(SUM(a.payment_amount) FILTER (WHERE a.payment_status = 'paid'), 0) as revenue_collected,
+    COALESCE(SUM(a.payment_amount) FILTER (WHERE a.payment_status = 'pending'), 0) as revenue_pending,
+    COALESCE(SUM(a.payment_amount) FILTER (WHERE a.payment_status = 'overdue'), 0) as revenue_overdue,
+    COALESCE(SUM(a.payment_amount), 0) as revenue_total,
 
     -- Ticket médio
     ROUND(
         COALESCE(
-            SUM(payment_amount) / NULLIF(COUNT(*) FILTER (WHERE payment_amount > 0), 0),
+            SUM(a.payment_amount) / NULLIF(COUNT(*) FILTER (WHERE a.payment_amount > 0), 0),
             0
         ), 2
     ) as average_ticket,
 
     -- === HORÁRIOS ===
     -- Distribuição por hora (para identificar picos e vales)
-    EXTRACT(HOUR FROM start_time) as hour,
-    COUNT(*) FILTER (WHERE EXTRACT(HOUR FROM start_time) = EXTRACT(HOUR FROM start_time)) as appointments_at_hour,
+    EXTRACT(HOUR FROM a.start_time) as hour,
+    COUNT(*) FILTER (WHERE EXTRACT(HOUR FROM a.start_time) = EXTRACT(HOUR FROM a.start_time)) as appointments_at_hour,
 
     -- Metadados
     NOW() as snapshot_generated_at
-FROM appointments, (
+FROM appointments a, (
     SELECT CURRENT_DATE - INTERVAL '1 day' as date
-) daily_strategic_metrics_snapshot_dates
-WHERE date = daily_strategic_metrics_snapshot_dates.date
+) d
+WHERE a.appointment_date = d.date
 GROUP BY
-    date,
-    organization_id,
-    EXTRACT(DOW FROM date),
-    EXTRACT(ISODOW FROM date),
-    TO_CHAR(date, 'Day'),
-    CEIL(EXTRACT(DAY FROM date) / 7.0),
-    EXTRACT(HOUR FROM start_time);
+    d.date,
+    a.organization_id,
+    EXTRACT(DOW FROM d.date),
+    EXTRACT(ISODOW FROM d.date),
+    TO_CHAR(d.date, 'Day'),
+    CEIL(EXTRACT(DAY FROM d.date) / 7.0),
+    EXTRACT(HOUR FROM a.start_time);
 
 -- Índices para performance
 CREATE UNIQUE INDEX idx_daily_strategic_metrics_unique
@@ -229,7 +229,7 @@ WITH date_ranges AS (
     SELECT
         organization_id,
         DATE_TRUNC('month', date) as month_start,
-        DATE_TRUNC('month', date) + INTERVAL '1 month - 1 day' as month_end,
+        DATE_TRUNC('month', date + INTERVAL '1 month') - INTERVAL '1 day' as month_end,
         EXTRACT(YEAR FROM date) as year,
         EXTRACT(MONTH FROM date) as month,
         CEIL(EXTRACT(DAY FROM date) / 7.0) as week_of_month,
@@ -239,7 +239,7 @@ WITH date_ranges AS (
             ELSE 'second'
         END as fortnight,
     DATE_TRUNC('week', date) as week_start,
-    DATE_TRUNC('week', date) + INTERVAL '7 days - 1 day' as week_end
+    DATE_TRUNC('week', date + INTERVAL '7 days') - INTERVAL '1 day' as week_end
     FROM (
         SELECT DISTINCT DATE(appointment_date) as date, organization_id
         FROM appointments
@@ -275,7 +275,7 @@ averages AS (
 SELECT
     nbp.organization_id,
     nbp.week_start as period_start,
-    nbp.week_start + INTERVAL '7 days - 1 day' as period_end,
+    nbp.week_start + INTERVAL '6 days' as period_end,
     EXTRACT(ISODOW FROM nbp.week_start) as start_day_of_week,
     'Semana ' || CEIL(EXTRACT(DAY FROM nbp.week_start) / 7.0) as period_label,
     nbp.new_patients_count,
@@ -516,17 +516,11 @@ RETURNS TABLE (
 ) AS $$
 DECLARE
     v_org_id UUID;
-    v_insight strategic_insights%ROWTYPE;
 BEGIN
     -- Se não especificado, processa todas as organizações
     IF p_organization_id IS NULL THEN
         FOR v_org_id IN SELECT id FROM organizations WHERE active = true LOOP
-            -- Processar cada organização (recursivo)
-            FOR v_insight IN
-                SELECT * FROM generate_strategic_insights(v_org_id, p_insight_types)
-            LOOP
-                RETURN NEXT v_insight;
-            END LOOP;
+            RETURN QUERY SELECT * FROM generate_strategic_insights(v_org_id, p_insight_types);
         END LOOP;
         RETURN;
     END IF;
@@ -535,7 +529,7 @@ BEGIN
 
     -- === INSIGHT 1: Horários com baixa demanda ===
     IF p_insight_types IS NULL OR 'low_demand_slot' = ANY(p_insight_types) THEN
-        INSERT INTO strategic_insights (organization_id, insight_type, data, priority, impact_score, insight_date, recommendations)
+        RETURN QUERY INSERT INTO strategic_insights (organization_id, insight_type, data, priority, impact_score, insight_date, recommendations)
         SELECT
             v_org_id,
             'low_demand_slot',
@@ -566,16 +560,12 @@ BEGIN
             tso.organization_id = v_org_id AND
             tso.opportunity_level IN ('high', 'medium')
         ON CONFLICT (organization_id, insight_type, insight_date, data) DO NOTHING
-        RETURNING * INTO v_insight;
-
-        IF v_insight.id IS NOT NULL THEN
-            RETURN NEXT v_insight;
-        END IF;
+        RETURNING id, insight_type, priority, data;
     END IF;
 
     -- === INSIGHT 2: Períodos de baixa captação ===
     IF p_insight_types IS NULL OR 'low_acquisition_period' = ANY(p_insight_types) THEN
-        INSERT INTO strategic_insights (organization_id, insight_type, data, priority, impact_score, insight_date, recommendations)
+        RETURN QUERY INSERT INTO strategic_insights (organization_id, insight_type, data, priority, impact_score, insight_date, recommendations)
         SELECT
             v_org_id,
             'low_acquisition_period',
@@ -618,17 +608,13 @@ BEGIN
             pap.period_classification IN ('critical_low', 'low') AND
             pap.period_start >= CURRENT_DATE - INTERVAL '3 months'
         ON CONFLICT (organization_id, insight_type, insight_date, data) DO NOTHING
-        RETURNING * INTO v_insight;
-
-        IF v_insight.id IS NOT NULL THEN
-            RETURN NEXT v_insight;
-        END IF;
+        RETURNING id, insight_type, priority, data;
     END IF;
 
     -- === INSIGHT 3: Padrões Sazonais ===
     IF p_insight_types IS NULL OR 'seasonal_pattern' = ANY(p_insight_types) THEN
         -- Analisar padrões por dia da semana
-        INSERT INTO strategic_insights (organization_id, insight_type, data, priority, impact_score, insight_date, recommendations, suggested_actions)
+        RETURN QUERY INSERT INTO strategic_insights (organization_id, insight_type, data, priority, impact_score, insight_date, recommendations, suggested_actions)
         SELECT
             v_org_id,
             'seasonal_pattern',
@@ -709,11 +695,7 @@ BEGIN
         ) dw
         WHERE dw.weeks_analyzed >= 2  -- Pelo menos 2 semanas de dados
         ON CONFLICT (organization_id, insight_type, insight_date, data) DO NOTHING
-        RETURNING * INTO v_insight;
-
-        IF v_insight.id IS NOT NULL THEN
-            RETURN NEXT v_insight;
-        END IF;
+        RETURNING id, insight_type, priority, data;
     END IF;
 
 END;
@@ -855,30 +837,10 @@ WHERE
 CREATE OR REPLACE VIEW prioritized_opportunities AS
 SELECT
     tso.*,
-    jsonb_agg(
-        jsonb_build_object(
-            'recommendation', unnest(ARRAY[
-                'Oferecer desconto de 10-20%',
-                'Lançar campanha específica',
-                'Enviar SMS para inativos'
-            ])
-        )
-    ) as recommendations
+    '["Oferecer desconto de 10-20%", "Lançar campanha específica", "Enviar SMS para inativos"]'::jsonb as recommendations
 FROM time_slot_opportunities tso
 WHERE
     tso.opportunity_level IN ('high', 'medium')
-GROUP BY
-    tso.organization_id,
-    tso.day_of_week,
-    tso.day_name,
-    tso.hour,
-    tso.occupied_slots,
-    tso.total_possible_slots,
-    tso.occupancy_rate,
-    tso.opportunity_level,
-    tso.opportunity_score,
-    tso.trend_delta,
-    tso.calculated_at
 ORDER BY tso.opportunity_score DESC;
 
 -- ============================================================================
@@ -965,7 +927,7 @@ COMMENT ON TABLE smart_alert_history IS
 'Histórico de todos os alertas disparados pelo sistema.';
 COMMENT ON FUNCTION refresh_daily_metrics_snapshot() IS
 'Atualiza todas as views materializadas de analytics de forma concorrente.';
-COMMENT ON FUNCTION generate_strategic_insights() IS
+COMMENT ON FUNCTION generate_strategic_insights(uuid, text[]) IS
 'Gera insights estratégicos automaticamente baseado nos dados de métricas.';
 
 -- ============================================================================
