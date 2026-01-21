@@ -1,0 +1,91 @@
+{
+  "expo": {
+    "name": "FisioFlow",
+    "slug": "fisioflow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "fisioflow",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0ea5e9"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fisioflow.app",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "FisioFlow precisa acessar seus dados de saúde para acompanhar seu progresso nos exercícios e sessões de fisioterapia.",
+        "NSHealthUpdateUsageDescription": "FisioFlow vai registrar suas sessões de exercícios e atividade física no app Saúde para um acompanhamento completo.",
+        "NSFaceIDUsageDescription": "Use Face ID para acessar o FisioFlow rapidamente e de forma segura.",
+        "NSCameraUsageDescription": "Precisamos acessar a câmera para você registrar fotos dos seus exercícios e progresso.",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para você compartilhar seu progresso com seu fisioterapeuta.",
+        "NSPhotoLibraryAddUsageDescription": "Precisamos salvar fotos dos seus exercícios e progresso no app."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.fisioflow.app"
+    },
+    "android": {
+      "package": "com.fisioflow.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0ea5e9"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "USE_BIOMETRIC",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-status-bar",
+        {
+          "color": "#0ea5e9",
+          "style": "light",
+          "translucent": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0ea5e9",
+          "image": "./assets/splash.png",
+          "imageStyle": "contain"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow FisioFlow to use Face ID for secure and quick access."
+        }
+      ],
+      [
+        "expo-haptics"
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fisioflow-app"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fisioflow-app"
+    },
+    "owner": "fisioflow"
+  }
+}
