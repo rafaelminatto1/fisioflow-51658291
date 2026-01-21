@@ -50,16 +50,8 @@
     "experiments": {
       "typedRoutes": true
     },
-    "extra": {
-      "eas": {
-        "projectId": "fisioflow-app"
-      }
-    },
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/fisioflow-app"
     },
     "owner": "fisioflow"
   }
