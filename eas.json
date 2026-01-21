@@ -9,7 +9,8 @@
       "distribution": "internal",
       "ios": {
         "resourceClass": "medium",
-        "simulator": false
+        "simulator": false,
+        "credentialsSource": "remote"
       },
       "android": {
         "resourceClass": "medium"
