@@ -169,3 +169,6 @@ fastlane/test_output
 # Code Injection
 iOSInjectionProject/
 iOSInjectionProject/
+
+# Claude Code
+.claude/settings.local.json
