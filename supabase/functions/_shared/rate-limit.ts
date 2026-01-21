@@ -49,6 +49,17 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   // Funções administrativas
   'backup-manager': { maxRequests: 5, windowMinutes: 5 },
   'weekly-report': { maxRequests: 10, windowMinutes: 5 },
+
+  // Agendamento Publico
+  'public-booking': { maxRequests: 10, windowMinutes: 15 },
+
+  // Auth
+  'send-mfa-otp': { maxRequests: 5, windowMinutes: 15 },
+
+  // Webhooks
+  'webhook-clerk': { maxRequests: 100, windowMinutes: 1 },
+  'webhook-stripe': { maxRequests: 100, windowMinutes: 1 },
+  'webhook-whatsapp': { maxRequests: 100, windowMinutes: 1 },
   
   // Default
   'default': { maxRequests: 60, windowMinutes: 5 },
