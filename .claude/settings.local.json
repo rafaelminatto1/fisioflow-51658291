@@ -200,7 +200,13 @@
       "Bash(~/macos-dev/install-novnc.sh)",
       "Bash(wmctrl:*)",
       "Bash(~/macos-dev/abrir-macos.sh:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "mcp__zread__search_doc",
+      "Bash(~/macos-dev/install-monterey.sh)",
+      "mcp__zread__read_file",
+      "Bash(tree:*)",
+      "Bash(~/macos-dev/retry-download.sh)",
+      "Bash(~/macos-dev/start-monterey.sh:*)"
     ],
     "deny": [],
     "ask": []
