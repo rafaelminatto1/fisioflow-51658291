@@ -3,8 +3,8 @@ import { Clock, AlertCircle, CheckCircle, XCircle, FileText, User as UserIcon, M
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/shared/ui/button';
+import { Avatar, AvatarFallback } from '@/components/shared/ui/avatar';
 
 interface AppointmentCardProps {
   appointment: Appointment;

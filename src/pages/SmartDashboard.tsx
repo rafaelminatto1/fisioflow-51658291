@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
+import { CardContent } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Button } from '@/components/shared/ui/button';
 import {
   Brain, TrendingUp, AlertTriangle, Users, DollarSign,
   Calendar, BarChart3, CheckCircle,

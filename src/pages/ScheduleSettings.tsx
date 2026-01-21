@@ -8,10 +8,10 @@ import { StatusColorManager } from '@/components/schedule/settings/StatusColorMa
 import { StatusColorSettingsModal } from '@/components/schedule/settings/StatusColorSettingsModal';
 import { CardSizeManager } from '@/components/schedule/settings/CardSizeManager';
 import { CalendarViewPresets } from '@/components/schedule/settings/CalendarViewPresets';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame, ArrowLeft, Info, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 
 export default function ScheduleSettings() {
   return (

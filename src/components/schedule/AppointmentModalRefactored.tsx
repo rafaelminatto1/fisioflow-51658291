@@ -6,19 +6,19 @@ import { format, parseISO } from 'date-fns';
 import {
   User, CreditCard, FileText, Check, X
 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/shared/ui/textarea';
 import {
   Tabs, TabsContent, TabsList, TabsTrigger
-} from '@/components/ui/tabs';
+} from '@/components/shared/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+} from '@/components/shared/ui/sheet';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
 import { toast } from 'sonner';
 
 import { useActivePatients } from '@/hooks/usePatients';

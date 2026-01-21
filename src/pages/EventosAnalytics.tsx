@@ -1,5 +1,5 @@
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EventosAnalytics } from '@/components/eventos/EventosAnalytics';

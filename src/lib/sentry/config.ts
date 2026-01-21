@@ -11,7 +11,6 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 import { logger } from '@/lib/errors/logger';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -55,7 +54,7 @@ export function initSentry() {
 
     // Integrations
     integrations: [
-      new BrowserTracing({
+      Sentry.browserTracingIntegration({
         // Track navigation and resource loading
         tracingOrigins: ['localhost', 'fisioflow.vercel.app', /^\//],
         // Trace Fetch/XHR requests

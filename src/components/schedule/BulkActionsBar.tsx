@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { Trash2, CheckCircle2, X } from 'lucide-react';
 import {
   AlertDialog,
@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 
 interface BulkActionsBarProps {
   selectedCount: number;

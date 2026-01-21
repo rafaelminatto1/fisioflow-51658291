@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { PosturalAssessment } from '@/components/physiotherapy/PosturalAssessment';
 import { TreatmentPlan } from '@/components/physiotherapy/TreatmentPlan';
 import { ProgressTracking } from '@/components/physiotherapy/ProgressTracking';

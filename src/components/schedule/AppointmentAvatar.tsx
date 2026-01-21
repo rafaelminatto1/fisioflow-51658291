@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
 import { cn } from '@/lib/utils';
 
 interface AppointmentAvatarProps {

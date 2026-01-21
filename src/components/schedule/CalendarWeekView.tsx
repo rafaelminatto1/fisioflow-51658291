@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/shared/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { TimeSlotCell } from './TimeSlotCell';
 import { useCardSize } from '@/hooks/useCardSize';

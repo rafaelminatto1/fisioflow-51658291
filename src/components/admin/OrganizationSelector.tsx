@@ -1,6 +1,6 @@
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Building2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 
 export const OrganizationSelector = () => {
   const { organizations, currentOrganization, isLoading } = useOrganizations();

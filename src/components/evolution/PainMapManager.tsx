@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/shared/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Button } from '@/components/shared/ui/button';
 import { PainMapCanvas } from './PainMapCanvas';
 import { PainEvolutionChart } from '@/components/pain-map/PainEvolutionChart';
 import { PainMapHistory } from './PainMapHistory';
@@ -15,8 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
 import type { PainPoint } from '@/components/pain-map/BodyMap';
 import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/shared/ui/switch';
+import { Label } from '@/components/shared/ui/label';
 
 interface PainMapManagerProps {
   patientId: string;

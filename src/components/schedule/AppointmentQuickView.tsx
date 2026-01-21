@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/components/shared/ui/popover';
 import {
   Dialog,
   DialogContent,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import {
   Drawer,
   DrawerContent,
@@ -25,8 +25,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+} from '@/components/shared/ui/select';
+import { Separator } from '@/components/shared/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';

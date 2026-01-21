@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Plus, Dumbbell } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/shared/ui/input';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { cn } from '@/lib/utils';
 import {
@@ -10,13 +10,13 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-} from "@/components/ui/command";
+} from '@/components/shared/ui/command';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+} from '@/components/shared/ui/popover';
+import { Button } from '@/components/shared/ui/button';
 
 interface ExerciseAutocompleteProps {
     onSelect: (exercise: Exercise) => void;

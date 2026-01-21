@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Badge } from '@/components/shared/ui/badge';
 import { useStatusConfig, CustomStatusConfig } from '@/hooks/useStatusConfig';
 import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from '@/components/shared/ui/collapsible';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,7 +25,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 
 // Predefined vivid color palette (Monday.com inspired)
 const COLOR_PALETTE = [

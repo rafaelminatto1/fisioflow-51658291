@@ -6,10 +6,10 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Checkbox } from '@/components/shared/ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
 import { Camera, ShieldAlert } from 'lucide-react';
 
 interface CameraConsentModalProps {

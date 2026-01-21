@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useParticipantes, useCreateParticipante, useDeleteParticipante, useExportParticipantes } from '@/hooks/useParticipantes';
 import { useEvento } from '@/hooks/useEventos';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Plus, Trash2, Download, FileText } from 'lucide-react';
 import { exportParticipantesPDF } from '@/lib/export/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 import {
   Table,
   TableBody,
@@ -15,18 +15,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/shared/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/components/shared/ui/dialog';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Checkbox } from '@/components/shared/ui/checkbox';
+import { Textarea } from '@/components/shared/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { participanteCreateSchema, type ParticipanteCreate } from '@/lib/validations/participante';

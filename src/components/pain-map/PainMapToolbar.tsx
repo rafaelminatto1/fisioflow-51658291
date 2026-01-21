@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Download, FileText, FileSpreadsheet, Braces, Printer, Copy, Check, FileOutput } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import { toast } from 'sonner';
 import type { PainPoint } from './BodyMap';
 import {

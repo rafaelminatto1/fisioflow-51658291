@@ -5,7 +5,7 @@
 
 import { useMemo, memo } from 'react';
 import { useRealtime } from '@/contexts/RealtimeContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Activity, Users, DollarSign, Calendar } from 'lucide-react';
 
 export const RealtimeMetrics = memo(function RealtimeMetrics() {

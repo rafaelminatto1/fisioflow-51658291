@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 import { CheckCircle2, Clock, XCircle, RefreshCw } from 'lucide-react';
 
 interface ConfirmationStatusBadgeProps {

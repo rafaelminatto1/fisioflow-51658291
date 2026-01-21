@@ -4,10 +4,10 @@ import { PainType } from '@/types/painMap';
 import { MuscleSelectorModal } from './MuscleSelectorModal';
 import { Muscle } from '@/lib/data/bodyMuscles';
 import { Layers, Maximize2, Minimize2, Info, Zap } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shared/ui/tooltip';
 
 export interface PainPoint {
   id: string;

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Progress } from '@/components/shared/ui/progress';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
 import { Target, CheckCircle2, Circle, Flame, Star, Calendar, Trophy, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import WeeklyChallenges from '@/components/gamification/WeeklyChallenges';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 
 const container = {
   hidden: { opacity: 0 },

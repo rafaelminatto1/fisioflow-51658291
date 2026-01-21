@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 
 import { Camera, StopCircle, AlertTriangle, CheckCircle2, Video } from 'lucide-react';
 import { useLivePoseAnalysis } from '@/hooks/useLivePoseAnalysis';

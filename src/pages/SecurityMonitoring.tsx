@@ -1,6 +1,6 @@
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import {
   Table,
   TableBody,
@@ -8,8 +8,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from '@/components/shared/ui/table';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
 import { Shield, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';

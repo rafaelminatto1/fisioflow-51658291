@@ -2,11 +2,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Avatar, AvatarFallback } from '@/components/shared/ui/avatar';
+import { Badge } from '@/components/shared/ui/badge';
+import { Input } from '@/components/shared/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
@@ -16,7 +16,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import {
   Pagination,
   PaginationContent,
@@ -25,7 +25,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from '@/components/shared/ui/pagination';
 import { LazyComponent } from '@/components/common/LazyComponent';
 import {
   PatientCreateModal,

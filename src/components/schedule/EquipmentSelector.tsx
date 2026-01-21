@@ -1,8 +1,8 @@
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/shared/ui/label';
+import { Input } from '@/components/shared/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Badge } from '@/components/shared/ui/badge';
 import { cn } from '@/lib/utils';
 
 export interface Equipment {

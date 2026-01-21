@@ -4,8 +4,8 @@ import { ptBR } from 'date-fns/locale';
 import { Clock, User, Stethoscope, Users, AlertCircle, Info } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { cn } from '@/lib/utils';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import {
@@ -13,7 +13,7 @@ import {
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/components/shared/ui/tooltip';
 
 interface CalendarWeekViewProps {
     currentDate: Date;

@@ -6,13 +6,13 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { Loader2, Mail, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 import { useMagicLinkAuth } from '@/hooks/useMagicLinkAuth';
-import { AlertCircle } from '@/components/ui/alert';
+import { AlertCircle } from '@/components/shared/ui/alert';
 
 // ============================================================================
 // TYPES

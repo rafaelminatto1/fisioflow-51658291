@@ -5,11 +5,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Checkbox } from '@/components/shared/ui/checkbox';
+import { Label } from '@/components/shared/ui/label';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { Shield, FileCheck, Info } from "lucide-react";
 import { useLGPDConsents, ConsentType } from "@/hooks/useLGPDConsents";
 

@@ -3,15 +3,15 @@ import { format, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, Clock, MoreHorizontal, Pencil, Trash2, User, CheckSquare, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import { Tarefa, PRIORIDADE_LABELS, PRIORIDADE_COLORS } from '@/hooks/useTarefas';
 
 interface KanbanCardProps {

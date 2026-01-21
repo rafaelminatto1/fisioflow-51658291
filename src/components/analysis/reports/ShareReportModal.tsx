@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shared/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shared/ui/tabs';
+import { Button } from '@/components/shared/ui/button';
+import { Textarea } from '@/components/shared/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { FileText, Stethoscope, MessageCircle, Copy, Check, Download } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';

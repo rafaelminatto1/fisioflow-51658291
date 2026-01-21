@@ -1,8 +1,8 @@
 import { memo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
+import { Badge } from '@/components/shared/ui/badge';
+import { Progress } from '@/components/shared/ui/progress';
 import {
   TrendingUp,
   TrendingDown,

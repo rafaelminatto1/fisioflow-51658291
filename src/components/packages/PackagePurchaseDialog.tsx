@@ -6,12 +6,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { Label } from '@/components/shared/ui/label';
 import { Package, Calendar, DollarSign, Check } from 'lucide-react';
 import { useSessionPackages, usePurchasePackage, type SessionPackage } from '@/hooks/usePackages';
 

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import {
     Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
-} from '@/components/ui/tooltip';
+} from '@/components/shared/ui/tooltip';
 import {
     Calendar, Clock, Target, AlertTriangle, CheckCircle2,
     Activity, Dumbbell, Shield, ChevronDown, ChevronUp,
@@ -15,7 +15,7 @@ import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from '@/components/shared/ui/collapsible';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/data/protocols';

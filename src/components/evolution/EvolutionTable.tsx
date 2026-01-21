@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { Download, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { TestEvolutionData } from '@/types/evolution';
 import { format } from 'date-fns';

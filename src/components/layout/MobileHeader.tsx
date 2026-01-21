@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/shared/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/shared/ui/sheet';
 import { Menu, Stethoscope } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Link, useLocation, useNavigate } from 'react-router-dom';

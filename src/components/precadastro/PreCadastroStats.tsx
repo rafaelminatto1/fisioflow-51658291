@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import { Link2, Clock, CheckCircle, Users, Activity } from 'lucide-react';
 
 interface StatsProps {

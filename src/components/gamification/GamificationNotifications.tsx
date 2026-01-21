@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Trophy, Star, Flame, Zap, Target, Medal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
 import { cn } from '@/lib/utils';
 
 interface NotificationData {

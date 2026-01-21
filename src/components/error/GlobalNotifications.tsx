@@ -1,7 +1,7 @@
 import React from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 
 export interface Notification {
   id: string;

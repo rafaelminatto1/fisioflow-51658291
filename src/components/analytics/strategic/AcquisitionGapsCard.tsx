@@ -2,9 +2,9 @@
  * Acquisition Gaps Card Component
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Progress } from '@/components/shared/ui/progress';
 import { Users, TrendingDown, AlertTriangle } from 'lucide-react';
 import type { AcquisitionGap } from '@/lib/analytics/strategic/types';
 

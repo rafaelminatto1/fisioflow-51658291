@@ -4,12 +4,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
 import { Plus, Search, AlertTriangle, Info, BookOpen, AlertCircle, X, Edit } from 'lucide-react';
 import { useTemplateItems, type ExerciseTemplate } from '@/hooks/useExerciseTemplates';
 import { useExercises } from '@/hooks/useExercises';
@@ -19,13 +19,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/components/ui/tabs';
+} from '@/components/shared/ui/tabs';
 
 interface TemplateDetailsModalProps {
   open: boolean;

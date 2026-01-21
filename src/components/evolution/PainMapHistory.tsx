@@ -1,6 +1,6 @@
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PainMapRecord } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';

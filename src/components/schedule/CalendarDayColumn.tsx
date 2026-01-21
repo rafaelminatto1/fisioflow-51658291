@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Clock, Ban, AlertTriangle, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shared/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { logger } from '@/lib/errors/logger';
 

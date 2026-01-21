@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Upload, Play, ChevronRight } from 'lucide-react';

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Progress } from '@/components/shared/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Clock, CheckCircle2, AlertCircle, Users, Target } from 'lucide-react';
 import { Tarefa, TarefaStatus, PRIORIDADE_LABELS, TarefaPrioridade } from '@/hooks/useTarefas';

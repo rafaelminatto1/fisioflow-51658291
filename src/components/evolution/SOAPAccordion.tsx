@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
-import { Progress } from '@/components/ui/progress';
+import { Progress } from '@/components/shared/ui/progress';
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from '@/components/ui/accordion';
+} from '@/components/shared/ui/accordion';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/components/shared/ui/tooltip';
 import {
     User,
     Eye,
