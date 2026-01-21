@@ -52,7 +52,6 @@
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "owner": "fisioflow"
+    }
   }
 }
