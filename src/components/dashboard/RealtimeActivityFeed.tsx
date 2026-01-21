@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback, memo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ActivityEvent {

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
+import { Switch } from '@/components/shared/ui/switch';
+import { Textarea } from '@/components/shared/ui/textarea';
 import { Bell, Save, Loader2, Mail, MessageCircle } from 'lucide-react';
 import { useScheduleSettings, NotificationSettings } from '@/hooks/useScheduleSettings';
 

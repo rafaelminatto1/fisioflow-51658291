@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
+import { Separator } from '@/components/shared/ui/separator';
+import { Switch } from '@/components/shared/ui/switch';
+import { Label } from '@/components/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   Calendar,
   CheckCircle,

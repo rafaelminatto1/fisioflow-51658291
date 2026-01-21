@@ -1,5 +1,5 @@
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Card } from '@/components/shared/ui/card';
+import { Label } from '@/components/shared/ui/label';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { PainEvolutionData } from '@/types/painMap';
 

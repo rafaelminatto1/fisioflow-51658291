@@ -6,12 +6,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Checkbox } from '@/components/shared/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
 import { useAddToWaitlist, PRIORITY_CONFIG } from '@/hooks/useWaitlist';
 import { Users, Calendar, Clock, AlertCircle } from 'lucide-react';
 

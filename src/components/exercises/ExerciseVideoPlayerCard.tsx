@@ -1,13 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Keyboard, RotateCcw, RotateCw, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/shared/ui/button';
+import { Slider } from '@/components/shared/ui/slider';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { exerciseVideosService, type ExerciseVideo } from '@/services/exerciseVideos';
 

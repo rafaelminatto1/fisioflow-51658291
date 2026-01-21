@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import { logger } from '@/lib/errors/logger';
 
 interface PatientErrorBoundaryProps {

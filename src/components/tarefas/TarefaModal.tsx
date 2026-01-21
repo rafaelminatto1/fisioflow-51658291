@@ -5,14 +5,14 @@ import { z } from 'zod';
 import { format } from 'date-fns';
 import { CalendarIcon, Tag, X, CheckSquare, Link as LinkIcon, Plus, Trash2, GripVertical, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/shared/ui/button';
+import { Calendar } from '@/components/shared/ui/calendar';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import {
   Form,
   FormControl,
@@ -20,9 +20,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+} from '@/components/shared/ui/form';
+import { Input } from '@/components/shared/ui/input';
+import { Separator } from '@/components/shared/ui/separator';
 import {
   Command,
   CommandEmpty,
@@ -30,24 +30,24 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/shared/ui/command';
+import { Checkbox } from '@/components/shared/ui/checkbox';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/components/shared/ui/popover';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+} from '@/components/shared/ui/select';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Separator } from '@/components/shared/ui/separator';
 import {
   Tarefa,
   TarefaStatus,

@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Clock, Ban, Calendar, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shared/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';

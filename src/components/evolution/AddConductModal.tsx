@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Textarea } from '@/components/shared/ui/textarea';
 import {
   Form,
   FormControl,
@@ -13,14 +13,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@/components/shared/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import { useCreateConduct, type ConductTemplate } from '@/hooks/useConductLibrary';
 
 const formSchema = z.object({

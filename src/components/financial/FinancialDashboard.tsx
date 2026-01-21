@@ -1,14 +1,14 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { DollarSign, TrendingUp, Calendar, AlertCircle, TrendingDown, Activity } from 'lucide-react';
 import { useFinancial } from '@/hooks/useFinancial';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/utils/format';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { DelinquencyList } from './DelinquencyList';
 import { generateTransactionsCSV, downloadCSV } from '@/utils/csvExport';
 import { Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { toast } from 'sonner';
 
 export const FinancialDashboard: React.FC = () => {

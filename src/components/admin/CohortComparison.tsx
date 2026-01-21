@@ -38,9 +38,9 @@ import {
   TooltipProps,
 } from 'recharts';
 import { Search, Filter, Download, TrendingUp, Users, Calendar, Activity, ChevronDown } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 

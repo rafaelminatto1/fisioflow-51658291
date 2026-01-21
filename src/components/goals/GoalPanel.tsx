@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { CheckCircle2, XCircle, MinusCircle, Info } from 'lucide-react';
 
 import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';

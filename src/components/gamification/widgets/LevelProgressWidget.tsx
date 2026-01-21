@@ -1,7 +1,7 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Progress } from '@/components/shared/ui/progress';
 import { Trophy, Zap, TrendingUp, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface LevelProgressWidgetProps {

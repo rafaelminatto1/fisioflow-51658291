@@ -3,8 +3,8 @@
 // Agora usa o contexto central para obter dados, eliminando duplicações de subscrições
 
 import { useMemo, memo, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtime } from '@/contexts/RealtimeContext';

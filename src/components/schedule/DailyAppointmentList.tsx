@@ -1,6 +1,6 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { cn } from '@/lib/utils';
 import { Clock, User, Phone, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';

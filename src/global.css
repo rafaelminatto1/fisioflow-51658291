@@ -1,0 +1,172 @@
+/**
+ * Global CSS para FisioFlow
+ *
+ * Este arquivo é usado por:
+ * - Web: Importado em src/index.css
+ * - Native: Processado pelo NativeWind via metro.config.js
+ *
+ * Contém as CSS variables do tema shadcn/ui que são
+ * compatíveis com NativeWind através de var()
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * CSS Variables do tema shadcn/ui
+ *
+ * No NativeWind, estas variáveis são convertidas para
+ * valores que podem ser usados nos estilos do React Native
+ */
+@layer base {
+  :root {
+    /* Cores base - HSL values */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 48%; /* Sky blue - #0ea5e9 */
+    --primary-foreground: 210 40% 98%;
+    --primary-glow: 199 89% 90%;
+    --primary-dark: 199 89% 35%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary-light: 210 40% 96%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 199 89% 48%;
+    --radius: 0.5rem;
+
+    /* Cores semânticas */
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+    --warning: 38 92% 50.2%;
+    --warning-foreground: 48 96% 89.3%;
+    --error: 0 84.2% 60.2%;
+    --error-foreground: 210 40% 98%;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 199 89% 48%;
+
+    /* Efeitos */
+    --shadow-medical: 0 4px 14px 0 rgba(14, 165, 233, 0.39);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    --gradient-secondary: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    --gradient-background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary-glow: 199 89% 25%;
+    --primary-dark: 199 89% 60%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --secondary-light: 217.2 32.6% 25%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 199 89% 48%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 199 89% 48%;
+
+    --shadow-medical: 0 4px 14px 0 rgba(14, 165, 233, 0.5);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+
+    --gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    --gradient-secondary: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    --gradient-success: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    --gradient-card: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    --gradient-background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+}
+
+/**
+ * Utilitários base do shadcn/ui
+ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/**
+ * Utilitários customizados para acessibilidade
+ */
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Focus visível acessível */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  /* Safe area para iOS */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .py-safe {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .p-safe {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

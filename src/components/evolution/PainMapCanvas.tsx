@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/shared/ui/card';
+import { Label } from '@/components/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Textarea } from '@/components/shared/ui/textarea';
 import type { PainMapPoint, PainIntensity, PainType, BodyRegion, PainEvolutionData } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
 import { BodyMapRealistic } from '@/components/pain-map/BodyMapRealistic';
 import { PainPoint } from '@/components/pain-map/BodyMap';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 
 interface PainMapCanvasProps {
   painPoints: PainMapPoint[];

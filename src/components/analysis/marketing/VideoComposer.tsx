@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/shared/ui/button';
+import { Progress } from '@/components/shared/ui/progress';
 import { Loader2, Download, Play, Pause } from 'lucide-react';
 
 interface VideoComposerProps {

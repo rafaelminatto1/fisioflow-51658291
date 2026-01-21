@@ -2,11 +2,11 @@
 import { useState, useMemo, memo, useEffect } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { useDebounce } from '@/hooks/performance/useDebounce';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Badge } from '@/components/shared/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   Plus, Edit, Trash2, Search, ChevronRight, Calendar,
   AlertTriangle, CheckCircle2, Clock, Target, Milestone
@@ -17,7 +17,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,13 +27,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
+} from '@/components/shared/ui/accordion';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
 
 export const ProtocolsManager = memo(function ProtocolsManager() {

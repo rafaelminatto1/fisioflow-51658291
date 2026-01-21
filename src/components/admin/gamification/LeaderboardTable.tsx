@@ -6,12 +6,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+} from '@/components/shared/ui/table';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Search, Trophy, Flame, Star, Eye, Plus, Minus, RefreshCw, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { LeaderboardFilters } from '@/types/gamification';

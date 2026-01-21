@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ExerciseVideoPlayer } from '@/components/exercises/ExerciseVideoPlayer';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Input } from '@/components/shared/ui/input';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { Search, Dumbbell, Filter } from 'lucide-react';
 
 interface Exercise {

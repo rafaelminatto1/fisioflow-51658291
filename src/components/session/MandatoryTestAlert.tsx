@@ -1,7 +1,7 @@
 import React from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 
 export interface RequiredTest {
     id: string;

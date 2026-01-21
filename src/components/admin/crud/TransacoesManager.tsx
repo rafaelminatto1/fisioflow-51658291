@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useTransacoes, useDeleteTransacao, type Transacao } from '@/hooks/useTransacoes';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Badge } from '@/components/shared/ui/badge';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { TransacaoModal } from './TransacaoModal';
 import { format } from 'date-fns';
@@ -18,7 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 
 export function TransacoesManager() {
   const { data: transacoes = [], isLoading } = useTransacoes();

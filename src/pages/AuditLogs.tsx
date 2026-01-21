@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   Table,
   TableBody,
@@ -13,22 +13,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/shared/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+} from '@/components/shared/ui/select';
+import { Input } from '@/components/shared/ui/input';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import { useAuditLogs, useExportAuditLogs, useBackups } from '@/hooks/useAuditLogs';
 import {
   Search, Eye, FileText, Download, Database, RefreshCw,

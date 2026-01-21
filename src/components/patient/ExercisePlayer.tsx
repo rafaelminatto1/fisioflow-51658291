@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Progress } from '@/components/shared/ui/progress';
+import { Textarea } from '@/components/shared/ui/textarea';
 import {
     Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
     Maximize2, AlertCircle

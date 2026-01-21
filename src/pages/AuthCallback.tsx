@@ -16,8 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
 import { logger } from '@/lib/errors/logger';
 
 type CallbackStatus = 'loading' | 'success' | 'error';

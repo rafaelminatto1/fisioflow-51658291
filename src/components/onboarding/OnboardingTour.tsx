@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Progress } from '@/components/shared/ui/progress';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {

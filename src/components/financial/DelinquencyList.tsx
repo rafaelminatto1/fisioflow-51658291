@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { useFinancial } from '@/hooks/useFinancial';
 import { formatCurrency } from '@/utils/format';

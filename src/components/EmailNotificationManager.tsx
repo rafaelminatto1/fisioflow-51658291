@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Mail, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface EmailStats {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -51,7 +51,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from '@/components/shared/ui/collapsible';
 
 // Ordem baseada em frequência de uso e fluxo de trabalho clínico
 const menuItems = [

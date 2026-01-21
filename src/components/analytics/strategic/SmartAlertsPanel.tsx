@@ -5,9 +5,9 @@
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { Bell, Clock, AlertTriangle, Info, CheckCircle, XCircle } from 'lucide-react';
 import { useAcknowledgeAlert } from '@/hooks/analytics/useStrategicInsights';
 import { toast } from '@/components/ui/use-toast';

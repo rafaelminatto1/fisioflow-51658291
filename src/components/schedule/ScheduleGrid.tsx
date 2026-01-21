@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from 'react';
 import { Calendar, Clock, User, Phone, FileText, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { AppointmentCardSkeleton } from '@/components/ui/skeleton';
 import { logger } from '@/lib/errors/logger';
 import type { Appointment } from '@/types/appointment';

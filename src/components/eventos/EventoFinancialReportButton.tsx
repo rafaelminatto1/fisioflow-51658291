@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/shared/ui/dialog';
 import { FileText, Download } from "lucide-react";
 import { useEventoFinancialReport } from "@/hooks/useEventoFinancialReport";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

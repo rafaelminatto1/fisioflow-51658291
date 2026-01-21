@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Plus, GripVertical, Trash2, Save, Eye, FileText, List, CheckSquare, AlignLeft, Type, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-// import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Card } from '@/components/shared/ui/card';
+import { Label } from '@/components/shared/ui/label';
+import { Switch } from '@/components/shared/ui/switch';
+import { Separator } from '@/components/shared/ui/separator';
+// import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import { AssessmentSection, AssessmentQuestion, QuestionType } from '@/types/assessment';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';

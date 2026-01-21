@@ -214,7 +214,18 @@
       "Bash(eas build:*)",
       "Bash(npx eas build:list:*)",
       "Bash(npx:*)",
-      "Bash(EXPO_APPLE_APP_SPECIFIC_PASSWORD=\"afgo-siwp-lsaq-qlot\" EXPO_APPLE_TEAM_ID=\"G7FDW933SF\" NODE_OPTIONS=\"--no-experimental-strip-types\" npx --yes eas-cli@latest build --profile development --platform ios --clear-cache)"
+      "Bash(EXPO_APPLE_APP_SPECIFIC_PASSWORD=\"afgo-siwp-lsaq-qlot\" EXPO_APPLE_TEAM_ID=\"G7FDW933SF\" NODE_OPTIONS=\"--no-experimental-strip-types\" npx --yes eas-cli@latest build --profile development --platform ios --clear-cache)",
+      "Bash(cat:*)",
+      "Bash(NODE_OPTIONS=\"--no-experimental-strip-types\" npx --yes eas-cli@latest build:list:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(export:*)",
+      "Bash([ -s \"$NVM_DIR/nvm.sh\" ])",
+      "Bash(. \"$NVM_DIR/nvm.sh\")",
+      "Bash(nvm install:*)",
+      "Bash(nvm use:*)",
+      "mcp__brave-search__brave_web_search",
+      "Bash(git rm:*)",
+      "Bash(. \"$HOME/.nvm/nvm.sh\":*)"
     ],
     "deny": [],
     "ask": []

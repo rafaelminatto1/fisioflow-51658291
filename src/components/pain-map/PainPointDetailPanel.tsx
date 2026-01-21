@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Label } from '@/components/shared/ui/label';
+import { Slider } from '@/components/shared/ui/slider';
+import { Textarea } from '@/components/shared/ui/textarea';
 import { Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PainPoint } from './BodyMap';

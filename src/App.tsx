@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo } from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from '@/components/web/ui/toaster';
+import { Toaster as Sonner } from '@/components/web/ui/sonner';
+import { TooltipProvider } from '@/components/web/ui/tooltip';
 import { QueryClient } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Slider } from '@/components/shared/ui/slider';
+import { Card } from '@/components/shared/ui/card';
 import {
     ZoomIn, ZoomOut, Move, Sun, Contrast,
     MousePointer2, Circle, Square, Type, ArrowRight, Save

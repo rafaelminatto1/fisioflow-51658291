@@ -9,20 +9,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';

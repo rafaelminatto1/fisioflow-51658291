@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import ReactMarkdown from 'react-markdown';
 import { Brain, CheckCircle2, AlertTriangle, ArrowRight, Activity } from 'lucide-react';
 import { AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';

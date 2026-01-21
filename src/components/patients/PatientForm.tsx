@@ -10,22 +10,22 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+} from '@/components/shared/ui/card';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Button } from '@/components/shared/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/shared/ui/select';
+import { Calendar } from '@/components/shared/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shared/ui/tabs';
+import { Badge } from '@/components/shared/ui/badge';
 import { CalendarIcon, User, Phone, Mail, MapPin, Activity, FileText, HeartPulse, Shield, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cleanCPF, emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';

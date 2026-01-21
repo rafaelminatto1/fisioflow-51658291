@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Lock, Gift } from 'lucide-react';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/shared/ui/scroll-area';
 
 interface LevelJourneyMapProps {
     currentLevel: number;

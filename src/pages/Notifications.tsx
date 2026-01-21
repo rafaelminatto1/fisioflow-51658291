@@ -16,10 +16,10 @@ import {
   Loader2,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useNotifications, type Notification } from '@/hooks/useNotifications';

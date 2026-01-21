@@ -5,7 +5,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import { Keyboard as KeyboardIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

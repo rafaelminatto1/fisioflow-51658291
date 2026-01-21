@@ -4,14 +4,14 @@
  */
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +21,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 import { Calendar, Loader2, CheckCircle2, XCircle, LogOut, Settings, RefreshCw } from 'lucide-react';
 import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import { cn } from '@/lib/utils';

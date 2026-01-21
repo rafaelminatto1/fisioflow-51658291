@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Badge } from '@/components/shared/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import {
   FileText, Stethoscope, Edit, Eye,
   Activity, CheckCircle2, PenTool,

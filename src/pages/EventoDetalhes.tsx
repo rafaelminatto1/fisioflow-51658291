@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEvento } from '@/hooks/useEventos';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { ArrowLeft, Calendar, MapPin, DollarSign, Edit } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';

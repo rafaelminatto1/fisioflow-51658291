@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { Checkbox } from '@/components/ui/checkbox';
+} from '@/components/shared/ui/select';
+import { DatePickerWithRange } from '@/components/shared/ui/date-range-picker';
+import { Checkbox } from '@/components/shared/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { FileText, Download, Loader2 } from 'lucide-react';

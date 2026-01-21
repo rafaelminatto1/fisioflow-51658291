@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { useProject } from '@/hooks/useProjects';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { KanbanSquare, ListTodo, CalendarRange, Settings } from 'lucide-react';
 import { ProjectKanban } from '@/components/projects/ProjectKanban';
 import { ProjectTimeline } from '@/components/projects/ProjectTimeline';
 import { ProjectTableView } from '@/components/projects/ProjectTableView';
 import { ProjectModal } from '@/components/projects/ProjectModal';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 
 export default function ProjectDetailsPage() {
     const { id } = useParams<{ id: string }>();

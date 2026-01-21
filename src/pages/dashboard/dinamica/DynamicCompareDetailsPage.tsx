@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 

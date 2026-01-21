@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Progress } from '@/components/shared/ui/progress';
+import { Badge } from '@/components/shared/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Brain, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';

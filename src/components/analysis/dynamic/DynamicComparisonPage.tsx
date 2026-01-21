@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Progress } from '@/components/shared/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Loader2, Upload, Video, Brain, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 

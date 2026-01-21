@@ -1,14 +1,14 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 
 export interface MetricField {

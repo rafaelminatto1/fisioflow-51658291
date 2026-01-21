@@ -4,9 +4,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
 import { mfaService } from '@/lib/auth/mfa';
 import { supabase } from '@/integrations/supabase/client';

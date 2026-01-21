@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Calendar } from '@/components/shared/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
+import { Card } from '@/components/shared/ui/card';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -16,7 +16,7 @@ import { CalendarIcon, Plus, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCreateEvento } from '@/hooks/useEventos';
 import { eventoCreateSchema, EventoCreate } from '@/lib/validations/evento';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/shared/ui/switch';
 import { useEventoTemplates } from '@/hooks/useEventoTemplates';
 
 interface NewEventoModalProps {

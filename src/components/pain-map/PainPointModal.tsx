@@ -5,12 +5,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
+import { Slider } from '@/components/shared/ui/slider';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import type { PainPoint } from './BodyMap';
 import { EvaScaleBar } from './EvaScaleBar';
 import { getMusclesByRegion } from '@/lib/data/bodyMuscles';

@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Avatar, AvatarFallback } from '@/components/shared/ui/avatar';
+import { Badge } from '@/components/shared/ui/badge';
 import { ChevronRight, Calendar, Phone, Mail } from 'lucide-react';
 import { cn, calculateAge } from '@/lib/utils';
 import { Patient } from '@/schemas/patient';

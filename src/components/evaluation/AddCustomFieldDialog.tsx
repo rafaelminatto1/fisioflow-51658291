@@ -6,19 +6,19 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+} from '@/components/shared/ui/select';
+import { Checkbox } from '@/components/shared/ui/checkbox';
 import { Plus, Type, Hash, AlignLeft, List, ToggleLeft, Calendar, Clock, Ruler } from 'lucide-react';
 import type { TemplateField } from './EvaluationTemplateSelector';
 

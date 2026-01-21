@@ -3,7 +3,13 @@
  * Facilita importações de componentes mobile
  */
 
-// Shared Components
+// Core universal components (Web + React Native)
+export * from './core';
+
+// Navigation components (React Navigation)
+export * from './navigation';
+
+// Legacy Shared Components (Web-based, to be migrated)
 export { SafeAreaWrapper, SafeHeader, SafeFooter, SafeScreen, useSafeAreaInsets } from './shared/SafeAreaWrapper';
 export { MobileTabBar, MobileLayout, useMobileTabBar } from './shared/MobileTabBar';
 export { MobileAuth } from './shared/MobileAuth';

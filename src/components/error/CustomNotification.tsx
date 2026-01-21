@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
 import { AlertTriangle, CheckCircle, Info, XCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

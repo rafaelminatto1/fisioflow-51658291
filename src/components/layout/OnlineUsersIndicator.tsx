@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Users, Circle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@/components/shared/ui/popover';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { cn } from '@/lib/utils';
 

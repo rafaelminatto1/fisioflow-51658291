@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Progress } from '@/components/shared/ui/progress';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
@@ -9,8 +9,8 @@ import { useGamificationNotifications } from '@/hooks/useGamificationNotificatio
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { QuestList } from './QuestList';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/shared/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 
 interface GamificationPanelProps {
   patientId: string;

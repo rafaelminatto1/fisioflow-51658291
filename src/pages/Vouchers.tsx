@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Plus, Ticket, Calendar, DollarSign, Edit, Trash2, MoreVertical, Search } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Input } from '@/components/shared/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useVouchers, useUserVouchers, useAllVouchers, useDeleteVoucher, useUpdateVoucher, type Voucher } from '@/hooks/useVouchers';
 import { usePurchaseVoucher, useVerifyVoucherPayment } from '@/hooks/usePurchaseVoucher';
@@ -13,14 +13,14 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { VoucherModal } from '@/components/vouchers/VoucherModal';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 
 export default function Vouchers() {
   const [isModalOpen, setIsModalOpen] = useState(false);

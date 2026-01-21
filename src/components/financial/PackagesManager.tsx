@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
 import {
     Dialog,
     DialogContent,
@@ -13,7 +13,7 @@ import {
     DialogTitle,
     DialogTrigger,
     DialogFooter,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import {
     Table,
     TableBody,
@@ -21,7 +21,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/components/shared/ui/table';
 import { Package, Plus, Edit, Trash2, Users, Calendar, DollarSign } from 'lucide-react';
 import { useSessionPackages, useCreatePackage, useUpdatePackage, useDeactivatePackage, type SessionPackage } from '@/hooks/usePackages';
 import { formatCurrency } from '@/lib/utils';

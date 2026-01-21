@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import { MoreVertical, Play, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-react';
 import { AppointmentBase } from '@/types/appointment';
 import { useNavigate } from 'react-router-dom';

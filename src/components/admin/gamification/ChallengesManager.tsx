@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/shared/ui/dialog';
+import { Label } from '@/components/shared/ui/label';
+import { Switch } from '@/components/shared/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus, Pencil, Trash2, Target, Calendar } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Badge } from '@/components/shared/ui/badge';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
+import { Badge } from '@/components/shared/ui/badge';
+import { Progress } from '@/components/shared/ui/progress';
 import {
     User,
     MapPin,

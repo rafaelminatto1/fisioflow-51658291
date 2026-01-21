@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Input } from '@/components/shared/ui/input';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2, Loader2, AlertCircle, Heart, Calendar, Phone, Mail, User } from 'lucide-react';

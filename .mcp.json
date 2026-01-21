@@ -10,6 +10,31 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=ycvbtjfrchcyvmkvuocu"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:7bSoUUpCeipNZq1q@db.ycvbtjfrchcyvmkvuocu.supabase.co:5432/postgres"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "BSAePlz76pot2NxzuGXngp-gEDzIxkv"
+      }
     }
   }
 }
