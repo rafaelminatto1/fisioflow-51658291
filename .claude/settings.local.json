@@ -206,7 +206,11 @@
       "mcp__zread__read_file",
       "Bash(tree:*)",
       "Bash(~/macos-dev/retry-download.sh)",
-      "Bash(~/macos-dev/start-monterey.sh:*)"
+      "Bash(~/macos-dev/start-monterey.sh:*)",
+      "Bash(~/macos-dev/iniciar-vnc.sh:*)",
+      "Bash(NODE_OPTIONS=\"--no-experimental-strip-types\" pnpm:*)",
+      "Bash(NODE_OPTIONS=\"--no-experimental-strip-types\" npx expo start:*)",
+      "Bash(ps:*)"
     ],
     "deny": [],
     "ask": []
