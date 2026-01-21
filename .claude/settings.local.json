@@ -211,7 +211,9 @@
       "Bash(NODE_OPTIONS=\"--no-experimental-strip-types\" pnpm:*)",
       "Bash(NODE_OPTIONS=\"--no-experimental-strip-types\" npx expo start:*)",
       "Bash(ps:*)",
-      "Bash(eas build:*)"
+      "Bash(eas build:*)",
+      "Bash(npx eas build:list:*)",
+      "Bash(npx:*)"
     ],
     "deny": [],
     "ask": []
