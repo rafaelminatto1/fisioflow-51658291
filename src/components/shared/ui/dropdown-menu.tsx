@@ -58,7 +58,7 @@ export const DropdownMenu = ({ children, open, onOpenChange }: SharedDropdownMen
   const platformProps = { children, open, onOpenChange };
 
   return (
-    <React.Suspense fallback={<div>{children}</div>}>
+    <React.Suspense fallback={<View>{children}</View>}>
       {isWeb ? <WebDropdownMenu {...platformProps} /> : <NativeDropdownMenu {...platformProps} />}
     </React.Suspense>
   );
