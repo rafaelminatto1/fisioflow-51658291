@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shared/ui/table';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSatisfactionSurveys, useSurveyStats, useDeleteSurvey } from '@/hooks/useSatisfactionSurveys';
 import { format } from 'date-fns';

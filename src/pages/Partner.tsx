@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/components/shared/ui/badge';
 import { Users, Plus, Mail, Phone, MapPin, Building2, Edit, Trash2, Star } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Partner {

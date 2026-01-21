@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Badge } from '@/components/shared/ui/badge';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { NewEventoModal } from '@/components/eventos/NewEventoModal';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';

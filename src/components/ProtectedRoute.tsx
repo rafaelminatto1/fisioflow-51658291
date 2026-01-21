@@ -5,7 +5,20 @@ import { UserRole } from '@/types/auth';
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { Button } from '@/components/shared/ui/button';
-import { AppLoadingSkeleton } from '@/components/ui/AppLoadingSkeleton';
+
+// Simple loading component
+function AppLoadingSkeleton({ message }: { message?: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <div className="text-center space-y-4 p-8">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+        <p className="text-muted-foreground font-medium">
+          {message ? `${message}...` : 'Carregando...'}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
