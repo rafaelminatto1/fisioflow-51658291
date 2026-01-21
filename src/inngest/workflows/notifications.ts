@@ -74,9 +74,44 @@ export const sendNotificationWorkflow = inngest.createFunction(
           return { sent: true, channel: 'whatsapp' };
 
         case 'push':
-          // TODO: Implement push notifications
-          console.log('Push notification not yet implemented');
-          return { sent: false, channel: 'push', error: 'Not implemented' };
+          // Send push notification via Supabase
+          try {
+            const supabase = createClient(
+              process.env.VITE_SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!
+            );
+
+            // Get user's push tokens
+            const { data: tokens } = await supabase
+              .from('user_push_tokens')
+              .select('token')
+              .eq('user_id', userId)
+              .eq('active', true);
+
+            if (!tokens || tokens.length === 0) {
+              return { sent: false, channel: 'push', error: 'No active push tokens found' };
+            }
+
+            // Send push notification via Supabase
+            const { error: pushError } = await supabase.auth.admin.sendPushNotification({
+              tokens: tokens.map((t: any) => t.token),
+              title: data.subject || 'FisioFlow',
+              body: data.body || '',
+              data: data.payload || {},
+            });
+
+            if (pushError) {
+              throw new Error(pushError.message);
+            }
+
+            return { sent: true, channel: 'push' };
+          } catch (error) {
+            return {
+              sent: false,
+              channel: 'push',
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
 
         default:
           return { sent: false, channel: type, error: 'Unknown type' };

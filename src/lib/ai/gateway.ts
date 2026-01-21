@@ -129,13 +129,35 @@ const MODEL_PROVIDER: Record<AIModel, AIProvider> = {
 
 /**
  * Cost per 1M tokens (approximate, for cost optimization)
+ *
+ * STRATEGY: Use Gemini (FREE) as default, Grok (FREE via Vercel) for complex reasoning
  */
 const COST_PER_1M_TOKENS: Record<AIProvider, { input: number; output: number }> = {
-  openai: { input: 2.5, output: 10 },      // gpt-4o-mini
-  google: { input: 0.075, output: 0.3 },   // gemini-2.0-flash (FREE tier)
-  grok: { input: 0, output: 0 },           // FREE via Vercel
-  anthropic: { input: 3, output: 15 },     // claude-3-5-sonnet
+  google: { input: 0, output: 0 },         // gemini-2.0-flash - FREE via Google AI tier
+  grok: { input: 0, output: 0 },           // FREE via Vercel AI Gateway
+  openai: { input: 2.5, output: 10 },      // gpt-4o-mini - backup only
+  anthropic: { input: 3, output: 15 },     // claude-3-5-sonnet - backup only
 };
+
+/**
+ * Model recommendations by use case
+ */
+const MODEL_RECOMMENDATIONS = {
+  // Simple tasks (SOAP notes, exercise suggestions) → Gemini
+  simple: 'gemini-2.0-flash-exp',
+
+  // Clinical reasoning (complex cases, differential diagnosis) → Grok
+  clinical: 'grok-2-1212',
+
+  // Chat/interactive → Gemini (faster)
+  chat: 'gemini-2.0-flash-exp',
+
+  // Vision/image analysis → Gemini Flash
+  vision: 'gemini-2.0-flash-exp',
+
+  // Code generation → Gemini
+  code: 'gemini-2.0-flash-exp',
+} as const;
 
 // ============================================================================
 // CLIENTS

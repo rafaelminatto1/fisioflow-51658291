@@ -46,9 +46,32 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
   const recommendationsQuery = useQuery({
     queryKey: ['smart-waitlist', 'recommendations', selectedDateRange, waitlist],
     queryFn: async (): Promise<WaitlistRecommendation[]> => {
-      // TODO: Fetch blocked dates and times from database
-      const blockedDates: Date[] = [];
+      // Fetch blocked dates and times from database
+      const { supabase } = await import('@/integrations/supabase/client');
+
+      // Get blocked dates
+      const { data: blockedDatesData } = await supabase
+        .from('blocked_dates')
+        .select('date')
+        .gte('date', format(selectedDateRange.start, 'yyyy-MM-dd'))
+        .lte('date', format(selectedDateRange.end, 'yyyy-MM-dd'));
+
+      const blockedDates = blockedDatesData?.map(d => parseISO(d.date)) || [];
+
+      // Get blocked time slots
+      const { data: blockedSlotsData } = await supabase
+        .from('blocked_time_slots')
+        .select('date, time')
+        .gte('date', format(selectedDateRange.start, 'yyyy-MM-dd'))
+        .lte('date', format(selectedDateRange.end, 'yyyy-MM-dd'));
+
       const blockedTimes: Record<string, string[]> = {};
+      blockedSlotsData?.forEach(slot => {
+        if (!blockedTimes[slot.date]) {
+          blockedTimes[slot.date] = [];
+        }
+        blockedTimes[slot.date].push(slot.time);
+      });
 
       const availableSlots = generateAvailableSlots(
         selectedDateRange.start,
@@ -90,8 +113,33 @@ export function useBestSlotForPatient(entry: WaitlistEntry | null) {
     queryFn: async (): Promise<TimeSlot | null> => {
       if (!entry) return null;
 
-      const blockedDates: Date[] = [];
+      // Fetch blocked dates and times from database
+      const { supabase } = await import('@/integrations/supabase/client');
+      const endDate = addDays(new Date(), 30);
+
+      // Get blocked dates
+      const { data: blockedDatesData } = await supabase
+        .from('blocked_dates')
+        .select('date')
+        .gte('date', format(new Date(), 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'));
+
+      const blockedDates = blockedDatesData?.map(d => parseISO(d.date)) || [];
+
+      // Get blocked time slots
+      const { data: blockedSlotsData } = await supabase
+        .from('blocked_time_slots')
+        .select('date, time')
+        .gte('date', format(new Date(), 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'));
+
       const blockedTimes: Record<string, string[]> = {};
+      blockedSlotsData?.forEach(slot => {
+        if (!blockedTimes[slot.date]) {
+          blockedTimes[slot.date] = [];
+        }
+        blockedTimes[slot.date].push(slot.time);
+      });
 
       const availableSlots = generateAvailableSlots(
         new Date(),
@@ -261,8 +309,33 @@ export function useOptimizeAllocations() {
   return useQuery({
     queryKey: ['waitlist-optimization', waitlist, startDate, daysAhead],
     queryFn: async (): Promise<Map<string, TimeSlot>> => {
-      const blockedDates: Date[] = [];
+      // Fetch blocked dates and times from database
+      const { supabase } = await import('@/integrations/supabase/client');
+      const endDate = addDays(startDate, daysAhead);
+
+      // Get blocked dates
+      const { data: blockedDatesData } = await supabase
+        .from('blocked_dates')
+        .select('date')
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'));
+
+      const blockedDates = blockedDatesData?.map(d => parseISO(d.date)) || [];
+
+      // Get blocked time slots
+      const { data: blockedSlotsData } = await supabase
+        .from('blocked_time_slots')
+        .select('date, time')
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'));
+
       const blockedTimes: Record<string, string[]> = {};
+      blockedSlotsData?.forEach(slot => {
+        if (!blockedTimes[slot.date]) {
+          blockedTimes[slot.date] = [];
+        }
+        blockedTimes[slot.date].push(slot.time);
+      });
 
       const availableSlots = generateAvailableSlots(
         startDate,

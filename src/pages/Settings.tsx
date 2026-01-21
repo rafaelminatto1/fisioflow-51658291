@@ -33,6 +33,8 @@ import { InviteUserModal } from '@/components/admin/InviteUserModal';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { BackupSettings } from '@/components/settings/BackupSettings';
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -495,6 +497,86 @@ const Settings = () => {
     navigate(`/settings?tab=${tabValue}`, { replace: true });
   }, [navigate]);
 
+  // Save working hours
+  const handleSaveWorkingHours = useCallback(async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      // Get user's organization
+      const { data: userData } = await supabase
+        .from('users')
+        .select('organization_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!userData?.organization_id) {
+        toast({
+          title: 'Erro',
+          description: 'Organização não encontrada',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Update organization settings with working hours
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          settings: {
+            working_hours: workingHours,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userData.organization_id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Horários salvos',
+        description: 'Seus horários de funcionamento foram atualizados.',
+      });
+
+      logger.info('Working hours saved', { userId: user.id, workingHours }, 'Settings');
+    } catch (error) {
+      logger.error('Failed to save working hours', error, 'Settings');
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar os horários.',
+        variant: 'destructive'
+      });
+    }
+  }, [user, workingHours, toast]);
+
+  // Load working hours on mount
+  useEffect(() => {
+    const loadWorkingHours = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('organization_id, organizations!inner(settings)')
+          .eq('id', user.id)
+          .single();
+
+        if (userData?.organizations?.settings?.working_hours) {
+          setWorkingHours(userData.organizations.settings.working_hours);
+        }
+      } catch (error) {
+        logger.warn('Failed to load working hours', error, 'Settings');
+      }
+    };
+
+    loadWorkingHours();
+  }, [user?.id]);
+
   return (
     <MainLayout>
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
@@ -573,7 +655,7 @@ const Settings = () => {
               <WorkingHoursSection
                 workingHours={workingHours}
                 onChange={setWorkingHours}
-                onSave={() => {/* TODO: Implement save */ }}
+                onSave={handleSaveWorkingHours}
               />
             </div>
           </TabsContent>
@@ -746,7 +828,7 @@ const Settings = () => {
             <WorkingHoursSection
               workingHours={workingHours}
               onChange={setWorkingHours}
-              onSave={() => {/* TODO: Implement save */ }}
+              onSave={handleSaveWorkingHours}
             />
           </TabsContent>
         </Tabs>

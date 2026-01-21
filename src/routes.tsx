@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Lazy load pages for better performance with webpack chunk names for better debugging
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
+const AuthCallback = lazy(() => import(/* webpackChunkName: "auth-callback" */ "./pages/AuthCallback"));
 
 // Core pages - High priority chunks
 const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "./pages/Index"));
@@ -116,6 +117,7 @@ const DynamicCompareDetailsPage = lazy(() => import(/* webpackChunkName: "analys
 const LeadsPage = lazy(() => import(/* webpackChunkName: "crm-leads" */ "./pages/crm/LeadsPage"));
 const CRMDashboard = lazy(() => import(/* webpackChunkName: "crm-dashboard" */ "./pages/crm/CRMDashboard"));
 const PatientPortal = lazy(() => import(/* webpackChunkName: "portal-patient" */ "./pages/PatientPortal"));
+const PatientLogin = lazy(() => import(/* webpackChunkName: "patient-login" */ "./pages/PatientLogin"));
 
 // Pre-cadastro
 const PreCadastro = lazy(() => import(/* webpackChunkName: "pre-cadastro" */ "./pages/PreCadastro"));
@@ -139,6 +141,8 @@ export function AppRoutes() {
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/login" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/paciente/login" element={<PatientLogin />} />
 
             <Route path="/pre-cadastro" element={<PreCadastro />} />
             <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
@@ -228,6 +232,7 @@ export function AppRoutes() {
 
             {/* Portal do Paciente */}
             <Route path="/portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
+            <Route path="/paciente/dashboard" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
             <Route path="/pre-cadastro-admin" element={<ProtectedRoute allowedRoles={['admin']}><PreCadastroAdmin /></ProtectedRoute>} />
             <Route path="/telemedicine-room/:roomId" element={<ProtectedRoute><TelemedicineRoom /></ProtectedRoute>} />
 

@@ -185,7 +185,22 @@
       "Bash(length)",
       "Bash(dpkg:*)",
       "Bash(sudo:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(do supabase migration repair:*)",
+      "Bash(yes:*)",
+      "Bash(lscpu:*)",
+      "Read(//dev/**)",
+      "Bash(du:*)",
+      "Bash(~/macos-dev/setup-docker-osx-ubuntu.sh)",
+      "Bash(nc:*)",
+      "Bash(~/macos-dev/auto-setup-macos.sh)",
+      "Bash(~/macos-dev/monitor-and-setup.sh:*)",
+      "Bash(vncviewer:*)",
+      "Bash(xwininfo:*)",
+      "Bash(~/macos-dev/install-novnc.sh)",
+      "Bash(wmctrl:*)",
+      "Bash(~/macos-dev/abrir-macos.sh:*)",
+      "Bash(printf:*)"
     ],
     "deny": [],
     "ask": []
