@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Upload, File, X, CheckCircle2, AlertCircle, FileText, FileImage, FileVideo } from 'lucide-react';
+import { Upload, X, CheckCircle2, AlertCircle, FileText, FileImage, FileVideo } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useDropzone } from 'react-dropzone';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UploadedFile {
   id: string;
@@ -16,11 +17,62 @@ interface UploadedFile {
   status: 'uploading' | 'success' | 'error';
   url?: string;
   error?: string;
+  path?: string;
 }
 
 const FileUploadTest = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [, setIsDragging] = useState(false);
+
+  const uploadFile = async (uploadedFile: UploadedFile) => {
+    const { id: fileId, file } = uploadedFile;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado.');
+      }
+      const filePath = `${user.id}/${Date.now()}_${file.name}`;
+
+      const { error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData) {
+        throw new Error('Não foi possível obter a URL pública.');
+      }
+
+      setFiles(prev =>
+        prev.map(f =>
+          f.id === fileId
+            ? { ...f, progress: 100, status: 'success', url: publicUrlData.publicUrl, path: filePath }
+            : f
+        )
+      );
+
+      toast({ title: 'Upload concluído com sucesso', description: file.name });
+    } catch (error: any) {
+      setFiles(prev =>
+        prev.map(f =>
+          f.id === fileId
+            ? { ...f, status: 'error', error: error.message }
+            : f
+        )
+      );
+      toast({ title: 'Erro no upload', description: error.message, variant: 'destructive' });
+    }
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadedFile[] = acceptedFiles.map(file => ({
@@ -32,9 +84,8 @@ const FileUploadTest = () => {
 
     setFiles(prev => [...prev, ...newFiles]);
 
-    // Simular upload
     newFiles.forEach(uploadedFile => {
-      simulateUpload(uploadedFile.id);
+      uploadFile(uploadedFile);
     });
   }, []);
 
@@ -52,29 +103,26 @@ const FileUploadTest = () => {
     }
   });
 
-  const simulateUpload = (fileId: string) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 30;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        setFiles(prev => prev.map(f => 
-          f.id === fileId 
-            ? { ...f, progress: 100, status: 'success', url: URL.createObjectURL(f.file) }
-            : f
-        ));
-        toast({ title: 'Upload concluído com sucesso' });
-      } else {
-        setFiles(prev => prev.map(f => 
-          f.id === fileId ? { ...f, progress } : f
-        ));
-      }
-    }, 500);
-  };
-
-  const removeFile = (fileId: string) => {
+  const removeFile = async (fileId: string) => {
+    const fileToRemove = files.find(f => f.id === fileId);
     setFiles(prev => prev.filter(f => f.id !== fileId));
+
+    if (fileToRemove && fileToRemove.status === 'success' && fileToRemove.path) {
+      const { error } = await supabase.storage
+        .from('documents')
+        .remove([fileToRemove.path]);
+
+      if (error) {
+        setFiles(prev => [...prev, fileToRemove]);
+        toast({
+          title: 'Erro ao remover arquivo',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'Arquivo removido com sucesso' });
+      }
+    }
   };
 
   const getFileIcon = (fileName: string) => {
