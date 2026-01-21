@@ -8,7 +8,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from '@/components/shared/ui/command';
 import { Search, Calendar, Users, Briefcase } from 'lucide-react';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 

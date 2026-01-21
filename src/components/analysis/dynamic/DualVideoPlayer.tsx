@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Slider } from '@/components/shared/ui/slider';
+import { Card } from '@/components/shared/ui/card';
 import { Play, Pause, SkipBack, SkipForward, RefreshCw } from 'lucide-react';
 import { UnifiedLandmark } from '@/utils/geometry';
 

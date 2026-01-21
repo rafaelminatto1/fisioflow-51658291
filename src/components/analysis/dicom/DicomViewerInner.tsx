@@ -22,8 +22,8 @@ import {
     Enums as ToolEnums,
 } from '@cornerstonejs/tools';
 import initCornerstone from './initCornerstone';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
 import { Ruler, MousePointer2, ZoomIn, Move } from 'lucide-react';
 
 interface DicomViewerProps {

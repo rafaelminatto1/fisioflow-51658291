@@ -8,10 +8,10 @@ import {
     TableHead,
     TableHeader,
     TableRow
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/shared/ui/table';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import {
     Dialog,
     DialogContent,
@@ -20,16 +20,16 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/shared/ui/dialog';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select";
+} from '@/components/shared/ui/select';
 import { Plus, Edit, Send, Loader2, Search, Filter } from 'lucide-react';
 import { goalsAdminService } from '@/services/goals/goalsAdminService';
 import { useToast } from "@/hooks/use-toast";

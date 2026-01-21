@@ -4,7 +4,7 @@ import { PatientEvolutionDashboard } from "@/components/patients/PatientEvolutio
 import { ProgressAnalysisCard } from "@/components/patients/ProgressAnalysisCard";
 import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
 import { usePatients } from "@/hooks/usePatients";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/shared/ui/button';
 import { ArrowLeft, FileDown, Printer, Activity } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/ui";
 import { generateEvolutionPDF } from "@/lib/export/evolutionPdfExport";

@@ -1,11 +1,11 @@
 import { useParams } from 'react-router-dom';
 import { usePublicPrescription } from '@/hooks/usePrescriptions';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Checkbox } from '@/components/shared/ui/checkbox';
+import { Progress } from '@/components/shared/ui/progress';
+import { Separator } from '@/components/shared/ui/separator';
 import {
   CheckCircle2,
   Clock,

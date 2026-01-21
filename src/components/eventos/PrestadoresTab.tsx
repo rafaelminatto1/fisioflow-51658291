@@ -3,12 +3,12 @@ import { usePrestadores, useCreatePrestador, useDeletePrestador, useMarcarPagame
 import { useExportPrestadores } from '@/hooks/useExportPrestadores';
 import { useRealtimePrestadores } from '@/hooks/useRealtimePrestadores';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Plus, Trash2, Check, X, Download, FileText } from 'lucide-react';
 import { exportPrestadoresPDF } from '@/lib/export/pdfExport';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/shared/ui/badge';
 import {
   Table,
   TableBody,
@@ -16,16 +16,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/shared/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from '@/components/shared/ui/dialog';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { prestadorCreateSchema, PrestadorCreate } from '@/lib/validations/prestador';

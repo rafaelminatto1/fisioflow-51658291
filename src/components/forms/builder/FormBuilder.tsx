@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useFormBuilder } from './useFormBuilder';
 import { Reorder } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import {
     Type,
     AlignLeft,
@@ -22,7 +22,7 @@ import {
     Hash
 } from 'lucide-react';
 import { ClinicalFieldType, EvaluationForm } from '@/types/clinical-forms';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/shared/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';

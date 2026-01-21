@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, MessageSquare, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
 import { Trash2, Dumbbell, Library, CheckCircle2, Circle, MoreHorizontal } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shared/ui/tooltip';
 
 export interface SessionExercise {
     id: string; // unique for this session instance (uuid)

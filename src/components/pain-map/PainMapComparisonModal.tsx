@@ -4,12 +4,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/components/shared/ui/dialog';
+import { Badge } from '@/components/shared/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
+import { Label } from '@/components/shared/ui/label';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { ArrowDown, ArrowUp, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import type { PainMapRecord, PainMapPoint, BodyRegion } from '@/types/painMap';
 import { comparePainMaps } from '@/hooks/usePainMapHistory';

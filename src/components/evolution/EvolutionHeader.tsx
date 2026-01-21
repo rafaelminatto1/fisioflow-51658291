@@ -6,8 +6,8 @@ import {
     ArrowLeft, Stethoscope, Calendar, Phone, FileText,
     Zap, Eye, EyeOff, Save, Cloud, Keyboard, CheckCircle2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { PatientHelpers } from '@/types';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import type { Patient, Appointment } from '@/types';

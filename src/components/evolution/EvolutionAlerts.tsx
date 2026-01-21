@@ -3,7 +3,7 @@ import {
     Alert,
     AlertDescription,
     AlertTitle,
-} from '@/components/ui/alert';
+} from '@/components/shared/ui/alert';
 import {
     AlertTriangle,
     Timer,

@@ -5,8 +5,8 @@ import { BottomNavigation } from './BottomNavigation';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/shared/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
 import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -18,7 +18,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 import {
   ChevronDown,
   User,

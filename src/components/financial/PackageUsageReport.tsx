@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
 import { usePatientPackages } from "@/hooks/usePackages";
 import { formatCurrency } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/shared/ui/badge';
 import { Package, TrendingUp, AlertCircle } from "lucide-react";
 
 export function PackageUsageReport() {

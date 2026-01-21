@@ -1,5 +1,5 @@
 import { Bell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,9 +8,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/shared/ui/dropdown-menu';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Badge } from '@/components/shared/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useGamificationNotifications } from '@/hooks/useGamificationNotifications';

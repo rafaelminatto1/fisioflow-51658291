@@ -1,21 +1,21 @@
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { useExercises } from '@/hooks/useExercises';
 import { useDebounce } from '@/hooks/performance/useDebounce';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Trash2, Dumbbell, Search, Sparkles, Filter, X, CheckCircle2, Circle, Loader2, Library, RotateCcw, ImageOff } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { SessionExercise } from './SessionExercisesPanel';
 import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shared/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
 import { ExerciseFilters } from '@/services/exercises';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
 import { type Exercise } from '@/hooks/useExercises';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/shared/ui/card';
 
 // ============================================================================================
 // TYPES & INTERFACES

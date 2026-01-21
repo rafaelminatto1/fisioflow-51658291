@@ -1,19 +1,19 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { X, Video, Check, AlertCircle, Info, ImageIcon, Film } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { Label } from '@/components/shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent } from '@/components/ui/card';
+} from '@/components/shared/ui/select';
+import { Progress } from '@/components/shared/ui/progress';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/shared/ui/dialog';
+import { Badge } from '@/components/shared/ui/badge';
 import { cn } from '@/lib/utils';
 import { useUploadExerciseVideo } from '@/hooks/useExerciseVideos';
 import { toast } from '@/hooks/use-toast';

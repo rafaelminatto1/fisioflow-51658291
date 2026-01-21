@@ -2,9 +2,9 @@
  * Recommendations Panel - AI-powered strategic recommendations
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
 import { Lightbulb, TrendingUp, Users, DollarSign, AlertCircle, ChevronRight, Sparkles } from 'lucide-react';
 import type { ForecastResponse, StrategicInsight } from '@/lib/analytics/strategic/types';
 

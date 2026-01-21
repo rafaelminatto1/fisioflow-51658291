@@ -1,5 +1,5 @@
 import MainLayout from '@/components/layout/MainLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Trophy, Target, Award, Gift, Zap, BarChart3, TrendingUp, Settings, RotateCcw } from 'lucide-react';
 import QuestsManager from '@/components/admin/gamification/QuestsManager';
 import AchievementsManager from '@/components/admin/gamification/AchievementsManager';

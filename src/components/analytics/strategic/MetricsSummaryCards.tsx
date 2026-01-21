@@ -2,8 +2,8 @@
  * Metrics Summary Cards - Key performance indicators at a glance
  */
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import { TrendingUp, TrendingDown, Minus, Calendar, Users, AlertCircle, Target } from 'lucide-react';
 import type { StrategicDashboardMetrics } from '@/lib/analytics/strategic/types';
 

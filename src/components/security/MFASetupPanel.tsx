@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
+import { Badge } from '@/components/shared/ui/badge';
 import { Shield, Lock, Key, Copy, Check, Mail, Send } from "lucide-react";
 import { useMFASettings } from "@/hooks/useMFASettings";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp";
+} from '@/components/shared/ui/input-otp';
 
 export function MFASetupPanel() {
   const {

@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { useEventosStats } from '@/hooks/useEventosStats';
 import { BarChart, Users, DollarSign } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Progress } from '@/components/shared/ui/progress';
 
 export function EventosAnalytics() {
   const { data: stats, isLoading } = useEventosStats();

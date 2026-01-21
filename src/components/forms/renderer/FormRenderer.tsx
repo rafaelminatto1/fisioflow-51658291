@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { EvaluationForm, EvaluationFormField } from '@/types/clinical-forms';
 import { logger } from '@/lib/errors/logger';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { Checkbox } from '@/components/shared/ui/checkbox';
+import { Calendar } from '@/components/shared/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, Loader2, Save, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
 import { generateFormSuggestions } from '@/services/ai/clinicalAnalysisService';
 
 interface FormRendererProps {

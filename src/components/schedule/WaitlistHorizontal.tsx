@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { ScrollArea, ScrollBar } from '@/components/shared/ui/scroll-area';
+import { Input } from '@/components/shared/ui/input';
 import {
     Clock,
     Search,
@@ -23,7 +23,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 
 interface WaitlistHorizontalProps {
     onSchedulePatient?: (patientId: string, patientName: string) => void;

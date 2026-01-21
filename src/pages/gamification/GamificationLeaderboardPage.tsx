@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Card } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Input } from '@/components/shared/ui/input';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, Crown, Medal, Award, Search, User } from 'lucide-react';
@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface LeaderboardEntry {

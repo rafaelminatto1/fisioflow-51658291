@@ -6,10 +6,10 @@
  */
 
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Sparkles,

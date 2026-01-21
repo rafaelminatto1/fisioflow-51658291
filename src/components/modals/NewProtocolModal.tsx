@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import {
   Form,
   FormControl,
@@ -15,9 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from '@/components/shared/ui/form';
+import { Input } from '@/components/shared/ui/input';
+import { Button } from '@/components/shared/ui/button';
 
 import {
   Select,
@@ -25,10 +25,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/shared/ui/select';
 import { Plus, Trash2, Milestone, AlertTriangle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/shared/ui/card';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import type { ExerciseProtocol, ProtocolMilestone, ProtocolRestriction } from '@/hooks/useExerciseProtocols';
 
 const milestoneSchema = z.object({

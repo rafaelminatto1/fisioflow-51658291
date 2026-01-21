@@ -4,12 +4,12 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PatientHelpers } from '@/types';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shared/ui/tabs';
+import { Button } from '@/components/shared/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
+import { Badge } from '@/components/shared/ui/badge';
 import {
     ArrowLeft,
     Edit,
@@ -39,7 +39,7 @@ import GamificationHeader from '@/components/gamification/GamificationHeader';
 import StreakCalendar from '@/components/gamification/StreakCalendar';
 import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
 import { useGamification } from '@/hooks/useGamification';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/shared/ui/card';
 
 // Overview & Clinical History Imports
 import { PatientEvolutionDashboard } from '@/components/patients/PatientEvolutionDashboard';
@@ -54,10 +54,10 @@ import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 
 // Financial & Documents Imports
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
+import { Input } from '@/components/shared/ui/input';
+import { Label } from '@/components/shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 
 const PersonalDataTab = ({ patient }: {
     patient: {

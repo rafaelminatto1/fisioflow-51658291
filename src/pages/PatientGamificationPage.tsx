@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { useGamification, Achievement } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 
 // Gamification Components
 import GamificationHeader from '@/components/gamification/GamificationHeader';

@@ -16,15 +16,15 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+} from '@/components/shared/ui/popover';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Separator } from '@/components/shared/ui/separator';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useNotifications, type Notification } from '@/hooks/useNotifications';

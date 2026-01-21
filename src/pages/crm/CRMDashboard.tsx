@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Users, CheckSquare, Send, Zap, BarChart3, Upload } from 'lucide-react';
 import { LeadsContent } from './LeadsPage';
 import { CRMTarefas } from '@/components/crm/CRMTarefas';

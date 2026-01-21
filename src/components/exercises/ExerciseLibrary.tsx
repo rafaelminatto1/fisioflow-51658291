@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Input } from '@/components/shared/ui/input';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Play, Search, Edit, Trash2, Heart, Dumbbell,
@@ -22,20 +22,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/shared/ui/dropdown-menu';
 
 import { ExerciseViewModal } from './ExerciseViewModal';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ExerciseFiltersPanel, type ExerciseFiltersState } from './ExerciseFiltersPanel';
 import { MergeExercisesModal } from './MergeExercisesModal';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/shared/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
 
 

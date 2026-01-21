@@ -8,7 +8,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useDeletePatient, usePatient } from '@/hooks/usePatientCrud';
 import { PatientHelpers } from '@/types';

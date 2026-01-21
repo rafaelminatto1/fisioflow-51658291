@@ -1,5 +1,5 @@
 import { useEventosStats } from "@/hooks/useEventosStats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Calendar, TrendingUp, DollarSign, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 

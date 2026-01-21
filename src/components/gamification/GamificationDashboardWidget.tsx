@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Trophy, Target, Award, Flame, TrendingUp, Loader2 } from 'lucide-react';
 import { LevelProgressWidget } from './widgets/LevelProgressWidget';
 import { RecentAchievementsWidget } from './widgets/RecentAchievementsWidget';

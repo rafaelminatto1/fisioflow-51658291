@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
+import { Badge } from '@/components/shared/ui/badge';
 import { Download, Trash2, Clock, CheckCircle, AlertCircle, FileArchive } from "lucide-react";
 import { useDataExport } from "@/hooks/useDataExport";
 import { format } from "date-fns";

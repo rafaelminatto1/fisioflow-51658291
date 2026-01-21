@@ -5,8 +5,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from '@/components/shared/ui/dialog';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { Edit, Loader2 } from 'lucide-react';
 import { PatientForm } from './PatientForm';
 import { useUpdatePatient, usePatient, type PatientUpdateInput } from '@/hooks/usePatientCrud';

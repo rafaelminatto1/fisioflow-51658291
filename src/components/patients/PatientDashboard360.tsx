@@ -1,7 +1,7 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Avatar, AvatarFallback } from '@/components/shared/ui/avatar';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import {
   User,
   Calendar,

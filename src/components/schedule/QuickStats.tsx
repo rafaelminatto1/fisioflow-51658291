@@ -1,5 +1,5 @@
 import { useAppointments } from '@/hooks/useAppointments';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import { Calendar, CheckCircle, Clock, XCircle, TrendingUp, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { usePatients } from '@/hooks/usePatients';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Badge } from '@/components/shared/ui/badge';
 import { Search, Plus, Edit, Eye } from 'lucide-react';
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';

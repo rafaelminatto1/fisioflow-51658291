@@ -8,8 +8,8 @@ import { CustomizableDashboard } from '@/components/dashboard/CustomizableDashbo
 import { RealtimeActivityFeed } from '@/components/dashboard/RealtimeActivityFeed';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
+import { Button } from '@/components/shared/ui/button';
 
 const Index = () => {
   const { profile } = useAuth();

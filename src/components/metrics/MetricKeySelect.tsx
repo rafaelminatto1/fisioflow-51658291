@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { metricRegistry } from '@/lib/metrics/metricRegistry';
 import { MetricGroup } from '@/lib/metrics/metricRegistry.zod';
 

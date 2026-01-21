@@ -2,7 +2,7 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Image as ImageIcon, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 
 interface ClinicalTest {
     id: string;

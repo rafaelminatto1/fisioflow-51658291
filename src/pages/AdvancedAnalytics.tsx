@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { BarChart3, Users, Calendar, DollarSign, Activity, LayoutDashboard } from "lucide-react";
 import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
 import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";

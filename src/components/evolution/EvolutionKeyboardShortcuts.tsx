@@ -19,8 +19,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/shared/ui/dialog';
+import { Badge } from '@/components/shared/ui/badge';
 import { Keyboard, FileText, Save, CheckCircle, Search, Clock, Activity, Sparkles, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

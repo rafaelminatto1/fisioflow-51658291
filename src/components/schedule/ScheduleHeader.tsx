@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { BadgeCheck, TrendingUp, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import type { Appointment } from '@/types/appointment';
 
 interface ScheduleHeaderProps {

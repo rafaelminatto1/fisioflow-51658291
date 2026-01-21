@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/shared/ui/button';
 import { cn } from '@/lib/utils';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { Calendar, Clock, User, Stethoscope } from 'lucide-react';

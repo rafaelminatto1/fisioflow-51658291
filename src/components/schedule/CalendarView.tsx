@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent } from '@/components/shared/ui/card';
 import { Appointment } from '@/types/appointment';
 
 import { generateTimeSlots } from '@/lib/config/agenda';

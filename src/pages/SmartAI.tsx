@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Textarea } from '@/components/shared/ui/textarea';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { Brain, Send, User, Bot, Sparkles, AlertCircle, Copy, Check } from 'lucide-react';
 import remarkGfm from 'remark-gfm';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
+import { Badge } from '@/components/shared/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
 

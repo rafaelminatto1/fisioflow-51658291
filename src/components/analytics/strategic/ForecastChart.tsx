@@ -2,7 +2,7 @@
  * Forecast Chart Component
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import {
   LineChart,
   Line,

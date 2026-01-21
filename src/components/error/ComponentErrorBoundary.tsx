@@ -15,8 +15,8 @@
 
 import { Component, ReactNode, ComponentType } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { logger } from '@/lib/errors/logger';
 
 interface ComponentErrorBoundaryProps {

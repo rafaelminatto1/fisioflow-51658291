@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
 import { FolderOpen, Image as ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
 import { dicomWebClient, DicomStudy } from '@/services/dicom/dicomWebClient';
 import DicomViewer from './DicomViewer';

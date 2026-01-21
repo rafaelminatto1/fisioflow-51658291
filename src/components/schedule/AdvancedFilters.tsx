@@ -1,14 +1,14 @@
 import React from 'react';
 import { Filter, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@/components/shared/ui/sheet';
 import { cn } from '@/lib/utils';
 
 interface FilterOptions {

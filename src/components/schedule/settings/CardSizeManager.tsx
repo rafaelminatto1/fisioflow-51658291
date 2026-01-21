@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Label } from '@/components/shared/ui/label';
+import { Input } from '@/components/shared/ui/input';
+import { Slider } from '@/components/shared/ui/slider';
 import { useCardSize, type CustomFontSizes } from '@/hooks/useCardSize';
 import { CARD_SIZE_CONFIGS, DEFAULT_CARD_SIZE, STATUS_CONFIG } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';

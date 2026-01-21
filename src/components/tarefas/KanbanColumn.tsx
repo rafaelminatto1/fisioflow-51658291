@@ -1,8 +1,8 @@
 import { Droppable } from '@hello-pangea/dnd';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/shared/ui/button';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
 import { KanbanCard } from './KanbanCard';
 import { Tarefa, TarefaStatus, STATUS_LABELS } from '@/hooks/useTarefas';
 

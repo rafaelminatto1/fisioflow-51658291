@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
+import { Badge } from '@/components/shared/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
 import { Loader2, Package, Zap } from 'lucide-react';
 import * as Icons from 'lucide-react';

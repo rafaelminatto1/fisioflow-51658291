@@ -1,10 +1,10 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogClose } from '@/components/shared/ui/dialog';
+import { Button } from '@/components/shared/ui/button';
+import { Badge } from '@/components/shared/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
+import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Separator } from '@/components/shared/ui/separator';
 import {
   Heart, Share2, ExternalLink, Edit,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,

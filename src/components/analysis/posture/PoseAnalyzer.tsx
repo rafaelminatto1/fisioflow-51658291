@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
+import { drawConnectors, drawLandmarks, POSE_CONNECTIONS } from '@/utils/poseDrawing';
 import { calculateAngle, POSE_LANDMARKS } from '@/utils/geometry';
 import { useToast } from '@/components/ui/use-toast';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
 import { Play, Pause, Camera, Upload } from 'lucide-react';
 
 // Type definitions for @mediapipe/pose (UMD module)
@@ -44,15 +44,6 @@ interface PoseInstance {
 interface PoseConstructor {
     new(options: PoseOptions): PoseInstance;
 }
-
-// POSE_CONNECTIONS needs to be defined locally since it may not export properly
-const POSE_CONNECTIONS: [number, number][] = [
-    [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
-    [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
-    [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
-    [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
-    [27, 29], [28, 30], [29, 31], [30, 32], [27, 31], [28, 32]
-];
 
 interface PoseAnalyzerProps {
     videoSrc?: string; // URL object or null for webcam

@@ -5,7 +5,7 @@
  */
 
 import React, { Suspense, lazy } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/shared/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ComponentErrorBoundary, ComputerVisionFallback } from '@/components/error/ComponentErrorBoundary';
 

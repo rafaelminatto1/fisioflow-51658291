@@ -2,10 +2,10 @@ import { useState, useMemo, useCallback, memo } from "react";
 import { useProjectTarefas, useUpdateTarefa, Tarefa } from "@/hooks/useTarefas";
 import { format, addDays, differenceInDays, isSameDay, startOfWeek, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { ScrollArea, ScrollBar } from '@/components/shared/ui/scroll-area';
+import { Card } from '@/components/shared/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/shared/ui/tooltip';
 import { TarefaModal } from "@/components/tarefas/TarefaModal";
 
 interface ProjectTimelineProps {

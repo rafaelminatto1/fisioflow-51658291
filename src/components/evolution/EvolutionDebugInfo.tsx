@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
 import { Bug } from 'lucide-react';
 import { Patient, Appointment } from '@/types';
 

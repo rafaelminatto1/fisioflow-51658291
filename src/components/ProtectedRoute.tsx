@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/auth';
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/shared/ui/alert';
+import { Button } from '@/components/shared/ui/button';
 import { AppLoadingSkeleton } from '@/components/ui/AppLoadingSkeleton';
 
 interface ProtectedRouteProps {

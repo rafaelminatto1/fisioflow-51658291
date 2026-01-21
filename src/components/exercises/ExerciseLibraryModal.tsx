@@ -4,7 +4,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/shared/ui/dialog';
 import { ExerciseLibrary } from './ExerciseLibrary';
 import { type Exercise } from '@/hooks/useExercises';
 

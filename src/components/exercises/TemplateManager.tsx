@@ -1,11 +1,11 @@
 import { useState, useMemo, memo } from 'react';
 import { toast } from 'sonner';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/shared/ui/card';
+import { Button } from '@/components/shared/ui/button';
+import { Input } from '@/components/shared/ui/input';
+import { Badge } from '@/components/shared/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Plus, Edit, Trash2, FileText, Search, Sparkles } from 'lucide-react';
 import { TemplateModal } from './TemplateModal';
 import { TemplateDetailsModal } from './TemplateDetailsModal';
@@ -19,7 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/shared/ui/alert-dialog';
 
 // Memoized Template Card Component
 const TemplateCard = memo(({
