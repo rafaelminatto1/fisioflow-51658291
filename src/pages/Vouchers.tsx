@@ -5,7 +5,7 @@ import { Button } from '@/components/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Input } from '@/components/shared/ui/input';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import { useVouchers, useUserVouchers, useAllVouchers, useDeleteVoucher, useUpdateVoucher, type Voucher } from '@/hooks/useVouchers';
 import { usePurchaseVoucher, useVerifyVoucherPayment } from '@/hooks/usePurchaseVoucher';
 import { usePermissions } from '@/hooks/usePermissions';

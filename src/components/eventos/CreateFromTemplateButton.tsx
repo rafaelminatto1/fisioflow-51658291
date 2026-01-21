@@ -18,7 +18,7 @@ import {
   useDeleteTemplate,
 } from '@/hooks/useEventoTemplates';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import { Badge } from '@/components/shared/ui/badge';
 
 interface CreateFromTemplateButtonProps {

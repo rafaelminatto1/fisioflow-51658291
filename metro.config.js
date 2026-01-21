@@ -3,14 +3,8 @@
  * Configuração simplificada para Expo SDK 54
  */
 
-import { getDefaultConfig } from 'expo/metro-config.js';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+const { getDefaultConfig } = require('expo/metro-config');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Configuração base do Expo
 const config = getDefaultConfig(__dirname);
 
 /**
@@ -66,45 +60,30 @@ const webOnlyPackages = [
 
 /**
  * Custom resolver para excluir pacotes web-only
+ * Usa resolveRequires com polyfills vazios
  */
-const originalResolver = config.resolver.resolveRequest;
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Pular pacotes web-only
-  if (webOnlyPackages.some(pkg => moduleName === pkg || moduleName.startsWith(pkg + '/'))) {
-    return {
-      filePath: '',
-      type: 'empty',
-    };
-  }
+const extraNodeModules = {};
+webOnlyPackages.forEach(pkg => {
+  extraNodeModules[pkg] = false; // Don't resolve these packages
+});
 
-  // Pular entry points web-specific
-  if (moduleName === 'index.html' || moduleName === '/src/main.tsx') {
-    return {
-      filePath: '',
-      type: 'empty',
-    };
-  }
-
-  // Usar o resolver original para outros casos
-  return originalResolver?.(context, moduleName, platform);
+/**
+ * Adicionar polyfills vazios para pacotes web-only
+ */
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  ...Object.fromEntries(
+    webOnlyPackages.map(pkg => [pkg, false])
+  ),
 };
 
 /**
- * Configurar watchFolders
+ * Blocklist para arquivos web-only
  */
-config.watchFolders = [__dirname];
-
-/**
- * Source extensions suportadas (incluindo todas do Expo)
- */
-config.resolver.sourceExts = [
-  'tsx',
-  'ts',
-  'jsx',
-  'js',
-  'json',
-  'mjs',
-  'cjs',
+config.resolver.blockList = [
+  ...config.resolver.blockList || [],
+  /.*\/node_modules\/(react-dom|react-router-dom|recharts|vite|@vitejs\/plugin-react|rollup-plugin-visualizer|vite-plugin-compression|vite-plugin-pwa|workbox-window|web-vitals)\/.*/,
+  /.*\/node_modules\/@radix\/.*/,
 ];
 
-export default config;
+module.exports = config;

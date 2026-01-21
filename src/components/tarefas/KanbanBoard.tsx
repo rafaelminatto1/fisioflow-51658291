@@ -23,7 +23,7 @@ import {
 import { KanbanColumn } from './KanbanColumn';
 import { TarefaModal } from './TarefaModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import {
   Tarefa,
   TarefaStatus,

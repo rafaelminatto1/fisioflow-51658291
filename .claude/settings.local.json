@@ -225,7 +225,8 @@
       "Bash(nvm use:*)",
       "mcp__brave-search__brave_web_search",
       "Bash(git rm:*)",
-      "Bash(. \"$HOME/.nvm/nvm.sh\":*)"
+      "Bash(. \"$HOME/.nvm/nvm.sh\":*)",
+      "Bash(1)"
     ],
     "deny": [],
     "ask": []
