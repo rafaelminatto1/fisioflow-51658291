@@ -3,10 +3,12 @@
     "name": "FisioFlow",
     "slug": "fisioflow",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": "fisioflow",
+    "entryPoint": "index.js",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -45,33 +47,6 @@
         "RECEIVE_BOOT_COMPLETED"
       ]
     },
-    "plugins": [
-      [
-        "expo-status-bar",
-        {
-          "color": "#0ea5e9",
-          "style": "light",
-          "translucent": false
-        }
-      ],
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#0ea5e9",
-          "image": "./assets/splash.png",
-          "imageStyle": "contain"
-        }
-      ],
-      [
-        "expo-local-authentication",
-        {
-          "faceIDPermission": "Allow FisioFlow to use Face ID for secure and quick access."
-        }
-      ],
-      [
-        "expo-haptics"
-      ]
-    ],
     "experiments": {
       "typedRoutes": true
     },
