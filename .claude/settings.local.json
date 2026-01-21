@@ -226,7 +226,11 @@
       "mcp__brave-search__brave_web_search",
       "Bash(git rm:*)",
       "Bash(. \"$HOME/.nvm/nvm.sh\":*)",
-      "Bash(1)"
+      "Bash(1)",
+      "Bash(tail:*)",
+      "Bash(while read comp)",
+      "Bash(do echo:*)",
+      "Bash(EAS_BUILD_AUTOCOMMIT=1 eas build:*)"
     ],
     "deny": [],
     "ask": []
