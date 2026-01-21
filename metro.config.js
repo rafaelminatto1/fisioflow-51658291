@@ -1,15 +1,23 @@
+/**
+ * Metro Configuration para FisioFlow
+ * Configuração simplificada para Expo SDK 54
+ */
+
 import { getDefaultConfig } from 'expo/metro-config.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { resolutionContext } from 'metro-resolver';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Configuração base do Expo
 const config = getDefaultConfig(__dirname);
 
-// Web-only packages that should be excluded from React Native builds
+/**
+ * Pacotes web-only que devem ser excluídos do React Native bundle
+ */
 const webOnlyPackages = [
+  // Radix UI (shadcn/ui components)
   '@radix-ui/react-accordion',
   '@radix-ui/react-alert-dialog',
   '@radix-ui/react-aspect-ratio',
@@ -37,6 +45,7 @@ const webOnlyPackages = [
   '@radix-ui/react-toggle',
   '@radix-ui/react-toggle-group',
   '@radix-ui/react-tooltip',
+  // Web-specific libraries
   'recharts',
   'react-dom',
   'react-router-dom',
@@ -44,6 +53,7 @@ const webOnlyPackages = [
   'react-pdf',
   '@react-pdf/renderer',
   'swagger-ui-react',
+  // Build tools (web-only)
   'vite',
   '@vitejs/plugin-react',
   '@vitejs/plugin-react-swc',
@@ -54,31 +64,47 @@ const webOnlyPackages = [
   'web-vitals',
 ];
 
-// Exclude web-only source files and packages from the React Native bundle
+/**
+ * Custom resolver para excluir pacotes web-only
+ */
+const originalResolver = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Skip web-only packages
+  // Pular pacotes web-only
   if (webOnlyPackages.some(pkg => moduleName === pkg || moduleName.startsWith(pkg + '/'))) {
-    return resolutionContext.EMPTY_MODULE;
+    return {
+      filePath: '',
+      type: 'empty',
+    };
   }
 
-  // Skip web-specific entry points
+  // Pular entry points web-specific
   if (moduleName === 'index.html' || moduleName === '/src/main.tsx') {
-    return resolutionContext.EMPTY_MODULE;
+    return {
+      filePath: '',
+      type: 'empty',
+    };
   }
 
-  // Continue with default resolution
-  return config.resolver.resolveRequest(context, moduleName, platform);
+  // Usar o resolver original para outros casos
+  return originalResolver?.(context, moduleName, platform);
 };
 
-// Exclude web-specific files from the bundle
+/**
+ * Configurar watchFolders
+ */
 config.watchFolders = [__dirname];
 
+/**
+ * Source extensions suportadas (incluindo todas do Expo)
+ */
 config.resolver.sourceExts = [
   'tsx',
   'ts',
   'jsx',
   'js',
   'json',
+  'mjs',
+  'cjs',
 ];
 
 export default config;
