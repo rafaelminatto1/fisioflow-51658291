@@ -213,7 +213,8 @@
       "Bash(ps:*)",
       "Bash(eas build:*)",
       "Bash(npx eas build:list:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(EXPO_APPLE_APP_SPECIFIC_PASSWORD=\"afgo-siwp-lsaq-qlot\" EXPO_APPLE_TEAM_ID=\"G7FDW933SF\" NODE_OPTIONS=\"--no-experimental-strip-types\" npx --yes eas-cli@latest build --profile development --platform ios --clear-cache)"
     ],
     "deny": [],
     "ask": []
