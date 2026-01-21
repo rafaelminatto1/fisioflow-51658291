@@ -113,10 +113,38 @@ export const dailyReportsWorkflow = inngest.createFunction(
               let emailsSent = 0;
               for (const therapist of therapists) {
                 try {
-                  // TODO: Send via Resend
+                  // Import ResendService dynamically
+                  const { ResendService } = await import('../../lib/email/index.js');
+
+                  // Calculate session stats
+                  const completedSessions = sessions?.filter((s: any) => s.status === 'completed').length || 0;
+                  const cancelledSessions = sessions?.filter((s: any) => s.status === 'cancelled').length || 0;
+
+                  // Get new patients count for yesterday
+                  const { data: newPatientsCount } = await supabase
+                    .from('patients')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('organization_id', org.id)
+                    .gte('created_at', yesterday.toISOString())
+                    .lt('created_at', today.toISOString());
+
+                  await ResendService.sendDailyReport(
+                    therapist.email,
+                    {
+                      therapistName: therapist.name || 'Fisioterapeuta',
+                      organizationName: org.name || 'FisioFlow',
+                      date: yesterday.toISOString().split('T')[0],
+                      totalSessions: sessions?.length || 0,
+                      completedSessions,
+                      cancelledSessions,
+                      newPatients: newPatientsCount || 0,
+                    },
+                    org.name
+                  );
+
                   logger.info(
-                    `Sending daily report to therapist for org`,
-                    { organizationId: org.id, organizationName: org.name },
+                    `Daily report sent to therapist`,
+                    { therapistId: therapist.id, email: therapist.email },
                     'daily-reports'
                   );
                   emailsSent++;

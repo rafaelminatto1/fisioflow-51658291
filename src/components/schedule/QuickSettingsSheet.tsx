@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Sheet,
     SheetContent,
@@ -17,8 +17,12 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Calendar, Check } from 'lucide-react';
+import { Clock, Users, Calendar, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 interface ScheduleConfig {
     businessHours: {
@@ -72,9 +76,43 @@ interface QuickSettingsSheetProps {
 }
 
 export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsSheetProps) => {
+    const { profile } = useAuth();
     const [config, setConfig] = useState<ScheduleConfig>(defaultConfig);
     const [hasChanges, setHasChanges] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Load settings from database on mount
+    useEffect(() => {
+        if (open && profile?.organization_id) {
+            loadSettings();
+        }
+    }, [open, profile?.organization_id]);
+
+    const loadSettings = useCallback(async () => {
+        if (!profile?.organization_id) return;
+
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('organizations')
+                .select('settings')
+                .eq('id', profile.organization_id)
+                .single();
+
+            if (error) throw error;
+
+            if (data?.settings?.schedule) {
+                setConfig(data.settings.schedule);
+                logger.info('Schedule settings loaded', { organizationId: profile.organization_id }, 'QuickSettingsSheet');
+            }
+        } catch (error) {
+            logger.error('Failed to load schedule settings', error, 'QuickSettingsSheet');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [profile?.organization_id]);
 
     const handleTimeChange = (day: 'weekdays' | 'saturday' | 'sunday', field: 'start' | 'end', value: string) => {
         setConfig(prev => ({
@@ -115,12 +153,60 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
         setSaved(false);
     };
 
-    const handleSave = () => {
-        // TODO: Save to backend/supabase
-        console.log('Saving config:', config);
-        setHasChanges(false);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    const handleSave = async () => {
+        if (!profile?.organization_id) {
+            toast({
+                title: 'Erro',
+                description: 'Usuário não autenticado',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('organizations')
+                .update({
+                    settings: {
+                        ...await getCurrentSettings(),
+                        schedule: config,
+                    },
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', profile.organization_id);
+
+            if (error) throw error;
+
+            setHasChanges(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+
+            toast({
+                title: 'Configurações salvas',
+                description: 'As configurações da agenda foram atualizadas.',
+            });
+
+            logger.info('Schedule settings saved', { organizationId: profile.organization_id }, 'QuickSettingsSheet');
+        } catch (error) {
+            logger.error('Failed to save schedule settings', error, 'QuickSettingsSheet');
+            toast({
+                title: 'Erro ao salvar',
+                description: 'Não foi possível salvar as configurações.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const getCurrentSettings = async () => {
+        const { data } = await supabase
+            .from('organizations')
+            .select('settings')
+            .eq('id', profile?.organization_id)
+            .single();
+        return data?.settings || {};
     };
 
     const handleReset = () => {
@@ -368,19 +454,24 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                         variant="outline"
                         onClick={handleReset}
                         className="flex-1"
-                        disabled={!hasChanges}
+                        disabled={!hasChanges || isSaving}
                     >
                         Resetar
                     </Button>
                     <Button
                         onClick={handleSave}
-                        disabled={!hasChanges}
+                        disabled={!hasChanges || isSaving}
                         className={cn(
                             "flex-1 gap-2",
                             saved && "bg-emerald-600 hover:bg-emerald-700"
                         )}
                     >
-                        {saved ? (
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Salvando...
+                            </>
+                        ) : saved ? (
                             <>
                                 <Check className="w-4 h-4" />
                                 Salvo!

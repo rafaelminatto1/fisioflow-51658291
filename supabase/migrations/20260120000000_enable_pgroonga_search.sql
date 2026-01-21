@@ -29,9 +29,9 @@ USING pgroonga (
   -- Category and difficulty for filtering
   category,
   difficulty,
-  -- Muscle groups for filtering
-  muscle_groups,
-  -- Equipment for filtering
+  -- Body parts for filtering (array)
+  body_parts,
+  -- Equipment for filtering (array)
   equipment
 )
 WITH (
@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION search_exercises_pgroonga(
   search_query TEXT DEFAULT '',
   category_filter TEXT DEFAULT NULL,
   difficulty_filter TEXT DEFAULT NULL,
-  muscle_group_filter TEXT DEFAULT NULL,
+  body_part_filter TEXT DEFAULT NULL,
   max_results INTEGER DEFAULT 20,
   offset_count INTEGER DEFAULT 0
 )
@@ -58,7 +58,7 @@ RETURNS TABLE (
   description TEXT,
   category TEXT,
   difficulty TEXT,
-  muscle_groups TEXT[],
+  body_parts TEXT[],
   equipment TEXT[],
   image_url TEXT,
   video_url TEXT,
@@ -88,8 +88,8 @@ BEGIN
     query_where := query_where || format(' & difficulty == %L', difficulty_filter);
   END IF;
 
-  IF muscle_group_filter IS NOT NULL THEN
-    query_where := query_where || format(' & muscle_groups @ %L', ARRAY[muscle_group_filter]::text[]);
+  IF body_part_filter IS NOT NULL THEN
+    query_where := query_where || format(' & body_parts @ %L', ARRAY[body_part_filter]::text[]);
   END IF;
 
   -- Remove leading ' & ' if exists
@@ -105,7 +105,7 @@ BEGIN
       e.description,
       e.category,
       e.difficulty,
-      e.muscle_groups,
+      e.body_parts,
       e.equipment,
       e.image_url,
       e.video_url,
@@ -140,7 +140,7 @@ RETURNS TABLE (
   description TEXT,
   category TEXT,
   difficulty TEXT,
-  muscle_groups TEXT[],
+  body_parts TEXT[],
   similarity_score REAL
 )
 LANGUAGE plpgsql
@@ -153,7 +153,7 @@ BEGIN
     e.description,
     e.category,
     e.difficulty,
-    e.muscle_groups,
+    e.body_parts,
     pgroonga_score(e.id) * 1.0 AS similarity_score
   FROM exercises AS e
   WHERE e.is_active = true
@@ -253,7 +253,7 @@ CREATE OR REPLACE FUNCTION search_exercises_advanced(
   search_query TEXT DEFAULT '',
   categories TEXT[] DEFAULT NULL,
   difficulties TEXT[] DEFAULT NULL,
-  muscle_groups TEXT[] DEFAULT NULL,
+  body_parts_filter TEXT[] DEFAULT NULL,
   equipment_filter TEXT[] DEFAULT NULL,
   min_duration_seconds INTEGER DEFAULT NULL,
   max_duration_seconds INTEGER DEFAULT NULL,
@@ -266,7 +266,7 @@ RETURNS TABLE (
   description TEXT,
   category TEXT,
   difficulty TEXT,
-  muscle_groups TEXT[],
+  body_parts TEXT[],
   equipment TEXT[],
   duration_seconds INTEGER,
   image_url TEXT,
@@ -299,10 +299,10 @@ BEGIN
       format('difficulty IN %L', difficulties));
   END IF;
 
-  -- Muscle groups filter (overlap)
-  IF muscle_groups IS NOT NULL AND array_length(muscle_groups, 1) > 0 THEN
+  -- Body parts filter (overlap)
+  IF body_parts_filter IS NOT NULL AND array_length(body_parts_filter, 1) > 0 THEN
     query_parts := array_append(query_parts,
-      format('muscle_groups && %L', muscle_groups));
+      format('body_parts && %L', body_parts_filter));
   END IF;
 
   -- Equipment filter (has any)
@@ -314,12 +314,12 @@ BEGIN
   -- Duration filters
   IF min_duration_seconds IS NOT NULL THEN
     query_parts := array_append(query_parts,
-      format('duration_seconds >= %s', min_duration_seconds));
+      format('duration >= %s', min_duration_seconds));
   END IF;
 
   IF max_duration_seconds IS NOT NULL THEN
     query_parts := array_append(query_parts,
-      format('duration_seconds <= %s', max_duration_seconds));
+      format('duration <= %s', max_duration_seconds));
   END IF;
 
   -- Always filter active exercises
@@ -337,9 +337,9 @@ BEGIN
       e.description,
       e.category,
       e.difficulty,
-      e.muscle_groups,
+      e.body_parts,
       e.equipment,
-      e.duration_seconds,
+      e.duration,
       e.image_url,
       e.video_url,
       e.instructions,
@@ -375,11 +375,13 @@ SELECT
   category,
   difficulty,
   COUNT(*) as exercise_count,
-  array_agg(DISTINCT unnest(muscle_groups)) as unique_muscle_groups,
-  array_agg(DISTINCT unnest(equipment)) as unique_equipment
-FROM exercises
-WHERE is_active = true
-  AND deleted_at IS NULL
+  array_agg(DISTINCT body_parts) FILTER (WHERE body_parts IS NOT NULL) as unique_body_parts,
+  array_agg(DISTINCT equipment) FILTER (WHERE equipment IS NOT NULL) as unique_equipment
+FROM (
+  SELECT e.category, e.difficulty, unnest(e.body_parts) as body_parts, unnest(e.equipment) as equipment
+  FROM exercises e
+  WHERE e.is_active = true AND e.deleted_at IS NULL
+) subq
 GROUP BY category, difficulty
 ORDER BY category, difficulty;
 
@@ -394,9 +396,9 @@ DO $$
 BEGIN
   RAISE NOTICE 'PGroonga full-text search enabled successfully!';
   RAISE NOTICE 'Available functions:';
-  RAISE NOTICE '  - search_exercises_pgroonga(query, category, difficulty, muscle_group, limit, offset)';
+  RAISE NOTICE '  - search_exercises_pgroonga(query, category, difficulty, body_part, limit, offset)';
   RAISE NOTICE '  - search_exercises_fuzzy(query, max_distance, limit)';
   RAISE NOTICE '  - find_similar_exercises(exercise_id, limit)';
   RAISE NOTICE '  - get_exercise_suggestions(partial_query, limit)';
-  RAISE NOTICE '  - search_exercises_advanced(query, categories[], difficulties[], muscle_groups[], equipment[], min_duration, max_duration, limit, offset)';
+  RAISE NOTICE '  - search_exercises_advanced(query, categories[], difficulties[], body_parts_filter[], equipment[], min_duration, max_duration, limit, offset)';
 END $$;

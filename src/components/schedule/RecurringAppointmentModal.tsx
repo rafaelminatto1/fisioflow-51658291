@@ -14,10 +14,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format, addDays, addWeeks, addMonths, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Clock, Info, Repeat, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, Clock, Info, Repeat, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { RecurringAppointmentFormData, RecurrenceType, RecurrenceEndType, DayOfWeek } from '@/types/recurring-appointment';
+import { useActivePatients } from '@/hooks/usePatients';
 
 // =====================================================================
 // TYPES
@@ -86,6 +87,12 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
   initialData,
   onSuccess,
 }) => {
+  // =================================================================
+  // DATA FETCHING
+  // =================================================================
+
+  const { data: patients, isLoading: isLoadingPatients, error: patientsError } = useActivePatients();
+
   // =================================================================
   // FORM STATE
   // =================================================================
@@ -249,14 +256,34 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
             <Select
               value={formData.patient_id}
               onValueChange={(value) => setFormData((prev) => ({ ...prev, patient_id: value }))}
+              disabled={isLoadingPatients}
             >
               <SelectTrigger id="patient">
-                <SelectValue placeholder="Selecione o paciente" />
+                {isLoadingPatients ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Carregando pacientes...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Selecione o paciente" />
+                )}
               </SelectTrigger>
               <SelectContent>
-                {/* TODO: Buscar pacientes do banco */}
-                <SelectItem value="1">Paciente Exemplo 1</SelectItem>
-                <SelectItem value="2">Paciente Exemplo 2</SelectItem>
+                {patientsError ? (
+                  <div className="px-2 py-1 text-sm text-red-500">
+                    Erro ao carregar pacientes
+                  </div>
+                ) : patients && patients.length > 0 ? (
+                  patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-1 text-sm text-muted-foreground">
+                    Nenhum paciente encontrado
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>

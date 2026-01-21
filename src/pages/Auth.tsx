@@ -10,6 +10,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { MagicLinkForm } from '@/components/auth/MagicLinkForm';
 
 // Demo credentials removed for security - no hardcoded credentials in production
 
@@ -29,13 +30,14 @@ export default function Auth() {
   const [invitationData, setInvitationData] = useState<{ email: string; role: string } | null>(null);
 
   // Use lazy initial state to avoid reading searchParams during render
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>(() =>
-    searchParams.get('mode') === 'register' ? 'register' : 'login'
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'magic'>(() =>
+    searchParams.get('mode') === 'register' ? 'register' :
+    searchParams.get('mode') === 'magic' ? 'magic' : 'login'
   );
 
   // Memoize tab change handler
   const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value as 'login' | 'register');
+    setActiveTab(value as 'login' | 'register' | 'magic');
   }, []);
 
   // Memoize input handlers to prevent recreating functions on every render
@@ -399,7 +401,7 @@ export default function Auth() {
 
         <CardContent className="space-y-6">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/50">
+            <TabsList className="grid w-full grid-cols-3 h-11 p-1 bg-muted/50">
               <TabsTrigger
                 value="login"
                 className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
@@ -413,6 +415,13 @@ export default function Auth() {
                 tabIndex={-1}
               >
                 Cadastro
+              </TabsTrigger>
+              <TabsTrigger
+                value="magic"
+                className="rounded-lg text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all duration-150"
+                tabIndex={-1}
+              >
+                Sem Senha
               </TabsTrigger>
             </TabsList>
 
@@ -446,6 +455,14 @@ export default function Auth() {
                 invitationData={invitationData}
                 passwordRequirements={passwordRequirements}
                 activeTab={activeTab}
+              />
+            </TabsContent>
+
+            <TabsContent value="magic" className="space-y-5 mt-6 focus-visible:outline-none">
+              <MagicLinkForm
+                userType="therapist"
+                redirectTo={`${window.location.origin}/`}
+                showBackButton={false}
               />
             </TabsContent>
           </Tabs>
