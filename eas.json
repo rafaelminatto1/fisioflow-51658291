@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "resourceClass": "large",
+        "resourceClass": "medium",
         "simulator": false,
         "credentialsSource": "remote"
       },
