@@ -30,8 +30,7 @@
       },
       "config": {
         "usesNonExemptEncryption": false
-      },
-      "bundleIdentifier": "com.fisioflow.app"
+      }
     },
     "android": {
       "package": "com.fisioflow.app",
@@ -52,6 +51,11 @@
     },
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e0f54524-5212-4809-b4ef-d083ec7a71ca"
+      }
     }
   }
 }
