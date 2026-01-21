@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';
 import { useDebounce } from '@/hooks/performance/useDebounce';
