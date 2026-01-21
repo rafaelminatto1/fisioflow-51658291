@@ -1,8 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { trackError } from '../../lib/analytics';
 import { AlertTriangle, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../shared/ui/card';
 
 /**
  * Hook para configurar listener global de erros de preload do Vite

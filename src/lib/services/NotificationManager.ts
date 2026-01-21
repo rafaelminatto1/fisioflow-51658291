@@ -382,6 +382,8 @@ class NotificationManagerClass {
 
   /**
    * Send push notification
+   * Note: Push notifications must be sent from server-side using web-push
+   * Client-side can only show local notifications via Service Worker
    */
   private async sendPush(
     recipient: NotificationRecipient,
@@ -398,28 +400,55 @@ class NotificationManagerClass {
     }
 
     try {
-      // Use Web Push API to send notification
-      const webPush = (await import('web-push')).default;
+      // Client-side: Show local notification via Service Worker Registration
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        // Send message to service worker to show notification
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SHOW_NOTIFICATION',
+          data: {
+            title: payload.title,
+            body: payload.body,
+            icon: payload.icon,
+            badge: payload.badge,
+            image: payload.image,
+            data: payload.data,
+            actions: payload.actions,
+            requireInteraction: payload.requireInteraction,
+            silent: payload.silent,
+            tag: payload.tag,
+          },
+        });
 
-      await webPush.sendNotification(
-        recipient.pushSubscription,
-        JSON.stringify({
-          title: payload.title,
+        return {
+          success: true,
+          channel: 'push',
+        };
+      }
+
+      // Fallback: Try to show notification directly (requires permission)
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(payload.title, {
           body: payload.body,
           icon: payload.icon,
           badge: payload.badge,
           image: payload.image,
           data: payload.data,
-          actions: payload.actions,
+          tag: payload.tag,
           requireInteraction: payload.requireInteraction,
           silent: payload.silent,
-          tag: payload.tag,
-        })
-      );
+        });
+
+        return {
+          success: true,
+          channel: 'push',
+        };
+      }
 
       return {
-        success: true,
+        success: false,
         channel: 'push',
+        error: 'Notification permission not granted or service worker not available',
+        retryable: false,
       };
     } catch (error) {
       return {
