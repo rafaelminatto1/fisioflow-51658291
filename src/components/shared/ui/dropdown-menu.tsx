@@ -82,7 +82,7 @@ export const DropdownMenuContent = ({ children, className = '' }: { children: Re
   const { isWeb } = usePlatform();
 
   return (
-    <React.Suspense fallback={<div className="bg-white rounded-lg shadow-lg border">{children}</div>}>
+    <React.Suspense fallback={<View className="bg-white rounded-lg shadow-lg border">{children}</View>}>
       {isWeb ? <WebDropdownMenuContent>{children}</WebDropdownMenuContent> : <NativeDropdownMenuContent>{children}</NativeDropdownMenuContent>}
     </React.Suspense>
   );
@@ -110,7 +110,7 @@ export const DropdownMenuItem = ({ children, onSelect, disabled }: { children: R
 };
 
 export const DropdownMenuSeparator = () => {
-  return <div style={{ borderTopWidth: 1, borderColor: '#e2e8f0', marginVertical: 4 }} />;
+  return <View style={{ borderTopWidth: 1, borderColor: '#e2e8f0', marginVertical: 4 }} />;
 };
 
 export default DropdownMenu;

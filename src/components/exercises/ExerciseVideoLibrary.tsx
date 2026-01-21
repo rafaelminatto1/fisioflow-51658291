@@ -47,7 +47,7 @@ import { Textarea } from '@/components/shared/ui/textarea';
 import { useExerciseVideos, useDeleteExerciseVideo, useUpdateExerciseVideo } from '@/hooks/useExerciseVideos';
 import { ExerciseVideoPlayer } from './ExerciseVideoPlayerCard';
 import { ExerciseVideoUpload } from './ExerciseVideoUpload';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/web/ui/empty-state';
 import {
   VIDEO_CATEGORIES,
   VIDEO_DIFFICULTY,
