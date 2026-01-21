@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
@@ -161,8 +162,9 @@ export const useActivePatients = () => {
       const patientsToPrefetch = result.data.slice(0, 10);
 
       const timer = setTimeout(() => {
-        patientsToPrefetch.forEach((patient, index) => {
-          setTimeout(() => {
+        // Fetch stats for all patients in parallel
+        Promise.all(
+          patientsToPrefetch.map((patient) =>
             queryClient.prefetchQuery({
               queryKey: ['patient-stats', patient.id],
               queryFn: async () => {
@@ -175,8 +177,10 @@ export const useActivePatients = () => {
                 return data;
               },
               staleTime: PATIENT_QUERY_CONFIG.staleTime,
-            });
-          }, index * 100); // Stagger by 100ms
+            })
+          )
+        ).catch((error) => {
+          console.warn('Failed to prefetch patient stats', error);
         });
       }, 500); // Start after 500ms
 
