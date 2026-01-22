@@ -381,9 +381,9 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
           },
-          experimentalMinChunkSize: 100000,
+          // experimentalMinChunkSize: 100000, // REMOVED: was preventing entry point from being included in HTML
         },
-        preserveEntrySignatures: 'strict',
+        // preserveEntrySignatures: 'strict', // REMOVED: was causing build issues with entry point injection
       },
       chunkSizeWarningLimit: 5000,
       reportCompressedSize: false,

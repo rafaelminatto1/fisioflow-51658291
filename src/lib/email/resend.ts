@@ -8,7 +8,21 @@
 import { Resend } from 'resend';
 import { logger } from '../errors/logger.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization - only create Resend client when actually needed
+// This prevents app crash when API key is not set (common in browser/frontend)
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  if (!resendClient) {
+    const apiKey = import.meta.env.VITE_RESEND_API_KEY;
+    if (apiKey) {
+      resendClient = new Resend(apiKey);
+    } else {
+      logger.warn('Resend API key not configured, email sending will be disabled', {}, 'resend.ts');
+    }
+  }
+  return resendClient;
+}
 
 // ============================================================================
 // EMAIL TEMPLATES
@@ -345,7 +359,12 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
       emailOptions.tags = Object.entries(options.tags).map(([key, value]) => ({ name: key, value }));
     }
 
-    const { data, error } = await resend.emails.send(emailOptions as any);
+    const client = getResendClient();
+    if (!client) {
+      return { success: false, error: 'Email service not configured (missing API key)' };
+    }
+
+    const { data, error } = await client.emails.send(emailOptions as any);
 
     if (error) {
       logger.error('Resend error:', error, 'resend.ts');
