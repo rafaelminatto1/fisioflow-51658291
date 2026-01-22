@@ -3,7 +3,7 @@ import { Button } from '@/components/shared/ui/button';
 import { Progress } from '@/components/shared/ui/progress';
 import { Target, CheckCircle2, Circle, Flame, Star } from 'lucide-react';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 
 interface Quest {
   id: string;

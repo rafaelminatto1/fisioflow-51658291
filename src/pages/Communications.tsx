@@ -35,7 +35,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/shared/ui/command';
+} from '@/components/web/ui/command';
 import {
   Popover,
   PopoverContent,
@@ -57,12 +57,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientHelpers } from '@/types';
 import { Badge } from '@/components/shared/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const Communications = () => {

@@ -20,7 +20,7 @@ import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();

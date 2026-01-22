@@ -11,7 +11,7 @@ import { Button } from '@/components/shared/ui/button';
 import { Label } from '@/components/shared/ui/label';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Checkbox } from '@/components/shared/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { useAddToWaitlist, PRIORITY_CONFIG } from '@/hooks/useWaitlist';
 import { Users, Calendar, Clock, AlertCircle } from 'lucide-react';
 

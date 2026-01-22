@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/shared/ui/button';
 import { Card, CardContent } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { Label } from '@/components/shared/ui/label';
 import { Package, Calendar, DollarSign, Check } from 'lucide-react';
 import { useSessionPackages, usePurchasePackage, type SessionPackage } from '@/hooks/usePackages';

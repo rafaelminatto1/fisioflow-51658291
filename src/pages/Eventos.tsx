@@ -6,7 +6,7 @@ import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Badge } from '@/components/shared/ui/badge';
 import { EmptyState } from '@/components/web/ui/empty-state';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { NewEventoModal } from '@/components/eventos/NewEventoModal';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
@@ -49,7 +49,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

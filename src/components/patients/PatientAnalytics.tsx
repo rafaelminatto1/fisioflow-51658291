@@ -5,7 +5,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent
-} from '@/components/ui/chart';
+} from '@/components/web/ui/chart';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Activity, Calendar, Users } from 'lucide-react';
 

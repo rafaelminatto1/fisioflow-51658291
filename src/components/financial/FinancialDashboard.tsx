@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { DollarSign, TrendingUp, Calendar, AlertCircle, TrendingDown, Activity } from 'lucide-react';
 import { useFinancial } from '@/hooks/useFinancial';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { formatCurrency } from '@/utils/format';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { DelinquencyList } from './DelinquencyList';

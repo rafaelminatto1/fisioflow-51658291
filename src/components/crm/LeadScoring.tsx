@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui
 import { Switch } from '@/components/shared/ui/switch';
 import { Label } from '@/components/shared/ui/label';
 import { Button } from '@/components/shared/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Separator } from '@/components/shared/ui/separator';
 import {
   TrendingUp, Target, Award, Info, Zap, AlertCircle,

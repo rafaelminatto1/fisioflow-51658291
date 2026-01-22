@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Badge } from '@/components/shared/ui/badge';
 import { useStatusConfig, CustomStatusConfig } from '@/hooks/useStatusConfig';
 import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
@@ -14,7 +14,7 @@ import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from '@/components/shared/ui/collapsible';
+} from '@/components/web/ui/collapsible';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,7 +25,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 
 // Predefined vivid color palette (Monday.com inspired)
 const COLOR_PALETTE = [

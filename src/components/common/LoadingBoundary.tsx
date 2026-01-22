@@ -1,5 +1,5 @@
 import React, { Suspense, ComponentType, ReactNode } from 'react';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 
 interface LoadingBoundaryProps {
   children: ReactNode;

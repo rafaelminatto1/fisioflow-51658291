@@ -8,7 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/shared/ui/sheet';
+} from '@/components/web/ui/sheet';
 import { cn } from '@/lib/utils';
 
 interface FilterOptions {

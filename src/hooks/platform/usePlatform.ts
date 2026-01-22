@@ -5,7 +5,7 @@
  * native (React Native + react-native-reusables)
  */
 
-import { Platform } from 'react-native';
+import RN from 'react-native';
 
 export type PlatformType = 'web' | 'ios' | 'android' | 'native';
 
@@ -24,11 +24,20 @@ interface PlatformInfo {
   isTouch: boolean;
 }
 
+// Fallback Platform for web builds when react-native is stubbed
+const WebPlatform = {
+  OS: 'web',
+  select: (obj: any) => obj.web ?? obj.default,
+  isTesting: false,
+};
+
 /**
  * Hook que retorna informações sobre a plataforma atual
  * @returns Informações da plataforma
  */
 export function usePlatform(): PlatformInfo {
+  // Use Platform if available (native), otherwise use web fallback
+  const Platform = RN.Platform || WebPlatform;
   const os = Platform.OS as 'ios' | 'android' | 'web';
 
   return {
@@ -46,6 +55,7 @@ export function usePlatform(): PlatformInfo {
  * Use fora de componentes React
  */
 export const getPlatform = (): PlatformInfo => {
+  const Platform = RN.Platform || WebPlatform;
   const os = Platform.OS as 'ios' | 'android' | 'web';
 
   return {

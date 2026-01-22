@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 import { Button } from '@/components/shared/ui/button'
 import { Input } from '@/components/shared/ui/input'
 import { Separator } from '@/components/shared/ui/separator'
-import { Sheet, SheetContent } from '@/components/shared/ui/sheet'
-import { Skeleton } from "@/components/ui/skeleton"
+import { Sheet, SheetContent } from '@/components/web/ui/sheet'
+import { Skeleton } from "@/components/shared/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,

@@ -4,11 +4,12 @@
  */
 
 import { StrategicDashboard } from '@/components/analytics/strategic';
-import { useOrganization } from '@/hooks/useOrganization';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Loader2 } from 'lucide-react';
 
 export default function StrategicAnalyticsPage() {
-  const { data: organization, isLoading: orgLoading } = useOrganization();
+  const { organizations, isLoading: orgLoading } = useOrganizations();
+  const organization = organizations?.[0]; // Use first organization
 
   if (orgLoading) {
     return (

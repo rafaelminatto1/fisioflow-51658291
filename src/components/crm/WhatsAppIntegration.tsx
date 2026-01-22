@@ -9,7 +9,7 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Switch } from '@/components/shared/ui/switch';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Separator } from '@/components/shared/ui/separator';
 import {
   MessageCircle, Send, Plus, CheckCircle2, Clock, Users,

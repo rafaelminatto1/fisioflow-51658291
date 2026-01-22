@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, Tag, X, CheckSquare, Link as LinkIcon, Plus, Trash2, GripVertical, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/shared/ui/button';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/shared/ui/form';
+} from '@/components/web/ui/form';
 import { Input } from '@/components/shared/ui/input';
 import { Separator } from '@/components/shared/ui/separator';
 import {
@@ -30,7 +30,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/shared/ui/command';
+} from '@/components/web/ui/command';
 import { Checkbox } from '@/components/shared/ui/checkbox';
 import {
   Popover,
@@ -46,7 +46,7 @@ import {
 } from '@/components/shared/ui/select';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Separator } from '@/components/shared/ui/separator';
 import {
   Tarefa,

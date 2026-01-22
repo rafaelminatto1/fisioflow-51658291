@@ -11,7 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps, AreaChart, Area } from 'recharts';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 
 // Custom Tooltip Component
 const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<any, any>) => {

@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/shared/ui/select';
-import { DatePickerWithRange } from '@/components/shared/ui/date-range-picker';
+import { DatePickerWithRange } from '@/components/web/ui/date-range-picker';
 import { Checkbox } from '@/components/shared/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';

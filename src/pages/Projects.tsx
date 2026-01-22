@@ -9,7 +9,7 @@ import { FolderKanban, Plus, Search, Calendar, Folder, MoreVertical, Pencil, Tra
 import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { ProjectModal } from '@/components/projects/ProjectModal';
-import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { OptimizedImage } from '@/components/web/ui/OptimizedImage';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,7 +25,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 
 const STATUS_COLORS = {
     active: 'bg-green-500',

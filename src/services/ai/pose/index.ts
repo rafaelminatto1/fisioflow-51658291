@@ -2,23 +2,23 @@
  * Platform-agnostic pose detection service factory
  *
  * This module provides a unified interface for pose detection across platforms:
- * - Web: Uses MediaPipe BlazePose (existing implementation)
- * - iOS: Uses TensorFlow Lite MoveNet via native module
+ * - Web: Uses MediaPipe BlazePose (faster, more accurate)
+ * - Mobile (iOS/Android): Uses TensorFlow.js MoveNet (works without native code)
  *
  * The factory pattern ensures the rest of the app doesn't need to know
  * which platform-specific implementation is being used.
  */
 
-import { Platform } from 'react-native';
 import { Capacitor } from '@capacitor/core';
+import { getPlatform } from '@/hooks/platform/usePlatform';
 import type { IPoseDetectionService } from './types';
 import { MediaPipeWebService } from './web/MediaPipeWebService';
-import { TFLitePoseService } from './native/TFLitePoseService';
+import { TensorFlowPoseService } from './tensorflow/TensorFlowPoseService';
 
 /**
  * Detection mode for forcing a specific implementation
  */
-export type PoseDetectionMode = 'auto' | 'web' | 'native';
+export type PoseDetectionMode = 'auto' | 'web' | 'tensorflow';
 
 /**
  * Factory options for service creation
@@ -63,17 +63,18 @@ export function createPoseDetectionService(
 
   // Determine which implementation to use
   const selectedMode = mode === 'auto' ? detectOptimalMode() : mode;
+  const platformInfo = getPlatform();
 
   if (debug) {
     console.log('[PoseDetection] Creating service with mode:', selectedMode);
-    console.log('[PoseDetection] Platform:', Platform.OS);
+    console.log('[PoseDetection] Platform:', platformInfo.platform);
     console.log('[PoseDetection] Is native:', Capacitor.isNativePlatform());
   }
 
   // Create appropriate service instance
   switch (selectedMode) {
-    case 'native':
-      serviceInstance = new TFLitePoseService({ debug });
+    case 'tensorflow':
+      serviceInstance = new TensorFlowPoseService({ debug });
       break;
 
     case 'web':
@@ -116,29 +117,24 @@ export function getCurrentServiceMode(): PoseDetectionMode {
  * Detect the optimal mode based on platform and capabilities
  */
 function detectOptimalMode(): PoseDetectionMode {
-  const isNative = Capacitor.isNativePlatform();
-  const isIOS = Platform.OS === 'ios';
-  const isAndroid = Platform.OS === 'android';
-  const isWeb = Platform.OS === 'web';
+  const platformInfo = getPlatform();
+  const isNative = platformInfo.isNative || Capacitor.isNativePlatform();
+  const isIOS = platformInfo.isIOS;
+  const isAndroid = platformInfo.isAndroid;
+  const isWeb = platformInfo.isWeb;
 
-  // iOS: Use native TFLite implementation
-  if (isNative && isIOS) {
-    return 'native';
+  // iOS/Android: Use TensorFlow.js (works without native code)
+  if (isNative && (isIOS || isAndroid)) {
+    return 'tensorflow';
   }
 
-  // Android: Could use native in the future, currently use web
-  if (isNative && isAndroid) {
-    // TODO: Implement Android native support
-    return 'web';
-  }
-
-  // Web: Always use MediaPipe web
+  // Web: Use MediaPipe web (faster and more accurate)
   if (isWeb) {
     return 'web';
   }
 
-  // Fallback to web implementation
-  return 'web';
+  // Fallback to TensorFlow.js
+  return 'tensorflow';
 }
 
 /**
@@ -171,23 +167,23 @@ export async function isPoseDetectionAvailable(
  * Feature flags for pose detection (can be used for gradual rollout)
  */
 export const POSE_DETECTION_FEATURES = {
-  /** Enable native iOS pose detection (set to false to force web implementation) */
-  IOS_NATIVE_ENABLED: true,
+  /** Enable TensorFlow.js on mobile (works without native code) */
+  TENSORFLOW_MOBILE_ENABLED: true,
   /** Enable real-time detection (may be disabled for low-end devices) */
   REALTIME_ENABLED: true,
   /** Enable GPU acceleration (when available) */
   GPU_ACCELERATION: true,
-  /** Minimum iOS version for native implementation */
+  /** Minimum iOS version for TensorFlow.js */
   MIN_IOS_VERSION: '13.0',
 } as const;
 
 /**
- * Check if native iOS pose detection should be used
+ * Check if TensorFlow.js should be used on mobile
  *
  * This considers feature flags and platform capabilities.
  */
-export function shouldUseNativeIOS(): boolean {
-  if (!POSE_DETECTION_FEATURES.IOS_NATIVE_ENABLED) {
+export function shouldUseTensorFlowMobile(): boolean {
+  if (!POSE_DETECTION_FEATURES.TENSORFLOW_MOBILE_ENABLED) {
     return false;
   }
 
@@ -195,12 +191,8 @@ export function shouldUseNativeIOS(): boolean {
     return false;
   }
 
-  if (Platform.OS !== 'ios') {
-    return false;
-  }
-
-  // Could add additional checks here (device capability, iOS version, etc.)
-  return true;
+  const platformInfo = getPlatform();
+  return platformInfo.isIOS || platformInfo.isAndroid;
 }
 
 // Export types for convenience

@@ -21,7 +21,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { Package, Plus, Edit, Trash2, Users, Calendar, DollarSign } from 'lucide-react';
 import { useSessionPackages, useCreatePackage, useUpdatePackage, useDeactivatePackage, type SessionPackage } from '@/hooks/usePackages';
 import { formatCurrency } from '@/lib/utils';

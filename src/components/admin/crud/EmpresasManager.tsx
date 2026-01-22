@@ -3,7 +3,7 @@ import { useEmpresasParceiras, useDeleteEmpresaParceira } from '@/hooks/useEmpre
 import { Card } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { EmpresaModal } from '@/components/admin/crud/EmpresaModal';
@@ -16,7 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import type { EmpresaParceira } from '@/hooks/useEmpresasParceiras';
 
 export function EmpresasManager() {

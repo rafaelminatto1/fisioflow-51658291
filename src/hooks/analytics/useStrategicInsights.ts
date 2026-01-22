@@ -516,19 +516,6 @@ export function useRefreshInsights() {
 // EXPORTS
 // ============================================================================
 
-export {
-  useTimeSlotOpportunities,
-  useAcquisitionGaps,
-  useStrategicInsights,
-  useSmartAlerts,
-  useSmartAlertConfigurations,
-  useStrategicDashboard,
-  useAcknowledgeInsight,
-  useDismissInsight,
-  useAcknowledgeAlert,
-  useRefreshInsights,
-};
-
 export type {
   UseTimeSlotOpportunitiesOptions,
   UseAcquisitionGapsOptions,

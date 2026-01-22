@@ -10,9 +10,8 @@ import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';
-import { Loader2, Mail, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { useMagicLinkAuth } from '@/hooks/useMagicLinkAuth';
-import { AlertCircle } from '@/components/shared/ui/alert';
 
 // ============================================================================
 // TYPES

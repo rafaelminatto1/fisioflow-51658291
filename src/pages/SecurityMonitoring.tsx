@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
 import { Shield, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';

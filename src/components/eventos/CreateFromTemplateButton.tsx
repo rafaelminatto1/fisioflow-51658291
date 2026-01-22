@@ -17,7 +17,7 @@ import {
   useCreateEventoFromTemplate,
   useDeleteTemplate,
 } from '@/hooks/useEventoTemplates';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { EmptyState } from '@/components/web/ui/empty-state';
 import { Badge } from '@/components/shared/ui/badge';
 

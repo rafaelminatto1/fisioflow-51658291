@@ -1,7 +1,7 @@
 import { Card } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import type { PainMapRecord } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
 import { Calendar, MapPin } from 'lucide-react';

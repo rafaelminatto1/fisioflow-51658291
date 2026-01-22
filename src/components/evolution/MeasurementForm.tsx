@@ -29,10 +29,10 @@ import {
   FileText
 } from 'lucide-react';
 import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
-import { ClinicalTestCombobox, type ClinicalTest } from '@/components/ui/clinical-test-combobox';
+import { ClinicalTestCombobox, type ClinicalTest } from '@/components/web/ui/clinical-test-combobox';
 import { CustomFieldsConfig, DEFAULT_MEASUREMENT_FIELDS, type CustomField } from './CustomFieldsConfig';
 import { SaveMeasurementTemplateModal } from './SaveMeasurementTemplateModal';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shared/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/web/ui/collapsible';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';

@@ -9,7 +9,7 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Card } from '@/components/shared/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Label } from '@/components/shared/ui/label';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { ArrowDown, ArrowUp, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import type { PainMapRecord, PainMapPoint, BodyRegion } from '@/types/painMap';
 import { comparePainMaps } from '@/hooks/usePainMapHistory';

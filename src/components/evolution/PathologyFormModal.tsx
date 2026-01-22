@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from '@/components/shared/ui/form';
+} from '@/components/web/ui/form';
 import {
   Select,
   SelectContent,
@@ -33,7 +33,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/shared/ui/command';
+} from '@/components/web/ui/command';
 import {
   Popover,
   PopoverContent,

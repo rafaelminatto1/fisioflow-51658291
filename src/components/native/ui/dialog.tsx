@@ -14,7 +14,11 @@ import {
   ViewStyle,
 } from 'react-native';
 import { cn } from '@/lib/utils';
-import { X } from '@/lib/icons/X';
+
+// Simple X icon component
+const XIcon = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+  <Text style={{ fontSize: size, fontWeight: '600', color: '#000' }} className={className}>✕</Text>
+);
 
 interface DialogContextValue {
   open: boolean;
@@ -95,7 +99,7 @@ export const DialogContent = ({
             onPress={() => onOpenChange(false)}
             className="absolute right-4 top-4"
           >
-            <X className="text-foreground" size={20} />
+            <XIcon size={20} />
           </Pressable>
 
           <View className={cn('', className)}>{children}</View>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui
 import { Badge } from '@/components/shared/ui/badge';
 import { Progress } from '@/components/shared/ui/progress';
 import { Button } from '@/components/shared/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { DollarSign, TrendingDown, AlertCircle, Package, Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import { usePrestadores } from '@/hooks/usePrestadores';
 import { useChecklist } from '@/hooks/useChecklist';

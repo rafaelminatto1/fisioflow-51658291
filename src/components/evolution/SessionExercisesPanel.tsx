@@ -6,7 +6,7 @@ import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { Trash2, Dumbbell, Library, CheckCircle2, Circle, MoreHorizontal } from 'lucide-react';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';

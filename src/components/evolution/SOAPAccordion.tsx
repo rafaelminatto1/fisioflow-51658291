@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
-import { SmartTextarea } from '@/components/ui/SmartTextarea';
+import { SmartTextarea } from '@/components/web/ui/SmartTextarea';
 import { Progress } from '@/components/shared/ui/progress';
 import {
     Accordion,
