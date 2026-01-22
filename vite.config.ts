@@ -383,7 +383,7 @@ export default defineConfig(({ mode }) => {
           },
           // experimentalMinChunkSize: 100000, // REMOVED: was preventing entry point from being included in HTML
         },
-        // preserveEntrySignatures: 'strict', // REMOVED: was causing build issues with entry point injection
+        preserveEntrySignatures: 'strict', // REQUIRED: ensures proper module dependency order for React
       },
       chunkSizeWarningLimit: 5000,
       reportCompressedSize: false,
