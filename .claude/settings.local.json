@@ -254,6 +254,10 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "shadcn"
+    "shadcn",
+    "supabase",
+    "postgres",
+    "sequential-thinking",
+    "brave-search"
   ]
 }
