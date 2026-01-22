@@ -11,7 +11,7 @@ import { Label } from '@/components/shared/ui/label';
 import { Input } from '@/components/shared/ui/input';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Checkbox } from '@/components/shared/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { useAddToWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import {

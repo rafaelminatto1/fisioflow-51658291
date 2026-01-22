@@ -3,7 +3,7 @@ import { useTransacoes, useDeleteTransacao, type Transacao } from '@/hooks/useTr
 import { Card } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { TransacaoModal } from './TransacaoModal';
@@ -18,7 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 
 export function TransacoesManager() {
   const { data: transacoes = [], isLoading } = useTransacoes();

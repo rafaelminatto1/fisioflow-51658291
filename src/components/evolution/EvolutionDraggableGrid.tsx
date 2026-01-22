@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
+import { DraggableGrid, GridItem } from '@/components/web/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { GridWidget } from '@/components/ui/GridWidget';
-import { SmartTextarea } from '@/components/ui/SmartTextarea';
+import { GridWidget } from '@/components/web/ui/GridWidget';
+import { SmartTextarea } from '@/components/web/ui/SmartTextarea';
 import { Button } from '@/components/shared/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/shared/ui/tooltip';
 import { Badge } from '@/components/shared/ui/badge';

@@ -8,7 +8,7 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Checkbox } from '@/components/shared/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/shared/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   Plus, Phone, Mail, MessageSquare, Calendar, Clock,
   CheckCircle2, Trash2, Users

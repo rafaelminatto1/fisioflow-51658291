@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Badge } from '@/components/shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { History, Trophy, Star, Flame, Target, Award, Zap } from 'lucide-react';

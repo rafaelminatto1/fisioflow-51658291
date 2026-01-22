@@ -88,6 +88,66 @@ function excludeMswPlugin() {
   };
 }
 
+// Plugin para excluir pacotes React Native do build web
+function excludeReactNativePlugin() {
+  const reactNativePackages = [
+    'react-native',
+    '@react-native-clipboard/clipboard',
+    '@react-native-community/',
+    '@react-navigation/',
+    'expo-',
+    '@expo/',
+    'react-native-web',
+  ];
+
+  // Also exclude native component files from web build
+  return {
+    name: 'exclude-react-native',
+    resolveId(id: string) {
+      // Excluir arquivos de componentes nativos
+      if (id.includes('/src/components/native/') || id.includes('\\src\\components\\native\\')) {
+        return {
+          id: id,
+          external: false,
+          moduleSideEffects: false
+        };
+      }
+
+      // Verifica se o ID começa com algum dos pacotes React Native
+      for (const pkg of reactNativePackages) {
+        if (id === pkg || id.startsWith(pkg + '/') || id.startsWith('node_modules/' + pkg) || id.includes('/' + pkg + '/')) {
+          return {
+            id: id,
+            external: false,
+            moduleSideEffects: false
+          };
+        }
+      }
+      return null;
+    },
+    load(id: string) {
+      // Excluir arquivos de componentes nativos - retornar módulo vazio
+      if (id.includes('/src/components/native/') || id.includes('\\src\\components\\native\\')) {
+        return 'export default {};';
+      }
+
+      for (const pkg of reactNativePackages) {
+        if (id.includes(pkg)) {
+          // Retorna um módulo vazio com exports simulados
+          return `
+            export const Clipboard = null;
+            export const Slider = null;
+            export const useState = () => [null, () => {}];
+            export const useEffect = () => {};
+            export default {};
+          `;
+        }
+      }
+      return null;
+    }
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
@@ -195,7 +255,7 @@ export default defineConfig(({ mode }) => {
             }
           ],
           navigationPreload: false,
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         },
         strategies: 'generateSW',
       }),
@@ -205,10 +265,14 @@ export default defineConfig(({ mode }) => {
         threshold: 10240,
         filter: (file) => {
           // Only compress files inside dist, not the absolute path
-          return file.includes('/dist/') || file.includes('\\dist\\');
+          // Exclude already compressed files
+          const isInDist = file.includes('/dist/') || file.includes('\\dist\\');
+          const isNotAlreadyCompressed = !file.includes('.gz') && !file.includes('.br');
+          return isInDist && isNotAlreadyCompressed;
         },
       }),
       isProduction && excludeMswPlugin(),
+      excludeReactNativePlugin(),
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -216,6 +280,10 @@ export default defineConfig(({ mode }) => {
         "lodash": "lodash-es",
         // Allow importing legacy module from react-grid-layout
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
+        // React Native aliases - point to stub modules for web build
+        "react-native": path.resolve(__dirname, "./src/lib/stubs/react-native.ts"),
+        "@react-native-clipboard/clipboard": path.resolve(__dirname, "./src/lib/stubs/clipboard.ts"),
+        "@react-native-community/slider": path.resolve(__dirname, "./src/lib/stubs/slider.ts"),
       },
     },
     build: {
@@ -361,6 +429,18 @@ export default defineConfig(({ mode }) => {
         '@mediapipe/pose',
         '@mediapipe/tasks-vision',
         'msw',
+        // React Native packages
+        'react-native',
+        '@react-native-clipboard/clipboard',
+        '@react-native-community/slider',
+        '@react-navigation/native',
+        '@react-navigation/bottom-tabs',
+        'expo-constants',
+        'expo-device',
+        'expo-haptics',
+        'expo-local-authentication',
+        'expo-splash-screen',
+        'expo-status-bar',
       ],
     },
     esbuild: {

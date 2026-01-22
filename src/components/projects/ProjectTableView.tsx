@@ -7,7 +7,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';

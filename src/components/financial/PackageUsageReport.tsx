@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { usePatientPackages } from "@/hooks/usePackages";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from '@/components/shared/ui/badge';

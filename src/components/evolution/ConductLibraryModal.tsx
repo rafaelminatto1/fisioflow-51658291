@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/s
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Search, BookOpen, Copy, Edit, Trash2 } from 'lucide-react';
 import { useConductLibrary, useDeleteConduct, type ConductTemplate } from '@/hooks/useConductLibrary';
 import {
@@ -15,7 +15,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { AddConductModal } from './AddConductModal';
 

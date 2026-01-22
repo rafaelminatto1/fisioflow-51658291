@@ -5,7 +5,7 @@ import { Clock, Copy } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
 import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
 import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';

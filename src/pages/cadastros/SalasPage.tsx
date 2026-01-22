@@ -7,10 +7,10 @@ import { Label } from '@/components/shared/ui/label';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Switch } from '@/components/shared/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/shared/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/shared/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/web/ui/alert-dialog';
 import { Plus, Pencil, Trash2, DoorOpen, Search, Users } from 'lucide-react';
 import { useSalas, useCreateSala, useUpdateSala, useDeleteSala, Sala, SalaFormData } from '@/hooks/useSalas';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { Badge } from '@/components/shared/ui/badge';
 
 const COLORS = [

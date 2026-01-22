@@ -8,7 +8,7 @@ import { Separator } from '@/components/shared/ui/separator';
 import { Switch } from '@/components/shared/ui/switch';
 import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   Calendar,

@@ -5,8 +5,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Input } from '@/components/shared/ui/input';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/shared/ui/dialog';
 import { Label } from '@/components/shared/ui/label';
 import {

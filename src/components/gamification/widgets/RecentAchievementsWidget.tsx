@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Award, Star, Trophy, Medal, Target, Flame, Zap, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 
 interface Achievement {
   id: string;

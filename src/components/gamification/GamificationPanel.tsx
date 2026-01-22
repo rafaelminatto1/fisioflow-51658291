@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/shared/ui/progress';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { Zap, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useGamificationNotifications } from '@/hooks/useGamificationNotifications';

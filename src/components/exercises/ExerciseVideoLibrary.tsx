@@ -3,8 +3,8 @@ import { useDebounce } from '@/hooks/performance/useDebounce';
 import { Input } from '@/components/shared/ui/input';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { Skeleton } from '@/components/shared/ui/skeleton';
+import { OptimizedImage } from '@/components/web/ui/OptimizedImage';
 import {
   Search, Video, Upload, Trash2, Play,
   X, Clock, Edit, AlertCircle, Check,
@@ -33,7 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,

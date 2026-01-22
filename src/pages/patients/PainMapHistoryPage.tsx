@@ -12,8 +12,8 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Skeleton } from '@/components/shared/ui/skeleton';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   ArrowLeft, Calendar, FileText, TrendingDown, Activity,
   MapPin, Target, Clock, Download, GitCompare

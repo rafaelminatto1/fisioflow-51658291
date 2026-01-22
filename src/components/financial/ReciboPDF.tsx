@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/shared/ui/button';
-import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { OptimizedImage } from '@/components/web/ui/OptimizedImage';
 import { valorPorExtenso } from '@/hooks/useRecibos';
 
 // Registrar fontes

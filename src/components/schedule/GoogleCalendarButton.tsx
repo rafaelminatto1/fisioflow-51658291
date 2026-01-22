@@ -21,7 +21,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { Calendar, Loader2, CheckCircle2, XCircle, LogOut, Settings, RefreshCw } from 'lucide-react';
 import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import { cn } from '@/lib/utils';

@@ -6,10 +6,10 @@ import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   FileText, Plus, Download, Edit, Eye, Filter, CheckCircle2, Save, Search

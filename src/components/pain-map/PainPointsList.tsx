@@ -1,5 +1,5 @@
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Button } from '@/components/shared/ui/button';
 import { Trash2, Edit2, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';

@@ -41,7 +41,7 @@ import { Search, Filter, Download, TrendingUp, Users, Calendar, Activity, Chevro
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 // ============================================================================

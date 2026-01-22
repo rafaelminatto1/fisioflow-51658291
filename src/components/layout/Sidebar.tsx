@@ -51,7 +51,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/shared/ui/collapsible';
+} from '@/components/web/ui/collapsible';
 
 // Ordem baseada em frequência de uso e fluxo de trabalho clínico
 const menuItems = [

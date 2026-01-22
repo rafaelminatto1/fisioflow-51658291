@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/shared/ui/avatar';
 import { Badge } from '@/components/shared/ui/badge';
 import { Input } from '@/components/shared/ui/input';
 import { EmptyState } from '@/components/web/ui/empty-state';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 import {
   Select,
@@ -25,7 +25,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/shared/ui/pagination';
+} from '@/components/web/ui/pagination';
 import { LazyComponent } from '@/components/common/LazyComponent';
 import {
   PatientCreateModal,

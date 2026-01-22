@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { useStatusConfig, CustomStatusConfig } from '@/hooks/useStatusConfig';
 import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';

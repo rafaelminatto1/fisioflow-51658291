@@ -6,8 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { PatientHelpers } from '@/types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shared/ui/tabs';
 import { Button } from '@/components/shared/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
 import { Badge } from '@/components/shared/ui/badge';
 import {

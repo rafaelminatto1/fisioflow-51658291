@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 
 export function BlockedTimesManager() {
   const { blockedTimes, createBlockedTime, deleteBlockedTime, isLoadingBlocked } = useScheduleSettings();

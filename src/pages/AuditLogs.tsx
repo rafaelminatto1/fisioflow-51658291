@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
 import { EmptyState } from '@/components/web/ui/empty-state';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import {
   Table,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import {
   Select,
   SelectContent,

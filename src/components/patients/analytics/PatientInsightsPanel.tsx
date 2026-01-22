@@ -9,8 +9,8 @@ import React, { useState, useMemo, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
   Sparkles,
   TrendingUp,

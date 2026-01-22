@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
-import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { OptimizedImage } from '@/components/web/ui/OptimizedImage';
 import {
   Pen,
   Eraser,

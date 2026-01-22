@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/shared/ui/button';
 import { Card } from '@/components/shared/ui/card';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/shared/ui/alert';
 import { Loader2, Brain, AlertTriangle } from 'lucide-react';
 import { analyzeWithGeminiVision, VisionAnalysisResult } from '@/services/ai/geminiVisionService';

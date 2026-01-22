@@ -56,7 +56,7 @@ export const Accordion = React.forwardRef<any, SharedAccordionProps>(
       {isWeb ? <WebAccordion {...platformProps} /> : <NativeAccordion {...platformProps} />}
     </React.Suspense>
   );
-}
+});
 
 Accordion.displayName = 'Accordion';
 

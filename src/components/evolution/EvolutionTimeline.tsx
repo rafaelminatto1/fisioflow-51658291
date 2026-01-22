@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
 import { Input } from '@/components/shared/ui/input';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -72,7 +72,7 @@ import {
   DialogTitle,
 } from '@/components/shared/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 
 // Tipos de eventos na timeline
 type TimelineEventType = 'session' | 'surgery' | 'goal' | 'pathology' | 'measurement' | 'attachment';

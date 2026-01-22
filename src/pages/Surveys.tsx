@@ -12,9 +12,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { EmptyState } from '@/components/web/ui/empty-state';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { useSatisfactionSurveys, useSurveyStats, useDeleteSurvey } from '@/hooks/useSatisfactionSurveys';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,7 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 
 export default function Surveys() {
   const [activeTab, setActiveTab] = useState('all');

@@ -10,7 +10,7 @@ import { Separator } from '@/components/shared/ui/separator';
 import { Eye, Edit, Download, FileText, Clock, User } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvaluationFormWithFields } from '@/hooks/useEvaluationForms';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { Info } from 'lucide-react';
 import { toast } from 'sonner';

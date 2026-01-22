@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
-import { SmartTextarea } from '@/components/ui/SmartTextarea';
+import { SmartTextarea } from '@/components/web/ui/SmartTextarea';
 import { Badge } from '@/components/shared/ui/badge';
 import { Separator } from '@/components/shared/ui/separator';
 import {

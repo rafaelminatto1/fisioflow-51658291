@@ -16,7 +16,7 @@ import {
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
-} from '@/components/shared/ui/sheet';
+} from '@/components/web/ui/sheet';
 import { Button } from '@/components/shared/ui/button';
 import { Label } from '@/components/shared/ui/label';
 import { toast } from 'sonner';

@@ -23,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/shared/ui/popover';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Separator } from '@/components/shared/ui/separator';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';

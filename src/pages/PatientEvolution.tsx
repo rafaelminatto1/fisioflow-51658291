@@ -25,10 +25,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui
 import { Button } from '@/components/shared/ui/button';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useCommandPalette } from '@/components/ui/CommandPalette';
+import { useCommandPalette } from '@/components/web/ui/CommandPalette';
 
 // Hooks
 import {

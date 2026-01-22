@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from '@/components/shared/ui/dialog';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   FileText,
   Upload,

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/shared/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
 import { Progress } from '@/components/shared/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { 
   BarChart, 
   Bar, 

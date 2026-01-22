@@ -7,8 +7,8 @@
 import * as React from 'react';
 import { View, Pressable, Text, Animated, StyleSheet } from 'react-native';
 import { cn } from '@/lib/utils';
-import { ChevronDown } from '@/lib/icons/ChevronDown';
-import { ChevronRight } from '@/lib/icons/ChevronRight';
+import { ChevronDown } from '@/lib/icons';
+import { ChevronRight } from '@/lib/icons';
 
 interface AccordionContextValue {
   value: string | string[];

@@ -7,9 +7,9 @@ import { Textarea } from '@/components/shared/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { FileText, Plus, Pencil, Trash2, Search, Copy } from 'lucide-react';
 import { 
   useEvolutionTemplates, 
@@ -19,7 +19,7 @@ import {
   EvolutionTemplate,
   EvolutionTemplateFormData
 } from '@/hooks/useEvolutionTemplates';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/shared/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/web/ui/alert-dialog';
 
 const TIPOS_EVOLUCAO = [
   { value: 'fisioterapia', label: 'Fisioterapia' },

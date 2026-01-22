@@ -9,7 +9,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/shared/ui/collapsible';
+} from '@/components/web/ui/collapsible';
 import { Filter, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {

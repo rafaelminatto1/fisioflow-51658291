@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Progress } from '@/components/shared/ui/progress';
 import { Target, TrendingUp, Clock, CheckCircle2 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';

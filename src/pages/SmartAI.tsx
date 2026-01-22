@@ -4,7 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Textarea } from '@/components/shared/ui/textarea';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Brain, Send, User, Bot, Sparkles, AlertCircle, Copy, Check } from 'lucide-react';
 import remarkGfm from 'remark-gfm';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';

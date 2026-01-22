@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/shared/ui/button';
 import { Label } from '@/components/shared/ui/label';
 import { Textarea } from '@/components/shared/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { Loader2 } from 'lucide-react';
 import { useCreateSurvey, type CreateSurveyData } from '@/hooks/useSatisfactionSurveys';
 import { cn } from '@/lib/utils';
