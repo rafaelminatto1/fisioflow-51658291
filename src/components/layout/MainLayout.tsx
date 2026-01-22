@@ -8,9 +8,9 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/shared/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
-import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
+import { PageBreadcrumbs } from '@/components/web/ui/page-breadcrumbs';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,

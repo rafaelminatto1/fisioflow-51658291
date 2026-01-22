@@ -6,9 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/shared/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/shared/ui/avatar';
 import { Progress } from '@/components/shared/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import { 
   BarChart, 
   Bar, 

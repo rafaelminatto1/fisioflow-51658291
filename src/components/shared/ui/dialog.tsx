@@ -45,6 +45,22 @@ const NativeDialogDescription = React.lazy(() =>
   import('@/components/native/ui/dialog').then(m => ({ default: m.DialogDescription }))
 );
 
+const WebDialogFooter = React.lazy(() =>
+  import('@/components/web/ui/dialog').then(m => ({ default: m.DialogFooter }))
+);
+
+const NativeDialogFooter = React.lazy(() =>
+  import('@/components/native/ui/dialog').then(m => ({ default: m.DialogFooter }))
+);
+
+const WebDialogClose = React.lazy(() =>
+  import('@/components/web/ui/dialog').then(m => ({ default: m.DialogClose }))
+);
+
+const NativeDialogClose = React.lazy(() =>
+  import('@/components/native/ui/dialog').then(m => ({ default: m.DialogClose }))
+);
+
 export interface SharedDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -117,6 +133,26 @@ export const DialogDescription = ({ children, className = '' }: { children: Reac
   return (
     <React.Suspense fallback={<p className="text-sm text-muted-foreground">{children}</p>}>
       {isWeb ? <WebDialogDescription>{children}</WebDialogDescription> : <NativeDialogDescription>{children}</NativeDialogDescription>}
+    </React.Suspense>
+  );
+};
+
+export const DialogFooter = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
+  const { isWeb } = usePlatform();
+
+  return (
+    <React.Suspense fallback={<div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">{children}</div>}>
+      {isWeb ? <WebDialogFooter className={className}>{children}</WebDialogFooter> : <NativeDialogFooter className={className}>{children}</NativeDialogFooter>}
+    </React.Suspense>
+  );
+};
+
+export const DialogClose = ({ children, className = '', asChild }: { children: React.ReactNode; className?: string; asChild?: boolean }) => {
+  const { isWeb } = usePlatform();
+
+  return (
+    <React.Suspense fallback={<button className={className}>{children}</button>}>
+      {isWeb ? <WebDialogClose className={className} asChild={asChild}>{children}</WebDialogClose> : <NativeDialogClose className={className} asChild={asChild}>{children}</NativeDialogClose>}
     </React.Suspense>
   );
 };

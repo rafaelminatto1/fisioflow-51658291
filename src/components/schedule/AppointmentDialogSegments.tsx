@@ -4,8 +4,8 @@ import { Label } from '@/components/shared/ui/label';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
-import { PatientCombobox } from '@/components/ui/patient-combobox';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { PatientCombobox } from '@/components/web/ui/patient-combobox';
+import { Calendar } from '@/components/web/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
 import {
     CalendarIcon,

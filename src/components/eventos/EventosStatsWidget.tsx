@@ -1,7 +1,7 @@
 import { useEventosStats } from "@/hooks/useEventosStats";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
 import { Calendar, TrendingUp, DollarSign, Users } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/shared/ui/skeleton";
 
 export function EventosStatsWidget() {
   const { data: stats, isLoading } = useEventosStats();

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/shared/ui/avatar';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import { Badge } from '@/components/shared/ui/badge';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';

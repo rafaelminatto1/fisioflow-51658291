@@ -15,7 +15,7 @@ import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from '@/components/shared/ui/collapsible';
+} from '@/components/web/ui/collapsible';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/data/protocols';

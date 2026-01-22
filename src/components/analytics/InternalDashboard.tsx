@@ -12,8 +12,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+} from '@/components/web/ui/table';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { PatientHelpers } from '@/types';
 

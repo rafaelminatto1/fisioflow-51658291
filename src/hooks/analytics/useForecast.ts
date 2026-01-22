@@ -494,12 +494,6 @@ export function useNewPatientsForecast(options: UseForecastOptions = {}) {
 // EXPORTS
 // ============================================================================
 
-export {
-  useAppointmentsForecast,
-  useRevenueForecast,
-  useNewPatientsForecast,
-};
-
 export type {
   UseForecastOptions,
 };

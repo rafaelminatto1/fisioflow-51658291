@@ -5,7 +5,7 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { EmptyState } from '@/components/web/ui/empty-state';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import {
   Select,
   SelectContent,

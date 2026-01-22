@@ -11,14 +11,14 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-} from '@/components/shared/ui/command';
+} from '@/components/web/ui/command';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/shared/ui/popover';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 
 export interface EvaluationTemplate {
     id: string;

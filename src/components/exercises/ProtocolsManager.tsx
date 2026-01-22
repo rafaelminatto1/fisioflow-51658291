@@ -11,7 +11,7 @@ import {
   Plus, Edit, Trash2, Search, ChevronRight, Calendar,
   AlertTriangle, CheckCircle2, Clock, Target, Milestone
 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import {
   Accordion,
   AccordionContent,

@@ -20,7 +20,7 @@ import {
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
 import { useEngagementData } from '@/hooks/useLeaderboard';
 import { exportAtRiskPatientsToCSV } from '@/utils/gamificationExport';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

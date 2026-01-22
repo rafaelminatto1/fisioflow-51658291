@@ -3,7 +3,7 @@ import { Card } from '@/components/shared/ui/card';
 import { Input } from '@/components/shared/ui/input';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
   Play, Search, Edit, Trash2, Heart, Dumbbell,
   Video, Clock, Repeat, LayoutGrid, List, VideoOff,
@@ -22,7 +22,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,

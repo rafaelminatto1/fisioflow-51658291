@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Trophy, Flame, Star, Eye, Plus, Minus, RefreshCw, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { LeaderboardFilters } from '@/types/gamification';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { PatientGamificationDetails } from './PatientGamificationDetails';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
 

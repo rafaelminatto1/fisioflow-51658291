@@ -41,6 +41,9 @@ export const Select = React.forwardRef<any, SharedSelectProps>(
 
 Select.displayName = 'Select';
 
+// Re-exportar componentes do select web para uso direto
+export { SelectValue, SelectTrigger, SelectContent, SelectItem, SelectLabel, SelectGroup, SelectSeparator } from '@/components/web/ui/select';
+
 const SelectFallback: React.FC<SharedSelectProps> = ({ value, placeholder, disabled, options = [] }) => {
   return (
     <select
@@ -49,12 +52,12 @@ const SelectFallback: React.FC<SharedSelectProps> = ({ value, placeholder, disab
       style={{
         padding: '8px 12px',
         borderRadius: '6px',
-        border: '1px solid #e2e8f0',
-        background: disabled ? '#f1f5f9' : 'white',
-        opacity: disabled ? 0.5 : 1,
+        border: '1px solid #d1d5db',
+        backgroundColor: '#ffffff',
+        minWidth: '200px',
       }}
     >
-      <option value="">{placeholder}</option>
+      {placeholder && <option value="">{placeholder}</option>}
       {options.map((option) => (
         <option key={option.value} value={option.value} disabled={option.disabled}>
           {option.label}
@@ -63,5 +66,3 @@ const SelectFallback: React.FC<SharedSelectProps> = ({ value, placeholder, disab
     </select>
   );
 };
-
-export default Select;

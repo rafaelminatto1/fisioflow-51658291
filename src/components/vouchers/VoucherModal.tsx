@@ -17,7 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/shared/ui/form';
+} from '@/components/web/ui/form';
 import { Input } from '@/components/shared/ui/input';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Button } from '@/components/shared/ui/button';

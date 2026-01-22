@@ -3,13 +3,13 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Card } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   Search, Calendar, SortAsc, Grid3X3, List, Filter, Download, PlusCircle, Target, Shield, Users, Zap, Heart
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { useProtocolFilters } from '@/hooks/useProtocolFilters';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +25,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
 import { PROTOCOL_CATEGORIES, MUSCULATURE_FILTERS, QUICK_TEMPLATES, getProtocolCategory } from '@/data/protocols';
 import { ProtocolCardEnhanced } from '@/components/protocols/ProtocolCardEnhanced';

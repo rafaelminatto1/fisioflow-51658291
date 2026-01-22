@@ -8,7 +8,7 @@ import { Card } from '@/components/shared/ui/card';
 import { Label } from '@/components/shared/ui/label';
 import { Switch } from '@/components/shared/ui/switch';
 import { Separator } from '@/components/shared/ui/separator';
-// import { ScrollArea } from '@/components/shared/ui/scroll-area';
+// import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
     Select,
     SelectContent,

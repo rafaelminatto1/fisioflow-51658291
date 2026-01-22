@@ -5,7 +5,7 @@ import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Textarea } from '@/components/shared/ui/textarea';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

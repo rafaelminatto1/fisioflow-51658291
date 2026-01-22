@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useGamificationAdmin, calculateLevelCurve } from '@/hooks/useGamificationAdmin';
 import { ProgressionType, LevelConfig } from '@/types/gamification';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 
 /**
  * LevelSystemConfig Component

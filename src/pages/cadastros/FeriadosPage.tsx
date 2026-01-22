@@ -8,8 +8,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Switch } from '@/components/shared/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/shared/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
+import { Calendar } from '@/components/web/ui/calendar';
 import { 
   Plus, 
   Search, 

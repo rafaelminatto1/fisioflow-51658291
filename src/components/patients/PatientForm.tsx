@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/shared/ui/select';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/shared/ui/tabs';
 import { Badge } from '@/components/shared/ui/badge';

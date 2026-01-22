@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/shared/ui/card';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
     LineChart, Line, CartesianGrid, ScatterChart, Scatter, ReferenceLine

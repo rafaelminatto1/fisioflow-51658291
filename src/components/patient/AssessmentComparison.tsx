@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { Card, CardHeader, CardTitle } from '@/components/shared/ui/card';
-import { ScrollArea, ScrollBar } from '@/components/shared/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/web/ui/scroll-area';
 import { Separator } from '@/components/shared/ui/separator';
 import { Badge } from '@/components/shared/ui/badge';
 

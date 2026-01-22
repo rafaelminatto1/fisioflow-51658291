@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogClose } from '@/components/shared/ui/dialo
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Separator } from '@/components/shared/ui/separator';
 import {
   Heart, Share2, ExternalLink, Edit,

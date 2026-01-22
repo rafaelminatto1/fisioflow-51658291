@@ -11,8 +11,8 @@ import { Badge } from '@/components/shared/ui/badge';
 import { Button } from '@/components/shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Progress } from '@/components/shared/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { Skeleton } from '@/components/shared/ui/skeleton';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { usePatientAnalyticsDashboard, useUpdatePatientRiskScore } from '@/hooks/usePatientAnalytics';
 import {
   LineChart,

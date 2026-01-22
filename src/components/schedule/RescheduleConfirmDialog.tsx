@@ -10,7 +10,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 

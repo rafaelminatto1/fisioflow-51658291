@@ -7,7 +7,7 @@ import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Trash2, Dumbbell, Search, Sparkles, Filter, X, CheckCircle2, Circle, Loader2, Library, RotateCcw, ImageOff } from 'lucide-react';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { SessionExercise } from './SessionExercisesPanel';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/shared/ui/tooltip';

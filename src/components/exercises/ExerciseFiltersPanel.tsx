@@ -13,7 +13,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/shared/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/shared/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/web/ui/command';
 import { Checkbox } from '@/components/shared/ui/checkbox';
 import { cn } from '@/lib/utils';
 import {

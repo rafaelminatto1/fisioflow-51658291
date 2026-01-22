@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/shared/ui/dialog';
 import { Button } from '@/components/shared/ui/button';
 import { Label } from '@/components/shared/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { FileText, Download } from 'lucide-react';
 import { Badge } from '@/components/shared/ui/badge';

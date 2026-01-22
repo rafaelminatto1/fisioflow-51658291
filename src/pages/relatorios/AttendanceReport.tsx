@@ -5,10 +5,10 @@ import { Button } from '@/components/shared/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Badge } from '@/components/shared/ui/badge';
 import { Progress } from '@/components/shared/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/shared/ui/popover';
-import { Calendar } from '@/components/shared/ui/calendar';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/shared/ui/collapsible';
+import { Calendar } from '@/components/web/ui/calendar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/web/ui/collapsible';
 import { 
   PieChart, 
   Pie, 

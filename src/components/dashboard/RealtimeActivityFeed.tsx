@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ActivityEvent {

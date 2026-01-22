@@ -15,7 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/shared/ui/form';
+} from '@/components/web/ui/form';
 import { Input } from '@/components/shared/ui/input';
 import { Button } from '@/components/shared/ui/button';
 
@@ -28,7 +28,7 @@ import {
 } from '@/components/shared/ui/select';
 import { Plus, Trash2, Milestone, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/shared/ui/card';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import type { ExerciseProtocol, ProtocolMilestone, ProtocolRestriction } from '@/hooks/useExerciseProtocols';
 
 const milestoneSchema = z.object({

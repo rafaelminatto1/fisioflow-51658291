@@ -10,8 +10,8 @@ import { Checkbox } from '@/components/shared/ui/checkbox';
 import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/shared/ui/dialog';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { 
   useRetentionMetrics, 

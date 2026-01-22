@@ -4,7 +4,7 @@ import { Label } from '@/components/shared/ui/label';
 import { Input } from '@/components/shared/ui/input';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Checkbox } from '@/components/shared/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Slider } from '@/components/shared/ui/slider';
 import { Badge } from '@/components/shared/ui/badge';

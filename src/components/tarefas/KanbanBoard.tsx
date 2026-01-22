@@ -19,10 +19,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { KanbanColumn } from './KanbanColumn';
 import { TarefaModal } from './TarefaModal';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { EmptyState } from '@/components/web/ui/empty-state';
 import {
   Tarefa,

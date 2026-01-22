@@ -6,7 +6,7 @@
 
 import * as React from 'react';
 import { Pressable, View, Text } from 'react-native';
-import { Check } from '@/lib/icons/Check';
+import { Check } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 export interface CheckboxProps {

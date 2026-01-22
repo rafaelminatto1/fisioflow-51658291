@@ -4,7 +4,7 @@ import { Muscle, getMusclesByRegion } from '@/lib/data/bodyMuscles';
 import { Check, Search, X } from 'lucide-react';
 import { Input } from '@/components/shared/ui/input';
 import { Button } from '@/components/shared/ui/button';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 
 interface MuscleSelectorModalProps {
   regionCode: string;

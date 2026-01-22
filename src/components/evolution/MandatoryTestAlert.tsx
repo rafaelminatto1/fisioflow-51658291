@@ -13,7 +13,7 @@ import {
 } from '@/components/shared/ui/dialog';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Label } from '@/components/shared/ui/label';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   AlertTriangle,
   Info,

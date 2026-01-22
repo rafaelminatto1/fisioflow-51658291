@@ -10,7 +10,7 @@ import {
 } from '@/components/shared/ui/dialog';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   Clock,
   Calendar,

@@ -10,7 +10,7 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@/components/shared/ui/input-otp';
+} from '@/components/web/ui/input-otp';
 
 export function MFASetupPanel() {
   const {

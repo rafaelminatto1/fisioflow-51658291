@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
 import { Button } from '@/components/shared/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { Label } from '@/components/shared/ui/label';
 import { Badge } from '@/components/shared/ui/badge';
 import { Progress } from '@/components/shared/ui/progress';
@@ -10,7 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { useStandardizedTests, useSaveStandardizedTest } from '@/hooks/useStandardizedTests';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 
 interface Test {
   id: string;

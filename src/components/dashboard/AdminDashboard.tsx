@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useQuery } from '@tanstack/react-query';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
 
 // Custom Tooltip Component for Charts - memoized for performance

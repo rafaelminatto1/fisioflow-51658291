@@ -6,7 +6,7 @@ import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/shared/ui/button';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import {
   Popover,
   PopoverContent,

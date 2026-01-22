@@ -24,7 +24,8 @@ import {
   Check,
   Package
 } from 'lucide-react';
-import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { EmptyState } from '@/components/web/ui/empty-state';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { useFinancial, type Transaction } from '@/hooks/useFinancial';
 import { TransactionModal, PackagesManager } from '@/components/financial';
 import { PackageUsageReport } from '@/components/financial/PackageUsageReport';
@@ -37,7 +38,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/shared/ui/alert-dialog';
+} from '@/components/web/ui/alert-dialog';
 import { exportFinancialReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';

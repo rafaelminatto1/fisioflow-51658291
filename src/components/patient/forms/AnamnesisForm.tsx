@@ -31,7 +31,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 
 interface LifestyleData {
     smoking?: boolean;

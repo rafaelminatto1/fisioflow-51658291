@@ -15,7 +15,11 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 import { cn } from '@/lib/utils';
-import { Check } from '@/lib/icons/Check';
+
+// Simple Check icon component
+const CheckIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
+  <Text style={{ fontSize: size, fontWeight: '600', color: '#000' }} className={className}>✓</Text>
+);
 
 interface DropdownMenuContextValue {
   open: boolean;
@@ -211,7 +215,7 @@ export const DropdownMenuCheckboxItem = ({
           checked ? 'bg-primary border-primary' : 'border-input'
         )}
       >
-        {checked && <Check className="h-3 w-3 text-primary-foreground" size={12} />}
+        {checked && <CheckIcon size={12} />}
       </View>
       <Text className="flex-1 text-sm text-foreground">{children}</Text>
     </Pressable>

@@ -9,7 +9,7 @@ import {
 } from '@/components/shared/ui/dialog';
 import { Button } from '@/components/shared/ui/button';
 import { Badge } from '@/components/shared/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import { Label } from '@/components/shared/ui/label';
 import { Card } from '@/components/shared/ui/card';
 import { Alert, AlertDescription } from '@/components/shared/ui/alert';

@@ -8,7 +8,7 @@ import {
     TableHead,
     TableHeader,
     TableRow
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { Button } from '@/components/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';

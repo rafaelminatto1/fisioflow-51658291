@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui
 import { Badge } from '@/components/shared/ui/badge';
 import { Progress } from '@/components/shared/ui/progress';
 import { Button } from '@/components/shared/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/shared/ui/skeleton';
 import {
   Zap,
   Flame,

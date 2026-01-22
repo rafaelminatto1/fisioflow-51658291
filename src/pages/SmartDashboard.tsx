@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { CardContent } from '@/components/shared/ui/card';
 import { Badge } from '@/components/shared/ui/badge';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import { Button } from '@/components/shared/ui/button';
 import {
   Brain, TrendingUp, AlertTriangle, Users, DollarSign,
@@ -17,9 +17,9 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Area, AreaChart } from 'recharts';
-import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
+import { DraggableGrid, GridItem } from '@/components/web/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
-import { GridWidget } from '@/components/ui/GridWidget';
+import { GridWidget } from '@/components/web/ui/GridWidget';
 import { toast } from 'sonner';
 
 type ViewMode = 'today' | 'week' | 'month' | 'custom';

@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/shared/ui/button';
 import { Label } from '@/components/shared/ui/label';
 import { Textarea } from '@/components/shared/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/shared/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/web/ui/radio-group';
 import {
   Select,
   SelectContent,

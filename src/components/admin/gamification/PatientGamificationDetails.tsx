@@ -6,7 +6,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-} from '@/components/shared/ui/sheet';
+} from '@/components/web/ui/sheet';
 import { Button } from '@/components/shared/ui/button';
 import { Input } from '@/components/shared/ui/input';
 import { Label } from '@/components/shared/ui/label';
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/shared/ui/table';
+} from '@/components/web/ui/table';
 import { Progress } from '@/components/shared/ui/progress';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 import {
   Trophy, Star, Flame, Target, Calendar, Plus, Minus,
   RefreshCw, History, Award, Zap, User

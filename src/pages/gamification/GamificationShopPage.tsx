@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
-import { ScrollArea } from '@/components/shared/ui/scroll-area';
+import { ScrollArea } from '@/components/web/ui/scroll-area';
 
 interface ShopItem {
   id: string;

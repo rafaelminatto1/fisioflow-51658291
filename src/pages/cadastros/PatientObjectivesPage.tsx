@@ -6,7 +6,7 @@ import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
 import { Target, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { 
@@ -17,7 +17,7 @@ import {
   PatientObjective,
   PatientObjectiveFormData
 } from '@/hooks/usePatientObjectives';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/shared/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/web/ui/alert-dialog';
 
 const CATEGORIAS = [
   { value: 'flexibilidade', label: 'Flexibilidade', color: 'bg-blue-500' },

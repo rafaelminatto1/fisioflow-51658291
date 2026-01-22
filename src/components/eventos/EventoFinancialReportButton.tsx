@@ -10,7 +10,7 @@ import {
 import { FileText, Download } from "lucide-react";
 import { useEventoFinancialReport } from "@/hooks/useEventoFinancialReport";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/card';
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/shared/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

@@ -6,7 +6,7 @@ import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { Card, CardContent, CardHeader } from '@/components/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shared/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shared/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/web/ui/table';
 import { Badge } from '@/components/shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { Textarea } from '@/components/shared/ui/textarea';
@@ -22,11 +22,11 @@ import {
   EvaluationFormFormData
 } from '@/hooks/useEvaluationForms';
 import { EvaluationForm } from '@/types/clinical-forms';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/shared/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/web/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
 import { StandardFormsManager } from '@/components/clinical/StandardFormsManager';
 import { useImportEvaluationForm, EvaluationFormImportData } from '@/hooks/useEvaluationForms';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/shared/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/web/ui/sheet';
 import { DynamicFieldRenderer } from '@/components/evaluation/DynamicFieldRenderer';
 import { TemplateField } from '@/components/evaluation/EvaluationTemplateSelector';
 

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shared/ui/tabs';
 import { ArrowLeft, Calendar, MapPin, DollarSign, Edit } from 'lucide-react';
 import { Badge } from '@/components/shared/ui/badge';
-import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { EmptyState } from '@/components/web/ui/empty-state';
+import { LoadingSkeleton } from '@/components/web/ui/loading-skeleton';
 import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';
 import { ParticipantesTab } from '@/components/eventos/ParticipantesTab';

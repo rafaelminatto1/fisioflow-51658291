@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/shared/ui/button';
 import { Label } from '@/components/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
-import { Calendar } from '@/components/shared/ui/calendar';
+import { Calendar } from '@/components/web/ui/calendar';
 import { Checkbox } from '@/components/shared/ui/checkbox';
 import { Copy, CalendarIcon, Check } from 'lucide-react';
 import { format, addWeeks } from 'date-fns';

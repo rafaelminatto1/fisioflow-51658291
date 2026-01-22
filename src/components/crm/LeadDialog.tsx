@@ -6,7 +6,7 @@ import { Label } from '@/components/shared/ui/label';
 import { Textarea } from '@/components/shared/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/ui/select';
 import { useCreateLead, useUpdateLead, useDeleteLead, Lead } from '@/hooks/useLeads';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/shared/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/web/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
 
 const ORIGENS = ['Instagram', 'Google', 'Indicação', 'Evento', 'Site', 'Facebook', 'WhatsApp', 'Telefone', 'Outro'];
