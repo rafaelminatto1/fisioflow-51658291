@@ -786,7 +786,7 @@ export default function RelatorioConvenioPage() {
     // Buscar atendimentos do paciente
     const { data: atendimentos } = await supabase
       .from('appointments')
-      .select('*')
+      .select('id, start_time, end_time, status, service_names')
       .eq('patient_id', pacienteId)
       .gte('start_time', new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString())
       .order('start_time', { ascending: true });
@@ -815,7 +815,7 @@ export default function RelatorioConvenioPage() {
     // Buscar convênio do paciente
     const { data: pacienteConvenio } = await supabase
       .from('patient_convenios')
-      .select('*, convenios(*)')
+      .select('*, convenios(nome, cnpj, codigo_ans)')
       .eq('patient_id', pacienteId)
       .eq('ativo', true)
       .single();
@@ -825,7 +825,7 @@ export default function RelatorioConvenioPage() {
     // Buscar evoluções
     const { data: evolucoes } = await supabase
       .from('evolucoes')
-      .select('*')
+      .select('id, data, descricao')
       .eq('patient_id', pacienteId)
       .order('data', { ascending: false })
       .limit(5);
