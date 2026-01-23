@@ -9,3 +9,7 @@
 ## 2024-05-23 - [Test Environment & Build Memory]
 **Learning:** The local Vitest environment is unstable for component tests (JSDOM issues), making unit testing difficult. Additionally, the build process runs out of memory on standard settings.
 **Action:** Use `pnpm build:prod` (which increases memory) for builds, and rely on Playwright for reliable frontend verification when unit tests fail due to environment issues.
+
+## 2024-05-24 - [Dangerous Unlimited Selects]
+**Learning:** Found `useMovimentacoesCaixa` in `src/hooks/useFluxoCaixa.ts` performing `select('*')` without a default limit if dates are not provided. This can cause massive performance degradation as the table grows.
+**Action:** Always verify that list queries have default pagination or limits, especially for transaction logs or historical data.
