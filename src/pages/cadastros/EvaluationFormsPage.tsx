@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ClipboardList, Plus, Pencil, Trash2, Search, Eye, Settings, BookOpen, Copy, Download, Upload } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { ClipboardList, Plus, Pencil, Trash2, Search, Eye, Settings, BookOpen, Copy, Download, Upload, Play, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useEvaluationForms,
@@ -21,7 +22,7 @@ import {
   useDuplicateEvaluationForm,
   EvaluationFormFormData
 } from '@/hooks/useEvaluationForms';
-import { EvaluationForm } from '@/types/clinical-forms';
+import { EvaluationForm, TemplateFilters, EvaluationTemplate } from '@/types/clinical-forms';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
 import { StandardFormsManager } from '@/components/clinical/StandardFormsManager';
@@ -29,6 +30,12 @@ import { useImportEvaluationForm, EvaluationFormImportData } from '@/hooks/useEv
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DynamicFieldRenderer } from '@/components/evaluation/DynamicFieldRenderer';
 import { TemplateField } from '@/components/evaluation/EvaluationTemplateSelector';
+// New components
+import { PageHeader } from '@/components/evaluation/PageHeader';
+import { TemplateGrid } from '@/components/evaluation/TemplateGrid';
+import { TemplateFilters as TemplateFiltersComponent } from '@/components/evaluation/TemplateFilters';
+import { useToggleFavorite } from '@/hooks/useTemplateFavorites';
+import { useTemplateStats } from '@/hooks/useTemplateStats';
 
 const TIPOS_FICHA = [
   { value: 'anamnese', label: 'Anamnese' },
@@ -45,12 +52,23 @@ const TIPOS_FICHA = [
 export default function EvaluationFormsPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'minhas' | 'padrao'>('minhas');
-  const [search, setSearch] = useState('');
-  const [selectedTipo, setSelectedTipo] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingForm, setEditingForm] = useState<EvaluationForm | null>(null);
   const [previewForm, setPreviewForm] = useState<EvaluationForm | null>(null);
+
+  // New: Filters state
+  const [filters, setFilters] = useState<TemplateFilters>({
+    search: '',
+    category: undefined,
+    favorites: false,
+    sortBy: 'name',
+  });
+
+  // New: Hooks for favorites and stats
+  const toggleFavoriteMutation = useToggleFavorite();
+  const { data: stats } = useTemplateStats();
+
   const importMutation = useImportEvaluationForm();
 
   const [formData, setFormData] = useState<EvaluationFormFormData>({
@@ -61,15 +79,64 @@ export default function EvaluationFormsPage() {
     ativo: true,
   });
 
-  const { data: forms = [], isLoading } = useEvaluationForms(selectedTipo || undefined);
-  const createMutation = useCreateEvaluationForm();
-  const updateMutation = useUpdateEvaluationForm();
-  const deleteMutation = useDeleteEvaluationForm();
-  const duplicateMutation = useDuplicateEvaluationForm();
+  // Fetch all forms (for the table view)
+  const { data: forms = [], isLoading } = useEvaluationForms(filters.category);
 
-  const filteredForms = forms.filter(f =>
-    f.nome.toLowerCase().includes(search.toLowerCase())
+  // Build favorites set for quick lookup
+  const favoritesSet = useMemo(
+    () => new Set(forms.filter(f => f.is_favorite).map(f => f.id)),
+    [forms]
   );
+
+  // Apply filters and sorting
+  const filteredForms = useMemo(() => {
+    let result = [...forms];
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(f =>
+        f.nome.toLowerCase().includes(searchLower) ||
+        f.descricao?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Favorites filter
+    if (filters.favorites) {
+      result = result.filter(f => f.is_favorite);
+    }
+
+    // Sorting
+    switch (filters.sortBy) {
+      case 'recent':
+        result.sort((a, b) => {
+          if (!a.last_used_at) return 1;
+          if (!b.last_used_at) return -1;
+          return new Date(b.last_used_at).getTime() - new Date(a.last_used_at).getTime();
+        });
+        break;
+      case 'usage':
+        result.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+        break;
+      case 'name':
+      default:
+        result.sort((a, b) => a.nome.localeCompare(b.nome));
+        break;
+    }
+
+    return result;
+  }, [forms, filters]);
+
+  // Quick access templates (favorites + recently used)
+  const quickAccessTemplates = useMemo(() => {
+    const favorites = forms.filter(f => f.is_favorite);
+    const recentlyUsed = forms
+      .filter(f => f.last_used_at && !f.is_favorite)
+      .sort((a, b) => new Date(b.last_used_at!).getTime() - new Date(a.last_used_at!).getTime())
+      .slice(0, 6 - favorites.length);
+
+    return [...favorites, ...recentlyUsed].slice(0, 6);
+  }, [forms]);
 
   const handleOpenDialog = (form?: EvaluationForm) => {
     if (form) {
@@ -115,6 +182,26 @@ export default function EvaluationFormsPage() {
     if (deleteId) {
       await deleteMutation.mutateAsync(deleteId);
       setDeleteId(null);
+    }
+  };
+
+  // New: Use template directly (navigate to patient evaluation)
+  const handleUseTemplate = (templateId: string) => {
+    // For now, navigate to form builder. In the future, this could:
+    // 1. Open a patient selector modal
+    // 2. Navigate directly to evaluation page with template pre-selected
+    toast.success('Template selecionado! Redirecionando para configuração...');
+    navigate(`/cadastros/fichas-avaliacao/${templateId}/campos`);
+  };
+
+  // New: Toggle favorite
+  const handleToggleFavorite = (templateId: string) => {
+    const template = forms.find(f => f.id === templateId);
+    if (template) {
+      toggleFavoriteMutation.mutate({
+        templateId,
+        isFavorite: template.is_favorite || false,
+      });
     }
   };
 
@@ -171,17 +258,23 @@ export default function EvaluationFormsPage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <ClipboardList className="h-8 w-8 text-primary" />
-              Fichas de Avaliação
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Crie fichas personalizáveis ou use modelos prontos para avaliação de pacientes
-            </p>
-          </div>
-        </div>
+        {/* Page Header with Stats */}
+        <PageHeader
+          title="Fichas de Avaliação"
+          description="Crie fichas personalizáveis ou use modelos prontos para avaliação de pacientes"
+          icon={ClipboardList}
+          stats={stats ? {
+            total: stats.total,
+            favorites: stats.favorites,
+            recentlyUsed: stats.recentlyUsed,
+          } : undefined}
+          action={
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Ficha
+            </Button>
+          }
+        />
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'minhas' | 'padrao')}>
           <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -189,171 +282,211 @@ export default function EvaluationFormsPage() {
             <TabsTrigger value="padrao">Fichas Padrão</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="minhas" className="space-y-4 mt-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Gerencie suas fichas de avaliação personalizadas
-              </p>
-              <Button onClick={() => handleOpenDialog()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Ficha
-              </Button>
-              <div className="flex gap-2 ml-2">
-                <input
-                  type="file"
-                  id="import-file"
-                  className="hidden"
-                  accept=".json"
-                  onChange={handleImportFile}
-                />
-                <Button variant="outline" onClick={() => document.getElementById('import-file')?.click()}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Importar
-                </Button>
-              </div>
-            </div>
+          <TabsContent value="minhas" className="space-y-6 mt-4">
+            {/* Filters */}
+            <TemplateFiltersComponent
+              filters={filters}
+              onFiltersChange={setFilters}
+              totalCount={forms.length}
+              favoritesCount={favoritesSet.size}
+            />
 
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar fichas..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Select value={selectedTipo || "all"} onValueChange={(value) => setSelectedTipo(value === "all" ? "" : value)}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Todos os tipos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os tipos</SelectItem>
-                      {TIPOS_FICHA.map(t => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {/* Quick Access Section - Favorites + Recently Used */}
+            {quickAccessTemplates.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-semibold">Acesso Rápido</h2>
+                  <Badge variant="secondary" className="text-xs">
+                    Favoritos e Recentes
+                  </Badge>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-                ) : filteredForms.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma ficha encontrada.
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead className="w-[50px] text-center">Ref</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredForms.map((form) => (
-                        <TableRow key={form.id}>
-                          <TableCell className="font-medium">{form.nome}</TableCell>
-                          <TableCell className="text-center">
-                            {form.referencias && (
-                              <TooltipProvider>
-                                <Tooltip delayDuration={300}>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center justify-center cursor-help">
-                                      <BookOpen className="h-4 w-4 text-primary/70" />
-                                      <span className="sr-only">Ver referências</span>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-xs p-3">
-                                    <p className="font-semibold text-xs mb-1">Referências:</p>
-                                    <p className="text-xs text-muted-foreground">{form.referencias}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {TIPOS_FICHA.find(t => t.value === form.tipo)?.label || form.tipo}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate text-muted-foreground text-sm">
-                            {form.descricao || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => duplicateMutation.mutate(form.id)}
-                                      disabled={duplicateMutation.isPending}
-                                      className="hover:bg-primary/10 hover:text-primary"
-                                    >
-                                      <Copy className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Duplicar Template</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                <TemplateGrid
+                  templates={quickAccessTemplates}
+                  favorites={favoritesSet}
+                  isLoading={isLoading}
+                  onToggleFavorite={handleToggleFavorite}
+                  onEdit={(id) => navigate(`/cadastros/fichas-avaliacao/${id}/campos`)}
+                  onDuplicate={(id) => duplicateMutation.mutate(id)}
+                  onDelete={setDeleteId}
+                  onPreview={setPreviewForm}
+                  onUse={handleUseTemplate}
+                  maxItems={6}
+                />
+              </div>
+            )}
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleExport(form)}
-                                title="Exportar JSON"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
+            <Separator />
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setPreviewForm(form)}
-                                title="Pré-visualizar"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+            {/* Full List - Table View */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Todos os Templates ({filteredForms.length})</h2>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    id="import-file"
+                    className="hidden"
+                    accept=".json"
+                    onChange={handleImportFile}
+                  />
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById('import-file')?.click()}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importar
+                  </Button>
+                </div>
+              </div>
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => navigate(`/cadastros/fichas-avaliacao/${form.id}/campos`)}
-                                title="Configurar campos"
-                              >
-                                <Settings className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenDialog(form)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteId(form.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
+              <Card>
+                <CardContent className="p-0">
+                  {isLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                  ) : filteredForms.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-4xl mb-2">📋</div>
+                      <p className="text-muted-foreground">
+                        {filters.favorites
+                          ? 'Nenhum template favorito encontrado'
+                          : 'Nenhuma ficha encontrada'}
+                      </p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[10px]"></TableHead>
+                          <TableHead>Nome</TableHead>
+                          <TableHead className="w-[60px] text-center">Ref</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Campos</TableHead>
+                          <TableHead>Uso</TableHead>
+                          <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredForms.map((form) => (
+                          <TableRow key={form.id}>
+                            <TableCell>
+                              {form.is_favorite && (
+                                <span className="text-yellow-500">⭐</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium">{form.nome}</TableCell>
+                            <TableCell className="text-center">
+                              {form.referencias && (
+                                <TooltipProvider>
+                                  <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center justify-center cursor-help">
+                                        <BookOpen className="h-4 w-4 text-primary/70" />
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs p-3">
+                                      <p className="font-semibold text-xs mb-1">Referências:</p>
+                                      <p className="text-xs text-muted-foreground">{form.referencias}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {TIPOS_FICHA.find(t => t.value === form.tipo)?.label || form.tipo}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {(form.evaluation_form_fields?.length || 0)} campos
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {form.usage_count ? (
+                                <span>{form.usage_count}x</span>
+                              ) : (
+                                <span className="text-xs">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleUseTemplate(form.id)}
+                                        className="hover:bg-primary/10 hover:text-primary"
+                                      >
+                                        <Play className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Usar Template</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => duplicateMutation.mutate(form.id)}
+                                        disabled={duplicateMutation.isPending}
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Duplicar</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleExport(form)}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setPreviewForm(form)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/cadastros/fichas-avaliacao/${form.id}/campos`)}
+                                >
+                                  <Settings className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleOpenDialog(form)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDeleteId(form.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="padrao" className="mt-4">
@@ -467,6 +600,7 @@ export default function EvaluationFormsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
         {/* Preview Sheet */}
         <Sheet open={!!previewForm} onOpenChange={() => setPreviewForm(null)}>
           <SheetContent className="overflow-y-auto sm:max-w-xl w-full">
@@ -500,6 +634,20 @@ export default function EvaluationFormsPage() {
                   onChange={() => { }}
                   readOnly={true}
                 />
+                <div className="mt-6 pt-6 border-t flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setPreviewForm(null)}>
+                    Fechar
+                  </Button>
+                  <Button onClick={() => {
+                    if (previewForm) {
+                      setPreviewForm(null);
+                      handleUseTemplate(previewForm.id);
+                    }
+                  }}>
+                    <Play className="h-4 w-4 mr-2" />
+                    Usar Este Template
+                  </Button>
+                </div>
               </div>
             )}
           </SheetContent>

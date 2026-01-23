@@ -24,6 +24,12 @@ export interface EvaluationForm {
     created_at: string;
     updated_at: string;
     fields?: EvaluationFormField[];
+    // New fields for template statistics and favorites
+    is_favorite?: boolean;
+    usage_count?: number;
+    last_used_at?: string | null;
+    cover_image?: string | null;
+    estimated_time?: number; // Estimated completion time in minutes
 }
 
 export interface EvaluationFormField {
@@ -47,3 +53,27 @@ export interface EvaluationFormWithFields extends EvaluationForm {
 }
 
 // Helper to map UI types to DB types if needed, currently 1:1 mapped above where possible
+
+// Template filters and sorting options
+export interface TemplateFilters {
+    search?: string;
+    category?: string;
+    favorites?: boolean;
+    sortBy?: 'name' | 'recent' | 'usage';
+    viewMode?: 'grid' | 'list';
+}
+
+// Template statistics display
+export interface TemplateStats {
+    total: number;
+    favorites: number;
+    recentlyUsed: number;
+    byCategory: Record<string, number>;
+}
+
+// Extended template interface for UI components
+export interface EvaluationTemplate extends EvaluationForm {
+    evaluation_form_fields?: EvaluationFormField[];
+    category?: string; // Alias for tipo for easier UI mapping
+    field_count?: number; // Cached count of fields
+}
