@@ -174,7 +174,10 @@
       "Bash(docker:*)",
       "Bash(docker compose:*)",
       "Bash(sudo chown:*)",
-      "Bash(groups:*)"
+      "Bash(groups:*)",
+      "Bash(tree:*)",
+      "mcp__supabase__generate_typescript_types",
+      "Bash(npx shadcn@latest add:*)"
     ],
     "deny": [],
     "ask": []
