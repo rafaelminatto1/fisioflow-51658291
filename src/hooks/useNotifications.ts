@@ -28,7 +28,8 @@ export const useNotifications = (limit = 10) => {
 
       const result = await supabase
         .from('notifications')
-        .select('*')
+        // Select specific columns to reduce payload size and improve performance
+        .select('id, organization_id, user_id, type, title, message, link, is_read, metadata, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(limit);
