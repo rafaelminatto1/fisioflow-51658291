@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { useCardSize } from '@/hooks/useCardSize';
 import { CARD_SIZE_CONFIGS, DEFAULT_CARD_SIZE } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { Minimize, Maximize, Frame, Square, RotateCcw, Sparkles, Clock } from 'lucide-react';
+import { Minimize, Maximize, Frame, Square, RotateCcw, Sparkles, Clock, Type } from 'lucide-react';
 import type { CardSize } from '@/types/agenda';
 import { toast } from '@/hooks/use-toast';
 
@@ -91,6 +91,10 @@ const MIN_SLOT_HEIGHT = 30;
 const MAX_SLOT_HEIGHT = 120;
 const DEFAULT_SLOT_HEIGHT = 60;
 
+// Font scale range: 50% to 150%
+const MIN_FONT_SCALE = 0;
+const MAX_FONT_SCALE = 10;
+
 function SlotHeightControl({
   slotHeight,
   onSlotHeightChange,
@@ -99,6 +103,11 @@ function SlotHeightControl({
   onSlotHeightChange: (value: number) => void;
 }) {
   const [inputValue, setInputValue] = useState(slotHeight.toString());
+
+  // Sync input with external changes
+  React.useEffect(() => {
+    setInputValue(slotHeight.toString());
+  }, [slotHeight]);
 
   const handleSliderChange = (value: number[]) => {
     const newHeight = value[0];
@@ -129,9 +138,15 @@ function SlotHeightControl({
     }
   };
 
-  // Calculate visual preview
-  const previewSlots = Array.from({ length: 3 }, (_, i) => i + 1);
+  // Calculate visual percentage
   const percentage = ((slotHeight - MIN_SLOT_HEIGHT) / (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT)) * 100;
+
+  // Sample appointments for preview
+  const sampleAppointments = [
+    { time: '07:00', name: 'Maria Santos', type: 'Fisioterapia', color: 'bg-blue-500' },
+    { time: '07:30', name: 'João Silva', type: 'Ortopédica', color: 'bg-emerald-500' },
+    { time: '08:00', name: 'Ana Costa', type: 'Neurológica', color: 'bg-purple-500' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -158,38 +173,61 @@ function SlotHeightControl({
           </div>
         </div>
 
-        <div className="relative pt-1">
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
+        {/* Colored progress bar */}
+        <div className="relative">
+          <div className="h-2 bg-muted rounded-full overflow-hidden mb-2">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
               style={{ width: `${percentage}%` }}
             />
           </div>
+          <Slider
+            value={[slotHeight]}
+            onValueChange={handleSliderChange}
+            min={MIN_SLOT_HEIGHT}
+            max={MAX_SLOT_HEIGHT}
+            step={5}
+            className="cursor-pointer"
+          />
         </div>
-
-        <Slider
-          value={[slotHeight]}
-          onValueChange={handleSliderChange}
-          min={MIN_SLOT_HEIGHT}
-          max={MAX_SLOT_HEIGHT}
-          step={5}
-          className="opacity-0 absolute inset-0 cursor-pointer"
-        />
       </div>
 
-      {/* Visual preview of slots */}
+      {/* Visual preview of slots with realistic appointments */}
       <div className="p-4 bg-muted/30 rounded-xl border">
         <p className="text-xs font-medium text-muted-foreground mb-3">Pré-visualização dos Slots</p>
         <div className="space-y-1">
-          {previewSlots.map((slot) => (
+          {sampleAppointments.map((apt, index) => (
             <div
-              key={slot}
-              className="bg-background border border-border rounded-md flex items-center justify-center transition-all"
+              key={index}
+              className="relative bg-background border border-border rounded-md overflow-hidden transition-all duration-300"
               style={{ height: `${slotHeight}px`, minHeight: `${slotHeight}px` }}
             >
-              <span className="text-xs text-muted-foreground">
-                {String(7 + Math.floor((slot - 1) / 2)).padStart(2, '0')}:00
-              </span>
+              {/* Time indicator on the left */}
+              <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center bg-muted/50 border-r border-border">
+                <span className="text-xs font-mono text-muted-foreground">{apt.time}</span>
+              </div>
+              {/* Appointment card */}
+              <div
+                className={cn(
+                  "absolute left-14 right-2 top-1 bottom-1 rounded-md flex flex-col justify-center px-2 text-white transition-all",
+                  apt.color
+                )}
+              >
+                <p
+                  className="font-medium truncate transition-all"
+                  style={{ fontSize: slotHeight >= 60 ? '11px' : slotHeight >= 45 ? '10px' : '9px' }}
+                >
+                  {apt.name}
+                </p>
+                {slotHeight >= 50 && (
+                  <p
+                    className="text-white/80 truncate transition-all"
+                    style={{ fontSize: slotHeight >= 60 ? '10px' : '9px' }}
+                  >
+                    {apt.type}
+                  </p>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -229,12 +267,206 @@ function SlotHeightControl({
   );
 }
 
+// Font scale control component
+function FontScaleControl({
+  fontScale,
+  onFontScaleChange,
+  fontPercentage,
+}: {
+  fontScale: number;
+  onFontScaleChange: (value: number) => void;
+  fontPercentage: number;
+}) {
+  const [inputValue, setInputValue] = useState(fontPercentage.toFixed(0));
+
+  // Sync input with external changes
+  React.useEffect(() => {
+    setInputValue(fontPercentage.toFixed(0));
+  }, [fontPercentage]);
+
+  const handleSliderChange = (value: number[]) => {
+    const newScale = value[0];
+    onFontScaleChange(newScale);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleInputBlur = () => {
+    const value = parseInt(inputValue, 10);
+    // Convert percentage (50-150) to scale (0-10)
+    if (isNaN(value) || value < 50) {
+      setInputValue('50');
+      onFontScaleChange(0);
+    } else if (value > 150) {
+      setInputValue('150');
+      onFontScaleChange(10);
+    } else {
+      const scale = Math.round(((value - 50) / 100) * 10);
+      onFontScaleChange(scale);
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleInputBlur();
+    }
+  };
+
+  // Calculate visual percentage for progress bar
+  const progressPercentage = (fontScale / MAX_FONT_SCALE) * 100;
+
+  // Base font sizes for preview (px)
+  const baseTimeFontSize = 10;
+  const baseNameFontSize = 11;
+  const baseTypeFontSize = 9;
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="font-scale" className="text-sm font-medium flex items-center gap-2">
+            <Type className="w-4 h-4" />
+            Tamanho da Fonte dos Cards
+          </Label>
+          <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5">
+            <Input
+              id="font-scale"
+              type="number"
+              min={50}
+              max={150}
+              value={inputValue}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleInputKeyDown}
+              className="w-16 h-8 text-center border-0 bg-transparent p-0 font-mono text-sm"
+            />
+            <span className="text-xs text-muted-foreground">%</span>
+          </div>
+        </div>
+
+        {/* Colored progress bar */}
+        <div className="relative">
+          <div className="h-2 bg-muted rounded-full overflow-hidden mb-2">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 transition-all duration-300 ease-out"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <Slider
+            value={[fontScale]}
+            onValueChange={handleSliderChange}
+            min={MIN_FONT_SCALE}
+            max={MAX_FONT_SCALE}
+            step={1}
+            className="cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* Visual preview of font sizes - realistic appointment card */}
+      <div className="p-4 bg-muted/30 rounded-xl border">
+        <p className="text-xs font-medium text-muted-foreground mb-3">Pré-visualização</p>
+        <div className="space-y-2">
+          {/* Sample appointment card */}
+          <div className="relative h-16 bg-emerald-500 rounded-lg overflow-hidden">
+            <div className="absolute inset-0 p-2 flex flex-col justify-center text-white">
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono transition-all"
+                  style={{ fontSize: `${baseTimeFontSize * (fontPercentage / 100)}px` }}
+                >
+                  08:00
+                </span>
+                <span className="text-white/60">-</span>
+                <span
+                  className="font-medium truncate transition-all"
+                  style={{ fontSize: `${baseNameFontSize * (fontPercentage / 100)}px` }}
+                >
+                  Maria Santos
+                </span>
+              </div>
+              <span
+                className="text-white/80 truncate transition-all"
+                style={{ fontSize: `${baseTypeFontSize * (fontPercentage / 100)}px` }}
+              >
+                Fisioterapia Ortopédica
+              </span>
+            </div>
+          </div>
+          {/* Second sample for comparison */}
+          <div className="relative h-16 bg-blue-500 rounded-lg overflow-hidden">
+            <div className="absolute inset-0 p-2 flex flex-col justify-center text-white">
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono transition-all"
+                  style={{ fontSize: `${baseTimeFontSize * (fontPercentage / 100)}px` }}
+                >
+                  09:30
+                </span>
+                <span className="text-white/60">-</span>
+                <span
+                  className="font-medium truncate transition-all"
+                  style={{ fontSize: `${baseNameFontSize * (fontPercentage / 100)}px` }}
+                >
+                  João Carlos Oliveira
+                </span>
+              </div>
+              <span
+                className="text-white/80 truncate transition-all"
+                style={{ fontSize: `${baseTypeFontSize * (fontPercentage / 100)}px` }}
+              >
+                Reabilitação Neurológica
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Info cards */}
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className={cn(
+          "p-3 rounded-lg border text-center transition-colors",
+          fontScale <= 3
+            ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+            : "bg-muted/30 border-border"
+        )}>
+          <p className="font-medium">Compacto</p>
+          <p className="text-muted-foreground">50-80%</p>
+        </div>
+        <div className={cn(
+          "p-3 rounded-lg border text-center transition-colors",
+          fontScale > 3 && fontScale <= 7
+            ? "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800"
+            : "bg-muted/30 border-border"
+        )}>
+          <p className="font-medium">Normal</p>
+          <p className="text-muted-foreground">80-120%</p>
+        </div>
+        <div className={cn(
+          "p-3 rounded-lg border text-center transition-colors",
+          fontScale > 7
+            ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800"
+            : "bg-muted/30 border-border"
+        )}>
+          <p className="font-medium">Grande</p>
+          <p className="text-muted-foreground">120-150%</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CardSizeManager() {
   const {
     cardSize: currentCardSize,
     setCardSize: setCurrentSize,
     heightScale,
     setHeightScale,
+    fontScale,
+    setFontScale,
+    fontPercentage,
     resetToDefault,
   } = useCardSize();
 
@@ -243,7 +475,7 @@ export function CardSizeManager() {
     return Math.round(MIN_SLOT_HEIGHT + (heightScale / 10) * (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT));
   }, [heightScale]);
 
-  const hasCustomSettings = currentCardSize !== DEFAULT_CARD_SIZE || heightScale !== 5;
+  const hasCustomSettings = currentCardSize !== DEFAULT_CARD_SIZE || heightScale !== 5 || fontScale !== 5;
 
   const handleSlotHeightChange = (newHeight: number) => {
     // Convert back to 0-10 scale
@@ -252,6 +484,15 @@ export function CardSizeManager() {
     toast({
       title: 'Altura dos slots atualizada',
       description: `Os slots de horário agora têm ${newHeight}px de altura.`,
+    });
+  };
+
+  const handleFontScaleChange = (newScale: number) => {
+    setFontScale(newScale);
+    const percentage = 50 + (newScale / 10) * 100;
+    toast({
+      title: 'Tamanho da fonte atualizado',
+      description: `A fonte dos cards agora está em ${percentage.toFixed(0)}%.`,
     });
   };
 
@@ -335,6 +576,28 @@ export function CardSizeManager() {
           <SlotHeightControl
             slotHeight={slotHeight}
             onSlotHeightChange={handleSlotHeightChange}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Font Scale Control */}
+      <Card className="border-2">
+        <CardHeader className="pb-4">
+          <div className="space-y-1">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Type className="w-5 h-5" />
+              Tamanho da Fonte dos Cards
+            </CardTitle>
+            <CardDescription>
+              Ajuste o tamanho da fonte do conteúdo dos cards. A fonte se adapta proporcionalmente.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <FontScaleControl
+            fontScale={fontScale}
+            onFontScaleChange={handleFontScaleChange}
+            fontPercentage={fontPercentage}
           />
         </CardContent>
       </Card>

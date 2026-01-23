@@ -1,6 +1,6 @@
 // Core data types for the FisioFlow application
 
-// Re-export agenda types
+// Re-export agenda types (includes schedule configuration types)
 export * from './agenda';
 export type { EnhancedAppointment } from './appointment';
 

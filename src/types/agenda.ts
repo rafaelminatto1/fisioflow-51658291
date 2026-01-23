@@ -165,3 +165,222 @@ export interface CardSizeConfig {
   // Height multiplier (0.5 to 2.0) - affects card height in calendar
   heightMultiplier: number;
 }
+
+// ============================================================================
+// SCHEDULE CONFIGURATION TYPES (Database tables: schedule_*)
+// ============================================================================
+
+// Day of week enum (0 = Sunday, 6 = Saturday)
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export const DAYS_OF_WEEK: { value: DayOfWeek; label: string }[] = [
+  { value: 0, label: 'Domingo' },
+  { value: 1, label: 'Segunda-feira' },
+  { value: 2, label: 'Terça-feira' },
+  { value: 3, label: 'Quarta-feira' },
+  { value: 4, label: 'Quinta-feira' },
+  { value: 5, label: 'Sexta-feira' },
+  { value: 6, label: 'Sábado' },
+];
+
+// Schedule Capacity Config
+export interface ScheduleCapacityConfig {
+  id: string;
+  organization_id: string;
+  day_of_week: DayOfWeek;
+  start_time: string; // HH:MM format
+  end_time: string; // HH:MM format
+  max_parallel_sessions: number;
+  session_duration_minutes: number;
+  buffer_minutes: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateScheduleCapacityConfigData {
+  organization_id: string;
+  day_of_week: DayOfWeek;
+  start_time: string;
+  end_time: string;
+  max_parallel_sessions?: number;
+  session_duration_minutes?: number;
+  buffer_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateScheduleCapacityConfigData {
+  day_of_week?: DayOfWeek;
+  start_time?: string;
+  end_time?: string;
+  max_parallel_sessions?: number;
+  session_duration_minutes?: number;
+  buffer_minutes?: number;
+  is_active?: boolean;
+}
+
+// Schedule Business Hours
+export interface ScheduleBusinessHours {
+  id: string;
+  organization_id: string;
+  day_of_week: DayOfWeek;
+  start_time: string; // HH:MM format
+  end_time: string; // HH:MM format
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateScheduleBusinessHoursData {
+  organization_id: string;
+  day_of_week: DayOfWeek;
+  start_time: string;
+  end_time: string;
+  is_active?: boolean;
+  notes?: string;
+}
+
+export interface UpdateScheduleBusinessHoursData {
+  day_of_week?: DayOfWeek;
+  start_time?: string;
+  end_time?: string;
+  is_active?: boolean;
+  notes?: string;
+}
+
+// Schedule Cancellation Rules
+export interface ScheduleCancellationRules {
+  id: string;
+  organization_id: string;
+  name: string;
+  min_hours_before_cancellation: number;
+  cancellation_fee_percentage: number;
+  allow_patient_cancellation: boolean;
+  allow_auto_refund: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateScheduleCancellationRulesData {
+  organization_id: string;
+  name: string;
+  min_hours_before_cancellation?: number;
+  cancellation_fee_percentage?: number;
+  allow_patient_cancellation?: boolean;
+  allow_auto_refund?: boolean;
+  is_active?: boolean;
+}
+
+export interface UpdateScheduleCancellationRulesData {
+  name?: string;
+  min_hours_before_cancellation?: number;
+  cancellation_fee_percentage?: number;
+  allow_patient_cancellation?: boolean;
+  allow_auto_refund?: boolean;
+  is_active?: boolean;
+}
+
+// Schedule Blocked Times
+export interface ScheduleBlockedTimes {
+  id: string;
+  organization_id: string;
+  start_date: string; // ISO date-time string
+  end_date: string; // ISO date-time string
+  reason: string | null;
+  is_recurring: boolean;
+  recurring_pattern: RecurringPattern | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecurringPattern {
+  frequency: 'daily' | 'weekly' | 'monthly';
+  days?: DayOfWeek[]; // For weekly frequency
+  end_date?: string; // ISO date string
+}
+
+export interface CreateScheduleBlockedTimesData {
+  organization_id: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+  is_recurring?: boolean;
+  recurring_pattern?: RecurringPattern;
+}
+
+export interface UpdateScheduleBlockedTimesData {
+  start_date?: string;
+  end_date?: string;
+  reason?: string;
+  is_recurring?: boolean;
+  recurring_pattern?: RecurringPattern;
+}
+
+// Schedule Notification Settings
+export interface ScheduleNotificationSettings {
+  id: string;
+  organization_id: string;
+  notification_type: NotificationType;
+  notification_channel: NotificationChannel;
+  enabled: boolean;
+  timing_value: number;
+  timing_unit: TimingUnit;
+  template: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type NotificationType =
+  | 'appointment_reminder'
+  | 'cancellation'
+  | 'reschedule'
+  | 'confirmation'
+  | 'no_show'
+  | 'follow_up';
+
+export type NotificationChannel = 'email' | 'sms' | 'push' | 'whatsapp';
+
+export type TimingUnit = 'minutes' | 'hours' | 'days';
+
+export const NOTIFICATION_TYPES: { value: NotificationType; label: string }[] = [
+  { value: 'appointment_reminder', label: 'Lembrete de Consulta' },
+  { value: 'cancellation', label: 'Cancelamento' },
+  { value: 'reschedule', label: 'Reagendamento' },
+  { value: 'confirmation', label: 'Confirmação' },
+  { value: 'no_show', label: 'Não Compareceu' },
+  { value: 'follow_up', label: 'Acompanhamento' },
+];
+
+export const NOTIFICATION_CHANNELS: { value: NotificationChannel; label: string; icon: string }[] = [
+  { value: 'email', label: 'E-mail', icon: 'mail' },
+  { value: 'sms', label: 'SMS', icon: 'message-square' },
+  { value: 'push', label: 'Push', icon: 'bell' },
+  { value: 'whatsapp', label: 'WhatsApp', icon: 'message-circle' },
+];
+
+export const TIMING_UNITS: { value: TimingUnit; label: string }[] = [
+  { value: 'minutes', label: 'Minutos' },
+  { value: 'hours', label: 'Horas' },
+  { value: 'days', label: 'Dias' },
+];
+
+export interface CreateScheduleNotificationSettingsData {
+  organization_id: string;
+  notification_type: NotificationType;
+  notification_channel: NotificationChannel;
+  enabled?: boolean;
+  timing_value: number;
+  timing_unit?: TimingUnit;
+  template?: string;
+}
+
+export interface UpdateScheduleNotificationSettingsData {
+  notification_type?: NotificationType;
+  notification_channel?: NotificationChannel;
+  enabled?: boolean;
+  timing_value?: number;
+  timing_unit?: TimingUnit;
+  template?: string;
+}

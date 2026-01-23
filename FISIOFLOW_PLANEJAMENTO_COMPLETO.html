@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FisioFlow - Planejamento Completo para Aplicativos iOS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #1F2937;
+            background: #F9FAFB;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #10B981;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1F2937;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #10B981;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #374151;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4B5563;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6B7280;
+            margin-bottom: 40px;
+        }
+
+        .executive-summary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+
+        .executive-summary h2 {
+            color: white;
+            border-bottom-color: rgba(255,255,255,0.3);
+            margin-top: 0;
+        }
+
+        .highlight-box {
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: #ECFDF5;
+            border-left: 4px solid #10B981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            background: #F3F4F6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #1F2937;
+            color: #F9FAFB;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        th {
+            background: #F9FAFB;
+            font-weight: 600;
+        }
+
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .checklist li::before {
+            content: '☐';
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            color: #10B981;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .tag-recommended {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        .tag-star {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: #F9FAFB;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #10B981;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6B7280;
+            margin-top: 5px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 40px;
+            }
+
+            h2 {
+                page-break-before: auto;
+            }
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #E5E7EB;
+            text-align: center;
+            color: #6B7280;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 FisioFlow - Planejamento Completo para Aplicativos iOS</h1>
+        <p class="subtitle">Análise Estratégica e Roadmap de Desenvolvimento</p>
+
+        <div class="executive-summary">
+            <h2>📊 Sumário Executivo</h2>
+            <p><strong>Data:</strong> 22 de Janeiro de 2026<br>
+            <strong>Projeto:</strong> FisioFlow - Plataforma de Fisioterapia Digital<br>
+            <strong>Responsável:</strong> Rafael Minatto</p>
+
+            <h3 style="color: white; margin-top: 20px;">Contexto Atual</h3>
+            <ul style="color: rgba(255,255,255,0.95);">
+                <li><strong>Volume de atendimentos:</strong> ~600/mês</li>
+                <li><strong>Profissionais ativos:</strong> 15</li>
+                <li><strong>Plataforma atual:</strong> Web (Vite + React + Supabase)</li>
+                <li><strong>Stack tecnológico:</strong> Moderno e escalável</li>
+            </ul>
+
+            <h3 style="color: white; margin-top: 20px;">Objetivos Principais</h3>
+            <ol style="color: rgba(255,255,255,0.95);">
+                <li>Criar aplicativos nativos iOS para melhor experiência mobile</li>
+                <li>Separar experiência entre pacientes e profissionais</li>
+                <li>Aumentar engajamento e retenção de usuários</li>
+                <li>Escalar o negócio com qualidade premium</li>
+            </ol>
+        </div>
+
+        <h2>🏗️ ANÁLISE DA ESTRUTURA ATUAL</h2>
+
+        <h3>Stack Tecnológico Identificado</h3>
+
+        <h4>Frontend</h4>
+        <ul>
+            <li><strong>Framework:</strong> React 18.3.1</li>
+            <li><strong>Build Tool:</strong> Vite 6.0.11</li>
+            <li><strong>Routing:</strong> React Router DOM v7</li>
+            <li><strong>UI Library:</strong> Radix UI (shadcn/ui)</li>
+            <li><strong>Styling:</strong> Tailwind CSS 4.x</li>
+            <li><strong>State Management:</strong> React Context + Hooks</li>
+            <li><strong>Forms:</strong> React Hook Form + Zod validation</li>
+            <li><strong>Language:</strong> TypeScript</li>
+        </ul>
+
+        <h4>Backend/Infraestrutura</h4>
+        <ul>
+            <li><strong>BaaS:</strong> Supabase (PostgreSQL + Auth + Storage + Realtime)</li>
+            <li><strong>Email:</strong> Resend</li>
+            <li><strong>Hosting:</strong> Vercel</li>
+        </ul>
+
+        <div class="success-box">
+            <h4>✅ Pontos Fortes Atuais</h4>
+            <ul>
+                <li>Arquitetura moderna e escalável</li>
+                <li>Separação clara de responsabilidades</li>
+                <li>Componentização bem estruturada</li>
+                <li>Integração com Supabase (excelente para mobile)</li>
+                <li>TypeScript para type safety</li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <h4>⚠️ Pontos de Melhoria Identificados</h4>
+            <ul>
+                <li>Falta de componentes mobile-optimized</li>
+                <li>Ausência de skeleton loaders</li>
+                <li>Sistema de notificações push não implementado</li>
+                <li>Falta de integração com Apple HealthKit</li>
+                <li>Ausência de dark mode system</li>
+                <li>Limitada experiência offline-first</li>
+            </ul>
+        </div>
+
+        <h2>📱 ARQUITETURA RECOMENDADA: Apps Separados</h2>
+
+        <div class="highlight-box">
+            <h3>✅ RECOMENDAÇÃO: DOIS APPS SEPARADOS</h3>
+            <p>Após análise detalhada, <strong>recomendo fortemente</strong> criar dois aplicativos separados:</p>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-value">📱</div>
+                <div class="metric-label"><strong>App FisioFlow Paciente</strong><br>Simplicidade, engajamento, adesão ao tratamento</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">👨‍⚕️</div>
+                <div class="metric-label"><strong>App FisioFlow Pro</strong><br>Produtividade, gestão, eficiência clínica</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">💰</div>
+                <div class="metric-label"><strong>ROI</strong><br>Break-even em 12-18 meses</div>
+            </div>
+        </div>
+
+        <h3>Justificativa para Apps Separados</h3>
+
+        <h4>1. Experiência de Usuário Otimizada</h4>
+        <ul>
+            <li>Cada app tem UX/UI específica para seu público</li>
+            <li>Interfaces simplificadas para pacientes</li>
+            <li>Ferramentas avançadas para profissionais</li>
+            <li>Redução de cognitive load</li>
+        </ul>
+
+        <h4>2. Segurança e Compliance</h4>
+        <ul>
+            <li>Separação clara de dados sensíveis</li>
+            <li>Role-based access control por app</li>
+            <li>Compliance mais fácil com LGPD</li>
+            <li>Auditoria simplificada</li>
+        </ul>
+
+        <h4>3. Manutenção e Evolução</h4>
+        <ul>
+            <li>Releases independentes</li>
+            <li>Features específicas por público</li>
+            <li>Testes mais focados</li>
+            <li>Roadmap separado</li>
+        </ul>
+
+        <h4>4. Monetização</h4>
+        <ul>
+            <li>Modelos de pricing diferentes</li>
+            <li>App profissional: B2B (assinatura por profissional)</li>
+            <li>App paciente: B2C (freemium)</li>
+        </ul>
+
+        <h4>5. App Store Optimization</h4>
+        <ul>
+            <li>Palavras-chave específicas</li>
+            <li>Screenshots direcionadas</li>
+            <li>Reviews segmentadas</li>
+            <li>Rankings em categorias diferentes</li>
+        </ul>
+
+        <h2>🛠️ TECNOLOGIA RECOMENDADA</h2>
+
+        <div class="success-box">
+            <h3>Opção 1: React Native + Expo <span class="tag tag-recommended">RECOMENDADO ⭐</span></h3>
+        </div>
+
+        <h4>Por que React Native + Expo?</h4>
+
+        <div class="highlight-box">
+            <h4>Vantagens</h4>
+            <ul>
+                <li>✅ <strong>Código compartilhado</strong> com web (~70-80%)</li>
+                <li>✅ <strong>Desenvolvimento rápido</strong> - hot reload, tooling excelente</li>
+                <li>✅ <strong>Sem necessidade de Mac</strong> - EAS Build compila na nuvem</li>
+                <li>✅ <strong>Base de talentos</strong> - React developers adaptam facilmente</li>
+                <li>✅ <strong>Ecosistema maduro</strong> - bibliotecas para tudo</li>
+                <li>✅ <strong>Supabase SDK nativo</strong> - já testado e funcional</li>
+                <li>✅ <strong>Updates over-the-air</strong> - EAS Update para correções rápidas</li>
+                <li>✅ <strong>Cost-effective</strong> - menor custo de desenvolvimento</li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <h4>Quando Escolher React Native + Expo?</h4>
+            <ul>
+                <li>Seu time conhece React/JavaScript</li>
+                <li>Quer lançar MVP rapidamente</li>
+                <li>Precisa de Android no futuro</li>
+                <li>Orçamento limitado</li>
+                <li>Tem Ubuntu (sem Mac)</li>
+            </ul>
+        </div>
+
+        <h3>Opção 2: Swift Nativo</h3>
+
+        <div class="highlight-box">
+            <h4>Vantagens</h4>
+            <ul>
+                <li>✅ <strong>Performance máxima</strong> - código compilado nativo</li>
+                <li>✅ <strong>Acesso completo</strong> a todas APIs iOS</li>
+                <li>✅ <strong>UI mais refinada</strong> - SwiftUI é excelente</li>
+                <li>✅ <strong>Melhor integração</strong> com ecossistema Apple</li>
+                <li>✅ <strong>Size do app</strong> menor</li>
+                <li>✅ <strong>Long-term viability</strong> - Apple mantém por décadas</li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <h4>Desvantagens</h4>
+            <ul>
+                <li>⚠️ <strong>Requer Mac</strong> - não tem como fugir disso</li>
+                <li>⚠️ <strong>Código separado</strong> - 0% de compartilhamento com web</li>
+                <li>⚠️ <strong>Tempo de desenvolvimento</strong> maior</li>
+                <li>⚠️ <strong>Custo mais alto</strong> - precisa de 2 times</li>
+                <li>⚠️ <strong>Android</strong> seria outro projeto completo</li>
+            </ul>
+        </div>
+
+        <h2>💰 ANÁLISE DE CUSTOS</h2>
+
+        <h3>Custos de Desenvolvimento (Estimativas 2025)</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tecnologia</th>
+                    <th>App Paciente (MVP)</th>
+                    <th>App Profissional (MVP)</th>
+                    <th>Total (Ambos)</th>
+                    <th>Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>React Native + Expo</strong></td>
+                    <td>R$ 40.000 - R$ 80.000</td>
+                    <td>R$ 60.000 - R$ 120.000</td>
+                    <td><strong>R$ 100.000 - R$ 200.000</strong></td>
+                    <td>3-6 meses cada app</td>
+                </tr>
+                <tr>
+                    <td><strong>Swift Nativo</strong></td>
+                    <td>R$ 80.000 - R$ 150.000</td>
+                    <td>R$ 120.000 - R$ 200.000</td>
+                    <td><strong>R$ 200.000 - R$ 350.000</strong></td>
+                    <td>4-8 meses cada app</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Custos Recorrentes Mensais</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Serviço</th>
+                    <th>Custo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Apple Developer Program</td>
+                    <td>US$ 99/ano (~R$ 500/ano)</td>
+                </tr>
+                <tr>
+                    <td>EAS Build (Free tier)</td>
+                    <td>Grátis (15 builds/mês)</td>
+                </tr>
+                <tr>
+                    <td>EAS Build (Paid)</td>
+                    <td>US$ 99/mês (se precisar mais builds)</td>
+                </tr>
+                <tr>
+                    <td>RevenueCat (Free tier)</td>
+                    <td>Grátis (até R$ 50k/mês em receita)</td>
+                </tr>
+                <tr>
+                    <td>Push notifications</td>
+                    <td>Incluído no Supabase</td>
+                </tr>
+                <tr>
+                    <td>Analytics</td>
+                    <td>Firebase Analytics (grátis)</td>
+                </tr>
+                <tr>
+                    <td><strong>Estimativa Total Mensal</strong></td>
+                    <td><strong>~R$ 50/mês (início) a ~R$ 500/mês (crescimento)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🎯 ROADMAP DE DESENVOLVIMENTO</h2>
+
+        <h3>FASE 1: Preparação (Mês 1)</h3>
+        <ul class="checklist">
+            <li>Criar conta Apple Developer</li>
+            <li>Configurar App Store Connect</li>
+            <li>Definir feature set final</li>
+            <li>Criar design system completo</li>
+            <li>Setup projeto React Native (Expo)</li>
+            <li>Configurar EAS Build</li>
+            <li>Implementar navegação (React Navigation)</li>
+            <li>Integrar Supabase no mobile</li>
+            <li>Setup autenticação</li>
+            <li>Configurar theme system (dark mode)</li>
+            <li>Implementar state management global</li>
+        </ul>
+
+        <h3>FASE 2: App Paciente - MVP (Meses 2-4)</h3>
+        <ul class="checklist">
+            <li>Login com email/senha e biometria</li>
+            <li>Login social (Google, Apple)</li>
+            <li>Onboarding otimizado</li>
+            <li>Listagem de planos ativos</li>
+            <li>Visualização de exercícios com vídeos</li>
+            <li>Contador de séries/reps e timer</li>
+            <li>Dashboard simplificado com gráficos</li>
+            <li>Sistema de notificações push</li>
+            <li>Sistema de gamificação básico</li>
+            <li>Streaks e badges</li>
+            <li>Chat com profissional</li>
+        </ul>
+
+        <h3>FASE 3: App Profissional - MVP (Meses 5-7)</h3>
+        <ul class="checklist">
+            <li>Gestão de pacientes com filtros avançados</li>
+            <li>Biblioteca de exercícios</li>
+            <li>Editor de planos drag-and-drop</li>
+            <li>Templates de planos</li>
+            <li>Dashboard de pacientes</li>
+            <li>Alertas de não-adesão</li>
+            <li>Relatórios exportáveis</li>
+            <li>Chat com pacientes</li>
+            <li>Broadcast messages</li>
+            <li>Gestão de agenda e financeiro</li>
+        </ul>
+
+        <h3>FASE 4: Integrações Avançadas (Meses 8-10)</h3>
+        <ul class="checklist">
+            <li>Apple HealthKit integration</li>
+            <li>Apple Watch companion app</li>
+            <li>Computer vision AI para postura</li>
+            <li>Contagem automática de repetições</li>
+            <li>Feedback visual em tempo real</li>
+        </ul>
+
+        <h2>💡 FUNCIONALIDADES PARA ENGAJAMENTO</h2>
+
+        <h3>Gamificação</h3>
+
+        <h4>1. Sistema de Pontos e Níveis</h4>
+        <ul>
+            <li>Pontos por exercício completado</li>
+            <li>Níveis de progressão (Iniciante → Intermediário → Avançado)</li>
+            <li>Badges por conquistas específicas</li>
+            <li>Leaderboard opcional (por clínica)</li>
+        </ul>
+
+        <h4>2. Streaks</h4>
+        <ul>
+            <li>Contador de dias consecutivos</li>
+            <li>Bônus por manter streaks</li>
+            <li>Recuperação de streak (1 vez por mês)</li>
+            <li>Notificações para manter streak</li>
+        </ul>
+
+        <h3>Notificações Inteligentes</h3>
+
+        <h4>Tipos de Notificações</h4>
+        <ol>
+            <li><strong>Lembretes de exercícios</strong> - Horário personalizado, baseado em histórico</li>
+            <li><strong>Motivacionais</strong> - Mensagens aleatórias personalizadas</li>
+            <li><strong>Progresso</strong> - Atualizações de conquistas e marcos</li>
+            <li><strong>Reengajamento</strong> - Para usuários inativos</li>
+        </ol>
+
+        <h2>🔐 SEGURANÇA E COMPLIANCE</h2>
+
+        <h3>LGPD Compliance</h3>
+
+        <div class="highlight-box">
+            <h4>Princípios Fundamentais</h4>
+            <ol>
+                <li><strong>Minimização de dados:</strong> Coletar apenas o necessário</li>
+                <li><strong>Consentimento explícito:</strong> Opt-in claro para tudo</li>
+                <li><strong>Direito ao esquecimento:</strong> Delete account completo</li>
+                <li><strong>Portabilidade:</strong> Exportar dados do usuário</li>
+                <li><strong>Transparência:</strong> Política de privacidade clara</li>
+            </ol>
+        </div>
+
+        <h4>Implementação Técnica</h4>
+        <ul>
+            <li>Criptografia em repouso (Supabase já tem)</li>
+            <li>Criptografia em trânsito (HTTPS obrigatório)</li>
+            <li>Autenticação com 2FA</li>
+            <li>Sessions com expiração</li>
+            <li>Audit logs para operações críticas</li>
+            <li>Anonymous analytics (opcional)</li>
+        </ul>
+
+        <h2>📊 ESTRUTURA DE REPOSITÓRIOS</h2>
+
+        <div class="highlight-box">
+            <h3>Recomendação: Monorepo com Turborepo</h3>
+        </div>
+
+        <pre><code>fisioflow/
+├── apps/
+│   ├── web/                 # App web atual
+│   ├── patient-ios/         # App paciente iOS
+│   ├── patient-android/     # App paciente Android (futuro)
+│   └── pro-ios/             # App profissional iOS
+├── packages/
+│   ├── ui/                  # Componentes compartilhados
+│   ├── config/              # Configurações compartilhadas
+│   ├── types/               # Tipos TypeScript compartilhados
+│   ├── utils/               # Utilitários compartilhados
+│   └── api/                 # Cliente Supabase compartilhado
+├── package.json
+├── turbo.json
+└── README.md</code></pre>
+
+        <h4>Vantagens do Monorepo</h4>
+        <ul>
+            <li>✅ Código compartilhado real</li>
+            <li>✅ Mudanças atomicas across apps</li>
+            <li>✅ CI/CD unificado</li>
+            <li>✅ Gerenciamento simplificado</li>
+        </ul>
+
+        <h2>🚀 XCODE VS EAS BUILD</h2>
+
+        <div class="success-box">
+            <h3>EAS Build (RECOMENDADO) ⭐</h3>
+            <ul>
+                <li><strong>Não precisa de Mac</strong> - compila na nuvem</li>
+                <li><strong>Automatizado</strong> - CI/CD integrado</li>
+                <li><strong>Paralelo</strong> - múltiplos builds simultâneos</li>
+                <li><strong>Consistente</strong> - ambiente limpo sempre</li>
+                <li><strong>Rápido</strong> - cache inteligente</li>
+            </ul>
+            <p><strong>Custos:</strong> Free tier com 15 builds/mês | US$ 99/mês para ilimitado</p>
+        </div>
+
+        <h2>🤖 VIABILIDADE DE DESENVOLVIMENTO COM LLMs</h2>
+
+        <div class="highlight-box">
+            <h3>Avaliação das Ferramentas Disponíveis</h3>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ferramenta</th>
+                    <th>Melhor Para</th>
+                    <th>Contexto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Claude</strong></td>
+                    <td>Análise de código, debugging, arquitetura</td>
+                    <td>200K tokens</td>
+                </tr>
+                <tr>
+                    <td><strong>GPT-4 / GPT-5</strong></td>
+                    <td>Geração de código boilerplate</td>
+                    <td>128K tokens</td>
+                </tr>
+                <tr>
+                    <td><strong>Gemini</strong></td>
+                    <td>Análise de grandes codebases</td>
+                    <td>1M tokens (maior)</td>
+                </tr>
+                <tr>
+                    <td><strong>Abacus AI</strong></td>
+                    <td>Automação completa de tasks</td>
+                    <td>Agentes especializados</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-value">60%</div>
+                <div class="metric-label">do código com LLMs</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">50%</div>
+                <div class="metric-label">mais rápido</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">40%</div>
+                <div class="metric-label">economia de custo</div>
+            </div>
+        </div>
+
+        <h3>O que LLMs fazem Bem</h3>
+        <ul>
+            <li>✅ Gerar código boilerplate</li>
+            <li>✅ Debugging e fix de bugs</li>
+            <li>✅ Explicar código complexo</li>
+            <li>✅ Sugerir arquiteturas</li>
+            <li>✅ Escrever testes</li>
+            <li>✅ Documentação</li>
+        </ul>
+
+        <h3>O que LLMs NÃO fazem Bem</h3>
+        <ul>
+            <li>❌ Design visual refinado</li>
+            <li>❌ UX/UI thinking</li>
+            <li>❌ Decisões de produto</li>
+            <li>❌ Testes manuais em dispositivos</li>
+            <li>❌ Submissão para App Store</li>
+            <li>❌ Estratégia de negócios</li>
+        </ul>
+
+        <h2>💵 MODELO DE MONETIZAÇÃO</h2>
+
+        <h3>App Paciente - Modelo Freemium</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Plano</th>
+                    <th>Preço</th>
+                    <th>Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Grátis</strong></td>
+                    <td>R$ 0</td>
+                    <td>Acesso a planos da clínica, exercícios básicos, notificações</td>
+                </tr>
+                <tr>
+                    <td><strong>Premium</strong></td>
+                    <td>R$ 29,90/mês ou R$ 249,90/ano</td>
+                    <td>Planos ilimitados, AI Coach, Apple Health, conteúdo exclusivo</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>App Profissional - Por Profissional (B2B)</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Plano</th>
+                    <th>Preço</th>
+                    <th>Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Starter</strong></td>
+                    <td>R$ 99/mês</td>
+                    <td>Até 20 pacientes, planos básicos, suporte por email</td>
+                </tr>
+                <tr>
+                    <td><strong>Pro</strong></td>
+                    <td>R$ 199/mês</td>
+                    <td>Até 100 pacientes, analytics, suporte prioritário</td>
+                </tr>
+                <tr>
+                    <td><strong>Clínica</strong></td>
+                    <td>R$ 499/mês</td>
+                    <td>Pacientes ilimitados, multi-profissionais, white-label</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Projeção de Receita</h3>
+
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-value">R$ 54K</div>
+                <div class="metric-label">Ano 1 - Conservador</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">R$ 191K</div>
+                <div class="metric-label">Ano 2 - Moderado</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">R$ 717K</div>
+                <div class="metric-label">Ano 3 - Otimista</div>
+            </div>
+        </div>
+
+        <h2>📈 MÉTRICAS DE SUCESSO</h2>
+
+        <h3>App Paciente</h3>
+
+        <h4>Engajamento</h4>
+        <ul>
+            <li><strong>DAU/MAU:</strong> Target 30%+ (daily active / monthly active)</li>
+            <li><strong>Session duration:</strong> 5-10 min por sessão</li>
+            <li><strong>Retention:</strong> Dia 1: 40%+ | Dia 7: 25%+ | Dia 30: 15%+</li>
+        </ul>
+
+        <h4>Adesão ao Tratamento</h4>
+        <ul>
+            <li><strong>Exercícios completados:</strong> 70%+ dos prescritos</li>
+            <li><strong>Streak médio:</strong> 5+ dias</li>
+            <li><strong>Push notification CTR:</strong> 8%+</li>
+        </ul>
+
+        <h4>Satisfação</h4>
+        <ul>
+            <li><strong>App Store rating:</strong> 4.5+ estrelas</li>
+            <li><strong>NPS:</strong> 50+</li>
+        </ul>
+
+        <h2>🎯 CONCLUSÕES E RECOMENDAÇÕES FINAIS</h2>
+
+        <div class="executive-summary">
+            <h3 style="color: white;">Resumo Executivo</h3>
+
+            <h4 style="color: white; margin-top: 20px;">Recomendação Tecnológica</h4>
+            <p style="color: rgba(255,255,255,0.95);"><strong>React Native + Expo</strong> é a melhor escolha porque:</p>
+            <ol style="color: rgba(255,255,255,0.95);">
+                <li>Aproveita código existente (70-80%)</li>
+                <li>Desenvolvimento mais rápido</li>
+                <li>Não requer Mac obrigatoriamente</li>
+                <li>Custo significativamente menor</li>
+                <li>Time de React pode desenvolver</li>
+            </ol>
+
+            <h4 style="color: white; margin-top: 20px;">Arquitetura de Apps</h4>
+            <p style="color: rgba(255,255,255,0.95);"><strong>Dois apps separados</strong> porque:</p>
+            <ol style="color: rgba(255,255,255,0.95);">
+                <li>UX otimizada para cada público</li>
+                <li>Segurança e compliance facilitados</li>
+                <li>Monetização flexível</li>
+                <li>Manutenção independente</li>
+                <li>ASO mais efetivo</li>
+            </ol>
+
+            <h4 style="color: white; margin-top: 20px;">Viabilidade com LLMs</h4>
+            <p style="color: rgba(255,255,255,0.95);"><strong>Sim, é viável</strong> mas:</p>
+            <ol style="color: rgba(255,255,255,0.95);">
+                <li>Você precisará supervisionar</li>
+                <li>Testes manuais são obrigatórios</li>
+                <li>Decisões de produto com você</li>
+                <li>Economia de 40-60% no desenvolvimento</li>
+                <li>Tempo 30-50% menor</li>
+            </ol>
+        </div>
+
+        <h2>🚀 Plano de Ação Imediato</h2>
+
+        <h3>Próximos 30 Dias</h3>
+
+        <h4>Semana 1: Decisões e Setup</h4>
+        <ul class="checklist">
+            <li>Decidir tecnologia final (React Native vs Swift)</li>
+            <li>Criar conta Apple Developer ($99/ano)</li>
+            <li>Definir feature set MVP</li>
+            <li>Budget approval</li>
+        </ul>
+
+        <h4>Semana 2: Design e Prototipagem</h4>
+        <ul class="checklist">
+            <li>Criar design system completo</li>
+            <li>Prototipar telas principais</li>
+            <li>Definir navegação</li>
+            <li>Testar com alguns usuários</li>
+        </ul>
+
+        <h4>Semana 3: Setup Técnico</h4>
+        <ul class="checklist">
+            <li>Criar repositório</li>
+            <li>Setup Expo + EAS</li>
+            <li>Configurar Supabase no mobile</li>
+            <li>Setup CI/CD</li>
+        </ul>
+
+        <h4>Semana 4: Primeiro Sprint</h4>
+        <ul class="checklist">
+            <li>Implementar autenticação</li>
+            <li>Criar navegação base</li>
+            <li>Implementar theme system</li>
+            <li>Primeira tela funcional</li>
+        </ul>
+
+        <h3>Investimento Inicial Necessário</h3>
+        <ul>
+            <li><strong>Apple Developer:</strong> $99 (anual)</li>
+            <li><strong>Design assets:</strong> R$ 2.000 - R$ 5.000</li>
+            <li><strong>Setup técnico:</strong> incluído no desenvolvimento</li>
+            <li><strong>Total upfront:</strong> ~R$ 3.000 - R$ 6.000</li>
+        </ul>
+
+        <h2>Timeline Realista</h2>
+        <ul>
+            <li><strong>MVP App Paciente:</strong> 3-4 meses</li>
+            <li><strong>MVP App Profissional:</strong> 4-5 meses</li>
+            <li><strong>Integrações avançadas:</strong> +2-3 meses</li>
+            <li><strong>Total para lançamento:</strong> ~1 ano</li>
+        </ul>
+
+        <h2>ROI Esperado</h2>
+        <ul>
+            <li><strong>Investimento:</strong> R$ 100-200K</li>
+            <li><strong>Break-even:</strong> 12-18 meses</li>
+            <li><strong>Receita Ano 2:</strong> R$ 150-250K</li>
+            <li><strong>Receita Ano 3:</strong> R$ 500-800K</li>
+        </ul>
+
+        <div class="success-box">
+            <h3>Fatores de Sucesso Críticos</h3>
+            <ol>
+                <li><strong>UX excepcional</strong> - simples e motivador</li>
+                <li><strong>Onboarding perfeito</strong> - primeiro uso encanta</li>
+                <li><strong>Notificações inteligentes</strong> - no momento certo</li>
+                <li><strong>Gamificação bem feita</strong> - não forçada</li>
+                <li><strong>Performance impecável</strong> - rápido e fluido</li>
+                <li><strong>Suporte ágil</strong> - responder feedback rápido</li>
+            </ol>
+        </div>
+
+        <div class="page-break"></div>
+
+        <h2>🔖 ANEXOS</h2>
+
+        <h3>A. Comparativo Detalhado: React Native vs Swift</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Aspecto</th>
+                    <th>React Native + Expo</th>
+                    <th>Swift Nativo</th>
+                    <th>Diferença</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Custo Desenvolvimento</td>
+                    <td>R$ 100-200K</td>
+                    <td>R$ 200-350K</td>
+                    <td>50-60% menor</td>
+                </tr>
+                <tr>
+                    <td>Timeline MVP</td>
+                    <td>3-6 meses</td>
+                    <td>4-8 meses</td>
+                    <td>25-40% mais rápido</td>
+                </tr>
+                <tr>
+                    <td>Compartilhamento Web</td>
+                    <td>70-80%</td>
+                    <td>0%</td>
+                    <td>Significativo</td>
+                </tr>
+                <tr>
+                    <td>Performance</td>
+                    <td>90-95% de nativo</td>
+                    <td>100%</td>
+                    <td>Pouco perceptível</td>
+                </tr>
+                <tr>
+                    <td>Requer Mac</td>
+                    <td>Não</td>
+                    <td>Sim</td>
+                    <td>Obrigatório</td>
+                </tr>
+                <tr>
+                    <td>Curva Aprendizado</td>
+                    <td>Baixa (React)</td>
+                    <td>Alta (Swift)</td>
+                    <td>Menor</td>
+                </tr>
+                <tr>
+                    <td>Time-to-market</td>
+                    <td>Rápido</td>
+                    <td>Lento</td>
+                    <td>Significativo</td>
+                </tr>
+                <tr>
+                    <td>Ecosistema</td>
+                    <td>Imenso</td>
+                    <td>Grande (só iOS)</td>
+                    <td>Maior</td>
+                </tr>
+                <tr>
+                    <td>Long-term</td>
+                    <td>Boa</td>
+                    <td>Excelente</td>
+                    <td>Melhor nativo</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>B. Checklist de Pré-Lançamento</h3>
+
+        <h4>Técnico</h4>
+        <ul class="checklist">
+            <li>Crash-free rate > 99%</li>
+            <li>Load time < 3s</li>
+            <li>Testado em múltiplos devices</li>
+            <li>Testado em múltiplas versões iOS</li>
+            <li>Memory leaks resolvidos</li>
+            <li>Battery usage otimizado</li>
+            <li>Offline mode funcional</li>
+            <li>Push notifications testadas</li>
+        </ul>
+
+        <h4>Legal</h4>
+        <ul class="checklist">
+            <li>Política de privacidade</li>
+            <li>Termos de uso</li>
+            <li>Compliance LGPD</li>
+            <li>Licenças de bibliotecas</li>
+            <li>Direitos autorais</li>
+        </ul>
+
+        <h4>App Store</h4>
+        <ul class="checklist">
+            <li>Screenshots (todos tamanhos)</li>
+            <li>Descrição otimizada</li>
+            <li>Keywords definidas</li>
+            <li>App icon (todos tamanhos)</li>
+            <li>Launch screen</li>
+            <li>Ratings & reviews strategy</li>
+            <li>Category selection correta</li>
+        </ul>
+
+        <h3>C. Métricas de Referência (Benchmarks)</h3>
+
+        <h4>Healthcare Apps</h4>
+        <ul>
+            <li><strong>Median DAU/MAU:</strong> 25%</li>
+            <li><strong>Median Retention D30:</strong> 12%</li>
+            <li><strong>Median Rating:</strong> 4.3</li>
+            <li><strong>Median Session:</strong> 4 min</li>
+        </ul>
+
+        <h4>Fitness Apps</h4>
+        <ul>
+            <li><strong>Median DAU/MAU:</strong> 35%</li>
+            <li><strong>Median Retention D30:</strong> 18%</li>
+            <li><strong>Median Rating:</strong> 4.5</li>
+            <li><strong>Median Session:</strong> 8 min</li>
+        </ul>
+
+        <div class="highlight-box">
+            <p><strong>Target FisioFlow:</strong> Superar medianas em 20-30%</p>
+        </div>
+
+        <h2>📞 Próximos Passos</h2>
+
+        <h3>Para Iniciar o Projeto</h3>
+        <ol>
+            <li><strong>Reunião de Kickoff:</strong> Alinhar visão final</li>
+            <li><strong>Workshop de Design:</strong> Definir look & feel</li>
+            <li><strong>Sprint Planning:</strong> Planejar primeiras 2 semanas</li>
+            <li><strong>Setup Técnico:</strong> Configurar ambiente</li>
+            <li><strong>First Commit:</strong> Começar código!</li>
+        </ol>
+
+        <h3>Dúvidas Frequentes</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Pergunta</th>
+                    <th>Resposta</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Preciso de Mac?</td>
+                    <td>Não necessariamente. EAS Build compila na nuvem. Mac só para debugar código nativo.</td>
+                </tr>
+                <tr>
+                    <td>Quanto tempo vai levar?</td>
+                    <td>MVP do app paciente em 3-4 meses, app profissional em 4-5 meses.</td>
+                </tr>
+                <tr>
+                    <td>Posso fazer só com LLMs?</td>
+                    <td>Sim, mas você precisará validar código, testar e tomar decisões de produto.</td>
+                </tr>
+                <tr>
+                    <td>Vale a pena dois apps?</td>
+                    <td>Sim. UX melhor, segurança maior, monetização flexível, manutenção mais fácil.</td>
+                </tr>
+                <tr>
+                    <td>React Native ou Swift?</td>
+                    <td>React Native. Compartilha código com web, mais barato, mais rápido.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <p><strong>Documento Versão 1.0</strong><br>
+            Data: 22 de Janeiro de 2026<br>
+            Autor: Análise Técnica Completa<br>
+            Status: Pronto para Revisão</p>
+            <p style="margin-top: 20px;">© 2026 FisioFlow - Todos os direitos reservados</p>
+        </div>
+    </div>
+</body>
+</html>
