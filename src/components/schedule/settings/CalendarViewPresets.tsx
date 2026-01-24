@@ -6,8 +6,9 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useCardSize } from '@/hooks/useCardSize';
 import { cn } from '@/lib/utils';
-import { Monitor, Eye, EyeOff, Zap, Type, Palette } from 'lucide-react';
+import { Monitor, Eye, EyeOff, Zap, Type, Palette, CheckCircle2, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { CardSize } from '@/types/agenda';
 
 interface ViewPreset {
@@ -62,6 +63,7 @@ export function CalendarViewPresets() {
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [largeText, setLargeText] = useState(false);
+  const [appliedPreset, setAppliedPreset] = useState<string | null>(null);
 
   const currentPreset = PRESETS.find(
     p => p.config.cardSize === cardSize && p.config.heightScale === heightScale
@@ -70,6 +72,8 @@ export function CalendarViewPresets() {
   const applyPreset = (preset: ViewPreset) => {
     setCardSize(preset.config.cardSize);
     setHeightScale(preset.config.heightScale);
+    setAppliedPreset(preset.id);
+    setTimeout(() => setAppliedPreset(null), 2000);
     toast({
       title: 'Preset aplicado',
       description: `${preset.name} - ${preset.description}`,
@@ -94,9 +98,18 @@ export function CalendarViewPresets() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Info alert */}
+          <Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-700 dark:text-blue-300 text-sm">
+              Presets configuram automaticamente o tamanho dos cards e a altura dos slots. Use as opções de acessibilidade para personalizar ainda mais.
+            </AlertDescription>
+          </Alert>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {PRESETS.map((preset) => {
               const isActive = currentPreset?.id === preset.id;
+              const wasApplied = appliedPreset === preset.id;
               return (
                 <button
                   key={preset.id}
@@ -113,17 +126,20 @@ export function CalendarViewPresets() {
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "flex items-center justify-center w-10 h-10 rounded-lg transition-all",
-                        isActive ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted group-hover:bg-primary/10"
+                        isActive || wasApplied ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted group-hover:bg-primary/10"
                       )}>
-                        {preset.icon}
+                        {wasApplied ? <CheckCircle2 className="w-5 h-5" /> : preset.icon}
                       </div>
                       <div className="text-left">
                         <p className="font-semibold text-sm">{preset.name}</p>
                         <p className="text-xs text-muted-foreground line-clamp-2">{preset.description}</p>
                       </div>
                     </div>
-                    {isActive && (
+                    {isActive && !wasApplied && (
                       <Badge variant="default" className="text-xs">Ativo</Badge>
+                    )}
+                    {wasApplied && (
+                      <Badge variant="default" className="text-xs bg-green-600 hover:bg-green-700">Aplicado!</Badge>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-1.5">

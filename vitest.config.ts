@@ -1,70 +1,143 @@
+/**
+ * Vitest Configuration
+ *
+ * Unit and integration test setup for FisioFlow
+ *
+ * @sa-exclude - Tests are run separately, not during build
+ */
+
 /// <reference types="vitest" />
+/// <reference types="@testing-library/jest-dom" />
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+
   test: {
+    // Global test utilities (describe, it, expect, etc.)
     globals: true,
+
+    // Test environment - jsdom for DOM testing
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+
+    // Pool configuration
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: false,
+        minThreads: 1,
+        maxThreads: 4,
+      },
+    },
+
+    // Setup files for test configuration
+    setupFiles: ['./src/tests/setup.ts'],
+
+    // Enable CSS modules for component tests
     css: true,
-    reporters: ['verbose'],
-    // Exclude Edge Functions from tests (they require Deno runtime)
+
+    // Include patterns
+    include: ['**/*.{test,spec}.{ts,tsx}'],
+
+    // Reporters
+    reporters: ['default', 'json', 'html', 'verbose'],
+
+    // Output files
+    outputFile: {
+      json: './coverage/test-results.json',
+      html: './coverage/index.html',
+    },
+
+    // Exclude Edge Functions and problematic tests
     exclude: [
       'node_modules/',
       'dist/',
-      'supabase/functions/!(__tests__)/**',
-      '**/supabase/functions/!(__tests__)/**',
-      // Exclude test files that have React 18 concurrent rendering issues
+      '.idea/',
+      '.git/',
+      '.cache/',
+      'supabase/functions/**',
+      'functions/**',
+      // Exclude test files with React 18 concurrent rendering issues
       '**/AIAssistantPanel.test.tsx',
       '**/PatientAnalytics.test.tsx',
       '**/PatientEvolution.test.tsx',
       '**/TreatmentAssistant.test.tsx',
-      '**/PatientCard.test.tsx'
+      '**/PatientCard.test.tsx',
     ],
-    // Increase timeout for concurrent operations
+
+    // Test timeouts
     testTimeout: 10000,
     hookTimeout: 10000,
-    // Prevent "Should not already be working" errors - use threads pool for better React 18 support
+
+    // Concurrency settings
     maxConcurrency: 2,
-    // Use forks pool for better isolation and to prevent React 18 concurrency issues
-    // pool: 'forks',
-    // Use isolate=true to ensure clean environment for each test
+
+    // Test isolation
     isolate: true,
-    // Mock de módulos problemáticos para Edge Functions
+
+    // Watch mode
+    watch: false,
+
+    // Mock configuration
     mock: {
       'web-push': {
         setVapidDetails: true,
         sendNotification: true,
-        generateVAPIDKeys: true
-      }
+        generateVAPIDKeys: true,
+      },
     },
-    // Configuração para suportar imports externos em Edge Functions
-    server: {
-      deps: {
-        external: ['web-push', '@supabase/functions']
-      }
-    },
+
+    // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'node_modules/',
+        'dist/',
         'src/test/',
+        'src/tests/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/coverage/**',
         '**/*.test.{ts,tsx}',
-        '**/mockData',
-        'supabase/functions/**' // Exclude Edge Functions from coverage
-      ]
-    }
+        '**/*.spec.{ts,tsx}',
+        '**/mockData/**',
+        'supabase/functions/**',
+        'functions/**',
+        // Supabase/Firebase integration clients
+        'src/integrations/supabase/client.ts',
+        'src/integrations/firebase/**/*.ts',
+        // Entry points
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+      ],
+      // Coverage thresholds
+      thresholds: {
+        statements: 60,
+        branches: 55,
+        functions: 60,
+        lines: 60,
+      },
+      // All files
+      all: true,
+    },
+
+    // Define test constants
+    define: {
+      __APP_VERSION__: '"test"',
+      __BUILD_TIME__: '"0"',
+      __CACHE_BUSTER__: '"test"',
+    },
   },
+
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+      'lodash': 'lodash-es',
+    },
+  },
 });

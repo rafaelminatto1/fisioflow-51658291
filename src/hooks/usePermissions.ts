@@ -1,59 +1,52 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-
-type AppRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/auth';
 
 interface PermissionsResult {
-  roles: AppRole[];
+  roles: UserRole[];
   isAdmin: boolean;
   isFisio: boolean;
   isEstagiario: boolean;
   isPaciente: boolean;
+  isRecepcionista: boolean;
+  isParceiro: boolean;
   canWrite: (resource: string) => boolean;
   canDelete: (resource: string) => boolean;
   isLoading: boolean;
 }
 
 /**
- * Hook de permissões - TODOS os usuários autenticados são considerados admin
- * Isso simplifica o sistema e permite que qualquer usuário cadastrado tenha acesso total
+ * Hook de permissões baseado no perfil do usuário do Firebase/Cloud SQL
  */
 export function usePermissions(): PermissionsResult {
-  const { data: user } = useQuery({
-    queryKey: ['auth-user'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    },
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-  });
+  const { profile, loading, initialized } = useAuth();
 
-  const isAuthenticated = !!user;
-
-  // Todos os usuários autenticados são considerados admin
-  const isAdmin = isAuthenticated;
-  const isFisio = isAuthenticated;
-  const isEstagiario = isAuthenticated;
-  const isPaciente = false; // Paciente geralmente não é um usuário do sistema
+  const isAdmin = profile?.role === 'admin';
+  const isFisio = profile?.role === 'fisioterapeuta';
+  const isEstagiario = profile?.role === 'estagiario';
+  const isPaciente = profile?.role === 'paciente';
+  const isRecepcionista = profile?.role === 'recepcionista';
+  const isParceiro = profile?.role === 'parceiro';
 
   const canWrite = (_resourceType: string): boolean => {
-    // Todos os usuários autenticados podem escrever
-    return isAuthenticated;
+    // Admins e profissionais podem escrever
+    return isAdmin || isFisio || isEstagiario || isRecepcionista;
   };
 
   const canDelete = (_resource: string): boolean => {
-    // Todos os usuários autenticados podem deletar
-    return isAuthenticated;
+    // Apenas admins e fisioterapeutas seniores podem deletar (exemplo)
+    return isAdmin || isFisio;
   };
 
   return {
-    roles: isAuthenticated ? ['admin'] as AppRole[] : [],
+    roles: profile?.role ? [profile.role] : [],
     isAdmin,
     isFisio,
     isEstagiario,
     isPaciente,
+    isRecepcionista,
+    isParceiro,
     canWrite,
     canDelete,
-    isLoading: false,
+    isLoading: !initialized || loading,
   };
 }

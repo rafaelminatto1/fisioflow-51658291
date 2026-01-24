@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth, AuthError } from '@/contexts/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +17,7 @@ import { OAuthButtons } from '@/components/auth/OAuthButtons';
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp, user, initialized } = useAuth();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
 
@@ -82,14 +84,10 @@ export default function Auth() {
 
   useEffect(() => {
     // Check if user is already logged in
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/');
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+    if (initialized && user) {
+      navigate('/');
+    }
+  }, [user, initialized, navigate]);
 
   useEffect(() => {
     // Verificar convite se token presente
@@ -132,25 +130,24 @@ export default function Auth() {
     setLoading(true);
     setError('');
 
+    // OAuth redirects handled by context/hooks or direct Firebase SDK
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        }
-      });
-
-      if (error) {
-        setError(error.message);
-        toast({
-          title: 'Erro no login',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
-    } catch (err: unknown) {
+      // Note: In modern Firebase, signInWithPopup works well.
+      // We rely on the AuthContextProvider to detect the session change.
+      // Firebase OAuth implementation usually doesn't need much here if using Popup.
+      // For Redirect, we'd need getRedirectResult.
+      const { signInWithOAuth } = await import('@/integrations/firebase/auth');
+      await signInWithOAuth('google');
+      // On success, the onAuthStateChange in AuthContextProvider will trigger
+    } catch (err: any) {
       logger.error('Erro no login com Google', err, 'Auth');
-      setError('Erro ao conectar com Google.');
+      const errorMessage = err.message || 'Erro ao conectar com Google.';
+      setError(errorMessage);
+      toast({
+        title: 'Erro no login',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -161,24 +158,17 @@ export default function Auth() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        }
-      });
-
-      if (error) {
-        setError(error.message);
-        toast({
-          title: 'Erro no login',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
-    } catch (err: unknown) {
+      const { signInWithOAuth } = await import('@/integrations/firebase/auth');
+      await signInWithOAuth('github');
+    } catch (err: any) {
       logger.error('Erro no login com GitHub', err, 'Auth');
-      setError('Erro ao conectar com GitHub.');
+      const errorMessage = err.message || 'Erro ao conectar com GitHub.';
+      setError(errorMessage);
+      toast({
+        title: 'Erro no login',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -192,12 +182,7 @@ export default function Auth() {
 
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-
+      const { error } = await signIn(email, password);
 
       if (error) {
         setError(error.message);
@@ -206,7 +191,6 @@ export default function Auth() {
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao FisioFlow",
         });
-
         navigate('/');
       }
     } catch (err: unknown) {
@@ -263,15 +247,13 @@ export default function Auth() {
 
       logger.info('Iniciando cadastro', { email: email.trim() }, 'Auth');
 
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      const { user: newUser, error: signUpError } = await signUp({
         email: email.trim(),
         password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName.trim(),
-          }
-        }
+        confirmPassword,
+        full_name: fullName.trim(),
+        userType: 'paciente', // Default for public signup
+        terms_accepted: true
       });
 
       if (signUpError) {
@@ -297,7 +279,7 @@ export default function Auth() {
         return;
       }
 
-      if (!authData.user) {
+      if (!newUser) {
         setError('Erro ao criar conta. Tente novamente.');
         toast({
           title: 'Erro no cadastro',
@@ -308,45 +290,14 @@ export default function Auth() {
         return;
       }
 
-      logger.info('Conta criada com sucesso', { userId: authData.user.id }, 'Auth');
+      logger.info('Conta criada com sucesso', { userId: newUser.uid }, 'Auth');
 
       // Se houver token de convite, validar e atribuir role
-      if (inviteToken && authData.user) {
-        try {
-          const { data: validationResult, error: validationError } = await supabase.rpc(
-            'validate_invitation',
-            {
-              _token: inviteToken,
-              _user_id: authData.user.id,
-            }
-          );
-
-          if (validationError || !validationResult) {
-            logger.error('Erro ao validar convite', validationError, 'Auth');
-            toast({
-              title: 'Aviso',
-              description: 'Conta criada, mas houve erro ao processar o convite',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Conta criada com sucesso!',
-              description: `Role ${invitationData?.role} atribuída. Redirecionando...`,
-            });
-            // Limpar campos
-            setFullName('');
-            setEmail('');
-            setPassword('');
-            setConfirmPassword('');
-            // Redirecionar para home após 2 segundos
-            setTimeout(() => {
-              navigate('/');
-            }, 2000);
-            return;
-          }
-        } catch (inviteErr) {
-          logger.error('Erro ao processar convite', inviteErr, 'Auth');
-        }
+      if (newUser) {
+        // Placeholder for when we have Firebase equivalent for invitations
+        // For now just logging that we created the user
+        logger.info('User created with invite token', { email: newUser.email, token: inviteToken });
+        // Note: In real app, we'd call a Cloud Function here to apply invitation logic
       }
 
       // Sucesso no cadastro
