@@ -1,0 +1,397 @@
+# Firebase Data Connect Schema: Assessments
+# Schema para sistema de avaliações do FisioFlow
+
+"""
+Template de avaliação
+"""
+type AssessmentTemplate @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  Nome do template
+  """
+  name: String!
+
+  """
+  Descrição do template
+  """
+  description: String?
+
+  """
+  Categoria da avaliação
+  """
+  category: String!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Indica se é um template global (disponível para todas organizações)
+  """
+  is_global: Boolean @default(false)
+
+  """
+  Ordem de exibição
+  """
+  display_order: Int @default(0)
+
+  """
+  Indica se o template está ativo
+  """
+  is_active: Boolean @default(true)
+
+  """
+  ID do usuário que criou
+  """
+  created_by: UUID!
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Seções do template
+  """
+  sections: [AssessmentSection] @hasMany
+
+  """
+  Avaliações que usam este template
+  """
+  assessments: [PatientAssessment] @hasMany
+}
+
+"""
+Seção de um template de avaliação
+"""
+type AssessmentSection @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do template
+  """
+  template_id: UUID!
+
+  """
+  Título da seção
+  """
+  title: String!
+
+  """
+  Descrição da seção
+  """
+  description: String?
+
+  """
+  Ordem da seção dentro do template
+  """
+  order: Int! @default(0)
+
+  """
+  Tipo de seção: questions, measurements, images, signature
+  """
+  section_type: String! @default("questions")
+
+  """
+  Configurações da seção em JSON
+  """
+  config: Json!
+
+  """
+  Indica se a seção está ativa
+  """
+  is_active: Boolean @default(true)
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Template da seção
+  """
+  template: AssessmentTemplate @belongsTo
+
+  """
+  Perguntas da seção
+  """
+  questions: [AssessmentQuestion] @hasMany
+}
+
+"""
+Pergunta de uma seção de avaliação
+"""
+type AssessmentQuestion @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID da seção
+  """
+  section_id: UUID!
+
+  """
+  Texto da pergunta
+  """
+  question_text: String!
+
+  """
+  Tipo de resposta: text, textarea, number, select, multiselect, radio, checkbox, date, scale
+  """
+  answer_type: String!
+
+  """
+  Ordem da pergunta dentro da seção
+  """
+  order: Int! @default(0)
+
+  """
+  Indica se a pergunta é obrigatória
+  """
+  is_required: Boolean @default(false)
+
+  """
+  Opções de resposta (para select, radio, checkbox)
+  """
+  options: Json?
+
+  """
+  Valor mínimo (para number/scale)
+  """
+  min_value: Int?
+
+  """
+  Valor máximo (para number/scale)
+  """
+  max_value: Int?
+
+  """
+  Unidade de medida
+  """
+  unit: String?
+
+  """
+  Texto de ajuda
+  """
+  help_text: String?
+
+  """
+  Placeholder
+  """
+  placeholder: String?
+
+  """
+  Validações adicionais em JSON
+  """
+  validations: Json?
+
+  """
+  Indica se a pergunta está ativa
+  """
+  is_active: Boolean @default(true)
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Seção da pergunta
+  """
+  section: AssessmentSection @belongsTo
+}
+
+"""
+Avaliação de paciente
+"""
+type PatientAssessment @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  ID do template usado
+  """
+  template_id: UUID!
+
+  """
+  Título da avaliação
+  """
+  title: String!
+
+  """
+  Data da avaliação
+  """
+  assessment_date: Date!
+
+  """
+  ID do profissional que realizou
+  """
+  performed_by: UUID!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Status: draft, in_progress, completed
+  """
+  status: String @default("draft")
+
+  """
+  Observações gerais
+  """
+  general_notes: String?
+
+  """
+  Conclusão da avaliação
+  """
+  conclusion: String?
+
+  """
+  Recomendações
+  """
+  recommendations: String?
+
+  """
+  Próxima avaliação
+  """
+  next_assessment_date: Date?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  """
+  Data e hora de conclusão
+  """
+  completed_at: DateTime?
+
+  # Relações
+  """
+  Paciente avaliado
+  """
+  patient: Patient @belongsTo
+
+  """
+  Template usado
+  """
+  template: AssessmentTemplate @belongsTo
+
+  """
+  Profissional que realizou
+  """
+  performer: Profile @belongsTo
+
+  """
+  Respostas da avaliação
+  """
+  responses: [AssessmentResponse] @hasMany
+}
+
+"""
+Resposta de uma avaliação
+"""
+type AssessmentResponse @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID da avaliação
+  """
+  assessment_id: UUID!
+
+  """
+  ID da pergunta respondida
+  """
+  question_id: UUID!
+
+  """
+  Resposta em texto
+  """
+  answer_text: String?
+
+  """
+  Resposta numérica
+  """
+  answer_number: Int?
+
+  """
+  Resposta em JSON (para respostas complexas)
+  """
+  answer_json: Json?
+
+  """
+  Arquivo anexado (URL)
+  """
+  attachment_url: String?
+
+  """
+  Observações sobre a resposta
+  """
+  notes: String?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Avaliação da resposta
+  """
+  assessment: PatientAssessment @belongsTo
+
+  """
+  Pergunta respondida
+  """
+  question: AssessmentQuestion @belongsTo
+}

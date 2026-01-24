@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Clock, Save, Loader2, Sun, Moon, Copy, CheckCircle2 } from 'lucide-react';
+import { Clock, Save, Loader2, Sun, Moon, Copy, CheckCircle2, Briefcase, Zap, Calendar } from 'lucide-react';
 import { useScheduleSettings, BusinessHour } from '@/hooks/useScheduleSettings';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,14 @@ const DEFAULT_HOURS: Partial<BusinessHour>[] = [
   { day_of_week: 4, is_open: true, open_time: '07:00', close_time: '21:00', break_start: undefined, break_end: undefined },
   { day_of_week: 5, is_open: true, open_time: '07:00', close_time: '21:00', break_start: undefined, break_end: undefined },
   { day_of_week: 6, is_open: true, open_time: '08:00', close_time: '13:00', break_start: undefined, break_end: undefined },
+];
+
+// Quick time presets for common schedules
+const TIME_PRESETS = [
+  { label: 'Comercial', icon: Briefcase, open: '09:00', close: '18:00', description: '9h às 18h' },
+  { label: 'Estendido', icon: Zap, open: '08:00', close: '20:00', description: '8h às 20h' },
+  { label: 'Manhã', icon: Sun, open: '07:00', close: '13:00', description: '7h às 13h' },
+  { label: 'Tarde', icon: Moon, open: '13:00', close: '19:00', description: '13h às 19h' },
 ];
 
 // Helper to convert time string to minutes
@@ -36,6 +44,7 @@ export function BusinessHoursManager() {
   const { businessHours, daysOfWeek, upsertBusinessHours, isLoadingHours, isSavingHours } = useScheduleSettings();
   const [hours, setHours] = useState<Partial<BusinessHour>[]>(DEFAULT_HOURS);
   const [saved, setSaved] = useState(false);
+  const [copiedDay, setCopiedDay] = useState<number | null>(null);
 
   useEffect(() => {
     if (businessHours.length > 0) {
@@ -71,6 +80,19 @@ export function BusinessHoursManager() {
     const updated = hours.map(h =>
       h.day_of_week === sourceDay ? h : { ...h, is_open: source.is_open, open_time: source.open_time, close_time: source.close_time }
     );
+    setHours(updated);
+    setSaved(false);
+    setCopiedDay(sourceDay);
+    setTimeout(() => setCopiedDay(null), 1500);
+  };
+
+  const applyPresetToAll = (preset: typeof TIME_PRESETS[0]) => {
+    const updated = hours.map(h => ({
+      ...h,
+      is_open: true,
+      open_time: preset.open,
+      close_time: preset.close,
+    }));
     setHours(updated);
     setSaved(false);
   };
@@ -110,6 +132,32 @@ export function BusinessHoursManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
+        {/* Quick presets section */}
+        <div className="p-4 rounded-xl border bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <Label className="text-sm font-medium">Presets Rápidos</Label>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {TIME_PRESETS.map((preset) => {
+              const Icon = preset.icon;
+              return (
+                <Button
+                  key={preset.label}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => applyPresetToAll(preset)}
+                  className="flex-col gap-1 h-auto py-3 hover:scale-[1.02] transition-all"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="text-xs font-medium">{preset.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{preset.description}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="space-y-4">
           {daysOfWeek.map((day, index) => {
             const hour = hours.find(h => h.day_of_week === day.value) || DEFAULT_HOURS[day.value];
@@ -149,12 +197,24 @@ export function BusinessHoursManager() {
                   {isOpen && (
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant={copiedDay === day.value ? "default" : "ghost"}
                       onClick={() => copyToAllDays(day.value)}
-                      className="h-8 text-xs"
+                      className={cn(
+                        "h-8 text-xs transition-all",
+                        copiedDay === day.value && "bg-green-600 hover:bg-green-700"
+                      )}
                     >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copiar
+                      {copiedDay === day.value ? (
+                        <>
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copiar
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>

@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "FisioFlow Pacientes",
+    "slug": "fisioflow-patients",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "fisioflowpatient",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3B82F6"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fisioflow.patients",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "CLIENT_ID_REVERSO_DO_FIREBASE"
+        }
+      },
+      "googleServicesFile": "./GoogleService-Info.plist"
+    },
+    "android": {
+      "package": "com.fisioflow.patients",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#3B82F6"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8e006901-c021-464d-bbcd-96d821ab62d0"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}
