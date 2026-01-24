@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { appointmentsApi } from '@/integrations/firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
 import { useDebounce } from '@/hooks/performance/useDebounce';
@@ -211,53 +212,22 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return () => { };
     }
 
-    logger.info('Realtime: Subscribing to appointments via Context', { organizationId }, 'RealtimeContext');
+    logger.info('Realtime: Subscribing to appointments via Ably', { organizationId }, 'RealtimeContext');
 
-    let isSubscribed = false;
-    const channel = supabase.channel(`appointments-realtime-${organizationId}`, {
-      config: {
-        broadcast: { self: false },
-        presence: { key: '' }
-      }
+    const ably = getAblyClient();
+    const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
+
+    channel.subscribe(ABLY_EVENTS.update, (message) => {
+      handleRealtimeChange(message.data as any);
     });
 
-    // Type assertion para postgres_changes devido ao tipo Database genérico
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'appointments',
-          filter: `organization_id=eq.${organizationId}`,
-        },
-        handleRealtimeChange
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-          setIsSubscribed(true);
-          logger.info('Realtime: Successfully subscribed', { organizationId }, 'RealtimeContext');
-        } else if (status === 'CHANNEL_ERROR') {
-          logger.error('Realtime: Channel error', { organizationId }, 'RealtimeContext');
-          setIsSubscribed(false);
-        }
-      });
+    setIsSubscribed(true);
 
     return () => {
-      logger.info('Realtime: Unsubscribing from appointments channel', { organizationId, isSubscribed }, 'RealtimeContext');
-
-      // Só remove channel se foi inscrito com sucesso
-      // Isso previne "WebSocket is closed before the connection is established"
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch((err) => {
-          logger.debug('Erro ao remover canal (ignorado)', err, 'RealtimeContext');
-        });
-      }
-
+      logger.info('Realtime: Unsubscribing from Ably channel', { organizationId }, 'RealtimeContext');
+      channel.unsubscribe();
       setIsSubscribed(false);
 
-      // Limpar timeouts pendentes
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
@@ -273,29 +243,20 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!organizationId) return;
 
       try {
-        logger.info('Realtime: Loading initial appointments', {}, 'RealtimeContext');
+        logger.info('Realtime: Loading initial appointments via Functions', {}, 'RealtimeContext');
 
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const dateFrom = sevenDaysAgo.toISOString().split('T')[0];
 
-        const { data, error } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .gte('date', sevenDaysAgo.toISOString().split('T')[0])
-          .order('date', { ascending: true })
-          .order('start_time', { ascending: true })
-          .limit(100);
+        const response = await appointmentsApi.list({
+          dateFrom,
+          limit: 100
+        });
 
-        if (error) {
-          logger.error('Realtime: Error loading initial appointments', error, 'RealtimeContext');
-          return;
-        }
-
-        if (data) {
-          setAppointments(data as Appointment[]);
-          logger.info(`Realtime: Loaded ${data.length} initial appointments`, {}, 'RealtimeContext');
+        if (response.data) {
+          setAppointments(response.data as Appointment[]);
+          logger.info(`Realtime: Loaded ${response.data.length} initial appointments`, {}, 'RealtimeContext');
         }
       } catch (error) {
         logger.error('Realtime: Error in loadInitialAppointments', error, 'RealtimeContext');

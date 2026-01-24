@@ -1,0 +1,336 @@
+"use strict";
+/**
+ * API Functions: Medical Records
+ * Cloud Functions para gestão de prontuários médicos
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.getPatientRecords = void 0;
+const https_1 = require("firebase-functions/v2/https");
+const pg_1 = require("pg");
+const auth_1 = require("../middleware/auth");
+/**
+ * Helper para verificar auth
+ */
+async function getAuth(request) {
+    if (!request.auth?.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    }
+    return (0, auth_1.authorizeRequest)(request.auth.token);
+}
+/**
+ * Busca prontuários de um paciente
+ */
+exports.getPatientRecords = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { patientId, type, limit = 50 } = request.data || {};
+    if (!patientId) {
+        throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        // Verificar se paciente pertence à organização
+        const patient = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
+        if (patient.rows.length === 0) {
+            throw new https_1.HttpsError('not-found', 'Paciente não encontrado');
+        }
+        let query = `
+      SELECT
+        mr.*,
+        p.full_name as created_by_name
+      FROM medical_records mr
+      LEFT JOIN profiles p ON mr.created_by = p.user_id
+      WHERE mr.patient_id = $1
+        AND mr.organization_id = $2
+    `;
+        const params = [patientId, auth.organizationId];
+        if (type) {
+            query += ` AND mr.type = $3`;
+            params.push(type);
+        }
+        query += ` ORDER BY mr.record_date DESC, mr.created_at DESC LIMIT $4`;
+        params.push(limit);
+        const result = await pool.query(query, params);
+        return { data: result.rows };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Cria um novo prontuário
+ */
+exports.createMedicalRecord = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { patientId, type, title, content, recordDate, } = request.data || {};
+    if (!patientId || !type || !title) {
+        throw new https_1.HttpsError('invalid-argument', 'patientId, type e title são obrigatórios');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        // Verificar se paciente existe
+        const patient = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
+        if (patient.rows.length === 0) {
+            throw new https_1.HttpsError('not-found', 'Paciente não encontrado');
+        }
+        // Inserir prontuário
+        const result = await pool.query(`INSERT INTO medical_records (
+        patient_id, created_by, organization_id,
+        type, title, content, record_date
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`, [
+            patientId,
+            auth.userId,
+            auth.organizationId,
+            type,
+            title,
+            content || '',
+            recordDate || new Date().toISOString().split('T')[0],
+        ]);
+        // Publicar no Ably
+        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+        await realtime.publishPatientUpdate(patientId, {
+            type: 'medical_record_created',
+            recordId: result.rows[0].id,
+        });
+        return { data: result.rows[0] };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Atualiza um prontuário
+ */
+exports.updateMedicalRecord = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { recordId, ...updates } = request.data || {};
+    if (!recordId) {
+        throw new https_1.HttpsError('invalid-argument', 'recordId é obrigatório');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        // Verificar se prontuário existe
+        const existing = await pool.query('SELECT * FROM medical_records WHERE id = $1 AND organization_id = $2', [recordId, auth.organizationId]);
+        if (existing.rows.length === 0) {
+            throw new https_1.HttpsError('not-found', 'Prontuário não encontrado');
+        }
+        // Construir SET dinâmico
+        const setClauses = [];
+        const values = [];
+        let paramCount = 0;
+        const allowedFields = ['title', 'content'];
+        for (const field of allowedFields) {
+            if (field in updates) {
+                paramCount++;
+                setClauses.push(`${field} = $${paramCount}`);
+                values.push(updates[field]);
+            }
+        }
+        if (setClauses.length === 0) {
+            throw new https_1.HttpsError('invalid-argument', 'Nenhum campo válido para atualizar');
+        }
+        paramCount++;
+        setClauses.push(`updated_at = $${paramCount}`);
+        values.push(new Date());
+        values.push(recordId, auth.organizationId);
+        const query = `
+      UPDATE medical_records
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
+      RETURNING *
+    `;
+        const result = await pool.query(query, values);
+        return { data: result.rows[0] };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Lista sessões de tratamento de um paciente
+ */
+exports.listTreatmentSessions = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { patientId, limit = 20 } = request.data || {};
+    if (!patientId) {
+        throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        const result = await pool.query(`SELECT
+        ts.*,
+        p.name as patient_name,
+        prof.full_name as therapist_name,
+        a.date as appointment_date
+      FROM treatment_sessions ts
+      LEFT JOIN patients p ON ts.patient_id = p.id
+      LEFT JOIN profiles prof ON ts.therapist_id = prof.user_id
+      LEFT JOIN appointments a ON ts.appointment_id = a.id
+      WHERE ts.patient_id = $1
+        AND ts.organization_id = $2
+      ORDER BY ts.session_date DESC, ts.created_at DESC
+      LIMIT $3`, [patientId, auth.organizationId, limit]);
+        return { data: result.rows };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Cria uma nova sessão de tratamento
+ */
+exports.createTreatmentSession = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { patientId, appointmentId, painLevelBefore, painLevelAfter, observations, evolution, nextGoals, } = request.data || {};
+    if (!patientId) {
+        throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        // Buscar dados do appointment se fornecido
+        let appointmentDate = null;
+        let therapistId = auth.userId;
+        if (appointmentId) {
+            const apt = await pool.query('SELECT date, therapist_id FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, auth.organizationId]);
+            if (apt.rows.length > 0) {
+                appointmentDate = apt.rows[0].date;
+                therapistId = apt.rows[0].therapist_id;
+            }
+        }
+        // Inserir sessão
+        const result = await pool.query(`INSERT INTO treatment_sessions (
+        patient_id, therapist_id, appointment_id,
+        organization_id, pain_level_before, pain_level_after,
+        observations, evolution, next_session_goals,
+        session_date
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *`, [
+            patientId,
+            therapistId,
+            appointmentId || null,
+            auth.organizationId,
+            painLevelBefore || null,
+            painLevelAfter || null,
+            observations || null,
+            evolution || null,
+            nextGoals || null,
+            appointmentDate || new Date().toISOString().split('T')[0],
+        ]);
+        // Atualizar progresso se houver mudança na dor
+        if (painLevelAfter !== undefined && painLevelBefore !== undefined) {
+            await pool.query(`INSERT INTO patient_progress (
+          patient_id, assessment_date, pain_level,
+          organization_id, recorded_by
+        ) VALUES ($1, CURRENT_DATE, $2, $3, $4)`, [
+                patientId,
+                painLevelAfter,
+                auth.organizationId,
+                auth.userId,
+            ]);
+        }
+        return { data: result.rows[0] };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Atualiza uma sessão de tratamento
+ */
+exports.updateTreatmentSession = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { sessionId, ...updates } = request.data || {};
+    if (!sessionId) {
+        throw new https_1.HttpsError('invalid-argument', 'sessionId é obrigatório');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        // Verificar se sessão existe
+        const existing = await pool.query('SELECT * FROM treatment_sessions WHERE id = $1 AND organization_id = $2', [sessionId, auth.organizationId]);
+        if (existing.rows.length === 0) {
+            throw new https_1.HttpsError('not-found', 'Sessão não encontrada');
+        }
+        // Construir SET dinâmico
+        const setClauses = [];
+        const values = [];
+        let paramCount = 0;
+        const allowedFields = ['pain_level_before', 'pain_level_after', 'observations', 'evolution', 'next_session_goals'];
+        for (const field of allowedFields) {
+            if (field in updates) {
+                paramCount++;
+                setClauses.push(`${field} = $${paramCount}`);
+                values.push(updates[field]);
+            }
+        }
+        if (setClauses.length === 0) {
+            throw new https_1.HttpsError('invalid-argument', 'Nenhum campo válido para atualizar');
+        }
+        paramCount++;
+        setClauses.push(`updated_at = $${paramCount}`);
+        values.push(new Date());
+        values.push(sessionId, auth.organizationId);
+        const query = `
+      UPDATE treatment_sessions
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
+      RETURNING *
+    `;
+        const result = await pool.query(query, values);
+        return { data: result.rows[0] };
+    }
+    finally {
+        await pool.end();
+    }
+});
+//# sourceMappingURL=medical-records.js.map

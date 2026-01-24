@@ -1,0 +1,431 @@
+# Firebase Data Connect Schema: Medical Records
+# Schema para gestão de prontuários médicos no FisioFlow
+
+"""
+Prontuário médico do paciente
+"""
+type MedicalRecord @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  ID do profissional que criou
+  """
+  created_by: UUID!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Queixa principal do paciente
+  """
+  chief_complaint: String!
+
+  """
+  Histórico da doença atual
+  """
+  history_of_present_illness: String?
+
+  """
+  Histórico médico passado
+  """
+  past_medical_history: String?
+
+  """
+  Histórico cirúrgico
+  """
+  surgical_history: String?
+
+  """
+  Medicamentos em uso
+  """
+  current_medications: Json?
+
+  """
+  Alergias conhecidas
+  """
+  allergies: String?
+
+  """
+  Histórico familiar
+  """
+  family_history: String?
+
+  """
+  Estilo de vida
+  """
+  lifestyle: Json?
+
+  """
+  Hábitos (fumo, álcool, exercícios)
+  """
+  habits: Json?
+
+  """
+  Exame físico em JSON
+  """
+  physical_examination: Json!
+
+  """
+  Diagnóstico principal
+  """
+  primary_diagnosis: String?
+
+  """
+  Diagnósticos secundários (array)
+  """
+  secondary_diagnoses: Json?
+
+  """
+  Plano de tratamento
+  """
+  treatment_plan: String?
+
+  """
+  Prognóstico
+  """
+  prognosis: String?
+
+  """
+  Observações adicionais
+  """
+  notes: String?
+
+  """
+  Data do atendimento
+  """
+  record_date: Date! @default(now())
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente do prontuário
+  """
+  patient: Patient @belongsTo
+
+  """
+  Profissional que criou
+  """
+  creator: Profile @hasMany
+
+  """
+  Sessões de tratamento associadas
+  """
+  treatment_sessions: [TreatmentSession] @hasMany
+}
+
+"""
+Sessão de tratamento
+"""
+type TreatmentSession @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  ID do profissional
+  """
+  therapist_id: UUID!
+
+  """
+  ID do agendamento (se aplicável)
+  """
+  appointment_id: UUID?
+
+  """
+  Data da sessão
+  """
+  session_date: Date!
+
+  """
+  Hora de início
+  """
+  start_time: Time!
+
+  """
+  Hora de término
+  """
+  end_time: Time!
+
+  """
+  Duração em minutos
+  """
+  duration_minutes: Int!
+
+  """
+  Tipo de sessão: avaliacao, tratamento, reavaliacao, alta
+  """
+  session_type: String!
+
+  """
+  Subjective - Queixa e sintomas do paciente
+  """
+  subjective: String?
+
+  """
+  Objective - Achados do exame físico
+  """
+  objective: Json?
+
+  """
+  Assessment - Avaliação do terapeuta
+  """
+  assessment: String?
+
+  """
+  Plan - Plano para próxima sessão
+  """
+  plan: String?
+
+  """
+  Procedimentos realizados (array)
+  """
+  procedures: Json?
+
+  """
+  Exercícios prescritos nesta sessão
+  """
+  exercises_prescribed: Json?
+
+  """
+  Evolução do paciente
+  """
+  evolution: String?
+
+  """
+  Resposta ao tratamento
+  """
+  treatment_response: String?
+
+  """
+  Nível de dor antes (0-10)
+  """
+  pain_level_before: Int?
+
+  """
+  Nível de dor depois (0-10)
+  """
+  pain_level_after: Int?
+
+  """
+  Observações
+  """
+  notes: String?
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente da sessão
+  """
+  patient: Patient @belongsTo
+
+  """
+  Profissional responsável
+  """
+  therapist: Profile @belongsTo
+
+  """
+  Agendamento associado
+  """
+  appointment: Appointment? @belongsTo
+}
+
+"""
+Registro de progresso do paciente
+"""
+type PatientProgress @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  Data da avaliação
+  """
+  assessment_date: Date!
+
+  """
+  Nível de dor (0-10)
+  """
+  pain_level: Int?
+
+  """
+  Escala visual analógica (0-100)
+  """
+  vas_score: Int?
+
+  """
+  Função física (0-100)
+  """
+  physical_function: Int?
+
+  """
+  Qualidade de vida (0-100)
+  """
+  quality_of_life: Int?
+
+  """
+  Força muscular (0-5)
+  """
+  muscle_strength: Int?
+
+  """
+  Amplitude de movimento em JSON
+  """
+  range_of_motion: Json?
+
+  """
+  Testes funcionais em JSON
+  """
+  functional_tests: Json?
+
+  """
+  Métricas personalizadas em JSON
+  """
+  custom_metrics: Json?
+
+  """
+  Observações
+  """
+  notes: String?
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  ID do profissional que registrou
+  """
+  recorded_by: UUID!
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente do progresso
+  """
+  patient: Patient @belongsTo
+}
+
+"""
+Anexo ao prontuário (imagens, documentos)
+"""
+type MedicalRecordAttachment @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  Título do anexo
+  """
+  title: String!
+
+  """
+  Descrição
+  """
+  description: String?
+
+  """
+  Tipo de anexo: imagem, pdf, video, documento
+  """
+  attachment_type: String!
+
+  """
+  URL do arquivo
+  """
+  file_url: String!
+
+  """
+  Tamanho do arquivo em bytes
+  """
+  file_size_bytes: Int!
+
+  """
+  MIME type
+  """
+  mime_type: String!
+
+  """
+  Data do documento/exame
+  """
+  document_date: Date?
+
+  """
+  Categoria do anexo: exame, foto_evolucao, laudo, imagem_radiologica
+  """
+  category: String!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  ID do profissional que fez upload
+  """
+  uploaded_by: UUID!
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente do anexo
+  """
+  patient: Patient @belongsTo
+}

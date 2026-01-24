@@ -66,9 +66,9 @@ fisioflow-51658291/
 ### Mobile (Planejado)
 | Tecnologia | Versão | Uso |
 |------------|--------|-----|
-| Capacitor | 7.4.3 | Bridge para nativo |
+| React Native | 0.76+ | Framework Mobile |
+| Expo | 52+ | Plataforma de desenvolvimento |
 | iOS | 13.0+ | Plataforma alvo |
-| Xcode | 13.0+ | IDE iOS |
 
 ---
 
@@ -321,19 +321,18 @@ SENTRY_DSN=xxx
 VITE_GEMINI_API_KEY=xxx
 ```
 
-### Capacitor Config
+### Expo Config
 
 ```typescript
-// capacitor.config.ts
+// app.json
 {
-  appId: 'com.fisioflow.app',
-  appName: 'FisioFlow',
-  webDir: 'dist',
-  bundledWebRuntime: false,
-  plugins: {
-    SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: '#0EA5E9',
+  "expo": {
+    "name": "FisioFlow",
+    "slug": "fisioflow",
+    "version": "1.0.0",
+    "ios": {
+      "bundleIdentifier": "com.fisioflow.app",
+      "supportsTablet": true
     }
   }
 }
@@ -346,16 +345,14 @@ VITE_GEMINI_API_KEY=xxx
 ### Production
 ```json
 {
-  "@capacitor/core": "^7.4.3",
-  "@capacitor/cli": "^7.4.3",
-  "@capacitor/ios": "^7.4.3",
+  "expo": "~52.0.0",
+  "react-native": "0.76.0",
   "@supabase/supabase-js": "^2.74.0",
   "@tanstack/react-query": "^5.90.17",
   "zustand": "^4.5.5",
-  "react-router-dom": "^6.30.1",
-  "@radix-ui/*": "latest",
-  "tailwindcss": "^3.4.17",
-  "date-fns": "^3.6.0"
+  "nativewind": "^4.0.1",
+  "react-native-reanimated": "~3.16.1",
+  "expo-router": "~4.0.0"
 }
 ```
 
@@ -383,10 +380,9 @@ VITE_GEMINI_API_KEY=xxx
   "test": "vitest",
   "test:e2e": "playwright test",
   "lint": "eslint .",
-  "cap:ios": "npx cap add ios",
-  "cap:sync": "npm run build && npx cap sync",
-  "cap:run:ios": "npx cap run ios",
-  "cap:open:ios": "npx cap open ios"
+  "android": "expo run:android",
+  "ios": "expo run:ios",
+  "start": "expo start"
 }
 ```
 
@@ -412,29 +408,17 @@ VITE_GEMINI_API_KEY=xxx
 ## 📱 Status iOS
 
 ### Configuração Atual
-- ✅ Capacitor 7.4.3 instalado
-- ✅ `capacitor.config.ts` configurado
+- ✅ React Native + Expo configurados
+- ✅ `app.json` configurado
 - ✅ Scripts npm disponíveis
-- ❌ Plataforma iOS ainda não adicionada
+- ❌ Ambiente de desenvolvimento não iniciado
 - ❌ Sem build nativo realizado
 
 ### Próximos Passos
-1. ⏳ Adicionar plataforma iOS (`npm run cap:ios`)
-2. ⏳ Configurar Xcode
+1. ⏳ Iniciar projeto (`npx expo start`)
+2. ⏳ Configurar navegação com Expo Router
 3. ⏳ Implementar features mobile
 4. ⏳ Testar em simulador/dispositivo
 5. ⏳ Publicar na App Store
 
 ---
-
-## 🔗 Links Importantes
-
-- **Web**: https://fisioflow.com
-- **Vercel**: https://vercel.com/...
-- **Supabase**: https://supabase.com/...
-- **GitHub**: https://github.com/...
-
----
-
-**Documento gerado em**: 19 de Janeiro de 2026
-**Próxima revisão**: Após setup iOS completo

@@ -91,8 +91,8 @@ const StatsigProviderWrapper = ({ children }: { children: React.ReactNode }) => 
     if (!user) return { userID: 'anonymous' };
 
     return {
-      userID: user.id,
-      email: user.email,
+      userID: user.uid,
+      email: user.email || undefined,
       custom: {
         role: profile?.role,
         name: profile?.full_name,

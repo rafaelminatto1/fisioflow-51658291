@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User } from 'firebase/auth';
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
 
 interface AuthError {
@@ -10,7 +10,6 @@ interface AuthError {
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
-  session: Session | null;
   loading: boolean;
   initialized: boolean;
   sessionCheckFailed: boolean;

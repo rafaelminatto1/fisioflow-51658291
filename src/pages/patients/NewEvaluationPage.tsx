@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowLeft, BookmarkPlus, LayoutDashboard, FileText, Activity, Map, Plus, Save } from 'lucide-react';
 
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -20,19 +20,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PatientHelpers } from '@/types';
+import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
 
 export default function NewEvaluationPage() {
-    const { patientId } = useParams();
+    const { patientId, templateId } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const appointmentId = searchParams.get('appointmentId');
     const { toast } = useToast();
+    const incrementTemplateUsage = useIncrementTemplateUsage();
 
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isSaving, setIsSaving] = useState(false);
+    const [isTemplateLoading, setIsTemplateLoading] = useState(!!templateId);
 
     // Template-based Anamnesis State
     const [selectedTemplate, setSelectedTemplate] = useState<EvaluationTemplate | null>(null);
@@ -77,9 +80,22 @@ export default function NewEvaluationPage() {
     // Handle template selection
     const handleTemplateSelect = useCallback((template: EvaluationTemplate | null) => {
         setSelectedTemplate(template);
+        setIsTemplateLoading(false);
         // Optionally reset custom fields when changing template
         // setCustomFields([]);
     }, []);
+
+    // Auto-load template if templateId is in URL
+    useEffect(() => {
+        if (templateId && !selectedTemplate) {
+            // The template will be loaded by EvaluationTemplateSelector
+            // We just need to ensure we wait for it
+            const timer = setTimeout(() => {
+                setIsTemplateLoading(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [templateId, selectedTemplate]);
 
     // Handle field value change
     const handleFieldValueChange = useCallback((fieldId: string, value: unknown) => {
@@ -113,7 +129,11 @@ export default function NewEvaluationPage() {
 
                 if (responseError) {
                     console.error('Error saving evaluation responses:', responseError);
+                    throw responseError;
                 }
+
+                // Increment template usage counter
+                await incrementTemplateUsage.mutateAsync(selectedTemplate.id);
             }
 
             toast({
@@ -256,6 +276,7 @@ export default function NewEvaluationPage() {
                                             selectedTemplateId={selectedTemplate?.id}
                                             onTemplateSelect={handleTemplateSelect}
                                             autoLoadDefault={true}
+                                            initialTemplateId={templateId}
                                         />
                                     </div>
 
