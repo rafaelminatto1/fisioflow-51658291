@@ -21,7 +21,7 @@ import {
   usePatientGoals,
   usePatientPathologies
 } from '@/hooks/usePatientEvolution';
-import { useSoapRecords } from '@/hooks/useSoapRecords';
+import { useSoapRecordsSummary } from '@/hooks/useSoapRecords';
 import { PatientHelpers } from '@/types';
 
 interface PatientDashboard360Props {
@@ -51,7 +51,7 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
   const { data: surgeries = [] } = usePatientSurgeries(patient.id);
   const { data: goals = [] } = usePatientGoals(patient.id);
   const { data: pathologies = [] } = usePatientPathologies(patient.id);
-  const { data: soapRecords = [] } = useSoapRecords(patient.id, 5);
+  const { data: soapRecords = [] } = useSoapRecordsSummary(patient.id, 5);
 
   const activeGoals = goals.filter(g => g.status === 'em_andamento');
   const activePathologies = pathologies.filter(p => p.status === 'em_tratamento');
