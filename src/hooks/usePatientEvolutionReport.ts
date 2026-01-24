@@ -38,7 +38,6 @@ export const usePatientEvolutionReport = (patientId: string) => {
           id,
           record_date,
           created_at,
-          objective,
           plan,
           created_by
         `)

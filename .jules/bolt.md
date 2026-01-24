@@ -9,3 +9,7 @@
 ## 2024-05-23 - [Test Environment & Build Memory]
 **Learning:** The local Vitest environment is unstable for component tests (JSDOM issues), making unit testing difficult. Additionally, the build process runs out of memory on standard settings.
 **Action:** Use `pnpm build:prod` (which increases memory) for builds, and rely on Playwright for reliable frontend verification when unit tests fail due to environment issues.
+
+## 2026-03-XX - [Ghost Components & Summary Hooks]
+**Learning:** Found a component (`src/components/patients/PatientDashboard360.tsx`) that appeared to be a duplicate/dead code version of another active component. Also, implementing a `useSoapRecordsSummary` hook allowed optimizing list views without breaking components that need full details.
+**Action:** When optimizing, check for duplicate component names in different folders. Create explicit `Summary` interfaces and hooks for large entities to enforce lean data fetching in dashboards.
