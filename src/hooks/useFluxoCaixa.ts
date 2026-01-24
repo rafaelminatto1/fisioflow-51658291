@@ -44,7 +44,7 @@ export function useFluxoCaixaResumo() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('fluxo_caixa_resumo')
-        .select('*')
+        .select('mes, entradas, saidas, saldo')
         .order('mes', { ascending: false })
         .limit(12);
       
@@ -60,7 +60,7 @@ export function useCaixaDiario(data: string) {
     queryFn: async () => {
       const { data: movs, error } = await supabase
         .from('movimentacoes_caixa')
-        .select('*')
+        .select('id, data, tipo, valor, descricao, categoria, forma_pagamento, created_at')
         .eq('data', data)
         .order('created_at', { ascending: true });
       

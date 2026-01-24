@@ -31,7 +31,7 @@ export const useUserProfile = () => {
       // Buscar perfil
       let { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, full_name, avatar_url, email, phone, organization_id, onboarding_completed, created_at, updated_at')
         .eq('user_id', userId)
         .single();
 
@@ -47,7 +47,7 @@ export const useUserProfile = () => {
           // Tentar buscar novamente após garantir
           const { data: retryData, error: retryError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('id, user_id, full_name, avatar_url, email, phone, organization_id, onboarding_completed, created_at, updated_at')
             .eq('user_id', userId)
             .single();
 
