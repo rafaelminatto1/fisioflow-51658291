@@ -1,0 +1,297 @@
+{
+  "exercises": [
+    {
+      "name": "Agachamento com peso corporal",
+      "slug": "agachamento-peso-corporal",
+      "category": "fortalecimento",
+      "description": "Exercício fundamental para fortalecer quadríceps, glúteos e core. Ideal para reabilitação de membros inferiores.",
+      "instructions": [
+        "Em pé, pés na largura dos ombros",
+        "Dobrar os joelhos como se fosse sentar",
+        "Manter coluna reta e olhar para frente",
+        "Descer até 90° de flexão dos joelhos",
+        "Retornar à posição inicial empurrando pelos calcanhares"
+      ],
+      "muscles": ["quadríceps", "glúteos", "isquiotibiais", "core"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "10-15",
+      "precautions": "Manter joelhos alinhados com os pés. Não deixar os joelhos passarem da ponta dos pés.",
+      "benefits": "Fortalece membros inferiores, melhora equilíbrio e estabilidade",
+      "tags": ["pernas", "quadríceps", "glúteos", "funcional"]
+    },
+    {
+      "name": "Pontes de glúteo",
+      "slug": "pontes-gluteo",
+      "category": "fortalecimento",
+      "description": "Exercício excelente para fortalecer glúteos e região lombar. Fundamental para padrão de marcha.",
+      "instructions": [
+        "Deitado de barriga para cima, joelhos dobrados",
+        "Pés apoiados no chão, na largura dos quadrís",
+        "Elevar o quadril mantendo o alinhamento",
+        "Seguir por 2-3 segundos no topo",
+        "Descer lentamente mantendo controle"
+      ],
+      "muscles": ["glúteos", "isquiotibiais", "core"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "12-15",
+      "precautions": "Não hiperestender a coluna lombar. Manter core ativado.",
+      "benefits": "Fortalece glúteos, estabiliza pelve, previne dores lombares",
+      "tags": ["glúteos", "core", "lombar", "quadril"]
+    },
+    {
+      "name": "Prancha abdominal",
+      "slug": "prancha-abdominal",
+      "category": "fortalecimento",
+      "description": "Exercício isométrico para fortalecimento completo do core. Essencial para estabilidade da coluna.",
+      "instructions": [
+        "Apoiar antebraços no chão, cotovelos alinhados com ombros",
+        "Elevar corpo mantendo linha reta da cabeça aos calcanhares",
+        "Contrair glúteos e abdominal",
+        "Manter posição por 20-60 segundos",
+        "Respirar normalmente durante o exercício"
+      ],
+      "muscles": ["core", "retos abdominais", "oblíquos", "transverso"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "duration_minutes": 1,
+      "precautions": "Manter coluna neutra, não deixar quadril cair ou subir demais.",
+      "benefits": "Fortalece core, melhora postura, previne dores lombares",
+      "tags": ["core", "abdominal", "postura", "isometria"]
+    },
+    {
+      "name": "Elevação lateral de quadril",
+      "slug": "elevacao-lateral-quadril",
+      "category": "fortalecimento",
+      "description": "Fortalece abdutores do quadril, importante para estabilidade pélvica e padrão de marcha.",
+      "instructions": [
+        "Deitado de lado, pernas estendidas",
+        "Elevar perna de cima mantendo alinhamento",
+        "Seguir por 2-3 segundos",
+        "Descer lentamente",
+        "Repetir em ambos os lados"
+      ],
+      "muscles": ["glúteo médio", "tensor da fáscia lata", "core"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "12-15 cada lado",
+      "precautions": "Manter tronco alinhado, não rotacionar pelve.",
+      "benefits": "Estabiliza pelve, melhora marcha, previne quedas",
+      "tags": ["glúteo médio", "quadril", "abdutor", "equilíbrio"]
+    },
+    {
+      "name": "Afundo ou Passada",
+      "slug": "afundo-passada",
+      "category": "fortalecimento",
+      "description": "Exercício unilateral avançado para membros inferiores. Excelente para reabilitação de joelhos.",
+      "instructions": [
+        "Em pé, dar um passo à frente",
+        "Dobrar ambos os joelhos a 90°",
+        "Joelho de trás quase toca o chão",
+        "Empurrar pelo calcanhar da perna da frente para voltar",
+        "Alternar pernas"
+      ],
+      "muscles": ["quadríceps", "glúteos", "isquiotibiais"],
+      "equipment": "nenhum",
+      "difficulty": "intermediate",
+      "sets_recommended": "3",
+      "reps_recommended": "10-12 cada perna",
+      "precautions": "Manter joelho frontal alinhado com tornozelo. Não deixar joelho trás tocar o chão.",
+      "benefits": "Fortalece unilateralmente, melhora equilíbrio, funcionalidade",
+      "tags": ["pernas", "quadríceps", "glúteos", "unilateral"]
+    },
+    {
+      "name": "Alongamento de isquiotibiais em decúbito",
+      "slug": "alongamento-isquiotibiais-decubi to",
+      "category": "alongamento",
+      "description": "Alongamento suave dos isquiotibiais, indicado para pós-operatório e limitações de mobilidade.",
+      "instructions": [
+        "Deitado de costas, uma perna flexionada com pé no chão",
+        "Elevar a outra perna estendida o máximo possível",
+        "Manter por 20-30 segundos",
+        "Usar toalha ou faixa elástica se necessário",
+        "Repetir em ambos os lados"
+      ],
+      "muscles": ["isquiotibiais", "glúteos"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "20-30 segundos cada lado",
+      "precautions": "Não forçar além do limite. Manter coluna lombar no chão.",
+      "benefits": "Melhora flexibilidade, reduz tensão posterior, previne lesões",
+      "tags": ["isquiotibiais", "alongamento", "flexibilidade", "membros inferiores"]
+    },
+    {
+      "name": "Gato-Vaca (Cat-Cow)",
+      "slug": "gato-vaca",
+      "category": "mobilidade",
+      "description": "Mobilização da coluna vertebral, excelente para dor lombar e rigidez.",
+      "instructions": [
+        "Apoiar mãos e joelhos no chão (posição 4 apoios)",
+        "Inspirar e arredondar coluna (gato)",
+        "Expirar e contrair coluna (vaca)",
+        "Repetir movimento fluido",
+        "Manter movimento controlado"
+      ],
+      "muscles": ["coluna vertebral", "core", "multífidos"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "2",
+      "reps_recommended": "10-15 repetições",
+      "precautions": "Movimento suave, sem dor. Evitar hiperextensão cervical.",
+      "benefits": "Mobiliza coluna, reduz dor lombar, melhora circulação discal",
+      "tags": ["coluna", "mobilidade", "lombar", "flexibilidade"]
+    },
+    {
+      "name": "Rotação de tronco em decúbito",
+      "slug": "rotacao-tronco-decubi to",
+      "category": "mobilidade",
+      "description": "Mobilização da coluna torácica, importante para mobilidade geral e função dos ombros.",
+      "instructions": [
+        "Deitado de costas, joelhos flexionados",
+        "Estender braços em cruz",
+        "Levar ambos os joelhos para um lado",
+        "Manter por 20-30 segundos",
+        "Retornar e repetir para o outro lado"
+      ],
+      "muscles": ["coluna torácica", "oblíquos", "lombar"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "2",
+      "reps_recommended": "20-30 segundos cada lado",
+      "precautions": "Manter ombros no chão. Não forçar além do conforto.",
+      "benefits": "Mobiliza torácica, melhora rotação, reduz tensão",
+      "tags": ["coluna", "torácica", "rotação", "mobilidade"]
+    },
+    {
+      "name": "Elevação de panturrilha",
+      "slug": "elevacao-panturrilha",
+      "category": "fortalecimento",
+      "description": "Fortalece músculos da panturrilha, essencial para marcha e estabilidade de tornozelo.",
+      "instructions": [
+        "Em pé, mãos apoiadas em parede ou cadeira",
+        "Elevar nos dedos dos pés o máximo possível",
+        "Seguir por 2-3 segundos",
+        "Descer lentamente",
+        "Repetir controladamente"
+      ],
+      "muscles": ["gastrocnêmio", "sóleo"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "15-20",
+      "precautions": "Manter alinhamento do tornozelo. Evitar balançar.",
+      "benefits": "Fortalece panturrilha, melhora marcha, previne entorses",
+      "tags": ["panturrilha", "tornozelo", "marcha", "membros inferiores"]
+    },
+    {
+      "name": "Bird-Dog (Cachorro-Passarinho)",
+      "slug": "bird-dog",
+      "category": "fortalecimento",
+      "description": "Exercício de coordenação e core, excelente para estabilidade lombo-pélvica.",
+      "instructions": [
+        "Posição 4 apoios (mãos e joelhos)",
+        "Estender braço direito e perna esquerda simultaneamente",
+        "Manter por 2-3 segundos",
+        "Retornar e alternar lados",
+        "Manter coluna neutra durante movimento"
+      ],
+      "muscles": ["core", "multífidos", "glúteos", "dorsais"],
+      "equipment": "nenhum",
+      "difficulty": "intermediate",
+      "sets_recommended": "3",
+      "reps_recommended": "8-10 cada lado",
+      "precautions": "Manter pelve neutra. Não hiperestender coluna lombar.",
+      "benefits": "Coordenação, estabilidade core, fortalece multífidos",
+      "tags": ["core", "coordenação", "multífidos", "equilíbrio"]
+    },
+    {
+      "name": "Extensão de joelho em cadeia cinética aberta",
+      "slug": "extensao-joelho-cadeia-aberta",
+      "category": "fortalecimento",
+      "description": "Fortalecimento isolado do quadríceps, indicado para reabilitação de joelho.",
+      "instructions": [
+        "Sentado com pernas pendentes",
+        "Estender uma perna até o joelho estar reto",
+        "Seguir por 2-3 segundos",
+        "Descer lentamente",
+        "Repetir em ambos os lados"
+      ],
+      "muscles": ["quadríceps"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "12-15 cada perna",
+      "precautions": "Movimento controlado. Não hiperestender joelho.",
+      "benefits": "Fortalece quadríceps isoladamente, seguro para joelho",
+      "tags": ["quadríceps", "joelho", "cadeia aberta", "reabilitação"]
+    },
+    {
+      "name": "Alongamento de peitoral na porta",
+      "slug": "alongamento-peitoral-porta",
+      "category": "alongamento",
+      "description": "Alonga peitorais e melhora postura de ombros, importante para postura geral.",
+      "instructions": [
+        "Em pé em uma porta",
+        "Apoiar antebraço em cada batente da porta",
+        "Inclinar corpo suavemente para frente",
+        "Sentir alongamento na frente do peito",
+        "Manter por 30-45 segundos"
+      ],
+      "muscles": ["peitoral maior", "peitoral menor", "deltóide anterior"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "2",
+      "reps_recommended": "30-45 segundos",
+      "precautions": "Não forçar. Manter ombros relaxados.",
+      "benefits": "Abre peitoral, melhora postura, reduz ombros caídos",
+      "tags": ["peitoral", "ombro", "alongamento", "postura"]
+    },
+    {
+      "name": "Rotação externa de ombro com elástico",
+      "slug": "rotacao-externa-ombro-elastico",
+      "category": "fortalecimento",
+      "description": "Fortalece manguito rotador, essencial para estabilidade do ombro.",
+      "instructions": [
+        "Cotovelo flexionado a 90° colado ao corpo",
+        "Segurar elástico com mão oposta",
+        "Rotacionar braço para fora mantendo cotovelo no corpo",
+        "Retornar lentamente",
+        "Movimento controlado"
+      ],
+      "muscles": ["manguito rotador", "infraespinhal", "redondo menor"],
+      "equipment": "elástico",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "12-15",
+      "precautions": "Mantenha cotovelo colado ao corpo. Não arquear coluna.",
+      "benefits": "Fortalece manguito rotador, estabiliza ombro, previne lesões",
+      "tags": ["ombro", "manguito rotador", "elástico", "estabilidade"]
+    },
+    {
+      "name": "Dead Bug",
+      "slug": "dead-bug",
+      "category": "fortalecimento",
+      "description": "Exercício progressivo de core, mais acessível que prancha para iniciantes.",
+      "instructions": [
+        "Deitado de costas, braços e pernas no ar",
+        "Braços estendidos em direção ao teto",
+        "Estender uma perna e braço oposto simultaneamente",
+        "Retornar e alternar",
+        "Manter coluna lombar no chão"
+      ],
+      "muscles": ["core", "retos abdominais", "oblíquos"],
+      "equipment": "nenhum",
+      "difficulty": "beginner",
+      "sets_recommended": "3",
+      "reps_recommended": "8-10 cada lado",
+      "precautions": "Mantenha coluna lombar no chão. Movimento lento e controlado.",
+      "benefits": "Coordenação core, seguro para coluna, acessível",
+      "tags": ["core", "coordenação", "abdominal", "funcional"]
+    }
+  ]
+}

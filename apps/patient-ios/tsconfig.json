@@ -1,0 +1,37 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@fisioflow/shared-types": [
+        "../../packages/shared-types/src"
+      ],
+      "@fisioflow/shared-api": [
+        "../../packages/shared-api/src"
+      ],
+      "@fisioflow/shared-utils": [
+        "../../packages/shared-utils/src"
+      ],
+      "@fisioflow/shared-constants": [
+        "../../packages/shared-constants/src"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

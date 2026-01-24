@@ -63,18 +63,16 @@
 
 **Estimativa:** 2-3 semanas
 
-### 2. App Mobile (Capacitor)
+### 2. App Mobile (React Native)
 
-**Status Atual:** Configuração presente, mas sem build
+**Status Atual:** Planejamento concluído
 
 **O que falta:**
-- [ ] Build para iOS
-- [ ] Build para Android
-- [ ] Testes em dispositivos reais
-- [ ] Publicação na App Store
-- [ ] Publicação na Google Play
-- [ ] Push notifications nativas
-- [ ] Autenticação biometrica
+- [ ] Inicializar projeto Expo
+- [ ] Configurar navegação
+- [ ] Migrar lógica de autenticação
+- [ ] Build para iOS e Android
+- [ ] Publicação nas lojas
 
 **Estimativa:** 4-6 semanas
 
@@ -347,16 +345,17 @@ export async function GET(req: Request) {
 
 #### 9. App Mobile Nativo
 
-**Descrição:** React Native ou Capacitor para iOS/Android
+**Descrição:** React Native + Expo para iOS/Android
 
 **Benefícios:**
 - Melhor performance
 - Acesso a hardware (camera, sensors)
 - Notificações push nativas
+- Código compartilhado
 
 **Implementação:**
-- Capacitor (já configurado)
-- Builds iOS/Android
+- Expo (a iniciar)
+- Builds via EAS
 - Testes em dispositivos
 
 **Estimativa:** 4-6 semanas

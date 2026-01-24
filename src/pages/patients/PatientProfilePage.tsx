@@ -28,6 +28,8 @@ import {
     CreditCard,
     File as FileIcon,
     Brain,
+    ClipboardList,
+    Sparkles,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -54,10 +56,12 @@ import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 
 // Financial & Documents Imports
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useEvaluationForms } from '@/hooks/useEvaluationForms';
 
 const PersonalDataTab = ({ patient }: {
     patient: {
@@ -765,6 +769,22 @@ export const PatientProfilePage = () => {
     });
 
     const [editingPatient, setEditingPatient] = useState<boolean>(false);
+    const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+
+    // Fetch evaluation forms for the modal
+    const { data: evaluationForms = [] } = useEvaluationForms();
+
+    const handleStartEvaluation = () => {
+        setEvaluationModalOpen(true);
+    };
+
+    const handleSelectTemplate = (templateId: string) => {
+        setSelectedTemplate(templateId);
+        setEvaluationModalOpen(false);
+        // Navigate to new evaluation page with selected template
+        navigate(`/patients/${id}/evaluations/new/${templateId}`);
+    };
 
     if (isLoading) {
         return (
@@ -836,6 +856,10 @@ export const PatientProfilePage = () => {
                             <Button onClick={() => setEditingPatient(true)} variant="outline" className="flex-1 md:flex-none gap-2">
                                 <Edit className="h-4 w-4" />
                                 Editar
+                            </Button>
+                            <Button onClick={handleStartEvaluation} className="flex-1 md:flex-none gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                                <ClipboardList className="h-4 w-4" />
+                                Iniciar Avaliação
                             </Button>
                             <Button onClick={() => navigate('/schedule')} className="flex-1 md:flex-none gap-2">
                                 <CalendarIcon className="h-4 w-4" />
@@ -940,6 +964,116 @@ export const PatientProfilePage = () => {
                     onOpenChange={setEditingPatient}
                     patientId={id}
                 />
+
+                {/* Evaluation Template Selection Modal */}
+                <Dialog open={evaluationModalOpen} onOpenChange={setEvaluationModalOpen}>
+                    <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    <ClipboardList className="h-5 w-5 text-primary" />
+                                </div>
+                                Iniciar Nova Avaliação
+                            </DialogTitle>
+                            <DialogDescription>
+                                Selecione um template de avaliação para {patientName}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <ScrollArea className="max-h-[60vh] pr-4">
+                            <div className="space-y-4 pt-4">
+                                {evaluationForms.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                                        <p className="text-muted-foreground">
+                                            Nenhum template de avaliação disponível
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Vá em "Cadastros → Fichas de Avaliação" para criar templates
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {/* Quick access - Favorites */}
+                                        {evaluationForms.filter(f => f.is_favorite).slice(0, 3).length > 0 && (
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                                    <Sparkles className="h-3 w-3" />
+                                                    Favoritos
+                                                </p>
+                                                {evaluationForms
+                                                    .filter(f => f.is_favorite)
+                                                    .slice(0, 3)
+                                                    .map((form) => (
+                                                        <button
+                                                            key={form.id}
+                                                            onClick={() => handleSelectTemplate(form.id)}
+                                                            className="w-full text-left p-3 rounded-lg border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all group"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-sm">{form.nome}</p>
+                                                                    {form.descricao && (
+                                                                        <p className="text-xs text-muted-foreground truncate">{form.descricao}</p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                                    <Badge variant="secondary" className="text-xs">
+                                                                        {(form.evaluation_form_fields?.length || 0)} campos
+                                                                    </Badge>
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        )}
+
+                                        {/* All templates */}
+                                        <details className="group">
+                                            <summary className="text-xs font-semibold text-muted-foreground flex items-center gap-1 cursor-pointer hover:text-foreground list-none p-0 bg-transparent border-none w-full">
+                                                <span>Ver todos os templates</span>
+                                                <span className="ml-auto group-open:rotate-90 transition-transform">›</span>
+                                            </summary>
+                                            <div className="mt-2 space-y-2 pl-4">
+                                                {evaluationForms.map((form) => (
+                                                    <button
+                                                        key={form.id}
+                                                        onClick={() => handleSelectTemplate(form.id)}
+                                                        className="w-full text-left p-3 rounded-lg border hover:border-primary/50 hover:bg-muted/50 transition-all flex items-center justify-between group"
+                                                    >
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-sm truncate">{form.nome}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    {form.tipo}
+                                                                </Badge>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {(form.evaluation_form_fields?.length || 0)} campos
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Selecionar →
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </details>
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setEvaluationModalOpen(false)}>
+                                Cancelar
+                            </Button>
+                            <Button onClick={() => setEvaluationModalOpen(false)}>
+                                Criar Template Novo
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </MainLayout>
     );

@@ -40,6 +40,7 @@ Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com Rea
 ## 🛠 Tecnologias Utilizadas
 
 - **Frontend**: React 18 + TypeScript + Vite
+- **Mobile**: React Native + Expo
 - **UI Components**: shadcn/ui + Tailwind CSS
 - **Backend**: Supabase (PostgreSQL + Auth + Real-time)
 - **Autenticação**: Supabase Auth com RLS
@@ -209,7 +210,7 @@ Veja o [roadmap completo](./docs2026/13-roadmap.md) com:
 - Novas funcionalidades sugeridas
 
 ### Próximas Funcionalidades
-- [ ] App Mobile (Capacitor)
+- [ ] App Mobile (React Native)
 - [ ] Sistema de Notificações Push (completo)
 - [ ] Integração com WhatsApp
 - [ ] Telemedicina completa

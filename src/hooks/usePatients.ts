@@ -10,11 +10,13 @@
  * @module hooks/usePatients
  */
 
+import { useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { patientsApi } from '@/integrations/firebase/functions';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
@@ -52,47 +54,30 @@ import {
  */
 export const useActivePatients = () => {
   const { profile } = useAuth();
+  const { toast } = useToast();
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
 
-  // Setup realtime subscription
+  // Setup realtime subscription via Ably
   useEffect(() => {
     if (!organizationId) {
       console.warn('useActivePatients: Missing organizationId');
       return;
     }
-    console.log('useActivePatients: subscribing with orgId', organizationId);
 
-    let isSubscribed = false;
-    const channel = supabase.channel(`patients-${organizationId}`);
+    logger.info('useActivePatients: subscribing via Ably', { organizationId }, 'usePatients');
 
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'patients',
-          filter: `organization_id=eq.${organizationId}`
-        },
-        () => {
-          logger.info('Realtime: Pacientes atualizados', { organizationId }, 'usePatients');
-          queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-          logger.debug('Realtime subscription active', { organizationId }, 'usePatients');
-        }
-      });
+    const ably = getAblyClient();
+    const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
+
+    channel.subscribe(ABLY_EVENTS.update, (message) => {
+      logger.info('Realtime (Ably): Pacientes atualizados', { organizationId, event: message.name }, 'usePatients');
+      queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
+    });
 
     return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch((error) => {
-          logger.warn('Failed to remove realtime channel', error, 'usePatients');
-        });
-      }
+      logger.info('Realtime (Ably): Unsubscribing from patients channel', { organizationId }, 'usePatients');
+      channel.unsubscribe();
     };
   }, [organizationId, queryClient]);
 
@@ -166,13 +151,8 @@ export const useActivePatients = () => {
             queryClient.prefetchQuery({
               queryKey: ['patient-stats', patient.id],
               queryFn: async () => {
-                const { data } = await supabase
-                  .from('appointments')
-                  .select('id, patient_id, status, date')
-                  .eq('patient_id', patient.id)
-                  .order('date', { ascending: false })
-                  .limit(10);
-                return data;
+                const response = await patientsApi.getStats(patient.id);
+                return response.data;
               },
               staleTime: PATIENT_QUERY_CONFIG.staleTime,
             });
@@ -222,6 +202,7 @@ export const usePatientById = (id: string | undefined) => {
  */
 export const useCreatePatient = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (patient: any) => {
@@ -248,6 +229,7 @@ export const useCreatePatient = () => {
  */
 export const useUpdatePatient = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: any & { id: string }) => {
@@ -275,6 +257,7 @@ export const useUpdatePatient = () => {
  */
 export const useDeletePatient = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (patientId: string) => {

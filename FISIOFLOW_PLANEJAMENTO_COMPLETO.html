@@ -69,6 +69,35 @@
             margin-bottom: 40px;
         }
 
+        .firebase-highlight {
+            background: linear-gradient(135deg, #FFCA28 0%, #FFA000 100%);
+            color: #1F2937;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+
+        .firebase-highlight h2 {
+            color: #1F2937;
+            border-bottom-color: rgba(31, 41, 55, 0.3);
+            margin-top: 0;
+        }
+
+        .firebase-highlight h3 {
+            color: #1F2937;
+        }
+
+        .firebase-badge {
+            display: inline-block;
+            background: #FFCA28;
+            color: #1F2937;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 2px;
+        }
+
         .executive-summary {
             background: linear-gradient(135deg, #10B981 0%, #059669 100%);
             color: white;
@@ -131,6 +160,7 @@
             border-radius: 8px;
             overflow-x: auto;
             margin: 20px 0;
+            font-size: 0.85em;
         }
 
         pre code {
@@ -174,6 +204,10 @@
             color: #10B981;
         }
 
+        .checklist li.checked::before {
+            content: '☑';
+        }
+
         .tag {
             display: inline-block;
             padding: 4px 12px;
@@ -191,6 +225,11 @@
         .tag-star {
             background: #FEF3C7;
             color: #D97706;
+        }
+
+        .tag-firebase {
+            background: #FEF3C7;
+            color: #B45309;
         }
 
         .metric-grid {
@@ -217,6 +256,40 @@
             font-size: 0.9rem;
             color: #6B7280;
             margin-top: 5px;
+        }
+
+        .firebase-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .firebase-feature {
+            background: #FFFBEB;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #F59E0B;
+        }
+
+        .firebase-feature strong {
+            color: #92400E;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .cost-table {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .cost-table th {
+            background: #1F2937;
+            color: white;
+        }
+
+        .cost-table tr:nth-child(even) {
+            background: #F9FAFB;
         }
 
         @media print {
@@ -252,19 +325,21 @@
 <body>
     <div class="container">
         <h1>📱 FisioFlow - Planejamento Completo para Aplicativos iOS</h1>
-        <p class="subtitle">Análise Estratégica e Roadmap de Desenvolvimento</p>
+        <p class="subtitle">Análise Estratégica e Roadmap de Desenvolvimento com Firebase + Google Cloud</p>
 
         <div class="executive-summary">
             <h2>📊 Sumário Executivo</h2>
             <p><strong>Data:</strong> 22 de Janeiro de 2026<br>
             <strong>Projeto:</strong> FisioFlow - Plataforma de Fisioterapia Digital<br>
-            <strong>Responsável:</strong> Rafael Minatto</p>
+            <strong>Responsável:</strong> Rafael Minatto<br>
+            <strong>Stack:</strong> React Native + Expo + Firebase + Cloud SQL</p>
 
             <h3 style="color: white; margin-top: 20px;">Contexto Atual</h3>
             <ul style="color: rgba(255,255,255,0.95);">
                 <li><strong>Volume de atendimentos:</strong> ~600/mês</li>
                 <li><strong>Profissionais ativos:</strong> 15</li>
-                <li><strong>Plataforma atual:</strong> Web (Vite + React + Supabase)</li>
+                <li><strong>Plataforma atual:</strong> Web (Vite + React)</li>
+                <li><strong>Backend:</strong> Firebase + Cloud SQL + Firebase Hosting</li>
                 <li><strong>Stack tecnológico:</strong> Moderno e escalável</li>
             </ul>
 
@@ -274,7 +349,58 @@
                 <li>Separar experiência entre pacientes e profissionais</li>
                 <li>Aumentar engajamento e retenção de usuários</li>
                 <li>Escalar o negócio com qualidade premium</li>
+                <li>Otimizar custos com Firebase + Google Cloud</li>
             </ol>
+        </div>
+
+        <div class="firebase-highlight">
+            <h2>🔥 POR QUE FIREBASE + GOOGLE CLOUD?</h2>
+
+            <div class="firebase-features">
+                <div class="firebase-feature">
+                    <strong>✅ Suporte Nativo Mobile</strong>
+                    SDKs otimizados para iOS/Android com integração perfeita
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Firebase Cloud Messaging</strong>
+                    Melhor sistema de push notifications (grátis e ilimitado)
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Firebase Auth</strong>
+                    Autenticação com providers nativos (Google, Apple, Email)
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Firebase Analytics</strong>
+                    Analytics gratuito e ilimitado
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Firebase Storage</strong>
+                    CDN automático para mídia
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Cloud Functions</strong>
+                    Backend serverless escalável
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Firebase Data Connect + Cloud SQL</strong>
+                    PostgreSQL completo com ORM type-safe
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Firebase Hosting</strong>
+                    CDN global com edge caching
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Crashlytics</strong>
+                    Crash reporting automático
+                </div>
+                <div class="firebase-feature">
+                    <strong>✅ Performance Monitoring</strong>
+                    Monitoramento em tempo real
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">💰 Economia vs Supabase Pro</h3>
+            <p><strong>Economia estimada:</strong> R$ 150-250/mês</p>
         </div>
 
         <h2>🏗️ ANÁLISE DA ESTRUTURA ATUAL</h2>
@@ -288,16 +414,17 @@
             <li><strong>Routing:</strong> React Router DOM v7</li>
             <li><strong>UI Library:</strong> Radix UI (shadcn/ui)</li>
             <li><strong>Styling:</strong> Tailwind CSS 4.x</li>
-            <li><strong>State Management:</strong> React Context + Hooks</li>
-            <li><strong>Forms:</strong> React Hook Form + Zod validation</li>
             <li><strong>Language:</strong> TypeScript</li>
         </ul>
 
-        <h4>Backend/Infraestrutura</h4>
+        <h4>Backend/Infraestrutura Google Cloud <span class="firebase-badge">FIREBASE</span></h4>
         <ul>
-            <li><strong>BaaS:</strong> Supabase (PostgreSQL + Auth + Storage + Realtime)</li>
-            <li><strong>Email:</strong> Resend</li>
-            <li><strong>Hosting:</strong> Vercel</li>
+            <li><strong>BaaS:</strong> Firebase (Auth, Storage, Functions, Analytics)</li>
+            <li><strong>Hosting:</strong> Firebase Hosting (CDN global + Edge caching)</li>
+            <li><strong>Database:</strong> Cloud SQL for PostgreSQL com Firebase Data Connect</li>
+            <li><strong>Auth:</strong> Firebase Authentication (Email, Google, Apple, Phone)</li>
+            <li><strong>Push Notifications:</strong> Firebase Cloud Messaging (FCM)</li>
+            <li><strong>Realtime:</strong> Firebase Realtime Database / Firestore</li>
         </ul>
 
         <div class="success-box">
@@ -306,8 +433,10 @@
                 <li>Arquitetura moderna e escalável</li>
                 <li>Separação clara de responsabilidades</li>
                 <li>Componentização bem estruturada</li>
-                <li>Integração com Supabase (excelente para mobile)</li>
+                <li>Integração com Firebase (excelente para mobile iOS/Android)</li>
                 <li>TypeScript para type safety</li>
+                <li>Firebase Data Connect + Cloud SQL (PostgreSQL completo)</li>
+                <li>Hosting com CDN global do Firebase</li>
             </ul>
         </div>
 
@@ -316,12 +445,139 @@
             <ul>
                 <li>Falta de componentes mobile-optimized</li>
                 <li>Ausência de skeleton loaders</li>
-                <li>Sistema de notificações push não implementado</li>
+                <li>Sistema de notificações push não implementado (FCM disponível)</li>
                 <li>Falta de integração com Apple HealthKit</li>
                 <li>Ausência de dark mode system</li>
                 <li>Limitada experiência offline-first</li>
+                <li>Cloud Functions não otimizadas para edge</li>
             </ul>
         </div>
+
+        <h2>🔥 FIREBASE DATA CONNECT: O FUTURO DO BACKEND</h2>
+
+        <div class="highlight-box">
+            <h3>O que é Firebase Data Connect?</h3>
+            <p>Firebase Data Connect é a nova solução da Google (2024/2025) que combina:</p>
+            <ul>
+                <li>✅ <strong>PostgreSQL completo</strong> via Cloud SQL</li>
+                <li>✅ <strong>ORM type-safe</strong> gerado automaticamente</li>
+                <li>✅ <strong>GraphQL</strong> como linguagem de query</li>
+                <li>✅ <strong>Integração nativa</strong> com Firebase Auth</li>
+                <li>✅ <strong>SDKs gerados automaticamente</strong> (TypeScript, Go, etc.)</li>
+                <li>✅ <strong>Streaming e subscriptions</strong> em tempo real</li>
+            </ul>
+        </div>
+
+        <h3>Exemplo de Uso</h3>
+
+        <h4>Schema (GraphQL)</h4>
+        <pre><code>type Patient @table {
+  id: UUID! @default(uuid_generate_v4())
+  email: String! @unique
+  name: String!
+  plans: [Plan!]! @relation(key: "patient_id")
+}
+
+type Plan @table {
+  id: UUID! @default(uuid_generate_v4())
+  patient_id: UUID!
+  professional_id: UUID!
+  name: String!
+  status: PlanStatus! @default(ACTIVE)
+  exercises: [PlanExercise!]! @relation(key: "plan_id")
+}</code></pre>
+
+        <h4>Query (TypeScript gerado automaticamente)</h4>
+        <pre><code>// TypeScript autocompleta tudo! 🎉
+const plans = await getPatientPlans('patient-id');
+plans[0].professional.name; // ✅ Type-safe!
+plans[0].exercises[0].sets;  // ✅ Type-safe!</code></pre>
+
+        <h3>Vantagens vs Firestore vs Supabase</h3>
+
+        <table class="cost-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Firebase Data Connect</th>
+                    <th>Firestore</th>
+                    <th>Supabase</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Database</strong></td>
+                    <td>PostgreSQL (Cloud SQL)</td>
+                    <td>NoSQL (Firebase)</td>
+                    <td>PostgreSQL</td>
+                </tr>
+                <tr>
+                    <td><strong>Type Safety</strong></td>
+                    <td>✅ Total (gerado)</td>
+                    <td>⚠️ Manual</td>
+                    <td>⚠️ Manual</td>
+                </tr>
+                <tr>
+                    <td><strong>ORM</strong></td>
+                    <td>✅ Integrado</td>
+                    <td>❌ Não tem</td>
+                    <td>✅ Prisma</td>
+                </tr>
+                <tr>
+                    <td><strong>Relations</strong></td>
+                    <td>✅ Nativo</td>
+                    <td>⚠️ Manual</td>
+                    <td>✅ Nativo</td>
+                </tr>
+                <tr>
+                    <td><strong>Custo</strong></td>
+                    <td>💰💰</td>
+                    <td>💰💰💰</td>
+                    <td>💰💰💰</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Custos Cloud SQL</h3>
+
+        <table class="cost-table">
+            <thead>
+                <tr>
+                    <th>Tamanho</th>
+                    <th>vCPU</th>
+                    <th>RAM</th>
+                    <th>Custo Mensal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>db-f1-micro</td>
+                    <td>1</td>
+                    <td>0.6 GB</td>
+                    <td>~US$ 15 (R$ 75)</td>
+                </tr>
+                <tr>
+                    <td>db-g1-small</td>
+                    <td>1</td>
+                    <td>1.7 GB</td>
+                    <td>~US$ 35 (R$ 175)</td>
+                </tr>
+                <tr>
+                    <td>db-g1-medium</td>
+                    <td>2</td>
+                    <td>3.75 GB</td>
+                    <td>~US$ 70 (R$ 350)</td>
+                </tr>
+                <tr>
+                    <td>db-g1-large</td>
+                    <td>4</td>
+                    <td>7.5 GB</td>
+                    <td>~US$ 140 (R$ 700)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="tag tag-recommended">Recomendação inicial: db-f1-micro ou db-g1-small</p>
 
         <h2>📱 ARQUITETURA RECOMENDADA: Apps Separados</h2>
 
@@ -371,78 +627,36 @@
             <li>Roadmap separado</li>
         </ul>
 
-        <h4>4. Monetização</h4>
-        <ul>
-            <li>Modelos de pricing diferentes</li>
-            <li>App profissional: B2B (assinatura por profissional)</li>
-            <li>App paciente: B2C (freemium)</li>
-        </ul>
-
-        <h4>5. App Store Optimization</h4>
-        <ul>
-            <li>Palavras-chave específicas</li>
-            <li>Screenshots direcionadas</li>
-            <li>Reviews segmentadas</li>
-            <li>Rankings em categorias diferentes</li>
-        </ul>
-
-        <h2>🛠️ TECNOLOGIA RECOMENDADA</h2>
+        <h2>🛠️ TECNOLOGIA DEFINIDA</h2>
 
         <div class="success-box">
-            <h3>Opção 1: React Native + Expo <span class="tag tag-recommended">RECOMENDADO ⭐</span></h3>
+            <h3>React Native + Expo (ESCOLHIDO ✅)</h3>
         </div>
 
-        <h4>Por que React Native + Expo?</h4>
+        <h4>Vantagens com Firebase</h4>
+        <ul>
+            <li>✅ <strong>Código compartilhado</strong> com web (~70-80%)</li>
+            <li>✅ <strong>Desenvolvimento rápido</strong> - hot reload, tooling excelente</li>
+            <li>✅ <strong>Sem necessidade de Mac</strong> - EAS Build compila na nuvem</li>
+            <li>✅ <strong>Firebase SDK nativo</strong> - integração perfeita com iOS/Android</li>
+            <li>✅ <strong>Expo + Firebase = Perfeição</strong> - suporte oficial otimizado</li>
+            <li>✅ <strong>Updates over-the-air</strong> - EAS Update para correções rápidas</li>
+            <li>✅ <strong>Cost-effective</strong> - menor custo de desenvolvimento</li>
+        </ul>
 
-        <div class="highlight-box">
-            <h4>Vantagens</h4>
-            <ul>
-                <li>✅ <strong>Código compartilhado</strong> com web (~70-80%)</li>
-                <li>✅ <strong>Desenvolvimento rápido</strong> - hot reload, tooling excelente</li>
-                <li>✅ <strong>Sem necessidade de Mac</strong> - EAS Build compila na nuvem</li>
-                <li>✅ <strong>Base de talentos</strong> - React developers adaptam facilmente</li>
-                <li>✅ <strong>Ecosistema maduro</strong> - bibliotecas para tudo</li>
-                <li>✅ <strong>Supabase SDK nativo</strong> - já testado e funcional</li>
-                <li>✅ <strong>Updates over-the-air</strong> - EAS Update para correções rápidas</li>
-                <li>✅ <strong>Cost-effective</strong> - menor custo de desenvolvimento</li>
-            </ul>
-        </div>
+        <h4>Integração Firebase + React Native</h4>
+        <pre><code>import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getMessaging } from 'firebase/messaging';
+import { getStorage } from 'firebase/storage';
 
-        <div class="warning-box">
-            <h4>Quando Escolher React Native + Expo?</h4>
-            <ul>
-                <li>Seu time conhece React/JavaScript</li>
-                <li>Quer lançar MVP rapidamente</li>
-                <li>Precisa de Android no futuro</li>
-                <li>Orçamento limitado</li>
-                <li>Tem Ubuntu (sem Mac)</li>
-            </ul>
-        </div>
-
-        <h3>Opção 2: Swift Nativo</h3>
-
-        <div class="highlight-box">
-            <h4>Vantagens</h4>
-            <ul>
-                <li>✅ <strong>Performance máxima</strong> - código compilado nativo</li>
-                <li>✅ <strong>Acesso completo</strong> a todas APIs iOS</li>
-                <li>✅ <strong>UI mais refinada</strong> - SwiftUI é excelente</li>
-                <li>✅ <strong>Melhor integração</strong> com ecossistema Apple</li>
-                <li>✅ <strong>Size do app</strong> menor</li>
-                <li>✅ <strong>Long-term viability</strong> - Apple mantém por décadas</li>
-            </ul>
-        </div>
-
-        <div class="warning-box">
-            <h4>Desvantagens</h4>
-            <ul>
-                <li>⚠️ <strong>Requer Mac</strong> - não tem como fugir disso</li>
-                <li>⚠️ <strong>Código separado</strong> - 0% de compartilhamento com web</li>
-                <li>⚠️ <strong>Tempo de desenvolvimento</strong> maior</li>
-                <li>⚠️ <strong>Custo mais alto</strong> - precisa de 2 times</li>
-                <li>⚠️ <strong>Android</strong> seria outro projeto completo</li>
-            </ul>
-        </div>
+// Configuração única para web, iOS e Android
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const messaging = getMessaging(app);
+const storage = getStorage(app);</code></pre>
 
         <h2>💰 ANÁLISE DE CUSTOS</h2>
 
@@ -451,87 +665,146 @@
         <table>
             <thead>
                 <tr>
-                    <th>Tecnologia</th>
-                    <th>App Paciente (MVP)</th>
-                    <th>App Profissional (MVP)</th>
-                    <th>Total (Ambos)</th>
+                    <th>App</th>
+                    <th>Custo (MVP)</th>
                     <th>Timeline</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><strong>React Native + Expo</strong></td>
+                    <td><strong>App Paciente</strong></td>
                     <td>R$ 40.000 - R$ 80.000</td>
-                    <td>R$ 60.000 - R$ 120.000</td>
-                    <td><strong>R$ 100.000 - R$ 200.000</strong></td>
-                    <td>3-6 meses cada app</td>
+                    <td>3-4 meses</td>
                 </tr>
                 <tr>
-                    <td><strong>Swift Nativo</strong></td>
-                    <td>R$ 80.000 - R$ 150.000</td>
-                    <td>R$ 120.000 - R$ 200.000</td>
-                    <td><strong>R$ 200.000 - R$ 350.000</strong></td>
-                    <td>4-8 meses cada app</td>
+                    <td><strong>App Profissional</strong></td>
+                    <td>R$ 60.000 - R$ 120.000</td>
+                    <td>4-5 meses</td>
+                </tr>
+                <tr>
+                    <td><strong>Total (Ambos)</strong></td>
+                    <td><strong>R$ 100.000 - R$ 200.000</strong></td>
+                    <td>~1 ano</td>
                 </tr>
             </tbody>
         </table>
 
         <h3>Custos Recorrentes Mensais</h3>
 
+        <h4>Firebase (Google Cloud)</h4>
         <table>
             <thead>
                 <tr>
                     <th>Serviço</th>
+                    <th>Free Tier</th>
                     <th>Custo</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Apple Developer Program</td>
-                    <td>US$ 99/ano (~R$ 500/ano)</td>
+                    <td>Firebase Auth</td>
+                    <td>10.000 verificações/mês</td>
+                    <td>+ US$ 0.0015/verify</td>
                 </tr>
                 <tr>
-                    <td>EAS Build (Free tier)</td>
-                    <td>Grátis (15 builds/mês)</td>
+                    <td>Cloud Firestore</td>
+                    <td>50K reads, 20K writes/day</td>
+                    <td>+ US$ 0.18/GB</td>
                 </tr>
                 <tr>
-                    <td>EAS Build (Paid)</td>
-                    <td>US$ 99/mês (se precisar mais builds)</td>
+                    <td>Firebase Storage</td>
+                    <td>5GB</td>
+                    <td>+ US$ 0.026/GB</td>
                 </tr>
                 <tr>
-                    <td>RevenueCat (Free tier)</td>
-                    <td>Grátis (até R$ 50k/mês em receita)</td>
+                    <td>Firebase Hosting</td>
+                    <td>10GB/month</td>
+                    <td>+ US$ 0.026/GB</td>
                 </tr>
                 <tr>
-                    <td>Push notifications</td>
-                    <td>Incluído no Supabase</td>
+                    <td>Cloud Functions</td>
+                    <td>2M invocações/mês</td>
+                    <td>+ US$ 0.40/M</td>
                 </tr>
                 <tr>
-                    <td>Analytics</td>
-                    <td>Firebase Analytics (grátis)</td>
+                    <td><strong>FCM (Push)</strong></td>
+                    <td><strong>Ilimitado</strong></td>
+                    <td><strong>GRÁTIS</strong></td>
                 </tr>
                 <tr>
-                    <td><strong>Estimativa Total Mensal</strong></td>
-                    <td><strong>~R$ 50/mês (início) a ~R$ 500/mês (crescimento)</strong></td>
+                    <td><strong>Analytics</strong></td>
+                    <td><strong>Ilimitado</strong></td>
+                    <td><strong>GRÁTIS</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Crashlytics</strong></td>
+                    <td><strong>Ilimitado</strong></td>
+                    <td><strong>GRÁTIS</strong></td>
                 </tr>
             </tbody>
         </table>
+
+        <h4>Cloud SQL for PostgreSQL</h4>
+        <ul>
+            <li><strong>db-f1-micro (1 vCPU, 614MB RAM):</strong> ~US$ 15/mês (~R$ 75/mês)</li>
+            <li><strong>Armazenamento:</strong> US$ 0.10/GB/mês</li>
+            <li><strong>Backup automático:</strong> US$ 0.08/GB/mês</li>
+        </ul>
+
+        <h4>Estimativa Total Mensal</h4>
+        <ul>
+            <li><strong>Fase inicial (Firebase free):</strong> ~R$ 50/mês</li>
+            <li><strong>Fase crescimento (Cloud SQL + extras):</strong> ~R$ 200-300/mês</li>
+            <li><strong>Escala completa:</strong> ~R$ 500-800/mês</li>
+        </ul>
+
+        <p class="tag tag-recommended">Economia vs Supabase Pro: R$ 150-250/mês</p>
+
+        <h2>📱 FIREBASE CLOUD MESSAGING (PUSH NOTIFICATIONS)</h2>
+
+        <div class="firebase-highlight">
+            <h3>Por que FCM?</h3>
+            <p>Firebase Cloud Messaging (FCM) é o melhor sistema de push notifications para mobile:</p>
+            <ul>
+                <li>✅ <strong>Gratuito e ilimitado</strong> - sem custos por mensagem</li>
+                <li>✅ <strong>Suporte nativo iOS</strong> - APNs integration automática</li>
+                <li>✅ <strong>Routing inteligente</strong> - delivery garantido</li>
+                <li>✅ <strong>Analytics integrado</strong> - métricas de open rate</li>
+                <li>✅ <strong>Segmentação avançada</strong> - topics e conditional sends</li>
+                <li>✅ <strong>Messaging console</strong> - GUI para enviar notificações</li>
+                <li>✅ <strong>Rich notifications</strong> - imagens, actions, custom sounds</li>
+            </ul>
+        </div>
+
+        <h3>Tipos de Notificações FisioFlow</h3>
+
+        <ol>
+            <li><strong>Lembretes de Exercícios</strong> - Horário personalizado, baseado em histórico</li>
+            <li><strong>Motivacionais</strong> - Mensagens aleatórias personalizadas</li>
+            <li><strong>Progresso</strong> - Atualizações de conquistas e marcos</li>
+            <li><strong>Reengajamento</strong> - Para usuários inativos</li>
+            <li><strong>Streaks</strong> - Notificações de conquistas de dias consecutivos</li>
+            <li><strong>Profissional → Paciente</strong> - Novos planos, feedback, etc.</li>
+        </ol>
 
         <h2>🎯 ROADMAP DE DESENVOLVIMENTO</h2>
 
         <h3>FASE 1: Preparação (Mês 1)</h3>
         <ul class="checklist">
-            <li>Criar conta Apple Developer</li>
-            <li>Configurar App Store Connect</li>
+            <li>Criar projeto Firebase no console</li>
+            <li>Criar conta Apple Developer ($99/ano)</li>
             <li>Definir feature set final</li>
             <li>Criar design system completo</li>
             <li>Setup projeto React Native (Expo)</li>
             <li>Configurar EAS Build</li>
             <li>Implementar navegação (React Navigation)</li>
-            <li>Integrar Supabase no mobile</li>
-            <li>Setup autenticação</li>
+            <li>Integrar Firebase no mobile (Auth, Firestore, FCM)</li>
+            <li>Setup autenticação com Firebase Auth</li>
+            <li>Configurar Firebase Cloud Messaging</li>
             <li>Configurar theme system (dark mode)</li>
             <li>Implementar state management global</li>
+            <li>Setup Firebase Data Connect</li>
+            <li>Configurar Firebase Analytics</li>
         </ul>
 
         <h3>FASE 2: App Paciente - MVP (Meses 2-4)</h3>
@@ -543,7 +816,7 @@
             <li>Visualização de exercícios com vídeos</li>
             <li>Contador de séries/reps e timer</li>
             <li>Dashboard simplificado com gráficos</li>
-            <li>Sistema de notificações push</li>
+            <li>Sistema de notificações push (FCM)</li>
             <li>Sistema de gamificação básico</li>
             <li>Streaks e badges</li>
             <li>Chat com profissional</li>
@@ -572,36 +845,6 @@
             <li>Feedback visual em tempo real</li>
         </ul>
 
-        <h2>💡 FUNCIONALIDADES PARA ENGAJAMENTO</h2>
-
-        <h3>Gamificação</h3>
-
-        <h4>1. Sistema de Pontos e Níveis</h4>
-        <ul>
-            <li>Pontos por exercício completado</li>
-            <li>Níveis de progressão (Iniciante → Intermediário → Avançado)</li>
-            <li>Badges por conquistas específicas</li>
-            <li>Leaderboard opcional (por clínica)</li>
-        </ul>
-
-        <h4>2. Streaks</h4>
-        <ul>
-            <li>Contador de dias consecutivos</li>
-            <li>Bônus por manter streaks</li>
-            <li>Recuperação de streak (1 vez por mês)</li>
-            <li>Notificações para manter streak</li>
-        </ul>
-
-        <h3>Notificações Inteligentes</h3>
-
-        <h4>Tipos de Notificações</h4>
-        <ol>
-            <li><strong>Lembretes de exercícios</strong> - Horário personalizado, baseado em histórico</li>
-            <li><strong>Motivacionais</strong> - Mensagens aleatórias personalizadas</li>
-            <li><strong>Progresso</strong> - Atualizações de conquistas e marcos</li>
-            <li><strong>Reengajamento</strong> - Para usuários inativos</li>
-        </ol>
-
         <h2>🔐 SEGURANÇA E COMPLIANCE</h2>
 
         <h3>LGPD Compliance</h3>
@@ -617,97 +860,18 @@
             </ol>
         </div>
 
-        <h4>Implementação Técnica</h4>
+        <h4>Implementação Técnica com Firebase</h4>
         <ul>
-            <li>Criptografia em repouso (Supabase já tem)</li>
-            <li>Criptografia em trânsito (HTTPS obrigatório)</li>
-            <li>Autenticação com 2FA</li>
-            <li>Sessions com expiração</li>
-            <li>Audit logs para operações críticas</li>
-            <li>Anonymous analytics (opcional)</li>
+            <li><strong>Criptografia em repouso:</strong> Firebase criptografa automaticamente (AES-256)</li>
+            <li><strong>Criptografia em trânsito:</strong> TLS 1.3 obrigatório em todas as conexões</li>
+            <li><strong>Autenticação com 2FA:</strong> Firebase Auth suporta 2FA nativo</li>
+            <li><strong>Sessions com expiração:</strong> Firebase Auth tokens com expiração configurável</li>
+            <li><strong>Audit logs:</strong> Cloud Logging para operações críticas</li>
+            <li><strong>Security Rules:</strong> Firestore Security Rules para granularidade</li>
+            <li><strong>App Check:</strong> Proteção contra abuso de APIs</li>
         </ul>
-
-        <h2>📊 ESTRUTURA DE REPOSITÓRIOS</h2>
-
-        <div class="highlight-box">
-            <h3>Recomendação: Monorepo com Turborepo</h3>
-        </div>
-
-        <pre><code>fisioflow/
-├── apps/
-│   ├── web/                 # App web atual
-│   ├── patient-ios/         # App paciente iOS
-│   ├── patient-android/     # App paciente Android (futuro)
-│   └── pro-ios/             # App profissional iOS
-├── packages/
-│   ├── ui/                  # Componentes compartilhados
-│   ├── config/              # Configurações compartilhadas
-│   ├── types/               # Tipos TypeScript compartilhados
-│   ├── utils/               # Utilitários compartilhados
-│   └── api/                 # Cliente Supabase compartilhado
-├── package.json
-├── turbo.json
-└── README.md</code></pre>
-
-        <h4>Vantagens do Monorepo</h4>
-        <ul>
-            <li>✅ Código compartilhado real</li>
-            <li>✅ Mudanças atomicas across apps</li>
-            <li>✅ CI/CD unificado</li>
-            <li>✅ Gerenciamento simplificado</li>
-        </ul>
-
-        <h2>🚀 XCODE VS EAS BUILD</h2>
-
-        <div class="success-box">
-            <h3>EAS Build (RECOMENDADO) ⭐</h3>
-            <ul>
-                <li><strong>Não precisa de Mac</strong> - compila na nuvem</li>
-                <li><strong>Automatizado</strong> - CI/CD integrado</li>
-                <li><strong>Paralelo</strong> - múltiplos builds simultâneos</li>
-                <li><strong>Consistente</strong> - ambiente limpo sempre</li>
-                <li><strong>Rápido</strong> - cache inteligente</li>
-            </ul>
-            <p><strong>Custos:</strong> Free tier com 15 builds/mês | US$ 99/mês para ilimitado</p>
-        </div>
 
         <h2>🤖 VIABILIDADE DE DESENVOLVIMENTO COM LLMs</h2>
-
-        <div class="highlight-box">
-            <h3>Avaliação das Ferramentas Disponíveis</h3>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Ferramenta</th>
-                    <th>Melhor Para</th>
-                    <th>Contexto</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Claude</strong></td>
-                    <td>Análise de código, debugging, arquitetura</td>
-                    <td>200K tokens</td>
-                </tr>
-                <tr>
-                    <td><strong>GPT-4 / GPT-5</strong></td>
-                    <td>Geração de código boilerplate</td>
-                    <td>128K tokens</td>
-                </tr>
-                <tr>
-                    <td><strong>Gemini</strong></td>
-                    <td>Análise de grandes codebases</td>
-                    <td>1M tokens (maior)</td>
-                </tr>
-                <tr>
-                    <td><strong>Abacus AI</strong></td>
-                    <td>Automação completa de tasks</td>
-                    <td>Agentes especializados</td>
-                </tr>
-            </tbody>
-        </table>
 
         <div class="metric-grid">
             <div class="metric-card">
@@ -816,48 +980,25 @@
             </div>
         </div>
 
-        <h2>📈 MÉTRICAS DE SUCESSO</h2>
-
-        <h3>App Paciente</h3>
-
-        <h4>Engajamento</h4>
-        <ul>
-            <li><strong>DAU/MAU:</strong> Target 30%+ (daily active / monthly active)</li>
-            <li><strong>Session duration:</strong> 5-10 min por sessão</li>
-            <li><strong>Retention:</strong> Dia 1: 40%+ | Dia 7: 25%+ | Dia 30: 15%+</li>
-        </ul>
-
-        <h4>Adesão ao Tratamento</h4>
-        <ul>
-            <li><strong>Exercícios completados:</strong> 70%+ dos prescritos</li>
-            <li><strong>Streak médio:</strong> 5+ dias</li>
-            <li><strong>Push notification CTR:</strong> 8%+</li>
-        </ul>
-
-        <h4>Satisfação</h4>
-        <ul>
-            <li><strong>App Store rating:</strong> 4.5+ estrelas</li>
-            <li><strong>NPS:</strong> 50+</li>
-        </ul>
-
         <h2>🎯 CONCLUSÕES E RECOMENDAÇÕES FINAIS</h2>
 
-        <div class="executive-summary">
-            <h3 style="color: white;">Resumo Executivo</h3>
+        <div class="firebase-highlight">
+            <h3>Resumo Executivo</h3>
 
-            <h4 style="color: white; margin-top: 20px;">Recomendação Tecnológica</h4>
-            <p style="color: rgba(255,255,255,0.95);"><strong>React Native + Expo</strong> é a melhor escolha porque:</p>
-            <ol style="color: rgba(255,255,255,0.95);">
+            <h4>Tecnologia Definida</h4>
+            <p><strong>React Native + Expo + Firebase</strong> foi a escolha definitiva porque:</p>
+            <ol>
                 <li>Aproveita código existente (70-80%)</li>
                 <li>Desenvolvimento mais rápido</li>
                 <li>Não requer Mac obrigatoriamente</li>
                 <li>Custo significativamente menor</li>
-                <li>Time de React pode desenvolver</li>
+                <li>Firebase tem suporte oficial React Native</li>
+                <li>FCM para push notifications ilimitado e grátis</li>
             </ol>
 
-            <h4 style="color: white; margin-top: 20px;">Arquitetura de Apps</h4>
-            <p style="color: rgba(255,255,255,0.95);"><strong>Dois apps separados</strong> porque:</p>
-            <ol style="color: rgba(255,255,255,0.95);">
+            <h4>Arquitetura de Apps</h4>
+            <p><strong>Dois apps separados</strong> porque:</p>
+            <ol>
                 <li>UX otimizada para cada público</li>
                 <li>Segurança e compliance facilitados</li>
                 <li>Monetização flexível</li>
@@ -865,9 +1006,9 @@
                 <li>ASO mais efetivo</li>
             </ol>
 
-            <h4 style="color: white; margin-top: 20px;">Viabilidade com LLMs</h4>
-            <p style="color: rgba(255,255,255,0.95);"><strong>Sim, é viável</strong> mas:</p>
-            <ol style="color: rgba(255,255,255,0.95);">
+            <h4>Viabilidade com LLMs</h4>
+            <p><strong>Sim, é viável</strong> mas:</p>
+            <ol>
                 <li>Você precisará supervisionar</li>
                 <li>Testes manuais são obrigatórios</li>
                 <li>Decisões de produto com você</li>
@@ -882,7 +1023,7 @@
 
         <h4>Semana 1: Decisões e Setup</h4>
         <ul class="checklist">
-            <li>Decidir tecnologia final (React Native vs Swift)</li>
+            <li>Criar projeto Firebase no console</li>
             <li>Criar conta Apple Developer ($99/ano)</li>
             <li>Definir feature set MVP</li>
             <li>Budget approval</li>
@@ -900,16 +1041,20 @@
         <ul class="checklist">
             <li>Criar repositório</li>
             <li>Setup Expo + EAS</li>
-            <li>Configurar Supabase no mobile</li>
-            <li>Setup CI/CD</li>
+            <li>Configurar Firebase no mobile</li>
+            <li>Configurar Firebase Data Connect</li>
+            <li>Setup Cloud SQL (PostgreSQL)</li>
+            <li>Setup CI/CD com Firebase</li>
         </ul>
 
         <h4>Semana 4: Primeiro Sprint</h4>
         <ul class="checklist">
-            <li>Implementar autenticação</li>
+            <li>Implementar Firebase Auth (email + Google)</li>
             <li>Criar navegação base</li>
             <li>Implementar theme system</li>
+            <li>Configurar FCM (push notifications)</li>
             <li>Primeira tela funcional</li>
+            <li>Setup Firebase Analytics</li>
         </ul>
 
         <h3>Investimento Inicial Necessário</h3>
@@ -948,134 +1093,56 @@
             </ol>
         </div>
 
-        <div class="page-break"></div>
+        <h2>📚 RECURSOS RECOMENDADOS</h2>
 
-        <h2>🔖 ANEXOS</h2>
+        <h3>Documentação Oficial</h3>
 
-        <h3>A. Comparativo Detalhado: React Native vs Swift</h3>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Aspecto</th>
-                    <th>React Native + Expo</th>
-                    <th>Swift Nativo</th>
-                    <th>Diferença</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Custo Desenvolvimento</td>
-                    <td>R$ 100-200K</td>
-                    <td>R$ 200-350K</td>
-                    <td>50-60% menor</td>
-                </tr>
-                <tr>
-                    <td>Timeline MVP</td>
-                    <td>3-6 meses</td>
-                    <td>4-8 meses</td>
-                    <td>25-40% mais rápido</td>
-                </tr>
-                <tr>
-                    <td>Compartilhamento Web</td>
-                    <td>70-80%</td>
-                    <td>0%</td>
-                    <td>Significativo</td>
-                </tr>
-                <tr>
-                    <td>Performance</td>
-                    <td>90-95% de nativo</td>
-                    <td>100%</td>
-                    <td>Pouco perceptível</td>
-                </tr>
-                <tr>
-                    <td>Requer Mac</td>
-                    <td>Não</td>
-                    <td>Sim</td>
-                    <td>Obrigatório</td>
-                </tr>
-                <tr>
-                    <td>Curva Aprendizado</td>
-                    <td>Baixa (React)</td>
-                    <td>Alta (Swift)</td>
-                    <td>Menor</td>
-                </tr>
-                <tr>
-                    <td>Time-to-market</td>
-                    <td>Rápido</td>
-                    <td>Lento</td>
-                    <td>Significativo</td>
-                </tr>
-                <tr>
-                    <td>Ecosistema</td>
-                    <td>Imenso</td>
-                    <td>Grande (só iOS)</td>
-                    <td>Maior</td>
-                </tr>
-                <tr>
-                    <td>Long-term</td>
-                    <td>Boa</td>
-                    <td>Excelente</td>
-                    <td>Melhor nativo</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h3>B. Checklist de Pré-Lançamento</h3>
-
-        <h4>Técnico</h4>
-        <ul class="checklist">
-            <li>Crash-free rate > 99%</li>
-            <li>Load time < 3s</li>
-            <li>Testado em múltiplos devices</li>
-            <li>Testado em múltiplas versões iOS</li>
-            <li>Memory leaks resolvidos</li>
-            <li>Battery usage otimizado</li>
-            <li>Offline mode funcional</li>
-            <li>Push notifications testadas</li>
-        </ul>
-
-        <h4>Legal</h4>
-        <ul class="checklist">
-            <li>Política de privacidade</li>
-            <li>Termos de uso</li>
-            <li>Compliance LGPD</li>
-            <li>Licenças de bibliotecas</li>
-            <li>Direitos autorais</li>
-        </ul>
-
-        <h4>App Store</h4>
-        <ul class="checklist">
-            <li>Screenshots (todos tamanhos)</li>
-            <li>Descrição otimizada</li>
-            <li>Keywords definidas</li>
-            <li>App icon (todos tamanhos)</li>
-            <li>Launch screen</li>
-            <li>Ratings & reviews strategy</li>
-            <li>Category selection correta</li>
-        </ul>
-
-        <h3>C. Métricas de Referência (Benchmarks)</h3>
-
-        <h4>Healthcare Apps</h4>
+        <h4>Firebase</h4>
         <ul>
-            <li><strong>Median DAU/MAU:</strong> 25%</li>
-            <li><strong>Median Retention D30:</strong> 12%</li>
-            <li><strong>Median Rating:</strong> 4.3</li>
-            <li><strong>Median Session:</strong> 4 min</li>
+            <li><a href="https://firebase.google.com/docs">Firebase Documentation</a></li>
+            <li><a href="https://firebase.google.com/docs/react-native/setup">Firebase for React Native</a></li>
+            <li><a href="https://firebase.google.com/docs/data-connect">Firebase Data Connect</a></li>
+            <li><a href="https://firebase.google.com/docs/cloud-messaging">Firebase Cloud Messaging</a></li>
+            <li><a href="https://firebase.google.com/docs/auth">Firebase Authentication</a></li>
         </ul>
 
-        <h4>Fitness Apps</h4>
+        <h4>React Native & Expo</h4>
         <ul>
-            <li><strong>Median DAU/MAU:</strong> 35%</li>
-            <li><strong>Median Retention D30:</strong> 18%</li>
-            <li><strong>Median Rating:</strong> 4.5</li>
-            <li><strong>Median Session:</strong> 8 min</li>
+            <li><a href="https://docs.expo.dev">Expo Documentation</a></li>
+            <li><a href="https://reactnative.dev">React Native</a></li>
+            <li><a href="https://docs.expo.dev/guides/using-firebase/">Expo + Firebase Guide</a></li>
         </ul>
 
-        <div class="highlight-box">
-            <p><strong>Target FisioFlow:</strong> Superar medianas em 20-30%</p>
-        </div>
+        <h3>Bibliotecas Recomendadas</h3>
+
+        <h4>Firebase</h4>
+        <pre><code># Firebase core
+npm install firebase
+
+# Expo plugin para Firebase (config automática)
+npx expo install @expo/firebase-app-check @expo/firebase-core
+
+# Firebase Cloud Messaging
+npx expo install expo-notifications</code></pre>
+
+        <h4>Navegação</h4>
+        <pre><code>npm install @react-navigation/native @react-navigation/stack
+npx expo install react-native-screens react-native-safe-area-context</code></pre>
+
+        <h4>UI Components</h4>
+        <pre><code>npm install react-native-reanimated
+npm install @gorhom/bottom-sheet
+npm install react-native-toast-message</code></pre>
+
+        <h4>Funcionalidades</h4>
+        <pre><code># HealthKit
+npm install react-native-health
+
+# In-app purchases
+npm install react-native-purchases
+
+# Biometria
+npx expo install expo-local-authentication</code></pre>
 
         <h2>📞 Próximos Passos</h2>
 
@@ -1084,7 +1151,7 @@
             <li><strong>Reunião de Kickoff:</strong> Alinhar visão final</li>
             <li><strong>Workshop de Design:</strong> Definir look & feel</li>
             <li><strong>Sprint Planning:</strong> Planejar primeiras 2 semanas</li>
-            <li><strong>Setup Técnico:</strong> Configurar ambiente</li>
+            <li><strong>Setup Técnico:</strong> Configurar ambiente Firebase</li>
             <li><strong>First Commit:</strong> Começar código!</li>
         </ol>
 
@@ -1107,25 +1174,26 @@
                     <td>MVP do app paciente em 3-4 meses, app profissional em 4-5 meses.</td>
                 </tr>
                 <tr>
-                    <td>Posso fazer só com LLMs?</td>
-                    <td>Sim, mas você precisará validar código, testar e tomar decisões de produto.</td>
+                    <td>Por que Firebase?</td>
+                    <td>Melhor integração mobile, push notifications grátis, analytics ilimitado, economia vs Supabase.</td>
                 </tr>
                 <tr>
                     <td>Vale a pena dois apps?</td>
                     <td>Sim. UX melhor, segurança maior, monetização flexível, manutenção mais fácil.</td>
                 </tr>
                 <tr>
-                    <td>React Native ou Swift?</td>
-                    <td>React Native. Compartilha código com web, mais barato, mais rápido.</td>
+                    <td>Por que React Native e não Swift?</td>
+                    <td>Compartilha código com web (70-80%), menor custo e desenvolvimento mais rápido.</td>
                 </tr>
             </tbody>
         </table>
 
         <div class="footer">
-            <p><strong>Documento Versão 1.0</strong><br>
+            <p><strong>Documento Versão 2.0 - Firebase Edition</strong><br>
             Data: 22 de Janeiro de 2026<br>
             Autor: Análise Técnica Completa<br>
-            Status: Pronto para Revisão</p>
+            Status: Pronto para Implementação<br><br>
+            🔥 Powered by Firebase + Google Cloud + React Native + Expo</p>
             <p style="margin-top: 20px;">© 2026 FisioFlow - Todos os direitos reservados</p>
         </div>
     </div>

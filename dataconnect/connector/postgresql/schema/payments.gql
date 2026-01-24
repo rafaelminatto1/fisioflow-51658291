@@ -1,0 +1,420 @@
+# Firebase Data Connect Schema: Payments
+# Schema para gestão de pagamentos no FisioFlow
+
+"""
+Método de pagamento
+"""
+enum PaymentMethod {
+  """
+  Pagamento em dinheiro
+  """
+  cash
+
+  """
+  Pagamento com cartão de crédito
+  """
+  credit_card
+
+  """
+  Pagamento com cartão de débito
+  """
+  debit_card
+
+  """
+  Pagamento via PIX
+  """
+  pix
+
+  """
+  Transferência bancária
+  """
+  transfer
+
+  """
+  Cheque
+  """
+  check
+}
+
+"""
+Status do pagamento
+"""
+enum PaymentStatus {
+  """
+  Pagamento pendente
+  """
+  pending
+
+  """
+  Pagamento concluído
+  """
+  completed
+
+  """
+  Pagamento falhou
+  """
+  failed
+
+  """
+  Pagamento cancelado
+  """
+  cancelled
+
+  """
+  Pagamento reembolsado
+  """
+  refunded
+}
+
+"""
+Pagamento individual
+"""
+type Payment @table {
+  """
+  Identificador único do pagamento
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  ID do agendamento (se aplicável)
+  """
+  appointment_id: UUID?
+
+  """
+  Valor do pagamento em centavos
+  """
+  amount_cents: Int!
+
+  """
+  Método de pagamento
+  """
+  method: PaymentMethod!
+
+  """
+  Status do pagamento
+  """
+  status: PaymentStatus! @default(pending)
+
+  """
+  Data do pagamento
+  """
+  payment_date: Date?
+
+  """
+  Hora do pagamento
+  """
+  payment_time: Time?
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Observações sobre o pagamento
+  """
+  notes: String?
+
+  """
+  URL do comprovante
+  """
+  receipt_url: String?
+
+  """
+  ID da transação no gateway (Stripe, etc.)
+  """
+  gateway_transaction_id: String?
+
+  """
+  Metadados adicionais em JSON
+  """
+  metadata: Json?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente que fez o pagamento
+  """
+  patient: Patient @belongsTo
+
+  """
+  Agendamento associado
+  """
+  appointment: Appointment? @belongsTo
+}
+
+"""
+Pacote de sessões de tratamento
+"""
+type PatientSessionPackage @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  Número de sessões contratadas
+  """
+  sessions_count: Int!
+
+  """
+  Número de sessões utilizadas
+  """
+  sessions_used: Int! @default(0)
+
+  """
+  Valor pago pelo pacote em centavos
+  """
+  amount_cents: Int!
+
+  """
+  Data de compra do pacote
+  """
+  purchase_date: Date!
+
+  """
+  Data de validade do pacote
+  """
+  valid_until: Date!
+
+  """
+  Indica se o pacote está ativo
+  """
+  is_active: Boolean @default(true)
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Observações
+  """
+  notes: String?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente do pacote
+  """
+  patient: Patient @belongsTo
+}
+
+"""
+Voucher de desconto
+"""
+type Voucher @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  Código do voucher
+  """
+  code: String! @unique
+
+  """
+  Tipo de desconto: percentage, fixed
+  """
+  discount_type: String! @default("percentage")
+
+  """
+  Valor do desconto
+  """
+  discount_value: Int!
+
+  """
+  Quantidade mínima de sessões
+  """
+  min_sessions: Int @default(1)
+
+  """
+  Uso máximo do voucher (0 = ilimitado)
+  """
+  max_uses: Int @default(0)
+
+  """
+  Número de vezes que o voucher foi usado
+  """
+  uses_count: Int @default(0)
+
+  """
+  Data de início de validade
+  """
+  valid_from: Date!
+
+  """
+  Data de fim de validade
+  """
+  valid_until: Date!
+
+  """
+  Indica se o voucher está ativo
+  """
+  is_active: Boolean @default(true)
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Descrição do voucher
+  """
+  description: String?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+}
+
+# Inputs
+"""
+Input para criar pagamento
+"""
+input CreatePaymentInput {
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  ID do agendamento (opcional)
+  """
+  appointment_id: UUID?
+
+  """
+  Valor em centavos
+  """
+  amount_cents: Int!
+
+  """
+  Método de pagamento
+  """
+  method: PaymentMethod!
+
+  """
+  Data do pagamento
+  """
+  payment_date: Date
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Observações
+  """
+  notes: String?
+}
+
+"""
+Input para criar pacote de sessões
+"""
+input CreateSessionPackageInput {
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  Número de sessões
+  """
+  sessions_count: Int!
+
+  """
+  Valor em centavos
+  """
+  amount_cents: Int!
+
+  """
+  Data de validade
+  """
+  valid_until: Date!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+}
+
+"""
+Resumo financeiro do paciente
+"""
+type PatientFinancialSummary @table {
+  """
+  ID do paciente
+  """
+  patient_id: UUID! @unique
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Total pago em centavos
+  """
+  total_paid_cents: Int! @default(0)
+
+  """
+  Total de sessões pagas avulsas
+  """
+  individual_sessions_paid: Int! @default(0)
+
+  """
+  Total de sessões de pacote
+  """
+  package_sessions_total: Int! @default(0)
+
+  """
+  Sessões de pacote utilizadas
+  """
+  package_sessions_used: Int! @default(0)
+
+  """
+  Sessões de pacote disponíveis
+  """
+  package_sessions_available: Int! @default(0)
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+}

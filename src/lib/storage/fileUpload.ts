@@ -1,4 +1,11 @@
-import { supabase } from '@/integrations/supabase/client';
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+  getStorage
+} from 'firebase/storage';
+import { auth } from '@/integrations/firebase/app';
 
 export type StorageBucket = 'avatars' | 'comprovantes' | 'prontuarios' | 'evolucao';
 
@@ -35,20 +42,12 @@ const BUCKET_LIMITS = {
   },
 };
 
-// Short-lived signed URL expiration times per bucket (in seconds)
-// Following LGPD compliance and principle of least privilege
-const SIGNED_URL_EXPIRY: Record<StorageBucket, number> = {
-  avatars: 3600,       // 1 hour (public bucket, but fallback)
-  prontuarios: 3600,   // 1 hour - view during clinical session
-  comprovantes: 7200,  // 2 hours - download financial receipt
-  evolucao: 1800,      // 30 min - quick evolution photo check
-};
-
 export async function uploadFile(
   file: File,
   options: UploadOptions
 ): Promise<UploadResult> {
   const bucketLimits = BUCKET_LIMITS[options.bucket];
+  const storage = getStorage();
 
   // Validate file size
   const maxSize = options.maxSize || bucketLimits.maxSize;
@@ -67,7 +66,7 @@ export async function uploadFile(
   }
 
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = auth.currentUser;
   if (!user) {
     throw new Error('Usuário não autenticado');
   }
@@ -78,70 +77,59 @@ export async function uploadFile(
   const sanitizedName = file.name
     .replace(/[^a-zA-Z0-9.-]/g, '_')
     .substring(0, 50);
-  
+
   let filePath: string;
-  
+
   if (options.bucket === 'avatars') {
-    filePath = `${user.id}/avatar.${fileExt}`;
+    filePath = `avatars/${user.uid}/avatar.${fileExt}`;
   } else {
     const folder = options.folder || 'geral';
-    filePath = `${user.id}/${folder}/${timestamp}_${sanitizedName}`;
+    filePath = `${options.bucket}/${user.uid}/${folder}/${timestamp}_${sanitizedName}`;
   }
 
-  // Upload to Supabase Storage
-  const { data, error } = await supabase.storage
-    .from(options.bucket)
-    .upload(filePath, file, {
-      cacheControl: '31536000', // 1 ano para imagens públicas
-      upsert: options.bucket === 'avatars',
-    });
+  // Create storage reference
+  const storageRef = ref(storage, filePath);
 
-  if (error) throw error;
+  // Upload with progress
+  const uploadTask = uploadBytesResumable(storageRef, file);
 
-  // Get URL
-  let publicUrl: string;
-  
-  if (options.bucket === 'avatars') {
-    const { data: urlData } = supabase.storage
-      .from(options.bucket)
-      .getPublicUrl(filePath);
-    publicUrl = urlData.publicUrl;
-  } else {
-    // Use short-lived signed URLs for security (LGPD compliance)
-    const expiresIn = SIGNED_URL_EXPIRY[options.bucket] || 3600;
-    const { data: urlData, error: urlError } = await supabase.storage
-      .from(options.bucket)
-      .createSignedUrl(filePath, expiresIn);
-    
-    if (urlError) throw urlError;
-    publicUrl = urlData.signedUrl;
-  }
-
-  return {
-    url: publicUrl,
-    path: data.path,
-    fullPath: `${options.bucket}/${data.path}`,
-  };
+  return new Promise((resolve, reject) => {
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        if (options.onProgress) options.onProgress(progress);
+      },
+      (error) => reject(error),
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        resolve({
+          url: downloadURL,
+          path: filePath,
+          fullPath: filePath, // Firebase fullPath is just the path from root
+        });
+      }
+    );
+  });
 }
 
-export async function deleteFile(bucket: StorageBucket, path: string): Promise<void> {
-  const { error } = await supabase.storage
-    .from(bucket)
-    .remove([path]);
-
-  if (error) throw error;
+export async function deleteFile(_bucket: StorageBucket, path: string): Promise<void> {
+  const storage = getStorage();
+  const storageRef = ref(storage, path);
+  await deleteObject(storageRef);
 }
 
+/**
+ * Get a temporary access URL. In Firebase Storage, default getDownloadURL() 
+ * is practically a permanent link unless signed URLs are used via Admin SDK.
+ * For client-side, we use getDownloadURL but we can wrap it for consistency.
+ */
 export async function getSignedUrl(
-  bucket: StorageBucket,
+  _bucket: StorageBucket,
   path: string,
-  expiresIn: number = 3600
+  _expiresIn: number = 3600
 ): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(path, expiresIn);
-
-  if (error) throw error;
-
-  return data.signedUrl;
+  const storage = getStorage();
+  const storageRef = ref(storage, path);
+  return getDownloadURL(storageRef);
 }

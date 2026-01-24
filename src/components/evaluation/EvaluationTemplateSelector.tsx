@@ -51,6 +51,7 @@ interface EvaluationTemplateSelectorProps {
     onTemplateSelect: (template: EvaluationTemplate | null) => void;
     category?: string;
     autoLoadDefault?: boolean;
+    initialTemplateId?: string; // Template ID from URL to auto-select
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -76,6 +77,7 @@ export function EvaluationTemplateSelector({
     onTemplateSelect,
     category,
     autoLoadDefault = true,
+    initialTemplateId,
 }: EvaluationTemplateSelectorProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -141,18 +143,30 @@ export function EvaluationTemplateSelector({
 
     // Auto-load default template on first render
     React.useEffect(() => {
-        if (autoLoadDefault && templates.length > 0 && !selectedTemplateId) {
-            // Find "Avaliação Padrão" or the first template
-            const defaultTemplate = templates.find(t =>
-                t.nome.toLowerCase().includes('padrão') ||
-                t.tipo === 'padrao'
-            ) || templates[0];
+        if (templates.length > 0 && !selectedTemplateId) {
+            // If initialTemplateId is provided, find and select it
+            if (initialTemplateId) {
+                const template = templates.find(t => t.id === initialTemplateId);
+                if (template) {
+                    onTemplateSelect(template);
+                    return;
+                }
+            }
 
-            if (defaultTemplate) {
-                onTemplateSelect(defaultTemplate);
+            // Otherwise use autoLoadDefault behavior
+            if (autoLoadDefault) {
+                // Find "Avaliação Padrão" or the first template
+                const defaultTemplate = templates.find(t =>
+                    t.nome.toLowerCase().includes('padrão') ||
+                    t.tipo === 'padrao'
+                ) || templates[0];
+
+                if (defaultTemplate) {
+                    onTemplateSelect(defaultTemplate);
+                }
             }
         }
-    }, [templates, autoLoadDefault, selectedTemplateId, onTemplateSelect]);
+    }, [templates, autoLoadDefault, selectedTemplateId, initialTemplateId, onTemplateSelect]);
 
     // Filter templates based on search
     const filteredTemplates = useMemo(() => {

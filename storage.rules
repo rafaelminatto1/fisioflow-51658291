@@ -1,0 +1,172 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============================================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================================
+
+    // Verificar se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verificar se o usuário é admin
+    function isAdmin() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Verificar se o usuário é fisioterapeuta
+    function isPhysiotherapist() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'fisioterapeuta';
+    }
+
+    // Verificar se o usuário é estagiário
+    function isIntern() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'estagiario';
+    }
+
+    // Verificar se o usuário é paciente
+    function isPatient() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'paciente';
+    }
+
+    // Verificar se é profissional (fisioterapeuta ou estagiário)
+    function isProfessional() {
+      return isPhysiotherapist() || isIntern();
+    }
+
+    // Verificar tamanho do arquivo (max 10MB)
+    function isValidFileSize() {
+      return request.resource.size < 10485760;
+    }
+
+    // Verificar tipo de conteúdo permitido
+    function isAllowedContentType() {
+      return request.resource.contentType.matches('image/.*') ||
+             request.resource.contentType == 'application/pdf' ||
+             request.resource.contentType == 'video/mp4' ||
+             request.resource.contentType == 'video/quicktime';
+    }
+
+    // ============================================================================================
+    // AVATARES DE USUÁRIOS
+    // ============================================================================================
+
+    match /users/{userId}/avatars/{filename} {
+      // Leitura: público (para exibição em perfil)
+      allow read: if true;
+
+      // Escrita: apenas o próprio usuário ou admin
+      allow write: if (isAuthenticated() && request.auth.uid == userId) ||
+                     isAdmin();
+    }
+
+    // ============================================================================================
+    // FOTOS DE EVOLUÇÃO (ANTES/DEPOIS)
+    // ============================================================================================
+
+    match /patients/{patientId}/evolutions/{evolutionId}/{filename} {
+      // Leitura: profissionais envolvidos e paciente próprio
+      allow read: if isProfessional() ||
+                     (isAuthenticated() && request.auth.uid == patientId) ||
+                     isAdmin();
+
+      // Escrita: apenas profissionais
+      allow write: if isProfessional() &&
+                     isValidFileSize() &&
+                     isAllowedContentType();
+    }
+
+    // ============================================================================================
+    // EXERCÍCIOS (VÍDEOS E IMAGENS)
+    // ============================================================================================
+
+    match /exercises/{exerciseId}/{filename} {
+      // Leitura: todos autenticados (biblioteca de exercícios)
+      allow read: if isAuthenticated();
+
+      // Escrita: apenas profissionais e admin
+      allow write: if isProfessional() || isAdmin();
+    }
+
+    // ============================================================================================
+    // DOCUMENTOS MÉDICOS (PDF, IMAGENS)
+    // ============================================================================================
+
+    match /patients/{patientId}/documents/{documentId}/{filename} {
+      // Leitura: profissionais envolvidos e paciente próprio
+      allow read: if isProfessional() ||
+                     (isAuthenticated() && request.auth.uid == patientId) ||
+                     isAdmin();
+
+      // Escrita: apenas profissionais
+      allow write: if isProfessional() &&
+                     isValidFileSize() &&
+                     isAllowedContentType();
+    }
+
+    // ============================================================================================
+    // RELATÓRIOS E EXPORTAÇÕES
+    // ============================================================================================
+
+    match /reports/{reportId}/{filename} {
+      // Leitura: admin e usuário que gerou
+      allow read: if isAdmin() ||
+                     (isAuthenticated() && request.auth.uid == firestore.get(/databases/(default)/documents/reports/$(reportId)).data.createdBy);
+
+      // Escrita: apenas via Cloud Function (admin service)
+      allow write: if false; // Apenas via Cloud Function
+    }
+
+    // ============================================================================================
+    // BACKUPS DO SISTEMA
+    // ============================================================================================
+
+    match /backups/{filename} {
+      // Acesso: apenas admin
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================================================================
+    // TEMPORÁRIOS (UPLOADS EM ANDAMENTO)
+    // ============================================================================================
+
+    match /temp/{userId}/{filename} {
+      // Leitura: apenas o próprio usuário
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+
+      // Escrita: usuário pode fazer upload temporário
+      // Será movido para local definitivo via Cloud Function
+      allow write: if isAuthenticated() &&
+                     request.auth.uid == userId &&
+                     isValidFileSize() &&
+                     isAllowedContentType();
+    }
+
+    // ============================================================================================
+    // ASSETS PÚBLICOS (LOGOS, IMAGENS DE MARKETING)
+    // ============================================================================================
+
+    match /public/{filename} {
+      // Leitura: público
+      allow read: if true;
+
+      // Escrita: apenas admin
+      allow write: if isAdmin();
+    }
+
+    // ============================================================================================
+    // DEFAULT DENY
+    // ============================================================================================
+
+    // Negar qualquer acesso não explicitamente permitido
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { clinicalApi } from '@/integrations/firebase/functions';
 import { useToast } from '@/hooks/use-toast';
 
 export interface MedicalRecord {
@@ -13,30 +13,19 @@ export interface MedicalRecord {
   family_history?: string;
   lifestyle_habits?: string;
   record_date: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export function useMedicalRecords(patientId?: string) {
   return useQuery({
     queryKey: ['medical-records', patientId],
     queryFn: async () => {
-      let query = supabase
-        .from('medical_records')
-        .select('id, patient_id, chief_complaint, medical_history, current_medications, allergies, previous_surgeries, family_history, lifestyle_habits, record_date, created_by, created_at, updated_at')
-        .order('record_date', { ascending: false });
-
-      if (patientId) {
-        query = query.eq('patient_id', patientId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as MedicalRecord[];
+      const response = await clinicalApi.getPatientRecords(patientId || '', 'evolution', 100);
+      return response.data as MedicalRecord[];
     },
-    enabled: !!patientId || patientId === undefined,
+    enabled: !!patientId,
   });
 }
 
@@ -45,19 +34,21 @@ export function useCreateMedicalRecord() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('medical_records')
-        .insert([record])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+    mutationFn: async (record: any) => {
+      const response = await clinicalApi.createMedicalRecord({
+        patientId: record.patient_id,
+        type: 'evolution',
+        title: 'Evolução Clínica',
+        content: JSON.stringify(record),
+        recordDate: record.record_date
+      });
+      return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
-      queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
+      if (data?.patient_id) {
+        queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
+      }
       toast({
         title: 'Prontuário criado!',
         description: 'Prontuário adicionado com sucesso.',
@@ -79,17 +70,10 @@ export function useUpdateMedicalRecord() {
 
   return useMutation({
     mutationFn: async ({ id, data, patientId }: { id: string; data: Partial<MedicalRecord>; patientId: string }) => {
-      const { data: updated, error } = await supabase
-        .from('medical_records')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return { ...updated, patient_id: patientId };
+      const response = await clinicalApi.updateMedicalRecord(id, data);
+      return { ...response.data, patient_id: patientId };
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
       queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
       toast({
@@ -113,12 +97,7 @@ export function useDeleteMedicalRecord() {
 
   return useMutation({
     mutationFn: async ({ id, patientId }: { id: string; patientId: string }) => {
-      const { error } = await supabase
-        .from('medical_records')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await clinicalApi.deleteMedicalRecord(id);
       return patientId;
     },
     onSuccess: (patientId) => {

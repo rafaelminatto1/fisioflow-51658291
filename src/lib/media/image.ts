@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 type TransformOptions = {
     width?: number;
@@ -8,7 +8,7 @@ type TransformOptions = {
     format?: 'avif' | 'webp' | 'jpg' | 'auto';
 };
 
-// Presets de tamanho para otimização automática
+// Presets maintained for structure, though they won't transform on the fly with basic Firebase Storage
 export const IMAGE_PRESETS = {
     avatar: { width: 64, height: 64, quality: 80, resize: 'cover' as const },
     thumbnail: { width: 320, height: 180, quality: 75, resize: 'cover' as const },
@@ -20,40 +20,40 @@ export const IMAGE_PRESETS = {
 export type ImagePreset = keyof typeof IMAGE_PRESETS;
 
 /**
- * Generates a consistent, optimized URL for a Supabase Storage image.
- * Uses Supabase Pro Image Transformations for performance.
+ * Generates a URL for a Firebase Storage image.
+ * Note: Firebase Storage does not support on-the-fly transformations like Supabase Pro.
+ * For true optimization, consider using the "Resize Images" Firebase Extension.
  *
  * @param bucket - The storage bucket (e.g., 'avatars', 'exercises')
  * @param path - The file path within the bucket
- * @param options - Transformation options (width, quality, etc.)
+ * @param _options - Transformation options (currently ignored in basic migration)
  */
-export const getOptimizedImageUrl = (
+export const getOptimizedImageUrl = async (
     bucket: string,
     path: string,
-    options: TransformOptions = IMAGE_PRESETS.card
-) => {
+    _options: TransformOptions = IMAGE_PRESETS.card
+): Promise<string> => {
     if (!path) return '';
 
-    // If it's already a full URL (e.g. Vercel Blob or external), return as is
+    // If it's already a full URL, return as is
     if (path.startsWith('http')) return path;
 
-    // Supabase Image Transformation
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path, {
-        transform: {
-            width: options.width,
-            height: options.height,
-            resize: options.resize,
-            quality: options.quality,
-        },
-    });
-
-    return data.publicUrl;
+    try {
+        const storage = getStorage();
+        // Firebase paths often include the bucket name in our new structure or are separate.
+        // We'll assume the path is relative to the bucket or fully qualified within the storage root.
+        const storageRef = ref(storage, path.startsWith(bucket) ? path : `${bucket}/${path}`);
+        return await getDownloadURL(storageRef);
+    } catch (error) {
+        console.error('Error getting image URL:', error);
+        return '';
+    }
 };
 
 /**
  * Gera URL otimizada usando um preset pré-definido
  */
-export const getOptimizedImageUrlWithPreset = (
+export const getOptimizedImageUrlWithPreset = async (
     bucket: string,
     path: string,
     preset: ImagePreset = 'card'
@@ -63,17 +63,19 @@ export const getOptimizedImageUrlWithPreset = (
 
 /**
  * Gera URLs para diferentes tamanhos de imagem (para srcset)
+ * Returns the same URL for all sizes in basic Firebase migration
  */
-export const getResponsiveImageUrls = (
+export const getResponsiveImageUrls = async (
     bucket: string,
     path: string,
     sizes: number[] = [320, 640, 960, 1280, 1920]
-): Record<number, string> => {
+): Promise<Record<number, string>> => {
     if (!path) return {};
 
+    const url = await getOptimizedImageUrl(bucket, path);
     const urls: Record<number, string> = {};
     for (const size of sizes) {
-        urls[size] = getOptimizedImageUrl(bucket, path, { width: size, quality: 75, resize: 'contain' });
+        urls[size] = url;
     }
     return urls;
 };

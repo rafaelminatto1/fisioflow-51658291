@@ -1,0 +1,416 @@
+# Firebase Data Connect Schema: Exercises
+# Schema para biblioteca de exercícios do FisioFlow
+
+"""
+Categoria de exercício
+"""
+enum ExerciseCategory {
+  """
+  Exercícios de fortalecimento muscular
+  """
+  fortalecimento
+
+  """
+  Exercícios de alongamento e flexibilidade
+  """
+  alongamento
+
+  """
+  Exercícios de mobilidade articular
+  """
+  mobilidade
+
+  """
+  Exercícios cardiovasculares
+  """
+  cardio
+
+  """
+  Exercícios de equilíbrio e propriocepção
+  """
+  equilibrio
+
+  """
+  Exercícios respiratórios
+  """
+  respiratorio
+
+  """
+  Exercícios de postura e core
+  """
+  postura
+
+  """
+  Exercícios de coordenação motora
+  """
+  coordenacao
+}
+
+"""
+Nível de dificuldade do exercício
+"""
+enum ExerciseDifficulty {
+  """
+  Iniciante - adequado para iniciantes
+  """
+  beginner
+
+  """
+  Intermediário - requer algum condicionamento
+  """
+  intermediate
+
+  """
+  Avançado - requer bom condicionamento físico
+  """
+  advanced
+}
+
+"""
+Exercício da biblioteca
+"""
+type Exercise @table {
+  """
+  Identificador único do exercício
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  Nome do exercício
+  """
+  name: String!
+
+  """
+  Slug do exercício para URLs amigáveis
+  """
+  slug: String! @unique
+
+  """
+  Categoria do exercício
+  """
+  category: ExerciseCategory!
+
+  """
+  Descrição detalhada do exercício
+  """
+  description: String!
+
+  """
+  Instruções passo a passo (array de strings)
+  """
+  instructions: Json!
+
+  """
+  Lista de músculos principais trabalhados
+  """
+  muscles: Json!
+
+  """
+  Equipamento necessário (ou "nenhum")
+  """
+  equipment: String! @default("nenhum")
+
+  """
+  Nível de dificuldade
+  """
+  difficulty: ExerciseDifficulty! @default(beginner)
+
+  """
+  URL do vídeo demonstrativo
+  """
+  video_url: String?
+
+  """
+  URL da thumbnail/imagem do exercício
+  """
+  thumbnail_url: String?
+
+  """
+  Duração estimada em minutos
+  """
+  duration_minutes: Int?
+
+  """
+  Número estimado de repetições
+  """
+  reps_recommended: String?
+
+  """
+  Número estimado de séries
+  """
+  sets_recommended: String?
+
+  """
+  Contra-indicações e precauções
+  """
+  precautions: String?
+
+  """
+  Benefícios do exercício
+  """
+  benefits: String?
+
+  """
+  Tags para busca e categorização
+  """
+  tags: Json! @default("[]")
+
+  """
+  Embedding vector para busca semântica (pgvector)
+  """
+  embedding: Vector?
+
+  """
+  Indica se o exercício está ativo
+  """
+  is_active: Boolean @default(true)
+
+  """
+  Indica se o exercício é destaque
+  """
+  is_featured: Boolean @default(false)
+
+  """
+  Ordem de exibição
+  """
+  display_order: Int @default(0)
+
+  """
+  Idioma do exercício (pt, en, es)
+  """
+  language: String @default("pt")
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Itens de plano que incluem este exercício
+  """
+  plan_items: [ExercisePlanItem] @hasMany
+}
+
+"""
+Plano de exercícios para um paciente
+"""
+type ExercisePlan @table {
+  """
+  Identificador único do plano
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do paciente
+  """
+  patient_id: UUID!
+
+  """
+  Nome do plano
+  """
+  name: String!
+
+  """
+  Descrição do plano
+  """
+  description: String?
+
+  """
+  Objetivos do plano
+  """
+  goals: Json?
+
+  """
+  Data de início do plano
+  """
+  start_date: Date!
+
+  """
+  Data prevista para conclusão
+  """
+  target_end_date: Date?
+
+  """
+  Data efetiva de conclusão
+  """
+  actual_end_date: Date?
+
+  """
+  Status: ativo, pausado, concluido, cancelado
+  """
+  status: String @default("ativo")
+
+  """
+  ID do profissional que criou o plano
+  """
+  created_by: UUID!
+
+  """
+  Anotações do profissional
+  """
+  notes: String?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Paciente do plano
+  """
+  patient: Patient @belongsTo
+
+  """
+  Itens/exercícios do plano
+  """
+  items: [ExercisePlanItem] @hasMany
+
+  """
+  Profissional que criou
+  """
+  creator: Profile @belongsTo
+}
+
+"""
+Item de exercício dentro de um plano
+"""
+type ExercisePlanItem @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do plano de exercícios
+  """
+  plan_id: UUID!
+
+  """
+  ID do exercício
+  """
+  exercise_id: UUID!
+
+  """
+  Ordem do exercício no plano
+  """
+  order: Int! @default(0)
+
+  """
+  Número de séries recomendadas
+  """
+  sets: Int?
+
+  """
+  Número de repetições recomendadas
+  """
+  reps: String?
+
+  """
+  Duração em segundos (para exercícios de tempo)
+  """
+  duration_seconds: Int?
+
+  """
+  Descanso entre séries em segundos
+  """
+  rest_seconds: Int?
+
+  """
+  Carga/peso (se aplicável)
+  """
+  load: String?
+
+  """
+  Observações específicas para este paciente
+  """
+  notes: String?
+
+  """
+  Frequência semanal recomendada
+  """
+  frequency_weekly: Int @default(3)
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Plano ao qual este item pertence
+  """
+  plan: ExercisePlan @belongsTo
+
+  """
+  Exercício deste item
+  """
+  exercise: Exercise @belongsTo
+}
+
+# Inputs e filtros
+"""
+Input para buscar exercícios similares (busca semântica)
+"""
+input FindSimilarExercisesInput {
+  """
+  ID do exercício de referência
+  """
+  exercise_id: UUID
+
+  """
+  Query de busca textual
+  """
+  query: String
+
+  """
+  Filtrar por categoria
+  """
+  category: ExerciseCategory?
+
+  """
+  Filtrar por dificuldade
+  """
+  difficulty: ExerciseDifficulty?
+
+  """
+  Filtrar por equipamento
+  """
+  equipment: String?
+
+  """
+  Limite de resultados
+  """
+  limit: Int @default(10)
+}
+
+"""
+Resultado de busca de exercícios
+"""
+type ExerciseSearchResult {
+  """
+  Exercício encontrado
+  """
+  exercise: Exercise!
+
+  """
+  Score de similaridade (0-1)
+  """
+  similarity: Float!
+}

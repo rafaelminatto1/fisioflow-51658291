@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { patientsApi } from '@/integrations/firebase/functions';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
@@ -20,7 +20,6 @@ export const PatientService = {
         return {
             id: dbPatient.id,
             name: getPatientName(dbPatient),
-            full_name: dbPatient.full_name, // Explicitly map full_name
             email: dbPatient.email ?? undefined,
             phone: dbPatient.phone ?? undefined,
             cpf: dbPatient.cpf ?? undefined,
@@ -73,14 +72,16 @@ export const PatientService = {
     async getActivePatients(organizationId: string) {
         if (!organizationId) throw AppError.badRequest('Organization ID is required');
 
-        const query = supabase
-            .from('patients')
-            .select<string, PatientDBStandard>(PATIENT_SELECT.standard)
-            // Filter by active statuses in the application (matching database values)
-            .in('status', ['active', 'Inicial', 'Em Tratamento', 'Recuperação', 'Concluído'])
-            .eq('organization_id', organizationId);
+        const response = await patientsApi.list({ status: 'active', limit: 1000 });
+        // Return thenable-like object to match previous Supabase query builder if possible,
+        // OR update return to just be the data/error structure if callers await it.
+        // Supabase returns { data, error }. callers await it.
+        // patientsApi returns { data: ... } keys.
 
-        return query.order('full_name', { ascending: true });
+        // We need to map the cloud function response structure to what consumers expect.
+        // Consumers expect { data: Row[], error: null } from Supabase query.
+
+        return { data: response.data || [], error: null };
     },
 
     /**
@@ -89,62 +90,55 @@ export const PatientService = {
     async getPatientById(id: string) {
         if (!id) throw AppError.badRequest('Patient ID is required');
 
-        const { data, error } = await supabase
-            .from('patients')
-            .select<string, PatientDBStandard>(PATIENT_SELECT.standard)
-            .eq('id', id)
-            .maybeSingle();
-
-        if (error) throw AppError.internal(error.message);
-        return { data };
+        try {
+            const response = await patientsApi.get(id);
+            return { data: response.data, error: null };
+        } catch (error: any) {
+            // Map Firebase error to Supabase-like error if needed or generic AppError
+            return { data: null, error: error };
+        }
     },
 
     /**
      * Create a new patient
      */
     async createPatient(patient: any) {
-        const { data, error } = await supabase
-            .from('patients')
-            .insert([{
+        try {
+            const response = await patientsApi.create({
                 ...patient,
                 status: patient.status || 'active',
                 progress: patient.progress || 0,
-            }])
-            .select()
-            .single();
-
-        if (error) throw AppError.internal(error.message);
-        return { data };
+            });
+            return { data: response.data, error: null };
+        } catch (error: any) {
+            return { data: null, error };
+        }
     },
 
     /**
      * Update a patient
      */
     async updatePatient(id: string, updates: any) {
-        const { data, error } = await supabase
-            .from('patients')
-            .update({
+        try {
+            const response = await patientsApi.update(id, {
                 ...updates,
                 updated_at: new Date().toISOString(),
-            })
-            .eq('id', id)
-            .select()
-            .single();
-
-        if (error) throw AppError.internal(error.message);
-        return { data };
+            });
+            return { data: response.data, error: null };
+        } catch (error: any) {
+            return { data: null, error };
+        }
     },
 
     /**
      * Delete a patient
      */
     async deletePatient(id: string) {
-        const { error } = await supabase
-            .from('patients')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw AppError.internal(error.message);
-        return { error: null };
+        try {
+            await patientsApi.delete(id);
+            return { error: null };
+        } catch (error: any) {
+            return { error };
+        }
     }
 };

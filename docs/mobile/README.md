@@ -4,12 +4,13 @@ Bem-vindo à documentação oficial do aplicativo **FisioFlow para iPhone**.
 
 ## 🎯 Visão Geral
 
-O **FisioFlow Mobile** é a versão nativa para iOS do sistema de gestão para clínicas de fisioterapia. Desenvolvido com **Capacitor 7**, transforma o aplicativo web React em um app nativo para iPhone com acesso a recursos exclusivos do dispositivo.
+O **FisioFlow Mobile** é a versão nativa para iOS do sistema de gestão para clínicas de fisioterapia. Desenvolvido com **React Native e Expo**, oferece uma experiência verdadeiramente nativa, compartilhando a lógica de negócios com a web mas com UI otimizada para mobile.
 
 ### 🔄 Diferenças Web vs Mobile
 
-| Aspecto | Web App | iOS App |
+| Aspecto | Web App | iOS App (React Native) |
 |---------|---------|---------|
+| **Tecnologia** | React DOM | React Native |
 | **Plataforma** | Navegador (Safari, Chrome) | Nativo iPhone |
 | **Distribuição** | URL/Vercel | App Store |
 | **Instalação** | Acesso via link | Download da App Store |
@@ -17,7 +18,7 @@ O **FisioFlow Mobile** é a versão nativa para iOS do sistema de gestão para c
 | **Push Notifications** | ⚠️ Limitado (PWA) | ✅ Nativo completo |
 | **Câmera** | ⚠️ Via browser | ✅ Acesso nativo |
 | **Geolocalização** | ⚠️ Via browser | ✅ GPS preciso |
-| **Offline** | ⚠️ Service Worker | ✅ Cache nativo |
+| **Offline** | ⚠️ Service Worker | ✅ SQLite / Cache Nativo |
 | **Performance** | Boa | ✅ Otimizada |
 | **UI/UX** | Desktop-first | Mobile-first |
 
@@ -38,10 +39,10 @@ O **FisioFlow Mobile** é a versão nativa para iOS do sistema de gestão para c
 ## 🚀 Stack Tecnológico
 
 ```
-Core: React 18 + TypeScript + Vite
-UI: shadcn/ui + Tailwind CSS
+Core: React Native + Expo
+UI: NativeWind (Tailwind) + Expo Router
 Backend: Supabase (PostgreSQL + Auth + Real-time)
-Mobile: Capacitor 7.4.3
+Build: EAS Build
 Deploy: App Store
 Monitor: Sentry + Vercel Analytics
 ```
@@ -61,7 +62,7 @@ Monitor: Sentry + Vercel Analytics
 - **Corpo**: Sans-serif, 400-500 weight
 
 ### Componentes
-Baseados em **shadcn/ui** com adaptações para mobile:
+Baseados em **React Native Paper** ou **Tamagui** com adaptações para mobile:
 - Botões touch-friendly (min 44x44px)
 - Bottom Tab Bar para navegação
 - Safe Area para notch
@@ -99,7 +100,7 @@ Baseados em **shadcn/ui** com adaptações para mobile:
 - ✅ Audit trail completo
 
 ### Segurança iOS
-- ✅ Keychain para tokens
+- ✅ SecureStore para tokens
 - ✅ Biometria para login rápido
 - ✅ Certificate Pinning
 - ✅ Jailbreak detection
@@ -120,11 +121,10 @@ Baseados em **shadcn/ui** com adaptações para mobile:
 ## 🛠️ Desenvolvimento
 
 ### Pré-requisitos
-- macOS 12.0+ (Monterey)
-- Xcode 13.0+
 - Node.js 18.0+
-- CocoaPods 1.11.0+
-- Conta Apple Developer ($99/ano)
+- Expo CLI
+- Conta Apple Developer ($99/ano) (para deploy)
+- (Opcional) macOS + Xcode para simulador local
 
 ### Setup Rápido
 ```bash
@@ -133,33 +133,26 @@ git clone <repo-url>
 cd fisioflow-51658291
 
 # Instale as dependências
-pnpm install
+npm install
 
-# Adicione a plataforma iOS
-npm run cap:ios
+# Inicie o projeto com Expo
+npx expo start
 
-# Build e sync
-npm run build
-npm run cap:sync
-
-# Abra no Xcode
-npm run cap:open:ios
+# Escaneie o QR Code com o app Expo Go no seu iPhone
 ```
 
 ### Workflow de Desenvolvimento
 1. Faça alterações no código
-2. `npm run build` - Build do projeto
-3. `npm run cap:sync` - Sincroniza com iOS
-4. Teste no simulador/dispositivo
-5. Commit e push
+2. O Expo Go atualiza automaticamente (Fast Refresh)
+3. Teste no dispositivo físico ou simulador
+4. Commit e push
 
 ## 🧪 Testes
 
 ### Tipos de Testes
-- **Unit**: Vitest para lógica
-- **Component**: React Testing Library
-- **E2E**: Playwright para fluxos críticos
-- **Manual**: Testes em dispositivo real
+- **Unit**: Jest + React Native Testing Library
+- **E2E**: Maestro ou Detox
+- **Manual**: Testes em dispositivo real via Expo Go
 
 ### Cobertura Atual
 - ~45-55% (meta: >70%)
@@ -168,14 +161,11 @@ npm run cap:open:ios
 
 ### Build de Produção
 ```bash
-# Build otimizado
-npm run build:prod
+# Build via EAS
+eas build --platform ios
 
-# Sync com iOS
-npm run cap:sync
-
-# Abrir no Xcode para archive
-npm run cap:open:ios
+# Submeter para App Store
+eas submit --platform ios
 ```
 
 ### Publicação na App Store
@@ -183,11 +173,10 @@ Ver [CHECKLIST_APP_STORE.md](./CHECKLIST_APP_STORE.md) para detalhes completos.
 
 ## 🔗 Links Úteis
 
-- [Capacitor Docs](https://capacitorjs.com/docs)
+- [Expo Docs](https://docs.expo.dev)
+- [React Native Docs](https://reactnative.dev)
 - [iOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
-- [App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
 - [Supabase Docs](https://supabase.com/docs)
-- [shadcn/ui](https://ui.shadcn.com)
 
 ## 🆘 Suporte
 
@@ -201,6 +190,6 @@ Este projeto está licenciado sob a MIT License.
 
 ---
 
-**Última atualização**: 19 de Janeiro de 2026
-**Versão**: 1.0.0
+**Última atualização**: 24 de Janeiro de 2026
+**Versão**: 1.1.0
 **Mantido por**: Equipe FisioFlow Mobile

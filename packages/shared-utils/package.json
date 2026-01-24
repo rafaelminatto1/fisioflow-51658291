@@ -1,0 +1,18 @@
+{
+  "name": "@fisioflow/shared-utils",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./date": "./src/date/index.ts",
+    "./format": "./src/format/index.ts",
+    "./validation": "./src/validation/index.ts"
+  },
+  "dependencies": {
+    "date-fns": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

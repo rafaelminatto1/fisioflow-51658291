@@ -1,0 +1,394 @@
+# Firebase Data Connect Schema: Organizations and Profiles
+# Schema para gestão de organizações, perfis e usuários
+
+"""
+Tipo de usuário/papel no sistema
+"""
+enum UserRole {
+  """
+  Administrador do sistema
+  """
+  admin
+
+  """
+  Fisioterapeuta
+  """
+  fisioterapeuta
+
+  """
+  Recepcionista
+  """
+  recepcionista
+
+  """
+  Paciente
+  """
+  paciente
+}
+
+"""
+Status da assinatura da organização
+"""
+enum SubscriptionStatus {
+  """
+  Período trial ativo
+  """
+  trial
+
+  """
+  Assinatura ativa
+  """
+  active
+
+  """
+  Assinatura cancelada
+  """
+  cancelled
+
+  """
+  Assinatura expirada
+  """
+  expired
+
+  """
+  Pagamento pendente
+  """
+  past_due
+}
+
+"""
+Organização/Clínica
+"""
+type Organization @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  Nome da organização
+  """
+  name: String!
+
+  """
+  Nome fantasia
+  """
+  trade_name: String?
+
+  """
+  CNPJ
+  """
+  cnpj: String? @unique
+
+  """
+  Email de contato
+  """
+  email: String!
+
+  """
+  Telefone
+  """
+  phone: String?
+
+  """
+  Endereço completo em JSON
+  """
+  address: Json?
+
+  """
+  Status da assinatura
+  """
+  subscription_status: SubscriptionStatus! @default(trial)
+
+  """
+  Data de início da assinatura
+  """
+  subscription_start_date: Date?
+
+  """
+  Data de fim da assinatura
+  """
+  subscription_end_date: Date?
+
+  """
+  Número máximo de profissionais permitido
+  """
+  max_professionals: Int @default(5)
+
+  """
+  Plano da assinatura: free, starter, pro, enterprise
+  """
+  plan: String @default("free")
+
+  """
+  Configurações da organização em JSON
+  """
+  settings: Json!
+
+  """
+  Logo da organização
+  """
+  logo_url: String?
+
+  """
+  Cor primária da marca (hex)
+  """
+  brand_color: String @default("#667eea")
+
+  """
+  Fuso horário padrão
+  """
+  timezone: String @default("America/Sao_Paulo")
+
+  """
+  Idioma padrão
+  """
+  language: String @default("pt-BR")
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Perfis de usuários da organização
+  """
+  profiles: [Profile] @hasMany
+
+  """
+  Pacientes da organização
+  """
+  patients: [Patient] @hasMany
+
+  """
+  Agendamentos da organização
+  """
+  appointments: [Appointment] @hasMany
+}
+
+"""
+Perfil de usuário vinculado ao Firebase Auth
+"""
+type Profile @table {
+  """
+  UID do Firebase Auth
+  """
+  user_id: UUID! @unique
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Nome completo
+  """
+  full_name: String!
+
+  """
+  Email
+  """
+  email: String!
+
+  """
+  Telefone
+  """
+  phone: String?
+
+  """
+  Foto de perfil
+  """
+  avatar_url: String?
+
+  """
+  Papel/função no sistema
+  """
+  role: UserRole!
+
+  """
+  CREFITO (para fisioterapeutas)
+  """
+  crefito: String?
+
+  """
+  Especialidades (array de strings)
+  """
+  specialties: Json!
+
+  """
+  Biografia
+  """
+  bio: String?
+
+  """
+  Data de nascimento
+  """
+  birth_date: Date?
+
+  """
+  Indica se o usuário está ativo
+  """
+  is_active: Boolean @default(true)
+
+  """
+  Último login
+  """
+  last_login_at: DateTime?
+
+  """
+  Email verificado
+  """
+  email_verified: Boolean @default(false)
+
+  """
+  Preferências do usuário em JSON
+  """
+  preferences: Json!
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+
+  """
+  Data e hora da última atualização
+  """
+  updated_at: DateTime! @default(now())
+
+  # Relações
+  """
+  Organização do perfil
+  """
+  organization: Organization @belongsTo
+
+  """
+  Agendamentos deste terapeuta
+  """
+  appointments_as_therapist: [Appointment] @hasMany
+}
+
+"""
+Convite para usuário
+"""
+type Invitation @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  Email do convidado
+  """
+  email: String!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Papel que será atribuído
+  """
+  role: UserRole!
+
+  """
+  Token único de convite
+  """
+  token: String! @unique
+
+  """
+  Status: pending, accepted, expired, cancelled
+  """
+  status: String @default("pending")
+
+  """
+  Data de expiração do convite
+  """
+  expires_at: DateTime!
+
+  """
+  Data de aceite
+  """
+  accepted_at: DateTime?
+
+  """
+  Quem enviou o convite
+  """
+  invited_by: UUID!
+
+  """
+  Mensagem personalizada
+  """
+  message: String?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+}
+
+"""
+Notificação do usuário
+"""
+type Notification @table {
+  """
+  Identificador único
+  """
+  id: UUID! @default(uuid_generate_v4())
+
+  """
+  ID do usuário destinatário
+  """
+  user_id: UUID!
+
+  """
+  ID da organização
+  """
+  organization_id: UUID!
+
+  """
+  Título da notificação
+  """
+  title: String!
+
+  """
+  Corpo da notificação
+  """
+  body: String!
+
+  """
+  Tipo de notificação: info, success, warning, error
+  """
+  type: String @default("info")
+
+  """
+  Link relacionado (opcional)
+  """
+  link: String?
+
+  """
+  Dados adicionais em JSON
+  """
+  data: Json?
+
+  """
+  Indica se foi lida
+  """
+  is_read: Boolean @default(false)
+
+  """
+  Data e hora de leitura
+  """
+  read_at: DateTime?
+
+  """
+  Data e hora de criação
+  """
+  created_at: DateTime! @default(now())
+}

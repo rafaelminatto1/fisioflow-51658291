@@ -30,17 +30,54 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // ============================================================================
-// SERVICE WORKER MESSAGE HANDLER
+// SERVICE WORKER REGISTRATION
 // ============================================================================
 
-// Configurar handler para mensagens do Service Worker
-// O VitePWA envia mensagens quando há atualizações
+// Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data?.type === 'SKIP_WAITING') {
-      // SW solicitou ativação imediata
-      console.log('[SW] Skip waiting recebido, recarregando...');
-      window.location.reload();
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+      });
+
+      console.log('[SW] Service Worker registered:', registration.scope);
+
+      // Verificar por atualizações
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Nova versão disponível
+              console.log('[SW] New version available');
+
+              // Notificar usuário (opcional - implementar UI)
+              if (window.confirm('Nova versão disponível. Deseja atualizar?')) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            }
+          });
+        }
+      });
+
+      // Configurar handler para mensagens do Service Worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data?.type === 'SKIP_WAITING') {
+          // SW solicitou ativação imediata
+          console.log('[SW] Skip waiting recebido, recarregando...');
+          window.location.reload();
+        }
+      });
+
+      // Solicitar permissão para notificações (opcional)
+      if ('Notification' in window && Notification.permission === 'default') {
+        // Não solicitar automaticamente - deixar usuário decidir
+        // await Notification.requestPermission();
+      }
+    } catch (error) {
+      console.error('[SW] Service Worker registration failed:', error);
     }
   });
 }
