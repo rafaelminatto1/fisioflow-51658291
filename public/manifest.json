@@ -1,66 +1,88 @@
 {
-  "name": "FisioFlow AI Studio PWA",
-  "short_name": "FisioFlow PWA",
-  "description": "Aplicativo PWA para pacientes do FisioFlow AI Studio com gamificação e acompanhamento de exercícios",
+  "$schema": "https://json.schemastore.org/web-manifest",
+  "name": "FisioFlow - Plataforma de Fisioterapia Digital",
+  "short_name": "FisioFlow",
+  "description": "Sistema completo de gestão para fisioterapeutas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
+  "theme_color": "#10B981",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "pt-BR",
-  "categories": [
-    "health",
-    "fitness",
-    "medical"
-  ],
+  "dir": "ltr",
+  "categories": ["medical", "health", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon-192x192.svg",
+      "src": "/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-512x512.svg",
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "/icons/favicon-32x32.svg",
-      "sizes": "32x32",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "/icons/favicon-16x16.svg",
-      "sizes": "16x16",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "shortcuts": [],
-  "screenshots": [
+  "shortcuts": [
     {
-      "src": "/screenshots/dashboard.avif",
-      "sizes": "1280x720",
-      "type": "image/avif",
-      "platform": "wide",
-      "label": "Dashboard principal com estatísticas de progresso"
+      "name": "Novo Agendamento",
+      "short_name": "Agendar",
+      "description": "Criar novo agendamento",
+      "url": "/?action=new-appointment",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "src": "/screenshots/achievements.avif",
-      "sizes": "750x1334",
-      "type": "image/avif",
-      "platform": "narrow",
-      "label": "Tela de conquistas e badges"
+      "name": "Meus Pacientes",
+      "short_name": "Pacientes",
+      "description": "Ver lista de pacientes",
+      "url": "/patients",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Agenda",
+      "short_name": "Agenda",
+      "description": "Ver agenda de hoje",
+      "url": "/",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
     }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  }
+  ]
 }

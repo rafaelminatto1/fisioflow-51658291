@@ -116,7 +116,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mode === 'development' && componentTagger(),
-      htmlPlugin(appVersion, buildTime, isProduction),
+      // htmlPlugin(appVersion, buildTime, isProduction),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
         org: "fisioflow",
         project: "fisioflow-web",
@@ -195,7 +195,7 @@ export default defineConfig(({ mode }) => {
             }
           ],
           navigationPreload: false,
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         },
         strategies: 'generateSW',
       }),
@@ -242,11 +242,12 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+          /*
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               // CRITICAL: React + Scheduler deve ser sempre o primeiro chunk carregado
               // Scheduler é necessário para React 18 funcionar corretamente
-              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
                 return 'react-vendor';
               }
               // Router depende de React, carregar após
@@ -262,7 +263,12 @@ export default defineConfig(({ mode }) => {
                 return 'supabase-vendor';
               }
               // Componentes UI que dependem de React
-              if (id.includes('@radix-ui')) {
+              if (id.includes('@radix-ui') ||
+                id.includes('class-variance-authority') ||
+                id.includes('clsx') ||
+                id.includes('tailwind-merge') ||
+                id.includes('react-remove-scroll') ||
+                id.includes('aria-hidden')) {
                 return 'ui-vendor';
               }
               // Gráficos
@@ -313,6 +319,7 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
           },
+          */
           experimentalMinChunkSize: 100000,
         },
         preserveEntrySignatures: 'strict',

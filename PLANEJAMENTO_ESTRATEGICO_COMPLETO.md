@@ -23,7 +23,7 @@
 - **Integrações de Comunicação**: WhatsApp Business API, SendGrid
 - **IA Avançada**: Análises preditivas, recomendações
 - **Telemedicina**: Videochamadas
-- **Mobile App**: PWA avançado ou app nativo
+- **Mobile App**: App Nativo iOS (React Native + Expo)
 - **Backup Automático**: Sistema de backup robusto
 - **Testes E2E**: Cobertura completa
 
