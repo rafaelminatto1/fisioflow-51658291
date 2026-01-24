@@ -7,12 +7,24 @@ import { ensureProfile } from '@/lib/database/profiles';
 
 export type SoapStatus = 'draft' | 'finalized' | 'cancelled';
 
+export interface SoapRecordSummary {
+  id: string;
+  record_date: string;
+  created_at: string;
+  status: SoapStatus;
+  signed_at?: string;
+  assessment?: string;
+  session_number?: number;
+}
+
 // Query keys factory for better cache management and type safety
 export const soapKeys = {
   all: ['soap-records'] as const,
   lists: () => [...soapKeys.all, 'list'] as const,
   list: (patientId: string, filters?: { status?: SoapStatus; limit?: number }) =>
     [...soapKeys.lists(), patientId, filters] as const,
+  summaries: (patientId: string, limit?: number) =>
+    [...soapKeys.all, 'summaries', patientId, limit] as const,
   details: () => [...soapKeys.all, 'detail'] as const,
   detail: (id: string) => [...soapKeys.details(), id] as const,
   drafts: (patientId: string) => [...soapKeys.all, 'drafts', patientId] as const,
@@ -133,6 +145,26 @@ export const useSoapRecords = (patientId: string, limit = 10) => {
     },
     enabled: !!patientId,
     staleTime: 1000 * 60 * 5, // 5 minutes - reduzir chamadas desnecessárias
+  });
+};
+
+// Hook para buscar resumo de registros SOAP (otimizado para dashboard)
+export const useSoapRecordsSummary = (patientId: string, limit = 5) => {
+  return useQuery({
+    queryKey: soapKeys.summaries(patientId, limit),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('soap_records')
+        .select('id, record_date, created_at, status, signed_at, assessment, session_number')
+        .eq('patient_id', patientId)
+        .order('record_date', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data as SoapRecordSummary[];
+    },
+    enabled: !!patientId,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
