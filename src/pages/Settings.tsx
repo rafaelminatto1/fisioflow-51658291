@@ -25,7 +25,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
 import { NotificationHistory } from '@/components/notifications/NotificationHistory';
@@ -495,6 +495,49 @@ const Settings = () => {
     navigate(`/settings?tab=${tabValue}`, { replace: true });
   }, [navigate]);
 
+  const { toast } = useToast();
+
+  // Load saved working hours from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('workingHours');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as WorkingHours;
+        setWorkingHours(parsed);
+      } catch (e) {
+        console.warn('Failed to parse saved working hours:', e);
+      }
+    }
+  }, []);
+
+  // Save working hours to localStorage
+  const handleSaveWorkingHours = useCallback(() => {
+    try {
+      localStorage.setItem('workingHours', JSON.stringify(workingHours));
+      toast({
+        title: 'Horários salvos!',
+        description: 'Seu horário de funcionamento foi atualizado.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar seus horários. Tente novamente.',
+        variant: 'destructive'
+      });
+    }
+  }, [workingHours, toast]);
+
+  // Enable 2FA (placeholder - requires backend integration)
+  const handleEnable2FA = useCallback(async (enabled: boolean) => {
+    if (enabled) {
+      toast({
+        title: 'Autenticação de dois fatores',
+        description: 'Em desenvolvimento: Integração com Firebase Auth 2FA será implementada em breve.',
+        variant: 'default'
+      });
+    }
+  }, [toast]);
+
   return (
     <MainLayout>
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
@@ -573,7 +616,7 @@ const Settings = () => {
               <WorkingHoursSection
                 workingHours={workingHours}
                 onChange={setWorkingHours}
-                onSave={() => {/* TODO: Implement save */ }}
+                onSave={handleSaveWorkingHours}
               />
             </div>
           </TabsContent>
@@ -717,7 +760,7 @@ const Settings = () => {
                     label="Autenticação de dois fatores"
                     description="Adicione uma camada extra de segurança"
                     checked={false}
-                    onCheckedChange={() => {/* TODO: Implement 2FA */ }}
+                    onCheckedChange={handleEnable2FA}
                   />
                 </div>
 
@@ -746,7 +789,7 @@ const Settings = () => {
             <WorkingHoursSection
               workingHours={workingHours}
               onChange={setWorkingHours}
-              onSave={() => {/* TODO: Implement save */ }}
+              onSave={handleSaveWorkingHours}
             />
           </TabsContent>
         </Tabs>

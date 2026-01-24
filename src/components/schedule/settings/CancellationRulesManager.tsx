@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { AlertTriangle, Save, Loader2, CheckCircle2, Info, Shield, Clock } from 'lucide-react';
+import { AlertTriangle, Save, Loader2, CheckCircle2, Info, Shield, Clock, DollarSign } from 'lucide-react';
 import { useScheduleSettings, CancellationRule } from '@/hooks/useScheduleSettings';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -17,6 +17,41 @@ const DEFAULT_RULES: Partial<CancellationRule> = {
   charge_late_cancellation: false,
   late_cancellation_fee: 0,
 };
+
+// Quick presets for common scenarios
+const CANCELLATION_PRESETS = [
+  {
+    label: 'Flexível',
+    description: '2h de antecedência',
+    icon: '🧘',
+    min_hours_before: 2,
+    max_cancellations_month: 5,
+    color: 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800',
+  },
+  {
+    label: 'Padrão',
+    description: '24h de antecedência',
+    icon: '⏱️',
+    min_hours_before: 24,
+    max_cancellations_month: 3,
+    color: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
+  },
+  {
+    label: 'Rigoroso',
+    description: '48h de antecedência',
+    icon: '📋',
+    min_hours_before: 48,
+    max_cancellations_month: 2,
+    color: 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800',
+  },
+];
+
+// Common fee presets
+const FEE_PRESETS = [
+  { label: 'R$ 50', value: 50 },
+  { label: 'R$ 100', value: 100 },
+  { label: 'R$ 150', value: 150 },
+];
 
 export function CancellationRulesManager() {
   const { cancellationRules, upsertCancellationRules, isLoadingRules, isSavingRules } = useScheduleSettings();
@@ -38,6 +73,15 @@ export function CancellationRulesManager() {
     upsertCancellationRules(rules);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const applyPreset = (preset: typeof CANCELLATION_PRESETS[0]) => {
+    setRules({
+      ...rules,
+      min_hours_before: preset.min_hours_before,
+      max_cancellations_month: preset.max_cancellations_month,
+    });
+    setSaved(false);
   };
 
   if (isLoadingRules) {
@@ -69,6 +113,34 @@ export function CancellationRulesManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
+        {/* Quick Presets */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Presets de Política</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {CANCELLATION_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                onClick={() => applyPreset(preset)}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:scale-[1.02]",
+                  "hover:shadow-md",
+                  preset.color,
+                  rules.min_hours_before === preset.min_hours_before &&
+                  rules.max_cancellations_month === preset.max_cancellations_month
+                    ? "ring-2 ring-offset-2 ring-current shadow-md"
+                    : ""
+                )}
+              >
+                <span className="text-3xl">{preset.icon}</span>
+                <div className="text-center">
+                  <p className="font-semibold text-sm">{preset.label}</p>
+                  <p className="text-xs text-muted-foreground">{preset.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Info Banner */}
         <Alert className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
           <Info className="h-4 w-4 text-blue-600" />
@@ -180,8 +252,13 @@ export function CancellationRulesManager() {
 
           {rules.charge_late_cancellation && (
             <div className="p-4 rounded-lg border bg-red-50 dark:bg-red-950/20 ml-4 animate-in slide-in-from-top-2 duration-300">
-              <Label className="text-sm font-medium mb-3 block">Taxa de Cancelamento Tardio</Label>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-red-100 dark:bg-red-900/50 rounded-md">
+                  <DollarSign className="h-4 w-4 text-red-600 dark:text-red-400" />
+                </div>
+                <Label className="text-sm font-medium">Taxa de Cancelamento Tardio</Label>
+              </div>
+              <div className="flex items-center gap-4 mb-3">
                 <span className="text-2xl font-bold text-red-600 dark:text-red-400">R$</span>
                 <Slider
                   value={[lateFee]}
@@ -191,9 +268,23 @@ export function CancellationRulesManager() {
                   step={5}
                   className="flex-1 cursor-pointer"
                 />
-                <span className="text-2xl font-bold min-w-[80px] text-right">
+                <span className="text-2xl font-bold min-w-[80px] text-right text-red-600 dark:text-red-400">
                   {lateFee.toFixed(2)}
                 </span>
+              </div>
+              {/* Quick fee presets */}
+              <div className="flex gap-2">
+                {FEE_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    size="sm"
+                    variant={lateFee === preset.value ? "default" : "outline"}
+                    onClick={() => updateRule('late_cancellation_fee', preset.value)}
+                    className="h-7 text-xs"
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
               </div>
               <div className="flex justify-between text-xs text-muted-foreground px-1 mt-2">
                 <span>Grátis</span>

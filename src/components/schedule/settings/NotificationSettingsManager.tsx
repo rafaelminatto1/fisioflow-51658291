@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Bell, Save, Loader2, CheckCircle2, Mail, MessageCircle, Send, Clock, Info } from 'lucide-react';
+import { Bell, Save, Loader2, CheckCircle2, Mail, MessageCircle, Send, Clock, Info, Copy, Eye, Sparkles } from 'lucide-react';
 import { useScheduleSettings, NotificationSettings } from '@/hooks/useScheduleSettings';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 const DEFAULT_SETTINGS: Partial<NotificationSettings> = {
   send_confirmation_email: true,
@@ -21,17 +22,35 @@ const DEFAULT_SETTINGS: Partial<NotificationSettings> = {
 };
 
 const TEMPLATE_VARIABLES = [
-  { key: '{nome}', label: 'Nome do paciente' },
-  { key: '{data}', label: 'Data da consulta' },
-  { key: '{hora}', label: 'Horário' },
-  { key: '{tipo}', label: 'Tipo de consulta' },
-  { key: '{terapeuta}', label: 'Nome do terapeuta' },
+  { key: '{nome}', label: 'Nome do paciente', example: 'Maria Santos' },
+  { key: '{data}', label: 'Data da consulta', example: '15/01/2026' },
+  { key: '{hora}', label: 'Horário', example: '14:30' },
+  { key: '{tipo}', label: 'Tipo de consulta', example: 'Fisioterapia' },
+  { key: '{terapeuta}', label: 'Nome do terapeuta', example: 'Dr. Silva' },
 ];
+
+// Sample data for preview
+const PREVIEW_DATA = {
+  '{nome}': 'Maria Santos',
+  '{data}': '15/01/2026',
+  '{hora}': '14:30',
+  '{tipo}': 'Fisioterapia',
+  '{terapeuta}': 'Dr. Silva',
+};
+
+const getMessagePreview = (message: string) => {
+  let preview = message;
+  Object.entries(PREVIEW_DATA).forEach(([key, value]) => {
+    preview = preview.replace(new RegExp(key, 'g'), value);
+  });
+  return preview;
+};
 
 export function NotificationSettingsManager() {
   const { notificationSettings, upsertNotificationSettings, isLoadingNotifications, isSavingNotifications } = useScheduleSettings();
   const [settings, setSettings] = useState<Partial<NotificationSettings>>(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (notificationSettings) {
@@ -206,34 +225,66 @@ export function NotificationSettingsManager() {
 
         {/* Mensagens Personalizadas */}
         <div className="space-y-4 pt-4 border-t">
-          <h3 className="font-semibold text-sm flex items-center gap-2">
-            <Info className="h-4 w-4 text-blue-500" />
-            Mensagens Personalizadas (opcional)
-          </h3>
-
-          {/* Template variables hint */}
-          <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/50">
-            {TEMPLATE_VARIABLES.map((v) => (
-              <Badge
-                key={v.key}
-                variant="outline"
-                className="cursor-pointer hover:bg-muted transition-colors"
-                onClick={() => {
-                  const currentField = settings.custom_confirmation_message || '';
-                  updateSetting('custom_confirmation_message', currentField + v.key);
-                }}
-              >
-                {v.key}
-              </Badge>
-            ))}
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-500" />
+              Mensagens Personalizadas (opcional)
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPreview(!showPreview)}
+              className="h-7 text-xs"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              {showPreview ? 'Ocultar' : 'Ver'} Preview
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Clique em uma variável para inserir na mensagem abaixo
-          </p>
+
+          {/* Enhanced template variables */}
+          <div className="space-y-3">
+            <Label className="text-xs font-medium">Variáveis Disponíveis</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {TEMPLATE_VARIABLES.map((v) => (
+                <div
+                  key={v.key}
+                  className="flex items-center justify-between p-2 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex flex-col">
+                    <Badge variant="outline" className="w-fit text-xs font-mono mb-1">
+                      {v.key}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{v.label}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      navigator.clipboard.writeText(v.key);
+                      toast({
+                        title: 'Copiado!',
+                        description: `${v.key} foi copiado para a área de transferência.`,
+                      });
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Mensagem de Confirmação */}
-          <div className="space-y-2">
-            <Label>Mensagem de Confirmação</Label>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Mensagem de Confirmação</Label>
+              {settings.custom_confirmation_message && (
+                <span className="text-xs text-muted-foreground">
+                  {settings.custom_confirmation_message.length} caracteres
+                </span>
+              )}
+            </div>
             <Textarea
               placeholder="Olá {nome}, seu agendamento para {data} às {hora} foi confirmado. Compareça 10 minutos antes."
               value={settings.custom_confirmation_message || ''}
@@ -241,14 +292,29 @@ export function NotificationSettingsManager() {
               rows={3}
               className="resize-none"
             />
+            {showPreview && settings.custom_confirmation_message && (
+              <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800">
+                <p className="text-xs font-medium text-violet-700 dark:text-violet-300 mb-1">Preview:</p>
+                <p className="text-sm text-violet-900 dark:text-violet-100 whitespace-pre-wrap">
+                  {getMessagePreview(settings.custom_confirmation_message)}
+                </p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               Deixe em branco para usar a mensagem padrão
             </p>
           </div>
 
           {/* Mensagem de Lembrete */}
-          <div className="space-y-2">
-            <Label>Mensagem de Lembrete</Label>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Mensagem de Lembrete</Label>
+              {settings.custom_reminder_message && (
+                <span className="text-xs text-muted-foreground">
+                  {settings.custom_reminder_message.length} caracteres
+                </span>
+              )}
+            </div>
             <Textarea
               placeholder="Olá {nome}, lembrando que sua consulta é amanhã às {hora}. Te esperamos!"
               value={settings.custom_reminder_message || ''}
@@ -256,6 +322,14 @@ export function NotificationSettingsManager() {
               rows={3}
               className="resize-none"
             />
+            {showPreview && settings.custom_reminder_message && (
+              <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800">
+                <p className="text-xs font-medium text-violet-700 dark:text-violet-300 mb-1">Preview:</p>
+                <p className="text-sm text-violet-900 dark:text-violet-100 whitespace-pre-wrap">
+                  {getMessagePreview(settings.custom_reminder_message)}
+                </p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               Deixe em branco para usar a mensagem padrão
             </p>
