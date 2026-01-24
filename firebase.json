@@ -1,0 +1,67 @@
+{
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/v1/evaluate",
+        "function": "apiEvaluate"
+      },
+      {
+        "source": "/api/v1/exercises/**",
+        "function": "apiExercises"
+      },
+      {
+        "source": "/api/v1/patients/**",
+        "function": "apiPatients"
+      },
+      {
+        "source": "/api/v1/appointments/**",
+        "function": "apiAppointments"
+      },
+      {
+        "source": "/api/v1/payments/**",
+        "function": "apiPayments"
+      },
+      {
+        "source": "/api/v1/ai/**",
+        "function": "aiChat"
+      },
+      {
+        "source": "/api/**",
+        "function": "apiRouter"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ],
+      "predeploy": []
+    }
+  ],
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

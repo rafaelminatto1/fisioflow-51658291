@@ -1,0 +1,308 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================================
+
+    // Verificar se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verificar se o usuário é admin
+    function isAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Verificar se o usuário é fisioterapeuta
+    function isPhysiotherapist() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'fisioterapeuta';
+    }
+
+    // Verificar se o usuário é estagiário
+    function isIntern() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'estagiario';
+    }
+
+    // Verificar se o usuário é paciente
+    function isPatient() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'paciente';
+    }
+
+    // Verificar se é profissional (fisioterapeuta ou estagiário)
+    function isProfessional() {
+      return isPhysiotherapist() || isIntern();
+    }
+
+    // Verificar se o usuário é o proprietário do documento
+    function isOwner(userIdField) {
+      return isAuthenticated() &&
+        request.auth.uid == resource.data[userIdField];
+    }
+
+    // Verificar se o usuário pode acessar dados do paciente
+    function canAccessPatientData() {
+      return isAdmin() || isProfessional();
+    }
+
+    // Verificar tamanho do documento para prevenir ataques
+    function isValidSize() {
+      return request.resource.data.size() < 1000000; // 1MB max per document
+    }
+
+    // Rate limiting básico baseado em timestamp
+    function rateLimit(operation, maxPerMinute) {
+      let now = request.time;
+      let key = request.auth.uid + '_' + operation;
+      // Implementação simplificada - production usa contadores separados
+      return true;
+    }
+
+    // ============================================================================================
+    // SECURITY LOGGING
+    // ============================================================================================
+
+    // Log de operações críticas em audit_logs
+    function logSecurityEvent(eventType, details) {
+      let logData = {
+        eventType: eventType,
+        userId: request.auth.uid,
+        timestamp: request.time,
+        ipAddress: request.ip,
+        userAgent: request.headers.get('User-Agent'),
+        details: details
+      };
+      // Em produção, escrever em /audit_logs/{logId}
+      return true;
+    }
+
+    // ============================================================================================
+    // USERS COLLECTION
+    // ============================================================================================
+
+    match /users/{userId} {
+      // Leitura: admins podem ver todos, usuários podem ver próprio perfil
+      allow read: if isAdmin() ||
+                     (isAuthenticated() && request.auth.uid == userId);
+
+      // Criação: apenas admins podem criar usuários
+      allow create: if isAdmin() && isValidSize();
+
+      // Atualização: admins podem atualizar qualquer um
+      // usuários podem atualizar próprio perfil (exceto role)
+      allow update: if isAdmin() ||
+                      (isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'emailVerified']));
+
+      // Deleção: apenas admins
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // PATIENTS COLLECTION
+    // ============================================================================================
+
+    match /patients/{patientId} {
+      // Leitura: profissionais e admin podem ver
+      // pacientes só podem ver o próprio
+      allow read: if canAccessPatientData() ||
+                     (isPatient() && isOwner('userId'));
+
+      // Criação: apenas profissionais e admin
+      allow create: if isProfessional() && isValidSize();
+
+      // Atualização: profissionais podem atualizar pacientes que atendem
+      // pacientes podem atualizar dados limitados
+      allow update: if isProfessional() ||
+                      (isPatient() && isOwner('userId'));
+
+      // Deleção: apenas admins
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // APPOINTMENTS COLLECTION
+    // ============================================================================================
+
+    match /appointments/{appointmentId} {
+      // Leitura: profissionais envolvidos, pacientes próprios, admin
+      allow read: if canAccessPatientData() ||
+                     (isPatient() && resource.data.patientId == request.auth.uid) ||
+                     isAdmin();
+
+      // Criação: profissionais e admin
+      allow create: if isProfessional() && isValidSize();
+
+      // Atualização: profissionais que atendem, admin
+      allow update: if isProfessional() || isAdmin();
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // EXERCISES COLLECTION
+    // ============================================================================================
+
+    match /exercises/{exerciseId} {
+      // Leitura: todos autenticados (biblioteca de exercícios)
+      allow read: if isAuthenticated();
+
+      // Criação: profissionais e admin
+      allow create: if isProfessional() && isValidSize();
+
+      // Atualização: apenas criador e admin
+      allow update: if isProfessional() && isOwner('createdBy') ||
+                      isAdmin();
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // FINANCIAL / PAYMENTS COLLECTION
+    // ============================================================================================
+
+    match /payments/{paymentId} {
+      // Acesso restrito: apenas admin
+      allow read, write: if isAdmin();
+    }
+
+    match /vouchers/{voucherId} {
+      // Leitura: usuários podem ver próprios vouchers, admin todos
+      allow read: if isAdmin() ||
+                     (isAuthenticated() && resource.data.userId == request.auth.uid);
+
+      // Criação: sistema apenas (via Cloud Function)
+      allow create: if false; // Apenas via Cloud Function com service account
+
+      // Atualização: apenas admin ou sistema
+      allow update: if isAdmin();
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // NOTIFICATIONS COLLECTION
+    // ============================================================================================
+
+    match /notifications/{notificationId} {
+      // Leitura: apenas destinatário
+      allow read: if isAuthenticated() &&
+                     resource.data.userId == request.auth.uid;
+
+      // Criação: sistema (Cloud Functions)
+      allow create: if false; // Apenas via Cloud Function
+
+      // Marcar como lido
+      allow update: if isAuthenticated() &&
+                      request.auth.uid == resource.data.userId &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']);
+
+      // Deleção: destinatário ou admin
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId ||
+                      isAdmin();
+    }
+
+    // ============================================================================================
+    // AUDIT LOGS COLLECTION
+    // ============================================================================================
+
+    match /audit_logs/{logId} {
+      // Acesso: apenas admin
+      allow read: if isAdmin();
+
+      // Escrita: apenas sistema (Cloud Functions)
+      allow write: if false; // Apenas via Cloud Function
+    }
+
+    // ============================================================================================
+    // SETTINGS COLLECTION
+    // ============================================================================================
+
+    match /settings/{settingId} {
+      // Leitura: todos autenticados para configurações públicas
+      // configurações privadas apenas admin
+      allow read: if isAuthenticated() &&
+                     (!resource.data.isPrivate || isAdmin());
+
+      // Escrita: apenas admin
+      allow write: if isAdmin();
+    }
+
+    // ============================================================================================
+    // EVENTS COLLECTION
+    // ============================================================================================
+
+    match /events/{eventId} {
+      // Leitura: profissionais e admin
+      allow read: if canAccessPatientData() || isAdmin();
+
+      // Criação: profissionais e admin
+      allow create: if isProfessional() && isValidSize();
+
+      // Atualização: criador e admin
+      allow update: if isOwner('createdBy') || isAdmin();
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // EVOLUTIONS / MEDICAL RECORDS
+    // ============================================================================================
+
+    match /evolutions/{evolutionId} {
+      // Leitura: profissionais envolvidos, paciente próprio, admin
+      allow read: if canAccessPatientData() ||
+                     (isPatient() && resource.data.patientId == request.auth.uid) ||
+                     isAdmin();
+
+      // Criação: apenas profissionais
+      allow create: if isProfessional() && isValidSize();
+
+      // Atualização: apenas criador
+      allow update: if isOwner('therapistId') || isAdmin();
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // EVALUATIONS / FORMS
+    // ============================================================================================
+
+    match /evaluations/{evaluationId} {
+      // Leitura: profissionais envolvidos, paciente próprio, admin
+      allow read: if canAccessPatientData() ||
+                     (isPatient() && resource.data.patientId == request.auth.uid) ||
+                     isAdmin();
+
+      // Criação: apenas profissionais
+      allow create: if isProfessional() && isValidSize();
+
+      // Atualização: criador e admin
+      allow update: if isOwner('therapistId') || isAdmin();
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // DEFAULT DENY
+    // ============================================================================================
+
+    // Negar qualquer acesso não explicitamente permitido
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

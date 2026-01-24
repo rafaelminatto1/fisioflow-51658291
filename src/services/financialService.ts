@@ -1,5 +1,4 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { financialApi } from '@/integrations/firebase/functions';
 import { AppError } from '@/lib/errors/AppError';
 import { logger } from '@/lib/errors/logger';
 
@@ -51,14 +50,8 @@ export class FinancialService {
      */
     static async fetchTransactions(): Promise<Transaction[]> {
         try {
-            const { data, error } = await supabase
-                .from('transacoes')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw new AppError(error.message, error.code, 500);
-
-            return data as Transaction[];
+            const response = await financialApi.list(1000);
+            return response.data || [];
         } catch (error) {
             throw AppError.from(error, 'FinancialService.fetchTransactions');
         }
@@ -114,14 +107,8 @@ export class FinancialService {
      */
     static async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
         try {
-            const { data, error } = await supabase
-                .from('transacoes')
-                .insert([transaction])
-                .select()
-                .single();
-
-            if (error) throw new AppError(error.message, error.code, 400);
-            return data as Transaction;
+            const response = await financialApi.create(transaction);
+            return response.data;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.createTransaction');
         }
@@ -132,15 +119,8 @@ export class FinancialService {
      */
     static async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
         try {
-            const { data, error } = await supabase
-                .from('transacoes')
-                .update(updates)
-                .eq('id', id)
-                .select()
-                .single();
-
-            if (error) throw new AppError(error.message, error.code, 400);
-            return data as Transaction;
+            const response = await financialApi.update(id, updates);
+            return response.data;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.updateTransaction');
         }
@@ -151,12 +131,7 @@ export class FinancialService {
      */
     static async deleteTransaction(id: string): Promise<void> {
         try {
-            const { error } = await supabase
-                .from('transacoes')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw new AppError(error.message, error.code, 500);
+            await financialApi.delete(id);
         } catch (error) {
             throw AppError.from(error, 'FinancialService.deleteTransaction');
         }
@@ -167,15 +142,8 @@ export class FinancialService {
      */
     static async markAsPaid(id: string): Promise<Transaction> {
         try {
-            const { data, error } = await supabase
-                .from('transacoes')
-                .update({ status: 'concluido' })
-                .eq('id', id)
-                .select()
-                .single();
-
-            if (error) throw new AppError(error.message, error.code, 400);
-            return data as Transaction;
+            const response = await financialApi.update(id, { status: 'concluido' });
+            return response.data;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.markAsPaid');
         }
@@ -186,64 +154,8 @@ export class FinancialService {
      */
     static async getEventReport(eventoId: string): Promise<FinancialReport> {
         try {
-            // Parallel fetch for better performance
-            const [eventoRes, pagamentosRes, prestadoresRes, checklistRes] = await Promise.all([
-                supabase.from("eventos").select("nome").eq("id", eventoId).single(),
-                supabase.from("pagamentos").select("tipo, descricao, valor, pago_em").eq("evento_id", eventoId),
-                supabase.from("prestadores").select("valor_acordado, status_pagamento").eq("evento_id", eventoId),
-                supabase.from("checklist_items").select("quantidade, custo_unitario").eq("evento_id", eventoId)
-            ]);
-
-            if (eventoRes.error) throw eventoRes.error;
-            if (pagamentosRes.error) throw pagamentosRes.error;
-            if (prestadoresRes.error) throw prestadoresRes.error;
-            if (checklistRes.error) throw checklistRes.error;
-
-            const evento = eventoRes.data;
-            const pagamentos = pagamentosRes.data;
-            const prestadores = prestadoresRes.data;
-            const checklist = checklistRes.data;
-
-            const receitas = pagamentos
-                ?.filter((p) => p.tipo === "receita")
-                .reduce((sum, p) => sum + Number(p.valor || 0), 0) || 0;
-
-            const custosPrestadores = prestadores
-                ?.reduce((sum, p) => sum + Number(p.valor_acordado || 0), 0) || 0;
-
-            const custosInsumos = checklist
-                ?.reduce((sum, c) => sum + (Number(c.quantidade || 0) * Number(c.custo_unitario || 0)), 0) || 0;
-
-            const outrosCustos = pagamentos
-                ?.filter((p) => p.tipo !== "receita")
-                .reduce((sum, p) => sum + Number(p.valor || 0), 0) || 0;
-
-            const custoTotal = custosPrestadores + custosInsumos + outrosCustos;
-            const saldo = receitas - custoTotal;
-            const margem = receitas > 0 ? Math.round((saldo / receitas) * 100) : 0;
-
-            const pagamentosPendentes = prestadores
-                ?.filter((p) => p.status_pagamento === "PENDENTE")
-                .reduce((sum, p) => sum + Number(p.valor_acordado || 0), 0) || 0;
-
-            return {
-                eventoId,
-                eventoNome: evento.nome,
-                receitas,
-                custosPrestadores,
-                custosInsumos,
-                outrosCustos,
-                custoTotal,
-                saldo,
-                margem,
-                pagamentosPendentes,
-                detalhePagamentos: pagamentos?.map((p) => ({
-                    tipo: p.tipo,
-                    descricao: p.descricao || "",
-                    valor: Number(p.valor || 0),
-                    pagoEm: p.pago_em,
-                })) || [],
-            };
+            const response = await financialApi.getEventReport(eventoId);
+            return response.data;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.getEventReport');
         }
@@ -254,14 +166,8 @@ export class FinancialService {
      */
     static async findTransactionByAppointmentId(appointmentId: string): Promise<Transaction | null> {
         try {
-            const { data, error } = await supabase
-                .from('transacoes')
-                .select('*')
-                .contains('metadata', { appointment_id: appointmentId })
-                .maybeSingle();
-
-            if (error) throw new AppError(error.message, error.code, 500);
-            return data as Transaction | null;
+            const response = await financialApi.findByAppointment(appointmentId);
+            return response.data as Transaction | null;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.findTransactionByAppointmentId');
         }

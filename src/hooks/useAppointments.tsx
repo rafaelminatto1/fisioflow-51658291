@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
-import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
-import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
+import { requireUserOrganizationId } from '@/utils/userHelpers';
 import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
 import { AppointmentService } from '@/services/appointmentService';
@@ -26,8 +25,8 @@ export const appointmentKeys = {
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
-    new Promise<T>((_reject) =>
-      setTimeout(() => _reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
     ),
   ]);
 }
@@ -163,11 +162,9 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     let organizationId: string | null = organizationIdOverride || null;
 
     if (!organizationId) {
-      try {
-        organizationId = await getUserOrganizationId();
-      } catch (orgError) {
-        logger.warn('Não foi possível obter organization_id, usando RLS', orgError, 'useAppointments');
-      }
+      // Se não tiver organizationId, abortar
+      logger.warn('Abortando fetch: organization_id não encontrado', {}, 'useAppointments');
+      return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
     }
 
     // Usar AppointmentService
@@ -277,65 +274,42 @@ export function useAppointments() {
   const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
 
-  // Setup Realtime subscription using custom hook
-  const channelName = `appointments-changes-${organizationId || 'all'}`;
-
+  // Setup Realtime subscription using Ably
   useEffect(() => {
     if (!organizationId) return;
 
-    let isSubscribed = false;
-    const channel = supabase.channel(channelName);
+    logger.info('Realtime (Ably): Subscribing to appointments', { organizationId }, 'useAppointments');
 
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'appointments',
-          filter: `organization_id=eq.${organizationId}`
-        },
-        (payload) => {
-          logger.info(`Realtime event: appointments ${payload.eventType}`, {}, 'useAppointments');
-          queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+    const ably = getAblyClient();
+    const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
 
-          if (payload.eventType === 'INSERT') {
-            toast({
-              title: '🔄 Novo agendamento',
-              description: 'Um novo agendamento foi criado por outro usuário',
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            toast({
-              title: '🔄 Agendamento atualizado',
-              description: 'Um agendamento foi atualizado por outro usuário',
-            });
-          } else if (payload.eventType === 'DELETE') {
-            toast({
-              title: '🔄 Agendamento removido',
-              description: 'Um agendamento foi removido por outro usuário',
-            });
-          }
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-          logger.debug(`Realtime conectado: ${channelName}`, {}, 'useAppointments');
-        }
-        if (status === 'CHANNEL_ERROR') {
-          logger.error(`Erro no canal Realtime: ${channelName}`, {}, 'useAppointments');
-        }
-        if (status === 'CLOSED') {
-          isSubscribed = false;
-          logger.debug(`Canal Realtime fechado: ${channelName}`, {}, 'useAppointments');
-        }
-      });
+    channel.subscribe(ABLY_EVENTS.update, (message) => {
+      const payload = message.data as any;
+      logger.info(`Realtime event (Ably): appointments ${payload.eventType}`, {}, 'useAppointments');
+
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+
+      if (payload.eventType === 'INSERT') {
+        toast({
+          title: '🔄 Novo agendamento',
+          description: 'Um novo agendamento foi criado por outro usuário',
+        });
+      } else if (payload.eventType === 'UPDATE') {
+        toast({
+          title: '🔄 Agendamento atualizado',
+          description: 'Um agendamento foi atualizado por outro usuário',
+        });
+      } else if (payload.eventType === 'DELETE') {
+        toast({
+          title: '🔄 Agendamento removido',
+          description: 'Um agendamento foi removido por outro usuário',
+        });
+      }
+    });
 
     return () => {
-      logger.debug(`Cleanup subscription ${channelName}`, { isSubscribed }, 'useAppointments');
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => { });
-      }
+      logger.info('Realtime (Ably): Unsubscribing from appointments', { organizationId }, 'useAppointments');
+      channel.unsubscribe();
     };
   }, [toast, organizationId, queryClient]);
 
@@ -509,34 +483,11 @@ export function useUpdateAppointmentStatus() {
       }
 
       // Obter organization_id para garantir segurança
-      const organizationId = await requireUserOrganizationId();
+      await requireUserOrganizationId();
 
-      const { data, error } = await supabase
-        .from('appointments')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', appointmentId)
-        .eq('organization_id', organizationId) // Garantir segurança
-        .select()
-        .single();
+      await AppointmentService.updateStatus(appointmentId, status);
 
-      if (error) {
-        logger.error('Erro ao atualizar status do agendamento', error, 'useAppointments');
-
-        if (error.message?.includes('violates row-level security')) {
-          throw new Error('Você não tem permissão para atualizar este agendamento.');
-        }
-        if (error.code === 'PGRST116') {
-          throw new Error('Agendamento não encontrado.');
-        }
-
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error('Agendamento não encontrado após atualização');
-      }
-
-      return data;
+      return { id: appointmentId, status };
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });

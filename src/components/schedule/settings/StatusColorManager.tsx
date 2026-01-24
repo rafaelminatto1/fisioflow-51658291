@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { useStatusConfig, CustomStatusConfig } from '@/hooks/useStatusConfig';
 import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { Palette, Plus, RotateCcw, Trash2, Check, X, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
+import { Palette, Plus, RotateCcw, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     Collapsible,
     CollapsibleContent,
@@ -455,30 +456,34 @@ export function StatusColorManager() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Palette className="h-6 w-6 text-primary" />
-                            <div>
-                                <CardTitle>Cores dos Status</CardTitle>
-                                <CardDescription>
-                                    Personalize as cores de cada status da agenda
-                                </CardDescription>
-                            </div>
+            {/* Header Card with gradient */}
+            <Card className="border-none shadow-lg">
+                <CardHeader className="bg-gradient-to-br from-pink-50 to-fuchsia-50 dark:from-pink-950/30 dark:to-fuchsia-950/30 rounded-t-xl">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-pink-500 rounded-lg">
+                            <Palette className="h-5 w-5 text-white" />
                         </div>
-                        <Button variant="outline" onClick={handleResetAll}>
-                            <RotateCcw className="w-4 h-4 mr-2" />
-                            Resetar Tudo
-                        </Button>
+                        <div>
+                            <CardTitle>Cores dos Status</CardTitle>
+                            <CardDescription>
+                                Personalize as cores de cada status da agenda
+                            </CardDescription>
+                        </div>
                     </div>
                 </CardHeader>
             </Card>
 
+            {/* Info Alert */}
+            <Alert className="border-pink-200 bg-pink-50/50 dark:bg-pink-950/20">
+                <Info className="h-4 w-4 text-pink-600" />
+                <AlertDescription className="text-pink-700 dark:text-pink-300 text-sm">
+                    As cores dos status ajudam a identificar visualmente o estado de cada agendamento na agenda.
+                </AlertDescription>
+            </Alert>
+
             {/* Custom Statuses Section */}
-            <Card>
-                <CardHeader>
+            <Card className="border-2">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20">
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="text-lg">Status Personalizados</CardTitle>
@@ -505,10 +510,16 @@ export function StatusColorManager() {
                     )}
 
                     {customStatuses.length === 0 && !showNewForm ? (
-                        <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                            <Palette className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Nenhum status personalizado criado.</p>
-                            <p className="text-xs mt-1">Clique em "Novo Status" para criar.</p>
+                        <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-muted-foreground/25 bg-gradient-to-br from-muted/20 to-muted/5">
+                            <div className="inline-flex p-4 rounded-full bg-muted/30 mb-4">
+                                <Palette className="h-10 w-10 text-muted-foreground/50" />
+                            </div>
+                            <p className="text-base font-medium text-muted-foreground mb-1">
+                                Nenhum status personalizado criado
+                            </p>
+                            <p className="text-sm text-muted-foreground/70 max-w-xs mx-auto">
+                                Clique em "Novo Status" para criar novos tipos de status para sua clínica
+                            </p>
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -526,50 +537,66 @@ export function StatusColorManager() {
             </Card>
 
             {/* Default Statuses by Group */}
-            {Object.entries(STATUS_GROUPS).map(([groupName, statusIds]) => (
-                <Collapsible
-                    key={groupName}
-                    open={expandedGroups[groupName]}
-                    onOpenChange={() => toggleGroup(groupName)}
-                >
-                    <Card>
-                        <CollapsibleTrigger asChild>
-                            <CardHeader className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg">{groupName}</CardTitle>
-                                    {expandedGroups[groupName] ? (
-                                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                                    ) : (
-                                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                                    )}
-                                </div>
-                            </CardHeader>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <CardContent className="pt-0">
-                                <div className="space-y-2">
-                                    {statusIds.map((statusId) => {
-                                        const config = statusConfig[statusId];
-                                        if (!config) return null;
-                                        return (
-                                            <StatusColorEditor
-                                                key={statusId}
-                                                statusId={statusId}
-                                                label={config.label}
-                                                currentColor={config.color}
-                                                isCustom={false}
-                                                hasCustomColor={hasCustomColors(statusId)}
-                                                onColorChange={(color) => handleColorChange(statusId, color)}
-                                                onReset={() => resetStatusColor(statusId)}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </CardContent>
-                        </CollapsibleContent>
-                    </Card>
-                </Collapsible>
-            ))}
+            {Object.entries(STATUS_GROUPS).map(([groupName, statusIds]) => {
+                // Get group color based on name
+                const groupColor = groupName.includes('Positivos')
+                    ? 'from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30'
+                    : groupName.includes('Agendados')
+                        ? 'from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30'
+                        : groupName.includes('Pendentes')
+                            ? 'from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30'
+                            : groupName.includes('Negativos')
+                                ? 'from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30'
+                                : 'from-slate-50 to-gray-50 dark:from-slate-950/30 dark:to-gray-950/30';
+
+                return (
+                    <Collapsible
+                        key={groupName}
+                        open={expandedGroups[groupName]}
+                        onOpenChange={() => toggleGroup(groupName)}
+                    >
+                        <Card className="border-2">
+                            <CollapsibleTrigger asChild>
+                                <CardHeader className={cn(
+                                    "cursor-pointer hover:opacity-90 transition-opacity",
+                                    groupColor
+                                )}>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">{groupName}</CardTitle>
+                                        {expandedGroups[groupName] ? (
+                                            <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                                        ) : (
+                                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                                        )}
+                                    </div>
+                                </CardHeader>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <CardContent className="pt-0">
+                                    <div className="space-y-2">
+                                        {statusIds.map((statusId) => {
+                                            const config = statusConfig[statusId];
+                                            if (!config) return null;
+                                            return (
+                                                <StatusColorEditor
+                                                    key={statusId}
+                                                    statusId={statusId}
+                                                    label={config.label}
+                                                    currentColor={config.color}
+                                                    isCustom={false}
+                                                    hasCustomColor={hasCustomColors(statusId)}
+                                                    onColorChange={(color) => handleColorChange(statusId, color)}
+                                                    onReset={() => resetStatusColor(statusId)}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Card>
+                    </Collapsible>
+                );
+            })}
         </div>
     );
 }
