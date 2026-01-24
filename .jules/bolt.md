@@ -9,3 +9,7 @@
 ## 2024-05-23 - [Test Environment & Build Memory]
 **Learning:** The local Vitest environment is unstable for component tests (JSDOM issues), making unit testing difficult. Additionally, the build process runs out of memory on standard settings.
 **Action:** Use `pnpm build:prod` (which increases memory) for builds, and rely on Playwright for reliable frontend verification when unit tests fail due to environment issues.
+
+## 2026-01-24 - [Unused Profile Data]
+**Learning:** The `profiles` table contains extensive fields (including JSON blobs for hours, preferences, etc.) that are rarely used by the frontend `useUserProfile` hook. `select('*')` was fetching significant unnecessary data on every app load.
+**Action:** Be extremely vigilant about `select('*')` on the `profiles` table specifically. Always define the exact columns needed for the UI context.
