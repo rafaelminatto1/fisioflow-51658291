@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseAuth } from "@/integrations/firebase/app";
 
 /**
  * Helper to ensure the current user is authenticated.
@@ -6,16 +6,17 @@ import { supabase } from "@/integrations/supabase/client";
  * Throws an error if not authorized.
  */
 export async function requireAdmin() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const auth = getFirebaseAuth();
+    const user = auth.currentUser;
 
-    if (!session) {
+    if (!user) {
         throw new Error("Unauthorized: No active session");
     }
 
     // Todos os usuários autenticados são admins
     return {
-        userId: session.user.id,
+        userId: user.uid,
         role: 'admin',
-        email: session.user.email
+        email: user.email
     };
 }

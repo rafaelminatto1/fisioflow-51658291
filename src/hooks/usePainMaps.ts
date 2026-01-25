@@ -1,14 +1,41 @@
+/**
+ * usePainMaps - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('pain_maps') → Firestore collection 'pain_maps'
+ * - supabase.from('pain_map_points') → Firestore collection 'pain_map_points'
+ * - supabase.from('sessions') → Firestore collection 'sessions'
+ */
+
 import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
 import type { PainPoint } from '@/components/pain-map';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  delete as deleteDocs,
+  writeBatch,
+  documentId
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 interface PainMap {
   id: string;
   session_id?: string;
   patient_id: string;
+  organization_id?: string;
   created_at: string;
   updated_at?: string;
   global_pain_level?: number;
@@ -38,6 +65,24 @@ interface CreatePainMapInput {
   points: Omit<PainPoint, 'id'>[];
 }
 
+// Helper: Convert Firestore doc to PainMap
+const convertDocToPainMap = (doc: any): PainMap => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as PainMap;
+};
+
+// Helper: Convert Firestore doc to PainMapPoint
+const convertDocToPainMapPoint = (doc: any): PainMapPoint => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as PainMapPoint;
+};
+
 // Hook para listar mapas de dor de uma sessão
 export function usePainMapsBySession(sessionId: string | undefined) {
   return useQuery({
@@ -45,17 +90,29 @@ export function usePainMapsBySession(sessionId: string | undefined) {
     queryFn: async () => {
       if (!sessionId) return [];
 
-      const { data, error } = await supabase
-        .from('pain_maps')
-        .select(`
-          *,
-          points:pain_map_points(*)
-        `)
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'pain_maps'),
+        where('session_id', '==', sessionId),
+        orderBy('created_at', 'asc')
+      );
 
-      if (error) throw error;
-      return (data || []) as unknown as PainMap[];
+      const snapshot = await getDocs(q);
+      const maps = snapshot.docs.map(convertDocToPainMap);
+
+      // Fetch points for each map
+      const mapsWithPoints = await Promise.all(
+        maps.map(async (map) => {
+          const pointsQ = query(
+            collection(db, 'pain_map_points'),
+            where('pain_map_id', '==', map.id)
+          );
+          const pointsSnapshot = await getDocs(pointsQ);
+          const points = pointsSnapshot.docs.map(convertDocToPainMapPoint);
+          return { ...map, points };
+        })
+      );
+
+      return mapsWithPoints;
     },
     enabled: !!sessionId,
   });
@@ -68,17 +125,48 @@ export function usePainMapsByPatient(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return [];
 
-      const { data, error } = await supabase
-        .from('pain_maps')
-        .select(`
-          *,
-          points:pain_map_points(*)
-        `)
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'pain_maps'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'asc')
+      );
 
-      if (error) throw error;
-      return (data || []) as unknown as (PainMap & { session?: { id: string; started_at: string } })[];
+      const snapshot = await getDocs(q);
+      const maps = snapshot.docs.map(convertDocToPainMap);
+
+      // Fetch points for each map
+      const mapsWithPoints = await Promise.all(
+        maps.map(async (map) => {
+          const pointsQ = query(
+            collection(db, 'pain_map_points'),
+            where('pain_map_id', '==', map.id)
+          );
+          const pointsSnapshot = await getDocs(pointsQ);
+          const points = pointsSnapshot.docs.map(convertDocToPainMapPoint);
+          return { ...map, points };
+        })
+      );
+
+      // Fetch session data for each map
+      const mapsWithSession = await Promise.all(
+        mapsWithPoints.map(async (map) => {
+          if (!map.session_id) return map;
+
+          const sessionRef = doc(db, 'sessions', map.session_id);
+          const sessionSnap = await getDoc(sessionRef);
+          if (!sessionSnap.exists()) return map;
+
+          return {
+            ...map,
+            session: {
+              id: sessionSnap.id,
+              started_at: sessionSnap.data().started_at,
+            },
+          };
+        })
+      );
+
+      return mapsWithSession as (PainMap & { session?: { id: string; started_at: string } })[];
     },
     enabled: !!patientId,
   });
@@ -91,22 +179,39 @@ export function usePainMap(painMapId: string | undefined) {
     queryFn: async () => {
       if (!painMapId) return null;
 
-      const { data, error } = await supabase
-        .from('pain_maps')
-        .select(`
-          *,
-          points:pain_map_points(*),
-          session:sessions(
-            id,
-            started_at,
-            patient:patients(id, name)
-          )
-        `)
-        .eq('id', painMapId)
-        .single();
+      const docRef = doc(db, 'pain_maps', painMapId);
+      const snapshot = await getDoc(docRef);
 
-      if (error) throw error;
-      return data;
+      if (!snapshot.exists()) return null;
+
+      const map = convertDocToPainMap(snapshot);
+
+      // Fetch points
+      const pointsQ = query(
+        collection(db, 'pain_map_points'),
+        where('pain_map_id', '==', map.id)
+      );
+      const pointsSnapshot = await getDocs(pointsQ);
+      const points = pointsSnapshot.docs.map(convertDocToPainMapPoint);
+
+      // Fetch session data
+      let session = null;
+      if (map.session_id) {
+        const sessionRef = doc(db, 'sessions', map.session_id);
+        const sessionSnap = await getDoc(sessionRef);
+        if (sessionSnap.exists()) {
+          session = {
+            id: sessionSnap.id,
+            started_at: sessionSnap.data().started_at,
+          };
+        }
+      }
+
+      return {
+        ...map,
+        points,
+        session,
+      };
     },
     enabled: !!painMapId,
   });
@@ -121,13 +226,14 @@ export function useCreatePainMap() {
       const { sessionId, points } = input;
 
       // Buscar patient_id da sessão
-      const { data: session, error: sessionError } = await supabase
-        .from('sessions')
-        .select('patient_id, organization_id')
-        .eq('id', sessionId)
-        .single();
+      const sessionRef = doc(db, 'sessions', sessionId);
+      const sessionSnap = await getDoc(sessionRef);
 
-      if (sessionError) throw sessionError;
+      if (!sessionSnap.exists()) {
+        throw new Error('Sessão não encontrada');
+      }
+
+      const session = sessionSnap.data();
 
       // Calcular nível global de dor
       const globalPainLevel = points.length > 0
@@ -135,23 +241,20 @@ export function useCreatePainMap() {
         : 0;
 
       // Criar mapa de dor
-      const { data: painMap, error: mapError } = await supabase
-        .from('pain_maps')
-        .insert({
-          session_id: sessionId,
-          patient_id: session.patient_id,
-          organization_id: session.organization_id,
-          global_pain_level: globalPainLevel,
-          pain_points: points,
-        } as any)
-        .select()
-        .single();
+      const painMapData = {
+        session_id: sessionId,
+        patient_id: session.patient_id,
+        organization_id: session.organization_id,
+        global_pain_level: globalPainLevel,
+        pain_points: points,
+        created_at: new Date().toISOString(),
+      };
 
-      if (mapError) throw mapError;
+      const painMapRef = await addDoc(collection(db, 'pain_maps'), painMapData);
 
       // Criar pontos de dor
       const pointsData = points.map(point => ({
-        pain_map_id: painMap.id,
+        pain_map_id: painMapRef.id,
         region_code: point.regionCode,
         region: point.region,
         intensity: point.intensity,
@@ -159,18 +262,19 @@ export function useCreatePainMap() {
         notes: point.notes,
       }));
 
-      const { data: createdPoints, error: pointsError } = await supabase
-        .from('pain_map_points')
-        .insert(pointsData)
-        .select();
+      const createdPointsRef = await Promise.all(
+        pointsData.map(pointData => addDoc(collection(db, 'pain_map_points'), pointData))
+      );
 
-      if (pointsError) {
-        // Rollback - deletar mapa criado
-        await supabase.from('pain_maps').delete().eq('id', painMap.id);
-        throw pointsError;
-      }
+      // Fetch created points
+      const createdPoints = await Promise.all(
+        createdPointsRef.map(async (ref) => {
+          const snap = await getDoc(ref);
+          return convertDocToPainMapPoint(snap);
+        })
+      );
 
-      return { ...painMap, points: createdPoints };
+      return { ...painMapData, id: painMapRef.id, points: createdPoints };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pain-maps', 'session', variables.sessionId] });
@@ -190,12 +294,21 @@ export function useDeletePainMap() {
 
   return useMutation({
     mutationFn: async (painMapId: string) => {
-      const { error } = await supabase
-        .from('pain_maps')
-        .delete()
-        .eq('id', painMapId);
+      // Delete points first
+      const pointsQ = query(
+        collection(db, 'pain_map_points'),
+        where('pain_map_id', '==', painMapId)
+      );
+      const pointsSnapshot = await getDocs(pointsQ);
 
-      if (error) throw error;
+      const batch = writeBatch(db);
+      pointsSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
+      // Delete pain map
+      await deleteDoc(doc(db, 'pain_maps', painMapId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pain-maps'] });
@@ -215,26 +328,55 @@ export function useComparePainMaps(patientId: string | undefined, mapIds: [strin
     queryFn: async () => {
       if (!patientId || !mapIds || mapIds.length !== 2) return null;
 
-      const { data, error } = await supabase
-        .from('pain_maps')
-        .select(`
-          *,
-          points:pain_map_points(*),
-          session:sessions(started_at)
-        `)
-        .in('id', mapIds)
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'pain_maps'),
+        where(documentId(), 'in', mapIds),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'asc')
+      );
 
-      if (error) throw error;
-      if (!data || data.length !== 2) return null;
+      const snapshot = await getDocs(q);
+      const maps = snapshot.docs.map(convertDocToPainMap);
+
+      if (maps.length !== 2) return null;
+
+      // Fetch points for each map
+      const mapsWithPoints = await Promise.all(
+        maps.map(async (map) => {
+          const pointsQ = query(
+            collection(db, 'pain_map_points'),
+            where('pain_map_id', '==', map.id)
+          );
+          const pointsSnapshot = await getDocs(pointsQ);
+          const points = pointsSnapshot.docs.map(convertDocToPainMapPoint);
+          return { ...map, points };
+        })
+      );
+
+      // Fetch session data
+      const mapsWithSession = await Promise.all(
+        mapsWithPoints.map(async (map) => {
+          if (!map.session_id) return map;
+
+          const sessionRef = doc(db, 'sessions', map.session_id);
+          const sessionSnap = await getDoc(sessionRef);
+          if (!sessionSnap.exists()) return map;
+
+          return {
+            ...map,
+            session: {
+              started_at: sessionSnap.data().started_at,
+            },
+          };
+        })
+      );
 
       // Calcular evolução
-      const [olderMap, newerMap] = data;
-      const evolution = calculateEvolution(olderMap.points, newerMap.points);
+      const [olderMap, newerMap] = mapsWithSession;
+      const evolution = calculateEvolution(olderMap.points || [], newerMap.points || []);
 
       return {
-        maps: data,
+        maps: mapsWithSession,
         evolution,
       };
     },
@@ -304,10 +446,17 @@ export function useUpdatePainMap() {
   return useMutation({
     mutationFn: async ({ painMapId, points }: { painMapId: string; points: Omit<PainPoint, 'id'>[] }) => {
       // Deletar pontos antigos
-      await supabase
-        .from('pain_map_points')
-        .delete()
-        .eq('pain_map_id', painMapId);
+      const pointsQ = query(
+        collection(db, 'pain_map_points'),
+        where('pain_map_id', '==', painMapId)
+      );
+      const pointsSnapshot = await getDocs(pointsQ);
+
+      const batch = writeBatch(db);
+      pointsSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
 
       // Criar novos pontos
       const pointsData = points.map(point => ({
@@ -319,13 +468,19 @@ export function useUpdatePainMap() {
         notes: point.notes,
       }));
 
-      const { data, error } = await supabase
-        .from('pain_map_points')
-        .insert(pointsData)
-        .select();
+      const createdPointsRef = await Promise.all(
+        pointsData.map(pointData => addDoc(collection(db, 'pain_map_points'), pointData))
+      );
 
-      if (error) throw error;
-      return data;
+      // Fetch created points
+      const createdPoints = await Promise.all(
+        createdPointsRef.map(async (ref) => {
+          const snap = await getDoc(ref);
+          return convertDocToPainMapPoint(snap);
+        })
+      );
+
+      return createdPoints;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pain-maps'] });
@@ -338,11 +493,11 @@ export function useUpdatePainMap() {
   });
 }
 
-// Interfaces for Supabase responses to avoid 'any'
+// Interfaces for responses
 interface PainMapResponse {
   id: string;
   created_at: string;
-  pain_points: unknown; // Supabase returns JSONB as unknown or any, we'll validate it
+  pain_points: unknown;
   global_pain_level?: number;
 }
 
@@ -363,22 +518,20 @@ export function usePainEvolution(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return [];
 
-      const { data, error } = await supabase
-        .from('pain_maps')
-        .select(`
-          id,
-          created_at,
-          pain_points,
-          global_pain_level
-        `)
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'pain_maps'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'asc')
+      );
 
-      if (error) throw error;
+      const snapshot = await getDocs(q);
+      const maps = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as PainMapResponse[];
 
       // Calcular média de intensidade por mapa
-      return (data || []).map((map: PainMapResponse) => {
-        // Validation/Transformation of JSONB data
+      return maps.map((map) => {
         const rawPoints = Array.isArray(map.pain_points)
           ? (map.pain_points as unknown as RawPainPoint[])
           : [];
@@ -416,22 +569,22 @@ export function usePainStatistics(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return null;
 
-      const { data, error } = await supabase
-        .from('pain_maps')
-        .select(`
-          id,
-          created_at,
-          pain_points,
-          global_pain_level
-        `)
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'pain_maps'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'asc')
+      );
 
-      if (error) throw error;
-      if (!data || data.length === 0) return null;
+      const snapshot = await getDocs(q);
+      const maps = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as PainMapResponse[];
+
+      if (maps.length === 0) return null;
 
       // Calcular estatísticas
-      const allPoints: RawPainPoint[] = data.flatMap(m =>
+      const allPoints: RawPainPoint[] = maps.flatMap(m =>
         Array.isArray(m.pain_points) ? (m.pain_points as unknown as RawPainPoint[]) : []
       );
 
@@ -467,8 +620,8 @@ export function usePainStatistics(patientId: string | undefined) {
         .sort((a, b) => b.count - a.count);
 
       // Tendência geral (comparando primeiro e último mapa)
-      const firstMap = data[0];
-      const lastMap = data[data.length - 1];
+      const firstMap = maps[0];
+      const lastMap = maps[maps.length - 1];
 
       const firstPoints = Array.isArray(firstMap.pain_points) ? (firstMap.pain_points as unknown as RawPainPoint[]) : [];
       const lastPoints = Array.isArray(lastMap.pain_points) ? (lastMap.pain_points as unknown as RawPainPoint[]) : [];
@@ -488,7 +641,7 @@ export function usePainStatistics(patientId: string | undefined) {
       const totalIntensity = allPoints.reduce((sum, p) => sum + (p.intensity || 0), 0);
       const averagePainLevel = allPoints.length > 0
         ? totalIntensity / allPoints.length
-        : (data.reduce((sum, m) => sum + (m.global_pain_level || 0), 0) / data.length);
+        : (maps.reduce((sum, m) => sum + (m.global_pain_level || 0), 0) / maps.length);
 
       // Calcular redução percentual
       const painReduction = firstAvg > 0
@@ -499,7 +652,7 @@ export function usePainStatistics(patientId: string | undefined) {
         averagePainLevel: Math.round(averagePainLevel * 10) / 10,
         painReduction: Math.abs(painReduction),
         improvementTrend: trend as 'improving' | 'stable' | 'worsening',
-        totalMaps: data.length,
+        totalMaps: maps.length,
         totalPoints: allPoints.length,
         topRegions,
         painTypes,

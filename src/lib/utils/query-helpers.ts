@@ -1,11 +1,18 @@
 /**
- * Query utility functions for Supabase
+ * Query utility functions for Firebase/Firestore
  * Reusable helpers for common query patterns
+ *
+ * Migration from Supabase to Firebase:
+ * - PostgrestQueryBuilder → Firestore Query
+ * - Supabase-specific filters → Firestore where clauses
  *
  * @module lib/utils/query-helpers
  */
 
-import type { PostgrestQueryBuilder } from '@supabase/supabase-js';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // ==============================================================================
 // TIMEOUT & RETRY HELPERS
@@ -51,12 +58,10 @@ export async function retryWithBackoff<T>(
     } catch (error) {
       lastError = error;
 
-      // Check if we should retry this error
       if (!shouldRetry(error) || attempt >= maxRetries - 1) {
         break;
       }
 
-      // Calculate delay with exponential backoff
       const delay = Math.min(initialDelay * Math.pow(2, attempt), maxDelay);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -77,21 +82,23 @@ export function isNetworkError(error: unknown): boolean {
       message.includes('timeout') ||
       message.includes('ECONNREFUSED') ||
       message.includes('ENOTFOUND') ||
-      message.includes('ETIMEDOUT')
+      message.includes('ETIMEDOUT') ||
+      message.includes('firestore') ||
+      message.includes('unavailable')
     );
   }
   return false;
 }
 
 // ==============================================================================
-// QUERY BUILDERS
+// FIRESTORE QUERY BUILDERS
 // ==============================================================================
 
 /**
- * Apply common filters to a Supabase query
+ * Apply common filters to a Firestore query
  */
-export function applyFilters<T extends Record<string, unknown>>(
-  query: PostgrestQueryBuilder<T>,
+export function applyFilters<T>(
+  query: Query<T>,
   filters: {
     organizationId?: string | null;
     status?: string | string[] | null;
@@ -101,42 +108,40 @@ export function applyFilters<T extends Record<string, unknown>>(
     orderBy?: string;
     ascending?: boolean;
     limit?: number;
-    offset?: number;
+    startAfter?: unknown;
   }
-): PostgrestQueryBuilder<T> {
+): Query<T> {
   let result = query;
 
   // Organization filter
   if (filters.organizationId) {
-    result = result.eq('organization_id', filters.organizationId);
+    result = query(result, where('organization_id', '==', filters.organizationId));
   }
 
   // Status filters
   if (filters.status && typeof filters.status === 'string') {
-    result = result.eq('status', filters.status);
+    result = query(result, where('status', '==', filters.status));
   } else if (filters.inStatus) {
-    result = result.in('status', filters.inStatus);
-  }
-
-  // Search filter
-  if (filters.searchTerm && filters.searchColumns) {
-    const searchLower = filters.searchTerm.trim().toLowerCase();
-    const orFilters = filters.searchColumns.map(col => `${col}.ilike.%${searchLower}%`);
-    result = result.or(orFilters.join(','));
+    // Firestore doesn't support 'in' with multiple values directly in the same way
+    // Use array-contains-any for array fields or multiple queries
+    if (filters.inStatus.length === 1) {
+      result = query(result, where('status', '==', filters.inStatus[0]));
+    }
+    // For multiple values, you'd need to run multiple queries and merge results
   }
 
   // Ordering
   if (filters.orderBy) {
-    result = result.order(filters.orderBy, { ascending: filters.ascending ?? true });
+    result = query(result, orderBy(filters.orderBy, filters.ascending ? 'asc' : 'desc'));
   }
 
   // Pagination
   if (filters.limit) {
-    if (filters.offset !== undefined) {
-      result = result.range(filters.offset, filters.offset + filters.limit - 1);
-    } else {
-      result = result.limit(filters.limit);
-    }
+    result = query(result, limit(filters.limit));
+  }
+
+  if (filters.startAfter) {
+    result = query(result, startAfter(filters.startAfter));
   }
 
   return result;
@@ -154,9 +159,9 @@ export function isEmpty<T>(data: T[] | null | undefined): data is null | undefin
 }
 
 /**
- * Type guard for Supabase error
+ * Type guard for Firebase error
  */
-export function isSupabaseError(error: unknown): error is { message: string; code?: string; details?: unknown; hint?: string } {
+export function isFirebaseError(error: unknown): error is { message: string; code?: string; details?: unknown } {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -170,7 +175,7 @@ export function isSupabaseError(error: unknown): error is { message: string; cod
 export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error instanceof Error) return error.message;
-  if (isSupabaseError(error)) return error.message;
+  if (isFirebaseError(error)) return error.message;
   return 'Erro desconhecido';
 }
 
@@ -286,4 +291,58 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
       }, delay - timeSinceLastCall);
     }
   };
+}
+
+// ==============================================================================
+// FIRESTORE-SPECIFIC HELPERS
+// ==============================================================================
+
+/**
+ * Create a paginated query with cursor-based pagination
+ */
+export function createPaginatedQuery<T>(
+  collectionRef: CollectionReference<T>,
+  options: {
+    orderBy?: string;
+    orderDirection?: 'asc' | 'desc';
+    pageSize?: number;
+    startAfter?: unknown;
+    filters?: Array<{ field: string; op: '==' | '!=' | '>' | '>=' | '<' | '<=' | 'array-contains' | 'in'; value: unknown }>;
+  }
+): Query<T> {
+  let q = query(collectionRef);
+
+  // Apply filters
+  if (options.filters) {
+    for (const filter of options.filters) {
+      q = query(q, where(filter.field, filter.op, filter.value));
+    }
+  }
+
+  // Apply ordering
+  if (options.orderBy) {
+    q = query(q, orderBy(options.orderBy, options.orderDirection || 'asc'));
+  }
+
+  // Apply limit
+  if (options.pageSize) {
+    q = query(q, limit(options.pageSize));
+  }
+
+  // Apply cursor
+  if (options.startAfter) {
+    q = query(q, startAfter(options.startAfter));
+  }
+
+  return q;
+}
+
+/**
+ * Convert Firestore snapshot to array with IDs
+ */
+export function snapshotToArray<T>(snapshot: { docs: Array<{ id: string; data: () => T }> }): Array<T & { id: string }> {
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Array<T & { id: string }>;
 }

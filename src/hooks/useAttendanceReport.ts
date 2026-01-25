@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
 
 export type PeriodFilter = 'week' | 'month' | 'quarter' | 'year' | 'custom';
 export type StatusFilter = 'all' | 'concluido' | 'faltou' | 'cancelado';
@@ -122,8 +124,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
           notes,
           therapist_id,
           patient_id,
-          patients!inner(id, full_name, phone),
-          profiles!appointments_therapist_id_fkey(id, full_name)
+          patients!inner(id, full_name, phone)
         `)
         .gte('appointment_date', format(start, 'yyyy-MM-dd'))
         .lte('appointment_date', format(end, 'yyyy-MM-dd'));
@@ -141,6 +142,22 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       if (error) throw error;
 
       const appointmentsList = appointments || [];
+
+      // Fetch therapist names from Firestore
+      const db = getFirebaseDb();
+      const therapistNames = new Map<string, string>();
+
+      const uniqueTherapistIds = [...new Set(appointmentsList.map(a => a.therapist_id).filter(Boolean))];
+
+      await Promise.all(uniqueTherapistIds.map(async (tid) => {
+        if (!tid) return;
+        const profileDoc = await getDoc(doc(db, 'profiles', tid));
+        if (profileDoc.exists()) {
+          therapistNames.set(tid, profileDoc.data().full_name || 'Sem nome');
+        } else {
+          therapistNames.set(tid, 'Não encontrado');
+        }
+      }));
 
       // Calculate basic metrics
       const total = appointmentsList.length;
@@ -210,7 +227,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       const therapistMap = new Map<string, TherapistAttendance>();
       appointmentsList.forEach(apt => {
         const therapistId = apt.therapist_id || 'unknown';
-        const therapistName = (apt.profiles as { full_name?: string } | null)?.full_name || 'Não atribuído';
+        const therapistName = therapistNames.get(therapistId) || 'Não atribuído';
 
         if (!therapistMap.has(therapistId)) {
           therapistMap.set(therapistId, {
@@ -267,7 +284,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
           patientPhone: (apt.patients as { phone?: string } | null)?.phone,
           date: apt.appointment_date,
           time: apt.appointment_time,
-          therapistName: (apt.profiles as { full_name?: string } | null)?.full_name || 'Não atribuído',
+          therapistName: therapistNames.get(apt.therapist_id || '') || 'Não atribuído',
           status: apt.status || 'agendado',
           notes: apt.notes
         }))
@@ -280,7 +297,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       if (therapistData.length > 0 && therapistData[0].rate >= 90) {
         insights.push({
           type: 'success',
-          message: `${therapistData[0].name} tem ${therapistData[0].rate}% de comparecimento - excelente!`
+          message: `${therapistData[0].name} tem ${therapistData[0].rate} % de comparecimento - excelente!`
         });
       }
 
@@ -289,7 +306,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       if (worstDay && worstDay.noShowRate >= 15) {
         insights.push({
           type: 'warning',
-          message: `Não-comparecimento predomina às ${worstDay.day.toLowerCase()}s (${worstDay.noShowRate}%)`
+          message: `Não - comparecimento predomina às ${worstDay.day.toLowerCase()}s(${worstDay.noShowRate} %)`
         });
       }
 
@@ -300,14 +317,16 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       if (worstHour && worstHour.noShowRate >= 15) {
         insights.push({
           type: 'warning',
-          message: `Horário com maior falta: ${worstHour.hour}-${parseInt(worstHour.hour) + 1}h (${worstHour.noShowRate}%)`
+          message: `Horário com maior falta: ${worstHour.hour} - ${parseInt(worstHour.hour) + 1
+            }h(${worstHour.noShowRate
+            } %)`
         });
       }
 
       if (bestHour && bestHour.noShowRate <= 5 && bestHour.total >= 5) {
         insights.push({
           type: 'success',
-          message: `Horário com menor falta: ${bestHour.hour}-${parseInt(bestHour.hour) + 1}h (${bestHour.noShowRate}%)`
+          message: `Horário com menor falta: ${bestHour.hour} -${parseInt(bestHour.hour) + 1} h(${bestHour.noShowRate} %)`
         });
       }
 
@@ -320,7 +339,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       } else if (attendanceRate < 70) {
         insights.push({
           type: 'warning',
-          message: `Taxa de comparecimento de ${attendanceRate}% está abaixo do ideal. Considere enviar lembretes automáticos.`
+          message: `Taxa de comparecimento de ${attendanceRate}% está abaixo do ideal.Considere enviar lembretes automáticos.`
         });
       }
 
@@ -356,12 +375,13 @@ export const useTherapists = () => {
 
       const userIds = [...new Set((userRoles || []).map(ur => ur.user_id))];
 
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('user_id', userIds);
+      const db = getFirebaseDb();
+      const profiles = await Promise.all(userIds.map(async (id) => {
+        const profileDoc = await getDoc(doc(db, 'profiles', id));
+        return profileDoc.exists() ? { id, full_name: profileDoc.data().full_name } : null;
+      }));
 
-      return profiles || [];
+      return profiles.filter(Boolean) || [];
     }
   });
 };
