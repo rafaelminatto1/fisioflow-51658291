@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 export interface SatisfactionSurvey {
   id: string;
@@ -24,7 +27,7 @@ export interface SatisfactionSurvey {
   // Relações
   patient?: {
     id: string;
-    name: string;
+    full_name: string;
   };
   appointment?: {
     id: string;
@@ -59,50 +62,66 @@ export interface SurveyFilters {
 }
 
 export function useSatisfactionSurveys(filters?: SurveyFilters) {
+  const { user } = useAuth();
   return useQuery({
     queryKey: ['satisfaction-surveys', filters],
     queryFn: async () => {
-      let query = supabase
+      let supaQuery = supabase
         .from('satisfaction_surveys')
         .select(`
           *,
-          patient:patients(id, name),
+          patient:patients(id, full_name),
           appointment:appointments(id, start_time)
         `)
         .order('sent_at', { ascending: false });
 
       if (filters?.patient_id) {
-        query = query.eq('patient_id', filters.patient_id);
+        supaQuery = supaQuery.eq('patient_id', filters.patient_id);
       }
 
       if (filters?.therapist_id) {
-        query = query.eq('therapist_id', filters.therapist_id);
+        supaQuery = supaQuery.eq('therapist_id', filters.therapist_id);
       }
 
       if (filters?.start_date) {
-        query = query.gte('sent_at', filters.start_date);
+        supaQuery = supaQuery.gte('sent_at', filters.start_date);
       }
 
       if (filters?.end_date) {
-        query = query.lte('sent_at', filters.end_date);
+        supaQuery = supaQuery.lte('sent_at', filters.end_date);
       }
 
       if (filters?.responded !== undefined) {
         if (filters.responded) {
-          query = query.not('responded_at', 'is', null);
+          supaQuery = supaQuery.not('responded_at', 'is', null);
         } else {
-          query = query.is('responded_at', null);
+          supaQuery = supaQuery.is('responded_at', null);
         }
       }
 
-      const { data, error } = await query;
-
+      const { data, error } = await supaQuery;
       if (error) throw error;
 
+      // Enrich with therapist names from Firestore
+      const therapistIds = [...new Set((data || []).map(item => item.therapist_id).filter(Boolean))];
+      const therapistMap = new Map<string, string>();
+
+      if (therapistIds.length > 0) {
+        const db = getFirebaseDb();
+        const profilesQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
+        const profilesSnap = await getDocs(profilesQ);
+        profilesSnap.forEach(doc => {
+          therapistMap.set(doc.data().user_id, doc.data().full_name);
+        });
+      }
+
       // Map data to expected format
-      return (data || []).map((item: SatisfactionSurvey & { therapist_id?: string }) => ({
+      return (data || []).map((item: any) => ({
         ...item,
-        therapist: item.therapist_id ? { id: item.therapist_id, name: 'Terapeuta' } : null,
+        therapist: item.therapist_id ? {
+          id: item.therapist_id,
+          name: therapistMap.get(item.therapist_id) || 'Terapeuta'
+        } : null,
       })) as SatisfactionSurvey[];
     },
   });
@@ -158,16 +177,18 @@ export function useSurveyStats() {
 }
 
 export function useCreateSurvey() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CreateSurveyData) => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .single();
+      if (!user) throw new Error('Usuário não autenticado');
 
-      if (!profile?.organization_id) {
+      const db = getFirebaseDb();
+      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      const profileData = profileDoc.exists() ? profileDoc.data() : null;
+
+      if (!profileData?.organization_id) {
         throw new Error('Organização não encontrada');
       }
 
@@ -175,12 +196,12 @@ export function useCreateSurvey() {
         .from('satisfaction_surveys')
         .insert({
           ...data,
-          organization_id: profile.organization_id,
+          organization_id: profileData.organization_id,
           responded_at: new Date().toISOString(),
         })
         .select(`
           *,
-          patient:patients(id, name)
+          patient:patients(id, full_name)
         `)
         .single();
 

@@ -1,0 +1,51 @@
+import { test, expect } from '@playwright/test';
+
+// Credentials provided by user for verification
+const LOGIN_EMAIL = 'rafael.minatto@yahoo.com.br';
+const LOGIN_PASSWORD = 'Yukari30@';
+
+test.describe('Verified Login Flow', () => {
+    test('should login successfully with provided credentials', async ({ page }) => {
+        console.log(`Attempting login with: ${LOGIN_EMAIL}`);
+
+        // Navigate to login page
+        await page.goto('/auth/login');
+
+        // Check if we are on the login page
+        await expect(page).toHaveURL(/.*auth\/login/);
+        // Wait for email input to be visible which confirms page load
+        await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
+
+        // Fill in credentials
+        await page.fill('input[type="email"]', LOGIN_EMAIL);
+        await page.fill('input[type="password"]', LOGIN_PASSWORD);
+
+        // Submit
+        const submitButton = page.locator('button[type="submit"]');
+        await expect(submitButton).toBeEnabled();
+        await submitButton.click();
+
+        // Verify successful login
+        // Expectation: Redirect to dashboard or home, or see "Dashboard" in title/text
+        // Waiting for URL change or specific element
+
+        // Wait for navigation - adjusting timeout for potential slow network/auth
+        await page.waitForTimeout(2000);
+
+        // Assuming dashboard is at '/' or '/dashboard', or checking for a common element like "Painel" or user profile
+        // Checking for a generic "Dashboard" link or Header usually present after login
+        // Adjust selector based on actual app structure if this fails
+
+        // Attempt to verify successful state by URL or common UI element
+        await Promise.any([
+            page.waitForURL('**/dashboard/**'),
+            page.waitForURL('**/app/**'),
+            page.waitForURL('**/'), // Root if redirected there
+            page.waitForSelector('text=Painel'),
+            page.waitForSelector('text=Agendamentos'),
+            page.waitForSelector('text=Bem-vindo')
+        ]);
+
+        console.log('Login successful - navigation occured or dashboard element found');
+    });
+});

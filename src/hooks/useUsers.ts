@@ -1,6 +1,29 @@
+/**
+ * useUsers - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('profiles') → Firestore collection 'profiles'
+ * - supabase.from('user_roles') → Firestore collection 'user_roles'
+ * - supabase.from('user_roles').upsert() → setDoc with merge
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  writeBatch
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 type AppRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
@@ -18,27 +41,32 @@ export function useUsers() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users-with-roles'],
     queryFn: async () => {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, user_id, email, full_name, created_at')
-        .order('created_at', { ascending: false });
+      // Fetch profiles
+      const profilesQ = query(
+        collection(db, 'profiles'),
+        orderBy('created_at', 'desc')
+      );
+      const profilesSnap = await getDocs(profilesQ);
 
-      if (profilesError) throw profilesError;
+      const profiles = profilesSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
+      // Fetch user roles
+      const rolesSnap = await getDocs(collection(db, 'user_roles'));
+      const userRoles = rolesSnap.docs.map(doc => ({
+        ...doc.data(),
+      }));
 
-      if (rolesError) throw rolesError;
-
-      const usersWithRoles: UserWithRoles[] = profiles.map((profile) => ({
-        id: profile.user_id,
+      const usersWithRoles: UserWithRoles[] = profiles.map((profile: any) => ({
+        id: profile.user_id || profile.id,
         email: profile.email || '',
         full_name: profile.full_name,
         created_at: profile.created_at || '',
         roles: userRoles
-          .filter((ur) => ur.user_id === profile.user_id)
-          .map((ur) => ur.role as AppRole),
+          .filter((ur: any) => ur.user_id === (profile.user_id || profile.id))
+          .map((ur: any) => ur.role as AppRole),
       }));
 
       return usersWithRoles;
@@ -48,14 +76,21 @@ export function useUsers() {
 
   const addRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert(
-          { user_id: userId, role },
-          { onConflict: 'user_id,role', ignoreDuplicates: true }
-        );
+      // Use user_id + role as composite key for document ID
+      const roleDocId = `${userId}_${role}`;
+      const roleRef = doc(db, 'user_roles', roleDocId);
 
-      if (error) throw error;
+      // Check if role already exists
+      const roleSnap = await getDoc(roleRef);
+      if (roleSnap.exists()) {
+        throw { code: 'already_exists', message: 'Role already exists for this user' };
+      }
+
+      await setDoc(roleRef, {
+        user_id: userId,
+        role,
+        created_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
@@ -63,7 +98,7 @@ export function useUsers() {
     },
     onError: (error: any) => {
       // If error is about duplicate, show a more friendly message
-      if (error?.code === '23505' || error?.message?.includes('unique')) {
+      if (error?.code === 'already_exists') {
         toast({
           title: 'Função já existe',
           description: 'Este usuário já possui esta função.',
@@ -72,7 +107,7 @@ export function useUsers() {
       } else {
         toast({
           title: 'Erro ao adicionar função',
-          description: error.message,
+          description: error.message || 'Erro desconhecido',
           variant: 'destructive',
         });
       }
@@ -81,13 +116,16 @@ export function useUsers() {
 
   const removeRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('role', role);
+      const roleDocId = `${userId}_${role}`;
+      const roleRef = doc(db, 'user_roles', roleDocId);
 
-      if (error) throw error;
+      // Check if role exists before deleting
+      const roleSnap = await getDoc(roleRef);
+      if (!roleSnap.exists()) {
+        throw new Error('Role not found');
+      }
+
+      await deleteDoc(roleRef);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });

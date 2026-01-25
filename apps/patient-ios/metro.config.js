@@ -1,17 +1,39 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, '../..');
 
-// Add watchFolders for pnpm workspace
+const config = getDefaultConfig(projectRoot);
+
+// Enable symlinks for monorepo support
+config.resolver.unstable_enableSymlinks = true;
+
+// WATCH: project root and workspace root
 config.watchFolders = [
-  path.resolve(__dirname, '../../'),
-  path.resolve(__dirname, '../shared-api'),
-  path.resolve(__dirname, '../shared-utils'),
+  projectRoot,
+  workspaceRoot,
 ];
 
-// Add resolver options for pnpm
+// RESOLVE: search order for node_modules
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
+// FEILDS: priority for web and native
 config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
-config.resolver.sourceExts = ['jsx', 'js', 'ts', 'tsx', 'json'];
+
+// EXTENSIONS: support for ESM packages
+config.resolver.sourceExts = ['jsx', 'js', 'ts', 'tsx', 'json', 'mjs', 'cjs'];
+
+// BLOCK: avoid git history
+config.resolver.blockList = [
+  /.*\.git\/.*/,
+];
 
 module.exports = config;
+
+
+
+

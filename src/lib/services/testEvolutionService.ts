@@ -1,19 +1,22 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import type { TestEvolutionData, TestResult, TestStatistics, AssessmentTestConfig } from '@/types/evolution';
 
 export class TestEvolutionService {
   static async getTestEvolutionData(patientId: string, testName: string): Promise<TestEvolutionData[]> {
-    const { data, error } = await supabase
-      .from('evolution_measurements')
-      .select('*')
-      .eq('patient_id', patientId)
-      .eq('measurement_name', testName)
-      .order('measured_at', { ascending: true });
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'evolution_measurements'),
+      where('patient_id', '==', patientId),
+      where('measurement_name', '==', testName),
+      orderBy('measured_at', 'asc')
+    );
+    const snapshot = await getDocs(q);
 
-    if (error) throw error;
+    const data = snapshot.docs.map(docSnap => docSnap.data());
 
     // Transform to TestEvolutionData format
-    return (data || []).map((item, index) => ({
+    return data.map((item, index) => ({
       id: item.id,
       patient_id: item.patient_id,
       test_name: item.measurement_name,
@@ -22,32 +25,33 @@ export class TestEvolutionService {
       unit: item.unit || undefined,
       session_number: index + 1,
       variation: index > 0 ? Number(item.value) - Number(data[index - 1].value) : 0
-    }));
+    })) as TestEvolutionData[];
   }
 
   static async getTestHistory(patientId: string): Promise<Map<string, TestEvolutionData[]>> {
-    const { data, error } = await supabase
-      .from('evolution_measurements')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('measured_at', { ascending: true });
-
-    if (error) throw error;
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'evolution_measurements'),
+      where('patient_id', '==', patientId),
+      orderBy('measured_at', 'asc')
+    );
+    const snapshot = await getDocs(q);
 
     const historyMap = new Map<string, TestEvolutionData[]>();
-    
-    (data || []).forEach((item, index, arr) => {
+
+    snapshot.docs.forEach((docSnap, index, arr) => {
+      const item = docSnap.data();
       const testName = item.measurement_name;
       if (!historyMap.has(testName)) {
         historyMap.set(testName, []);
       }
 
-      const previousTests = arr.filter((t, i) => i < index && t.measurement_name === testName);
+      const previousTests = arr.slice(0, index).filter(t => t.data().measurement_name === testName);
       const sessionNumber = previousTests.length + 1;
-      const previousValue = previousTests.length > 0 ? Number(previousTests[previousTests.length - 1].value) : null;
+      const previousValue = previousTests.length > 0 ? Number(previousTests[previousTests.length - 1].data().value) : null;
 
       historyMap.get(testName)!.push({
-        id: item.id,
+        id: docSnap.id,
         patient_id: item.patient_id,
         test_name: item.measurement_name,
         date: item.measured_at.split('T')[0],
@@ -62,76 +66,79 @@ export class TestEvolutionService {
   }
 
   static async addTestResult(patientId: string, sessionId: string, result: Omit<TestResult, 'id' | 'created_at'>): Promise<void> {
-    const { error } = await supabase
-      .from('evolution_measurements')
-      .insert({
-        patient_id: patientId,
-        soap_record_id: sessionId,
-        measurement_name: result.test_name,
-        measurement_type: result.test_type,
-        value: result.value,
-        unit: result.unit,
-        notes: result.notes,
-        measured_at: result.measured_at,
-        created_by: result.measured_by
-      });
-
-    if (error) throw error;
+    const db = getFirebaseDb();
+    await addDoc(collection(db, 'evolution_measurements'), {
+      patient_id: patientId,
+      soap_record_id: sessionId,
+      measurement_name: result.test_name,
+      measurement_type: result.test_type,
+      value: result.value,
+      unit: result.unit,
+      notes: result.notes,
+      measured_at: result.measured_at,
+      created_by: result.measured_by,
+      created_at: new Date().toISOString(),
+    });
   }
 
   static async getMandatoryTests(patientId: string, sessionNumber: number): Promise<AssessmentTestConfig[]> {
     // Get patient pathologies
-    const { data: pathologies, error: pathError } = await supabase
-      .from('patient_pathologies')
-      .select('pathology_name')
-      .eq('patient_id', patientId)
-      .eq('status', 'em_tratamento');
+    const db = getFirebaseDb();
+    const pathQ = query(
+      collection(db, 'patient_pathologies'),
+      where('patient_id', '==', patientId),
+      where('status', '==', 'em_tratamento')
+    );
+    const pathSnapshot = await getDocs(pathQ);
 
-    if (pathError) throw pathError;
+    if (pathSnapshot.empty) return [];
 
-    if (!pathologies || pathologies.length === 0) return [];
-
-    const pathologyNames = pathologies.map(p => p.pathology_name);
+    const pathologyNames = pathSnapshot.docs.map(doc => doc.data().pathology_name);
 
     // Get mandatory tests for these pathologies
-    const { data: tests, error: testError } = await supabase
-      .from('pathology_required_measurements')
-      .select('*')
-      .in('pathology_name', pathologyNames);
+    // NOTE: Firestore doesn't support 'in' queries well with arrays
+    // In production, this should use a Cloud Function or composite index
+    const testsQ = query(
+      collection(db, 'pathology_required_measurements')
+    );
+    const testsSnapshot = await getDocs(testsQ);
 
-    if (testError) throw testError;
+    const filteredTests = testsSnapshot.docs.filter(docSnap =>
+      pathologyNames.includes(docSnap.data().pathology_name)
+    );
 
     // Filter by frequency (check if test should be done at this session)
-    return (tests || [])
-      .map(test => ({
-        id: test.id,
-        pathology_name: test.pathology_name,
-        test_name: test.measurement_name,
-        test_type: 'measurement',
-        frequency_sessions: 1, // Default
-        is_mandatory: true,
-        alert_level: test.alert_level as 'critico' | 'importante' | 'leve',
-        instructions: test.instructions || undefined,
-        unit: test.measurement_unit || undefined,
-        min_value: undefined,
-        max_value: undefined
-      }))
+    return filteredTests
+      .map(docSnap => {
+        const test = docSnap.data();
+        return {
+          id: docSnap.id,
+          pathology_name: test.pathology_name,
+          test_name: test.measurement_name,
+          test_type: 'measurement',
+          frequency_sessions: 1, // Default
+          is_mandatory: true,
+          alert_level: test.alert_level as 'critico' | 'importante' | 'leve',
+          instructions: test.instructions || undefined,
+          unit: test.measurement_unit || undefined,
+          min_value: undefined,
+          max_value: undefined
+        };
+      })
       .filter(test => sessionNumber % test.frequency_sessions === 0);
   }
 
   static async checkMandatoryTestsCompleted(patientId: string, sessionId: string): Promise<boolean> {
-    const { data: measurements, error } = await supabase
-      .from('evolution_measurements')
-      .select('measurement_name')
-      .eq('patient_id', patientId)
-      .eq('soap_record_id', sessionId);
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'evolution_measurements'),
+      where('patient_id', '==', patientId),
+      where('soap_record_id', '==', sessionId)
+    );
+    const snapshot = await getDocs(q);
 
-    if (error) throw error;
-
-    // Get mandatory tests for this session
+    const completedTests = new Set(snapshot.docs.map(doc => doc.data().measurement_name));
     const mandatoryTests = await this.getMandatoryTests(patientId, 1); // Simplified
-
-    const completedTests = new Set((measurements || []).map(m => m.measurement_name));
     const criticalTests = mandatoryTests
       .filter(t => t.alert_level === 'critico')
       .map(t => t.test_name);

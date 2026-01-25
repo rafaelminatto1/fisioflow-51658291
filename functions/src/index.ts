@@ -170,7 +170,7 @@ export const onAppointmentUpdated = functions.firestore.onDocumentWritten('appoi
     const after = event.data?.after.data();
 
     if (before && after) {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+         
         const realtime = await import('./realtime/publisher');
         await realtime.publishAppointmentEvent(after.organization_id, {
             event: 'UPDATE',
