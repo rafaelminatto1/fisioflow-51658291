@@ -95,7 +95,6 @@ const SizeOption = memo(function SizeOption({ size, currentSize, onSelect }: Siz
 // Slot height range: 30px (compact) to 120px (spacious)
 const MIN_SLOT_HEIGHT = 30;
 const MAX_SLOT_HEIGHT = 120;
-const DEFAULT_SLOT_HEIGHT = 60;
 
 // Font scale range: 50% to 150%
 const MIN_FONT_SCALE = 0;
@@ -168,7 +167,6 @@ function SlotHeightControl({
 
   const {
     inputValue,
-    setInputValue,
     handleChange,
     handleFocus,
     handleBlur,
@@ -333,7 +331,6 @@ function FontScaleControl({
 
   const {
     inputValue,
-    setInputValue,
     handleChange,
     handleFocus,
     handleBlur,

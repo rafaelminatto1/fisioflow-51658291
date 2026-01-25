@@ -1,177 +1,660 @@
 /**
  * Firebase Functions Integration
  * Utilitários para chamadas tipadas para as Cloud Functions da API
+ *
+ * @module integrations/firebase/functions
  */
 
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
 import { app } from './app';
 
-const functions = getFunctions(app, 'southamerica-east1');
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Região padrão para as Cloud Functions */
+const DEFAULT_REGION = 'us-central1';
+
+/** Timeout padrão para chamadas de função (em segundos) */
+const DEFAULT_TIMEOUT = 60;
+
+const functions = getFunctions(app, DEFAULT_REGION);
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 /**
- * Interface genérica para resposta de função
+ * Interface genérica para resposta de função com erro
  */
 export interface FunctionResponse<T> {
-    data: T;
-    error?: string;
-    total?: number;
+  data: T;
+  error?: string;
+  total?: number;
 }
 
 /**
- * Auxiliar para chamar funções https
+ * Tipo de erro para falhas em chamadas de função
+ */
+export class FunctionCallError extends Error {
+  constructor(
+    public functionName: string,
+    public originalError: unknown,
+    message?: string
+  ) {
+    super(
+      message || `Error calling function '${functionName}': ${String(originalError)}`
+    );
+    this.name = 'FunctionCallError';
+  }
+}
+
+/**
+ * Opções para chamada de função
+ */
+interface CallFunctionOptions {
+  /** Timeout em segundos */
+  timeout?: number;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Auxiliar para chamar funções https com tratamento de erro e tipagem forte
+ *
+ * @param functionName - Nome da função a ser chamada
+ * @param data - Dados a serem enviados
+ * @param options - Opções adicionais
+ * @returns Promise com a resposta da função
+ * @throws {FunctionCallError} Quando a chamada falha
  */
 export async function callFunction<TRequest, TResponse>(
-    functionName: string,
-    data: TRequest
+  functionName: string,
+  data: TRequest,
+  options?: CallFunctionOptions
 ): Promise<TResponse> {
-    const callable = httpsCallable<TRequest, TResponse>(functions, functionName);
-    const result = await callable(data);
+  try {
+    const callable = httpsCallable<TRequest, TResponse>(
+      functions,
+      functionName,
+      options?.timeout ? { timeout: options.timeout * 1000 } : undefined
+    );
+    const result: HttpsCallableResult<TResponse> = await callable(data);
     return result.data;
+  } catch (error) {
+    throw new FunctionCallError(functionName, error);
+  }
 }
+
+/**
+ * Wrapper para chamadas de função que retorna resultados tipados
+ * com tratamento automático de erros da resposta
+ */
+export async function callFunctionWithResponse<TRequest, TData>(
+  functionName: string,
+  data: TRequest,
+  options?: CallFunctionOptions
+): Promise<FunctionResponse<TData>> {
+  const response = await callFunction<TRequest, FunctionResponse<TData>>(
+    functionName,
+    data,
+    options
+  );
+
+  if (response.error && !response.data) {
+    throw new FunctionCallError(functionName, response.error);
+  }
+
+  return response;
+}
+
+// ============================================================================
+// API TYPES
+// ============================================================================
+
+/**
+ * Tipos para API de Pacientes
+ */
+export namespace PatientApi {
+  export interface ListParams {
+    status?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface GetParams {
+    patientId?: string;
+    profileId?: string;
+  }
+
+  export interface Patient {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    [key: string]: unknown;
+  }
+
+  export interface CreateData {
+    name: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    [key: string]: unknown;
+  }
+
+  export interface UpdateData {
+    [key: string]: unknown;
+  }
+
+  export interface Stats {
+    totalSessions: number;
+    upcomingAppointments: number;
+    lastVisit?: string;
+    [key: string]: unknown;
+  }
+}
+
+/**
+ * Tipos para API de Exercícios
+ */
+export namespace ExerciseApi {
+  export interface ListParams {
+    category?: string;
+    difficulty?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface Exercise {
+    id: string;
+    name: string;
+    category?: string;
+    difficulty?: string;
+    description?: string;
+    [key: string]: unknown;
+  }
+
+  export interface CreateData {
+    name: string;
+    category?: string;
+    difficulty?: string;
+    description?: string;
+    [key: string]: unknown;
+  }
+
+  export interface UpdateData {
+    [key: string]: unknown;
+  }
+
+  export interface PrescribedExercise {
+    id: string;
+    patientId: string;
+    exerciseId: string;
+    prescribedAt: string;
+    [key: string]: unknown;
+  }
+
+  export interface LogExerciseData {
+    patientId: string;
+    prescriptionId: string;
+    difficulty: number;
+    notes?: string;
+  }
+
+  export interface Category {
+    id: string;
+    name: string;
+    [key: string]: unknown;
+  }
+}
+
+/**
+ * Tipos para API Financeira
+ */
+export namespace FinancialApi {
+  export interface Transaction {
+    id: string;
+    amount: number;
+    type: 'income' | 'expense';
+    category?: string;
+    status: string;
+    createdAt: string;
+    [key: string]: unknown;
+  }
+
+  export interface CreateData {
+    amount: number;
+    type: 'income' | 'expense';
+    category?: string;
+    appointmentId?: string;
+    [key: string]: unknown;
+  }
+
+  export interface UpdateData {
+    [key: string]: unknown;
+  }
+
+  export interface EventReport {
+    eventId: string;
+    totalRevenue: number;
+    totalExpenses: number;
+    transactionCount: number;
+    [key: string]: unknown;
+  }
+}
+
+/**
+ * Tipos para API Clínica
+ */
+export namespace ClinicalApi {
+  export interface MedicalRecord {
+    id: string;
+    patientId: string;
+    type: string;
+    title: string;
+    content: string;
+    recordDate: string;
+    createdAt: string;
+    [key: string]: unknown;
+  }
+
+  export interface CreateMedicalRecordData {
+    patientId: string;
+    type: string;
+    title: string;
+    content: string;
+    recordDate?: string;
+  }
+
+  export interface UpdateMedicalRecordData {
+    [key: string]: unknown;
+  }
+
+  export interface TreatmentSession {
+    id: string;
+    patientId: string;
+    sessionDate: string;
+    notes?: string;
+    [key: string]: unknown;
+  }
+
+  export interface CreateTreatmentSessionData {
+    patientId: string;
+    sessionDate: string;
+    notes?: string;
+    [key: string]: unknown;
+  }
+
+  export interface PainRecord {
+    id: string;
+    patientId: string;
+    level: number;
+    type: string;
+    bodyPart: string;
+    notes?: string;
+    recordedAt: string;
+  }
+
+  export interface SavePainRecordData {
+    patientId: string;
+    level: number;
+    type: string;
+    bodyPart: string;
+    notes?: string;
+  }
+}
+
+/**
+ * Tipos para API de Agendamentos
+ */
+export namespace AppointmentApi {
+  export interface Appointment {
+    id: string;
+    patientId: string;
+    therapistId?: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    [key: string]: unknown;
+  }
+
+  export interface ListParams {
+    dateFrom?: string;
+    dateTo?: string;
+    therapistId?: string;
+    status?: string;
+    patientId?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface CreateData {
+    patientId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    therapistId?: string;
+    [key: string]: unknown;
+  }
+
+  export interface UpdateData {
+    [key: string]: unknown;
+  }
+
+  export interface CheckConflictParams {
+    therapistId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    excludeAppointmentId?: string;
+  }
+
+  export interface ConflictResult {
+    hasConflict: boolean;
+    conflictingAppointments?: Appointment[];
+  }
+}
+
+/**
+ * Tipos para API de Perfis
+ */
+export namespace ProfileApi {
+  export interface Profile {
+    id: string;
+    email?: string;
+    displayName?: string;
+    role?: string;
+    [key: string]: unknown;
+  }
+
+  export interface UpdateData {
+    [key: string]: unknown;
+  }
+}
+
+// ============================================================================
+// APIs
+// ============================================================================
 
 /**
  * API de Pacientes no Firebase Functions
  */
 export const patientsApi = {
-    list: (params: { status?: string; search?: string; limit?: number; offset?: number }) =>
-        callFunction<any, any>('listPatients', params),
+  /**
+   * Lista pacientes com filtros opcionais
+   */
+  list: (params: PatientApi.ListParams = {}): Promise<FunctionResponse<PatientApi.Patient[]>> =>
+    callFunctionWithResponse('listPatients', params),
 
-    get: (idOrParams: string | { patientId?: string; profileId?: string }) => {
-        const data = typeof idOrParams === 'string' ? { patientId: idOrParams } : idOrParams;
-        return callFunction<any, any>('getPatient', data);
-    },
+  /**
+   * Obtém um paciente por ID
+   */
+  get: (idOrParams: string | PatientApi.GetParams): Promise<PatientApi.Patient> => {
+    const data = typeof idOrParams === 'string' ? { patientId: idOrParams } : idOrParams;
+    return callFunction('getPatient', data);
+  },
 
-    create: (patient: any) =>
-        callFunction<any, any>('createPatient', patient),
+  /**
+   * Cria um novo paciente
+   */
+  create: (patient: PatientApi.CreateData): Promise<PatientApi.Patient> =>
+    callFunction('createPatient', patient),
 
-    update: (patientId: string, updates: any) =>
-        callFunction<any, any>('updatePatient', { patientId, ...updates }),
+  /**
+   * Atualiza um paciente existente
+   */
+  update: (patientId: string, updates: PatientApi.UpdateData): Promise<PatientApi.Patient> =>
+    callFunction('updatePatient', { patientId, ...updates }),
 
-    delete: (patientId: string) =>
-        callFunction<any, any>('deletePatient', { patientId }),
+  /**
+   * Remove um paciente
+   */
+  delete: (patientId: string): Promise<{ success: boolean }> =>
+    callFunction('deletePatient', { patientId }),
 
-    getStats: (patientId: string) =>
-        callFunction<any, any>('getPatientStats', { patientId }),
+  /**
+   * Obtém estatísticas de um paciente
+   */
+  getStats: (patientId: string): Promise<PatientApi.Stats> =>
+    callFunction('getPatientStats', { patientId }),
 };
-
-/**
- * API de Agendamentos no Firebase Functions
- */
 
 /**
  * API de Exercícios no Firebase Functions
  */
 export const exercisesApi = {
-    list: (params: { category?: string; difficulty?: string; search?: string; limit?: number; offset?: number }) =>
-        callFunction<any, any>('listExercises', params),
+  /**
+   * Lista exercícios com filtros opcionais
+   */
+  list: (params: ExerciseApi.ListParams = {}): Promise<FunctionResponse<ExerciseApi.Exercise[]>> =>
+    callFunctionWithResponse('listExercises', params),
 
-    get: (exerciseId: string) =>
-        callFunction<any, any>('getExercise', { exerciseId }),
+  /**
+   * Obtém um exercício por ID
+   */
+  get: (exerciseId: string): Promise<ExerciseApi.Exercise> =>
+    callFunction('getExercise', { exerciseId }),
 
-    getCategories: () =>
-        callFunction<any, any>('getExerciseCategories', {}),
+  /**
+   * Lista todas as categorias de exercícios
+   */
+  getCategories: (): Promise<ExerciseApi.Category[]> =>
+    callFunction('getExerciseCategories', {}),
 
-    getPrescribedExercises: (patientId: string) =>
-        callFunction<any, any>('getPrescribedExercises', { patientId }),
+  /**
+   * Obtém exercícios prescritos para um paciente
+   */
+  getPrescribedExercises: (patientId: string): Promise<ExerciseApi.PrescribedExercise[]> =>
+    callFunction('getPrescribedExercises', { patientId }),
 
-    logExercise: (data: { patientId: string; prescriptionId: string; difficulty: number; notes?: string }) =>
-        callFunction<any, any>('logExercise', data),
+  /**
+   * Registra a realização de um exercício
+   */
+  logExercise: (data: ExerciseApi.LogExerciseData): Promise<{ success: boolean; logId?: string }> =>
+    callFunction('logExercise', data),
 
-    create: (exercise: any) =>
-        callFunction<any, any>('createExercise', exercise),
+  /**
+   * Cria um novo exercício
+   */
+  create: (exercise: ExerciseApi.CreateData): Promise<ExerciseApi.Exercise> =>
+    callFunction('createExercise', exercise),
 
-    update: (id: string, updates: any) =>
-        callFunction<any, any>('updateExercise', { id, ...updates }),
+  /**
+   * Atualiza um exercício existente
+   */
+  update: (id: string, updates: ExerciseApi.UpdateData): Promise<ExerciseApi.Exercise> =>
+    callFunction('updateExercise', { id, ...updates }),
 
-    delete: (id: string) =>
-        callFunction<any, any>('deleteExercise', { id }),
+  /**
+   * Remove um exercício
+   */
+  delete: (id: string): Promise<{ success: boolean }> =>
+    callFunction('deleteExercise', { id }),
 
-    merge: (keepId: string, mergeIds: string[]) =>
-        callFunction<any, any>('mergeExercises', { keepId, mergeIds }),
+  /**
+   * Mescla exercícios duplicados
+   */
+  merge: (keepId: string, mergeIds: string[]): Promise<{ success: boolean; mergedCount?: number }> =>
+    callFunction('mergeExercises', { keepId, mergeIds }),
 };
 
 /**
  * API Financeira (Transações) no Firebase Functions
  */
 export const financialApi = {
-    list: (limit?: number, offset?: number) =>
-        callFunction<any, any>('listTransactions', { limit, offset }),
+  /**
+   * Lista transações com paginação
+   */
+  list: (limit?: number, offset?: number): Promise<FunctionResponse<FinancialApi.Transaction[]>> =>
+    callFunctionWithResponse('listTransactions', { limit, offset }),
 
-    create: (transaction: any) =>
-        callFunction<any, any>('createTransaction', transaction),
+  /**
+   * Cria uma nova transação
+   */
+  create: (transaction: FinancialApi.CreateData): Promise<FinancialApi.Transaction> =>
+    callFunction('createTransaction', transaction),
 
-    update: (transactionId: string, updates: any) =>
-        callFunction<any, any>('updateTransaction', { transactionId, ...updates }),
+  /**
+   * Atualiza uma transação existente
+   */
+  update: (transactionId: string, updates: FinancialApi.UpdateData): Promise<FinancialApi.Transaction> =>
+    callFunction('updateTransaction', { transactionId, ...updates }),
 
-    delete: (transactionId: string) =>
-        callFunction<any, any>('deleteTransaction', { transactionId }),
+  /**
+   * Remove uma transação
+   */
+  delete: (transactionId: string): Promise<{ success: boolean }> =>
+    callFunction('deleteTransaction', { transactionId }),
 
-    findByAppointment: (appointmentId: string) =>
-        callFunction<any, any>('findTransactionByAppointmentId', { appointmentId }),
+  /**
+   * Busca transação por agendamento
+   */
+  findByAppointment: (appointmentId: string): Promise<FinancialApi.Transaction | null> =>
+    callFunction('findTransactionByAppointmentId', { appointmentId }),
 
-    getEventReport: (eventoId: string) =>
-        callFunction<any, any>('getEventReport', { eventoId }),
+  /**
+   * Obtém relatório de um evento
+   */
+  getEventReport: (eventoId: string): Promise<FinancialApi.EventReport> =>
+    callFunction('getEventReport', { eventoId }),
 };
 
 /**
  * API Clínica (Prontuários e Sessões) no Firebase Functions
  */
 export const clinicalApi = {
-    getPatientRecords: (patientId: string, type?: string, limit?: number) =>
-        callFunction<any, any>('getPatientRecords', { patientId, type, limit }),
+  /**
+   * Obtém prontuários de um paciente
+   */
+  getPatientRecords: (
+    patientId: string,
+    type?: string,
+    limit?: number
+  ): Promise<FunctionResponse<ClinicalApi.MedicalRecord[]>> =>
+    callFunctionWithResponse('getPatientRecords', { patientId, type, limit }),
 
-    createMedicalRecord: (data: { patientId: string; type: string; title: string; content: string; recordDate?: string }) =>
-        callFunction<any, any>('createMedicalRecord', data),
+  /**
+   * Cria um novo prontuário
+   */
+  createMedicalRecord: (data: ClinicalApi.CreateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> =>
+    callFunction('createMedicalRecord', data),
 
-    updateMedicalRecord: (recordId: string, updates: any) =>
-        callFunction<any, any>('updateMedicalRecord', { recordId, ...updates }),
+  /**
+   * Atualiza um prontuário existente
+   */
+  updateMedicalRecord: (recordId: string, updates: ClinicalApi.UpdateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> =>
+    callFunction('updateMedicalRecord', { recordId, ...updates }),
 
-    deleteMedicalRecord: (recordId: string) =>
-        callFunction<any, any>('deleteMedicalRecord', { recordId }),
+  /**
+   * Remove um prontuário
+   */
+  deleteMedicalRecord: (recordId: string): Promise<{ success: boolean }> =>
+    callFunction('deleteMedicalRecord', { recordId }),
 
-    listTreatmentSessions: (patientId: string, limit?: number) =>
-        callFunction<any, any>('listTreatmentSessions', { patientId, limit }),
+  /**
+   * Lista sessões de tratamento de um paciente
+   */
+  listTreatmentSessions: (patientId: string, limit?: number): Promise<ClinicalApi.TreatmentSession[]> =>
+    callFunction('listTreatmentSessions', { patientId, limit }),
 
-    createTreatmentSession: (data: any) =>
-        callFunction<any, any>('createTreatmentSession', data),
+  /**
+   * Cria uma nova sessão de tratamento
+   */
+  createTreatmentSession: (data: ClinicalApi.CreateTreatmentSessionData): Promise<ClinicalApi.TreatmentSession> =>
+    callFunction('createTreatmentSession', data),
 
-    getPainRecords: (patientId: string) =>
-        callFunction<any, any>('getPainRecords', { patientId }),
+  /**
+   * Obtém registros de dor de um paciente
+   */
+  getPainRecords: (patientId: string): Promise<ClinicalApi.PainRecord[]> =>
+    callFunction('getPainRecords', { patientId }),
 
-    savePainRecord: (data: { patientId: string; level: number; type: string; bodyPart: string; notes?: string }) =>
-        callFunction<any, any>('savePainRecord', data),
+  /**
+   * Salva um registro de dor
+   */
+  savePainRecord: (data: ClinicalApi.SavePainRecordData): Promise<ClinicalApi.PainRecord> =>
+    callFunction('savePainRecord', data),
 };
 
 /**
  * API de Agendamentos no Firebase Functions
  */
 export const appointmentsApi = {
-    list: (params: { dateFrom?: string; dateTo?: string; therapistId?: string; status?: string; patientId?: string; limit?: number; offset?: number }) =>
-        callFunction<any, any>('listAppointments', params),
+  /**
+   * Lista agendamentos com filtros opcionais
+   */
+  list: (params: AppointmentApi.ListParams = {}): Promise<FunctionResponse<AppointmentApi.Appointment[]>> =>
+    callFunctionWithResponse('listAppointments', params),
 
-    get: (appointmentId: string) =>
-        callFunction<any, any>('getAppointment', { appointmentId }),
+  /**
+   * Obtém um agendamento por ID
+   */
+  get: (appointmentId: string): Promise<AppointmentApi.Appointment> =>
+    callFunction('getAppointment', { appointmentId }),
 
-    create: (appointment: any) =>
-        callFunction<any, any>('createAppointment', appointment),
+  /**
+   * Cria um novo agendamento
+   */
+  create: (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> =>
+    callFunction('createAppointment', appointment),
 
-    update: (appointmentId: string, updates: any) =>
-        callFunction<any, any>('updateAppointment', { appointmentId, ...updates }),
+  /**
+   * Atualiza um agendamento existente
+   */
+  update: (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> =>
+    callFunction('updateAppointment', { appointmentId, ...updates }),
 
-    cancel: (appointmentId: string, reason?: string) =>
-        callFunction<any, any>('cancelAppointment', { appointmentId, reason }),
+  /**
+   * Cancela um agendamento
+   */
+  cancel: (appointmentId: string, reason?: string): Promise<{ success: boolean }> =>
+    callFunction('cancelAppointment', { appointmentId, reason }),
 
-    checkTimeConflict: (params: { therapistId: string; date: string; startTime: string; endTime: string; excludeAppointmentId?: string }) =>
-        callFunction<any, any>('checkTimeConflict', params),
+  /**
+   * Verifica conflitos de horário
+   */
+  checkTimeConflict: (params: AppointmentApi.CheckConflictParams): Promise<AppointmentApi.ConflictResult> =>
+    callFunction('checkTimeConflict', params),
 };
 
 /**
  * API de Perfis no Firebase Functions
  */
 export const profileApi = {
-    getCurrent: () =>
-        callFunction<any, any>('getProfile', {}),
+  /**
+   * Obtém o perfil do usuário atual
+   */
+  getCurrent: (): Promise<ProfileApi.Profile> =>
+    callFunction('getProfile', {}),
 
-    update: (updates: any) =>
-        callFunction<any, any>('updateProfile', updates),
+  /**
+   * Atualiza o perfil do usuário atual
+   */
+  update: (updates: ProfileApi.UpdateData): Promise<ProfileApi.Profile> =>
+    callFunction('updateProfile', updates),
+};
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+/**
+ * Objeto consolidado com todas as APIs
+ */
+export const api = {
+  patients: patientsApi,
+  exercises: exercisesApi,
+  financial: financialApi,
+  clinical: clinicalApi,
+  appointments: appointmentsApi,
+  profile: profileApi,
 };
