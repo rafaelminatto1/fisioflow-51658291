@@ -6,12 +6,15 @@
   "exports": {
     ".": "./src/index.ts",
     "./firebase": "./src/firebase/index.ts",
-    "./functions": "./src/functions/index.ts",
+    "/functions": "./src/functions/index.ts",
     "./firestore": "./src/firestore/index.ts",
     "./storage": "./src/storage/index.ts",
-    "./offline": "./src/offline/index.ts"
+    "./offline": "./src/offline/index.ts",
+    "./ai": "./src/ai/index.ts"
   },
   "dependencies": {
+    "@fisioflow/shared-types": "workspace:*",
+    "@fisioflow/shared-constants": "workspace:*",
     "@react-native-async-storage/async-storage": "~1.23.1",
     "@react-native-community/netinfo": "~11.3.1",
     "firebase": "^10.0.0",
