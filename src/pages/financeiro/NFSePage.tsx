@@ -23,6 +23,10 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 interface NFSe {
   id: string;
@@ -439,6 +443,8 @@ function NFSePreview({ nfse, onEdit }: { nfse: NFSe; onEdit?: () => void }) {
 }
 
 export default function NFSePage() {
+  const { user } = useAuth();
+  const { currentOrganization: orgData } = useOrganizations();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -489,16 +495,12 @@ export default function NFSePage() {
   const createNFSe = useMutation({
     mutationFn: async (data: typeof formData) => {
       // Buscar dados do prestador
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .single();
+      if (!user) throw new Error('Not authenticated');
+      const db = getFirebaseDb();
+      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      const profile = profileDoc.exists() ? profileDoc.data() : null;
 
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', profile?.organization_id)
-        .single();
+      const org = orgData;
 
       const valorNumerico = parseFloat(data.valor);
       const aliquota = config?.aliquota_iss || 5;
@@ -528,7 +530,7 @@ export default function NFSePage() {
         },
         prestador: {
           nome: org?.name || profile?.full_name || '',
-          cnpj: profile?.cnpj_cnpj || '',
+          cnpj: profile?.cpf_cnpj || profile?.cnpj_cnpj || '',
           inscricao_municipal: config?.inscricao_municipal,
         },
         servico: {

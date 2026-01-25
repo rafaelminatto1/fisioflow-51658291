@@ -211,10 +211,26 @@
       "Bash(killall:*)",
       "Bash(fuser:*)",
       "Bash(npm start:*)",
-      "Bash(./generate-assets.sh:*)"
+      "Bash(./generate-assets.sh:*)",
+      "Bash(firebase:*)",
+      "Bash(sudo:*)",
+      "Bash(WATCHMAN_DISABLE_WATCHMAN=1 npm start:*)",
+      "Bash(# List all hooks that still import from Supabase grep -l \"\"from ''@/integrations/supabase\"\" src/hooks/use*.ts)",
+      "Bash(# Check which hooks exist ls -la src/hooks/use*.ts)",
+      "Bash(# Check which hooks still use Supabase \\(checking various import patterns\\) grep -l \"\"@supabase\\\\|from.*supabase\"\" src/hooks/use*.ts)",
+      "Bash(# Check which hooks are already using Firebase grep -l \"\"@/integrations/firebase\"\" src/hooks/use*.ts)",
+      "Bash(# Check which Inngest workflows still use Supabase grep -l \"\"supabase\"\" src/inngest/workflows/*.ts)",
+      "Bash(# Check if appointments.ts still uses Supabase grep -n \"\"createClient.*supabase\"\" src/inngest/workflows/appointments.ts)",
+      "Bash(# Check if build completed successfully ls -la dist/)",
+      "Bash(# Get accurate count - exclude .migrated and .backup files echo \"\"=== Status Atual da Migração ===\"\" echo \"\"\"\" echo \"\"Hooks principais ativos \\(excluindo .migrated e .backup\\):\"\" ls src/hooks/use*.ts)",
+      "Bash(node:*)",
+      "Bash(playwright:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/patient-ios/apps/patient-ios/apps/patient-ios/assets"
+    ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [

@@ -1,6 +1,36 @@
+/**
+ * usePatientDocuments - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.from('patient_documents') → Firestore collection 'patient_documents'
+ * - supabase.storage.from('patient-documents') → Firebase Storage 'patient-documents'
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseAuth, getFirebaseDb, getFirebaseStorage } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
+const storage = getFirebaseStorage();
 
 export interface PatientDocument {
   id: string;
@@ -27,14 +57,14 @@ export const usePatientDocuments = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-documents', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_documents')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as PatientDocument[];
+      const q = query(
+        collection(db, 'patient_documents'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientDocument[];
     },
     enabled: !!patientId
   });
@@ -46,41 +76,39 @@ export const useUploadDocument = () => {
 
   return useMutation({
     mutationFn: async ({ patient_id, file, category, description }: UploadDocumentData) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      // Upload do arquivo para o Storage
+      // Upload do arquivo para o Firebase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${patient_id}/${Date.now()}.${fileExt}`;
-      const filePath = `patient-documents/${fileName}`;
+      const storageRef = ref(storage, `patient-documents/${fileName}`);
 
-      const { error: uploadError } = await supabase.storage
-        .from('patient-documents')
-        .upload(fileName, file, {
-          cacheControl: '31536000', // 1 ano para documentos
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
 
       // Criar registro de metadata
-      const { data: document, error: dbError } = await supabase
-        .from('patient_documents')
-        .insert({
-          patient_id,
-          file_name: file.name,
-          file_path: filePath,
-          file_type: file.type,
-          file_size: file.size,
-          category,
-          description,
-          uploaded_by: userData.user.id
-        })
-        .select()
-        .single();
+      const now = new Date().toISOString();
+      const documentData = {
+        patient_id,
+        file_name: file.name,
+        file_path: `patient-documents/${fileName}`,
+        file_type: file.type,
+        file_size: file.size,
+        category,
+        description: description || null,
+        uploaded_by: firebaseUser.uid,
+        storage_url: downloadURL,
+        created_at: now,
+        updated_at: now,
+      };
 
-      if (dbError) throw dbError;
-      return document as PatientDocument;
+      const docRef = await addDoc(collection(db, 'patient_documents'), documentData);
+
+      return {
+        id: docRef.id,
+        ...documentData,
+      } as PatientDocument;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-documents', data.patient_id] });
@@ -107,20 +135,13 @@ export const useDeleteDocument = () => {
   return useMutation({
     mutationFn: async (document: PatientDocument) => {
       // Deletar do storage
-      const fileName = document.file_path.replace('patient-documents/', '');
-      const { error: storageError } = await supabase.storage
-        .from('patient-documents')
-        .remove([fileName]);
-
-      if (storageError) throw storageError;
+      const storageRef = ref(storage, document.file_path);
+      await deleteObject(storageRef);
 
       // Deletar do banco
-      const { error: dbError } = await supabase
-        .from('patient_documents')
-        .delete()
-        .eq('id', document.id);
+      const docRef = doc(db, 'patient_documents', document.id);
+      await deleteDoc(docRef);
 
-      if (dbError) throw dbError;
       return document;
     },
     onSuccess: (data) => {
@@ -146,17 +167,21 @@ export const useDownloadDocument = () => {
 
   return useMutation({
     mutationFn: async (document: PatientDocument) => {
-      const fileName = document.file_path.replace('patient-documents/', '');
-      const { data, error } = await supabase.storage
-        .from('patient-documents')
-        .download(fileName);
+      const storageRef = ref(storage, document.file_path);
+      const url = await getDownloadURL(storageRef);
 
-      if (error) throw error;
-      return { data, document };
+      // Fetch the file
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Falha ao baixar arquivo');
+      }
+
+      const blob = await response.blob();
+      return { blob, document };
     },
-    onSuccess: ({ data, document: doc }) => {
+    onSuccess: ({ blob, document: doc }) => {
       // Criar link de download
-      const url = URL.createObjectURL(data);
+      const url = URL.createObjectURL(blob);
       const link = window.document.createElement('a');
       link.href = url;
       link.download = doc.file_name;

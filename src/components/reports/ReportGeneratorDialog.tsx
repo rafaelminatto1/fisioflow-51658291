@@ -12,6 +12,7 @@ import { ReportGeneratorService } from '@/lib/services/ReportGeneratorService';
 import { usePainEvolution, usePainStatistics } from '@/hooks/usePainMaps';
 import { usePatientSurgeries, usePatientPathologies, usePatientGoals } from '@/hooks/usePatientEvolution';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface ReportGeneratorDialogProps {
   patientId: string;
@@ -26,8 +27,9 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
   const [reportType, setReportType] = useState<ReportType>('medical');
   const [customNotes, setCustomNotes] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   const { user } = useAuth();
+  const { profile } = useUserProfile();
   const { data: surgeries = [] } = usePatientSurgeries(patientId);
   const { data: pathologies = [] } = usePatientPathologies(patientId);
   const { data: goals = [] } = usePatientGoals(patientId);
@@ -36,20 +38,13 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
 
   const handleGenerate = async () => {
     if (!user) return;
-    
+
     setIsGenerating(true);
-    
+
     try {
-      // Buscar nome do terapeuta do perfil
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('user_id', user.id)
-        .single();
-      
       const therapistName = profile?.full_name || 'Fisioterapeuta';
       const reportDate = new Date().toLocaleDateString('pt-BR');
-      
+
       // Get initial and current assessment data
       const initialPain = painEvolution.length > 0
         ? (painEvolution[painEvolution.length - 1] as { globalPainLevel?: number; averageIntensity?: number }).globalPainLevel || painEvolution[painEvolution.length - 1].averageIntensity || 0
@@ -113,7 +108,7 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
       } else if (reportType === 'patient') {
         // Relatório Simplificado para Paciente
         const painReduction = painStats?.painReduction || 0;
-        
+
         ReportGeneratorService.generatePatientReport({
           patientName,
           reportDate,
@@ -173,7 +168,7 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
           challenges: [
             'Baixa adesão aos exercícios domiciliares em dias chuvosos'
           ],
-          riskFactors: pathologies.filter(p => p.status === 'em_tratamento').length > 2 
+          riskFactors: pathologies.filter(p => p.status === 'em_tratamento').length > 2
             ? ['Múltiplas patologias ativas simultâneas']
             : undefined,
           recommendations: [
@@ -218,7 +213,7 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
                     <label htmlFor="medical" className="cursor-pointer">
                       <p className="font-semibold">Relatório Médico</p>
                       <p className="text-sm text-muted-foreground">
-                        Relatório técnico completo para envio ao médico solicitante. Inclui histórico cirúrgico, 
+                        Relatório técnico completo para envio ao médico solicitante. Inclui histórico cirúrgico,
                         patologias, medicações, evolução clínica detalhada com testes e medições.
                       </p>
                     </label>
@@ -234,7 +229,7 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
                     <label htmlFor="patient" className="cursor-pointer">
                       <p className="font-semibold">Relatório para Paciente</p>
                       <p className="text-sm text-muted-foreground">
-                        Relatório simplificado e motivacional para o paciente. Destaca conquistas, progresso em linguagem 
+                        Relatório simplificado e motivacional para o paciente. Destaca conquistas, progresso em linguagem
                         acessível, objetivos atuais e próximos passos.
                       </p>
                     </label>
@@ -250,7 +245,7 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
                     <label htmlFor="internal" className="cursor-pointer">
                       <p className="font-semibold">Relatório Interno</p>
                       <p className="text-sm text-muted-foreground">
-                        Relatório para equipe interna de fisioterapeutas. Inclui métricas de adesão, análise de risco, 
+                        Relatório para equipe interna de fisioterapeutas. Inclui métricas de adesão, análise de risco,
                         recomendações técnicas e observações clínicas.
                       </p>
                     </label>
@@ -292,7 +287,7 @@ function calculateTimeSince(dateStr: string): string {
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays < 30) return `${diffDays} dias`;
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} meses`;
   return `${Math.floor(diffDays / 365)} anos`;

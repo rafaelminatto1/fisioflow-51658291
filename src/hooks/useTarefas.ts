@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getUserOrganizationId } from '@/utils/userHelpers';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
 
 export interface Tarefa {
   id: string;
@@ -103,13 +105,10 @@ export function useCreateTarefa() {
 
   return useMutation({
     mutationFn: async (tarefa: Partial<Tarefa>) => {
-      // Get org_id from profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .single();
-
-      const user = await supabase.auth.getUser();
+      // Get org_id from profile (migrated to helper that uses Firestore)
+      const organization_id = await getUserOrganizationId();
+      const auth = getFirebaseAuth();
+      const firebaseUser = auth.currentUser;
 
       const { data, error } = await supabase
         .from('tarefas')
@@ -121,8 +120,8 @@ export function useCreateTarefa() {
           data_vencimento: tarefa.data_vencimento,
           tags: tarefa.tags || [],
           order_index: tarefa.order_index || 0,
-          organization_id: profile?.organization_id,
-          created_by: user.data.user?.id
+          organization_id,
+          created_by: firebaseUser?.uid
         }])
         .select()
         .single();
