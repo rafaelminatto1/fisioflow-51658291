@@ -2,7 +2,8 @@
  * Helpers para operações relacionadas ao usuário e organização
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
 
 /**
  * Obtém o organization_id do usuário atual
@@ -10,44 +11,28 @@ import { supabase } from '@/integrations/supabase/client';
  * @throws Error se o usuário não estiver autenticado
  */
 export async function getUserOrganizationId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const auth = getFirebaseAuth();
+  const db = getFirebaseDb();
+  const user = auth.currentUser;
 
   if (!user) {
     throw new Error('Usuário não autenticado');
   }
 
-  // Validação explícita de UUID para evitar erro 400 no Supabase
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(user.id)) {
-    console.error('CRITICAL: Malformed User ID detected (pre-check):', user.id);
-    localStorage.clear();
-    sessionStorage.clear();
-    await supabase.auth.signOut();
-    window.location.href = '/login';
-    throw new Error('Sessão inválida: ID de usuário malformado');
-  }
+  try {
+    const profileRef = doc(db, 'profiles', user.uid);
+    const profileSnap = await getDoc(profileRef);
 
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('organization_id')
-    .eq('user_id', user.id)
-    .single();
-
-  if (error) {
-    // Se o erro for de sintaxe de UUID (código 22P02), é um sinal claro de ID inválido
-    if (error.code === '22P02') {
-      console.error('CRITICAL: Invalid UUID syntax detected in RLS query', user.id);
-      // Limpar todo o armazenamento local para garantir
-      localStorage.clear();
-      sessionStorage.clear();
-      await supabase.auth.signOut();
-      window.location.href = '/login'; // Redirecionar para login em vez de reload
-      throw new Error('Sessão inválida detected via DB error');
+    if (!profileSnap.exists()) {
+      return null;
     }
+
+    const profileData = profileSnap.data();
+    return profileData?.organization_id || null;
+  } catch (error: any) {
+    console.error('Erro ao buscar organização do usuário no Firestore:', error);
     throw new Error(`Erro ao buscar organização do usuário: ${error.message}`);
   }
-
-  return profile?.organization_id || null;
 }
 
 /**

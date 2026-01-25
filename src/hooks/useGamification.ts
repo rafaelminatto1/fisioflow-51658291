@@ -1,6 +1,18 @@
+/**
+ * useGamification - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
+ * - supabase.from('daily_quests') → Firestore collection 'daily_quests'
+ * - supabase.from('achievements') → Firestore collection 'achievements'
+ * - supabase.from('achievements_log') → Firestore collection 'achievements_log'
+ * - supabase.from('xp_transactions') → Firestore collection 'xp_transactions'
+ * - supabase.from('shop_items') → Firestore collection 'shop_items'
+ * - supabase.from('user_inventory') → Firestore collection 'user_inventory'
+ */
+
 import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { generateSmartQuests, GeneratedQuest } from '@/lib/gamification/quest-generator';
@@ -20,6 +32,23 @@ import {
   type UserInventoryItem,
   type BuyItemParams,
 } from '@/types/gamification';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  setDoc
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // Level Calculation Constants - buscar do banco se disponível
 const LEVEL_BASE_XP = 1000;
@@ -56,7 +85,7 @@ const calculateNewStreak = (currentStreak: number, lastActivityDate: string | nu
 
   if (diffDays === 0) return { newStreak: currentStreak, shouldReset: false }; // Same day
   if (diffDays === 1) return { newStreak: currentStreak, shouldReset: false }; // Consecutive day
-  
+
   return { newStreak: 1, shouldReset: true }; // Missed a day
 };
 
@@ -74,7 +103,7 @@ export interface UseGamificationResult {
   shopItems: ShopItem[];
   userInventory: UserInventoryItem[];
   buyItem: ReturnType<typeof useMutation<void, Error, BuyItemParams>>;
-  
+
   // Computed
   xpPerLevel: number;
   currentLevel: number;
@@ -97,13 +126,14 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: shopItems = [] } = useQuery({
     queryKey: ['shop-items'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('shop_items')
-        .select('*')
-        .eq('is_active', true)
-        .order('cost', { ascending: true });
-      if (error) return [];
-      return data as ShopItem[];
+      const q = query(
+        collection(db, 'shop_items'),
+        where('is_active', '==', true),
+        orderBy('cost', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShopItem[];
     },
     staleTime: 1000 * 60 * 30, // 30 mins
   });
@@ -111,12 +141,13 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: userInventory = [] } = useQuery({
     queryKey: ['user-inventory', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_inventory')
-        .select('*, item:shop_items(*)')
-        .eq('user_id', patientId);
-      if (error) return [];
-      return data as UserInventoryItem[];
+      const q = query(
+        collection(db, 'user_inventory'),
+        where('user_id', '==', patientId)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserInventoryItem[];
     },
     enabled: !!patientId,
   });
@@ -127,24 +158,27 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_gamification')
-        .select('*')
-        .eq('patient_id', patientId)
-        .maybeSingle();
+      const docRef = doc(db, 'patient_gamification', patientId);
+      const snapshot = await getDoc(docRef);
 
-      if (error && error.code !== 'PGRST116') throw error;
+      let data = null;
+      if (snapshot.exists()) {
+        data = { id: snapshot.id, ...snapshot.data() } as GamificationProfile;
+      }
 
       if (!data) {
         // Create profile if not exists
-        const { data: newProfile, error: createError } = await supabase
-          .from('patient_gamification')
-          .insert({ patient_id: patientId })
-          .select()
-          .single();
-        
-        if (createError) throw createError;
-        return newProfile as GamificationProfile;
+        const newProfile = {
+          patient_id: patientId,
+          total_points: 0,
+          level: 1,
+          current_streak: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as GamificationProfile;
+
+        await setDoc(docRef, newProfile);
+        return newProfile;
       }
 
       // Check Streak Logic with Inventory Protection
@@ -156,55 +190,51 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
         if (shouldReset) {
           // Check for Streak Freeze in Inventory
-          const { data: freezeItem } = await supabase
-            .from('user_inventory')
-            .select('*, item:shop_items!inner(code)')
-            .eq('user_id', patientId)
-            .eq('item.code', 'streak_freeze')
-            .gt('quantity', 0)
-            .maybeSingle();
+          const freezeQ = query(
+            collection(db, 'user_inventory'),
+            where('user_id', '==', patientId),
+            where('item_code', '==', 'streak_freeze'),
+            where('quantity', '>', 0),
+            limit(1)
+          );
 
-          if (freezeItem) {
+          const freezeSnapshot = await getDocs(freezeQ);
+
+          if (!freezeSnapshot.empty) {
+            const freezeItem = { id: freezeSnapshot.docs[0].id, ...freezeSnapshot.docs[0].data() };
+
             // Consume Freeze
             const newQuantity = (freezeItem.quantity || 1) - 1;
             if (newQuantity === 0) {
-               await supabase.from('user_inventory').delete().eq('id', freezeItem.id);
+              await deleteDoc(doc(db, 'user_inventory', freezeItem.id));
             } else {
-               await supabase.from('user_inventory').update({ quantity: newQuantity }).eq('id', freezeItem.id);
+              await updateDoc(doc(db, 'user_inventory', freezeItem.id), { quantity: newQuantity });
             }
 
             // Save Streak (fake an activity for yesterday to keep it alive)
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            
-            const { data: savedProfile } = await supabase
-              .from('patient_gamification')
-              .update({ last_activity_date: yesterday.toISOString() })
-              .eq('id', data.id)
-              .select()
-              .single();
-            
-            if (savedProfile) {
-               console.log("Streak Saved by Freeze!");
-               return savedProfile as GamificationProfile;
+
+            await updateDoc(docRef, { last_activity_date: yesterday.toISOString() });
+
+            const updatedSnap = await getDoc(docRef);
+            if (updatedSnap.exists()) {
+              console.log("Streak Saved by Freeze!");
+              return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
             }
           }
 
           // No freeze available? Reset.
-          const { data: updated, error: updateError } = await supabase
-            .from('patient_gamification')
-            .update({ current_streak: 0 })
-            .eq('id', data.id)
-            .select()
-            .single();
+          await updateDoc(docRef, { current_streak: 0 });
 
-          if (!updateError && updated) {
-            return updated as GamificationProfile;
+          const updatedSnap = await getDoc(docRef);
+          if (updatedSnap.exists()) {
+            return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
           }
         }
       }
 
-      return data as GamificationProfile;
+      return data;
     },
     enabled: !!patientId,
     staleTime: 1000 * 60 * 2,
@@ -219,24 +249,26 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       const today = new Date().toISOString().split('T')[0];
 
       // 1. Try to get existing quests for today
-      const { data, error } = await supabase
-        .from('daily_quests')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('date', today)
-        .maybeSingle();
+      const q = query(
+        collection(db, 'daily_quests'),
+        where('patient_id', '==', patientId),
+        where('date', '==', today),
+        limit(1)
+      );
 
-      if (error && error.code !== 'PGRST116') return [];
+      const snapshot = await getDocs(q);
 
-      if (data) {
+      if (!snapshot.empty) {
+        const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
         // Parse stored JSON
         const quests = data.quests_data as DailyQuestItem[];
         return quests;
       }
 
       // 2. No quests found? Generate Smart Quests!
-      const smartQuests: GeneratedQuest[] = await generateSmartQuests(supabase, patientId);
-      
+      // Note: generateSmartQuests needs to be updated to accept Firebase db
+      const smartQuests: GeneratedQuest[] = await generateSmartQuests({ supabase: null, db }, patientId);
+
       const newQuestsData: DailyQuestItem[] = smartQuests.map(q => ({
         id: q.id,
         title: q.title,
@@ -247,18 +279,13 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       }));
 
       // 3. Persist generated quests
-      const { error: insertError } = await supabase
-        .from('daily_quests')
-        .insert({
-          patient_id: patientId,
-          date: today,
-          quests_data: newQuestsData,
-          completed_count: 0
-        });
-
-      if (insertError) {
-        console.error("Failed to save generated quests:", insertError);
-      }
+      await addDoc(collection(db, 'daily_quests'), {
+        patient_id: patientId,
+        date: today,
+        quests_data: newQuestsData,
+        completed_count: 0,
+        created_at: new Date().toISOString(),
+      });
 
       return newQuestsData;
     },
@@ -272,14 +299,14 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: achievementsData } = useQuery({
     queryKey: ['achievements', patientId],
     queryFn: async () => {
-      const [allRes, unlockedRes] = await Promise.all([
-        supabase.from('achievements').select('*').eq('is_active', true),
-        supabase.from('achievements_log').select('*').eq('patient_id', patientId)
+      const [allSnapshot, unlockedSnapshot] = await Promise.all([
+        getDocs(query(collection(db, 'achievements'), where('is_active', '==', true))),
+        getDocs(query(collection(db, 'achievements_log'), where('patient_id', '==', patientId)))
       ]);
 
       return {
-        all: (allRes.data as Achievement[]) || [],
-        unlocked: (unlockedRes.data as UnlockedAchievement[]) || []
+        all: allSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Achievement[],
+        unlocked: unlockedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UnlockedAchievement[]
       };
     },
     enabled: !!patientId,
@@ -292,13 +319,15 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: recentTransactions = [] } = useQuery({
     queryKey: ['xp-transactions', patientId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('xp_transactions')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      return data || [];
+      const q = query(
+        collection(db, 'xp_transactions'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc'),
+        limit(10)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
     },
     enabled: !!patientId
   });
@@ -312,45 +341,40 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       if (!profile) throw new Error("Profile not loaded");
 
       // 1. Log Transaction
-      await supabase.from('xp_transactions').insert({
+      await addDoc(collection(db, 'xp_transactions'), {
         patient_id: patientId,
         amount,
         reason,
-        description
+        description,
+        created_at: new Date().toISOString(),
       });
 
       // 2. Update Profile
       const newTotalPoints = (profile.total_points || 0) + amount;
-      const calc = calculateLevel(newTotalPoints); // simplified level logic based on total points for now, usually XP is cumulative
+      const calc = calculateLevel(newTotalPoints);
 
-      // We need to fetch current XP to update accurately if we separate Points (Currency) from XP (Level)
-      // For V2, let's assume total_points is the currency/score. 
-      // If we want XP separate, we should have used current_xp column.
-      // Let's stick to total_points for simplicity in this hook version.
-      
-      const { data: updatedProfile, error } = await supabase
-        .from('patient_gamification')
-        .update({
-          total_points: newTotalPoints,
-          level: calc.level,
-          last_activity_date: new Date().toISOString()
-        })
-        .eq('patient_id', patientId)
-        .select()
-        .single();
+      const docRef = doc(db, 'patient_gamification', patientId);
+      await updateDoc(docRef, {
+        total_points: newTotalPoints,
+        level: calc.level,
+        last_activity_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
+      // Fetch updated profile
+      const updatedSnap = await getDoc(docRef);
+      const updatedProfile = { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
 
       return {
         newLevel: updatedProfile.level,
-        newXp: updatedProfile.total_points, // using total points as XP for now
+        newXp: updatedProfile.total_points,
         leveledUp: updatedProfile.level > profile.level
       };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
-      
+
       toast({
         title: `+${data.newXp - (profile?.total_points || 0)} XP Ganho!`,
         description: data.leveledUp ? "Parabéns! Você subiu de nível!" : "Continue assim!",
@@ -366,17 +390,23 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
       // 1. Update Quest State locally (optimistic) or DB
       const updatedQuests = dailyQuests.map(q => q.id === questId ? { ...q, completed: true } : q);
-      
-      const { error } = await supabase
-        .from('daily_quests')
-        .update({ 
-          quests_data: updatedQuests,
-          completed_count: updatedQuests.filter(q => q.completed).length
-        })
-        .eq('patient_id', patientId)
-        .eq('date', new Date().toISOString().split('T')[0]);
 
-      if (error) throw error;
+      const today = new Date().toISOString().split('T')[0];
+      const q = query(
+        collection(db, 'daily_quests'),
+        where('patient_id', '==', patientId),
+        where('date', '==', today),
+        limit(1)
+      );
+
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        await updateDoc(snapshot.docs[0].ref, {
+          quests_data: updatedQuests,
+          completed_count: updatedQuests.filter(q => q.completed).length,
+          updated_at: new Date().toISOString(),
+        });
+      }
 
       // 2. Award XP
       await awardXp.mutateAsync({
@@ -396,30 +426,34 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       if (profile.total_points < cost) throw new Error("Pontos insuficientes");
 
       // 1. Deduct Points
-      const { error: pointsError } = await supabase
-        .from('patient_gamification')
-        .update({ total_points: profile.total_points - cost })
-        .eq('patient_id', patientId);
-      
-      if (pointsError) throw pointsError;
+      const docRef = doc(db, 'patient_gamification', patientId);
+      await updateDoc(docRef, {
+        total_points: profile.total_points - cost,
+        updated_at: new Date().toISOString(),
+      });
 
       // 2. Add to Inventory
-      const { data: existing } = await supabase
-        .from('user_inventory')
-        .select('*')
-        .eq('user_id', patientId)
-        .eq('item_id', itemId)
-        .maybeSingle();
+      const q = query(
+        collection(db, 'user_inventory'),
+        where('user_id', '==', patientId),
+        where('item_id', '==', itemId),
+        limit(1)
+      );
 
-      if (existing) {
-        await supabase
-          .from('user_inventory')
-          .update({ quantity: (existing.quantity || 1) + 1 })
-          .eq('id', existing.id);
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        await updateDoc(snapshot.docs[0].ref, {
+          quantity: (snapshot.docs[0].data().quantity || 1) + 1,
+          updated_at: new Date().toISOString(),
+        });
       } else {
-        await supabase
-          .from('user_inventory')
-          .insert({ user_id: patientId, item_id: itemId, quantity: 1 });
+        await addDoc(collection(db, 'user_inventory'), {
+          user_id: patientId,
+          item_id: itemId,
+          quantity: 1,
+          created_at: new Date().toISOString(),
+        });
       }
     },
     onSuccess: () => {
@@ -468,7 +502,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     shopItems,
     userInventory,
     buyItem,
-    
+
     // Computed Values
     xpPerLevel: calc.xpForNextLevel,
     currentLevel: calc.level,

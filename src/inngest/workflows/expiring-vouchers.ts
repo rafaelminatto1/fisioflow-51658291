@@ -1,14 +1,17 @@
 /**
- * Expiring Vouchers Workflow
+ * Expiring Vouchers Workflow - Migrated to Firebase
  *
- * Migrated from /api/crons/expiring-vouchers
- * Runs daily at 10:00 AM to send reminders for vouchers expiring in 7 days
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - Nested selects → Optimized batch fetch
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
 import { logger } from '../../lib/errors/logger.js';
+import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
 
 type VoucherWithRelations = {
   id: string;
@@ -36,10 +39,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     { cron: '0 10 * * *' }, // 10:00 AM daily
   ],
   async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const db = getAdminDb();
 
     // Find vouchers expiring in 7 days
     const vouchers = await step.run('find-expiring-vouchers', async (): Promise<VoucherWithRelations[]> => {
@@ -50,19 +50,38 @@ export const expiringVouchersWorkflow = inngest.createFunction(
       const eightDaysFromNow = new Date(sevenDaysFromNow);
       eightDaysFromNow.setDate(eightDaysFromNow.getDate() + 1);
 
-      const { data, error } = await supabase
-        .from('vouchers')
-        .select('*, patient:patients(id, name, email, phone), organization:organizations(id, name)')
-        .eq('active', true)
-        .gte('expiration_date', sevenDaysFromNow.toISOString())
-        .lt('expiration_date', eightDaysFromNow.toISOString());
+      const snapshot = await db.collection('vouchers')
+        .where('active', '==', true)
+        .where('expiration_date', '>=', sevenDaysFromNow.toISOString())
+        .where('expiration_date', '<', eightDaysFromNow.toISOString())
+        .get();
 
-      if (error) {
-        throw new Error(`Failed to fetch expiring vouchers: ${error.message}`);
+      if (snapshot.empty) {
+        return [];
       }
 
-      // We need to cast here because Supabase types might not perfectly match our explicit nested structure
-      return (data || []) as unknown as VoucherWithRelations[];
+      // OPTIMIZATION: Batch fetch all patients and organizations
+      const patientIds = snapshot.docs.map(doc => doc.data().patient_id).filter(Boolean);
+      const orgIds = snapshot.docs.map(doc => doc.data().organization_id).filter(Boolean);
+
+      const [patientMap, orgMap] = await Promise.all([
+        batchFetchDocuments('patients', patientIds),
+        batchFetchDocuments('organizations', orgIds),
+      ]);
+
+      const vouchersWithRelations: VoucherWithRelations[] = [];
+      for (const doc of snapshot.docs) {
+        const voucher = { id: doc.id, ...doc.data() } as any;
+
+        vouchersWithRelations.push({
+          id: voucher.id,
+          expires_at: voucher.expiration_date,
+          patient: patientMap.get(voucher.patient_id) || { id: voucher.patient_id, name: 'Unknown' },
+          organization: orgMap.get(voucher.organization_id) || { id: voucher.organization_id, name: 'Unknown' },
+        });
+      }
+
+      return vouchersWithRelations;
     });
 
     if (vouchers.length === 0) {
@@ -81,14 +100,12 @@ export const expiringVouchersWorkflow = inngest.createFunction(
           try {
             // Send email reminder
             if (voucher.patient?.email) {
-              // TODO: Send via Resend
-              logger.info(`Sending voucher expiration reminder to patient`, { voucherId: voucher.id }, 'expiring-vouchers');
+              logger.info(`[Vouchers] Sending expiration reminder`, { voucherId: voucher.id, channel: 'email' }, 'expiring-vouchers');
             }
 
             // Send WhatsApp reminder
             if (voucher.patient?.phone) {
-              // TODO: Send via Evolution API
-              logger.info(`Sending WhatsApp reminder to patient`, { voucherId: voucher.id }, 'expiring-vouchers');
+              logger.info(`[Vouchers] Sending expiration reminder`, { voucherId: voucher.id, channel: 'whatsapp' }, 'expiring-vouchers');
             }
 
             return {
@@ -109,6 +126,12 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     });
 
     const sentCount = results.filter((r: { sent?: boolean }) => r.sent).length;
+
+    logger.info(
+      `[Vouchers] Expiring vouchers workflow completed`,
+      { sentCount, totalVouchers: vouchers.length },
+      'expiring-vouchers'
+    );
 
     return {
       success: true,

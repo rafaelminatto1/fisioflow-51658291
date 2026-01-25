@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
-import { colors } from '@fisioflow/shared-constants';
+import { colors } from '../../lib/constants';
 
 export default function AuthLayout() {
   const { user, loading } = useAuth();

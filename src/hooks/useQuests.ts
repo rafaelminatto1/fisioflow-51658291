@@ -1,6 +1,30 @@
+/**
+ * useQuests - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patient_quests') → Firestore collection 'patient_quests'
+ * - supabase.from('quest_definitions') → Firestore collection 'quest_definitions'
+ * - supabase.rpc() → Cloud Functions (pendente)
+ * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  getDocFromServer
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export type QuestCategory = 'daily' | 'weekly' | 'special';
 export type QuestStatus = 'pending' | 'in_progress' | 'completed' | 'expired';
@@ -64,17 +88,33 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
       if (!patientId) return [];
 
       try {
-        const { data, error } = await supabase
-          .from('patient_quests')
-          .select(`
-            *,
-            quest_definition:quest_definitions(*)
-          `)
-          .eq('patient_id', patientId)
-          .order('created_at', { ascending: false });
+        const q = query(
+          collection(db, 'patient_quests'),
+          where('patient_id', '==', patientId),
+          orderBy('created_at', 'desc')
+        );
 
-        if (error) throw error;
-        return data as PatientQuest[];
+        const snapshot = await getDocs(q);
+        const quests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientQuest[];
+
+        // Fetch quest definitions for each quest
+        const questsWithDefinitions = await Promise.all(
+          quests.map(async (quest) => {
+            if (quest.quest_id) {
+              const questDefRef = doc(db, 'quest_definitions', quest.quest_id);
+              const questDefSnap = await getDoc(questDefRef);
+              if (questDefSnap.exists()) {
+                return {
+                  ...quest,
+                  quest_definition: { id: questDefSnap.id, ...questDefSnap.data() } as QuestDefinition,
+                };
+              }
+            }
+            return quest;
+          })
+        );
+
+        return questsWithDefinitions;
       } catch (err) {
         console.error('Failed to fetch quests:', err);
         throw err;
@@ -90,14 +130,14 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
     queryKey: ['available-quests'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('quest_definitions')
-          .select('*')
-          .eq('is_active', true)
-          .order('category', { ascending: true });
+        const q = query(
+          collection(db, 'quest_definitions'),
+          where('is_active', '==', true),
+          orderBy('category', 'asc')
+        );
 
-        if (error) throw error;
-        return data as QuestDefinition[];
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as QuestDefinition[];
       } catch (err) {
         console.error('Failed to fetch available quests:', err);
         return [];
@@ -130,17 +170,14 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
         throw new Error('Você já tem esta quest ativa');
       }
 
-      const { error } = await supabase
-        .from('patient_quests')
-        .insert({
-          patient_id: patientId,
-          quest_id: questId,
-          status: 'in_progress',
-          progress: {},
-          started_at: new Date().toISOString(),
-        });
-
-      if (error) throw error;
+      await addDoc(collection(db, 'patient_quests'), {
+        patient_id: patientId,
+        quest_id: questId,
+        status: 'in_progress',
+        progress: {},
+        started_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-quests', patientId] });
@@ -168,40 +205,33 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
 
       const xpReward = quest.quest_definition?.xp_reward || 0;
 
-      // Adicionar XP usando a nova função que calcula nível automaticamente
+      // Adicionar XP ao gamification profile
       if (xpReward > 0) {
-        // Usar a função RPC que calcula nível automaticamente
-        const { error: rpcError } = await supabase.rpc('add_xp_with_level_up', {
-          p_patient_id: patientId,
-          p_amount: xpReward,
-          p_reason: 'quest_reward',
-          p_description: `Recompensa: ${quest.quest_definition?.title || 'Quest'}`,
-        });
+        // Buscar profile atual
+        const profileQ = query(
+          collection(db, 'patient_gamification'),
+          where('patient_id', '==', patientId),
+          limit(1)
+        );
+        const profileSnap = await getDocs(profileQ);
 
-        if (rpcError) {
-          // Fallback para função antiga se a nova não existir
-          console.warn('Using fallback XP addition method');
-          const { error: txError } = await supabase.from('xp_transactions').insert({
+        if (!profileSnap.empty) {
+          const profileData = profileSnap.docs[0].data();
+          const newTotalPoints = (profileData.total_points || 0) + xpReward;
+
+          await updateDoc(profileSnap.docs[0].ref, {
+            total_points: newTotalPoints,
+            updated_at: new Date().toISOString(),
+          });
+
+          // Adicionar transação de XP
+          await addDoc(collection(db, 'xp_transactions'), {
             patient_id: patientId,
             amount: xpReward,
             reason: 'quest_reward',
             description: `Recompensa: ${quest.quest_definition?.title || 'Quest'}`,
+            created_at: new Date().toISOString(),
           });
-
-          if (txError) throw txError;
-
-          // Atualizar gamification profile
-          const { data: profile } = await supabase
-            .from('patient_gamification')
-            .select('total_points')
-            .eq('patient_id', patientId)
-            .single();
-
-          if (profile) {
-            await supabase.from('patient_gamification')
-              .update({ total_points: (profile.total_points || 0) + xpReward })
-              .eq('patient_id', patientId);
-          }
         }
       }
     },
@@ -231,11 +261,9 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
     if (!patientId) return;
 
     try {
-      // Chamar a função do Supabase para refresh
-      const { error } = await supabase.rpc('refresh_daily_quests');
-
-      if (error) throw error;
-
+      // Firebase doesn't support RPC functions directly
+      // This would need to be a Cloud Function
+      // For now, just invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['patient-quests', patientId] });
 
       toast({

@@ -1,7 +1,26 @@
+/**
+ * useDashboardStats - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('profiles') → Firestore collection 'profiles'
+ * - supabase.realtime → Firestore onSnapshot
+ */
+
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getCountFromServer,
+  query,
+  where,
+  onSnapshot
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 interface DashboardStats {
   totalPatients: number;
@@ -46,7 +65,7 @@ export const useDashboardStats = () => {
         initialDelay: number = 1000
       ): Promise<T> => {
         let lastError: Error | unknown;
-        
+
         for (let attempt = 0; attempt < maxRetries; attempt++) {
           try {
             return await fn();
@@ -58,7 +77,7 @@ export const useDashboardStats = () => {
             }
           }
         }
-        
+
         throw lastError;
       };
 
@@ -76,69 +95,65 @@ export const useDashboardStats = () => {
       ] = await Promise.allSettled([
         retryWithBackoff(() =>
           withTimeout(
-            supabase
-              .from('patients')
-              .select('*', { count: 'exact', head: true }),
+            getCountFromServer(collection(db, 'patients')),
             8000
-          )
+          ).then(result => result.data().count)
         ),
         retryWithBackoff(() =>
           withTimeout(
-            supabase
-              .from('patients')
-              .select('*', { count: 'exact', head: true })
-              .gte('created_at', startOfMonth.toISOString()),
+            getCountFromServer(
+              query(collection(db, 'patients'), where('created_at', '>=', startOfMonth.toISOString()))
+            ),
             8000
-          )
+          ).then(result => result.data().count)
         ),
         retryWithBackoff(() =>
           withTimeout(
-            supabase
-              .from('appointments')
-              .select('*', { count: 'exact', head: true })
-              .eq('appointment_date', today),
+            getCountFromServer(
+              query(collection(db, 'appointments'), where('appointment_date', '==', today))
+            ),
             8000
-          )
+          ).then(result => result.data().count)
         ),
         retryWithBackoff(() =>
           withTimeout(
-            supabase
-              .from('appointments')
-              .select('*', { count: 'exact', head: true })
-              .eq('appointment_date', today)
-              .eq('status', 'concluido'),
+            getCountFromServer(
+              query(
+                collection(db, 'appointments'),
+                where('appointment_date', '==', today),
+                where('status', '==', 'concluido')
+              )
+            ),
             8000
-          )
+          ).then(result => result.data().count)
         ),
         retryWithBackoff(() =>
           withTimeout(
-            supabase
-              .from('profiles')
-              .select('*', { count: 'exact', head: true }),
+            getCountFromServer(collection(db, 'profiles')),
             8000
-          )
+          ).then(result => result.data().count)
         ),
       ]);
 
       // Extrair dados com fallback
       const totalPatients = totalPatientsResult.status === 'fulfilled'
-        ? totalPatientsResult.value.count || 0
+        ? totalPatientsResult.value || 0
         : 0;
 
       const newPatients = newPatientsResult.status === 'fulfilled'
-        ? newPatientsResult.value.count || 0
+        ? newPatientsResult.value || 0
         : 0;
 
       const todayAppointments = todayAppointmentsResult.status === 'fulfilled'
-        ? todayAppointmentsResult.value.count || 0
+        ? todayAppointmentsResult.value || 0
         : 0;
 
       const completedToday = completedTodayResult.status === 'fulfilled'
-        ? completedTodayResult.value.count || 0
+        ? completedTodayResult.value || 0
         : 0;
 
       const activeTherapists = activeTherapistsResult.status === 'fulfilled'
-        ? activeTherapistsResult.value.count || 0
+        ? activeTherapistsResult.value || 0
         : 0;
 
       setStats({
@@ -170,39 +185,40 @@ export const useDashboardStats = () => {
   useEffect(() => {
     loadStats();
 
-    // FIX: Track subscription state to avoid WebSocket errors
-    let isSubscribed = false;
-    const subscription = supabase.channel('dashboard-stats');
+    // Set up real-time listeners using Firestore onSnapshot
+    const unsubscribes: (() => void)[] = [];
 
-    (subscription as any)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'appointments' },
-        () => {
-          loadStats().catch((err) => {
-            logger.error('Erro ao recarregar estatísticas após mudança em appointments', err, 'useDashboardStats');
-          });
-        }
-      )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'patients' },
-        () => {
-          loadStats().catch((err) => {
-            logger.error('Erro ao recarregar estatísticas após mudança em patients', err, 'useDashboardStats');
-          });
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
+    // Listen for changes in appointments
+    const appointmentsUnsubscribe = onSnapshot(
+      collection(db, 'appointments'),
+      () => {
+        loadStats().catch((err) => {
+          logger.error('Erro ao recarregar estatísticas após mudança em appointments', err, 'useDashboardStats');
+        });
+      },
+      (error) => {
+        logger.error('Real-time appointments error:', error, 'useDashboardStats');
+      }
+    );
+    unsubscribes.push(appointmentsUnsubscribe);
+
+    // Listen for changes in patients
+    const patientsUnsubscribe = onSnapshot(
+      collection(db, 'patients'),
+      () => {
+        loadStats().catch((err) => {
+          logger.error('Erro ao recarregar estatísticas após mudança em patients', err, 'useDashboardStats');
+        });
+      },
+      (error) => {
+        logger.error('Real-time patients error:', error, 'useDashboardStats');
+      }
+    );
+    unsubscribes.push(patientsUnsubscribe);
 
     return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(subscription).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
+      // Unsubscribe from all listeners
+      unsubscribes.forEach(unsub => unsub());
     };
   }, [loadStats]);
 
