@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Database } from '@/integrations/supabase/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
 
 type CommunicationType = Database['public']['Enums']['communication_type'];
 type CommunicationStatus = Database['public']['Enums']['communication_status'];
@@ -23,7 +26,7 @@ export interface Communication {
   organization_id: string;
   patient?: {
     id: string;
-    name: string;
+    full_name: string;
     email: string | null;
     phone: string | null;
   } | null;
@@ -37,7 +40,7 @@ export function useCommunications(filters?: { channel?: string; status?: string 
         .from('communication_logs')
         .select(`
           *,
-          patient:patients(id, name, email, phone)
+          patient:patients(id, full_name, email, phone)
         `)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -94,17 +97,19 @@ interface SendCommunicationData {
 }
 
 export function useSendCommunication() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: SendCommunicationData) => {
-      // Get organization_id from profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .single();
+      // Get organization_id from profile in Firestore
+      if (!user) throw new Error('Usuário não autenticado');
 
-      if (!profile?.organization_id) {
+      const db = getFirebaseDb();
+      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      const profileData = profileDoc.exists() ? profileDoc.data() : null;
+
+      if (!profileData?.organization_id) {
         throw new Error('Organização não encontrada');
       }
 
@@ -117,7 +122,7 @@ export function useSendCommunication() {
           subject: data.subject || null,
           body: data.body,
           status: 'pendente' as CommunicationStatus,
-          organization_id: profile.organization_id,
+          organization_id: profileData.organization_id,
         })
         .select()
         .single();

@@ -1,6 +1,8 @@
-import { PushNotifications, PushNotificationSchema, Token } from '@capacitor/push-notifications';
+import { PushNotifications, PushNotificationSchema, Token, ActionPerformed } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
+import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { doc, setDoc } from 'firebase/firestore';
 
 /**
  * Serviço para gerenciar Push Notifications no iOS
@@ -61,7 +63,7 @@ export async function initPushNotifications(): Promise<void> {
     });
 
     // Listener: Notificação clicada (app aberto pela notificação)
-    await PushNotifications.addListener('pushNotificationActionPerformed', (notification: PushNotificationSchema) => {
+    await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
       console.log('Notificação clicada:', notification);
       handleNotificationAction(notification);
     });
@@ -73,21 +75,35 @@ export async function initPushNotifications(): Promise<void> {
 /**
  * Salva o token de push no Supabase
  */
+/**
+ * Salva o token de push no Firebase Firestore
+ */
 async function savePushTokenToDatabase(token: string): Promise<void> {
   try {
-    // TODO: Implementar quando Supabase client estiver disponível
-    // const { data: { user } } = await supabase.auth.getUser();
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
 
-    // if (user) {
-    //   await supabase.from('user_push_tokens').upsert({
-    //     user_id: user.id,
-    //     token: token,
-    //     platform: Capacitor.getPlatform(),
-    //     updated_at: new Date().toISOString(),
-    //   });
-    // }
+    if (currentUser) {
+      const db = getFirebaseDb();
+      // Use device ID or platform as key if possible, but for now we settle for user_id + token
+      // Better schema: user_push_tokens/{userId}/devices/{deviceId}
+      // Or simply a collection of tokens with user_id field.
+      // Let's us a subcollection for the user to make it easier to manage per user.
+      // users/{userId}/push_tokens/{token}
 
-    console.log('Token salvo no banco (implementar Supabase)');
+      const tokenRef = doc(db, 'users', currentUser.uid, 'push_tokens', token);
+
+      await setDoc(tokenRef, {
+        token: token,
+        platform: Capacitor.getPlatform(),
+        updated_at: new Date().toISOString(),
+        last_used: new Date().toISOString()
+      }, { merge: true });
+
+      console.log('Token salvo no Firestore');
+    } else {
+      console.log('Usuário não autenticado, token não salvo');
+    }
   } catch (error) {
     console.error('Erro ao salvar token:', error);
   }
@@ -119,8 +135,8 @@ async function showLocalNotification(notification: {
 /**
  * Manipula clique na notificação
  */
-function handleNotificationAction(notification: PushNotificationSchema): void {
-  const type = notification.data?.type;
+function handleNotificationAction(notification: ActionPerformed): void {
+  const type = notification.notification.data?.type;
 
   // TODO: Implementar navegação baseada no tipo
   switch (type) {
@@ -171,7 +187,12 @@ export async function sendLocalNotification(options: {
  */
 export async function clearAllNotifications(): Promise<void> {
   try {
-    await LocalNotifications.cancel();
+    // cancel() requires options with notifications array, but to clear all we might need to get pending first.
+    // For now assuming we want to cancel all pending.
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel({ notifications: pending.notifications });
+    }
   } catch (error) {
     console.error('Erro ao limpar notificações:', error);
   }

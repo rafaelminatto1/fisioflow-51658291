@@ -3,8 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
 
 export const usePushNotifications = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
@@ -12,7 +16,7 @@ export const usePushNotifications = () => {
   useEffect(() => {
     // Check if push notifications are supported
     setIsSupported('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window);
-    
+
     if ('Notification' in window) {
       setPermission(Notification.permission);
     }
@@ -22,18 +26,18 @@ export const usePushNotifications = () => {
   const { data: subscriptions } = useQuery({
     queryKey: ['push-subscriptions'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
       const { data, error } = await supabase
         .from('push_subscriptions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.uid)
         .eq('active', true);
 
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!user
   });
 
   // Request notification permission
@@ -46,7 +50,7 @@ export const usePushNotifications = () => {
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
-      
+
       if (result === 'granted') {
         toast.success('Notificações ativadas!');
         return true;
@@ -71,15 +75,15 @@ export const usePushNotifications = () => {
 
       // Get service worker registration
       const registration = await navigator.serviceWorker.ready;
-      
+
       // Check for existing subscription
       let subscription = await registration.pushManager.getSubscription();
-      
+
       if (!subscription) {
         // Create new subscription
         // Note: In production, you'd use a VAPID public key from your server
         const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
-        
+
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: vapidPublicKey
@@ -87,22 +91,19 @@ export const usePushNotifications = () => {
       }
 
       const subscriptionJson = subscription.toJSON();
-      
+
       // Save subscription to database
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
+      const db = getFirebaseDb();
+      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      const profileData = profileDoc.exists() ? profileDoc.data() : null;
 
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
-          user_id: user.id,
-          organization_id: profile?.organization_id,
+          user_id: user.uid,
+          organization_id: profileData?.organization_id,
           endpoint: subscriptionJson.endpoint!,
           p256dh: subscriptionJson.keys?.p256dh || '',
           auth: subscriptionJson.keys?.auth || '',
@@ -116,7 +117,7 @@ export const usePushNotifications = () => {
         });
 
       if (error) throw error;
-      
+
       return subscription;
     },
     onSuccess: () => {
@@ -134,17 +135,16 @@ export const usePushNotifications = () => {
     mutationFn: async () => {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      
+
       if (subscription) {
         await subscription.unsubscribe();
-        
+
         // Deactivate in database
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           await supabase
             .from('push_subscriptions')
             .update({ active: false })
-            .eq('user_id', user.id)
+            .eq('user_id', user.uid)
             .eq('endpoint', subscription.endpoint);
         }
       }

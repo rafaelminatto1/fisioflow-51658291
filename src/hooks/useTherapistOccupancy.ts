@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 export interface TherapistOccupancyData {
   id: string;
@@ -59,6 +61,8 @@ const getDateRange = (period: PeriodFilter, startDate?: Date, endDate?: Date) =>
   }
 };
 
+const db = getFirebaseDb();
+
 export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { period: 'today' }) => {
   return useQuery({
     queryKey: ['therapist-occupancy', options.period, options.startDate?.toISOString(), options.endDate?.toISOString()],
@@ -66,37 +70,48 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       const { start, end } = getDateRange(options.period, options.startDate, options.endDate);
       const today = format(new Date(), 'yyyy-MM-dd');
 
-      // Buscar todos os user_ids com role de fisioterapeuta ou admin
-      const { data: userRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('role', ['admin', 'fisioterapeuta']);
+      // Buscar todos os user_ids com role de fisioterapeuta ou admin no Firestore
+      const rolesQ = query(
+        collection(db, 'user_roles'),
+        where('role', 'in', ['admin', 'fisioterapeuta'])
+      );
+      const rolesSnap = await getDocs(rolesQ);
+      const therapistUserIds = [...new Set(rolesSnap.docs.map(doc => doc.data().user_id))];
 
-      if (rolesError) throw rolesError;
+      if (therapistUserIds.length === 0) {
+        return {
+          ocupacaoMedia: 0,
+          totalConsultasHoje: 0,
+          totalHorasTrabalhadas: 0,
+          fisioterapeutasAtivos: 0,
+          therapists: [],
+          hourlyData: [],
+          suggestions: []
+        };
+      }
 
-      const therapistUserIds = [...new Set((userRoles || []).map(ur => ur.user_id))];
-
-      // Buscar profiles dos fisioterapeutas
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, user_id, full_name, avatar_url')
-        .in('user_id', therapistUserIds);
-
-      if (profilesError) throw profilesError;
-
-      const therapists = (profiles || []).map(p => ({
-        id: p.id,
-        user_id: p.user_id,
-        full_name: p.full_name,
-        avatar_url: p.avatar_url
+      // Buscar profiles dos fisioterapeutas no Firestore
+      const therapists: any[] = [];
+      await Promise.all(therapistUserIds.map(async (userId) => {
+        const profileQ = query(collection(db, 'profiles'), where('user_id', '==', userId));
+        const profileSnap = await getDocs(profileQ);
+        if (!profileSnap.empty) {
+          const p = profileSnap.docs[0].data();
+          therapists.push({
+            id: profileSnap.docs[0].id,
+            user_id: p.user_id,
+            full_name: p.full_name,
+            avatar_url: p.avatar_url
+          });
+        }
       }));
 
       // Buscar agendamentos do período (usando therapist_id que é o profile id)
       const therapistIds = therapists.map(t => t.id);
 
       // Se não há therapists, retornar arrays vazios
-      let appointments: Array<{ id?: string; patient_id?: string; appointment_date?: string }> = [];
-      let todayAppointments: Array<{ id?: string }> = [];
+      let appointments: any[] = [];
+      let todayAppointments: any[] = [];
 
       if (therapistIds.length > 0) {
         const { data: appointmentsData, error: aptsError } = await supabase

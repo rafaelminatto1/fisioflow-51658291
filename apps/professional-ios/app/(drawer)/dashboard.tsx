@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useState } from 'react';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '@fisioflow/shared-api';
 import { getGreeting } from '@fisioflow/shared-utils';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';

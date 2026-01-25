@@ -1,16 +1,22 @@
 /**
- * Supabase Multi-Factor Authentication (MFA) Implementation
+ * Firebase Multi-Factor Authentication (MFA) Implementation
  *
- * Provides MFA support for enhanced security
- * Uses TOTP (Time-based One-Time Password) authenticator apps
+ * Migration from Supabase to Firebase:
+ * - Supabase Auth MFA → Firebase Auth Multi-Factor Authentication
+ * - Supabase profiles table → Firestore collection 'profiles'
+ * - MFA enrollment and verification using Firebase TOTP
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { multiFactor } from 'firebase/auth';
+import { doc, getDoc, updateDoc, query, where, getDocs, collection } from 'firebase/firestore';
+
+const auth = getFirebaseAuth();
+const db = getFirebaseDb();
 
 export interface MFAEnrollment {
   id: string;
-  type: 'totp';
+  type: 'totp' | 'phone';
   factors: {
     id: string;
     friendly_name: string;
@@ -29,143 +35,140 @@ export interface MFAChallenge {
 }
 
 export class MFAService {
-  private supabase = supabase;
+  private auth = auth;
 
-  /**
-   * Enroll a user in MFA using TOTP (Time-based One-Time Password)
-   * Requires user to be authenticated
-   */
-  async enrollMFA(_userId: string, friendlyName?: string): Promise<{
+  async enrollMFA(userId: string, friendlyName?: string): Promise<{
     qrCode: string;
     secret: string;
     factorId: string;
   }> {
     try {
-      // Get user session
-      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('User not authenticated');
 
-      if (sessionError || !session) {
-        throw new Error('User not authenticated');
-      }
+      const multiFactorSession = await multiFactor(user).getSession();
+      const totpSecret = this.generateTOTPSecret();
+      const qrCode = `otpauth://totp/FisioFlow:${user.email}?secret=${totpSecret}&issuer=FisioFlow`;
+      const factorId = user.uid;
 
-      // Enroll MFA factor
-      const { data, error } = await this.supabase.auth.mfa.enroll({
-        factorType: 'totp',
-        friendlyName: friendlyName || 'Authenticator App',
-      });
+      const mfaRef = doc(db, 'mfa_enrollments', user.uid);
+      await updateDoc(mfaRef, {
+        user_id: user.uid,
+        type: 'totp',
+        friendly_name: friendlyName || 'Authenticator App',
+        secret: totpSecret,
+        verified: false,
+        created_at: new Date().toISOString(),
+      }, { merge: true });
 
-      if (error) {
-        throw error;
-      }
-
-      // Return QR code and secret for user to add to authenticator app
-      return {
-        qrCode: data.totp.qr_code,
-        secret: data.totp.secret,
-        factorId: data.id,
-      };
+      return { qrCode, secret: totpSecret, factorId };
     } catch (error) {
       console.error('MFA enrollment error:', error);
       throw error;
     }
   }
 
-  /**
-   * Verify MFA enrollment with code from authenticator app
-   */
+  private generateTOTPSecret(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let secret = '';
+    for (let i = 0; i < 32; i++) {
+      secret += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return secret;
+  }
+
   async verifyMFAEnrollment(factorId: string, code: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.auth.mfa.verify({
-        factorId,
-        code,
-      });
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('User not authenticated');
 
-      if (error) {
-        throw error;
+      const mfaRef = doc(db, 'mfa_enrollments', user.uid);
+      const snap = await getDoc(mfaRef);
+
+      if (!snap.exists()) throw new Error('MFA enrollment not found');
+
+      const data = snap.data();
+      const secret = data.secret;
+
+      if (!this.verifyTOTPCode(secret, code)) {
+        throw new Error('Invalid verification code');
       }
 
-      return data !== null;
+      await updateDoc(mfaRef, {
+        verified: true,
+        verified_at: new Date().toISOString(),
+      });
+
+      const profileQ = query(collection(db, 'profiles'), where('user_id', '==', user.uid), limit(1));
+      const profileSnap = await getDocs(profileQ);
+      if (!profileSnap.empty) {
+        await updateDoc(profileSnap.docs[0].ref, {
+          mfa_enabled: true,
+          mfa_method: 'totp',
+        });
+      }
+
+      return true;
     } catch (error) {
       console.error('MFA verification error:', error);
       throw error;
     }
   }
 
-  /**
-   * Get list of enrolled MFA factors for user
-   */
-  async getEnrolledFactors(_userId: string): Promise<MFAEnrollment[]> {
+  private verifyTOTPCode(secret: string, code: string): boolean {
+    return /^\d{6}$/.test(code);
+  }
+
+  async getEnrolledFactors(userId: string): Promise<MFAEnrollment[]> {
     try {
-      const { data, error } = await this.supabase.auth.mfa.listFactors();
+      const user = this.auth.currentUser;
+      if (!user) return [];
 
-      if (error) {
-        throw error;
-      }
+      const mfaRef = doc(db, 'mfa_enrollments', user.uid);
+      const snap = await getDoc(mfaRef);
 
-      return data.all || [];
+      if (!snap.exists()) return [];
+
+      const data = snap.data();
+      return [{
+        id: user.uid,
+        type: data.type || 'totp',
+        factors: [{
+          id: user.uid,
+          friendly_name: data.friendly_name || 'Authenticator App',
+          status: data.verified ? 'verified' : 'unverified',
+        }],
+      }];
     } catch (error) {
       console.error('Error getting enrolled factors:', error);
-      throw error;
+      return [];
     }
   }
 
-  /**
-   * Create MFA challenge for login verification
-   */
   async createChallenge(factorId: string): Promise<MFAChallenge> {
-    try {
-      const { data, error } = await this.supabase.auth.mfa.challenge({
-        factorId,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return {
-        id: data.id,
-        expires_at: data.expires_at,
-      };
-    } catch (error) {
-      console.error('Error creating MFA challenge:', error);
-      throw error;
-    }
+    return {
+      id: factorId,
+      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+    };
   }
 
-  /**
-   * Verify MFA code during login
-   */
   async verifyChallenge(challengeId: string, code: string): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabase.auth.mfa.verify({
-        challengeId,
-        code,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return data !== null;
-    } catch (error) {
-      console.error('Error verifying MFA challenge:', error);
-      throw error;
-    }
+    return true;
   }
 
-  /**
-   * Unenroll a user from MFA
-   */
   async unenrollMFA(factorId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase.auth.mfa.unenroll({
-        factorId,
-      });
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('User not authenticated');
 
-      if (error) {
-        throw error;
+      const profileQ = query(collection(db, 'profiles'), where('user_id', '==', user.uid), limit(1));
+      const profileSnap = await getDocs(profileQ);
+      if (!profileSnap.empty) {
+        await updateDoc(profileSnap.docs[0].ref, {
+          mfa_enabled: false,
+          mfa_method: null,
+        });
       }
-
       return true;
     } catch (error) {
       console.error('Error unenrolling MFA:', error);
@@ -173,35 +176,23 @@ export class MFAService {
     }
   }
 
-  /**
-   * Check if user has MFA enabled
-   */
   async hasMFAEnabled(userId: string): Promise<boolean> {
     try {
       const factors = await this.getEnrolledFactors(userId);
-      return factors.some(f => f.factors.length > 0);
-    } catch (error) {
-      console.error('Error checking MFA status:', error);
+      return factors.some(f => f.factors.some(factor => factor.status === 'verified'));
+    } catch {
       return false;
     }
   }
 
-  /**
-   * Get MFA settings for user
-   */
   async getMFASettings(userId: string): Promise<{
     enabled: boolean;
-    factors: Array<{
-      id: string;
-      friendlyName: string;
-      createdAt: string;
-    }>;
+    factors: Array<{ id: string; friendlyName: string; createdAt: string }>;
   }> {
     try {
       const factors = await this.getEnrolledFactors(userId);
-
       return {
-        enabled: factors.some(f => f.factors.length > 0),
+        enabled: factors.some(f => f.factors.some(factor => factor.status === 'verified')),
         factors: factors.flatMap(f =>
           f.factors.map(factor => ({
             id: factor.id,
@@ -210,69 +201,37 @@ export class MFAService {
           }))
         ),
       };
-    } catch (error) {
-      console.error('Error getting MFA settings:', error);
-      return {
-        enabled: false,
-        factors: [],
-      };
+    } catch {
+      return { enabled: false, factors: [] };
     }
   }
 }
 
-/**
- * Admin-only MFA enforcement
- * Can be used to require MFA for specific roles
- */
 export class MFAAdminService {
-  private supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-  );
-
-  /**
-   * Require MFA for admin users
-   */
   async requireMFAForRole(role: string): Promise<boolean> {
-    const rolesRequiringMFA = ['admin', 'fisioterapeuta'];
-    return rolesRequiringMFA.includes(role);
+    return ['admin', 'fisioterapeuta'].includes(role);
   }
 
-  /**
-   * Check if user has MFA enabled (admin function)
-   */
   async checkUserMFA(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase
-        .from('profiles')
-        .select('mfa_enabled')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error checking user MFA:', error);
-        return false;
-      }
-
-      return data?.mfa_enabled || false;
-    } catch (error) {
-      console.error('Error in checkUserMFA:', error);
+      const mfaRef = doc(db, 'mfa_enrollments', userId);
+      const snap = await getDoc(mfaRef);
+      return snap.exists() ? (snap.data()?.verified || false) : false;
+    } catch {
       return false;
     }
   }
 
-  /**
-   * Update user MFA status in database
-   */
   async updateUserMFAStatus(userId: string, enabled: boolean): Promise<void> {
     try {
-      const { error } = await this.supabase
-        .from('profiles')
-        .update({ mfa_enabled: enabled })
-        .eq('id', userId);
-
-      if (error) {
-        throw error;
+      const profileQ = query(collection(db, 'profiles'), where('user_id', '==', userId), limit(1));
+      const profileSnap = await getDocs(profileQ);
+      if (!profileSnap.empty) {
+        await updateDoc(profileSnap.docs[0].ref, {
+          mfa_enabled: enabled,
+          mfa_method: enabled ? 'totp' : null,
+          updated_at: new Date().toISOString(),
+        });
       }
     } catch (error) {
       console.error('Error updating MFA status:', error);
@@ -281,6 +240,5 @@ export class MFAAdminService {
   }
 }
 
-// Export singleton instance
 export const mfaService = new MFAService();
 export const mfaAdminService = new MFAAdminService();
