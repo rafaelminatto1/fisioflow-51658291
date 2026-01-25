@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import type { ConductTemplate } from '@/types/evolution';
 
 export interface ConductData {
@@ -13,29 +14,32 @@ export class ConductReplicationService {
   // Optimized: Select only required columns instead of *
   static async getSavedConducts(patientId: string): Promise<ConductTemplate[]> {
     // For now, we'll get recent SOAP records as conduct templates
-    const { data, error } = await supabase
-      .from('soap_records')
-      .select('id, patient_id, record_date, plan, assessment, created_by, created_at')
-      .eq('patient_id', patientId)
-      .not('plan', 'is', null)
-      .order('record_date', { ascending: false })
-      .limit(10);
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'soap_records'),
+      where('patient_id', '==', patientId),
+      where('plan', '!=', null),
+      orderBy('record_date', 'desc'),
+      limit(10)
+    );
+    const snapshot = await getDocs(q);
 
-    if (error) throw error;
-
-    return (data || []).map(record => ({
-      id: record.id,
-      patient_id: record.patient_id,
-      template_name: `Conduta de ${record.record_date}`,
-      conduct_data: {
-        plan: record.plan || '',
-        techniques: [],
-        exercises: [],
-        recommendations: record.assessment || ''
-      },
-      created_by: record.created_by,
-      created_at: record.created_at
-    }));
+    return snapshot.docs.map(recordSnap => {
+      const data = recordSnap.data();
+      return {
+        id: recordSnap.id,
+        patient_id: data.patient_id,
+        template_name: `Conduta de ${data.record_date}`,
+        conduct_data: {
+          plan: data.plan || '',
+          techniques: [],
+          exercises: [],
+          recommendations: data.assessment || ''
+        },
+        created_by: data.created_by,
+        created_at: data.created_at
+      } as ConductTemplate;
+    });
   }
 
   static async saveConductAsTemplate(
@@ -58,13 +62,15 @@ export class ConductReplicationService {
   }
 
   static async replicateConduct(conductId: string): Promise<{ plan: string | null; assessment: string | null; techniques: unknown[]; exercises: unknown[] }> {
-    const { data, error } = await supabase
-      .from('soap_records')
-      .select('*')
-      .eq('id', conductId)
-      .single();
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'soap_records', conductId);
+    const docSnap = await getDoc(docRef);
 
-    if (error) throw error;
+    if (!docSnap.exists()) {
+      throw new Error('SOAP record not found');
+    }
+
+    const data = docSnap.data();
 
     return {
       plan: data.plan,

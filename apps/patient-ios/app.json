@@ -12,20 +12,21 @@
       "resizeMode": "contain",
       "backgroundColor": "#3B82F6"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "backgroundColor": "#FFFFFF",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fisioflow.patients",
-      "config": {
-        "googleSignIn": {
-          "reservedClientId": "CLIENT_ID_REVERSO_DO_FIREBASE"
-        }
-      },
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "userInterfaceStyle": "light"
     },
     "android": {
       "package": "com.fisioflow.patients",
-      "googleServicesFile": "./google-services.json"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "plugins": [
       [

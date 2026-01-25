@@ -2,6 +2,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Svg, Circle, Polyline } from 'react-native-svg';
+import {
+  Card,
+  useTheme,
+  Tabs,
+  Progress,
+  Badge,
+  Divider,
+} from '@fisioflow/shared-ui';
 
 // Mock data - will be replaced with Firebase data
 const mockProgressData = {
@@ -39,8 +47,17 @@ const mockAchievements = [
   { id: '4', title: 'Maratonista', description: '14 dias seguidos', icon: 'trophy', unlocked: false },
 ];
 
+type ProgressTab = 'overview' | 'history' | 'achievements';
+
 export default function ProgressScreen() {
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'history' | 'achievements'>('overview');
+  const theme = useTheme();
+  const [selectedTab, setSelectedTab] = useState<ProgressTab>('overview');
+
+  const tabs = [
+    { value: 'overview', label: 'Visão Geral' },
+    { value: 'history', label: 'Histórico' },
+    { value: 'achievements', label: 'Conquistas' },
+  ];
 
   // Simple chart data points
   const chartPoints = mockWeeklyData.map((d, i) => {
@@ -49,91 +66,143 @@ export default function ProgressScreen() {
     return `${x},${y}`;
   }).join(' ');
 
-  const renderOverview = () => (
+  const painReductionPercent = Math.round(
+    (1 - mockProgressData.averagePain / mockProgressData.initialPain) * 100
+  );
+
+  return (
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.backgroundSecondary }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.title, { color: theme.colors.text.primary }]}>Progresso</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>Sua evolução</Text>
+      </View>
+
+      {/* Tabs */}
+      <View style={[styles.tabsContainer, { backgroundColor: theme.colors.background }]}>
+        <Tabs tabs={tabs} value={selectedTab} onChange={(v) => setSelectedTab(v as ProgressTab)} scrollable={false} />
+      </View>
+
+      {/* Content */}
+      <View style={styles.content}>
+        {selectedTab === 'overview' && (
+          <OverviewTab
+            chartPoints={chartPoints}
+            painReductionPercent={painReductionPercent}
+            progressData={mockProgressData}
+            weeklyData={mockWeeklyData}
+          />
+        )}
+        {selectedTab === 'history' && <HistoryTab sessions={mockRecentSessions} />}
+        {selectedTab === 'achievements' && <AchievementsTab achievements={mockAchievements} />}
+      </View>
+    </ScrollView>
+  );
+}
+
+// Overview Tab Component
+function OverviewTab({
+  chartPoints,
+  painReductionPercent,
+  progressData,
+  weeklyData,
+}: {
+  chartPoints: string;
+  painReductionPercent: number;
+  progressData: typeof mockProgressData;
+  weeklyData: typeof mockWeeklyData;
+}) {
+  const theme = useTheme();
+
+  return (
     <View>
       {/* Main Stats Cards */}
       <View style={styles.mainStats}>
-        <TouchableOpacity style={styles.statCard}>
-          <View style={styles.statIconContainer}>
-            <Ionicons name="calendar" size={24} color="#3B82F6" />
+        <Card variant="elevated" style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: theme.colors.primary[100] }]}>
+            <Ionicons name="calendar" size={24} color={theme.colors.primary[500]} />
           </View>
-          <Text style={styles.statValue}>{mockProgressData.totalSessions}</Text>
-          <Text style={styles.statLabel}>Sessões Totais</Text>
-        </TouchableOpacity>
+          <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>
+            {progressData.totalSessions}
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>Sessões</Text>
+        </Card>
 
-        <TouchableOpacity style={styles.statCard}>
-          <View style={styles.statIconContainer}>
-            <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+        <Card variant="elevated" style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: theme.colors.success[100] }]}>
+            <Ionicons name="checkmark-circle" size={24} color={theme.colors.success[500]} />
           </View>
-          <Text style={styles.statValue}>{mockProgressData.adherenceRate}%</Text>
-          <Text style={styles.statLabel}>Taxa de Adesão</Text>
-        </TouchableOpacity>
+          <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>
+            {progressData.adherenceRate}%
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>Adesão</Text>
+        </Card>
 
-        <TouchableOpacity style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#FEF3C7' }]}>
-            <Ionicons name="flame" size={24} color="#F59E0B" />
+        <Card variant="elevated" style={styles.statCard}>
+          <View style={[styles.statIconContainer, { backgroundColor: theme.colors.warning[100] }]}>
+            <Ionicons name="flame" size={24} color={theme.colors.warning[500]} />
           </View>
-          <Text style={styles.statValue}>{mockProgressData.currentStreak}</Text>
-          <Text style={styles.statLabel}>Dias Seguidos</Text>
-        </TouchableOpacity>
+          <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>
+            {progressData.currentStreak}
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>Dias</Text>
+        </Card>
       </View>
 
       {/* Pain Progress Card */}
-      <View style={styles.card}>
+      <Card variant="elevated" style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Evolução da Dor</Text>
-          <View style={styles.painChange}>
-            <Ionicons name="trending-down" size={16} color="#10B981" />
-            <Text style={styles.painChangeText}>
-              -{Math.round((1 - mockProgressData.averagePain / mockProgressData.initialPain) * 100)}%
-            </Text>
-          </View>
+          <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Evolução da Dor</Text>
+          <Badge variant="success" size="sm">
+            <Ionicons name="trending-down" size={12} color="#fff" />
+            <Text style={styles.painChangeText}>-{painReductionPercent}%</Text>
+          </Badge>
         </View>
 
         <View style={styles.painComparison}>
           <View style={styles.painItem}>
-            <Text style={styles.painLabel}>Início</Text>
-            <View style={[styles.painBar, { width: '100%', backgroundColor: '#FEE2E2' }]}>
-              <View style={[styles.painFill, { width: '75%', backgroundColor: '#EF4444' }]} />
-            </View>
-            <Text style={styles.painValue}>{mockProgressData.initialPain}/10</Text>
+            <Text style={[styles.painLabel, { color: theme.colors.text.secondary }]}>Início</Text>
+            <Progress value={75} size="sm" />
+            <Text style={[styles.painValue, { color: theme.colors.text.primary }]}>
+              {progressData.initialPain}/10
+            </Text>
           </View>
 
-          <Ionicons name="arrow-forward" size={20} color="#CBD5E1" />
+          <Ionicons name="arrow-forward" size={20} color={theme.colors.text.tertiary} />
 
           <View style={styles.painItem}>
-            <Text style={styles.painLabel}>Atual</Text>
-            <View style={[styles.painBar, { width: '100%', backgroundColor: '#D1FAE5' }]}>
-              <View style={[styles.painFill, { width: '32%', backgroundColor: '#10B981' }]} />
-            </View>
-            <Text style={styles.painValue}>{mockProgressData.averagePain}/10</Text>
+            <Text style={[styles.painLabel, { color: theme.colors.text.secondary }]}>Atual</Text>
+            <Progress value={32} color="success" size="sm" />
+            <Text style={[styles.painValue, { color: theme.colors.text.primary }]}>
+              {progressData.averagePain}/10
+            </Text>
           </View>
         </View>
-      </View>
+      </Card>
 
       {/* Weekly Progress Chart */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Progresso Semanal</Text>
+      <Card variant="elevated" style={styles.card}>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Progresso Semanal</Text>
 
         <View style={styles.chartContainer}>
           <Svg width="280" height="140">
-            {/* Grid lines */}
             <Polyline
               points={`20,20 260,20 20,120 260,120`}
               fill="none"
-              stroke="#E2E8F0"
+              stroke={theme.colors.border}
               strokeWidth="1"
             />
-            {/* Progress line */}
             <Polyline
               points={chartPoints}
               fill="none"
-              stroke="#3B82F6"
+              stroke={theme.colors.primary[500]}
               strokeWidth="3"
               strokeLinejoin="round"
             />
-            {/* Data points */}
-            {mockWeeklyData.map((d, i) => {
+            {weeklyData.map((d, i) => {
               const x = i * 40 + 20;
               const y = 120 - (d.completed / d.total) * 100;
               return (
@@ -142,7 +211,7 @@ export default function ProgressScreen() {
                   cx={x}
                   cy={y}
                   r="6"
-                  fill="#3B82F6"
+                  fill={theme.colors.primary[500]}
                   stroke="#fff"
                   strokeWidth="2"
                 />
@@ -150,226 +219,180 @@ export default function ProgressScreen() {
             })}
           </Svg>
 
-          {/* Day labels */}
           <View style={styles.dayLabels}>
-            {mockWeeklyData.map((d, i) => (
-              <Text key={i} style={styles.dayLabel}>
+            {weeklyData.map((d, i) => (
+              <Text key={i} style={[styles.dayLabel, { color: theme.colors.text.tertiary }]}>
                 {d.day}
               </Text>
             ))}
           </View>
         </View>
-      </View>
+      </Card>
 
       {/* Exercises Summary */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Resumo de Exercícios</Text>
+      <Card variant="elevated" style={styles.card}>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>Resumo de Exercícios</Text>
         <View style={styles.exercisesSummary}>
           <View style={styles.exerciseStat}>
-            <Text style={styles.exerciseStatValue}>{mockProgressData.totalExercises}</Text>
-            <Text style={styles.exerciseStatLabel}>Prescritos</Text>
-          </View>
-          <View style={styles.exerciseDivider} />
-          <View style={styles.exerciseStat}>
-            <Text style={[styles.exerciseStatValue, { color: '#10B981' }]}>
-              {mockProgressData.completedExercises}
+            <Text style={[styles.exerciseStatValue, { color: theme.colors.text.primary }]}>
+              {progressData.totalExercises}
             </Text>
-            <Text style={styles.exerciseStatLabel}>Completados</Text>
-          </View>
-          <View style={styles.exerciseDivider} />
-          <View style={styles.exerciseStat}>
-            <Text style={[styles.exerciseStatValue, { color: '#EF4444' }]}>
-              {mockProgressData.totalExercises - mockProgressData.completedExercises}
+            <Text style={[styles.exerciseStatLabel, { color: theme.colors.text.secondary }]}>
+              Prescritos
             </Text>
-            <Text style={styles.exerciseStatLabel}>Pendentes</Text>
+          </View>
+          <Divider orientation="vertical" length={40} />
+          <View style={styles.exerciseStat}>
+            <Text style={[styles.exerciseStatValue, { color: theme.colors.success[500] }]}>
+              {progressData.completedExercises}
+            </Text>
+            <Text style={[styles.exerciseStatLabel, { color: theme.colors.text.secondary }]}>
+              Completados
+            </Text>
+          </View>
+          <Divider orientation="vertical" length={40} />
+          <View style={styles.exerciseStat}>
+            <Text style={[styles.exerciseStatValue, { color: theme.colors.danger[500] }]}>
+              {progressData.totalExercises - progressData.completedExercises}
+            </Text>
+            <Text style={[styles.exerciseStatLabel, { color: theme.colors.text.secondary }]}>
+              Pendentes
+            </Text>
           </View>
         </View>
-      </View>
+      </Card>
     </View>
   );
+}
 
-  const renderHistory = () => (
+// History Tab Component
+function HistoryTab({ sessions }: { sessions: typeof mockRecentSessions }) {
+  const theme = useTheme();
+
+  const getPainColor = (pain: number) => {
+    if (pain > 5) return theme.colors.danger[500];
+    if (pain > 3) return theme.colors.warning[500];
+    return theme.colors.success[500];
+  };
+
+  return (
     <View>
-      <Text style={styles.sectionTitle}>Sessões Recentes</Text>
-      {mockRecentSessions.map((session) => (
-        <TouchableOpacity key={session.id} style={styles.sessionCard}>
+      {sessions.map((session) => (
+        <Card key={session.id} variant="elevated" style={styles.sessionCard} pressable>
           <View style={styles.sessionDateContainer}>
-            <Text style={styles.sessionDate}>{session.date}</Text>
+            <Text style={[styles.sessionDate, { color: theme.colors.text.primary }]}>
+              {session.date}
+            </Text>
           </View>
 
           <View style={styles.sessionInfo}>
-            <Text style={styles.sessionExercises}>
+            <Text style={[styles.sessionExercises, { color: theme.colors.text.primary }]}>
               {session.completed} de {session.exercises} exercícios
             </Text>
-            <View style={styles.sessionProgress}>
-              <View
-                style={[
-                  styles.sessionProgressBar,
-                  { width: `${(session.completed / session.exercises) * 100}%` }
-                ]}
-              />
-            </View>
+            <Progress value={(session.completed / session.exercises) * 100} size="sm" />
           </View>
 
           <View style={styles.sessionPain}>
-            <Ionicons
-              name="pulse"
-              size={16}
-              color={session.pain > 5 ? '#EF4444' : session.pain > 3 ? '#F59E0B' : '#10B981'}
-            />
-            <Text style={styles.sessionPainText}>{session.pain}/10</Text>
+            <Ionicons name="pulse" size={16} color={getPainColor(session.pain)} />
+            <Text style={[styles.sessionPainText, { color: theme.colors.text.secondary }]}>
+              {session.pain}/10
+            </Text>
           </View>
-        </TouchableOpacity>
+        </Card>
       ))}
     </View>
   );
+}
 
-  const renderAchievements = () => (
+// Achievements Tab Component
+function AchievementsTab({ achievements }: { achievements: typeof mockAchievements }) {
+  const theme = useTheme();
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+
+  return (
     <View>
       <View style={styles.achievementsHeader}>
-        <Text style={styles.sectionTitle}>Conquistas</Text>
-        <View style={styles.achievementCount}>
-          <Text style={styles.achievementCountText}>
-            {mockAchievements.filter(a => a.unlocked).length}/{mockAchievements.length}
-          </Text>
-        </View>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>Conquistas</Text>
+        <Badge variant="primary" size="sm">
+          {unlockedCount}/{achievements.length}
+        </Badge>
       </View>
 
       <View style={styles.achievementsGrid}>
-        {mockAchievements.map((achievement) => (
-          <TouchableOpacity
+        {achievements.map((achievement) => (
+          <Card
             key={achievement.id}
+            variant={achievement.unlocked ? 'elevated' : 'outlined'}
             style={[
               styles.achievementCard,
-              !achievement.unlocked && styles.achievementCardLocked
+              !achievement.unlocked && { opacity: 0.6 },
             ]}
+            pressable
           >
-            <View style={[
-              styles.achievementIconContainer,
-              !achievement.unlocked && styles.achievementIconContainerLocked
-            ]}>
+            <View
+              style={[
+                styles.achievementIconContainer,
+                achievement.unlocked
+                  ? { backgroundColor: theme.colors.warning[100] }
+                  : { backgroundColor: theme.colors.backgroundSecondary },
+              ]}
+            >
               <Ionicons
                 name={achievement.icon as any}
                 size={32}
-                color={achievement.unlocked ? '#F59E0B' : '#CBD5E1'}
+                color={achievement.unlocked ? theme.colors.warning[500] : theme.colors.text.tertiary}
               />
             </View>
-            <Text style={[
-              styles.achievementTitle,
-              !achievement.unlocked && styles.achievementTitleLocked
-            ]}>
+            <Text
+              style={[
+                styles.achievementTitle,
+                { color: achievement.unlocked ? theme.colors.text.primary : theme.colors.text.tertiary },
+              ]}
+            >
               {achievement.title}
             </Text>
-            <Text style={[
-              styles.achievementDescription,
-              !achievement.unlocked && styles.achievementDescriptionLocked
-            ]}>
+            <Text
+              style={[
+                styles.achievementDescription,
+                { color: achievement.unlocked ? theme.colors.text.secondary : theme.colors.text.tertiary },
+              ]}
+            >
               {achievement.description}
             </Text>
             {!achievement.unlocked && (
-              <View style={styles.lockedBadge}>
-                <Ionicons name="lock-closed" size={12} color="#94A3B8" />
-                <Text style={styles.lockedBadgeText}>Bloqueado</Text>
+              <View style={[styles.lockedBadge, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                <Ionicons name="lock-closed" size={12} color={theme.colors.text.tertiary} />
+                <Text style={[styles.lockedBadgeText, { color: theme.colors.text.tertiary }]}>Bloqueado</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Card>
         ))}
       </View>
     </View>
-  );
-
-  return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Progresso</Text>
-        <Text style={styles.subtitle}>Sua evolução</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'overview' && styles.tabActive]}
-          onPress={() => setSelectedTab('overview')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'overview' && styles.tabTextActive]}>
-            Visão Geral
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'history' && styles.tabActive]}
-          onPress={() => setSelectedTab('history')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'history' && styles.tabTextActive]}>
-            Histórico
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'achievements' && styles.tabActive]}
-          onPress={() => setSelectedTab('achievements')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'achievements' && styles.tabTextActive]}>
-            Conquistas
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        {selectedTab === 'overview' && renderOverview()}
-        {selectedTab === 'history' && renderHistory()}
-        {selectedTab === 'achievements' && renderAchievements()}
-      </View>
-    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
     padding: 24,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1E293B',
-    fontFamily: 'Inter_700',
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Inter_400',
   },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
+  tabsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  tabActive: {
-    backgroundColor: '#DBEAFE',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontFamily: 'Inter_500',
-  },
-  tabTextActive: {
-    color: '#1E40AF',
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   content: {
     padding: 16,
@@ -381,23 +404,13 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   statIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#DBEAFE',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -405,22 +418,14 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1E293B',
-    fontFamily: 'Inter_700',
   },
   statLabel: {
     fontSize: 11,
-    color: '#64748B',
     textAlign: 'center',
-    fontFamily: 'Inter_400',
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    padding: 16,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -431,23 +436,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1E293B',
-    fontFamily: 'Inter_600',
-  },
-  painChange: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
   },
   painChangeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#10B981',
-    fontFamily: 'Inter_600',
+    color: '#fff',
+    marginLeft: 4,
   },
   painComparison: {
     flexDirection: 'row',
@@ -459,25 +453,12 @@ const styles = StyleSheet.create({
   },
   painLabel: {
     fontSize: 12,
-    color: '#64748B',
     marginBottom: 8,
-    fontFamily: 'Inter_500',
-  },
-  painBar: {
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  painFill: {
-    height: '100%',
-    borderRadius: 4,
   },
   painValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1E293B',
-    fontFamily: 'Inter_600',
+    marginTop: 8,
   },
   chartContainer: {
     alignItems: 'center',
@@ -485,14 +466,12 @@ const styles = StyleSheet.create({
   },
   dayLabels: {
     flexDirection: 'row',
-    justifyContent:space-between',
+    justifyContent: 'space-between',
     width: 280,
     marginTop: 8,
   },
   dayLabel: {
     fontSize: 11,
-    color: '#64748B',
-    fontFamily: 'Inter_400',
   },
   exercisesSummary: {
     flexDirection: 'row',
@@ -505,36 +484,26 @@ const styles = StyleSheet.create({
   exerciseStatValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1E293B',
-    fontFamily: 'Inter_700',
   },
   exerciseStatLabel: {
     fontSize: 11,
-    color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Inter_400',
   },
-  exerciseDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#E2E8F0',
+  achievementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 16,
-    fontFamily: 'Inter_600',
   },
   sessionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
   sessionDateContainer: {
     width: 60,
@@ -543,8 +512,6 @@ const styles = StyleSheet.create({
   sessionDate: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1E293B',
-    fontFamily: 'Inter_600',
   },
   sessionInfo: {
     flex: 1,
@@ -552,20 +519,7 @@ const styles = StyleSheet.create({
   },
   sessionExercises: {
     fontSize: 14,
-    color: '#1E293B',
     marginBottom: 6,
-    fontFamily: 'Inter_500',
-  },
-  sessionProgress: {
-    height: 4,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  sessionProgressBar: {
-    height: '100%',
-    backgroundColor: '#3B82F6',
-    borderRadius: 2,
   },
   sessionPain: {
     flexDirection: 'row',
@@ -575,26 +529,6 @@ const styles = StyleSheet.create({
   sessionPainText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
-    fontFamily: 'Inter_600',
-  },
-  achievementsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  achievementCount: {
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  achievementCountText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1E40AF',
-    fontFamily: 'Inter_600',
   },
   achievementsGrid: {
     flexDirection: 'row',
@@ -603,52 +537,30 @@ const styles = StyleSheet.create({
   },
   achievementCard: {
     width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
-  },
-  achievementCardLocked: {
-    opacity: 0.6,
   },
   achievementIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FEF3C7',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  achievementIconContainerLocked: {
-    backgroundColor: '#F1F5F9',
-  },
   achievementTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1E293B',
     textAlign: 'center',
     marginBottom: 4,
-    fontFamily: 'Inter_600',
-  },
-  achievementTitleLocked: {
-    color: '#94A3B8',
   },
   achievementDescription: {
     fontSize: 11,
-    color: '#64748B',
     textAlign: 'center',
-    fontFamily: 'Inter_400',
-  },
-  achievementDescriptionLocked: {
-    color: '#CBD5E1',
   },
   lockedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -657,7 +569,5 @@ const styles = StyleSheet.create({
   },
   lockedBadgeText: {
     fontSize: 10,
-    color: '#94A3B8',
-    fontFamily: 'Inter_500',
   },
 });

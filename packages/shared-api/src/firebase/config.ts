@@ -39,4 +39,7 @@ if (process.env.NODE_ENV === 'development' && process.env.EXPO_PUBLIC_USE_EMULAT
   connectFunctionsEmulator(functions, 'localhost', 5001);
 }
 
+// Re-export isSupported
+export { isSupported } from 'firebase/messaging';
+
 export default app;

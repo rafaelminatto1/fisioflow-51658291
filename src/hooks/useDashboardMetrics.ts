@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 export interface TherapistPerformance {
   id: string;
@@ -142,14 +144,13 @@ export const useDashboardMetrics = () => {
           .gte('appointment_date', thirtyDaysAgo)
           .eq('status', 'concluido'),
 
-        // Receita por fisioterapeuta
+        // Receita por fisioterapeuta (removed join with profiles as it's on Firestore)
         supabase
           .from('appointments')
           .select(`
             therapist_id,
             payment_amount,
-            status,
-            profiles!appointments_therapist_id_fkey(id, full_name)
+            status
           `)
           .gte('appointment_date', startOfCurrentMonth)
           .eq('status', 'concluido'),
@@ -198,16 +199,19 @@ export const useDashboardMetrics = () => {
       const uniqueActivePatients = new Set(activePatientsData?.map(a => a.patient_id) || []);
       const pacientesAtivos = uniqueActivePatients.size;
 
-      // Contar fisioterapeutas únicos
+      // Contar fisioterapeutas únicos no Firestore
       const uniqueTherapistUserIds = [...new Set((userRolesResult.data || []).map(ur => ur.user_id))];
       let fisioterapeutasAtivos = 0;
 
+      const db = getFirebaseDb();
       if (uniqueTherapistUserIds.length > 0) {
-        const { count: profilesCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .in('user_id', uniqueTherapistUserIds);
-        fisioterapeutasAtivos = profilesCount || 0;
+        // Query profiles from Firestore
+        const profilesQ = query(
+          collection(db, 'profiles'),
+          where('user_id', 'in', uniqueTherapistUserIds)
+        );
+        const profilesSnap = await getDocs(profilesQ);
+        fisioterapeutasAtivos = profilesSnap.size;
       }
 
       // Calcular métricas financeiras
@@ -236,15 +240,26 @@ export const useDashboardMetrics = () => {
         ? Math.min((agendamentosHoje / (horasDisponiveisDia * fisioterapeutasAtivos)) * 100, 100)
         : 0;
 
-      // Processar receita por fisioterapeuta
       const fisioStats = new Map<string, TherapistPerformance>();
-      receitaPorFisioResult.data?.forEach((apt) => {
-        const profile = apt.profiles as unknown as { id: string; full_name?: string } | null;
-        if (!profile?.id) return;
+      const therapistIds = [...new Set(receitaPorFisioResult.data?.map(apt => apt.therapist_id).filter(Boolean))];
+      const therapistProfiles = new Map<string, { full_name?: string }>();
 
-        const existing = fisioStats.get(profile.id) || {
-          id: profile.id,
-          nome: profile.full_name || 'Sem nome',
+      if (therapistIds.length > 0) {
+        const profileQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
+        const profileSnap = await getDocs(profileQ);
+        profileSnap.forEach(doc => {
+          therapistProfiles.set(doc.data().user_id, doc.data());
+        });
+      }
+
+      receitaPorFisioResult.data?.forEach((apt) => {
+        const tId = apt.therapist_id;
+        if (!tId) return;
+
+        const profile = therapistProfiles.get(tId);
+        const existing = fisioStats.get(tId) || {
+          id: tId,
+          nome: profile?.full_name || 'Sem nome',
           atendimentos: 0,
           receita: 0,
           taxaOcupacao: 0,
@@ -252,7 +267,7 @@ export const useDashboardMetrics = () => {
 
         existing.atendimentos += 1;
         existing.receita += Number(apt.payment_amount || 0);
-        fisioStats.set(profile.id, existing);
+        fisioStats.set(tId, existing);
       });
 
       const receitaPorFisioterapeuta = Array.from(fisioStats.values())

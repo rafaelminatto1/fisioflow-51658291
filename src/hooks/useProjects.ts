@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export interface Project {
     id: string;
@@ -20,17 +22,38 @@ export interface Project {
     };
 }
 
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
+
 export function useProjects() {
     return useQuery({
         queryKey: ['projects'],
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('projects')
-                .select('*, manager:profiles!projects_manager_id_fkey(full_name, avatar_url)')
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return (data || []) as Project[];
+
+            // Fetch manager profiles from Firestore
+            const managerIds = [...new Set((data || []).map(p => p.manager_id).filter(Boolean))];
+            const profiles = new Map<string, any>();
+
+            await Promise.all(managerIds.map(async (id) => {
+                const snap = await getDoc(doc(db, 'profiles', id!));
+                if (snap.exists()) {
+                    profiles.set(id!, snap.data());
+                }
+            }));
+
+            return (data || []).map(p => ({
+                ...p,
+                manager: profiles.get(p.manager_id || '') ? {
+                    full_name: profiles.get(p.manager_id || '').full_name,
+                    avatar_url: profiles.get(p.manager_id || '').avatar_url
+                } : undefined
+            })) as Project[];
         }
     });
 }
@@ -41,12 +64,25 @@ export function useProject(id: string) {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('projects')
-                .select('*, manager:profiles!projects_manager_id_fkey(full_name, avatar_url)')
+                .select('*')
                 .eq('id', id)
                 .single();
 
             if (error) throw error;
-            return data as Project;
+            if (!data) return null;
+
+            let manager = undefined;
+            if (data.manager_id) {
+                const snap = await getDoc(doc(db, 'profiles', data.manager_id));
+                if (snap.exists()) {
+                    manager = {
+                        full_name: snap.data().full_name,
+                        avatar_url: snap.data().avatar_url
+                    };
+                }
+            }
+
+            return { ...data, manager } as Project;
         },
         enabled: !!id
     });
@@ -57,12 +93,12 @@ export function useCreateProject() {
 
     return useMutation({
         mutationFn: async (project: Partial<Project>) => {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('organization_id')
-                .single();
+            const firebaseUser = auth.currentUser;
+            if (!firebaseUser) throw new Error('User not authenticated');
 
-            const user = await supabase.auth.getUser();
+            // Get organization ID from Firestore profile
+            const profileSnap = await getDocs(query(collection(db, 'profiles'), where('user_id', '==', firebaseUser.uid)));
+            const profile = !profileSnap.empty ? profileSnap.docs[0].data() : null;
 
             const { data, error } = await supabase
                 .from('projects')
@@ -73,7 +109,7 @@ export function useCreateProject() {
                     start_date: project.start_date,
                     end_date: project.end_date,
                     organization_id: profile?.organization_id,
-                    created_by: user.data.user?.id,
+                    created_by: firebaseUser.uid,
                     manager_id: project.manager_id
                 }])
                 .select()

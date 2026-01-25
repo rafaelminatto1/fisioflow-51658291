@@ -1,9 +1,4 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(pnpm run build:*)"
-    ]
-  },
   "env": {
     "ANTHROPIC_AUTH_TOKEN": "d0e85ef16c6a4539a5338a808c9c5876.cQJh5FAURxIAJJud",
     "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
@@ -11,5 +6,11 @@
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.7"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run build:*)",
+      "Bash(NODE_OPTIONS=\"--experimental-loader=playwright/lib/loader\" node:*)"
+    ]
   }
 }

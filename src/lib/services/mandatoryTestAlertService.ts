@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
 import type { MandatoryTestAlert, AssessmentTestConfig } from '@/types/evolution';
 import { TestEvolutionService } from './testEvolutionService';
 import { PathologyService } from './pathologyService';
@@ -27,7 +27,7 @@ export class MandatoryTestAlertService {
 
       // 2. Buscar testes obrigatórios baseados nas patologias
       const mandatoryTests = await TestEvolutionService.getMandatoryTests(patientId, sessionNumber);
-      
+
       // 3. Verificar quais testes foram completados
       const alerts: MandatoryTestAlert[] = mandatoryTests.map(test => ({
         id: `alert_${test.id}_${sessionNumber}`,
@@ -69,6 +69,7 @@ export class MandatoryTestAlertService {
 
   /**
    * Registra uma exceção para um teste obrigatório não realizado
+   * NOTE: Uses audit_log collection - needs Cloud Function for proper implementation
    */
   static async registerException(
     patientId: string,
@@ -76,11 +77,16 @@ export class MandatoryTestAlertService {
     testName: string,
     reason: string
   ): Promise<void> {
-    // Registrar no audit log
-    const { error } = await supabase.from('audit_log').insert({
+    // Get current user from Firebase Auth
+    const auth = getFirebaseAuth();
+    const userId = auth.currentUser?.uid;
+
+    // NOTE: This would typically use a Cloud Function to log to audit_log
+    // For now, we'll log to console and create a local record
+    const exceptionRecord = {
       action: 'MANDATORY_TEST_EXCEPTION',
       table_name: 'evolution_measurements',
-      user_id: (await supabase.auth.getUser()).data.user?.id,
+      user_id: userId,
       new_data: {
         patient_id: patientId,
         session_id: sessionId,
@@ -88,12 +94,14 @@ export class MandatoryTestAlertService {
         exception_reason: reason,
         timestamp: new Date().toISOString(),
       },
-    });
+      created_at: new Date().toISOString(),
+    };
 
-    if (error) {
-      logger.error('Erro ao registrar exceção de teste obrigatório', error, 'MandatoryTestAlertService');
-      throw error;
-    }
+    logger.warn('Mandatory test exception registered', exceptionRecord, 'MandatoryTestAlertService');
+
+    // In production, this should call a Cloud Function to store in audit_log
+    // For now, we'll just log the exception
+    console.log('Audit log entry:', exceptionRecord);
   }
 
   /**
@@ -194,7 +202,7 @@ export class MandatoryTestAlertService {
     };
 
     const configs = defaultConfigs[pathologyName] || [];
-    
+
     return configs.map((config, index) => ({
       id: `config_${pathologyName}_${index}`,
       pathology_name: pathologyName,

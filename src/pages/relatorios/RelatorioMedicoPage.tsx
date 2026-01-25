@@ -22,6 +22,11 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { Download, Info } from 'lucide-react';
 
 const styles = StyleSheet.create({
   page: {
@@ -1061,6 +1066,8 @@ function RelatorioMedicoEditor({
 }
 
 export default function RelatorioMedicoPage() {
+  const { user } = useAuth();
+  const { currentOrganization: org } = useOrganizations();
   const queryClient = useQueryClient();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [previewRelatorio, setPreviewRelatorio] = useState<RelatorioMedicoData | null>(null);
@@ -1106,8 +1113,8 @@ export default function RelatorioMedicoPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from('patients')
-        .select('id, name, cpf, telefone, email, date_of_birth')
-        .order('name');
+        .select('id, full_name, cpf, phone, email, birth_date')
+        .order('full_name');
       return data || [];
     },
   });
@@ -1135,15 +1142,10 @@ export default function RelatorioMedicoPage() {
 
   // Carregar dados do profissional
   const carregarDadosProfissional = async () => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .single();
-
-    const { data: org } = await supabase
-      .from('organizations')
-      .select('*')
-      .single();
+    if (!user) return { profile: null, org: null };
+    const db = getFirebaseDb();
+    const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+    const profile = profileDoc.exists() ? profileDoc.data() : null;
 
     return { profile, org };
   };
@@ -1166,9 +1168,9 @@ export default function RelatorioMedicoPage() {
       id: '',
       tipo_relatorio: 'inicial',
       paciente: {
-        nome: paciente.name,
+        nome: paciente.full_name,
         cpf: paciente.cpf || '',
-        data_nascimento: paciente.date_of_birth || '',
+        data_nascimento: paciente.birth_date || '',
         telefone: paciente.phone || '',
         email: paciente.email || '',
       },
@@ -1311,7 +1313,7 @@ export default function RelatorioMedicoPage() {
                       <SelectContent>
                         {pacientes.map(paciente => (
                           <SelectItem key={paciente.id} value={paciente.id}>
-                            {paciente.name}
+                            {paciente.full_name}
                           </SelectItem>
                         ))}
                       </SelectContent>

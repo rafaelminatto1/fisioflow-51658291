@@ -1,18 +1,17 @@
 /**
- * Cleanup Workflow
+ * Cleanup Workflow - Migrated to Firebase
  *
- * Migrated from /api/crons/cleanup
- * Runs daily at 3:00 AM to clean up expired data
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - supabase.from().delete().lt() → Helper function deleteByQuery
  *
- * Features:
- * - Automatic retries with exponential backoff
- * - Idempotent operations (safe to run multiple times)
- * - Detailed logging
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, CleanupPayload, CleanupResult, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminDb } from '../../lib/firebase/admin.js';
+import { deleteByQuery } from '../../lib/firebase/admin.js';
 
 export const cleanupWorkflow = inngest.createFunction(
   {
@@ -24,10 +23,7 @@ export const cleanupWorkflow = inngest.createFunction(
     event: Events.CRON_DAILY_CLEANUP,
   },
   async ({ step }: { event: { data: CleanupPayload }; step: InngestStep }) => {
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const db = getAdminDb();
 
     const result: CleanupResult = {
       deletedRecords: {
@@ -46,17 +42,13 @@ export const cleanupWorkflow = inngest.createFunction(
         const ninetyDaysAgo = new Date();
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-        const { error, count } = await supabase
-          .from('notification_history')
-          .delete()
-          .lt('created_at', ninetyDaysAgo.toISOString())
-          .select('count', { count: 'exact', head: true });
-
-        if (error) {
-          throw new Error(`Failed to cleanup notifications: ${error.message}`);
-        }
-
-        return count || 0;
+        return await deleteByQuery(
+          'notification_history',
+          'created_at',
+          '<',
+          ninetyDaysAgo.toISOString(),
+          { maxDeletes: 10000 } // Safety limit
+        );
       }
     )) as number;
     result.deletedRecords.notificationHistory = notificationResult;
@@ -68,18 +60,18 @@ export const cleanupWorkflow = inngest.createFunction(
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-        const { error, count } = await supabase
-          .from('password_reset_tokens')
-          .delete()
-          .lt('created_at', twentyFourHoursAgo.toISOString())
-          .select('count', { count: 'exact', head: true });
-
-        if (error) {
-          result.errors.push(`Password tokens cleanup: ${error.message}`);
+        try {
+          return await deleteByQuery(
+            'password_reset_tokens',
+            'created_at',
+            '<',
+            twentyFourHoursAgo.toISOString(),
+            { maxDeletes: 5000 }
+          );
+        } catch (error) {
+          result.errors.push(`Password tokens cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
           return 0;
         }
-
-        return count || 0;
       }
     )) as number;
     result.deletedRecords.passwordResetTokens = resetTokensResult;
@@ -91,18 +83,18 @@ export const cleanupWorkflow = inngest.createFunction(
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const { error, count } = await supabase
-          .from('system_health_logs')
-          .delete()
-          .lt('created_at', thirtyDaysAgo.toISOString())
-          .select('count', { count: 'exact', head: true });
-
-        if (error) {
-          result.errors.push(`Health logs cleanup: ${error.message}`);
+        try {
+          return await deleteByQuery(
+            'system_health_logs',
+            'created_at',
+            '<',
+            thirtyDaysAgo.toISOString(),
+            { maxDeletes: 5000 }
+          );
+        } catch (error) {
+          result.errors.push(`Health logs cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
           return 0;
         }
-
-        return count || 0;
       }
     )) as number;
     result.deletedRecords.systemHealthLogs = healthLogsResult;
@@ -112,19 +104,28 @@ export const cleanupWorkflow = inngest.createFunction(
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const { error, count } = await supabase
-        .from('sessions')
-        .delete()
-        .eq('status', 'in_progress')
-        .lt('updated_at', sevenDaysAgo.toISOString())
-        .select('count', { count: 'exact', head: true });
+      try {
+        const snapshot = await db.collection('soap_records')
+          .where('status', '==', 'in_progress')
+          .where('updated_at', '<', sevenDaysAgo.toISOString())
+          .limit(500)
+          .get();
 
-      if (error) {
-        result.errors.push(`Sessions cleanup: ${error.message}`);
+        if (snapshot.empty) {
+          return 0;
+        }
+
+        const batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        return snapshot.docs.length;
+      } catch (error) {
+        result.errors.push(`Sessions cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
         return 0;
       }
-
-      return count || 0;
     })) as number;
     result.deletedRecords.incompleteSessions = sessionsResult;
 
@@ -132,51 +133,47 @@ export const cleanupWorkflow = inngest.createFunction(
     const expiredOffersResult = (await step.run('expire-stale-waitlist-offers', async (): Promise<number> => {
       const now = new Date().toISOString();
 
-      // Find all offers that have expired
-      const { data: expiredOffers, error: fetchError } = await supabase
-        .from('waitlist')
-        .select('id, refusal_count')
-        .eq('status', 'offered')
-        .lt('offer_expires_at', now);
+      try {
+        const snapshot = await db.collection('waitlist')
+          .where('status', '==', 'offered')
+          .where('offer_expires_at', '<', now)
+          .limit(500)
+          .get();
 
-      if (fetchError) {
-        result.errors.push(`Expired offers fetch: ${fetchError.message}`);
-        return 0;
-      }
+        if (snapshot.empty) {
+          return 0;
+        }
 
-      if (!expiredOffers || expiredOffers.length === 0) {
-        return 0;
-      }
+        const batch = db.batch();
+        let processedCount = 0;
 
-      // Process each expired offer - increment refusal count and return to waiting/remove
-      let processedCount = 0;
-      for (const offer of expiredOffers) {
-        const newRefusalCount = (offer.refusal_count || 0) + 1;
-        const newStatus = newRefusalCount >= 3 ? 'removed' : 'waiting';
+        snapshot.docs.forEach((docSnap) => {
+          const offer = docSnap.data();
+          const newRefusalCount = (offer.refusal_count || 0) + 1;
+          const newStatus = newRefusalCount >= 3 ? 'removed' : 'waiting';
 
-        const { error: updateError } = await supabase
-          .from('waitlist')
-          .update({
+          batch.update(docSnap.ref, {
             status: newStatus,
             offered_slot: null,
             offered_at: null,
             offer_expires_at: null,
             refusal_count: newRefusalCount,
-          })
-          .eq('id', offer.id);
-
-        if (!updateError) {
+          });
           processedCount++;
-        }
-      }
+        });
 
-      return processedCount;
+        await batch.commit();
+        return processedCount;
+      } catch (error) {
+        result.errors.push(`Expired offers: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return 0;
+      }
     })) as number;
     (result.deletedRecords as Record<string, number>).expiredWaitlistOffers = expiredOffersResult;
 
     // Log completion
     await step.run('log-cleanup-summary', async () => {
-      console.log('Cleanup completed:', {
+      console.log('[Cleanup] Completed:', {
         notificationHistory: result.deletedRecords.notificationHistory,
         passwordResetTokens: result.deletedRecords.passwordResetTokens,
         systemHealthLogs: result.deletedRecords.systemHealthLogs,

@@ -1,9 +1,23 @@
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { inngest } from '@/lib/inngest/client';
+import { Events } from '@/lib/inngest/types';
 
+/**
+ * NOTE: This service uses Supabase Edge Functions for appointment notifications.
+ * For Firebase, you need to implement Firebase Cloud Functions to:
+ * 1. Schedule notifications for appointments
+ * 2. Send notifications via FCM or other channels
+ * 3. Handle reschedule and cancellation notifications
+ *
+ * The current implementation logs to console.
+ *
+ * TODO: Implement Firebase Cloud Functions for:
+ * - schedule-notifications → Replace supabase.functions.invoke('schedule-notifications')
+ */
 export class AppointmentNotificationService {
   /**
-   * Agenda notificação para um agendamento criado
+   * Schedule notification for an appointment
+   * NOTE: Requires Firebase Cloud Function implementation
    */
   static async scheduleNotification(
     appointmentId: string,
@@ -20,37 +34,35 @@ export class AppointmentNotificationService {
 
       logger.info('Agendando notificação para consulta', { appointmentId, date, time }, 'AppointmentNotificationService');
 
-      // Chamar edge function para agendar notificação
-      const { data, error } = await supabase.functions.invoke('schedule-notifications', {
-        body: {
+      // Trigger Inngest Event
+      await inngest.send({
+        name: Events.NOTIFICATION_SEND,
+        data: {
           userId: patientId,
-          type: 'appointment_created',
-          scheduleAt: new Date().toISOString(), // Enviar imediatamente
+          organizationId: 'system', // or derive from context
+          type: 'push',
           data: {
+            to: patientId, // For push, 'to' is userId usually, or handled by logic
+            subject: 'Lembrete de Consulta',
+            body: `Olá ${patientName}, você tem uma consulta agendada para ${date.toLocaleDateString('pt-BR')} às ${time}.`,
             appointmentId,
-            patientName,
-            date: date.toLocaleDateString('pt-BR'),
-            time,
+            action: 'appointment_reminder'
           }
         }
       });
 
-      if (error) {
-        logger.error('Erro ao agendar notificação', error, 'AppointmentNotificationService');
-        throw error;
-      }
-
-      logger.info('Notificação agendada com sucesso', { appointmentId, result: data }, 'AppointmentNotificationService');
-      return data;
+      logger.info('Notificação agendada com sucesso (placeholder)', { appointmentId }, 'AppointmentNotificationService');
+      return { success: true, appointmentId };
     } catch (error) {
       logger.error('Falha ao agendar notificação', error, 'AppointmentNotificationService');
-      // Não falhar o agendamento se notificação falhar
+      // Don't fail the appointment if notification fails
       return null;
     }
   }
 
   /**
-   * Notifica sobre reagendamento
+   * Notify about reschedule
+   * NOTE: Requires Firebase Cloud Function implementation
    */
   static async notifyReschedule(
     appointmentId: string,
@@ -67,27 +79,17 @@ export class AppointmentNotificationService {
 
       logger.info('Notificando reagendamento', { appointmentId, newDate, newTime }, 'AppointmentNotificationService');
 
-      const { data, error } = await supabase.functions.invoke('schedule-notifications', {
-        body: {
-          userId: patientId,
-          type: 'appointment_rescheduled',
-          scheduleAt: new Date().toISOString(),
-          data: {
-            appointmentId,
-            patientName,
-            date: newDate.toLocaleDateString('pt-BR'),
-            time: newTime,
-          }
-        }
+      // TODO: Implement Firebase Cloud Function call
+      console.log('[AppointmentNotificationService] notifyReschedule:', {
+        appointmentId,
+        patientId,
+        newDate: newDate.toLocaleDateString('pt-BR'),
+        newTime,
+        patientName,
       });
 
-      if (error) {
-        logger.error('Erro ao notificar reagendamento', error, 'AppointmentNotificationService');
-        throw error;
-      }
-
-      logger.info('Notificação de reagendamento enviada', { appointmentId }, 'AppointmentNotificationService');
-      return data;
+      logger.info('Notificação de reagendamento enviada (placeholder)', { appointmentId }, 'AppointmentNotificationService');
+      return { success: true, appointmentId };
     } catch (error) {
       logger.error('Falha ao notificar reagendamento', error, 'AppointmentNotificationService');
       return null;
@@ -95,7 +97,8 @@ export class AppointmentNotificationService {
   }
 
   /**
-   * Notifica sobre cancelamento
+   * Notify about cancellation
+   * NOTE: Requires Firebase Cloud Function implementation
    */
   static async notifyCancellation(
     appointmentId: string,
@@ -112,27 +115,17 @@ export class AppointmentNotificationService {
 
       logger.info('Notificando cancelamento', { appointmentId }, 'AppointmentNotificationService');
 
-      const { data, error } = await supabase.functions.invoke('schedule-notifications', {
-        body: {
-          userId: patientId,
-          type: 'appointment_cancelled',
-          scheduleAt: new Date().toISOString(),
-          data: {
-            appointmentId,
-            patientName,
-            date: date.toLocaleDateString('pt-BR'),
-            time,
-          }
-        }
+      // TODO: Implement Firebase Cloud Function call
+      console.log('[AppointmentNotificationService] notifyCancellation:', {
+        appointmentId,
+        patientId,
+        date: date.toLocaleDateString('pt-BR'),
+        time,
+        patientName,
       });
 
-      if (error) {
-        logger.error('Erro ao notificar cancelamento', error, 'AppointmentNotificationService');
-        throw error;
-      }
-
-      logger.info('Notificação de cancelamento enviada', { appointmentId }, 'AppointmentNotificationService');
-      return data;
+      logger.info('Notificação de cancelamento enviada (placeholder)', { appointmentId }, 'AppointmentNotificationService');
+      return { success: true, appointmentId };
     } catch (error) {
       logger.error('Falha ao notificar cancelamento', error, 'AppointmentNotificationService');
       return null;

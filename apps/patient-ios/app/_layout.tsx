@@ -2,19 +2,21 @@ import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { Inter_400, Inter_500, Inter_600, Inter_700 } from '@expo-google-fonts/inter';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider, ToastProvider } from '@fisioflow/shared-ui';
+import { NotificationProvider } from '@fisioflow/shared-api';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Inter_400,
-    Inter_500,
-    Inter_600,
-    Inter_700,
+    Inter_400: Inter_400Regular,
+    Inter_500: Inter_500Medium,
+    Inter_600: Inter_600SemiBold,
+    Inter_700: Inter_700Bold,
   });
 
   useEffect(() => {
@@ -29,11 +31,17 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <ThemeProvider>
+        <NotificationProvider requestOnMount={true} registerOnMount={true} appType="patient">
+          <ToastProvider position="top">
+            <StatusBar style="auto" />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </ToastProvider>
+        </NotificationProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,6 +1,26 @@
+/**
+ * useContasFinanceiras - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('contas_financeiras') → Firestore collection 'contas_financeiras'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  getDocs
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface ContaFinanceira {
   id: string;
@@ -25,13 +45,38 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
   return useQuery({
     queryKey: ['contas-financeiras', tipo, status],
     queryFn: async () => {
-      // Optimized: Select only required columns instead of *
-      let query = supabase.from('contas_financeiras').select('id, descricao, valor, data_vencimento, data_pagamento, tipo, status, fornecedor_id, observacoes, created_at').order('data_vencimento', { ascending: true });
-      if (tipo) query = query.eq('tipo', tipo);
-      if (status) query = query.eq('status', status);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as ContaFinanceira[];
+      let q = query(
+        collection(db, 'contas_financeiras'),
+        orderBy('data_vencimento', 'asc')
+      );
+
+      if (tipo) {
+        q = query(
+          collection(db, 'contas_financeiras'),
+          where('tipo', '==', tipo),
+          orderBy('data_vencimento', 'asc')
+        );
+      }
+
+      if (status) {
+        if (tipo) {
+          q = query(
+            collection(db, 'contas_financeiras'),
+            where('tipo', '==', tipo),
+            where('status', '==', status),
+            orderBy('data_vencimento', 'asc')
+          );
+        } else {
+          q = query(
+            collection(db, 'contas_financeiras'),
+            where('status', '==', status),
+            orderBy('data_vencimento', 'asc')
+          );
+        }
+      }
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
     },
     staleTime: 1000 * 60 * 2, // 2 minutos
     gcTime: 1000 * 60 * 5, // 5 minutos
@@ -42,10 +87,17 @@ export function useCreateContaFinanceira() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (conta: Omit<ContaFinanceira, 'id' | 'created_at'>) => {
-      // Optimized: Select only required columns
-      const { data, error } = await supabase.from('contas_financeiras').insert(conta).select('id, descricao, valor, data_vencimento, data_pagamento, tipo, status, fornecedor_id, observacoes, created_at').single();
-      if (error) throw error;
-      return data;
+      const contaData = {
+        ...conta,
+        created_at: new Date().toISOString(),
+      };
+
+      const docRef = await addDoc(collection(db, 'contas_financeiras'), contaData);
+
+      return {
+        id: docRef.id,
+        ...contaData,
+      } as ContaFinanceira;
     },
     // Optimistic update - adiciona conta à lista antes da resposta do servidor
     onMutate: async (newConta) => {
@@ -82,10 +134,14 @@ export function useUpdateContaFinanceira() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...conta }: Partial<ContaFinanceira> & { id: string }) => {
-      // Optimized: Select only required columns
-      const { data, error } = await supabase.from('contas_financeiras').update(conta).eq('id', id).select('id, descricao, valor, data_vencimento, data_pagamento, tipo, status, fornecedor_id, observacoes, created_at').single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'contas_financeiras', id);
+      await updateDoc(docRef, conta);
+
+      const snap = await getDoc(docRef);
+      return {
+        id: snap.id,
+        ...snap.data(),
+      } as ContaFinanceira;
     },
     // Optimistic update - atualiza conta na lista antes da resposta do servidor
     onMutate: async ({ id, ...conta }) => {
@@ -119,8 +175,8 @@ export function useDeleteContaFinanceira() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contas_financeiras').delete().eq('id', id);
-      if (error) throw error;
+      const docRef = doc(db, 'contas_financeiras', id);
+      await deleteDoc(docRef);
     },
     // Optimistic update - remove conta da lista visualmente
     onMutate: async (id) => {
@@ -149,16 +205,14 @@ export function useResumoFinanceiro() {
   return useQuery({
     queryKey: ['resumo-financeiro'],
     queryFn: async () => {
-      // Otimizado: Select apenas colunas necessárias para o resumo
-      const { data, error } = await supabase.from('contas_financeiras').select('tipo, status, valor, data_vencimento');
-      if (error) throw error;
-      
+      const snapshot = await getDocs(collection(db, 'contas_financeiras'));
+      const contas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
+
       const hoje = new Date().toISOString().split('T')[0];
-      const contas = data as ContaFinanceira[];
-      
+
       const receber = contas.filter(c => c.tipo === 'receber');
       const pagar = contas.filter(c => c.tipo === 'pagar');
-      
+
       return {
         totalReceber: receber.filter(c => c.status === 'pendente').reduce((acc, c) => acc + Number(c.valor), 0),
         totalPagar: pagar.filter(c => c.status === 'pendente').reduce((acc, c) => acc + Number(c.valor), 0),

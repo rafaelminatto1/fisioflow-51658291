@@ -1,13 +1,17 @@
 /**
- * Appointment Reminder Workflow
+ * Appointment Reminder Workflow - Migrated to Firebase
  *
- * Sends reminders for upcoming appointments
- * Can be triggered manually or scheduled
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - supabase.from() → firestore queries
+ * - select() → getDoc/getDocs
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
 
 type AppointmentWithRelations = {
   id: string;
@@ -27,6 +31,48 @@ type AppointmentWithRelations = {
   };
 };
 
+/**
+ * Helper para buscar appointments com relações no Firestore
+ */
+async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Promise<AppointmentWithRelations[]> {
+  const db = getAdminDb();
+
+  const snapshot = await db.collection('appointments')
+    .where('status', '==', 'agendado')
+    .where('date', '>=', startDate.toISOString())
+    .where('date', '<', endDate.toISOString())
+    .get();
+
+  if (snapshot.empty) {
+    return [];
+  }
+
+  // Buscar dados relacionados em lote
+  const patientIds = snapshot.docs.map(doc => doc.data().patient_id).filter(Boolean);
+  const orgIds = snapshot.docs.map(doc => doc.data().organization_id).filter(Boolean);
+
+  const [patientMap, orgMap] = await Promise.all([
+    batchFetchDocuments('patients', patientIds),
+    batchFetchDocuments('organizations', orgIds),
+  ]);
+
+  const appointments: AppointmentWithRelations[] = [];
+
+  for (const docSnap of snapshot.docs) {
+    const appointment = { id: docSnap.id, ...docSnap.data() } as any;
+
+    appointments.push({
+      id: appointment.id,
+      date: appointment.date,
+      time: appointment.time,
+      patient: patientMap.get(appointment.patient_id) || { id: appointment.patient_id, full_name: 'Unknown' },
+      organization: orgMap.get(appointment.organization_id) || { id: appointment.organization_id, name: 'Unknown' },
+    });
+  }
+
+  return appointments;
+}
+
 export const appointmentReminderWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-appointment-reminder',
@@ -37,11 +83,6 @@ export const appointmentReminderWorkflow = inngest.createFunction(
     event: Events.APPOINTMENT_REMINDER,
   },
   async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
     // Get appointments that need reminders
     const appointments = await step.run('get-appointments', async (): Promise<AppointmentWithRelations[]> => {
       const tomorrow = new Date();
@@ -51,22 +92,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
       const dayAfter = new Date(tomorrow);
       dayAfter.setDate(dayAfter.getDate() + 1);
 
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patient:patients(id, full_name, email, phone, notification_preferences),
-          organization:organizations(id, name, settings)
-        `)
-        .eq('status', 'agendado')
-        .gte('date', tomorrow.toISOString())
-        .lt('date', dayAfter.toISOString());
-
-      if (error) {
-        throw new Error(`Failed to fetch appointments: ${error.message}`);
-      }
-
-      return (data || []) as unknown as AppointmentWithRelations[];
+      return await getAppointmentsWithRelations(tomorrow, dayAfter);
     });
 
     if (appointments.length === 0) {
@@ -159,23 +185,36 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
     event: Events.APPOINTMENT_CREATED,
   },
   async ({ event, step }: { event: { data: { appointmentId: string } }; step: InngestStep }) => {
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
+    const db = getAdminDb();
     const { appointmentId } = event.data;
 
     // 1. Fetch complete appointment details
     const appointment = await step.run('get-appointment-details', async () => {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*, patient:patients(id, full_name, email, phone, notification_preferences), organization:organizations(id, name, settings), therapist:profiles!therapist_id(full_name)')
-        .eq('id', appointmentId)
-        .single();
+      const appointmentSnap = await db.collection('appointments').doc(appointmentId).get();
 
-      if (error) throw new Error('Failed to fetch appointment: ' + error.message);
-      return data;
+      if (!appointmentSnap.exists) {
+        throw new Error('Appointment not found');
+      }
+
+      const appointmentData = { id: appointmentSnap.id, ...appointmentSnap.data() } as any;
+
+      // Buscar relações em lote
+      const [patientSnap, orgSnap, therapistSnap] = await Promise.all([
+        db.collection('patients').doc(appointmentData.patient_id).get(),
+        db.collection('organizations').doc(appointmentData.organization_id).get(),
+        appointmentData.therapist_id ? db.collection('profiles').doc(appointmentData.therapist_id).get() : Promise.resolve({ exists: false }),
+      ]);
+
+      const patient = patientSnap.exists ? { id: patientSnap.id, ...patientSnap.data() } : null;
+      const organization = orgSnap.exists ? { id: orgSnap.id, ...orgSnap.data() } : null;
+      const therapist = therapistSnap.exists ? { id: therapistSnap.id, ...therapistSnap.data() } : null;
+
+      return {
+        ...appointmentData,
+        patient,
+        organization,
+        therapist,
+      };
     });
 
     if (!appointment) return { success: false, reason: 'Appointment not found' };

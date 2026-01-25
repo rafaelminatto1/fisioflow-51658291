@@ -1,9 +1,19 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from 'react-native';
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { getGreeting } from '@fisioflow/shared-utils';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import {
+  Card,
+  Button,
+  Badge,
+  Progress,
+  Avatar,
+  ListItem,
+  Divider,
+  useTheme,
+  toast,
+} from '@fisioflow/shared-ui';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Mock data - will be replaced with Firebase data
 const mockTodayPlan = {
@@ -18,36 +28,55 @@ const mockStreak = {
 };
 
 const mockNextSession = {
-  date: '15 de janeiro',
+  date: '25 de janeiro',
   time: '14:00',
   professional: 'Dra. Ana Silva',
 };
 
 const mockPainLevel = 3; // 0-10 scale
 
+// Helper function
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Bom dia';
+  if (hour < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const theme = useTheme();
+  const router = useRouter();
   const [painLevel, setPainLevel] = useState(mockPainLevel);
   const [showPainSelector, setShowPainSelector] = useState(false);
 
   const handleStartExercises = () => {
-    router.push('/exercises');
+    router.push('/(tabs)/exercises');
   };
 
   const handlePainCheckIn = (level: number) => {
     setPainLevel(level);
     setShowPainSelector(false);
+    toast.success(`Nível de dor registrado: ${level}/10`);
     // TODO: Save to Firebase
   };
 
+  const progressPercent = (mockTodayPlan.completedCount / mockTodayPlan.exercisesCount) * 100;
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.backgroundSecondary }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header with gradient */}
+      <LinearGradient
+        colors={[theme.colors.primary[500], theme.colors.primary[600]]}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
           <View style={styles.greetingContainer}>
             <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.userName}>{user?.name || 'Paciente'}</Text>
+            <Text style={styles.userName}>Paciente</Text>
+            <Text style={styles.headerSubtitle}>Você está indo muito bem! 🎉</Text>
           </View>
 
           {/* Streak Badge */}
@@ -56,65 +85,78 @@ export default function HomeScreen() {
             <Text style={styles.streakCount}>{mockStreak.current}</Text>
           </View>
         </View>
-
-        <Text style={styles.headerSubtitle}>Você está indo muito bem! 🎉</Text>
-      </View>
+      </LinearGradient>
 
       {/* Quick Stats */}
-      <View style={styles.quickStats}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{mockStreak.current}</Text>
-          <Text style={styles.statLabel}>dias seguidos</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{mockStreak.best}</Text>
-          <Text style={styles.statLabel}>melhor sequência</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{mockTodayPlan.exercisesCount - mockTodayPlan.completedCount}</Text>
-          <Text style={styles.statLabel}>pendentes hoje</Text>
-        </View>
+      <View style={styles.statsContainer}>
+        <Card variant="elevated" style={styles.statsCard}>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.colors.primary[500] }]}>
+                {mockStreak.current}
+              </Text>
+              <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+                dias seguidos
+              </Text>
+            </View>
+            <Divider orientation="vertical" length={40} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.colors.warning[500] }]}>
+                {mockStreak.best}
+              </Text>
+              <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+                melhor sequência
+              </Text>
+            </View>
+            <Divider orientation="vertical" length={40} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: theme.colors.success[500] }]}>
+                {mockTodayPlan.exercisesCount - mockTodayPlan.completedCount}
+              </Text>
+              <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+                pendentes hoje
+              </Text>
+            </View>
+          </View>
+        </Card>
       </View>
 
       {/* Today's Plan Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View>
-            <Text style={styles.cardTitle}>Plano de Hoje</Text>
-            <Text style={styles.cardSubtitle}>
-              {mockTodayPlan.completedCount} de {mockTodayPlan.exercisesCount} exercícios
-            </Text>
-          </View>
-          <View style={styles.timeBadge}>
-            <Ionicons name="time-outline" size={16} color="#64748B" />
-            <Text style={styles.timeText}>{mockTodayPlan.estimatedTime} min</Text>
-          </View>
-        </View>
+      <Card variant="elevated" style={styles.card}>
+        <CardHeader
+          title="Plano de Hoje"
+          subtitle={`${mockTodayPlan.completedCount} de ${mockTodayPlan.exercisesCount} exercícios`}
+          rightElement={
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={16} color={theme.colors.text.tertiary} />
+              <Text style={[styles.timeText, { color: theme.colors.text.tertiary }]}>
+                {mockTodayPlan.estimatedTime} min
+              </Text>
+            </View>
+          }
+        />
 
         {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              { width: `${(mockTodayPlan.completedCount / mockTodayPlan.exercisesCount) * 100}%` }
-            ]}
-          />
-        </View>
+        <Progress value={progressPercent} size="md" />
 
-        <Pressable style={styles.primaryButton} onPress={handleStartExercises}>
-          <Ionicons name="play" size={20} color="#fff" />
-          <Text style={styles.primaryButtonText}>
-            {mockTodayPlan.completedCount > 0 ? 'Continuar' : 'Começar'}
-          </Text>
-        </Pressable>
-      </View>
+        <Button
+          onPress={handleStartExercises}
+          fullWidth
+          leftIcon={<Ionicons name="play" size={20} color="#fff" />}
+          style={{ marginTop: 16 }}
+        >
+          {mockTodayPlan.completedCount > 0 ? 'Continuar' : 'Começar'}
+        </Button>
+      </Card>
 
       {/* Pain Check-in */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Como está sua dor hoje?</Text>
-        <Text style={styles.cardSubtitle}>Toque para registrar</Text>
+      <Card variant="elevated" style={styles.card}>
+        <Text style={[styles.cardTitle, { color: theme.colors.text.primary }]}>
+          Como está sua dor hoje?
+        </Text>
+        <Text style={[styles.cardSubtitle, { color: theme.colors.text.secondary }]}>
+          Toque para registrar
+        </Text>
 
         <TouchableOpacity
           style={styles.painButton}
@@ -122,33 +164,45 @@ export default function HomeScreen() {
         >
           <View style={styles.painScale}>
             <View style={[styles.painIndicator, { left: `${painLevel * 10}%` }]} />
-            <View style={styles.painGradient} />
+            <LinearGradient
+              colors={[theme.colors.success[500], theme.colors.warning[500], theme.colors.danger[500]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.painGradient}
+            />
           </View>
           <View style={styles.painLabels}>
-            <Text style={styles.painLabel}>Nenhuma</Text>
-            <Text style={styles.painLabel}>Moderada</Text>
-            <Text style={styles.painLabel}>Severa</Text>
+            <Text style={[styles.painLabel, { color: theme.colors.text.tertiary }]}>Nenhuma</Text>
+            <Text style={[styles.painLabel, { color: theme.colors.text.tertiary }]}>Moderada</Text>
+            <Text style={[styles.painLabel, { color: theme.colors.text.tertiary }]}>Severa</Text>
           </View>
-          <Text style={styles.painValue}>Nível {painLevel}/10</Text>
+          <Text style={[styles.painValue, { color: theme.colors.text.primary }]}>
+            Nível {painLevel}/10
+          </Text>
         </TouchableOpacity>
 
         {showPainSelector && (
-          <View style={styles.painSelector}>
-            <Text style={styles.painSelectorTitle}>Selecione o nível:</Text>
+          <View style={[styles.painSelector, { backgroundColor: theme.colors.backgroundSecondary }]}>
+            <Text style={[styles.painSelectorTitle, { color: theme.colors.text.primary }]}>
+              Selecione o nível:
+            </Text>
             <View style={styles.painButtons}>
               {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
                 <TouchableOpacity
                   key={level}
                   style={[
                     styles.painLevelButton,
-                    painLevel === level && styles.painLevelButtonActive
+                    {
+                      backgroundColor: painLevel === level ? theme.colors.primary[500] : theme.colors.background,
+                      borderColor: painLevel === level ? theme.colors.primary[500] : theme.colors.border,
+                    },
                   ]}
                   onPress={() => handlePainCheckIn(level)}
                 >
                   <Text
                     style={[
                       styles.painLevelButtonText,
-                      painLevel === level && styles.painLevelButtonTextActive
+                      { color: painLevel === level ? '#FFFFFF' : theme.colors.text.secondary },
                     ]}
                   >
                     {level}
@@ -158,59 +212,86 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
-      </View>
+      </Card>
 
       {/* Next Session */}
-      <View style={styles.card}>
-        <View style={styles.sessionHeader}>
-          <Ionicons name="calendar-outline" size={24} color="#3B82F6" />
-          <Text style={styles.cardTitle}>Próxima Sessão</Text>
-        </View>
-        <Text style={styles.sessionDate}>{mockNextSession.date}</Text>
-        <Text style={styles.sessionTime}>{mockNextSession.time}</Text>
-        <Text style={styles.sessionProfessional}>com {mockNextSession.professional}</Text>
-      </View>
+      <Card variant="elevated" style={styles.card}>
+        <ListItem
+          title={mockNextSession.date}
+          subtitle={`${mockNextSession.time} • com ${mockNextSession.professional}`}
+          leading={<Ionicons name="calendar-outline" size={24} color={theme.colors.primary[500]} />}
+          pressable
+          onPress={() => router.push('/(tabs)/profile')}
+        />
+      </Card>
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <TouchableOpacity style={styles.quickActionButton} onPress={() => router.push('/exercises')}>
-          <View style={styles.quickActionIcon}>
-            <Ionicons name="fitness" size={24} color="#3B82F6" />
+        <TouchableOpacity
+          style={[styles.quickActionButton, { backgroundColor: theme.colors.background }]}
+          onPress={() => router.push('/(tabs)/exercises')}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.primary[100] }]}>
+            <Ionicons name="fitness" size={24} color={theme.colors.primary[500]} />
           </View>
-          <Text style={styles.quickActionText}>Exercícios</Text>
+          <Text style={[styles.quickActionText, { color: theme.colors.text.secondary }]}>
+            Exercícios
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton} onPress={() => router.push('/progress')}>
-          <View style={styles.quickActionIcon}>
-            <Ionicons name="stats-chart" size={24} color="#10B981" />
+        <TouchableOpacity
+          style={[styles.quickActionButton, { backgroundColor: theme.colors.background }]}
+          onPress={() => router.push('/(tabs)/progress')}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.success[100] }]}>
+            <Ionicons name="stats-chart" size={24} color={theme.colors.success[500]} />
           </View>
-          <Text style={styles.quickActionText}>Progresso</Text>
+          <Text style={[styles.quickActionText, { color: theme.colors.text.secondary }]}>
+            Progresso
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.quickActionButton} onPress={() => router.push('/profile')}>
-          <View style={styles.quickActionIcon}>
-            <Ionicons name="person" size={24} color="#8B5CF6" />
+        <TouchableOpacity
+          style={[styles.quickActionButton, { backgroundColor: theme.colors.background }]}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.info[100] }]}>
+            <Ionicons name="person" size={24} color={theme.colors.info[500]} />
           </View>
-          <Text style={styles.quickActionText}>Perfil</Text>
+          <Text style={[styles.quickActionText, { color: theme.colors.text.secondary }]}>
+            Perfil
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
 
+// CardHeader component for reuse
+function CardHeader({ title, subtitle, rightElement }: any) {
+  return (
+    <View style={styles.cardHeader}>
+      <View>
+        <Text style={styles.cardTitle}>{title}</Text>
+        {subtitle && <Text style={styles.cardSubtitle}>{subtitle}</Text>}
+      </View>
+      {rightElement}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
-    padding: 24,
     paddingTop: 60,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
-  headerTop: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -220,26 +301,23 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: '#64748B',
-    fontFamily: 'Inter_400',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   userName: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#FFFFFF',
     marginTop: 4,
-    fontFamily: 'Inter_700',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#10B981',
-    marginTop: 12,
-    fontFamily: 'Inter_500',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 8,
   },
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -249,52 +327,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#F59E0B',
-    fontFamily: 'Inter_700',
   },
-  quickStats: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginTop: 16,
+  statsContainer: {
+    paddingHorizontal: 16,
+    marginTop: -20,
+  },
+  statsCard: {
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
   statItem: {
-    flex: 1,
     alignItems: 'center',
   },
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1E293B',
-    fontFamily: 'Inter_700',
   },
   statLabel: {
     fontSize: 12,
-    color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Inter_400',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#E2E8F0',
-    marginHorizontal: 16,
   },
   card: {
-    backgroundColor: '#fff',
-    margin: 16,
-    marginTop: 8,
+    marginHorizontal: 16,
+    marginTop: 16,
     padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -305,19 +365,14 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1E293B',
-    fontFamily: 'Inter_600',
   },
   cardSubtitle: {
     fontSize: 14,
-    color: '#64748B',
     marginTop: 4,
-    fontFamily: 'Inter_400',
   },
   timeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -325,42 +380,13 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 12,
-    color: '#64748B',
-    fontFamily: 'Inter_500',
-  },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#3B82F6',
-    borderRadius: 4,
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    paddingVertical: 14,
-    gap: 8,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Inter_600',
+    fontWeight: '500',
   },
   painButton: {
     marginTop: 12,
   },
   painScale: {
     height: 40,
-    backgroundColor: '#E2E8F0',
     borderRadius: 20,
     position: 'relative',
     overflow: 'hidden',
@@ -372,16 +398,14 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: 'linear-gradient(90deg, #10B981 0%, #F59E0B 50%, #EF4444 100%)',
   },
   painIndicator: {
     position: 'absolute',
     top: 4,
     bottom: 4,
     width: 32,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    transform: [{ translateX: -16 }],
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -395,28 +419,21 @@ const styles = StyleSheet.create({
   },
   painLabel: {
     fontSize: 11,
-    color: '#64748B',
-    fontFamily: 'Inter_400',
   },
   painValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1E293B',
     textAlign: 'center',
-    fontFamily: 'Inter_600',
   },
   painSelector: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: '#F8FAFC',
     borderRadius: 12,
   },
   painSelectorTitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1E293B',
     marginBottom: 12,
-    fontFamily: 'Inter_500',
   },
   painButtons: {
     flexDirection: 'row',
@@ -427,47 +444,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  painLevelButtonActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
-  },
   painLevelButtonText: {
     fontSize: 14,
-    color: '#64748B',
-    fontFamily: 'Inter_500',
-  },
-  painLevelButtonTextActive: {
-    color: '#fff',
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  sessionDate: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1E293B',
-    fontFamily: 'Inter_600',
-  },
-  sessionTime: {
-    fontSize: 16,
-    color: '#3B82F6',
-    marginTop: 4,
-    fontFamily: 'Inter_500',
-  },
-  sessionProfessional: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-    fontFamily: 'Inter_400',
+    fontWeight: '500',
   },
   quickActions: {
     flexDirection: 'row',
@@ -477,25 +460,22 @@ const styles = StyleSheet.create({
   },
   quickActionButton: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'transparent',
     alignItems: 'center',
   },
   quickActionIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   quickActionText: {
     fontSize: 12,
-    color: '#64748B',
-    fontFamily: 'Inter_500',
+    fontWeight: '500',
   },
 });

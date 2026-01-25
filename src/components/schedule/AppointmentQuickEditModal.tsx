@@ -55,7 +55,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
+import { PatientService } from '@/services/patientService';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
+
+const db = getFirebaseDb();
 
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
@@ -215,17 +220,17 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
             data: oldData.data.map((apt) =>
               apt.id === appointmentId
                 ? {
-                    ...apt,
-                    // Atualiza todos os campos que podem mudar visualmente
-                    ...(updates.appointment_date && {
-                      date: new Date(updates.appointment_date + 'T12:00:00')
-                    }),
-                    ...(updates.appointment_time && { time: updates.appointment_time }),
-                    ...(updates.duration && { duration: updates.duration }),
-                    ...(updates.status && { status: updates.status }),
-                    ...(updates.notes !== undefined && { notes: updates.notes }),
-                    updatedAt: new Date(),
-                  }
+                  ...apt,
+                  // Atualiza todos os campos que podem mudar visualmente
+                  ...(updates.appointment_date && {
+                    date: new Date(updates.appointment_date + 'T12:00:00')
+                  }),
+                  ...(updates.appointment_time && { time: updates.appointment_time }),
+                  ...(updates.duration && { duration: updates.duration }),
+                  ...(updates.status && { status: updates.status }),
+                  ...(updates.notes !== undefined && { notes: updates.notes }),
+                  updatedAt: new Date(),
+                }
                 : apt
             )
           };
@@ -256,8 +261,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       const errorMessage = error.message.includes('duplicate')
         ? 'Já existe um agendamento neste horário.'
         : error.message.includes('permission')
-        ? 'Você não tem permissão para alterar este agendamento.'
-        : 'Erro ao atualizar agendamento. Tente novamente.';
+          ? 'Você não tem permissão para alterar este agendamento.'
+          : 'Erro ao atualizar agendamento. Tente novamente.';
 
       toast.error(errorMessage);
     },
@@ -266,16 +271,12 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   // Carregar detalhes do paciente
   useEffect(() => {
     if (appointment?.patientId && open) {
-      (supabase
-        .from('patients') as any)
-        .select('phone, birth_date')
-        .eq('id', appointment.patientId)
-        .single()
-        .then(({ data }: { data: { phone?: string; birth_date?: string } | null }) => {
+      PatientService.getPatientById(appointment.patientId)
+        .then(({ data }) => {
           if (data) {
             setPatientDetails({
-              phone: data.phone || undefined,
-              birthDate: data.birth_date || undefined,
+              phone: (data as any).phone || undefined,
+              birthDate: (data as any).birth_date || undefined,
             });
           }
         })
@@ -292,12 +293,14 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
     const fetchTherapists = async () => {
       try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('role', 'fisioterapeuta');
+        const q = query(
+          collection(db, 'profiles'),
+          where('role', '==', 'fisioterapeuta')
+        );
+        const snap = await getDocs(q);
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (data) {
-          setTherapists(data.map((p: { id: string; full_name?: string }) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
+          setTherapists(data.map((p: any) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
         }
         therapistsLoadedRef.current = true;
       } catch {

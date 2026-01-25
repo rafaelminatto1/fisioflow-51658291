@@ -1,74 +1,107 @@
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/lib/errors/logger";
+/**
+ * ensureProfile - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore for profile management.
+ * - supabase.from('profiles') → Firestore collection 'profiles'
+ * - supabase.from('user_roles') → Firestore collection 'user_roles'
+ */
+
+import { doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+
+const db = getFirebaseDb();
 
 /**
  * Ensures a profile and default role exist for a user.
  * This is a defensive utility to recover from cases where the database trigger might have failed.
+ *
+ * Migrated from Supabase to Firebase Firestore.
+ *
+ * @param userId - Firebase Auth user ID
+ * @param email - User email
+ * @param fullName - User full name
+ * @returns Profile ID or null if failed
  */
 export const ensureProfile = async (userId: string, email?: string, fullName?: string): Promise<string | null> => {
-    try {
-        // 1. Check if profile exists
-        const { data: profile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', userId)
-            .maybeSingle();
+  try {
+    // 1. Check if profile exists in Firestore
+    const profileRef = doc(db, 'profiles', userId);
+    const profileSnap = await getDoc(profileRef);
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
-            logger.error('Error fetching profile in ensureProfile', fetchError, 'profiles-util');
-        }
+    let profileId: string | null = null;
 
-        let profileId = profile?.id;
+    if (!profileSnap.exists()) {
+      logger.info('Profile not found in ensureProfile, creating for:', { userId }, 'profiles-util');
 
-        if (!profile) {
-            console.log('Profile not found in ensureProfile, creating for:', userId);
-            const { data: newProfile, error: insertError } = await supabase
-                .from('profiles')
-                .insert({
-                    user_id: userId,
-                    email: email || null,
-                    full_name: fullName || (email ? email.split('@')[0] : 'Usuário'),
-                    onboarding_completed: false
-                })
-                .select('id')
-                .single();
+      // Create new profile document
+      const newProfileData = {
+        user_id: userId,
+        email: email || null,
+        full_name: fullName || (email ? email.split('@')[0] : 'Usuário'),
+        onboarding_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-            if (insertError && insertError.code !== '23505') {
-                logger.error('Error inserting profile in ensureProfile', insertError, 'profiles-util');
-            }
-
-            if (newProfile) {
-                profileId = newProfile.id;
-            } else if (insertError?.code === '23505') {
-                // Race condition, fetch it again
-                const { data: existing } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('user_id', userId)
-                    .single();
-                profileId = existing?.id;
-            }
-        }
-
-        // 2. Ensure default role exists in user_roles
-        // Use upsert with on_conflict to handle race conditions gracefully
-        const { error: roleInsertError } = await supabase
-            .from('user_roles')
-            .upsert({
-                user_id: userId,
-                role: 'paciente'
-            }, {
-                onConflict: 'user_id,role',
-                ignoreDuplicates: true
-            });
-
-        if (roleInsertError && roleInsertError.code !== '23505') {
-            logger.error('Error inserting role in ensureProfile', roleInsertError, 'profiles-util');
-        }
-
-        return profileId || null;
-    } catch (err) {
-        logger.error('Unexpected error in ensureProfile', err, 'profiles-util');
-        return null;
+      await setDoc(profileRef, newProfileData);
+      profileId = userId;
+    } else {
+      profileId = userId;
     }
+
+    // 2. Ensure default role exists in user_roles
+    const roleRef = doc(db, 'user_roles', userId);
+    const roleSnap = await getDoc(roleRef);
+
+    if (!roleSnap.exists()) {
+      await setDoc(roleRef, {
+        user_id: userId,
+        role: 'paciente',
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    return profileId;
+  } catch (err) {
+    logger.error('Unexpected error in ensureProfile', err, 'profiles-util');
+    return null;
+  }
+};
+
+/**
+ * Fetch a profile by user ID
+ */
+export const fetchProfile = async (userId: string): Promise<any | null> => {
+  try {
+    const profileRef = doc(db, 'profiles', userId);
+    const profileSnap = await getDoc(profileRef);
+
+    if (!profileSnap.exists()) {
+      return null;
+    }
+
+    return { id: profileSnap.id, ...profileSnap.data() };
+  } catch (err) {
+    logger.error('Error fetching profile', err, 'profiles-util');
+    return null;
+  }
+};
+
+/**
+ * Update profile data
+ */
+export const updateProfile = async (userId: string, updates: Record<string, any>): Promise<boolean> => {
+  try {
+    const profileRef = doc(db, 'profiles', userId);
+    await setDoc(profileRef, {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    }, { merge: true });
+
+    return true;
+  } catch (err) {
+    logger.error('Error updating profile', err, 'profiles-util');
+    return false;
+  }
 };

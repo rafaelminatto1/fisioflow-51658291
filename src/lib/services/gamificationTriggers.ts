@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from 'firebase/firestore';
 
 /**
  * XP Rewards Configuration
@@ -72,6 +73,11 @@ interface GamificationSettings {
   [key: string]: any;
 }
 
+// Helper to convert Firestore doc to data
+const docToData = <T>(doc: QueryDocumentSnapshot<T>): T => {
+  return doc.data();
+};
+
 /**
  * Gamification Trigger Service
  * Handles automatic XP awards for various user actions
@@ -83,6 +89,7 @@ export class GamificationTriggerService {
 
   /**
    * Fetch gamification settings from database (with caching)
+   * NOTE: In production, this should use Cloud Functions or a settings collection
    */
   private static async getSettings(): Promise<GamificationSettings> {
     const now = Date.now();
@@ -93,18 +100,19 @@ export class GamificationTriggerService {
     }
 
     try {
-      const { data } = await supabase
-        .from('gamification_settings')
-        .select('key, value')
-        .in('key', ['base_xp', 'multiplier']);
+      const db = getFirebaseDb();
+      const settingsRef = collection(db, 'gamification_settings');
+      const q = query(settingsRef, where('key', 'in', ['base_xp', 'multiplier']));
+      const snapshot = await getDocs(q);
 
       const settings: GamificationSettings = {
         base_xp: 1000,
         multiplier: 1.2,
       };
 
-      data?.forEach(setting => {
-        settings[setting.key] = setting.value;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data() as { key: string; value: any };
+        settings[data.key] = data.value;
       });
 
       this.cachedSettings = settings;
@@ -209,60 +217,48 @@ export class GamificationTriggerService {
 
       const finalXP = totalXP + bonusXP;
 
-      // Get current profile
-      const { data: profile, error: profileError } = await supabase
-        .from('patient_gamification')
-        .select('total_points, level, current_streak, last_activity_date')
-        .eq('patient_id', patientId)
-        .maybeSingle();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        throw profileError;
-      }
+      const db = getFirebaseDb();
+      const gamificationRef = doc(db, 'patient_gamification', patientId);
+      const profileSnap = await getDoc(gamificationRef);
 
       // Calculate new values
-      const currentTotalPoints = profile?.total_points || 0;
+      const currentTotalPoints = profileSnap.exists() ? (profileSnap.data()?.total_points || 0) : 0;
       const newTotalPoints = currentTotalPoints + finalXP;
       const calc = await this.calculateLevelAsync(newTotalPoints);
-      const oldLevel = profile?.level || 1;
+      const oldLevel = profileSnap.exists() ? (profileSnap.data()?.level || 1) : 1;
 
       // Check if we should update streak (only increment if it's a new day)
-      let newStreak = profile?.current_streak || 0;
+      const currentStreak = profileSnap.exists() ? (profileSnap.data()?.current_streak || 0) : 0;
+      let newStreak = currentStreak;
       const today = new Date().toISOString().split('T')[0];
-      const lastActivity = profile?.last_activity_date?.split('T')[0];
+      const lastActivity = profileSnap.exists() ? (profileSnap.data()?.last_activity_date || '').split('T')[0] : '';
 
       if (lastActivity !== today) {
         newStreak += 1;
       }
 
       // Update or create profile
-      const { error: updateError } = await supabase
-        .from('patient_gamification')
-        .upsert({
-          patient_id: patientId,
-          total_points: newTotalPoints,
-          level: calc.level,
-          current_streak: newStreak,
-          last_activity_date: new Date().toISOString(),
-        })
-        .eq('patient_id', patientId);
-
-      if (updateError) throw updateError;
+      await setDoc(gamificationRef, {
+        patient_id: patientId,
+        total_points: newTotalPoints,
+        level: calc.level,
+        current_streak: newStreak,
+        last_activity_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { merge: true });
 
       // Log transaction
-      const { error: transactionError } = await supabase.from('xp_transactions').insert({
+      const transactionsRef = collection(db, 'xp_transactions');
+      await addDoc(transactionsRef, {
         patient_id: patientId,
         amount: finalXP,
         reason: 'session_completion' as XPReason,
         description: `Sessão ${sessionData.sessionNumber} concluída${sessionData.exercisesCount > 0 ? ` com ${sessionData.exercisesCount} exercício(s)` : ''}${bonusReason}`,
+        created_at: new Date().toISOString(),
       });
 
-      if (transactionError) {
-        console.warn('Failed to log XP transaction:', transactionError);
-      }
-
       // Check for streak bonuses
-      if (newStreak > (profile?.current_streak || 0) && [3, 7, 30].includes(newStreak)) {
+      if (newStreak > currentStreak && [3, 7, 30].includes(newStreak)) {
         await this.checkAndAwardStreakBonus(patientId, newStreak);
       }
 
@@ -300,38 +296,31 @@ export class GamificationTriggerService {
 
       const xp = XP_REWARDS.EXERCISE_COMPLETED;
 
-      // Get current profile
-      const { data: profile } = await supabase
-        .from('patient_gamification')
-        .select('total_points')
-        .eq('patient_id', patientId)
-        .maybeSingle();
+      const db = getFirebaseDb();
+      const gamificationRef = doc(db, 'patient_gamification', patientId);
+      const profileSnap = await getDoc(gamificationRef);
 
-      const newTotalPoints = (profile?.total_points || 0) + xp;
+      const currentTotalPoints = profileSnap.exists() ? (profileSnap.data()?.total_points || 0) : 0;
+      const newTotalPoints = currentTotalPoints + xp;
       const calc = await this.calculateLevelAsync(newTotalPoints);
 
       // Update profile
-      const { error: updateError } = await supabase
-        .from('patient_gamification')
-        .update({
-          total_points: newTotalPoints,
-          level: calc.level,
-        })
-        .eq('patient_id', patientId);
-
-      if (updateError) throw updateError;
+      await setDoc(gamificationRef, {
+        patient_id: patientId,
+        total_points: newTotalPoints,
+        level: calc.level,
+        updated_at: new Date().toISOString(),
+      }, { merge: true });
 
       // Log transaction
-      const { error: transactionError } = await supabase.from('xp_transactions').insert({
+      const transactionsRef = collection(db, 'xp_transactions');
+      await addDoc(transactionsRef, {
         patient_id: patientId,
         amount: xp,
         reason: 'exercise_completed' as XPReason,
         description: `Exercício: ${exerciseData.exerciseName}`,
+        created_at: new Date().toISOString(),
       });
-
-      if (transactionError) {
-        console.warn('Failed to log XP transaction:', transactionError);
-      }
 
       return { success: true, xpAwarded: xp };
     } catch (error) {
@@ -380,38 +369,31 @@ export class GamificationTriggerService {
       }
 
       if (xp > 0) {
-        // Get current profile
-        const { data: profile } = await supabase
-          .from('patient_gamification')
-          .select('total_points')
-          .eq('patient_id', patientId)
-          .maybeSingle();
+        const db = getFirebaseDb();
+        const gamificationRef = doc(db, 'patient_gamification', patientId);
+        const profileSnap = await getDoc(gamificationRef);
 
-        const newTotalPoints = (profile?.total_points || 0) + xp;
+        const currentTotalPoints = profileSnap.exists() ? (profileSnap.data()?.total_points || 0) : 0;
+        const newTotalPoints = currentTotalPoints + xp;
         const calc = await this.calculateLevelAsync(newTotalPoints);
 
         // Update profile
-        const { error: updateError } = await supabase
-          .from('patient_gamification')
-          .update({
-            total_points: newTotalPoints,
-            level: calc.level,
-          })
-          .eq('patient_id', patientId);
-
-        if (updateError) throw updateError;
+        await setDoc(gamificationRef, {
+          patient_id: patientId,
+          total_points: newTotalPoints,
+          level: calc.level,
+          updated_at: new Date().toISOString(),
+        }, { merge: true });
 
         // Log transaction
-        const { error: transactionError } = await supabase.from('xp_transactions').insert({
+        const transactionsRef = collection(db, 'xp_transactions');
+        await addDoc(transactionsRef, {
           patient_id: patientId,
           amount: xp,
           reason: 'goal_achieved' as XPReason,
           description,
+          created_at: new Date().toISOString(),
         });
-
-        if (transactionError) {
-          console.warn('Failed to log XP transaction:', transactionError);
-        }
 
         return { success: true, xpAwarded: xp };
       }
@@ -447,40 +429,33 @@ export class GamificationTriggerService {
         xp += XP_REWARDS.APPOINTMENT_ON_TIME;
       }
 
-      // Get current profile
-      const { data: profile } = await supabase
-        .from('patient_gamification')
-        .select('total_points')
-        .eq('patient_id', patientId)
-        .maybeSingle();
+      const db = getFirebaseDb();
+      const gamificationRef = doc(db, 'patient_gamification', patientId);
+      const profileSnap = await getDoc(gamificationRef);
 
-      const newTotalPoints = (profile?.total_points || 0) + xp;
+      const currentTotalPoints = profileSnap.exists() ? (profileSnap.data()?.total_points || 0) : 0;
+      const newTotalPoints = currentTotalPoints + xp;
       const calc = await this.calculateLevelAsync(newTotalPoints);
 
       // Update profile
-      const { error: updateError } = await supabase
-        .from('patient_gamification')
-        .update({
-          total_points: newTotalPoints,
-          level: calc.level,
-        })
-        .eq('patient_id', patientId);
-
-      if (updateError) throw updateError;
+      await setDoc(gamificationRef, {
+        patient_id: patientId,
+        total_points: newTotalPoints,
+        level: calc.level,
+        updated_at: new Date().toISOString(),
+      }, { merge: true });
 
       // Log transaction
-      const { error: transactionError } = await supabase.from('xp_transactions').insert({
+      const transactionsRef = collection(db, 'xp_transactions');
+      await addDoc(transactionsRef, {
         patient_id: patientId,
         amount: xp,
         reason: 'appointment_attended' as XPReason,
         description: appointmentData.wasOnTime
           ? 'Compareceu ao agendamento pontualmente'
           : 'Compareceu ao agendamento',
+        created_at: new Date().toISOString(),
       });
-
-      if (transactionError) {
-        console.warn('Failed to log XP transaction:', transactionError);
-      }
 
       return { success: true, xpAwarded: xp };
     } catch (error) {
@@ -524,38 +499,31 @@ export class GamificationTriggerService {
       }
 
       if (xp > 0 && bonusType) {
-        // Get current profile
-        const { data: profile } = await supabase
-          .from('patient_gamification')
-          .select('total_points')
-          .eq('patient_id', patientId)
-          .maybeSingle();
+        const db = getFirebaseDb();
+        const gamificationRef = doc(db, 'patient_gamification', patientId);
+        const profileSnap = await getDoc(gamificationRef);
 
-        const newTotalPoints = (profile?.total_points || 0) + xp;
+        const currentTotalPoints = profileSnap.exists() ? (profileSnap.data()?.total_points || 0) : 0;
+        const newTotalPoints = currentTotalPoints + xp;
         const calc = await this.calculateLevelAsync(newTotalPoints);
 
         // Update profile
-        const { error: updateError } = await supabase
-          .from('patient_gamification')
-          .update({
-            total_points: newTotalPoints,
-            level: calc.level,
-          })
-          .eq('patient_id', patientId);
-
-        if (updateError) throw updateError;
+        await setDoc(gamificationRef, {
+          patient_id: patientId,
+          total_points: newTotalPoints,
+          level: calc.level,
+          updated_at: new Date().toISOString(),
+        }, { merge: true });
 
         // Log transaction
-        const { error: transactionError } = await supabase.from('xp_transactions').insert({
+        const transactionsRef = collection(db, 'xp_transactions');
+        await addDoc(transactionsRef, {
           patient_id: patientId,
           amount: xp,
           reason: 'streak_bonus' as XPReason,
           description: `Bônus de sequência: ${bonusType}!`,
+          created_at: new Date().toISOString(),
         });
-
-        if (transactionError) {
-          console.warn('Failed to log XP transaction:', transactionError);
-        }
 
         return { success: true, xpAwarded: xp, bonusType };
       }
@@ -576,17 +544,15 @@ export class GamificationTriggerService {
    */
   static async getNextLevelInfo(patientId: string): Promise<LevelCalculationResult | null> {
     try {
-      const { data: profile } = await supabase
-        .from('patient_gamification')
-        .select('total_points, level')
-        .eq('patient_id', patientId)
-        .maybeSingle();
+      const db = getFirebaseDb();
+      const gamificationRef = doc(db, 'patient_gamification', patientId);
+      const profileSnap = await getDoc(gamificationRef);
 
-      if (!profile) {
+      if (!profileSnap.exists()) {
         return null;
       }
 
-      return await this.calculateLevelAsync(profile.total_points || 0);
+      return await this.calculateLevelAsync(profileSnap.data()?.total_points || 0);
     } catch (error) {
       console.error('Error getting next level info:', error);
       return null;

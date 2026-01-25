@@ -1,14 +1,17 @@
 /**
- * Data Integrity Workflow
+ * Data Integrity Workflow - Migrated to Firebase
  *
- * Migrated from /api/crons/data-integrity
- * Runs periodically to check for orphaned records and data consistency
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - NOT IN subqueries → Optimized batch validation
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
 import { logger } from '../../lib/errors/logger.js';
+import { getAdminDb, documentExists } from '../../lib/firebase/admin.js';
 
 export const dataIntegrityWorkflow = inngest.createFunction(
   {
@@ -21,84 +24,143 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     { cron: '0 */6 * * *' }, // Every 6 hours
   ],
   async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const db = getAdminDb();
 
     const issues: string[] = [];
 
-    // Check 1: Appointments without valid patients
-    await step.run('check-orphaned-appointments', async (): Promise<number> => {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('id')
-        .not('patient_id', 'in', '(select id from patients where active = true)');
+    // OPTIMIZATION: Batch validate documents
+    const validateRefs = async (collectionPath: string, refField: string, targetCollection: string, limit: number) => {
+      const snapshot = await db.collection(collectionPath).limit(limit).get();
 
-      if (error) {
-        console.error('Failed to check orphaned appointments:', error);
-      } else if (data && data.length > 0) {
-        issues.push(`Found ${data.length} appointments with invalid patients`);
+      const orphanedIds: string[] = [];
+      const refIds = snapshot.docs.map(doc => doc.data()[refField]).filter(Boolean);
+
+      // Batch check existence
+      for (const refId of refIds) {
+        const exists = await documentExists(targetCollection, refId);
+        if (!exists) {
+          orphanedIds.push(refId);
+        }
       }
 
-      return data?.length || 0;
+      return orphanedIds.length;
+    };
+
+    // Check 1: Appointments without valid patients
+    await step.run('check-orphaned-appointments', async (): Promise<number> => {
+      const snapshot = await db.collection('appointments').limit(100).get();
+
+      let orphanedCount = 0;
+      const patientIds = snapshot.docs.map(doc => doc.data().patient_id).filter(Boolean);
+      const uniquePatientIds = [...new Set(patientIds)];
+
+      // Batch check patients
+      for (const patientId of uniquePatientIds) {
+        const exists = await documentExists('patients', patientId);
+        if (!exists) {
+          // Count how many appointments reference this patient
+          const count = snapshot.docs.filter(doc => doc.data().patient_id === patientId).length;
+          orphanedCount += count;
+        }
+      }
+
+      if (orphanedCount > 0) {
+        issues.push(`Found ${orphanedCount} appointments with invalid patients`);
+      }
+
+      return orphanedCount;
     });
 
     // Check 2: Sessions without valid appointments
     await step.run('check-orphaned-sessions', async () => {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('id')
-        .not('appointment_id', 'in', '(select id from appointments)');
+      const snapshot = await db.collection('soap_records')
+        .where('appointment_id', '!=', null)
+        .limit(100)
+        .get();
 
-      if (error) {
-        console.error('Failed to check orphaned sessions:', error);
-      } else if (data && data.length > 0) {
-        issues.push(`Found ${data.length} sessions with invalid appointments`);
+      if (snapshot.empty) {
+        return 0;
       }
 
-      return data?.length || 0;
+      const appointmentIds = snapshot.docs.map(doc => doc.data().appointment_id).filter(Boolean);
+      const uniqueAppointmentIds = [...new Set(appointmentIds)];
+
+      let orphanedCount = 0;
+      for (const appointmentId of uniqueAppointmentIds) {
+        const exists = await documentExists('appointments', appointmentId);
+        if (!exists) {
+          const count = snapshot.docs.filter(doc => doc.data().appointment_id === appointmentId).length;
+          orphanedCount += count;
+        }
+      }
+
+      if (orphanedCount > 0) {
+        issues.push(`Found ${orphanedCount} sessions with invalid appointments`);
+      }
+
+      return orphanedCount;
     });
 
     // Check 3: Payments without valid appointments
     await step.run('check-orphaned-payments', async () => {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('id')
-        .not('appointment_id', 'in', '(select id from appointments)');
+      const snapshot = await db.collection('payments')
+        .where('appointment_id', '!=', null)
+        .limit(100)
+        .get();
 
-      if (error) {
-        logger.error('Failed to check orphaned payments', error, 'data-integrity');
-      } else if (data && data.length > 0) {
-        issues.push(`Found ${data.length} payments with invalid appointments`);
+      if (snapshot.empty) {
+        return 0;
       }
 
-      return data?.length || 0;
+      const appointmentIds = snapshot.docs.map(doc => doc.data().appointment_id).filter(Boolean);
+      const uniqueAppointmentIds = [...new Set(appointmentIds)];
+
+      let orphanedCount = 0;
+      for (const appointmentId of uniqueAppointmentIds) {
+        const exists = await documentExists('appointments', appointmentId);
+        if (!exists) {
+          const count = snapshot.docs.filter(doc => doc.data().appointment_id === appointmentId).length;
+          orphanedCount += count;
+        }
+      }
+
+      if (orphanedCount > 0) {
+        issues.push(`Found ${orphanedCount} payments with invalid appointments`);
+      }
+
+      return orphanedCount;
     });
 
     // Check 4: Patients with invalid organizations
     await step.run('check-orphaned-patients', async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id')
-        .not('organization_id', 'in', '(select id from organizations)');
+      const snapshot = await db.collection('patients').limit(100).get();
 
-      if (error) {
-        logger.error('Failed to check orphaned patients', error, 'data-integrity');
-      } else if (data && data.length > 0) {
-        issues.push(`Found ${data.length} patients with invalid organizations`);
+      const orgIds = snapshot.docs.map(doc => doc.data().organization_id).filter(Boolean);
+      const uniqueOrgIds = [...new Set(orgIds)];
+
+      let orphanedCount = 0;
+      for (const orgId of uniqueOrgIds) {
+        const exists = await documentExists('organizations', orgId);
+        if (!exists) {
+          const count = snapshot.docs.filter(doc => doc.data().organization_id === orgId).length;
+          orphanedCount += count;
+        }
       }
 
-      return data?.length || 0;
+      if (orphanedCount > 0) {
+        issues.push(`Found ${orphanedCount} patients with invalid organizations`);
+      }
+
+      return orphanedCount;
     });
 
     // Log results
     await step.run('log-integrity-results', async () => {
       if (issues.length > 0) {
-        console.warn('Data integrity issues found:', issues);
+        logger.warn('[Data Integrity] Issues found', { issues }, 'data-integrity');
         // TODO: Send alert to admins
       } else {
-        console.log('Data integrity check passed: No issues found');
+        logger.info('[Data Integrity] Check passed: No issues found', {}, 'data-integrity');
       }
 
       return {

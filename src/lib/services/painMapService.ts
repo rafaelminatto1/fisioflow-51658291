@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, QueryDocumentSnapshot } from 'firebase/firestore';
 import type {
   PainMapRecord,
   PainMapFormData,
@@ -10,75 +11,131 @@ import type {
 export class PainMapService {
   // Optimized: Select only required columns instead of *
   static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
-    const { data, error } = await supabase
-      .from('pain_maps')
-      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
-      .eq('patient_id', patientId)
-      .order('recorded_at', { ascending: false });
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'pain_maps'),
+      where('patient_id', '==', patientId),
+      orderBy('recorded_at', 'desc')
+    );
+    const snapshot = await getDocs(q);
 
-    if (error) throw error;
-    return (data as unknown) as PainMapRecord[] || [];
+    return snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        patient_id: data.patient_id,
+        global_pain_level: data.global_pain_level,
+        pain_points: data.pain_points || [],
+        recorded_at: data.recorded_at,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      } as PainMapRecord;
+    });
   }
 
   // Optimized: Select only required columns instead of *
   static async getPainMapById(id: string): Promise<PainMapRecord> {
-    const { data, error } = await supabase
-      .from('pain_maps')
-      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
-      .eq('id', id)
-      .single();
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'pain_maps', id);
+    const docSnap = await getDoc(docRef);
 
-    if (error) throw error;
-    return data as unknown as PainMapRecord;
+    if (!docSnap.exists()) {
+      throw new Error('Pain map not found');
+    }
+
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      patient_id: data.patient_id,
+      global_pain_level: data.global_pain_level,
+      pain_points: data.pain_points || [],
+      recorded_at: data.recorded_at,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    } as PainMapRecord;
   }
 
   static async createPainMap(painMap: PainMapFormData): Promise<PainMapRecord> {
-    const { data, error } = await supabase
-      .from('pain_maps')
-      .insert(painMap)
-      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
-      .single();
+    const db = getFirebaseDb();
+    const now = new Date().toISOString();
+    const dataToSave = {
+      ...painMap,
+      recorded_at: painMap.recorded_at || now,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (error) throw error;
-    return data as unknown as PainMapRecord;
+    const docRef = await addDoc(collection(db, 'pain_maps'), dataToSave);
+    const docSnap = await getDoc(docRef);
+
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      patient_id: data.patient_id,
+      global_pain_level: data.global_pain_level,
+      pain_points: data.pain_points || [],
+      recorded_at: data.recorded_at,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    } as PainMapRecord;
   }
 
   static async updatePainMap(id: string, painMap: Partial<PainMapFormData>): Promise<PainMapRecord> {
-    const { data, error } = await supabase
-      .from('pain_maps')
-      .update(painMap)
-      .eq('id', id)
-      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
-      .single();
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'pain_maps', id);
 
-    if (error) throw error;
-    return data as unknown as PainMapRecord;
+    await updateDoc(docRef, {
+      ...painMap,
+      updated_at: new Date().toISOString(),
+    });
+
+    return this.getPainMapById(id);
   }
 
   static async deletePainMap(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('pain_maps')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'pain_maps', id);
+    await deleteDoc(docRef);
   }
 
   // Optimized: Select only required columns instead of *
   static async getPainEvolution(patientId: string, startDate?: string, endDate?: string): Promise<PainEvolutionData[]> {
-    let query = supabase
-      .from('pain_maps')
-      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
-      .eq('patient_id', patientId)
-      .order('recorded_at', { ascending: true });
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'pain_maps'),
+      where('patient_id', '==', patientId),
+      orderBy('recorded_at', 'asc')
+    );
 
-    if (startDate) query = query.gte('recorded_at', startDate);
-    if (endDate) query = query.lte('recorded_at', endDate);
+    // Note: Firestore doesn't support multiple range queries in a single query
+    // Additional filtering would need to be done client-side or via composite indexes
+    // For now, we'll apply date filters in client-side processing if needed
 
-    const { data, error } = await query;
-    if (error) throw error;
+    const snapshot = await getDocs(q);
 
-    return ((data as unknown) || []).map((record: unknown) => ({
+    const allRecords = snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        patient_id: data.patient_id,
+        global_pain_level: data.global_pain_level,
+        pain_points: data.pain_points || [],
+        recorded_at: data.recorded_at,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      } as PainMapRecord;
+    });
+
+    // Client-side date filtering
+    let filteredRecords = allRecords;
+    if (startDate) {
+      filteredRecords = filteredRecords.filter(r => r.recorded_at >= startDate);
+    }
+    if (endDate) {
+      filteredRecords = filteredRecords.filter(r => r.recorded_at <= endDate);
+    }
+
+    return filteredRecords.map(record => ({
       date: record.recorded_at,
       globalPainLevel: record.global_pain_level,
       regionCount: record.pain_points.length,

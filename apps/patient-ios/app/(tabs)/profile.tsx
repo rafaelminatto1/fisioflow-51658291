@@ -1,266 +1,338 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { useAuth } from '../../hooks/useAuth';
-import { signOut, getFCMToken, requestNotificationPermissions } from '@fisioflow/shared-api';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth, signOut, useNotifications } from '@fisioflow/shared-api';
+import {
+  Avatar,
+  Button,
+  Card,
+  useTheme,
+  toast,
+  ListItem,
+  Switch,
+  Divider,
+  Badge,
+} from '@fisioflow/shared-ui';
+
+interface MenuItem {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+  color: string;
+  showSwitch?: boolean;
+  switchValue?: boolean;
+  onSwitchChange?: (value: boolean) => void;
+  onPress?: () => void;
+}
+
+interface QuickAction {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  onPress: () => void;
+}
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const theme = useTheme();
+  const { userData } = useAuth();
+  const { permission, requestPermission } = useNotifications();
+
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    permission === 'granted'
+  );
   const [emailRemindersEnabled, setEmailRemindersEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   async function handleLogout() {
-    Alert.alert(
-      'Sair',
-      'Tem certeza que deseja sair?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
+    Alert.alert('Sair', 'Tem certeza que deseja sair?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace('/(auth)/login');
+          } catch (error) {
+            console.error('Failed to sign out:', error);
+            toast.error('Não foi possível sair. Tente novamente.');
+          }
         },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-              router.replace('/(auth)/login');
-            } catch (error) {
-              console.error('Failed to sign out:', error);
-              Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
-            }
-          },
-        },
-      ]
-    );
+      },
+    ]);
   }
 
   async function handleToggleNotifications(value: boolean) {
     if (value) {
-      const granted = await requestNotificationPermissions();
-      if (granted) {
+      const status = await requestPermission();
+      if (status === 'granted') {
         setNotificationsEnabled(true);
-        // Get FCM token for push notifications
-        const token = await getFCMToken();
-        if (token) {
-          console.log('FCM token obtained:', token);
-          // TODO: Save token to user profile
-        }
+        toast.success('Notificações ativadas!');
       } else {
-        Alert.alert('Permissões negadas', 'Ative as notificações nas configurações do dispositivo.');
+        toast.error('Ative as notificações nas configurações do dispositivo.');
       }
     } else {
       setNotificationsEnabled(false);
+      toast.info('Notificações desativadas');
     }
   }
 
-  const menuItems = [
+  function handleToggleEmailReminders(value: boolean) {
+    setEmailRemindersEnabled(value);
+    toast.info(value ? 'Lembretes por email ativados' : 'Lembretes por email desativados');
+  }
+
+  const menuItems: MenuItem[] = [
     {
       icon: 'person-outline',
       title: 'Editar Perfil',
       description: 'Nome, email, telefone',
-      onPress: () => {/* Navigate to edit profile */},
-      color: '#3B82F6',
+      color: theme.colors.primary[500],
+      onPress: () => {
+        toast.info('Edição de perfil em breve!');
+      },
     },
     {
       icon: 'notifications-outline',
       title: 'Notificações',
       description: 'Gerenciar alertas e lembretes',
-      rightElement: (
-        <Switch
-          value={notificationsEnabled}
-          onValueChange={handleToggleNotifications}
-          trackColor={{ false: '#CBD5E1', true: '#3B82F6' }}
-          thumbColor={notificationsEnabled ? '#fff' : '#fff'}
-        />
-      ),
-      onPress: () => {/* Navigate to notifications settings */},
-      color: '#10B981',
+      color: theme.colors.success[500],
+      showSwitch: true,
+      switchValue: notificationsEnabled,
+      onSwitchChange: handleToggleNotifications,
     },
     {
       icon: 'mail-outline',
       title: 'Lembretes por Email',
       description: 'Resumos e lembretes semanais',
-      rightElement: (
-        <Switch
-          value={emailRemindersEnabled}
-          onValueChange={setEmailRemindersEnabled}
-          trackColor={{ false: '#CBD5E1', true: '#3B82F6' }}
-          thumbColor={emailRemindersEnabled ? '#fff' : '#fff'}
-        />
-      ),
-      onPress: () => {/* Navigate to email settings */},
-      color: '#8B5CF6',
+      color: theme.colors.info[500],
+      showSwitch: true,
+      switchValue: emailRemindersEnabled,
+      onSwitchChange: handleToggleEmailReminders,
     },
     {
-      icon: 'lock-closed',
+      icon: 'lock-closed-outline',
       title: 'Privacidade',
       description: 'Dados pessoais e consentimentos',
-      onPress: () => {/* Navigate to privacy settings */},
       color: '#6366F1',
+      onPress: () => {
+        toast.info('Configurações de privacidade em breve!');
+      },
     },
     {
       icon: 'moon-outline',
       title: 'Modo Escuro',
       description: 'Aparência escura',
-      rightElement: (
-        <Switch
-          value={darkModeEnabled}
-          onValueChange={setDarkModeEnabled}
-          trackColor={{ false: '#CBD5E1', true: '#1E293B' }}
-          thumbColor={darkModeEnabled ? '#fff' : '#fff'}
-        />
-      ),
-      onPress: () => {/* Toggle dark mode */},
-      color: '#F59E0B',
+      color: theme.colors.warning[500],
+      onPress: () => {
+        toast.info('Modo escuro em breve!');
+      },
     },
     {
       icon: 'help-circle-outline',
       title: 'Ajuda e Suporte',
       description: 'FAQ, tutoriais e contato',
-      onPress: () => {/* Navigate to help */},
-      color: '#64748B',
+      color: theme.colors.text.tertiary,
+      onPress: () => {
+        toast.info('Ajuda em breve!');
+      },
     },
     {
       icon: 'information-circle-outline',
       title: 'Sobre',
       description: 'Versão e informações',
-      onPress: () => {/* Show about modal */},
-      color: '#64748B',
+      color: theme.colors.text.tertiary,
+      onPress: () => {
+        Alert.alert('FisioFlow Pacientes', 'Versão 1.0.0\nExpo SDK 54\nBuild 1');
+      },
     },
   ];
 
-  const quickActions = [
+  const quickActions: QuickAction[] = [
     {
       icon: 'document-text-outline',
       title: 'Termos de Uso',
-      onPress: () => {},
+      onPress: () => {
+        toast.info('Termos de Uso em breve!');
+      },
     },
     {
       icon: 'shield-checkmark-outline',
       title: 'Política de Privacidade',
-      onPress: () => {},
+      onPress: () => {
+        toast.info('Política de Privacidade em breve!');
+      },
     },
     {
       icon: 'alert-circle-outline',
       title: 'Licenças de Software',
-      onPress: () => {},
+      onPress: () => {
+        toast.info('Licenças em breve!');
+      },
     },
   ];
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.backgroundSecondary }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header Card */}
+      <Card variant="elevated" style={styles.headerCard}>
         <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.editAvatarButton}>
+          <Avatar name={userData?.name || 'Paciente'} size="xl" />
+          <TouchableOpacity
+            style={[styles.editAvatarButton, { backgroundColor: theme.colors.primary[500] }]}
+            onPress={() => toast.info('Alterar foto em breve!')}
+          >
             <Ionicons name="camera" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.userName}>{user?.name}</Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
+        <Text style={[styles.userName, { color: theme.colors.text.primary }]}>
+          {userData?.name || 'Paciente'}
+        </Text>
+        <Text style={[styles.userEmail, { color: theme.colors.text.secondary }]}>
+          {userData?.email}
+        </Text>
 
         {/* Quick Stats */}
-        <View style={styles.quickStats}>
+        <View style={[styles.quickStats, { backgroundColor: theme.colors.backgroundSecondary }]}>
           <View style={styles.statItem}>
-            <Ionicons name="flame" size={16} color="#F59E0B" />
-            <Text style={styles.statValue}>7</Text>
-            <Text style={styles.statLabel}>dias seguidos</Text>
+            <Ionicons name="flame" size={16} color={theme.colors.warning[500]} />
+            <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>7</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>dias</Text>
           </View>
-          <View style={styles.statDivider} />
+          <Divider orientation="vertical" length={30} />
           <View style={styles.statItem}>
-            <Ionicons name="trophy" size={16} color="#8B5CF6" />
-            <Text style={styles.statValue}>14</Text>
-            <Text style={.statLabel}>melhor</Text>
+            <Ionicons name="trophy" size={16} color={theme.colors.info[500]} />
+            <Text style={[styles.statValue, { color: theme.colors.text.primary }]}>14</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.text.secondary }]}>melhor</Text>
           </View>
         </View>
-      </View>
+      </Card>
 
       {/* Menu Items */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Configurações</Text>
+      <Card variant="elevated" style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
+          Configurações
+        </Text>
         {menuItems.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
-            <View style={styles.menuItemLeft}>
-              <View style={[styles.menuIcon, { backgroundColor: `${item.color}20` }]}>
-                <Ionicons name={item.icon as any} size={20} color={item.color} />
-              </View>
-              <View style={styles.menuItemContent}>
-                <Text style={styles.menuItemTitle}>{item.title}</Text>
-                <Text style={styles.menuItemDescription}>{item.description}</Text>
-              </View>
-            </View>
-            {item.rightElement || (
-              <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
+          <View key={index}>
+            {item.showSwitch ? (
+              <SwitchListItem
+                icon={item.icon}
+                title={item.title}
+                description={item.description}
+                value={item.switchValue || false}
+                onValueChange={item.onSwitchChange || (() => { })}
+                iconColor={item.color}
+              />
+            ) : (
+              <ListItem
+                title={item.title}
+                subtitle={item.description}
+                leading={
+                  <View style={[styles.menuIcon, { backgroundColor: `${item.color}20` }]}>
+                    <Ionicons name={item.icon} size={20} color={item.color} />
+                  </View>
+                }
+                trailing={<Ionicons name="chevron-forward" size={20} color={theme.colors.text.tertiary} />}
+                pressable
+                onPress={item.onPress}
+              />
             )}
-          </TouchableOpacity>
+            {index < menuItems.length - 1 && <Divider />}
+          </View>
         ))}
-      </View>
+      </Card>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Informações</Text>
+      <Card variant="elevated" style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text.secondary }]}>
+          Informações
+        </Text>
         {quickActions.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.quickActionItem} onPress={item.onPress}>
-            <Ionicons name={item.icon as any} size={20} color="#64748B" />
-            <Text style={styles.quickActionText}>{item.title}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
-          </TouchableOpacity>
+          <View key={index}>
+            <ListItem
+              title={item.title}
+              leading={<Ionicons name={item.icon} size={20} color={theme.colors.text.tertiary} />}
+              trailing={<Ionicons name="chevron-forward" size={20} color={theme.colors.text.tertiary} />}
+              pressable
+              onPress={item.onPress}
+            />
+            {index < quickActions.length - 1 && <Divider />}
+          </View>
         ))}
-      </View>
+      </Card>
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-        <Text style={styles.logoutButtonText}>Sair da Conta</Text>
-      </TouchableOpacity>
+      <Button
+        variant="danger"
+        onPress={handleLogout}
+        leftIcon={<Ionicons name="log-out-outline" size={20} color="#fff" />}
+        style={styles.logoutButton}
+      >
+        Sair da Conta
+      </Button>
 
       {/* Version Info */}
-      <Text style={styles.version}>
+      <Text style={[styles.version, { color: theme.colors.text.tertiary }]}>
         FisioFlow Pacientes v1.0.0
       </Text>
-      <Text style={styles.buildInfo}>
+      <Text style={[styles.buildInfo, { color: theme.colors.text.tertiary }]}>
         Build 1 • Expo SDK 54
       </Text>
     </ScrollView>
   );
 }
 
+// SwitchListItem component
+function SwitchListItem({
+  icon,
+  title,
+  description,
+  value,
+  onValueChange,
+  iconColor,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+  iconColor: string;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.switchListItem}>
+      <View style={styles.switchListItemLeft}>
+        <View style={[styles.menuIcon, { backgroundColor: `${iconColor}20` }]}>
+          <Ionicons name={icon} size={20} color={iconColor} />
+        </View>
+        <View style={styles.switchListItemContent}>
+          <Text style={[styles.menuItemTitle, { color: theme.colors.text.primary }]}>{title}</Text>
+          <Text style={[styles.menuItemDescription, { color: theme.colors.text.secondary }]}>
+            {description}
+          </Text>
+        </View>
+      </View>
+      <Switch value={value} onChange={onValueChange} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
-    flex:1,
-    backgroundColor: '#F8FAFC',
+    flex: 1,
   },
-  header: {
-    padding: 24,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+  headerCard: {
+    margin: 16,
+    padding: 20,
     alignItems: 'center',
   },
   avatarContainer: {
     position: 'relative',
     marginBottom: 16,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
   },
   editAvatarButton: {
     position: 'absolute',
@@ -269,25 +341,21 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#1E293B',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#fff',
   },
   userName: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1E293B',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#64748B',
   },
   quickStats: {
     flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -302,47 +370,23 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1E293B',
   },
   statLabel: {
     fontSize: 11,
-    color: '#64748B',
   },
-  statDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: '#E2E8F0',
-  },
-  section: {
-    backgroundColor: '#fff',
+  card: {
+    marginHorizontal: 16,
     marginTop: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
+    padding: 0,
+    overflow: 'hidden',
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 8,
     textTransform: 'uppercase',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  menuItemLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
   },
   menuIcon: {
     width: 36,
@@ -351,61 +395,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuItemContent: {
+  switchListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  switchListItemLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  switchListItemContent: {
     flex: 1,
   },
   menuItemTitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1E293B',
     marginBottom: 2,
   },
   menuItemDescription: {
     fontSize: 12,
-    color: '#64748B',
-  },
-  quickActionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  quickActionText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1E293B',
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEF2F2',
-    marginHorizontal: 24,
+    marginHorizontal: 16,
     marginTop: 16,
-    marginBottom: 16,
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  logoutButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#EF4444',
   },
   version: {
     fontSize: 12,
-    color: '#94A3B8',
     textAlign: 'center',
     marginTop: 8,
   },
   buildInfo: {
     fontSize: 10,
-    color: '#CBD5E1',
     textAlign: 'center',
+    marginBottom: 24,
   },
 });

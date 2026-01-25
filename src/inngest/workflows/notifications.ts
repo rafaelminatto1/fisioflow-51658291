@@ -1,13 +1,18 @@
 /**
- * Notification Workflow
+ * Notification Workflow - Migrated to Firebase
  *
- * Generic notification workflow that can send emails, WhatsApp messages, or push notifications
- * Supports batch sending and individual retry
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - supabase.from('notification_history') → firestore.collection('notification_history')
+ * - insert() → addDoc()
+ * - update().where().eq() → updateDoc() with query
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';
 
 type NotificationResult = { sent: boolean; channel: string; error?: string };
 
@@ -25,15 +30,11 @@ export const sendNotificationWorkflow = inngest.createFunction(
   },
   async ({ event, step }: { event: { data: NotificationSendPayload }; step: InngestStep }) => {
     const { userId, organizationId, type, data } = event.data;
+    const db = getAdminDb();
 
     // Log notification attempt
-    await step.run('log-notification', async () => {
-      const supabase = createClient(
-        process.env.VITE_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      await supabase.from('notification_history').insert({
+    const notificationId = await step.run('log-notification', async () => {
+      const docRef = await db.collection('notification_history').add({
         user_id: userId,
         organization_id: organizationId,
         type,
@@ -43,7 +44,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
         created_at: new Date().toISOString(),
       });
 
-      return { logged: true };
+      return docRef.id;
     });
 
     // Send based on type
@@ -73,33 +74,63 @@ export const sendNotificationWorkflow = inngest.createFunction(
           });
           return { sent: true, channel: 'whatsapp' };
 
-        case 'push':
-          // TODO: Implement push notifications
-          console.log('Push notification not yet implemented');
-          return { sent: false, channel: 'push', error: 'Not implemented' };
+        case 'push': {
+          const messaging = getAdminMessaging();
+          const tokensSnapshot = await db.collection('users').doc(userId).collection('push_tokens').get();
+
+          if (tokensSnapshot.empty) {
+            console.log('[Notification] No push tokens found for user', { userId });
+            return { sent: false, channel: 'push', error: 'No tokens found' };
+          }
+
+          const tokens = tokensSnapshot.docs.map(doc => doc.data().token).filter(t => !!t);
+
+          if (tokens.length === 0) {
+            return { sent: false, channel: 'push', error: 'No valid tokens' };
+          }
+
+          // Send multicast message
+          const message = {
+            notification: {
+              title: data.subject || 'FisioFlow',
+              body: data.body,
+            },
+            data: {
+              // Data must be string key/value pairs
+              ...Object.entries(data).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}),
+              type: 'PROMOTIONAL', // Default or specific type
+            },
+            tokens: tokens,
+          };
+
+          const response = await messaging.sendEachForMulticast(message);
+
+          if (response.failureCount > 0) {
+            console.warn('[Notification] Some push notifications failed', {
+              success: response.successCount,
+              failure: response.failureCount,
+              errors: response.responses.filter(r => !r.success).map(r => r.error)
+            });
+
+            // Optional: Clean up invalid tokens here if error is 'registration-token-not-registered'
+          }
+
+          return { sent: response.successCount > 0, channel: 'push', error: response.failureCount === tokens.length ? 'All failed' : undefined };
+        }
 
         default:
+          console.warn('[Notification] Unknown notification type', { type });
           return { sent: false, channel: type, error: 'Unknown type' };
       }
     });
 
     // Update notification status
     await step.run('update-status', async () => {
-      const supabase = createClient(
-        process.env.VITE_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      await supabase
-        .from('notification_history')
-        .update({
-          status: result.sent ? 'sent' : 'failed',
-          sent_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1);
+      await db.collection('notification_history').doc(notificationId).update({
+        status: result.sent ? 'sent' : 'failed',
+        sent_at: new Date().toISOString(),
+        error_message: result.error || null,
+      });
 
       return { updated: true };
     });
@@ -107,6 +138,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
     return {
       success: result.sent,
       timestamp: new Date().toISOString(),
+      notificationId,
       ...result,
     };
   }
@@ -126,6 +158,16 @@ export const sendNotificationBatchWorkflow = inngest.createFunction(
   },
   async ({ event, step }: { event: { data: NotificationBatchPayload }; step: InngestStep }) => {
     const { organizationId, notifications } = event.data;
+
+    // Validate input
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+      return {
+        success: false,
+        error: 'No notifications provided',
+        queued: 0,
+        timestamp: new Date().toISOString(),
+      };
+    }
 
     const results = await step.run('process-batch', async () => {
       // Send individual notification events

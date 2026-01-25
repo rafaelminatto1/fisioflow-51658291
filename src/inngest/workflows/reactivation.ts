@@ -1,177 +1,180 @@
 /**
- * Reactivation Workflow
+ * Reactivation Workflow - Migrated to Firebase
  *
- * Runs weekly to find inactive patients (no appointments > 30 days)
- * and sends a friendly "We miss you" message.
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - Complex joins → Client-side data aggregation
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
-
-// Define event manually if not in types yet
-const REACTIVATION_EVENT = 'cron/reactivation.weekly';
+import { getAdminDb } from '../../lib/firebase/admin.js';
 
 interface Appointment {
-    date: string;
-    status: string;
+  date: string;
+  status: string;
 }
 
 interface Patient {
-    id: string;
-    name: string;
-    phone?: string;
-    email?: string;
-    organization_id: string;
-    notification_preferences?: {
-        whatsapp?: boolean;
-        email?: boolean;
-    };
-    appointments?: Appointment[];
-    organization?: Organization;
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  organization_id: string;
+  notification_preferences?: {
+    whatsapp?: boolean;
+    email?: boolean;
+  };
+  organization?: Organization;
 }
 
 interface Organization {
-    id: string;
-    name: string;
-    settings?: {
-        whatsapp_enabled?: boolean;
-        email_enabled?: boolean;
-    };
+  id: string;
+  name: string;
+  settings?: {
+    whatsapp_enabled?: boolean;
+    email_enabled?: boolean;
+  };
 }
 
 export const reactivationWorkflow = inngest.createFunction(
-    {
-        id: 'fisioflow-reactivation-weekly',
-        name: 'Weekly Reactivation Campaign',
-        retries: retryConfig.whatsapp.maxAttempts,
-    },
-    {
-        cron: '0 10 * * 1', // 10:00 AM on Mondays
-    },
-    async ({ step }: { step: InngestStep }) => {
-        const supabase = createClient(
-            process.env.VITE_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
+  {
+    id: 'fisioflow-reactivation-weekly',
+    name: 'Weekly Reactivation Campaign',
+    retries: retryConfig.whatsapp.maxAttempts,
+  },
+  {
+    cron: '0 10 * * 1', // 10:00 AM on Mondays
+  },
+  async ({ step }: { step: InngestStep }) => {
+    const db = getAdminDb();
 
-        // Step 1: Find patients inactive > 30 days
-        const patients = await step.run('find-inactive-patients', async () => {
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Step 1: Find patients inactive > 30 days
+    const patients = await step.run('find-inactive-patients', async () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            // 1. Get active patients with WA enabled (perf optim)
-            const { data: activePatients, error } = await supabase
-                .from('patients')
-                .select(`
-                id, name, phone, email, organization_id, notification_preferences,
-                appointments!patient_id(date, status)
-            `)
-                .eq('active', true)
-                .order('date', { foreignTable: 'appointments', ascending: false });
+      // Get active patients
+      const patientsSnapshot = await db.collection('patients')
+        .where('active', '==', true)
+        .select('id', 'name', 'phone', 'email', 'organization_id', 'notification_preferences')
+        .get();
 
-            if (error) throw new Error(`Failed to fetch patients: ${error.message}`);
+      const inactivePatients: Patient[] = [];
+      const now = new Date();
 
-            const inactivePatients: Patient[] = [];
-            const now = new Date();
+      // OPTIMIZATION: Fetch all completed appointments in one query
+      // Then filter by date client-side
+      const appointmentsSnapshot = await db.collection('appointments')
+        .where('status', 'in', ['concluido', 'realizado', 'attended'])
+        .where('date', '>=', new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString()) // Last 60 days max
+        .get();
 
-            const patientList = activePatients as unknown as Patient[];
+      // Create a map: patientId -> latest appointment
+      const latestAppointmentByPatient = new Map<string, Appointment>();
+      appointmentsSnapshot.docs.forEach(doc => {
+        const appt = { id: doc.id, ...doc.data() } as Appointment;
+        const existing = latestAppointmentByPatient.get(appt.patient_id || '');
+        if (!existing || new Date(appt.date) > new Date(existing.date)) {
+          latestAppointmentByPatient.set(appt.patient_id || '', appt);
+        }
+      });
 
-            for (const p of patientList || []) {
-                // Check preferences
-                if (p.notification_preferences?.whatsapp === false && p.notification_preferences?.email === false) continue;
-                if (!p.phone && !p.email) continue;
+      for (const patientDoc of patientsSnapshot.docs) {
+        const p = { id: patientDoc.id, ...patientDoc.data() } as Patient;
 
-                const appointments = p.appointments || [];
-                // Filter completed appointments
-                const lastApp = appointments.find((a) =>
-                    ['concluido', 'realizado', 'attended'].includes(a.status)
-                );
+        // Check preferences
+        const prefs = p.notification_preferences || {};
+        if (prefs.whatsapp === false && prefs.email === false) continue;
+        if (!p.phone && !p.email) continue;
 
-                if (lastApp) {
-                    const lastDate = new Date(lastApp.date);
-                    const diffTime = Math.abs(now.getTime() - lastDate.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const lastApp = latestAppointmentByPatient.get(p.id);
+        if (!lastApp) continue; // No appointments at all
 
-                    // If last appointment was between 30 and 37 days ago (to avoid spamming every week)
-                    // Weekly run: we target the window of [30, 37] days.
-                    if (diffDays >= 30 && diffDays <= 37) {
-                        inactivePatients.push(p);
-                    }
-                } else {
-                    // Never had an appointment? Maybe new lead. Skip for now or different strategy.
-                    // We focus on reactivation.
-                }
+        const lastDate = new Date(lastApp.date);
+        const diffTime = Math.abs(now.getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // If last appointment was between 30 and 37 days ago
+        if (diffDays >= 30 && diffDays <= 37) {
+          inactivePatients.push(p);
+        }
+      }
+
+      return inactivePatients;
+    });
+
+    if (patients.length === 0) {
+      return { success: true, processed: 0, message: 'No inactive patients found in window' };
+    }
+
+    // Step 2: Get Org Settings
+    const patientsWithOrg = await step.run('get-org-settings', async () => {
+      const orgIds = [...new Set(patients.map((p) => p.organization_id))];
+
+      // Fetch organizations in batch
+      const orgPromises = orgIds.map(orgId => db.collection('organizations').doc(orgId).get());
+      const orgSnapshots = await Promise.all(orgPromises);
+
+      const orgMap = new Map(
+        orgSnapshots
+          .filter(snap => snap.exists)
+          .map(snap => [snap.id, { id: snap.id, ...snap.data() }])
+      );
+
+      return patients.map((p) => ({
+        ...p,
+        organization: orgMap.get(p.organization_id),
+      }));
+    });
+
+    // Step 3: Queue Messages
+    const results = await step.run('queue-reactivation', async () => {
+      const events: any[] = [];
+
+      for (const p of patientsWithOrg) {
+        const org = p.organization;
+        const notificationPrefs = p.notification_preferences || {};
+
+        const whatsappEnabled = (org?.settings?.whatsapp_enabled ?? true) && (notificationPrefs.whatsapp !== false);
+        const emailEnabled = (org?.settings?.email_enabled ?? true) && (notificationPrefs.email !== false);
+
+        if (whatsappEnabled && p.phone) {
+          events.push({
+            name: 'whatsapp/reactivation',
+            data: {
+              to: p.phone,
+              patientName: p.name,
+              organizationName: org?.name || 'FisioFlow'
             }
-
-            return inactivePatients;
-        });
-
-        if (patients.length === 0) {
-            return { success: true, processed: 0, message: 'No inactive patients found in window' };
+          });
         }
 
-        // Step 2: Get Org Settings
-        const patientsWithOrg = await step.run('get-org-settings', async () => {
-            const orgIds = [...new Set(patients.map((p) => p.organization_id))];
-            const { data: organizations } = await supabase
-                .from('organizations')
-                .select('id, name, settings')
-                .in('id', orgIds);
-
-            const orgMap = new Map((organizations || []).map((o) => [o.id, o]));
-
-            return patients.map((p) => ({
-                ...p,
-                organization: orgMap.get(p.organization_id) as Organization | undefined
-            }));
-        });
-
-        // Step 3: Queue Messages
-        const results = await step.run('queue-reactivation', async () => {
-            const events: any[] = [];
-
-            for (const p of patientsWithOrg) {
-                const org = p.organization;
-                const notificationPrefs = p.notification_preferences || {};
-
-                const whatsappEnabled = (org?.settings?.whatsapp_enabled ?? true) && (notificationPrefs.whatsapp !== false);
-                const emailEnabled = (org?.settings?.email_enabled ?? true) && (notificationPrefs.email !== false);
-
-                if (whatsappEnabled && p.phone) {
-                    events.push({
-                        name: 'whatsapp/reactivation',
-                        data: {
-                            to: p.phone,
-                            patientName: p.name,
-                            organizationName: org?.name || 'FisioFlow'
-                        }
-                    });
-                }
-
-                if (emailEnabled && p.email) {
-                    events.push({
-                        name: 'email/reactivation',
-                        data: {
-                            to: p.email,
-                            patientName: p.name,
-                            organizationName: org?.name || 'FisioFlow'
-                        }
-                    });
-                }
+        if (emailEnabled && p.email) {
+          events.push({
+            name: 'email/reactivation',
+            data: {
+              to: p.email,
+              patientName: p.name,
+              organizationName: org?.name || 'FisioFlow'
             }
+          });
+        }
+      }
 
-            if (events.length > 0) {
-                await inngest.send(events);
-            }
+      if (events.length > 0) {
+        await inngest.send(events);
+      }
 
-            return { queued: events.length };
-        });
+      return { queued: events.length };
+    });
 
-        return {
-            success: true,
-            queued: results.queued,
-            timestamp: new Date().toISOString()
-        };
-    }
+    return {
+      success: true,
+      queued: results.queued,
+      timestamp: new Date().toISOString()
+    };
+  }
 );

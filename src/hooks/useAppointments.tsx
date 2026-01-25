@@ -159,7 +159,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
 
   try {
     // Obter organization_id do usuário
-    let organizationId: string | null = organizationIdOverride || null;
+    const organizationId: string | null = organizationIdOverride || null;
 
     if (!organizationId) {
       // Se não tiver organizationId, abortar

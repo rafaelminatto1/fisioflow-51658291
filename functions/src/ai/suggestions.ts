@@ -216,7 +216,7 @@ export const patientChatbot = onCall({
 
   // Detectar intenções
   let intent = '';
-  let entities: Record<string, string> = {};
+  const entities: Record<string, string> = {};
 
   if (lowerMessage.includes('agendar') || lowerMessage.includes('marcar') || lowerMessage.includes('horário')) {
     intent = 'schedule_appointment';

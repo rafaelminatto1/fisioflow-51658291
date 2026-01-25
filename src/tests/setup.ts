@@ -9,6 +9,9 @@
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ============================================================================
 // MOCKS - Supabase Client
@@ -45,9 +48,9 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('@/integrations/firebase/app', () => ({
   firebaseApp: {
-    auth: () => ({ }),
-    firestore: () => ({ }),
-    storage: () => ({ }),
+    auth: () => ({}),
+    firestore: () => ({}),
+    storage: () => ({}),
   },
 }));
 
@@ -112,7 +115,6 @@ vi.mock('@/hooks/usePatientAnalytics', () => ({
 
 vi.mock('react-markdown', () => ({
   default: ({ children }: { children: React.ReactNode }) => {
-    const React = require('react');
     return React.createElement('div', { className: 'mock-react-markdown' }, children);
   },
 }));
@@ -261,11 +263,6 @@ export function createMockResponse<T>(data: T | null, error: Error | null = null
  * Wraps a component with test providers
  */
 export function createMockProviders({ children }: { children: React.ReactNode }) {
-  const React = require('react');
-  const BrowserRouter = require('react-router-dom').BrowserRouter;
-  const QueryClientProvider = require('@tanstack/react-query').QueryClientProvider;
-  const QueryClient = require('@tanstack/react-query').QueryClient;
-
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {

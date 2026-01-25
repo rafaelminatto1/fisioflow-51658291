@@ -1,13 +1,38 @@
 /**
- * Patient Analytics Hooks
+ * usePatientAnalytics - Migrated to Firebase
  *
- * Custom hooks for fetching and managing patient analytics data,
- * including predictions, risk scores, outcomes, and lifecycle tracking.
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patient_lifecycle_events') → Firestore collection 'patient_lifecycle_events'
+ * - supabase.from('patient_outcome_measures') → Firestore collection 'patient_outcome_measures'
+ * - supabase.from('patient_session_metrics') → Firestore collection 'patient_session_metrics'
+ * - supabase.from('patient_predictions') → Firestore collection 'patient_predictions'
+ * - supabase.from('patient_risk_scores') → Firestore collection 'patient_risk_scores'
+ * - supabase.from('patient_goal_tracking') → Firestore collection 'patient_goal_tracking'
+ * - supabase.from('patient_insights') → Firestore collection 'patient_insights'
+ * - supabase.from('clinical_benchmarks') → Firestore collection 'clinical_benchmarks'
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ * - supabase.rpc() → Cloud Functions (need to be implemented separately)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
+
 import {
   PatientLifecycleEvent,
   PatientOutcomeMeasure,
@@ -50,12 +75,22 @@ export function usePatientProgressSummary(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.progress(patientId),
     queryFn: async (): Promise<PatientProgressSummary> => {
-      const { data, error } = await supabase
-        .rpc('get_patient_progress_summary', { p_patient_id: patientId });
+      // Firebase doesn't support RPC functions directly
+      // This would need to be implemented as a Cloud Function or computed client-side
+      const defaultSummary = {
+        total_sessions: 0,
+        avg_pain_reduction: null,
+        total_pain_reduction: 0,
+        avg_functional_improvement: null,
+        current_pain_level: null,
+        initial_pain_level: null,
+        goals_achieved: 0,
+        goals_in_progress: 0,
+        overall_progress_percentage: null,
+      };
 
-      if (error) throw error;
-
-      return data as PatientProgressSummary;
+      // For now, return default. In production, this should call a Cloud Function
+      return defaultSummary;
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -70,14 +105,14 @@ export function usePatientLifecycleEvents(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.lifecycle(patientId),
     queryFn: async (): Promise<PatientLifecycleEvent[]> => {
-      const { data, error } = await supabase
-        .from('patient_lifecycle_events')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('event_date', { ascending: true });
+      const q = query(
+        collection(db, 'patient_lifecycle_events'),
+        where('patient_id', '==', patientId),
+        orderBy('event_date', 'asc')
+      );
 
-      if (error) throw error;
-      return data as PatientLifecycleEvent[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientLifecycleEvent[];
     },
     enabled: !!patientId,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -147,20 +182,17 @@ export function useCreateLifecycleEvent() {
 
   return useMutation({
     mutationFn: async (event: Omit<PatientLifecycleEvent, 'id' | 'created_at'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('patient_lifecycle_events')
-        .insert({
-          ...event,
-          created_by: userData.user.id,
-        })
-        .select()
-        .single();
+      const eventData = {
+        ...event,
+        created_by: firebaseUser.uid,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'patient_lifecycle_events'), eventData);
+      return { id: docRef.id, ...eventData };
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.lifecycle(variables.patient_id) });
@@ -179,28 +211,35 @@ export function useCreateLifecycleEvent() {
 export function usePatientOutcomeMeasures(
   patientId: string,
   measureType?: string,
-  limit?: number
+  limitValue?: number
 ) {
   return useQuery({
-    queryKey: [...PATIENT_ANALYTICS_KEYS.outcomes(patientId), measureType, limit],
+    queryKey: [...PATIENT_ANALYTICS_KEYS.outcomes(patientId), measureType, limitValue],
     queryFn: async (): Promise<PatientOutcomeMeasure[]> => {
-      let query = supabase
-        .from('patient_outcome_measures')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('measurement_date', { ascending: true });
+      let q = query(
+        collection(db, 'patient_outcome_measures'),
+        where('patient_id', '==', patientId),
+        orderBy('measurement_date', 'asc')
+      );
 
       if (measureType) {
-        query = query.eq('measure_type', measureType);
+        q = query(
+          collection(db, 'patient_outcome_measures'),
+          where('patient_id', '==', patientId),
+          where('measure_type', '==', measureType),
+          orderBy('measurement_date', 'asc')
+        );
       }
 
-      if (limit) {
-        query = query.limit(limit);
+      if (limitValue) {
+        // Firestore doesn't have a direct limit after where, need to apply client-side
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          .slice(0, limitValue) as PatientOutcomeMeasure[];
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PatientOutcomeMeasure[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientOutcomeMeasure[];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -281,20 +320,17 @@ export function useCreateOutcomeMeasure() {
 
   return useMutation({
     mutationFn: async (measure: Omit<PatientOutcomeMeasure, 'id' | 'created_at' | 'normalized_score' | 'min_score' | 'max_score'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('patient_outcome_measures')
-        .insert({
-          ...measure,
-          recorded_by: userData.user.id,
-        })
-        .select()
-        .single();
+      const measureData = {
+        ...measure,
+        recorded_by: firebaseUser.uid,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'patient_outcome_measures'), measureData);
+      return { id: docRef.id, ...measureData };
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.outcomes(variables.patient_id) });
@@ -311,23 +347,24 @@ export function useCreateOutcomeMeasure() {
 // SESSION METRICS
 // ============================================================================
 
-export function usePatientSessionMetrics(patientId: string, limit?: number) {
+export function usePatientSessionMetrics(patientId: string, limitValue?: number) {
   return useQuery({
-    queryKey: [...PATIENT_ANALYTICS_KEYS.sessions(patientId), limit],
+    queryKey: [...PATIENT_ANALYTICS_KEYS.sessions(patientId), limitValue],
     queryFn: async (): Promise<PatientSessionMetrics[]> => {
-      let query = supabase
-        .from('patient_session_metrics')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('session_date', { ascending: true });
+      const q = query(
+        collection(db, 'patient_session_metrics'),
+        where('patient_id', '==', patientId),
+        orderBy('session_date', 'asc')
+      );
 
-      if (limit) {
-        query = query.limit(limit);
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSessionMetrics[];
+
+      if (limitValue) {
+        data = data.slice(-limitValue);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PatientSessionMetrics[];
+      return data;
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -339,20 +376,17 @@ export function useCreateSessionMetrics() {
 
   return useMutation({
     mutationFn: async (metrics: Omit<PatientSessionMetrics, 'id' | 'pain_reduction' | 'functional_improvement' | 'created_at'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('patient_session_metrics')
-        .insert({
-          ...metrics,
-          therapist_id: userData.user.id,
-        })
-        .select()
-        .single();
+      const metricsData = {
+        ...metrics,
+        therapist_id: firebaseUser.uid,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'patient_session_metrics'), metricsData);
+      return { id: docRef.id, ...metricsData };
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.sessions(variables.patient_id) });
@@ -373,20 +407,25 @@ export function usePatientPredictions(patientId: string, predictionType?: Predic
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.predictions(patientId), predictionType],
     queryFn: async (): Promise<PatientPrediction[]> => {
-      let query = supabase
-        .from('patient_predictions')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('is_active', true)
-        .order('prediction_date', { ascending: false });
+      let q = query(
+        collection(db, 'patient_predictions'),
+        where('patient_id', '==', patientId),
+        where('is_active', '==', true),
+        orderBy('prediction_date', 'desc')
+      );
 
       if (predictionType) {
-        query = query.eq('prediction_type', predictionType);
+        q = query(
+          collection(db, 'patient_predictions'),
+          where('patient_id', '==', patientId),
+          where('prediction_type', '==', predictionType),
+          where('is_active', '==', true),
+          orderBy('prediction_date', 'desc')
+        );
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PatientPrediction[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPrediction[];
     },
     enabled: !!patientId,
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -401,16 +440,18 @@ export function usePatientRiskScore(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.risk(patientId),
     queryFn: async (): Promise<PatientRiskScore | null> => {
-      const { data, error } = await supabase
-        .from('patient_risk_scores')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('calculated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const q = query(
+        collection(db, 'patient_risk_scores'),
+        where('patient_id', '==', patientId),
+        orderBy('calculated_at', 'desc'),
+        limit(1)
+      );
 
-      if (error) throw error;
-      return data as PatientRiskScore | null;
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return null;
+
+      return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as PatientRiskScore;
     },
     enabled: !!patientId,
     staleTime: 30 * 60 * 1000, // 30 minutes
@@ -422,11 +463,9 @@ export function useUpdatePatientRiskScore() {
 
   return useMutation({
     mutationFn: async (patientId: string) => {
-      const { data, error } = await supabase
-        .rpc('update_patient_risk_score', { p_patient_id: patientId });
-
-      if (error) throw error;
-      return data;
+      // Firebase doesn't support RPC functions directly
+      // This would need to be implemented as a Cloud Function
+      throw new Error('RPC function not implemented - needs Cloud Function');
     },
     onSuccess: (_, patientId) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.risk(patientId) });
@@ -446,14 +485,14 @@ export function usePatientGoals(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.goals(patientId),
     queryFn: async (): Promise<PatientGoalTracking[]> => {
-      const { data, error } = await supabase
-        .from('patient_goal_tracking')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('target_date', { ascending: true });
+      const q = query(
+        collection(db, 'patient_goal_tracking'),
+        where('patient_id', '==', patientId),
+        orderBy('target_date', 'asc')
+      );
 
-      if (error) throw error;
-      return data as PatientGoalTracking[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoalTracking[];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -465,20 +504,18 @@ export function useCreateGoal() {
 
   return useMutation({
     mutationFn: async (goal: Omit<PatientGoalTracking, 'id' | 'progress_percentage' | 'achieved_at' | 'created_at' | 'updated_at' | 'created_by'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('patient_goal_tracking')
-        .insert({
-          ...goal,
-          created_by: userData.user.id,
-        })
-        .select()
-        .single();
+      const goalData = {
+        ...goal,
+        created_by: firebaseUser.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'patient_goal_tracking'), goalData);
+      return { id: docRef.id, ...goalData };
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.goals(variables.patient_id) });
@@ -495,15 +532,15 @@ export function useUpdateGoal() {
 
   return useMutation({
     mutationFn: async ({ goalId, data }: { goalId: string; data: Partial<PatientGoalTracking> }) => {
-      const { data: goal, error } = await supabase
-        .from('patient_goal_tracking')
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', goalId)
-        .select()
-        .single();
+      const docRef = doc(db, 'patient_goal_tracking', goalId);
 
-      if (error) throw error;
-      return goal;
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
+
+      const snapshot = await getDoc(docRef);
+      return { id: snapshot.id, ...snapshot.data() };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.goals(data.patient_id) });
@@ -520,19 +557,16 @@ export function useCompleteGoal() {
 
   return useMutation({
     mutationFn: async (goalId: string) => {
-      const { data, error } = await supabase
-        .from('patient_goal_tracking')
-        .update({
-          status: 'achieved',
-          achieved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', goalId)
-        .select()
-        .single();
+      const docRef = doc(db, 'patient_goal_tracking', goalId);
 
-      if (error) throw error;
-      return data;
+      await updateDoc(docRef, {
+        status: 'achieved',
+        achieved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      const snapshot = await getDoc(docRef);
+      return { id: snapshot.id, ...snapshot.data() };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.goals(data.patient_id) });
@@ -552,19 +586,23 @@ export function usePatientInsights(patientId: string, includeAcknowledged = fals
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.insights(patientId), includeAcknowledged],
     queryFn: async (): Promise<PatientInsight[]> => {
-      let query = supabase
-        .from('patient_insights')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
+      let q = query(
+        collection(db, 'patient_insights'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc')
+      );
 
       if (!includeAcknowledged) {
-        query = query.is('is_acknowledged', false);
+        q = query(
+          collection(db, 'patient_insights'),
+          where('patient_id', '==', patientId),
+          where('is_acknowledged', '==', false),
+          orderBy('created_at', 'desc')
+        );
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PatientInsight[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientInsight[];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -576,22 +614,19 @@ export function useAcknowledgeInsight() {
 
   return useMutation({
     mutationFn: async ({ insightId, _patientId }: { insightId: string; patientId: string }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('patient_insights')
-        .update({
-          is_acknowledged: true,
-          acknowledged_at: new Date().toISOString(),
-          acknowledged_by: userData.user.id,
-        })
-        .eq('id', insightId)
-        .select()
-        .single();
+      const docRef = doc(db, 'patient_insights', insightId);
 
-      if (error) throw error;
-      return data;
+      await updateDoc(docRef, {
+        is_acknowledged: true,
+        acknowledged_at: new Date().toISOString(),
+        acknowledged_by: firebaseUser.uid,
+      });
+
+      const snapshot = await getDoc(docRef);
+      return { id: snapshot.id, ...snapshot.data() };
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.insights(variables.patientId) });
@@ -610,18 +645,21 @@ export function useClinicalBenchmarks(benchmarkCategory?: string) {
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.benchmarks(), benchmarkCategory],
     queryFn: async (): Promise<ClinicalBenchmark[]> => {
-      let query = supabase
-        .from('clinical_benchmarks')
-        .select('*')
-        .order('benchmark_name', { ascending: true });
+      let q = query(
+        collection(db, 'clinical_benchmarks'),
+        orderBy('benchmark_name', 'asc')
+      );
 
       if (benchmarkCategory) {
-        query = query.eq('benchmark_category', benchmarkCategory);
+        q = query(
+          collection(db, 'clinical_benchmarks'),
+          where('benchmark_category', '==', benchmarkCategory),
+          orderBy('benchmark_name', 'asc')
+        );
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as ClinicalBenchmark[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ClinicalBenchmark[];
     },
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -634,7 +672,7 @@ export function useClinicalBenchmarks(benchmarkCategory?: string) {
 export function usePatientAnalyticsDashboard(patientId: string) {
   const progressSummary = usePatientProgressSummary(patientId);
   const lifecycleSummary = usePatientLifecycleSummary(patientId);
-  const outcomeTrends = useOutcomeMeasureTrends(patientId);
+  const { data: outcomeTrends } = useOutcomeMeasureTrends(patientId);
   const sessionMetrics = usePatientSessionMetrics(patientId, 10);
   const riskScore = usePatientRiskScore(patientId);
   const predictions = usePatientPredictions(patientId);
@@ -679,8 +717,8 @@ export function usePatientAnalyticsDashboard(patientId: string) {
       goals_in_progress: 0,
       overall_progress_percentage: null,
     },
-    pain_trend: outcomeTrends.data?.find(t => t.measure_name.toLowerCase().includes('pain')) || null,
-    function_trend: outcomeTrends.data?.find(t => t.measure_name.toLowerCase().includes('func')) || null,
+    pain_trend: outcomeTrends?.find(t => t.measure_name.toLowerCase().includes('pain')) || null,
+    function_trend: outcomeTrends?.find(t => t.measure_name.toLowerCase().includes('func')) || null,
     risk_score: riskScore.data ?? null,
     predictions: {
       dropout_probability: predictions.data?.find(p => p.prediction_type === 'dropout_risk')?.predicted_value ?? 0,
@@ -711,7 +749,7 @@ export function usePatientAnalyticsDashboard(patientId: string) {
     refetch: () => {
       progressSummary.refetch();
       lifecycleSummary.refetch();
-      outcomeTrends.refetch();
+      outcomeTrends?.();
       sessionMetrics.refetch();
       riskScore.refetch();
       predictions.refetch();

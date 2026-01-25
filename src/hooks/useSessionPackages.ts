@@ -1,6 +1,29 @@
+/**
+ * useSessionPackages - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('session_packages') → Firestore collection 'session_packages'
+ * - supabase.rpc('use_package_session') → Client-side transaction + Cloud Function (pending)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  runTransaction
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface SessionPackage {
   id: string;
@@ -29,18 +52,21 @@ export const useSessionPackages = (patientId?: string) => {
   return useQuery({
     queryKey: ['session-packages', patientId],
     queryFn: async () => {
-      let query = supabase
-        .from('session_packages')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let q = query(
+        collection(db, 'session_packages'),
+        orderBy('created_at', 'desc')
+      );
 
       if (patientId) {
-        query = query.eq('patient_id', patientId);
+        q = query(
+          collection(db, 'session_packages'),
+          where('patient_id', '==', patientId),
+          orderBy('created_at', 'desc')
+        );
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as SessionPackage[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SessionPackage[];
     },
   });
 };
@@ -51,14 +77,29 @@ export const useCreatePackage = () => {
 
   return useMutation({
     mutationFn: async (packageData: Omit<SessionPackage, 'id' | 'created_at' | 'updated_at' | 'remaining_sessions' | 'value_per_session' | 'used_sessions'>) => {
-      const { data, error } = await supabase
-        .from('session_packages')
-        .insert(packageData)
-        .select()
-        .single();
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      if (error) throw error;
-      return data;
+      const now = new Date().toISOString();
+      const remainingSessions = packageData.total_sessions;
+      const valuePerSession = packageData.final_value / packageData.total_sessions;
+
+      const newPackageData = {
+        ...packageData,
+        created_by: firebaseUser.uid,
+        used_sessions: 0,
+        remaining_sessions: remainingSessions,
+        value_per_session: Math.round(valuePerSession * 100) / 100, // Round to 2 decimal places
+        created_at: now,
+        updated_at: now,
+      };
+
+      const docRef = await addDoc(collection(db, 'session_packages'), newPackageData);
+
+      return {
+        id: docRef.id,
+        ...newPackageData,
+      } as SessionPackage;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
@@ -76,23 +117,70 @@ export const useUsePackageSession = () => {
 
   return useMutation({
     mutationFn: async (packageId: string) => {
-      const { data, error } = await supabase.rpc('use_package_session', {
-        _package_id: packageId,
-      });
+      const packageRef = doc(db, 'session_packages', packageId);
 
-      if (error) throw error;
-      if (!data) throw new Error('Não foi possível usar sessão do pacote');
-      return data;
+      // Use transaction to ensure atomicity
+      try {
+        await runTransaction(db, async (transaction) => {
+          const packageSnap = await getDoc(packageRef);
+
+          if (!packageSnap.exists()) {
+            throw new Error('Pacote não encontrado');
+          }
+
+          const pkg = packageSnap.data() as SessionPackage;
+
+          if (pkg.status !== 'ativo') {
+            throw new Error('Pacote não está ativo');
+          }
+
+          if (pkg.remaining_sessions <= 0) {
+            throw new Error('Não há sessões disponíveis neste pacote');
+          }
+
+          // Check if package is expired
+          if (pkg.valid_until && new Date(pkg.valid_until) < new Date()) {
+            throw new Error('Pacote expirado');
+          }
+
+          const newUsedSessions = pkg.used_sessions + 1;
+          const newRemainingSessions = pkg.remaining_sessions - 1;
+
+          // Update status if consumed
+          let newStatus = pkg.status;
+          if (newRemainingSessions === 0) {
+            newStatus = 'consumido';
+          }
+
+          transaction.update(packageRef, {
+            used_sessions: newUsedSessions,
+            remaining_sessions: newRemainingSessions,
+            status: newStatus,
+            updated_at: new Date().toISOString(),
+          });
+
+          return { id: packageId, ...pkg, used_sessions: newUsedSessions, remaining_sessions: newRemainingSessions, status: newStatus };
+        });
+
+        // Fetch updated package
+        const updatedSnap = await getDoc(packageRef);
+        return {
+          id: updatedSnap.id,
+          ...updatedSnap.data(),
+        } as SessionPackage;
+      } catch (error) {
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
       toast({ title: 'Sessão debitada do pacote' });
     },
     onError: (error: Error) => {
-      toast({ 
+      toast({
         title: 'Erro ao debitar sessão',
         description: error.message,
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     },
   });

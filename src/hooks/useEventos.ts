@@ -1,32 +1,76 @@
+/**
+ * useEventos - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('eventos') → Firestore collection 'eventos'
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser (if needed)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { EventoCreate, EventoUpdate } from '@/lib/validations/evento';
 import { mockEventos } from '@/lib/mockData';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+
+export interface Evento {
+  id: string;
+  nome: string;
+  descricao?: string;
+  categoria: string;
+  local?: string;
+  data_inicio: string;
+  data_fim: string;
+  gratuito: boolean;
+  link_whatsapp?: string;
+  valor_padrao_prestador?: number;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Helper: Convert Firestore doc to Evento
+const convertDocToEvento = (doc: any): Evento => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Evento;
+};
 
 export function useEventos(filtros?: { status?: string; categoria?: string; busca?: string }) {
   return useQuery({
     queryKey: ['eventos', filtros],
     queryFn: async () => {
-      let query = supabase
-        .from('eventos')
-        .select('*');
+      const q = query(
+        collection(db, 'eventos'),
+        orderBy('data_inicio', 'desc')
+      );
 
+      const snapshot = await getDocs(q);
+      let eventos = snapshot.docs.map(convertDocToEvento);
+
+      // Apply filters client-side (for simplicity)
       if (filtros?.status && filtros.status !== 'todos') {
-        query = query.eq('status', filtros.status);
+        eventos = eventos.filter(e => e.status === filtros.status);
       }
 
       if (filtros?.categoria && filtros.categoria !== 'todos') {
-        query = query.eq('categoria', filtros.categoria);
+        eventos = eventos.filter(e => e.categoria === filtros.categoria);
       }
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      let eventos = data || [];
 
       if (filtros?.busca) {
         const busca = filtros.busca.toLowerCase();
@@ -45,15 +89,14 @@ export function useEvento(id: string) {
   return useQuery({
     queryKey: ['evento', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('eventos')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const docRef = doc(db, 'eventos', id);
+      const snapshot = await getDoc(docRef);
 
-      if (error) throw error;
+      if (!snapshot.exists()) {
+        throw new Error('Evento não encontrado');
+      }
 
-      return data;
+      return convertDocToEvento(snapshot);
     },
     enabled: !!id,
   });
@@ -66,36 +109,27 @@ export function useCreateEvento() {
   return useMutation({
     mutationFn: async (evento: EventoCreate) => {
       // Converter datas para string no formato ISO
-      const eventoData: {
-        nome: string;
-        descricao?: string;
-        categoria: string;
-        local?: string;
-        data_inicio: string;
-        data_fim: string;
-        gratuito: boolean;
-        link_whatsapp?: string;
-        valor_padrao_prestador?: number;
-      } = {
+      const eventoData = {
         nome: evento.nome,
-        descricao: evento.descricao,
+        descricao: evento.descricao || null,
         categoria: evento.categoria,
-        local: evento.local,
+        local: evento.local || null,
         data_inicio: evento.data_inicio.toISOString().split('T')[0],
         data_fim: evento.data_fim.toISOString().split('T')[0],
         gratuito: evento.gratuito,
-        link_whatsapp: evento.link_whatsapp,
-        valor_padrao_prestador: evento.valor_padrao_prestador,
+        link_whatsapp: evento.link_whatsapp || null,
+        valor_padrao_prestador: evento.valor_padrao_prestador || null,
+        status: 'ativo',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
-        .from('eventos')
-        .insert([eventoData])
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'eventos'), eventoData);
 
-      if (error) throw error;
-      return data;
+      return {
+        id: docRef.id,
+        ...eventoData,
+      } as Evento;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['eventos'] });
@@ -121,24 +155,23 @@ export function useUpdateEvento() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: EventoUpdate }) => {
+      const docRef = doc(db, 'eventos', id);
+
       // Converter datas se existirem
-      const updateData: Record<string, string | Date | boolean | number | undefined> = { ...data };
+      const updateData: Record<string, any> = { ...data };
       if (updateData.data_inicio instanceof Date) {
         updateData.data_inicio = updateData.data_inicio.toISOString().split('T')[0];
       }
       if (updateData.data_fim instanceof Date) {
         updateData.data_fim = updateData.data_fim.toISOString().split('T')[0];
       }
+      updateData.updated_at = new Date().toISOString();
 
-      const { data: updated, error } = await supabase
-        .from('eventos')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
+      await updateDoc(docRef, updateData);
 
-      if (error) throw error;
-      return updated;
+      // Fetch updated document
+      const snapshot = await getDoc(docRef);
+      return convertDocToEvento(snapshot);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['eventos'] });
@@ -163,12 +196,7 @@ export function useDeleteEvento() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('eventos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'eventos', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['eventos'] });

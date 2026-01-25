@@ -146,7 +146,7 @@ export default function ExercisesScreen() {
 
             {/* Status Overlay */}
             <View style={styles.statusOverlay}>
-              {getStatusIcon(exercise.status)}
+              {getStatusIcon(exercise.status as ExerciseStatus)}
             </View>
 
             {/* Exercise Info */}
@@ -155,9 +155,9 @@ export default function ExercisesScreen() {
                 <Text style={styles.exerciseName} numberOfLines={1}>
                   {exercise.name}
                 </Text>
-                <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(exercise.status)}20` }]}>
-                  <Text style={[styles.statusText, { color: getStatusColor(exercise.status) }]}>
-                    {getStatusText(exercise.status)}
+                <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(exercise.status as ExerciseStatus)}20` }]}>
+                  <Text style={[styles.statusText, { color: getStatusColor(exercise.status as ExerciseStatus) }]}>
+                    {getStatusText(exercise.status as ExerciseStatus)}
                   </Text>
                 </View>
               </View>

@@ -1,6 +1,31 @@
+/**
+ * useInvitations - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('user_invitations') → Firestore collection 'user_invitations'
+ * - supabase.rpc('revoke_invitation') → Client-side update + Cloud Function (pending)
+ * - supabase.rpc('create_user_invitation') → Client-side create + Cloud Function (pending)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 type AppRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
@@ -15,31 +40,40 @@ interface Invitation {
   created_at: string;
 }
 
+// Helper to generate invitation token
+const generateInvitationToken = (): string => {
+  return Math.random().toString(36).substring(2, 15) +
+         Math.random().toString(36).substring(2, 15);
+};
+
+// Helper to check if invitation is expired
+const isInvitationExpired = (expiresAt: string): boolean => {
+  return new Date(expiresAt) < new Date();
+};
+
 export function useInvitations() {
   const queryClient = useQueryClient();
 
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['invitations'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_invitations')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'user_invitations'),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-
-      return data as Invitation[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Invitation[];
     },
     staleTime: 2 * 60 * 1000,
   });
 
   const revokeMutation = useMutation({
     mutationFn: async (invitationId: string) => {
-      const { error } = await supabase.rpc('revoke_invitation', {
-        _invitation_id: invitationId,
-      });
-
-      if (error) throw error;
+      // Firebase doesn't have RPC functions - this would normally be a Cloud Function
+      // For now, we'll delete the invitation document
+      const docRef = doc(db, 'user_invitations', invitationId);
+      await deleteDoc(docRef);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] });
@@ -56,13 +90,47 @@ export function useInvitations() {
 
   const createMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: AppRole }) => {
-      const { data, error } = await supabase.rpc('create_user_invitation', {
-        _email: email,
-        _role: role,
-      });
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      if (error) throw error;
-      return data;
+      // Check if there's already a pending invitation for this email
+      const existingQ = query(
+        collection(db, 'user_invitations'),
+        where('email', '==', email),
+        where('used_at', '==', null),
+        limit(1)
+      );
+      const existingSnap = await getDocs(existingQ);
+
+      if (!existingSnap.empty) {
+        // Check if existing invitation is expired
+        const existing = existingSnap.docs[0].data();
+        if (existing.expires_at && !isInvitationExpired(existing.expires_at)) {
+          throw new Error('Já existe um convite pendente para este email');
+        }
+      }
+
+      // Create invitation (expires in 7 days)
+      const token = generateInvitationToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const invitationData = {
+        email,
+        role,
+        token,
+        invited_by: firebaseUser.uid,
+        expires_at: expiresAt.toISOString(),
+        used_at: null,
+        created_at: new Date().toISOString(),
+      };
+
+      const docRef = await addDoc(collection(db, 'user_invitations'), invitationData);
+
+      return {
+        id: docRef.id,
+        ...invitationData,
+      } as Invitation;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] });

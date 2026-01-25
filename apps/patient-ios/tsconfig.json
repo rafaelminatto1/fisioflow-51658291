@@ -10,20 +10,9 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@fisioflow/shared-types": [
-        "../../packages/shared-types/src"
-      ],
-      "@fisioflow/shared-api": [
-        "../../packages/shared-api/src"
-      ],
-      "@fisioflow/shared-utils": [
-        "../../packages/shared-utils/src"
-      ],
-      "@fisioflow/shared-constants": [
-        "../../packages/shared-constants/src"
       ]
-    }
+    },
+    "jsx": "react-native"
   },
   "include": [
     "**/*.ts",

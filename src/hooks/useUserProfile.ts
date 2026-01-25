@@ -1,8 +1,21 @@
+/**
+ * useUserProfile - Migrated to Firebase Auth + Firestore
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.auth → firebase/auth
+ * - supabase.from('profiles') → firestore/profiles
+ * - onAuthStateChange → onAuthStateChanged
+ */
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
-import { ensureProfile } from '@/lib/database/profiles';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+
+const auth = getFirebaseAuth();
+const db = getFirebaseDb();
 
 export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
@@ -20,74 +33,133 @@ export interface UserProfile {
   role?: UserRole;
 }
 
+/**
+ * Hook de perfil de usuário migrado para Firebase
+ *
+ * Mantém a mesma interface do hook original Supabase para
+ * compatibilidade com componentes existentes.
+ */
 export const useUserProfile = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
+  /**
+   * Garante que o perfil exista no Firestore (defensivo)
+   */
+  const ensureProfile = async (userId: string, email: string | null, fullName?: string | null) => {
+    try {
+      const profileRef = doc(db, 'profiles', userId);
+      const profileSnap = await getDoc(profileRef);
+
+      if (!profileSnap.exists()) {
+        // Criar perfil se não existir
+        await setDoc(profileRef, {
+          user_id: userId,
+          full_name: fullName || null,
+          email: email || null,
+          avatar_url: null,
+          phone: null,
+          organization_id: null,
+          onboarding_completed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      logger.error('Erro ao garantir perfil', err, 'useUserProfile');
+    }
+  };
+
+  /**
+   * Buscar perfil do usuário no Firestore
+   */
+  const fetchProfile = async (firebaseUser: FirebaseUser): Promise<UserProfile | null> => {
     try {
       // Buscar perfil
-      let { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      const profileRef = doc(db, 'profiles', firebaseUser.uid);
+      const profileSnap = await getDoc(profileRef);
 
-      // Se não encontrou perfil, tenta garantir que ele exista (defensivo)
-      if (profileError || !profileData) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session?.user;
+      if (!profileSnap.exists()) {
+        // Criar perfil defensivamente
+        await ensureProfile(
+          firebaseUser.uid,
+          firebaseUser.email,
+          firebaseUser.displayName
+        );
 
-        if (currentUser && currentUser.id === userId) {
-          const fullName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name;
-          await ensureProfile(userId, currentUser.email, fullName);
-
-          // Tentar buscar novamente após garantir
-          const { data: retryData, error: retryError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', userId)
-            .single();
-
-          if (!retryError) {
-            profileData = retryData;
-            profileError = null;
-          }
+        // Buscar novamente
+        const retrySnap = await getDoc(profileRef);
+        if (!retrySnap.exists()) {
+          setError('Perfil não encontrado');
+          return null;
         }
+
+        const profileData = retrySnap.data();
+
+        // Buscar role do usuário
+        const roleRef = doc(db, 'user_roles', firebaseUser.uid);
+        const roleSnap = await getDoc(roleRef);
+        const role = (roleSnap.data()?.role as UserRole) || 'paciente';
+
+        return {
+          id: retrySnap.id,
+          ...profileData,
+          role,
+        } as UserProfile;
       }
 
-      if (profileError || !profileData) {
-        logger.error('Erro ao buscar perfil', profileError, 'useUserProfile');
-        setError(profileError?.message || 'Perfil não encontrado');
-        return null;
-      }
+      const profileData = profileSnap.data();
 
       // Buscar role do usuário
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-
-      const role = (roleData?.role as UserRole) || 'paciente';
+      const roleRef = doc(db, 'user_roles', firebaseUser.uid);
+      const roleSnap = await getDoc(roleRef);
+      const role = (roleSnap.data()?.role as UserRole) || 'paciente';
 
       return {
+        id: profileSnap.id,
         ...profileData,
         role,
       } as UserProfile;
     } catch (err) {
       logger.error('Erro ao buscar perfil', err, 'useUserProfile');
+      setError(err instanceof Error ? err.message : 'Erro ao buscar perfil');
       return null;
     }
   };
 
-  const refreshProfile = async () => {
-    if (user?.id) {
+  /**
+   * Atualizar perfil do usuário no Firestore
+   */
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    if (!user?.uid) return;
+    try {
       setLoading(true);
-      const profileData = await fetchProfile(user.id);
+      const profileRef = doc(db, 'profiles', user.uid);
+      await updateDoc(profileRef, {
+        ...data,
+        updated_at: new Date().toISOString()
+      });
+
+      // Atualizar estado local
+      setProfile(prev => prev ? { ...prev, ...data } : null);
+      return { success: true };
+    } catch (err) {
+      logger.error('Erro ao atualizar perfil', err, 'useUserProfile');
+      return { success: false, error: err };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Atualizar perfil do usuário
+   */
+  const refreshProfile = async () => {
+    if (user?.uid) {
+      setLoading(true);
+      const profileData = await fetchProfile(user);
       setProfile(profileData);
       setLoading(false);
     }
@@ -96,52 +168,49 @@ export const useUserProfile = () => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Firebase Auth state listener
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            setUser(firebaseUser);
 
-        if (session?.user) {
-          setUser(session.user);
-          // Antes de buscar, garante que o perfil exista (especialmente para novos usuários ou dev environments)
-          const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
-          await ensureProfile(session.user.id, session.user.email, fullName);
+            // Garantir que o perfil exista (especialmente para novos usuários)
+            await ensureProfile(
+              firebaseUser.uid,
+              firebaseUser.email,
+              firebaseUser.displayName
+            );
 
-          const profileData = await fetchProfile(session.user.id);
-          setProfile(profileData);
-        }
+            const profileData = await fetchProfile(firebaseUser);
+            setProfile(profileData);
+          } else {
+            setUser(null);
+            setProfile(null);
+          }
+          setLoading(false);
+        });
+
+        return unsubscribe;
       } catch (err) {
         logger.error('Erro na inicialização do perfil', err, 'useUserProfile');
-      } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
-          await ensureProfile(session.user.id, session.user.email, fullName);
-
-          const profileData = await fetchProfile(session.user.id);
-          setProfile(profileData);
-        } else {
-          setUser(null);
-          setProfile(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
   }, []);
 
+  /**
+   * Obter nome de exibição
+   */
   const getDisplayName = () => {
     if (profile?.full_name) return profile.full_name;
     if (user?.email) return user.email.split('@')[0];
     return 'Usuário';
   };
 
+  /**
+   * Obter iniciais do nome
+   */
   const getInitials = () => {
     const name = getDisplayName();
     const parts = name.split(' ');
@@ -157,6 +226,7 @@ export const useUserProfile = () => {
     loading,
     error,
     refreshProfile,
+    updateProfile,
     getDisplayName,
     getInitials,
     // Todos os usuários autenticados são considerados admin/fisio

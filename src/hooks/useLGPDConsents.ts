@@ -1,11 +1,33 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+/**
+ * useLGPDConsents - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('lgpd_consents') → Firestore collection 'lgpd_consents'
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ * - supabase.rpc('manage_consent') → Client-side upsert with setDoc
+ */
 
-export type ConsentType = 
-  | 'dados_pessoais' 
-  | 'dados_sensiveis' 
-  | 'comunicacao_marketing' 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
+
+export type ConsentType =
+  | 'dados_pessoais'
+  | 'dados_sensiveis'
+  | 'comunicacao_marketing'
   | 'compartilhamento_terceiros';
 
 export interface LGPDConsent {
@@ -20,19 +42,25 @@ export interface LGPDConsent {
   updated_at: string;
 }
 
+const CONSENT_VERSION = '1.0';
+
 export function useLGPDConsents() {
   const queryClient = useQueryClient();
 
   const { data: consents, isLoading } = useQuery({
     queryKey: ["lgpd-consents"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lgpd_consents")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) return [];
 
-      if (error) throw error;
-      return data as LGPDConsent[];
+      const q = query(
+        collection(db, 'lgpd_consents'),
+        where('user_id', '==', firebaseUser.uid),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as LGPDConsent[];
     },
   });
 
@@ -44,17 +72,46 @@ export function useLGPDConsents() {
       consentType: ConsentType;
       granted: boolean;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase.rpc("manage_consent", {
-        _user_id: user.id,
-        _consent_type: consentType,
-        _granted: granted,
-      });
+      // Use user_id + consent_type as composite key for document ID
+      const consentDocId = `${firebaseUser.uid}_${consentType}`;
+      const consentRef = doc(db, 'lgpd_consents', consentDocId);
 
-      if (error) throw error;
-      return data;
+      // Check if consent already exists
+      const consentSnap = await getDoc(consentRef);
+      const now = new Date().toISOString();
+
+      const consentData: Partial<LGPDConsent> = {
+        user_id: firebaseUser.uid,
+        consent_type: consentType,
+        granted,
+        version: CONSENT_VERSION,
+        updated_at: now,
+      };
+
+      if (granted) {
+        consentData.granted_at = now;
+        consentData.revoked_at = null;
+      } else {
+        consentData.revoked_at = now;
+      }
+
+      // If it exists, preserve created_at
+      if (consentSnap.exists()) {
+        const existing = consentSnap.data();
+        consentData.created_at = existing.created_at;
+      } else {
+        consentData.created_at = now;
+      }
+
+      await setDoc(consentRef, consentData, { merge: true });
+
+      return {
+        id: consentDocId,
+        ...consentData,
+      } as LGPDConsent;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["lgpd-consents"] });

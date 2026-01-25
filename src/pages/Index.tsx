@@ -75,7 +75,7 @@ const Index = () => {
                 {period === 'hoje' && 'Hoje'}
                 {period === 'semana' && <><span className="hidden xs:inline">Esta </span>Semana</>}
                 {period === 'mes' && <><span className="hidden xs:inline">Este </span>Mês</>}
-                {period === 'personalizado' && 'Custom'}
+                {period === 'personalizado' && 'Personalizado'}
               </Button>
             ))}
           </div>

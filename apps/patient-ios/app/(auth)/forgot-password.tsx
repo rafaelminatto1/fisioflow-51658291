@@ -1,16 +1,18 @@
-import { View, Text, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { resetPassword } from '@fisioflow/shared-api';
+import { Button, Input, useTheme, toast, Card } from '@fisioflow/shared-ui';
 
 export default function ForgotPasswordScreen() {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   async function handleReset() {
     if (!email) {
-      Alert.alert('Erro', 'Digite seu e-mail');
+      toast.error('Digite seu e-mail');
       return;
     }
 
@@ -18,64 +20,75 @@ export default function ForgotPasswordScreen() {
       setLoading(true);
       await resetPassword(email);
       setSent(true);
+      toast.success('E-mail enviado com sucesso!');
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Falha ao enviar e-mail');
+      const message = error.message || 'Falha ao enviar e-mail';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <View style={styles.container}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backText}>← Voltar</Text>
-      </Pressable>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Text style={[styles.backText, { color: theme.colors.primary[500] }]}>
+          ← Voltar
+        </Text>
+      </TouchableOpacity>
 
       <View style={styles.header}>
-        <Text style={styles.title}>Esqueci minha senha</Text>
-        <Text style={styles.subtitle}>
-          {sent
-            ? 'E-mail enviado! Verifique sua caixa de entrada.'
-            : 'Digite seu e-mail para receber as instruções'}
+        <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+          Esqueci minha senha
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
+          {!sent
+            ? 'Digite seu e-mail para receber as instruções'
+            : 'E-mail enviado! Verifique sua caixa de entrada.'}
         </Text>
       </View>
 
-      {!sent && (
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="E-mail"
+      {!sent ? (
+        <Card variant="elevated" style={styles.card}>
+          <Input
+            label="E-mail"
+            placeholder="seu@email.com"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
           />
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-            ]}
+          <Button
             onPress={handleReset}
-            disabled={loading}
+            loading={loading}
+            fullWidth
+            size="lg"
           >
-            <Text style={styles.buttonText}>
-              {loading ? 'Enviando...' : 'Enviar Instruções'}
+            Enviar Instruções
+          </Button>
+        </Card>
+      ) : (
+        <Card variant="elevated" style={styles.card}>
+          <View style={styles.successContainer}>
+            <View style={[styles.successIcon, { backgroundColor: theme.colors.success[100] }]}>
+              <Text style={[styles.successIconText, { color: theme.colors.success[500] }]}>
+                ✓
+              </Text>
+            </View>
+            <Text style={[styles.successText, { color: theme.colors.text.secondary }]}>
+              Enviamos as instruções para recuperar sua senha no e-mail informado.
             </Text>
-          </Pressable>
-        </View>
-      )}
+          </View>
 
-      {sent && (
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={() => router.replace('/(auth)/login')}
-        >
-          <Text style={styles.buttonText}>Voltar ao Login</Text>
-        </Pressable>
+          <Button
+            onPress={() => router.replace('/(auth)/login')}
+            fullWidth
+            size="lg"
+          >
+            Voltar ao Login
+          </Button>
+        </Card>
       )}
     </View>
   );
@@ -84,7 +97,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 24,
   },
   backButton: {
@@ -93,7 +105,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 16,
-    color: '#3B82F6',
+    fontWeight: '500',
   },
   header: {
     marginBottom: 32,
@@ -101,38 +113,35 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#1E293B',
   },
   subtitle: {
     fontSize: 16,
-    color: '#64748B',
     marginTop: 8,
     lineHeight: 24,
   },
-  form: {
+  card: {
+    padding: 20,
     gap: 16,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 8,
-    paddingVertical: 14,
+  successContainer: {
     alignItems: 'center',
-    marginTop: 8,
+    paddingVertical: 16,
+    gap: 16,
   },
-  buttonPressed: {
-    opacity: 0.7,
+  successIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  successIconText: {
+    fontSize: 36,
+    fontWeight: '700',
+  },
+  successText: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

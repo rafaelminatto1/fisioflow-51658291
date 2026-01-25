@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ExerciseFunctions } from '@fisioflow/shared-api';
+import { ExerciseFunctions } from '../lib/exercises';
 
 export function useExercises(patientId?: string) {
   const [exercises, setExercises] = useState<any[]>([]);

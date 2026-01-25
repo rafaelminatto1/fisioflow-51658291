@@ -1,7 +1,41 @@
+/**
+ * useSoapRecords - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('soap_records') → Firestore collection 'soap_records'
+ * - supabase.storage → Firebase Storage
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ */
+
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  getFirebaseDb,
+  getFirebaseAuth,
+  getFirebaseStorage
+} from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  QueryConstraint,
+  serverTimestamp,
+  Timestamp
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { ensureProfile } from '@/lib/database/profiles';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
+const storage = getFirebaseStorage();
 
 // ===== TYPES =====
 
@@ -116,45 +150,57 @@ export interface SessionTemplate {
   updated_at: string;
 }
 
-// Hook para buscar registros SOAP de um paciente
-export const useSoapRecords = (patientId: string, limit = 10) => {
-  return useQuery({
-    queryKey: soapKeys.list(patientId, { limit }),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('soap_records')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('record_date', { ascending: false })
-        .limit(limit);
+// Helper: Convert Firestore doc to SoapRecord
+const convertDocToSoapRecord = (doc: any): SoapRecord => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    record_date: data.record_date || new Date().toISOString().split('T')[0],
+  } as SoapRecord;
+};
 
-      if (error) throw error;
-      return data as SoapRecord[];
+// Hook para buscar registros SOAP de um paciente
+export const useSoapRecords = (patientId: string, limitValue = 10) => {
+  return useQuery({
+    queryKey: soapKeys.list(patientId, { limit: limitValue }),
+    queryFn: async () => {
+      const q = query(
+        collection(db, 'soap_records'),
+        where('patient_id', '==', patientId),
+        orderBy('record_date', 'desc'),
+        limit(limitValue)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToSoapRecord);
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 5, // 5 minutes - reduzir chamadas desnecessárias
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
 // Hook para busca infinita de registros SOAP (paginação)
-export const useInfiniteSoapRecords = (patientId: string, limit = 20) => {
+export const useInfiniteSoapRecords = (patientId: string, limitValue = 20) => {
   return useInfiniteQuery({
     queryKey: [...soapKeys.lists(), patientId, 'infinite'],
     queryFn: async ({ pageParam = 0 }) => {
-      const { data, error } = await supabase
-        .from('soap_records')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('record_date', { ascending: false })
-        .range(pageParam * limit, (pageParam + 1) * limit - 1);
+      // For simplicity, fetch all and slice client-side
+      // In production, implement proper cursor-based pagination
+      const q = query(
+        collection(db, 'soap_records'),
+        where('patient_id', '==', patientId),
+        orderBy('record_date', 'desc')
+      );
 
-      if (error) throw error;
-      return data as SoapRecord[];
+      const snapshot = await getDocs(q);
+      const allRecords = snapshot.docs.map(convertDocToSoapRecord);
+      return allRecords.slice(pageParam * limitValue, (pageParam + 1) * limitValue);
     },
     initialPageParam: 0,
     enabled: !!patientId,
-    getNextPageParam: (lastPage, _allPages, lastPageParam) => {
-      if (lastPage.length < limit) return undefined;
+    getNextPageParam: (_lastPage, _allPages, lastPageParam) => {
+      // Simple pagination logic
       return lastPageParam + 1;
     },
     staleTime: 1000 * 60 * 5,
@@ -166,17 +212,17 @@ export const useSoapRecord = (recordId: string) => {
   return useQuery({
     queryKey: soapKeys.detail(recordId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('soap_records')
-        .select('*')
-        .eq('id', recordId)
-        .single();
+      const docRef = doc(db, 'soap_records', recordId);
+      const snapshot = await getDoc(docRef);
 
-      if (error) throw error;
-      return data as SoapRecord;
+      if (!snapshot.exists()) {
+        throw new SoapOperationError('Registro não encontrado', 'NOT_FOUND');
+      }
+
+      return convertDocToSoapRecord(snapshot);
     },
     enabled: !!recordId,
-    staleTime: 1000 * 60 * 10, // 10 minutos para registros individuais
+    staleTime: 1000 * 60 * 10, // 10 minutos
   });
 };
 
@@ -187,37 +233,34 @@ export const useCreateSoapRecord = () => {
 
   return useMutation({
     mutationFn: async (data: CreateSoapRecordData) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
 
-      const fullName = userData.user.user_metadata?.full_name || userData.user.user_metadata?.name;
-      const profileId = await ensureProfile(userData.user.id, userData.user.email, fullName);
+      const fullName = firebaseUser.displayName || firebaseUser.email?.split('@')[0];
+      const profileId = await ensureProfile(firebaseUser.uid, firebaseUser.email, fullName);
       if (!profileId) throw new SoapOperationError('Não foi possível carregar o perfil do usuário', 'PROFILE_ERROR');
 
       const recordData = {
         ...data,
         created_by: profileId,
-        record_date: data.record_date || new Date().toISOString().split('T')[0]
+        record_date: data.record_date || new Date().toISOString().split('T')[0],
+        status: data.status || 'draft',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      const { data: record, error } = await supabase
-        .from('soap_records')
-        .insert(recordData)
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'soap_records'), recordData);
 
-      if (error) throw new SoapOperationError('Erro ao criar registro', 'CREATE_ERROR', error);
-      return record as SoapRecord;
+      return {
+        id: docRef.id,
+        ...recordData,
+      } as SoapRecord;
     },
-    // Optimistic update - adicionar o novo registro à cache imediatamente
     onMutate: async (newData) => {
-      // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: soapKeys.lists() });
 
-      // Snapshot do valor anterior
       const previousLists = queryClient.getQueryData(soapKeys.all);
 
-      // Optimistic update
       queryClient.setQueryData(
         soapKeys.list(newData.patient_id),
         (old: SoapRecord[] | undefined) => [
@@ -235,7 +278,6 @@ export const useCreateSoapRecord = () => {
       return { previousLists };
     },
     onSuccess: (data) => {
-      // Invalidar e refetch para garantir dados corretos
       queryClient.invalidateQueries({ queryKey: soapKeys.list(data.patient_id) });
       queryClient.setQueryData(soapKeys.detail(data.id), data);
       toast({
@@ -244,7 +286,6 @@ export const useCreateSoapRecord = () => {
       });
     },
     onError: (error, _variables, context) => {
-      // Reverter para o estado anterior
       if (context?.previousLists) {
         queryClient.setQueryData(soapKeys.all, context.previousLists);
       }
@@ -264,24 +305,22 @@ export const useUpdateSoapRecord = () => {
 
   return useMutation({
     mutationFn: async ({ recordId, data }: { recordId: string; data: Partial<CreateSoapRecordData> }) => {
-      const { data: record, error } = await supabase
-        .from('soap_records')
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', recordId)
-        .select()
-        .single();
+      const docRef = doc(db, 'soap_records', recordId);
 
-      if (error) throw new SoapOperationError('Erro ao atualizar registro', 'UPDATE_ERROR', error);
-      return record as SoapRecord;
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
+
+      // Fetch updated document
+      const snapshot = await getDoc(docRef);
+      return convertDocToSoapRecord(snapshot);
     },
     onMutate: async ({ recordId, data }) => {
-      // Cancelar queries
       await queryClient.cancelQueries({ queryKey: soapKeys.detail(recordId) });
 
-      // Snapshot
       const previousRecord = queryClient.getQueryData(soapKeys.detail(recordId));
 
-      // Optimistic update
       queryClient.setQueryData(
         soapKeys.detail(recordId),
         (old: SoapRecord | undefined) => ({ ...old, ...data, updated_at: new Date().toISOString() } as SoapRecord)
@@ -298,7 +337,6 @@ export const useUpdateSoapRecord = () => {
       });
     },
     onError: (error, _variables, context) => {
-      // Reverter
       if (context?.previousRecord && context?.recordId) {
         queryClient.setQueryData(soapKeys.detail(context.recordId), context.previousRecord);
       }
@@ -318,24 +356,21 @@ export const useSignSoapRecord = () => {
 
   return useMutation({
     mutationFn: async (recordId: string) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
 
-      const { data: record, error } = await supabase
-        .from('soap_records')
-        .update({
-          status: 'finalized',
-          signed_at: new Date().toISOString(),
-          finalized_at: new Date().toISOString(),
-          finalized_by: userData.user.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', recordId)
-        .select()
-        .single();
+      const docRef = doc(db, 'soap_records', recordId);
 
-      if (error) throw new SoapOperationError('Erro ao finalizar registro', 'SIGN_ERROR', error);
-      return record as SoapRecord;
+      await updateDoc(docRef, {
+        status: 'finalized',
+        signed_at: new Date().toISOString(),
+        finalized_at: new Date().toISOString(),
+        finalized_by: firebaseUser.uid,
+        updated_at: new Date().toISOString()
+      });
+
+      const snapshot = await getDoc(docRef);
+      return convertDocToSoapRecord(snapshot);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: soapKeys.list(data.patient_id) });
@@ -361,42 +396,50 @@ export const useDraftSoapRecords = (patientId: string) => {
   return useQuery({
     queryKey: soapKeys.drafts(patientId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('soap_records')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('status', 'draft')
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'soap_records'),
+        where('patient_id', '==', patientId),
+        where('status', '==', 'draft'),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as SoapRecord[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToSoapRecord);
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 2, // 2 minutos para drafts (podem mudar frequentemente)
+    staleTime: 1000 * 60 * 2, // 2 minutos
   });
 };
 
 // ===== SESSION ATTACHMENTS =====
+
+// Helper: Convert Firestore doc to SessionAttachment
+const convertDocToSessionAttachment = (doc: any): SessionAttachment => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as SessionAttachment;
+};
 
 // Hook para buscar anexos de uma sessão
 export const useSessionAttachments = (soapRecordId?: string, patientId?: string) => {
   return useQuery({
     queryKey: soapKeys.attachments(soapRecordId, patientId),
     queryFn: async () => {
-      let query = supabase
-        .from('session_attachments')
-        .select('*')
-        .order('uploaded_at', { ascending: false });
+      let q = query(
+        collection(db, 'session_attachments'),
+        orderBy('uploaded_at', 'desc')
+      );
 
       if (soapRecordId) {
-        query = query.eq('soap_record_id', soapRecordId);
+        q = query(collection(db, 'session_attachments'), where('soap_record_id', '==', soapRecordId), orderBy('uploaded_at', 'desc'));
       } else if (patientId) {
-        query = query.eq('patient_id', patientId);
+        q = query(collection(db, 'session_attachments'), where('patient_id', '==', patientId), orderBy('uploaded_at', 'desc'));
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as SessionAttachment[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToSessionAttachment);
     },
     enabled: !!(soapRecordId || patientId),
     staleTime: 1000 * 60 * 5,
@@ -422,8 +465,8 @@ export const useUploadSessionAttachment = () => {
       category?: SessionAttachmentCategory;
       description?: string;
     }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
 
       // Determine file type
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
@@ -437,40 +480,35 @@ export const useUploadSessionAttachment = () => {
       };
       const fileType = fileTypeMap[fileExtension] || 'other';
 
-      // Upload to storage
+      // Upload to Firebase Storage
       const fileName = `${patientId}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('session-attachments')
-        .upload(fileName, file);
+      const storageRef = ref(storage, `session-attachments/${fileName}`);
 
-      if (uploadError) throw new SoapOperationError('Erro ao fazer upload do arquivo', 'UPLOAD_ERROR', uploadError);
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('session-attachments')
-        .getPublicUrl(fileName);
+      await uploadBytes(storageRef, file);
+      const fileUrl = await getDownloadURL(storageRef);
 
       // Save to database
-      const { data: attachmentData, error: dbError } = await supabase
-        .from('session_attachments')
-        .insert({
-          soap_record_id: soapRecordId,
-          patient_id: patientId,
-          file_name: fileName,
-          original_name: file.name,
-          file_url: urlData.publicUrl,
-          file_type: fileType,
-          mime_type: file.type,
-          category,
-          size_bytes: file.size,
-          description,
-          uploaded_by: userData.user.id
-        })
-        .select()
-        .single();
+      const attachmentData = {
+        soap_record_id: soapRecordId || null,
+        patient_id: patientId,
+        file_name: fileName,
+        original_name: file.name,
+        file_url: fileUrl,
+        file_type: fileType,
+        mime_type: file.type,
+        category,
+        size_bytes: file.size,
+        description: description || null,
+        uploaded_by: firebaseUser.uid,
+        uploaded_at: new Date().toISOString(),
+      };
 
-      if (dbError) throw new SoapOperationError('Erro ao salvar anexo no banco', 'DB_ERROR', dbError);
-      return attachmentData as SessionAttachment;
+      const docRef = await addDoc(collection(db, 'session_attachments'), attachmentData);
+
+      return {
+        id: docRef.id,
+        ...attachmentData,
+      } as SessionAttachment;
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: soapKeys.attachments(variables.soapRecordId, variables.patientId) });
@@ -493,28 +531,26 @@ export const useDeleteSessionAttachment = () => {
   return useMutation({
     mutationFn: async ({ attachmentId, soapRecordId, patientId }: { attachmentId: string; soapRecordId?: string; patientId?: string }) => {
       // Get attachment to delete from storage
-      const { data: attachment } = await supabase
-        .from('session_attachments')
-        .select('*')
-        .eq('id', attachmentId)
-        .single();
+      const docRef = doc(db, 'session_attachments', attachmentId);
+      const snapshot = await getDoc(docRef);
 
-      if (!attachment) throw new SoapOperationError('Anexo não encontrado', 'NOT_FOUND');
+      if (!snapshot.exists()) {
+        throw new SoapOperationError('Anexo não encontrado', 'NOT_FOUND');
+      }
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('session-attachments')
-        .remove([attachment.file_name]);
+      const attachment = convertDocToSessionAttachment(snapshot);
 
-      if (storageError) console.warn('Storage delete error:', storageError);
+      // Delete from Firebase Storage
+      try {
+        const storageRef = ref(storage, `session-attachments/${attachment.file_name}`);
+        await deleteObject(storageRef);
+      } catch (storageError) {
+        console.warn('Storage delete error:', storageError);
+      }
 
       // Delete from database
-      const { error: dbError } = await supabase
-        .from('session_attachments')
-        .delete()
-        .eq('id', attachmentId);
+      await deleteDoc(docRef);
 
-      if (dbError) throw new SoapOperationError('Erro ao remover anexo do banco', 'DELETE_ERROR', dbError);
       return { attachmentId, soapRecordId, patientId };
     },
     onSuccess: (result) => {
@@ -536,22 +572,36 @@ export const useDeleteSessionAttachment = () => {
 
 // ===== SESSION TEMPLATES =====
 
+// Helper: Convert Firestore doc to SessionTemplate
+const convertDocToSessionTemplate = (doc: any): SessionTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as SessionTemplate;
+};
+
 // Hook para buscar templates do terapeuta
 export const useSessionTemplates = (therapistId?: string) => {
   return useQuery({
     queryKey: soapKeys.templates(therapistId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('session_templates')
-        .select('*')
-        .or(`is_global.eq.true,therapist_id.eq.${therapistId}`)
-        .order('created_at', { ascending: false });
+      if (!therapistId) return [];
 
-      if (error) throw error;
-      return data as SessionTemplate[];
+      // Query for global templates OR therapist-specific templates
+      const q = query(
+        collection(db, 'session_templates'),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      const allTemplates = snapshot.docs.map(convertDocToSessionTemplate);
+
+      // Filter client-side ( Firestore OR is limited)
+      return allTemplates.filter(t => t.is_global || t.therapist_id === therapistId);
     },
     enabled: !!therapistId,
-    staleTime: 1000 * 60 * 10, // 10 minutos para templates
+    staleTime: 1000 * 60 * 10, // 10 minutos
   });
 };
 
@@ -562,20 +612,22 @@ export const useCreateSessionTemplate = () => {
 
   return useMutation({
     mutationFn: async (template: Omit<SessionTemplate, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
 
-      const { data, error } = await supabase
-        .from('session_templates')
-        .insert({
-          ...template,
-          therapist_id: userData.user.id
-        })
-        .select()
-        .single();
+      const templateData = {
+        ...template,
+        therapist_id: firebaseUser.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw new SoapOperationError('Erro ao criar template', 'CREATE_ERROR', error);
-      return data as SessionTemplate;
+      const docRef = await addDoc(collection(db, 'session_templates'), templateData);
+
+      return {
+        id: docRef.id,
+        ...templateData,
+      } as SessionTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: soapKeys.templates() });
@@ -601,15 +653,15 @@ export const useUpdateSessionTemplate = () => {
 
   return useMutation({
     mutationFn: async ({ templateId, data }: { templateId: string; data: Partial<SessionTemplate> }) => {
-      const { data: template, error } = await supabase
-        .from('session_templates')
-        .update({ ...data, updated_at: new Date().toISOString() })
-        .eq('id', templateId)
-        .select()
-        .single();
+      const docRef = doc(db, 'session_templates', templateId);
 
-      if (error) throw new SoapOperationError('Erro ao atualizar template', 'UPDATE_ERROR', error);
-      return template as SessionTemplate;
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
+
+      const snapshot = await getDoc(docRef);
+      return convertDocToSessionTemplate(snapshot);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: soapKeys.templates() });
@@ -635,12 +687,8 @@ export const useDeleteSessionTemplate = () => {
 
   return useMutation({
     mutationFn: async (templateId: string) => {
-      const { error } = await supabase
-        .from('session_templates')
-        .delete()
-        .eq('id', templateId);
-
-      if (error) throw new SoapOperationError('Erro ao remover template', 'DELETE_ERROR', error);
+      const docRef = doc(db, 'session_templates', templateId);
+      await deleteDoc(docRef);
       return templateId;
     },
     onSuccess: () => {
@@ -668,11 +716,11 @@ export const useAutoSaveSoapRecord = () => {
 
   return useMutation({
     mutationFn: async (data: CreateSoapRecordData & { recordId?: string }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new SoapOperationError('Usuário não autenticado', 'UNAUTHORIZED');
 
-      const fullName = userData.user.user_metadata?.full_name || userData.user.user_metadata?.name;
-      const profileId = await ensureProfile(userData.user.id, userData.user.email, fullName);
+      const fullName = firebaseUser.displayName || firebaseUser.email?.split('@')[0];
+      const profileId = await ensureProfile(firebaseUser.uid, firebaseUser.email, fullName);
       if (!profileId) throw new SoapOperationError('Não foi possível carregar o perfil do usuário', 'PROFILE_ERROR');
 
       const recordData = {
@@ -680,51 +728,45 @@ export const useAutoSaveSoapRecord = () => {
         created_by: profileId,
         status: data.status || 'draft',
         last_auto_save_at: new Date().toISOString(),
-        record_date: data.record_date || new Date().toISOString().split('T')[0]
+        record_date: data.record_date || new Date().toISOString().split('T')[0],
+        updated_at: new Date().toISOString(),
       };
 
-      // Se tem recordId, atualiza. Se não, verifica se existe draft para este appointment
+      // Se tem recordId, atualiza
       if (data.recordId) {
-        const { data: record, error } = await supabase
-          .from('soap_records')
-          .update(recordData)
-          .eq('id', data.recordId)
-          .select()
-          .single();
+        const docRef = doc(db, 'soap_records', data.recordId);
+        await updateDoc(docRef, recordData);
 
-        if (error) throw new SoapOperationError('Erro ao atualizar draft', 'AUTOSAVE_UPDATE_ERROR', error);
-        return { ...record, isNew: false } as SoapRecord & { isNew?: boolean };
-      } else if (data.appointment_id) {
-        // Tenta buscar draft existente
-        const { data: existing } = await supabase
-          .from('soap_records')
-          .select('id')
-          .eq('appointment_id', data.appointment_id)
-          .eq('status', 'draft')
-          .maybeSingle();
+        const snapshot = await getDoc(docRef);
+        return { ...convertDocToSoapRecord(snapshot), isNew: false } as SoapRecord & { isNew?: boolean };
+      }
 
-        if (existing) {
-          const { data: record, error } = await supabase
-            .from('soap_records')
-            .update(recordData)
-            .eq('id', existing.id)
-            .select()
-            .single();
+      // Se tem appointment_id, verifica se existe draft
+      if (data.appointment_id) {
+        const q = query(
+          collection(db, 'soap_records'),
+          where('appointment_id', '==', data.appointment_id),
+          where('status', '==', 'draft'),
+          limit(1)
+        );
 
-          if (error) throw new SoapOperationError('Erro ao atualizar draft existente', 'AUTOSAVE_UPDATE_ERROR', error);
-          return { ...record, isNew: false } as SoapRecord & { isNew?: boolean };
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+          const existingDoc = snapshot.docs[0];
+          await updateDoc(existingDoc.ref, recordData);
+
+          const updatedSnapshot = await getDoc(existingDoc.ref);
+          return { ...convertDocToSoapRecord(updatedSnapshot), isNew: false } as SoapRecord & { isNew?: boolean };
         }
       }
 
       // Cria novo registro
-      const { data: record, error } = await supabase
-        .from('soap_records')
-        .insert(recordData)
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'soap_records'), recordData);
 
-      if (error) throw new SoapOperationError('Erro ao criar draft', 'AUTOSAVE_CREATE_ERROR', error);
-      return { ...record, isNew: true } as SoapRecord & { isNew?: boolean };
+      return {
+        id: docRef.id,
+        ...recordData,
+      } as SoapRecord & { isNew?: boolean };
     },
     onSuccess: (result) => {
       // Atualizar cache silenciosamente
@@ -734,7 +776,7 @@ export const useAutoSaveSoapRecord = () => {
       }
     },
     onError: (error: unknown) => {
-      // Silent error for autosave - log apenas
+      // Silent error for autosave
       console.error('Autosave error:', error instanceof SoapOperationError ? error.message : error);
     }
   });

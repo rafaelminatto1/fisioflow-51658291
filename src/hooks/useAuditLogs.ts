@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 export interface AuditLog {
   id: string;
@@ -9,10 +11,10 @@ export interface AuditLog {
   action: string;
   table_name: string;
   record_id: string | null;
-  old_data: Record<string, unknown>;
-  new_data: Record<string, unknown>;
-  changes: Record<string, unknown>;
-  ip_address: unknown;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  changes: Record<string, unknown> | null;
+  ip_address: string | null;
   user_agent: string | null;
   session_id: string | null;
   // Joined data
@@ -34,37 +36,37 @@ export function useAuditLogs(filters?: AuditFilters) {
   const { data: logs = [] as AuditLog[], isLoading, refetch } = useQuery<AuditLog[]>({
     queryKey: ['audit-logs', filters],
     queryFn: async () => {
-      let query = supabase
+      let supaQuery = supabase
         .from('audit_log')
         .select('*')
         .order('timestamp', { ascending: false })
         .limit(500);
 
       if (filters?.action) {
-        query = query.eq('action', filters.action);
+        supaQuery = supaQuery.eq('action', filters.action);
       }
 
       if (filters?.tableName) {
-        query = query.eq('table_name', filters.tableName);
+        supaQuery = supaQuery.eq('table_name', filters.tableName);
       }
 
       if (filters?.userId) {
-        query = query.eq('user_id', filters.userId);
+        supaQuery = supaQuery.eq('user_id', filters.userId);
       }
 
       if (filters?.recordId) {
-        query = query.eq('record_id', filters.recordId);
+        supaQuery = supaQuery.eq('record_id', filters.recordId);
       }
 
       if (filters?.startDate) {
-        query = query.gte('timestamp', filters.startDate.toISOString());
+        supaQuery = supaQuery.gte('timestamp', filters.startDate.toISOString());
       }
 
       if (filters?.endDate) {
-        query = query.lte('timestamp', filters.endDate.toISOString());
+        supaQuery = supaQuery.lte('timestamp', filters.endDate.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data, error } = await supaQuery;
 
       if (error) throw error;
 
@@ -72,12 +74,18 @@ export function useAuditLogs(filters?: AuditFilters) {
       const userIds = [...new Set(data?.map(log => log.user_id).filter(Boolean))];
 
       let profiles: { user_id: string; full_name: string; email: string }[] = [];
+      const db = getFirebaseDb();
       if (userIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, email')
-          .in('user_id', userIds);
-        profiles = profilesData || [];
+        const profilesQ = query(
+          collection(db, 'profiles'),
+          where('user_id', 'in', userIds)
+        );
+        const profilesSnap = await getDocs(profilesQ);
+        profiles = profilesSnap.docs.map(doc => ({
+          user_id: doc.id,
+          full_name: doc.data().full_name,
+          email: doc.data().email,
+        }));
       }
 
       const enrichedLogs = data?.map(log => {

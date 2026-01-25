@@ -4,11 +4,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { PreCadastroStats } from '@/components/precadastro/PreCadastroStats';
 import { PreCadastroList } from '@/components/precadastro/PreCadastroList';
 import { LinkManagement } from '@/components/precadastro/LinkManagement';
 
 const PreCadastroAdmin = () => {
+  const { user } = useAuth();
+  const { currentOrganization: orgData } = useOrganizations();
   const queryClient = useQueryClient();
 
   // Fetch tokens
@@ -40,19 +44,14 @@ const PreCadastroAdmin = () => {
   // Create token mutation
   const createToken = useMutation({
     mutationFn: async (newToken: any) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) throw new Error('Usuário não autenticado');
+      if (!user?.uid) throw new Error('Usuário não autenticado');
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
+      const organizationId = orgData?.id;
 
       const { data, error } = await supabase
         .from('precadastro_tokens')
         .insert({
-          organization_id: profile?.organization_id,
+          organization_id: organizationId,
           nome: newToken.nome || 'Link de Pré-cadastro',
           descricao: newToken.descricao,
           max_usos: newToken.max_usos ? parseInt(newToken.max_usos) : null,

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -50,19 +52,21 @@ export const BookingPage = () => {
         async function loadProfile() {
             if (!slug) return;
             try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, user_id, full_name, specialty, avatar_url, bio, slug')
-                    .eq('slug', slug)
-                    .single();
+                const db = getFirebaseDb();
+                const q = query(collection(db, 'profiles'), where('slug', '==', slug));
+                const querySnapshot = await getDocs(q);
 
-                if (error) throw error;
-                setProfile(data);
-            } catch (error) {
+                if (querySnapshot.empty) {
+                    throw new Error('Perfil não encontrado');
+                }
+
+                const data = querySnapshot.docs[0].data();
+                setProfile(data as PublicProfile);
+            } catch (error: any) {
                 console.error('Error loading profile:', error);
                 toast({
                     title: 'Perfil não encontrado',
-                    description: 'Não foi possível encontrar o profissional solicitado.',
+                    description: error.message || 'Não foi possível encontrar o profissional solicitado.',
                     variant: 'destructive'
                 });
             } finally {

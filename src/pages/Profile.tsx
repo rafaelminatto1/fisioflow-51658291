@@ -22,12 +22,13 @@ import {
   Save,
   Edit
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 export const Profile = () => {
   const { user } = useAuth();
+  const { profile, loading: profileLoading, updateProfile } = useUserProfile();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,63 +45,41 @@ export const Profile = () => {
     slug: ''
   });
 
-  // Fetch profile data on load
+  // Sync local state when profile loads
   React.useEffect(() => {
-    async function loadProfile() {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setProfileData({
-            name: data.full_name || '',
-            email: user.email || '',
-            phone: data.phone || '',
-            crefito: data.crefito || '',
-            specialty: data.specialty || '',
-            bio: data.bio || '',
-            address: data.address || '',
-            birthDate: data.birth_date || '',
-            avatar: data.avatar_url || '',
-            slug: data.slug || ''
-          });
-        }
-      } catch (error) {
-        console.error('Error loading profile:', error);
-      }
+    if (profile) {
+      setProfileData({
+        name: profile.full_name || '',
+        email: user?.email || '',
+        phone: profile.phone || '',
+        crefito: profile.crefito || '',
+        specialty: profile.specialty || '',
+        bio: profile.bio || '',
+        address: profile.address || '',
+        birthDate: profile.birth_date || '',
+        avatar: profile.avatar_url || '',
+        slug: profile.slug || ''
+      });
     }
-
-    loadProfile();
-  }, [user]);
+  }, [profile, user]);
 
   const handleSave = async () => {
     if (!user) return;
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profileData.name,
-          phone: profileData.phone,
-          crefito: profileData.crefito,
-          specialty: profileData.specialty,
-          bio: profileData.bio,
-          address: profileData.address,
-          birth_date: profileData.birthDate || null,
-          slug: profileData.slug || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+      const result = await updateProfile({
+        full_name: profileData.name,
+        phone: profileData.phone,
+        crefito: profileData.crefito,
+        specialty: profileData.specialty,
+        bio: profileData.bio,
+        address: profileData.address,
+        birth_date: profileData.birthDate || null,
+        slug: profileData.slug || null,
+      });
 
-      if (error) throw error;
+      if (!result?.success) throw result?.error || new Error('Update failed');
 
       toast({
         title: 'Perfil atualizado!',

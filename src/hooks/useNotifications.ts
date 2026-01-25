@@ -1,7 +1,33 @@
+/**
+ * useNotifications - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ * - supabase.from('notifications') → Firestore collection 'notifications'
+ * - supabase.realtime → Firestore onSnapshot
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  writeBatch,
+  QueryDocumentSnapshot
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface Notification {
   id: string;
@@ -16,43 +42,56 @@ export interface Notification {
   created_at: string;
 }
 
-export const useNotifications = (limit = 10) => {
+// Helper: Convert Firestore doc to Notification
+const convertDocToNotification = (doc: QueryDocumentSnapshot): Notification => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Notification;
+};
+
+export const useNotifications = (limitValue = 10) => {
   const queryClient = useQueryClient();
+  const [realtimeNotifications, setRealtimeNotifications] = useState<Notification[]>([]);
 
   // Fetch notifications
   const { data: notifications = [], isLoading, refetch } = useQuery({
-    queryKey: ['notifications', limit],
+    queryKey: ['notifications', limitValue],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return [];
 
-      const result = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      const q = query(
+        collection(db, 'notifications'),
+        where('user_id', '==', user.uid),
+        orderBy('created_at', 'desc'),
+        limit(limitValue)
+      );
 
-      // Type assertion to avoid deep instantiation
-      const data = result.data as Notification[] | null;
-      return data || [];
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(convertDocToNotification);
+      return data;
     },
     staleTime: 30000, // 30 seconds
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Update realtime notifications when query data changes
+  useEffect(() => {
+    if (notifications.length > 0) {
+      setRealtimeNotifications(notifications);
+    }
+  }, [notifications]);
+
   // Count unread notifications
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = realtimeNotifications.filter((n) => !n.is_read).length;
 
   // Mark single notification as read
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      const docRef = doc(db, 'notifications', notificationId);
+      await updateDoc(docRef, { is_read: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -62,16 +101,30 @@ export const useNotifications = (limit = 10) => {
   // Mark all as read
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
+      // First, fetch all unread notifications
+      const q = query(
+        collection(db, 'notifications'),
+        where('user_id', '==', user.uid),
+        where('is_read', '==', false)
+      );
 
-      if (error) throw error;
+      const snapshot = await getDocs(q);
+
+      // Use batch to update all (max 500 operations per batch)
+      const batchSize = 500;
+      for (let i = 0; i < snapshot.docs.length; i += batchSize) {
+        const batch = writeBatch(db);
+        const chunk = snapshot.docs.slice(i, i + batchSize);
+
+        chunk.forEach((doc) => {
+          batch.update(doc.ref, { is_read: true });
+        });
+
+        await batch.commit();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -79,52 +132,52 @@ export const useNotifications = (limit = 10) => {
     },
   });
 
-  // Real-time subscription
-  // FIX: Track subscription state to avoid WebSocket errors
+  // Real-time subscription using Firestore onSnapshot
   useEffect(() => {
-    let mounted = true;
-    let isSubscribed = false;
-    const channel = supabase.channel('notifications-realtime');
+    const user = auth.currentUser;
+    if (!user) return;
 
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-        },
-        (payload) => {
-          if (!mounted) return;
-          const newNotification = payload.new as Notification;
+    const q = query(
+      collection(db, 'notifications'),
+      where('user_id', '==', user.uid),
+      orderBy('created_at', 'desc'),
+      limit(limitValue)
+    );
 
-          // Show toast for new notification
-          toast(newNotification.title, {
-            description: newNotification.message,
-          });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const docs = snapshot.docs.map(convertDocToNotification);
+        setRealtimeNotifications(docs);
 
-          // Refetch notifications
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
+        // Check for new notifications (docChanges)
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const newNotification = convertDocToNotification(change.doc);
+            // Only show toast if it's a truly new notification (not initial load)
+            if (snapshot.docChanges().length === 1) {
+              toast(newNotification.title, {
+                description: newNotification.message,
+              });
+            }
+          }
+        });
+
+        // Invalidate queries to keep data in sync
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      },
+      (error) => {
+        console.error('Real-time notifications error:', error);
+      }
+    );
 
     return () => {
-      mounted = false;
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
+      unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, limitValue]);
 
   return {
-    notifications,
+    notifications: realtimeNotifications,
     unreadCount,
     isLoading,
     refetch,
@@ -135,7 +188,7 @@ export const useNotifications = (limit = 10) => {
   };
 };
 
-// Helper function to create notifications (can be used in edge functions or client)
+// Helper function to create notifications (can be used in cloud functions or client)
 export const createNotification = async (params: {
   userId: string;
   type: Notification['type'];
@@ -144,14 +197,16 @@ export const createNotification = async (params: {
   link?: string;
   metadata?: Record<string, unknown>;
 }) => {
-  const { error } = await supabase.from('notifications').insert([{
+  const notificationData = {
     user_id: params.userId,
     type: params.type,
     title: params.title,
     message: params.message,
     link: params.link || null,
-    metadata: JSON.parse(JSON.stringify(params.metadata || {})),
-  }]);
+    metadata: params.metadata || {},
+    is_read: false,
+    created_at: new Date().toISOString(),
+  };
 
-  if (error) throw error;
+  await addDoc(collection(db, 'notifications'), notificationData);
 };

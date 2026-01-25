@@ -8,11 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  FileText, Plus, Download, Edit, Eye, Filter, CheckCircle2, Save, Search
+  FileText, Plus, Download, Edit, Eye, CheckCircle2, Save
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,11 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { Activity } from 'lucide-react';
 
 // Registrar font para PDF
 Font.register({
@@ -172,8 +177,7 @@ interface RelatorioConvenioData {
   data_emissao: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface RelatorioConvenioPageProps { }
+
 
 // Componente PDF do Relatório
 function RelatorioConvenioPDF({ data }: { data: RelatorioConvenioData }) {
@@ -718,6 +722,8 @@ function RelatorioEditor({
 }
 
 export default function RelatorioConvenioPage() {
+  const { user } = useAuth();
+  const { currentOrganization: orgData } = useOrganizations();
   const queryClient = useQueryClient();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [previewRelatorio, setPreviewRelatorio] = useState<RelatorioConvenioData | null>(null);
@@ -743,8 +749,8 @@ export default function RelatorioConvenioPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from('patients')
-        .select('id, name, cpf, telefone, email, date_of_birth')
-        .order('name');
+        .select('id, full_name, cpf, phone, email, birth_date')
+        .order('full_name');
       return data || [];
     },
   });
@@ -801,16 +807,13 @@ export default function RelatorioConvenioPage() {
     if (!paciente) return;
 
     // Buscar dados do profissional
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .single();
+    if (!user) return;
+    const db = getFirebaseDb();
+    const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+    const profile = profileDoc.exists() ? profileDoc.data() : null;
 
     // Buscar dados da clínica
-    const { data: org } = await supabase
-      .from('organizations')
-      .select('*')
-      .single();
+    const org = orgData;
 
     // Buscar convênio do paciente
     const { data: pacienteConvenio } = await supabase
@@ -833,9 +836,9 @@ export default function RelatorioConvenioPage() {
     const novoRelatorio: RelatorioConvenioData = {
       id: '',
       paciente: {
-        nome: paciente.name,
+        nome: paciente.full_name,
         cpf: paciente.cpf || '',
-        data_nascimento: paciente.date_of_birth || '',
+        data_nascimento: paciente.birth_date || '',
         telefone: paciente.phone || '',
         email: paciente.email || '',
         numero_convenio: '',
@@ -924,7 +927,7 @@ export default function RelatorioConvenioPage() {
                       <SelectContent>
                         {pacientes.map(paciente => (
                           <SelectItem key={paciente.id} value={paciente.id}>
-                            {paciente.name}
+                            {paciente.full_name}
                           </SelectItem>
                         ))}
                       </SelectContent>

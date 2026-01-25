@@ -1,16 +1,19 @@
 /**
- * AI Patient Insights Workflow
+ * AI Patient Insights Workflow - Migrated to Firebase
  *
- * Generates AI-powered insights for patients using OpenAI/Gemini
- * This demonstrates the power of Inngest for long-running AI workflows
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - Nested selects → Optimized query
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { getAdminDb } from '../../lib/firebase/admin.js';
 
 type PatientData = {
   id: string;
@@ -42,56 +45,43 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
     id: 'fisioflow-ai-patient-insights',
     name: 'Generate AI Patient Insights',
     retries: retryConfig.api.maxAttempts,
-    // maxDuration: '5m', // Allow up to 5 minutes for AI processing
   },
   {
     event: Events.AI_PATIENT_INSIGHTS,
   },
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { patientId, organizationId } = event.data;
-
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const db = getAdminDb();
 
     // Step 1: Fetch patient data
     const patient = await step.run('fetch-patient-data', async (): Promise<PatientData> => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select(`
-          *,
-          sessions(
-            id,
-            created_at,
-            status,
-            notes,
-            subjective,
-            objective,
-            assessment,
-            plan
-          ),
-          appointments(
-            id,
-            date,
-            time,
-            status
-          )
-        `)
-        .eq('id', patientId)
-        .single();
+      const patientSnap = await db.collection('patients').doc(patientId).get();
 
-      if (error) {
-        throw new Error(`Failed to fetch patient: ${error.message}`);
+      if (!patientSnap.exists) {
+        throw new Error('Patient not found');
       }
 
-      return (data || {}) as unknown as PatientData;
+      const patientData = { id: patientSnap.id, ...patientSnap.data() } as any;
+
+      // Fetch sessions for this patient (last 10)
+      const sessionsSnapshot = await db.collection('soap_records')
+        .where('patient_id', '==', patientId)
+        .orderBy('created_at', 'desc')
+        .limit(10)
+        .get();
+
+      const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      return {
+        ...patientData,
+        sessions,
+      };
     });
 
     // Step 2: Generate AI insights
     const insights = await step.run('generate-ai-insights', async (): Promise<z.infer<typeof insightSchema>> => {
       const sessions = patient.sessions || [];
-      const recentSessions = sessions.slice(-10); // Last 10 sessions
+      const recentSessions = sessions.slice(-10);
 
       if (recentSessions.length === 0) {
         return {
@@ -132,7 +122,7 @@ Please provide:
 
         return object;
       } catch (error) {
-        console.error('AI generation error:', error);
+        console.error('[AI Insights] Generation error:', error);
         return {
           summary: 'Unable to generate insights',
           trends: [],
@@ -145,16 +135,12 @@ Please provide:
 
     // Step 3: Store insights in database
     await step.run('store-insights', async () => {
-      const { error } = await supabase.from('patient_insights').insert({
+      await db.collection('patient_insights').add({
         patient_id: patientId,
         organization_id: organizationId,
         insights: insights,
         generated_at: new Date().toISOString(),
       });
-
-      if (error) {
-        throw new Error(`Failed to store insights: ${error.message}`);
-      }
 
       return { stored: true };
     });
@@ -183,7 +169,7 @@ export const aiBatchInsightsWorkflow = inngest.createFunction(
     id: 'fisioflow-ai-batch-insights',
     name: 'Generate Batch AI Insights',
     retries: retryConfig.api.maxAttempts,
-    concurrency: 3, // Process 3 patients at a time to avoid rate limits
+    concurrency: 3,
   },
   {
     event: 'ai/batch.insights',
@@ -191,8 +177,17 @@ export const aiBatchInsightsWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { organizationId, patientIds } = event.data;
 
+    // Validate input
+    if (!Array.isArray(patientIds) || patientIds.length === 0) {
+      return {
+        success: false,
+        error: 'No patient IDs provided',
+        queued: 0,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
     const results = await step.run('process-batch', async (): Promise<{ queued: number }> => {
-      // Queue individual insight generation for each patient
       const events = (patientIds as string[]).map((patientId) => ({
         name: Events.AI_PATIENT_INSIGHTS,
         data: {

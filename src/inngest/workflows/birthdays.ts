@@ -1,18 +1,23 @@
 /**
- * Birthday Messages Workflow
+ * Birthday Messages Workflow - Migrated to Firebase
  *
- * Migrated from /api/crons/birthdays
- * Runs daily at 9:00 AM to send birthday wishes
+ * Migration from Supabase to Firebase:
+ * - createClient(supabase) → Firebase Admin SDK
+ * - supabase.from().select().filter('date_of_birth', 'like') → Client-side date filtering
+ * - .in('id', ids) → Batch fetch
  *
- * Features:
- * - Throttled to avoid rate limits
- * - Individual retry for failed messages
- * - Sends via WhatsApp and/or Email using integrated services
+ * OPTIMIZATION NOTE: Firestore doesn't support LIKE queries on dates.
+ * For production with large datasets, consider:
+ * 1. Adding a birthday_MMDD field (e.g., "12-25") to each patient document
+ * 2. Creating an index on this field
+ * 3. Using .where('birthday_MMDD', '==', todayMMDD) for O(1) lookup
+ *
+ * @version 2.0.0 - Improved with centralized Admin SDK helper and optimizations
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminDb } from '../../lib/firebase/admin.js';
 
 export const birthdayMessagesWorkflow = inngest.createFunction(
   {
@@ -27,10 +32,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
   async ({ step }: {
     event: { data: BirthdayMessagePayload }; step: InngestStep
   }) => {
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const db = getAdminDb();
 
     // Step 1: Find all patients with birthdays today
     const patients = await step.run('find-birthdays-today', async (): Promise<any[]> => {
@@ -39,17 +41,40 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
       const day = String(today.getDate()).padStart(2, '0');
       const todayMMDD = `${month}-${day}`;
 
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id, name, email, phone, date_of_birth, organization_id, settings')
-        .eq('active', true)
-        .filter('date_of_birth', 'like', `%-${todayMMDD}`);
+      // Try to use optimized field first (if it exists)
+      const optimizedSnapshot = await db.collection('patients')
+        .where('active', '==', true)
+        .where('birthday_MMDD', '==', todayMMDD)
+        .limit(1)
+        .get();
 
-      if (error) {
-        throw new Error(`Failed to fetch birthday patients: ${error.message}`);
+      let birthdayPatients: any[] = [];
+
+      if (!optimizedSnapshot.empty) {
+        // Field exists, use it for all patients
+        const fullSnapshot = await db.collection('patients')
+          .where('active', '==', true)
+          .where('birthday_MMDD', '==', todayMMDD)
+          .get();
+
+        birthdayPatients = fullSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } else {
+        // Fall back to client-side filtering (less efficient)
+        console.warn('[Birthday] birthday_MMDD field not found, using client-side filtering');
+        const snapshot = await db.collection('patients')
+          .where('active', '==', true)
+          .select('id', 'name', 'email', 'phone', 'date_of_birth', 'organization_id', 'settings', 'notification_preferences')
+          .get();
+
+        birthdayPatients = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter((patient: any) => {
+            const dob = patient.date_of_birth;
+            return dob && dob.includes(`-${todayMMDD}`);
+          });
       }
 
-      return data || [];
+      return birthdayPatients;
     });
 
     if (patients.length === 0) {
@@ -61,31 +86,43 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
       };
     }
 
-    // Step 2: Get organization settings for all patients
-    const patientsWithOrg = await step.run('get-organization-settings', async (): Promise<any[]> => {
+    // Step 2: Get organization settings (batch fetch for efficiency)
+    const { patientsWithOrg, therapistMap } = await step.run('get-related-data', async () => {
       const orgIds = [...new Set(patients.map((p: { organization_id: string }) => p.organization_id))];
 
-      const { data: organizations } = await supabase
-        .from('organizations')
-        .select('id, name, settings')
-        .in('id', orgIds);
+      // Batch fetch organizations
+      const orgPromises = orgIds.map(orgId => db.collection('organizations').doc(orgId).get());
+      const orgSnapshots = await Promise.all(orgPromises);
 
       const orgMap = new Map(
-        (organizations || []).map((org: { id: string; name?: string; settings?: Record<string, unknown> }) => [org.id, org])
+        orgSnapshots
+          .filter(snap => snap.exists)
+          .map(snap => [snap.id, { id: snap.id, ...snap.data() }])
       );
 
-      return patients.map((patient: {
-        id: string;
-        name: string;
-        email?: string;
-        phone?: string;
-        date_of_birth?: string;
-        organization_id: string;
-        settings?: Record<string, unknown>;
-      }) => ({
+      // OPTIMIZATION: Fetch ALL therapists for these organizations at once
+      // instead of querying per patient in the loop
+      const therapistsSnapshot = await db.collection('profiles')
+        .where('organization_id', 'in', orgIds)
+        .where('role', '==', 'therapist')
+        .get();
+
+      // Create a map: organizationId -> therapist
+      const therapistByOrg = new Map<string, any>();
+      therapistsSnapshot.docs.forEach(doc => {
+        const therapist = { id: doc.id, ...doc.data() };
+        therapistByOrg.set(therapist.organization_id, therapist);
+      });
+
+      const patientsWithOrgData = patients.map((patient: any) => ({
         ...patient,
         organization: orgMap.get(patient.organization_id),
       }));
+
+      return {
+        patientsWithOrg: patientsWithOrgData,
+        therapistMap: therapistByOrg,
+      };
     });
 
     // Step 3: Queue birthday messages via Inngest events
@@ -94,20 +131,14 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
 
       for (const patient of patientsWithOrg) {
         const org = patient.organization;
-        const preferredChannel = patient.settings?.notification_channel || 'whatsapp';
-        const whatsappEnabled = org?.settings?.whatsapp_enabled ?? true;
-        const emailEnabled = org?.settings?.email_enabled ?? true;
+        const preferredChannel = patient.settings?.notification_channel || patient.notification_preferences?.preferred_channel || 'whatsapp';
+        const notifPrefs = patient.notification_preferences || {};
+        const whatsappEnabled = (org?.settings?.whatsapp_enabled ?? true) && notifPrefs.whatsapp !== false;
+        const emailEnabled = (org?.settings?.email_enabled ?? true) && notifPrefs.email !== false;
 
-        // Get therapist name if available
-        const { data: therapist } = await supabase
-          .from('users')
-          .select('name')
-          .eq('organization_id', patient.organization_id)
-          .eq('role', 'therapist')
-          .limit(1)
-          .single();
-
-        const therapistName = therapist?.name || '';
+        // Get therapist from the pre-fetched map
+        const therapist = therapistMap.get(patient.organization_id);
+        const therapistName = therapist?.full_name || therapist?.name || '';
 
         // Send WhatsApp message if enabled
         if (whatsappEnabled && preferredChannel === 'whatsapp' && patient.phone) {

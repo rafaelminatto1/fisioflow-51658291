@@ -1,35 +1,49 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import type { PatientGoal, PatientGoalFormData } from '@/types/evolution';
 import { differenceInDays } from 'date-fns';
 
 export class PatientGoalsService {
   static async getGoalsByPatientId(patientId: string): Promise<PatientGoal[]> {
-    const { data, error } = await supabase
-      .from('patient_goals')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: false });
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'patient_goals'),
+      where('patient_id', '==', patientId),
+      orderBy('created_at', 'desc')
+    );
+    const snapshot = await getDocs(q);
 
-    if (error) throw error;
-    return (data || []).map(g => ({
-      ...g,
-      current_progress: 0,
-      priority: 'media' as const
-    })) as PatientGoal[];
+    return snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        ...data,
+        id: docSnap.id,
+        current_progress: data.current_progress || 0,
+        priority: data.priority || 'media',
+      } as PatientGoal;
+    });
   }
 
   static async addGoal(data: PatientGoalFormData): Promise<PatientGoal> {
-    const { data: goal, error } = await supabase
-      .from('patient_goals')
-      .insert(data)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...goal,
+    const db = getFirebaseDb();
+    const now = new Date().toISOString();
+    const dataToSave = {
+      ...data,
       current_progress: 0,
-      priority: 'media' as const
+      priority: 'media',
+      created_at: now,
+      updated_at: now,
+    };
+
+    const docRef = await addDoc(collection(db, 'patient_goals'), dataToSave);
+    const docSnap = await getDoc(docRef);
+
+    const savedData = docSnap.data();
+    return {
+      ...savedData,
+      id: docSnap.id,
+      current_progress: 0,
+      priority: 'media',
     } as PatientGoal;
   }
 
@@ -38,49 +52,54 @@ export class PatientGoalsService {
     progress: number,
     currentValue?: string
   ): Promise<PatientGoal> {
-    const updates: { current_progress: number; current_value?: string } = { current_progress: progress };
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'patient_goals', goalId);
+
+    const updates: { current_progress: number; current_value?: string; updated_at: string } = {
+      current_progress: progress,
+      updated_at: new Date().toISOString(),
+    };
     if (currentValue !== undefined) {
       updates.current_value = currentValue;
     }
 
-    const { data, error } = await supabase
-      .from('patient_goals')
-      .update(updates)
-      .eq('id', goalId)
-      .select()
-      .single();
+    await updateDoc(docRef, updates);
 
-    if (error) throw error;
+    const docSnap = await getDoc(docRef);
+    const data = docSnap.data();
+
     return {
       ...data,
+      id: docSnap.id,
       current_progress: progress,
-      priority: 'media' as const
+      priority: data.priority || 'media',
     } as PatientGoal;
   }
 
   static async updateGoal(goalId: string, data: Partial<PatientGoalFormData>): Promise<PatientGoal> {
-    const { data: goal, error } = await supabase
-      .from('patient_goals')
-      .update(data)
-      .eq('id', goalId)
-      .select()
-      .single();
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'patient_goals', goalId);
 
-    if (error) throw error;
+    await updateDoc(docRef, {
+      ...data,
+      updated_at: new Date().toISOString(),
+    });
+
+    const docSnap = await getDoc(docRef);
+    const updatedData = docSnap.data();
+
     return {
-      ...goal,
-      current_progress: 0,
-      priority: 'media' as const
+      ...updatedData,
+      id: docSnap.id,
+      current_progress: updatedData.current_progress || 0,
+      priority: updatedData.priority || 'media',
     } as PatientGoal;
   }
 
   static async deleteGoal(goalId: string): Promise<void> {
-    const { error } = await supabase
-      .from('patient_goals')
-      .delete()
-      .eq('id', goalId);
-
-    if (error) throw error;
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'patient_goals', goalId);
+    await deleteDoc(docRef);
   }
 
   static calculateCountdown(targetDate: string): { days: number; formatted: string } {
@@ -106,21 +125,24 @@ export class PatientGoalsService {
   }
 
   static async markGoalCompleted(goalId: string): Promise<PatientGoal> {
-    const { data, error } = await supabase
-      .from('patient_goals')
-      .update({
-        status: 'concluido',
-        completed_at: new Date().toISOString()
-      })
-      .eq('id', goalId)
-      .select()
-      .single();
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'patient_goals', goalId);
 
-    if (error) throw error;
+    await updateDoc(docRef, {
+      status: 'concluido',
+      completed_at: new Date().toISOString(),
+      current_progress: 100,
+      updated_at: new Date().toISOString(),
+    });
+
+    const docSnap = await getDoc(docRef);
+    const data = docSnap.data();
+
     return {
       ...data,
+      id: docSnap.id,
       current_progress: 100,
-      priority: 'media' as const
+      priority: data.priority || 'media',
     } as PatientGoal;
   }
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot, collection, query, where, getDoc, getDocs } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config';
 import { COLLECTIONS } from '@fisioflow/shared-constants';
-import { startOfDay, endOfDay, subDays, differenceInDays } from 'date-fns';
+import { startOfDay, endOfDay, subDays, differenceInDays, format } from 'date-fns';
 
 export interface PatientProgress {
   patientId: string;
@@ -246,5 +246,3 @@ export async function updateExerciseProgress(
   // Recalculate adherence rate and update progress
   // (implementation depends on business logic)
 }
-
-import { setDoc, updateDoc, format } from 'firebase/firestore';
