@@ -6,6 +6,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import {
   generateDashboardMetrics,
   generateTrendData,
@@ -25,6 +27,8 @@ const BUSINESS_HOURS = {
   end: 21,
   slotDuration: 30,
 } as const;
+
+const db = getFirebaseDb();
 
 const QUERY_KEYS = {
   all: ['analytics'] as const,
@@ -94,10 +98,7 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
           .from('patients')
           .select('id, created_at, full_name, status')
           .order('created_at', { ascending: false }),
-        supabase
-          .from('profiles')
-          .select('id, full_name, status')
-          .not('status', 'is', null),
+        getDocs(collection(db, 'profiles')),
         supabase
           .from('payments')
           .select('id, date, amount, status, appointment_id')
@@ -107,8 +108,9 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
 
       if (appointmentsResult.error) throw appointmentsResult.error;
       if (patientsResult.error) throw patientsResult.error;
-      if (therapistsResult.error) throw therapistsResult.error;
       if (paymentsResult.error) throw paymentsResult.error;
+
+      const profiles = therapistsResult.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Get last appointment date for each patient
       const patientIds = patientsResult.data?.map(p => p.id) || [];
@@ -136,10 +138,10 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
       })) || [];
 
       return generateDashboardMetrics(
-        appointmentsResult.data || [],
-        patientsWithLastAppointment,
-        therapistsResult.data || [],
-        paymentsResult.data || [],
+        (appointmentsResult.data as any) || [],
+        patientsWithLastAppointment as any,
+        profiles as any || [],
+        (paymentsResult.data as any) || [],
         start,
         end,
         BUSINESS_HOURS
@@ -193,15 +195,16 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
 
       const { data, error } = await supabase
         .from('appointments')
-        .select('date, status')
+        .select('date, status' as any)
         .gte('date', start.toISOString())
         .lte('date', end.toISOString());
 
       if (error) throw error;
 
-      const completedAppointments = (data || [])
-        .filter(a => a.status === 'completed')
-        .map(a => ({ date: a.date, value: 1 }));
+      const appointments = (data as any) || [];
+      const completedAppointments = appointments
+        .filter((a: any) => a.status === 'completed')
+        .map((a: any) => ({ date: a.date, value: 1 }));
 
       return generateTrendData(completedAppointments, start, end, groupBy);
     },
@@ -247,14 +250,14 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
 
       const { data, error } = await supabase
         .from('payments')
-        .select('date, amount, status')
+        .select('date, amount, status' as any)
         .gte('date', start.toISOString())
         .lte('date', end.toISOString())
         .eq('status', 'paid');
 
       if (error) throw error;
 
-      const payments = (data || []).map(p => ({ date: p.date, value: p.amount }));
+      const payments = ((data as any) || []).map((p: any) => ({ date: p.date, value: p.amount }));
 
       return generateTrendData(payments, start, end, groupBy);
     },
@@ -306,7 +309,7 @@ export function usePatientTrends(options: TrendsOptions = {}) {
 
       if (error) throw error;
 
-      const newPatients = (data || []).map(p => ({ date: p.created_at, value: 1 }));
+      const newPatients = (data || []).map(p => ({ date: p.created_at || '', value: 1 }));
 
       return generateTrendData(newPatients, start, end, groupBy);
     },
@@ -372,12 +375,12 @@ export function useComparisonMetrics(options: ComparisonMetricsOptions) {
       const [currentResult, previousResult] = await Promise.all([
         supabase
           .from('appointments')
-          .select('date, status')
+          .select('date, status' as any)
           .gte('date', currentStart.toISOString())
           .lte('date', end.toISOString()),
         supabase
           .from('appointments')
-          .select('date, status')
+          .select('date, status' as any)
           .gte('date', previousStart.toISOString())
           .lte('date', previousEnd.toISOString()),
       ]);
@@ -434,17 +437,31 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
       if (metric === 'appointments') {
         const { data, error } = await supabase
           .from('appointments')
-          .select('therapist_id, profiles!appointments_therapist_id_fkey(full_name)')
+          .select('therapist_id')
           .gte('date', start.toISOString())
           .lte('date', end.toISOString())
           .eq('status', 'completed');
 
         if (error) throw error;
 
+        // Fetch profile names from Firestore
+        const therapistIds = [...new Set((data || []).map(apt => apt.therapist_id))];
+        const profileNames = new Map<string, string>();
+
+        await Promise.all(therapistIds.map(async (id: any) => {
+          if (!id) return;
+          const profSnap = await getDoc(doc(db, 'profiles', id));
+          if (profSnap.exists()) {
+            profileNames.set(id, (profSnap.data() as any).full_name);
+          }
+        }));
+
         const counts = new Map<string, { name: string; count: number }>();
         (data || []).forEach(apt => {
           const therapistId = apt.therapist_id;
-          const name = (apt as any)['profiles!appointments_therapist_id_fkey']?.full_name || 'Unknown';
+          if (!therapistId) return;
+
+          const name = profileNames.get(therapistId) || 'Unknown';
           const current = counts.get(therapistId) || { name, count: 0 };
           counts.set(therapistId, { ...current, count: current.count + 1 });
         });
@@ -462,17 +479,29 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         // Revenue by therapist
         const { data, error } = await supabase
           .from('payments')
-          .select('amount, appointment_id, appointments(therapist_id, profiles!appointments_therapist_id_fkey(full_name))')
+          .select('amount, appointment_id, appointments(therapist_id)')
           .gte('date', start.toISOString())
           .lte('date', end.toISOString())
           .eq('status', 'paid');
 
         if (error) throw error;
 
+        // Fetch profile names from Firestore
+        const therapistIds = [...new Set((data || []).map(p => (p.appointments as any)?.therapist_id))];
+        const profileNames = new Map<string, string>();
+
+        await Promise.all(therapistIds.map(async (id) => {
+          if (!id) return;
+          const profSnap = await getDoc(doc(db, 'profiles', id));
+          if (profSnap.exists()) {
+            profileNames.set(id, profSnap.data().full_name);
+          }
+        }));
+
         const totals = new Map<string, { name: string; total: number }>();
         (data || []).forEach(payment => {
-          const therapistId = payment.appointments?.therapist_id;
-          const name = (payment.appointments as any)?.['profiles!appointments_therapist_id_fkey']?.full_name || 'Unknown';
+          const therapistId = (payment.appointments as any)?.therapist_id;
+          const name = profileNames.get(therapistId) || 'Unknown';
           if (!therapistId) return;
 
           const current = totals.get(therapistId) || { name, total: 0 };

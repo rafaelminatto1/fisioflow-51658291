@@ -1,7 +1,33 @@
+/**
+ * useWaitlist - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('waitlist') → Firestore collection 'waitlist'
+ * - supabase.from('waitlist_offers') → Firestore collection 'waitlist_offers'
+ * - Joins com patients são feitos client-side
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocsFromCache,
+  getDocsFromServer
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface WaitlistEntry {
   id: string;
@@ -71,60 +97,85 @@ export function useWaitlist(filters?: {
   status?: string;
   priority?: string;
 }) {
-  const query = useQuery({
+  const queryResult = useQuery({
     queryKey: ['waitlist', filters],
     queryFn: async () => {
-      let query = supabase
-        .from('waitlist')
-        .select(`
-          *,
-          patient:patients(id, name:full_name, phone, email)
-        `)
-        .order('created_at', { ascending: true });
+      let q = query(
+        collection(db, 'waitlist'),
+        orderBy('created_at', 'asc')
+      );
 
+      // Apply status filter
       if (filters?.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        q = query(
+          collection(db, 'waitlist'),
+          where('status', '==', filters.status),
+          orderBy('created_at', 'asc')
+        );
       } else if (!filters?.status) {
-        query = query.eq('status', 'waiting');
+        q = query(
+          collection(db, 'waitlist'),
+          where('status', '==', 'waiting'),
+          orderBy('created_at', 'asc')
+        );
       }
 
+      // Apply priority filter
       if (filters?.priority) {
-        query = query.eq('priority', filters.priority);
+        q = query(
+          collection(db, 'waitlist'),
+          where('priority', '==', filters.priority),
+          orderBy('created_at', 'asc')
+        );
       }
 
-      const { data, error } = await query;
+      const snapshot = await getDocs(q);
+      const waitlistData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as WaitlistEntry[];
 
-      if (error) {
-        logger.error('Error fetching waitlist', error, 'useWaitlist');
-        throw error;
-      }
+      // Fetch patient data for each entry
+      const entriesWithPatients = await Promise.all(
+        waitlistData.map(async (entry) => {
+          if (entry.patient_id) {
+            const patientRef = doc(db, 'patients', entry.patient_id);
+            const patientSnap = await getDoc(patientRef);
+            if (patientSnap.exists()) {
+              const p = patientSnap.data();
+              return {
+                ...entry,
+                patient: {
+                  id: patientSnap.id,
+                  name: p.name || p.full_name || 'Desconhecido',
+                  phone: p.phone,
+                  email: p.email,
+                },
+              };
+            }
+          }
+          return entry;
+        })
+      );
 
       // Ordenar por prioridade (urgent > high > normal) e depois por data
-      const sorted = (data || []).sort((a: WaitlistEntry & { created_at: string }, b: WaitlistEntry & { created_at: string }) => {
+      const sorted = entriesWithPatients.sort((a: WaitlistEntry, b: WaitlistEntry) => {
         const priorityDiff = PRIORITY_CONFIG[a.priority as keyof typeof PRIORITY_CONFIG].order -
           PRIORITY_CONFIG[b.priority as keyof typeof PRIORITY_CONFIG].order;
         if (priorityDiff !== 0) return priorityDiff;
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
 
-      // Map to expected format
-      return sorted.map((item: WaitlistEntry & { preferred_time_slots?: string[]; preferred_periods?: string[]; refusal_count?: number; preferred_therapist_ids?: string[] }) => ({
-        ...item,
-        // Map DB column `preferred_time_slots` to frontend `preferred_periods`
-        preferred_periods: item.preferred_time_slots || item.preferred_periods || [],
-        refusal_count: item.refusal_count ?? 0,
-        // Map first therapist ID if array exists
-        preferred_therapist_id: item.preferred_therapist_ids?.[0],
-      })) as WaitlistEntry[];
+      return sorted;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
   });
 
   return {
-    ...query,
-    isFromCache: query.isStale && !query.isLoading && !!query.data,
-    cacheTimestamp: query.dataUpdatedAt
+    ...queryResult,
+    isFromCache: queryResult.isStale && !queryResult.isLoading && !!queryResult.data,
+    cacheTimestamp: queryResult.dataUpdatedAt
   };
 }
 
@@ -133,14 +184,11 @@ export function useWaitlistCounts() {
   return useQuery({
     queryKey: ['waitlist', 'counts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('waitlist')
-        .select('status, priority');
-
-      if (error) throw error;
+      const snapshot = await getDocs(collection(db, 'waitlist'));
+      const data = snapshot.docs.map(doc => doc.data());
 
       const counts = {
-        total: data?.length || 0,
+        total: data.length || 0,
         waiting: 0,
         offered: 0,
         scheduled: 0,
@@ -148,7 +196,7 @@ export function useWaitlistCounts() {
         high: 0,
       };
 
-      data?.forEach(item => {
+      data.forEach((item: any) => {
         if (item.status === 'waiting') counts.waiting++;
         if (item.status === 'offered') counts.offered++;
         if (item.status === 'scheduled') counts.scheduled++;
@@ -168,32 +216,42 @@ export function useAddToWaitlist() {
   return useMutation({
     mutationFn: async (input: AddToWaitlistInput) => {
       // Verificar se paciente já está na lista
-      const { data: existing } = await supabase
-        .from('waitlist')
-        .select('id')
-        .eq('patient_id', input.patient_id)
-        .eq('status', 'waiting')
-        .single();
+      const existingQ = query(
+        collection(db, 'waitlist'),
+        where('patient_id', '==', input.patient_id),
+        where('status', '==', 'waiting'),
+        limit(1)
+      );
+      const existingSnap = await getDocs(existingQ);
 
-      if (existing) {
+      if (!existingSnap.empty) {
         throw new Error('Paciente já está na lista de espera');
       }
 
-      const { data, error } = await supabase
-        .from('waitlist')
-        .insert({
-          ...input,
-          status: 'waiting',
-          refusal_count: 0,
-        })
-        .select(`
-          *,
-          patient:patients(id, name:full_name, phone)
-        `)
-        .single();
+      const waitlistData = {
+        ...input,
+        status: 'waiting' as const,
+        refusal_count: 0,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'waitlist'), waitlistData);
+
+      // Fetch patient data for response
+      const patientRef = doc(db, 'patients', input.patient_id);
+      const patientSnap = await getDoc(patientRef);
+
+      const result = {
+        id: docRef.id,
+        ...waitlistData,
+        patient: patientSnap.exists() ? {
+          id: patientSnap.id,
+          name: patientSnap.data().name || patientSnap.data().full_name,
+          phone: patientSnap.data().phone,
+        } : undefined,
+      };
+
+      return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
@@ -212,12 +270,11 @@ export function useRemoveFromWaitlist() {
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
-      const { error } = await supabase
-        .from('waitlist')
-        .update({ status: 'removed', removed_at: new Date().toISOString() })
-        .eq('id', waitlistId);
-
-      if (error) throw error;
+      const docRef = doc(db, 'waitlist', waitlistId);
+      await updateDoc(docRef, {
+        status: 'removed',
+        removed_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
@@ -239,43 +296,54 @@ export function useOfferSlot() {
       const { waitlist_id, appointment_slot } = input;
 
       // Buscar entrada da lista
-      const { data: entry, error: fetchError } = await supabase
-        .from('waitlist')
-        .select('*, patient:patients(id, name:full_name, phone)')
-        .eq('id', waitlist_id)
-        .eq('status', 'waiting')
-        .single();
+      const entryRef = doc(db, 'waitlist', waitlist_id);
+      const entrySnap = await getDoc(entryRef);
 
-      if (fetchError || !entry) {
+      if (!entrySnap.exists() || entrySnap.data()?.status !== 'waiting') {
         throw new Error('Entrada não encontrada ou já processada');
       }
 
-      // Atualizar status
-      const { data, error } = await supabase
-        .from('waitlist')
-        .update({
-          status: 'offered',
-          offered_slot: appointment_slot,
-          offered_at: new Date().toISOString(),
-          offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        })
-        .eq('id', waitlist_id)
-        .select()
-        .single();
+      const entryData = entrySnap.data();
 
-      if (error) throw error;
+      // Fetch patient data
+      let patientData = null;
+      if (entryData.patient_id) {
+        const patientRef = doc(db, 'patients', entryData.patient_id);
+        const patientSnap = await getDoc(patientRef);
+        if (patientSnap.exists()) {
+          const p = patientSnap.data();
+          patientData = {
+            id: patientSnap.id,
+            name: p.name || p.full_name,
+            phone: p.phone,
+          };
+        }
+      }
+
+      // Atualizar status
+      await updateDoc(entryRef, {
+        status: 'offered',
+        offered_slot: appointment_slot,
+        offered_at: new Date().toISOString(),
+        offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      });
 
       // Registrar oferta
-      await supabase.from('waitlist_offers').insert({
-        patient_id: (entry as Record<string, unknown>).patient_id,
+      await addDoc(collection(db, 'waitlist_offers'), {
+        patient_id: entryData.patient_id,
         appointment_id: waitlist_id,
         offered_slot: appointment_slot,
         response: 'pending',
         status: 'pending',
         expiration_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date().toISOString(),
       });
 
-      return { ...data, patient: (entry as Record<string, unknown>).patient };
+      return {
+        id: waitlist_id,
+        ...entryData,
+        patient: patientData,
+      };
     },
     onSuccess: (data: WaitlistEntry & { patient?: { name?: string } }) => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
@@ -294,26 +362,29 @@ export function useAcceptOffer() {
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
-      const { data, error } = await supabase
-        .from('waitlist')
-        .update({
-          status: 'scheduled',
-        })
-        .eq('id', waitlistId)
-        .eq('status', 'offered')
-        .select()
-        .single();
+      const docRef = doc(db, 'waitlist', waitlistId);
 
-      if (error) throw error;
+      await updateDoc(docRef, {
+        status: 'scheduled',
+        updated_at: new Date().toISOString(),
+      });
 
       // Atualizar histórico de ofertas
-      await supabase
-        .from('waitlist_offers')
-        .update({ response: 'accepted', responded_at: new Date().toISOString() })
-        .eq('appointment_id', waitlistId)
-        .eq('response', 'pending');
+      const offersQ = query(
+        collection(db, 'waitlist_offers'),
+        where('appointment_id', '==', waitlistId),
+        where('response', '==', 'pending')
+      );
+      const offersSnap = await getDocs(offersQ);
 
-      return data;
+      if (!offersSnap.empty) {
+        await updateDoc(offersSnap.docs[0].ref, {
+          response: 'accepted',
+          responded_at: new Date().toISOString(),
+        });
+      }
+
+      return { id: waitlistId, status: 'scheduled' };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
@@ -333,44 +404,51 @@ export function useRejectOffer() {
   return useMutation({
     mutationFn: async (waitlistId: string) => {
       // Buscar entrada atual
-      const { data: current, error: fetchError } = await supabase
-        .from('waitlist')
-        .select('*')
-        .eq('id', waitlistId)
-        .single();
+      const docRef = doc(db, 'waitlist', waitlistId);
+      const snap = await getDoc(docRef);
 
-      if (fetchError) throw fetchError;
+      if (!snap.exists()) {
+        throw new Error('Entrada não encontrada');
+      }
 
-      const currentTyped = current as Record<string, unknown> | null;
-      const newRefusalCount = ((currentTyped?.refusal_count as number | undefined) ?? 0) + 1;
+      const current = snap.data();
+      const newRefusalCount = ((current.refusal_count as number | undefined) ?? 0) + 1;
       const maxRefusals = 3;
 
       // Se atingiu máximo de recusas, remover da lista
       const newStatus = newRefusalCount >= maxRefusals ? 'removed' : 'waiting';
 
-      const { data, error } = await supabase
-        .from('waitlist')
-        .update({
-          status: newStatus,
-          offered_slot: null,
-          offered_at: null,
-          offer_expires_at: null,
-          refusal_count: newRefusalCount,
-        })
-        .eq('id', waitlistId)
-        .select()
-        .single();
-
-      if (error) throw error;
+      await updateDoc(docRef, {
+        status: newStatus,
+        offered_slot: null,
+        offered_at: null,
+        offer_expires_at: null,
+        refusal_count: newRefusalCount,
+        updated_at: new Date().toISOString(),
+      });
 
       // Atualizar histórico de ofertas
-      await supabase
-        .from('waitlist_offers')
-        .update({ response: 'rejected', responded_at: new Date().toISOString() })
-        .eq('appointment_id', waitlistId)
-        .eq('response', 'pending');
+      const offersQ = query(
+        collection(db, 'waitlist_offers'),
+        where('appointment_id', '==', waitlistId),
+        where('response', '==', 'pending')
+      );
+      const offersSnap = await getDocs(offersQ);
 
-      return { ...data, wasRemoved: newStatus === 'removed' };
+      if (!offersSnap.empty) {
+        await updateDoc(offersSnap.docs[0].ref, {
+          response: 'rejected',
+          responded_at: new Date().toISOString(),
+        });
+      }
+
+      return {
+        id: waitlistId,
+        ...current,
+        refusal_count: newRefusalCount,
+        status: newStatus,
+        wasRemoved: newStatus === 'removed',
+      };
     },
     onSuccess: (data: WaitlistEntry & { wasRemoved?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
@@ -399,15 +477,9 @@ export function useUpdatePriority() {
       waitlistId: string;
       priority: 'normal' | 'high' | 'urgent';
     }) => {
-      const { data, error } = await supabase
-        .from('waitlist')
-        .update({ priority })
-        .eq('id', waitlistId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'waitlist', waitlistId);
+      await updateDoc(docRef, { priority });
+      return { id: waitlistId, priority };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
@@ -425,26 +497,64 @@ export function useWaitlistOffers(patientId?: string) {
   return useQuery({
     queryKey: ['waitlist-offers', patientId],
     queryFn: async () => {
-      let query = supabase
-        .from('waitlist_offers')
-        .select(`
-          *,
-          waitlist:waitlist(
-            id,
-            patient_id,
-            patient:patients(id, name:full_name, phone)
-          )
-        `)
-        .order('created_at', { ascending: false });
+      let q = query(
+        collection(db, 'waitlist_offers'),
+        orderBy('created_at', 'desc')
+      );
 
       if (patientId) {
-        query = query.eq('patient_id', patientId);
+        q = query(
+          collection(db, 'waitlist_offers'),
+          where('patient_id', '==', patientId),
+          orderBy('created_at', 'desc')
+        );
       }
 
-      const { data, error } = await query;
+      const snapshot = await getDocs(q);
 
-      if (error) throw error;
-      return data || [];
+      // Fetch waitlist and patient data for each offer
+      const offersWithDetails = await Promise.all(
+        snapshot.docs.map(async (docSnapshot) => {
+          const offer = { id: docSnapshot.id, ...docSnapshot.data() };
+
+          if (offer.appointment_id) {
+            const waitlistRef = doc(db, 'waitlist', offer.appointment_id);
+            const waitlistSnap = await getDoc(waitlistRef);
+
+            if (waitlistSnap.exists()) {
+              const waitlist = waitlistSnap.data();
+
+              // Fetch patient
+              let patient = null;
+              if (waitlist.patient_id) {
+                const patientRef = doc(db, 'patients', waitlist.patient_id);
+                const patientSnap = await getDoc(patientRef);
+                if (patientSnap.exists()) {
+                  const p = patientSnap.data();
+                  patient = {
+                    id: patientSnap.id,
+                    name: p.name || p.full_name,
+                    phone: p.phone,
+                  };
+                }
+              }
+
+              return {
+                ...offer,
+                waitlist: {
+                  id: waitlistSnap.id,
+                  patient_id: waitlist.patient_id,
+                  patient,
+                },
+              };
+            }
+          }
+
+          return offer;
+        })
+      );
+
+      return offersWithDetails;
     },
   });
 }

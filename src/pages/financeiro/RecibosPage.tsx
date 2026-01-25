@@ -17,9 +17,15 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 export default function RecibosPage() {
+  const { user } = useAuth();
+  const { currentOrganization: orgData } = useOrganizations();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [previewRecibo, setPreviewRecibo] = useState<ReciboData | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,21 +44,15 @@ export default function RecibosPage() {
 
   // Buscar configurações da clínica
   const { data: clinicaConfig } = useQuery({
-    queryKey: ['clinica-config'],
+    queryKey: ['clinica-config', user?.uid],
     queryFn: async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .single();
-
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', profile?.organization_id)
-        .single();
-
-      return { profile, org };
+      if (!user) return null;
+      const db = getFirebaseDb();
+      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      const profile = profileDoc.exists() ? profileDoc.data() : null;
+      return { profile, org: orgData };
     },
+    enabled: !!user,
   });
 
   // Buscar pacientes para seleção
@@ -61,8 +61,8 @@ export default function RecibosPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from('patients')
-        .select('id, name, cpf, email, phone')
-        .order('name');
+        .select('id, full_name, cpf, email, phone')
+        .order('full_name');
       return data || [];
     },
   });
@@ -93,7 +93,7 @@ export default function RecibosPage() {
     if (formData.patient_id) {
       const paciente = pacientes.find(p => p.id === formData.patient_id);
       if (paciente) {
-        pagadorNome = paciente.name;
+        pagadorNome = paciente.full_name;
         if (!pagadorCpf) pagadorCpf = paciente.cpf;
       }
     }
@@ -271,7 +271,7 @@ export default function RecibosPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {pacientes.map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

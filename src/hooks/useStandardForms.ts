@@ -1,7 +1,26 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+/**
+ * useStandardForms - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
+ * - supabase.from('evaluation_form_fields') → Firestore collection 'evaluation_form_fields'
+ */
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // Definição das fichas padrão
 export const STANDARD_FORMS = {
@@ -599,22 +618,17 @@ export function useCreateStandardForm() {
       const formConfig = STANDARD_FORMS[formType];
 
       // Criar a ficha
-      const { data: form, error: formError } = await supabase
-        .from('evaluation_forms')
-        .insert({
-          nome: formConfig.nome,
-          tipo: formConfig.tipo,
-          descricao: formConfig.descricao,
-          ativo: true,
-        })
-        .select()
-        .single();
-
-      if (formError) throw formError;
+      const formRef = await addDoc(collection(db, 'evaluation_forms'), {
+        nome: formConfig.nome,
+        tipo: formConfig.tipo,
+        descricao: formConfig.descricao,
+        ativo: true,
+        created_at: new Date().toISOString(),
+      });
 
       // Criar os campos
-      const fieldsToInsert = formConfig.campos.map(campo => ({
-        form_id: form.id,
+      const fieldsToAdd = formConfig.campos.map(campo => ({
+        form_id: formRef.id,
         rotulo: campo.rotulo,
         pergunta: campo.pergunta,
         tipo_campo: campo.tipo_campo,
@@ -627,13 +641,16 @@ export function useCreateStandardForm() {
         maximo: (campo as any).maximo || null,
       }));
 
-      const { error: fieldsError } = await supabase
-        .from('evaluation_form_fields')
-        .insert(fieldsToInsert);
+      // Firestore doesn't support batch insert, so we insert each field
+      for (const field of fieldsToAdd) {
+        await addDoc(collection(db, 'evaluation_form_fields'), field);
+      }
 
-      if (fieldsError) throw fieldsError;
-
-      return form;
+      return {
+        id: formRef.id,
+        nome: formConfig.nome,
+        tipo: formConfig.tipo,
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -652,16 +669,16 @@ export function useStandardFormExists(formType: keyof typeof STANDARD_FORMS) {
     queryFn: async () => {
       const formConfig = STANDARD_FORMS[formType];
 
-      const { data, error } = await supabase
-        .from('evaluation_forms')
-        .select('id')
-        .eq('nome', formConfig.nome)
-        .eq('tipo', formConfig.tipo)
-        .eq('ativo', true)
-        .maybeSingle();
+      const q = query(
+        collection(db, 'evaluation_forms'),
+        where('nome', '==', formConfig.nome),
+        where('tipo', '==', formConfig.tipo),
+        where('ativo', '==', true),
+        limit(1)
+      );
 
-      if (error) throw error;
-      return !!data;
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
     },
   });
 }

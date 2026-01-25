@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -31,13 +31,17 @@ interface SizeOptionProps {
   onSelect: (size: CardSize) => void;
 }
 
-function SizeOption({ size, currentSize, onSelect }: SizeOptionProps) {
+const SizeOption = memo(function SizeOption({ size, currentSize, onSelect }: SizeOptionProps) {
   const config = CARD_SIZE_CONFIGS[size];
   const isSelected = currentSize === size;
 
+  const handleClick = useCallback(() => {
+    onSelect(size);
+  }, [size, onSelect]);
+
   return (
     <button
-      onClick={() => onSelect(size)}
+      onClick={handleClick}
       className={cn(
         "relative flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left group",
         "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
@@ -45,6 +49,8 @@ function SizeOption({ size, currentSize, onSelect }: SizeOptionProps) {
           ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
           : "border-border hover:border-primary/50"
       )}
+      aria-pressed={isSelected}
+      aria-label={`Selecionar tamanho ${config.label}`}
     >
       <div className="flex items-center justify-between w-full mb-3">
         <div className="flex items-center gap-3">
@@ -84,7 +90,7 @@ function SizeOption({ size, currentSize, onSelect }: SizeOptionProps) {
       </div>
     </button>
   );
-}
+});
 
 // Slot height range: 30px (compact) to 120px (spacious)
 const MIN_SLOT_HEIGHT = 30;
@@ -95,6 +101,57 @@ const DEFAULT_SLOT_HEIGHT = 60;
 const MIN_FONT_SCALE = 0;
 const MAX_FONT_SCALE = 10;
 
+/**
+ * Custom hook to manage input state with change detection.
+ * Only triggers onChange when the value actually changes.
+ */
+function useInputWithChangeDetection(
+  currentValue: number,
+  onChange: (value: number) => void,
+  formatValue: (value: string) => number = (v) => parseInt(v, 10)
+) {
+  const [inputValue, setInputValue] = useState(currentValue.toString());
+  const [originalValue, setOriginalValue] = useState(currentValue);
+
+  React.useEffect(() => {
+    setInputValue(currentValue.toString());
+    setOriginalValue(currentValue);
+  }, [currentValue]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  }, []);
+
+  const handleFocus = useCallback(() => {
+    setOriginalValue(currentValue);
+  }, [currentValue]);
+
+  const handleBlur = useCallback(() => {
+    const parsedValue = formatValue(inputValue);
+
+    if (!isNaN(parsedValue) && parsedValue !== originalValue) {
+      onChange(parsedValue);
+    } else {
+      setInputValue(originalValue.toString());
+    }
+  }, [inputValue, originalValue, onChange, formatValue]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    }
+  }, [handleBlur]);
+
+  return {
+    inputValue,
+    setInputValue,
+    handleChange,
+    handleFocus,
+    handleBlur,
+    handleKeyDown,
+  };
+}
+
 function SlotHeightControl({
   slotHeight,
   onSlotHeightChange,
@@ -102,51 +159,40 @@ function SlotHeightControl({
   slotHeight: number;
   onSlotHeightChange: (value: number) => void;
 }) {
-  const [inputValue, setInputValue] = useState(slotHeight.toString());
+  const formatValue = useCallback((value: string) => {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed < MIN_SLOT_HEIGHT) return MIN_SLOT_HEIGHT;
+    if (parsed > MAX_SLOT_HEIGHT) return MAX_SLOT_HEIGHT;
+    return parsed;
+  }, []);
 
-  // Sync input with external changes
-  React.useEffect(() => {
-    setInputValue(slotHeight.toString());
-  }, [slotHeight]);
+  const {
+    inputValue,
+    setInputValue,
+    handleChange,
+    handleFocus,
+    handleBlur,
+    handleKeyDown,
+  } = useInputWithChangeDetection(slotHeight, onSlotHeightChange, formatValue);
 
-  const handleSliderChange = (value: number[]) => {
+  const handleSliderChange = useCallback((value: number[]) => {
     const newHeight = value[0];
     setInputValue(newHeight.toString());
     onSlotHeightChange(newHeight);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleInputBlur = () => {
-    const value = parseInt(inputValue, 10);
-    if (isNaN(value) || value < MIN_SLOT_HEIGHT) {
-      setInputValue(MIN_SLOT_HEIGHT.toString());
-      onSlotHeightChange(MIN_SLOT_HEIGHT);
-    } else if (value > MAX_SLOT_HEIGHT) {
-      setInputValue(MAX_SLOT_HEIGHT.toString());
-      onSlotHeightChange(MAX_SLOT_HEIGHT);
-    } else {
-      onSlotHeightChange(value);
-    }
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleInputBlur();
-    }
-  };
+  }, [onSlotHeightChange, setInputValue]);
 
   // Calculate visual percentage
-  const percentage = ((slotHeight - MIN_SLOT_HEIGHT) / (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT)) * 100;
+  const percentage = useMemo(() =>
+    ((slotHeight - MIN_SLOT_HEIGHT) / (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT)) * 100,
+    [slotHeight]
+  );
 
   // Sample appointments for preview
-  const sampleAppointments = [
+  const sampleAppointments = useMemo(() => [
     { time: '07:00', name: 'Maria Santos', type: 'Fisioterapia', color: 'bg-blue-500' },
     { time: '07:30', name: 'João Silva', type: 'Ortopédica', color: 'bg-emerald-500' },
     { time: '08:00', name: 'Ana Costa', type: 'Neurológica', color: 'bg-purple-500' },
-  ];
+  ], []);
 
   return (
     <div className="space-y-6">
@@ -164,9 +210,10 @@ function SlotHeightControl({
               min={MIN_SLOT_HEIGHT}
               max={MAX_SLOT_HEIGHT}
               value={inputValue}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyDown={handleInputKeyDown}
+              onChange={handleChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
               className="w-16 h-8 text-center border-0 bg-transparent p-0 font-mono text-sm"
             />
             <span className="text-xs text-muted-foreground">px</span>
@@ -277,45 +324,32 @@ function FontScaleControl({
   onFontScaleChange: (value: number) => void;
   fontPercentage: number;
 }) {
-  const [inputValue, setInputValue] = useState(fontPercentage.toFixed(0));
+  const formatValue = useCallback((value: string) => {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed < 50) return 0;
+    if (parsed > 150) return 10;
+    return Math.round(((parsed - 50) / 100) * 10);
+  }, []);
 
-  // Sync input with external changes
-  React.useEffect(() => {
-    setInputValue(fontPercentage.toFixed(0));
-  }, [fontPercentage]);
+  const {
+    inputValue,
+    setInputValue,
+    handleChange,
+    handleFocus,
+    handleBlur,
+    handleKeyDown,
+  } = useInputWithChangeDetection(fontScale, onFontScaleChange, formatValue);
 
-  const handleSliderChange = (value: number[]) => {
+  const handleSliderChange = useCallback((value: number[]) => {
     const newScale = value[0];
     onFontScaleChange(newScale);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleInputBlur = () => {
-    const value = parseInt(inputValue, 10);
-    // Convert percentage (50-150) to scale (0-10)
-    if (isNaN(value) || value < 50) {
-      setInputValue('50');
-      onFontScaleChange(0);
-    } else if (value > 150) {
-      setInputValue('150');
-      onFontScaleChange(10);
-    } else {
-      const scale = Math.round(((value - 50) / 100) * 10);
-      onFontScaleChange(scale);
-    }
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleInputBlur();
-    }
-  };
+  }, [onFontScaleChange]);
 
   // Calculate visual percentage for progress bar
-  const progressPercentage = (fontScale / MAX_FONT_SCALE) * 100;
+  const progressPercentage = useMemo(() =>
+    (fontScale / MAX_FONT_SCALE) * 100,
+    [fontScale]
+  );
 
   // Base font sizes for preview (px)
   const baseTimeFontSize = 10;
@@ -337,9 +371,10 @@ function FontScaleControl({
               min={50}
               max={150}
               value={inputValue}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyDown={handleInputKeyDown}
+              onChange={handleChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
               className="w-16 h-8 text-center border-0 bg-transparent p-0 font-mono text-sm"
             />
             <span className="text-xs text-muted-foreground">%</span>
@@ -475,9 +510,12 @@ export function CardSizeManager() {
     return Math.round(MIN_SLOT_HEIGHT + (heightScale / 10) * (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT));
   }, [heightScale]);
 
-  const hasCustomSettings = currentCardSize !== DEFAULT_CARD_SIZE || heightScale !== 5 || fontScale !== 5;
+  const hasCustomSettings = useMemo(() =>
+    currentCardSize !== DEFAULT_CARD_SIZE || heightScale !== 5 || fontScale !== 5,
+    [currentCardSize, heightScale, fontScale]
+  );
 
-  const handleSlotHeightChange = (newHeight: number) => {
+  const handleSlotHeightChange = useCallback((newHeight: number) => {
     // Convert back to 0-10 scale
     const newScale = Math.round(((newHeight - MIN_SLOT_HEIGHT) / (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT)) * 10);
     setHeightScale(newScale);
@@ -485,24 +523,28 @@ export function CardSizeManager() {
       title: 'Altura dos slots atualizada',
       description: `Os slots de horário agora têm ${newHeight}px de altura.`,
     });
-  };
+  }, [setHeightScale]);
 
-  const handleFontScaleChange = (newScale: number) => {
+  const handleFontScaleChange = useCallback((newScale: number) => {
     setFontScale(newScale);
     const percentage = 50 + (newScale / 10) * 100;
     toast({
       title: 'Tamanho da fonte atualizado',
       description: `A fonte dos cards agora está em ${percentage.toFixed(0)}%.`,
     });
-  };
+  }, [setFontScale]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     resetToDefault();
     toast({
       title: 'Configurações resetadas',
       description: 'Voltou para as configurações padrão.',
     });
-  };
+  }, [resetToDefault]);
+
+  const handleSizeSelect = useCallback((size: CardSize) => {
+    setCurrentSize(size);
+  }, [setCurrentSize]);
 
   return (
     <div className="space-y-6">
@@ -538,22 +580,22 @@ export function CardSizeManager() {
             <SizeOption
               size="extra_small"
               currentSize={currentCardSize}
-              onSelect={setCurrentSize}
+              onSelect={handleSizeSelect}
             />
             <SizeOption
               size="small"
               currentSize={currentCardSize}
-              onSelect={setCurrentSize}
+              onSelect={handleSizeSelect}
             />
             <SizeOption
               size="medium"
               currentSize={currentCardSize}
-              onSelect={setCurrentSize}
+              onSelect={handleSizeSelect}
             />
             <SizeOption
               size="large"
               currentSize={currentCardSize}
-              onSelect={setCurrentSize}
+              onSelect={handleSizeSelect}
             />
           </div>
         </CardContent>

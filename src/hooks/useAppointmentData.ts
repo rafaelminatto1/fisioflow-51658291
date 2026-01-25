@@ -1,5 +1,12 @@
+/**
+ * useAppointmentData - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('patients') → Firestore collection 'patients'
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import {
     PATIENT_SELECT,
     devValidate as devValidatePatient,
@@ -10,9 +17,13 @@ import {
     devValidateAppointment,
     type AppointmentDBStandard
 } from '@/lib/constants/appointment-queries';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export const useAppointmentData = (appointmentId: string | undefined) => {
-    // Buscar dados do agendamento do Supabase com retry e timeout
+    // Buscar dados do agendamento do Firebase com retry e timeout
     const { data: appointment, isLoading: appointmentLoading, error: appointmentError } = useQuery({
         queryKey: ['appointment', appointmentId],
         queryFn: async () => {
@@ -20,16 +31,18 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidateAppointment(APPOINTMENT_SELECT.standard);
 
-            const result = await supabase
-                .from('appointments')
-                .select<string, AppointmentDBStandard>(APPOINTMENT_SELECT.standard)
-                .eq('id', appointmentId)
-                .maybeSingle();
+            const docRef = doc(db, 'appointments', appointmentId);
+            const snapshot = await getDoc(docRef);
 
-            if (result.error) throw result.error;
+            if (!snapshot.exists()) {
+                return null;
+            }
 
-            // Retornar null em vez de undefined para evitar erro do React Query
-            return result.data ?? null;
+            const data = snapshot.data();
+            return {
+                id: snapshot.id,
+                ...data,
+            } as AppointmentDBStandard;
         },
         enabled: !!appointmentId,
         retry: 3,
@@ -39,7 +52,7 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
     const patientId = appointment?.patient_id;
 
-    // Buscar informações do paciente do Supabase com retry e timeout
+    // Buscar informações do paciente do Firebase com retry e timeout
     const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
         queryKey: ['patient', patientId],
         queryFn: async () => {
@@ -47,16 +60,18 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidatePatient(PATIENT_SELECT.standard);
 
-            const result = await supabase
-                .from('patients')
-                .select<string, PatientDBStandard>(PATIENT_SELECT.standard)
-                .eq('id', patientId)
-                .maybeSingle();
+            const docRef = doc(db, 'patients', patientId);
+            const snapshot = await getDoc(docRef);
 
-            if (result.error) throw result.error;
+            if (!snapshot.exists()) {
+                return null;
+            }
 
-            // Retornar null em vez de undefined para evitar erro do React Query
-            return result.data ?? null;
+            const data = snapshot.data();
+            return {
+                id: snapshot.id,
+                ...data,
+            } as PatientDBStandard;
         },
         enabled: !!patientId,
         retry: 3,

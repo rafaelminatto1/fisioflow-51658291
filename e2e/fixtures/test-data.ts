@@ -17,6 +17,13 @@ export const testUsers = {
     role: 'estagiario',
     expectedOrganizationId: null,
   },
+  // Firebase test user
+  rafael: {
+    email: 'REDACTED_EMAIL',
+    password: 'REDACTED',
+    role: 'professional',
+    expectedOrganizationId: null,
+  },
 };
 
 // Dados de teste para organização

@@ -1,58 +1,101 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import type { Surgery, SurgeryFormData } from '@/types/evolution';
 import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
 
 export class SurgeryService {
   // Optimized: Select only required columns instead of *
   static async getSurgeriesByPatientId(patientId: string): Promise<Surgery[]> {
-    const { data, error } = await supabase
-      .from('patient_surgeries')
-      .select('id, patient_id, surgery_type, surgery_date, hospital, surgeon, notes, complications, created_at, updated_at')
-      .eq('patient_id', patientId)
-      .order('surgery_date', { ascending: false });
+    const db = getFirebaseDb();
+    const q = query(
+      collection(db, 'patient_surgeries'),
+      where('patient_id', '==', patientId),
+      orderBy('surgery_date', 'desc')
+    );
+    const snapshot = await getDocs(q);
 
-    if (error) throw error;
-    return (data || []) as Surgery[];
+    return snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        patient_id: data.patient_id,
+        surgery_type: data.surgery_type,
+        surgery_date: data.surgery_date,
+        hospital: data.hospital,
+        surgeon: data.surgeon,
+        notes: data.notes,
+        complications: data.complications,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      } as Surgery;
+    });
   }
 
   // Optimized: Select only required columns
   static async addSurgery(data: SurgeryFormData): Promise<Surgery> {
-    const { data: surgery, error } = await supabase
-      .from('patient_surgeries')
-      .insert(data)
-      .select('id, patient_id, surgery_type, surgery_date, hospital, surgeon, notes, complications, created_at, updated_at')
-      .single();
+    const db = getFirebaseDb();
+    const now = new Date().toISOString();
+    const dataToSave = {
+      ...data,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (error) throw error;
-    return surgery as Surgery;
+    const docRef = await addDoc(collection(db, 'patient_surgeries'), dataToSave);
+    const docSnap = await getDoc(docRef);
+
+    const savedData = docSnap.data();
+    return {
+      id: docSnap.id,
+      patient_id: savedData.patient_id,
+      surgery_type: savedData.surgery_type,
+      surgery_date: savedData.surgery_date,
+      hospital: savedData.hospital,
+      surgeon: savedData.surgeon,
+      notes: savedData.notes,
+      complications: savedData.complications,
+      created_at: savedData.created_at,
+      updated_at: savedData.updated_at,
+    } as Surgery;
   }
 
   // Optimized: Select only required columns
   static async updateSurgery(surgeryId: string, data: Partial<SurgeryFormData>): Promise<Surgery> {
-    const { data: surgery, error } = await supabase
-      .from('patient_surgeries')
-      .update(data)
-      .eq('id', surgeryId)
-      .select('id, patient_id, surgery_type, surgery_date, hospital, surgeon, notes, complications, created_at, updated_at')
-      .single();
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'patient_surgeries', surgeryId);
 
-    if (error) throw error;
-    return surgery as Surgery;
+    await updateDoc(docRef, {
+      ...data,
+      updated_at: new Date().toISOString(),
+    });
+
+    const docSnap = await getDoc(docRef);
+    const updatedData = docSnap.data();
+
+    return {
+      id: docSnap.id,
+      patient_id: updatedData.patient_id,
+      surgery_type: updatedData.surgery_type,
+      surgery_date: updatedData.surgery_date,
+      hospital: updatedData.hospital,
+      surgeon: updatedData.surgeon,
+      notes: updatedData.notes,
+      complications: updatedData.complications,
+      created_at: updatedData.created_at,
+      updated_at: updatedData.updated_at,
+    } as Surgery;
   }
 
   static async deleteSurgery(surgeryId: string): Promise<void> {
-    const { error } = await supabase
-      .from('patient_surgeries')
-      .delete()
-      .eq('id', surgeryId);
-
-    if (error) throw error;
+    const db = getFirebaseDb();
+    const docRef = doc(db, 'patient_surgeries', surgeryId);
+    await deleteDoc(docRef);
   }
 
   static calculateTimeSinceSurgery(surgeryDate: string): string {
     const now = new Date();
     const surgery = new Date(surgeryDate);
-    
+
     const days = differenceInDays(now, surgery);
     const months = differenceInMonths(now, surgery);
     const years = differenceInYears(now, surgery);

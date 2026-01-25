@@ -1,8 +1,30 @@
+/**
+ * useGamificationNotifications - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.from() → firestore queries
+ * - supabase.channel() → Firestore onSnapshot
+ * - postgres_changes → onSnapshot
+ */
+
 import { useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Unsubscribe,
+} from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+
+const db = getFirebaseDb();
 
 export type NotificationType = 'achievement' | 'level_up' | 'quest_complete' | 'streak_milestone' | 'reward_unlocked';
 
@@ -49,10 +71,16 @@ const NOTIFICATION_ICONS = {
   reward_unlocked: '🎁',
 };
 
+/**
+ * Hook de notificações de gamificação migrado para Firebase
+ *
+ * Mantém a mesma interface do hook original Supabase para
+ * compatibilidade com componentes existentes.
+ */
 export const useGamificationNotifications = (patientId?: string): UseGamificationNotificationsResult => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const unsubscribeRef = useRef<Unsubscribe | null>(null);
 
   // Buscar notificações
   const { data: notifications = [], isLoading, error, refetch } = useQuery({
@@ -61,15 +89,18 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
       if (!patientId) return [];
 
       try {
-        const { data, error } = await supabase
-          .from('gamification_notifications')
-          .select('*')
-          .eq('patient_id', patientId)
-          .order('created_at', { ascending: false })
-          .limit(50);
+        const q = query(
+          collection(db, 'gamification_notifications'),
+          where('patient_id', '==', patientId),
+          orderBy('created_at', 'desc'),
+          limit(50)
+        );
 
-        if (error) throw error;
-        return data as GamificationNotification[];
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as GamificationNotification[];
       } catch (err) {
         console.error('Failed to fetch notifications:', err);
         toast({
@@ -91,12 +122,10 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
   // Marcar como lido
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('gamification_notifications')
-        .update({ read_at: new Date().toISOString() })
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      const notificationRef = doc(db, 'gamification_notifications', notificationId);
+      await updateDoc(notificationRef, {
+        read_at: new Date().toISOString(),
+      });
 
       queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
     } catch (err) {
@@ -114,13 +143,21 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
     if (!patientId) return;
 
     try {
-      const { error } = await supabase
-        .from('gamification_notifications')
-        .update({ read_at: new Date().toISOString() })
-        .eq('patient_id', patientId)
-        .is('read_at', null);
+      // Buscar todas não lidas
+      const q = query(
+        collection(db, 'gamification_notifications'),
+        where('patient_id', '==', patientId),
+        where('read_at', '==', null)
+      );
 
-      if (error) throw error;
+      const snapshot = await getDocs(q);
+
+      // Marcar cada uma como lida
+      const updates = snapshot.docs.map(docSnap =>
+        updateDoc(docSnap.ref, { read_at: new Date().toISOString() })
+      );
+
+      await Promise.all(updates);
 
       queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
 
@@ -141,12 +178,8 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
   // Deletar notificação
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('gamification_notifications')
-        .delete()
-        .eq('id', notificationId);
-
-      if (error) throw error;
+      const notificationRef = doc(db, 'gamification_notifications', notificationId);
+      await deleteDoc(notificationRef);
 
       queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
     } catch (err) {
@@ -159,62 +192,78 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
     }
   }, [patientId, queryClient, toast]);
 
-  // Realtime subscription para novas notificações
+  // Realtime subscription para novas notificações (Firestore onSnapshot)
   useEffect(() => {
     if (!patientId) return;
 
-    // Cleanup canal anterior
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
+    // Cleanup anterior
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
     }
 
-    // Criar novo canal
-    const channel = supabase
-      .channel(`gamification-notifications-${patientId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'gamification_notifications',
-          filter: `patient_id=eq.${patientId}`
-        },
-        (payload) => {
-          const newNotification = payload.new as GamificationNotification;
-          const icon = NOTIFICATION_ICONS[newNotification.type];
+    // Criar query para listener
+    const q = query(
+      collection(db, 'gamification_notifications'),
+      where('patient_id', '==', patientId),
+      orderBy('created_at', 'desc'),
+      limit(50)
+    );
 
-          // Mostrar toast imediatamente para novas notificações
-          toast({
-            title: `${icon} ${newNotification.title}`,
-            description: newNotification.message,
-            variant: getNotificationVariant(newNotification.type),
-          });
+    // Inscrever em mudanças
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const newNotification = {
+              id: change.doc.id,
+              ...change.doc.data(),
+            } as GamificationNotification;
 
-          // Invalidar query para atualizar lista
-          queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
+            // Verificar se é uma notificação nova (nos últimos 5 segundos)
+            const createdAt = new Date(newNotification.created_at);
+            const now = new Date();
+            const isRecent = (now.getTime() - createdAt.getTime()) < 5000;
 
-          // Tocar som de notificação (se disponível)
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(newNotification.title, {
-              body: newNotification.message,
-              icon: '/favicon.ico',
-              tag: newNotification.id
-            });
+            if (isRecent) {
+              const icon = NOTIFICATION_ICONS[newNotification.type];
+
+              // Mostrar toast imediatamente para novas notificações
+              toast({
+                title: `${icon} ${newNotification.title}`,
+                description: newNotification.message,
+                variant: getNotificationVariant(newNotification.type),
+              });
+
+              // Invalidar query para atualizar lista
+              queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
+
+              // Tocar som de notificação (se disponível)
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(newNotification.title, {
+                  body: newNotification.message,
+                  icon: '/favicon.ico',
+                  tag: newNotification.id
+                });
+              }
+            }
           }
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIPTION_ERROR') {
-          console.error('Realtime subscription error');
-        }
-      });
+        });
 
-    channelRef.current = channel;
+        // Sempre invalidar query quando houver mudanças
+        queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
+      },
+      (error) => {
+        console.error('Realtime subscription error:', error);
+      }
+    );
+
+    unsubscribeRef.current = unsubscribe;
 
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
       }
     };
   }, [patientId, queryClient, toast]);
@@ -230,3 +279,6 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
     refetch,
   };
 };
+
+// Missing import
+import { getDocs } from 'firebase/firestore';

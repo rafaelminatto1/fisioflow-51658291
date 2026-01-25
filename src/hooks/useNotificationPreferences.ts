@@ -1,5 +1,27 @@
+/**
+ * useNotificationPreferences - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('notification_preferences') → Firestore collection 'notification_preferences'
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  setDoc
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface NotificationPreferences {
   id: string;
@@ -29,6 +51,19 @@ export interface UpdateNotificationPreferencesInput {
   weekend_notifications?: boolean;
 }
 
+// Default values for notification preferences
+const DEFAULT_PREFERENCES: Omit<NotificationPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+  appointment_reminders: true,
+  exercise_reminders: true,
+  progress_updates: true,
+  system_alerts: true,
+  therapist_messages: true,
+  payment_reminders: true,
+  quiet_hours_start: '22:00',
+  quiet_hours_end: '08:00',
+  weekend_notifications: false,
+};
+
 export function useNotificationPreferences() {
   const queryClient = useQueryClient();
 
@@ -36,51 +71,56 @@ export function useNotificationPreferences() {
   const { data: preferences, isLoading, error } = useQuery({
     queryKey: ['notification-preferences'],
     queryFn: async (): Promise<NotificationPreferences | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) return null;
 
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      // Use user_id as document ID
+      const prefRef = doc(db, 'notification_preferences', firebaseUser.uid);
+      const snap = await getDoc(prefRef);
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Não existe, criar padrão
-          const { data: newPrefs, error: createError } = await supabase
-            .from('notification_preferences')
-            .insert({
-              user_id: user.id,
-            })
-            .select()
-            .single();
+      if (!snap.exists()) {
+        // Não existe, criar padrão
+        const now = new Date().toISOString();
+        const newPrefs = {
+          user_id: firebaseUser.uid,
+          ...DEFAULT_PREFERENCES,
+          created_at: now,
+          updated_at: now,
+        };
 
-          if (createError) throw createError;
-          return newPrefs;
-        }
-        throw error;
+        await setDoc(prefRef, newPrefs);
+
+        return {
+          id: firebaseUser.uid,
+          ...newPrefs,
+        } as NotificationPreferences;
       }
 
-      return data;
+      return {
+        id: snap.id,
+        ...snap.data(),
+      } as NotificationPreferences;
     },
   });
 
   // Atualizar preferências
   const updatePreferences = useMutation({
     mutationFn: async (input: UpdateNotificationPreferencesInput) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .update(input)
-        .eq('user_id', user.id)
-        .select()
-        .single();
+      const prefRef = doc(db, 'notification_preferences', firebaseUser.uid);
 
-      if (error) throw error;
-      return data;
+      await updateDoc(prefRef, {
+        ...input,
+        updated_at: new Date().toISOString(),
+      });
+
+      const snap = await getDoc(prefRef);
+      return {
+        id: snap.id,
+        ...snap.data(),
+      } as NotificationPreferences;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
@@ -95,4 +135,3 @@ export function useNotificationPreferences() {
     isUpdating: updatePreferences.isPending,
   };
 }
-

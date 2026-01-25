@@ -1,6 +1,30 @@
+/**
+ * useOrganizations - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('organizations') → Firestore collection 'organizations'
+ * - supabase.from('profiles') → Firestore collection 'profiles'
+ * - supabase.auth.getUser() → getFirebaseAuth().currentUser
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface Organization {
   id: string;
@@ -28,14 +52,14 @@ export const useOrganizations = () => {
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('active', true)
-        .order('name');
+      const q = query(
+        collection(db, 'organizations'),
+        where('active', '==', true),
+        orderBy('name')
+      );
 
-      if (error) throw error;
-      return data as Organization[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Organization[];
     },
   });
 
@@ -43,51 +67,57 @@ export const useOrganizations = () => {
   const { data: currentOrganization } = useQuery({
     queryKey: ['current-organization'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) return null;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
+      const profileQ = query(
+        collection(db, 'profiles'),
+        where('user_id', '==', firebaseUser.uid),
+        limit(1)
+      );
+      const profileSnap = await getDocs(profileQ);
 
-      if (!profile?.organization_id) return null;
+      if (profileSnap.empty) return null;
 
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', profile.organization_id)
-        .maybeSingle();
+      const profile = profileSnap.docs[0].data();
+      const organizationId = profile.organization_id;
 
-      if (error) {
-        console.error('Error fetching current organization:', error);
-        throw error;
+      if (!organizationId) return null;
+
+      const orgRef = doc(db, 'organizations', organizationId);
+      const orgSnap = await getDoc(orgRef);
+
+      if (!orgSnap.exists()) {
+        console.warn('Organization not found for ID:', organizationId);
+        return null;
       }
 
-      if (!data) {
-        console.warn('Organization not found (404/406) for ID:', profile.organization_id);
-      }
-
-      return data as Organization | null;
+      return {
+        id: orgSnap.id,
+        ...orgSnap.data(),
+      } as Organization;
     },
   });
 
   // Mutation para criar organização
   const createOrganization = useMutation({
     mutationFn: async (orgData: { name: string; slug: string; settings?: Record<string, any> }) => {
-      const { data, error } = await supabase
-        .from('organizations')
-        .insert({
-          name: orgData.name,
-          slug: orgData.slug,
-          settings: orgData.settings || {},
-        })
-        .select()
-        .single();
+      const now = new Date().toISOString();
+      const orgDataToInsert = {
+        name: orgData.name,
+        slug: orgData.slug,
+        settings: orgData.settings || {},
+        active: true,
+        created_at: now,
+        updated_at: now,
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'organizations'), orgDataToInsert);
+
+      return {
+        id: docRef.id,
+        ...orgDataToInsert,
+      } as Organization;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
@@ -101,15 +131,17 @@ export const useOrganizations = () => {
   // Mutation para atualizar organização
   const updateOrganization = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Organization> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('organizations')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'organizations', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const snap = await getDoc(docRef);
+      return {
+        id: snap.id,
+        ...snap.data(),
+      } as Organization;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
