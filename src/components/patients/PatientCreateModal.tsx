@@ -58,9 +58,17 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
             />
           ) : (
             <div className="flex items-center justify-center py-12">
-              <div className="text-center space-y-2">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-                <p className="text-muted-foreground">Carregando organização...</p>
+              <div className="text-center space-y-4">
+                {/* We assume if it's taking too long, there might be an issue, 
+                    but useOrganizations usually returns isLoading. 
+                    If we want to be more robust, we should check isLoading from hook. */}
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                  <p className="text-muted-foreground">Carregando organização...</p>
+                </div>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  Se isso demorar muito, tente recarregar a página ou verifique sua conexão.
+                </p>
               </div>
             </div>
           )}

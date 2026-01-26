@@ -1,11 +1,28 @@
 /**
- * Hooks para recomendações inteligentes com IA
+ * Hooks para recomendações inteligentes com IA - Migrated to Firebase
  * @module hooks/useAIRecommendations
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - patients -> patients collection
+ * - appointments -> appointments collection
+ * - patient_evolutions -> patient_evolutions collection
+ * - patient_goals -> patient_goals collection
+ * - Auth through useAuth() from AuthContext
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit as queryLimit,
+} from 'firebase/firestore';
 import {
   generatePatientRecommendations,
   generateBulkPatientRecommendations,
@@ -16,6 +33,8 @@ import {
   ScheduleRecommendation,
   TreatmentInsight,
 } from '@/lib/ai/recommendations';
+
+const db = getFirebaseDb();
 
 // =====================================================================
 // QUERY KEYS
@@ -30,6 +49,9 @@ const AI_KEYS = {
   nextAppointment: (patientId: string) => [...AI_KEYS.all, 'next', patientId] as const,
 };
 
+// Helper to convert doc to data
+const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+
 // =====================================================================
 // PATIENT RECOMMENDATIONS
 // =====================================================================
@@ -42,48 +64,44 @@ export function usePatientRecommendations(patientId: string) {
     queryKey: AI_KEYS.patientRecommendations(patientId),
     queryFn: async (): Promise<PatientRecommendation[]> => {
       // Fetch patient data
-      const { data: patient, error: patientError } = await supabase
-        .from('patients')
-        .select('id, full_name, created_at')
-        .eq('id', patientId)
-        .single();
-
-      if (patientError) throw patientError;
+      const patientDoc = await getDoc(doc(db, 'patients', patientId));
+      if (!patientDoc.exists()) throw new Error('Patient not found');
+      const patient = convertDoc(patientDoc);
 
       // Fetch appointment history
-      const { data: appointments, error: aptError } = await supabase
-        .from('appointments')
-        .select('id, date, time, status, therapist_id')
-        .eq('patient_id', patientId)
-        .order('date', { ascending: false })
-        .limit(20);
-
-      if (aptError) throw aptError;
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        where('patient_id', '==', patientId),
+        orderBy('date', 'desc'),
+        queryLimit(20)
+      );
+      const appointmentsSnap = await getDocs(appointmentsQuery);
+      const appointments = appointmentsSnap.docs.map(convertDoc);
 
       // Fetch evolution data
-      const { data: evolutions, error: evoError } = await supabase
-        .from('patient_evolutions')
-        .select('id, date, pain_level, evolution_score')
-        .eq('patient_id', patientId)
-        .order('date', { ascending: false })
-        .limit(10);
-
-      if (evoError) throw evoError;
+      const evolutionsQuery = query(
+        collection(db, 'patient_evolutions'),
+        where('patient_id', '==', patientId),
+        orderBy('date', 'desc'),
+        queryLimit(10)
+      );
+      const evolutionsSnap = await getDocs(evolutionsQuery);
+      const evolutions = evolutionsSnap.docs.map(convertDoc);
 
       // Build patient data object
       const patientData = {
         id: patient.id,
         name: patient.full_name,
-        lastAppointment: appointments?.find(a => a.status === 'completed')?.date,
-        appointmentCount: appointments?.filter(a => a.status === 'completed').length || 0,
-        missedAppointments: appointments?.filter(a => a.status === 'no_show' || a.status === 'cancelled').length || 0,
-        completedAppointments: appointments?.filter(a => a.status === 'completed').length || 0,
+        lastAppointment: appointments?.find((a: any) => a.status === 'completed')?.date,
+        appointmentCount: appointments?.filter((a: any) => a.status === 'completed').length || 0,
+        missedAppointments: appointments?.filter((a: any) => a.status === 'no_show' || a.status === 'cancelled').length || 0,
+        completedAppointments: appointments?.filter((a: any) => a.status === 'completed').length || 0,
         painLevelHistory: evolutions
-          ?.filter(e => e.pain_level !== null)
-          .map(e => ({ date: e.date, level: e.pain_level || 0 })) || [],
+          ?.filter((e: any) => e.pain_level !== null)
+          .map((e: any) => ({ date: e.date, level: e.pain_level || 0 })) || [],
         evolutionScores: evolutions
-          ?.filter(e => e.evolution_score !== null)
-          .map(e => ({ date: e.date, score: e.evolution_score || 0 })) || [],
+          ?.filter((e: any) => e.evolution_score !== null)
+          .map((e: any) => ({ date: e.date, score: e.evolution_score || 0 })) || [],
       };
 
       return generatePatientRecommendations(patientData);
@@ -106,44 +124,47 @@ export function useAllPatientRecommendations(options?: {
     queryKey: [...AI_KEYS.allRecommendations(), status, limit],
     queryFn: async (): Promise<PatientRecommendation[]> => {
       // Fetch patients with their appointment and evolution data
-      const { data: patients, error } = await supabase
-        .from('patients')
-        .select('id, full_name, created_at')
-        .limit(limit);
-
-      if (error) throw error;
+      const patientsQuery = query(
+        collection(db, 'patients'),
+        queryLimit(limit)
+      );
+      const patientsSnap = await getDocs(patientsQuery);
+      const patients = patientsSnap.docs.map(convertDoc);
 
       // Fetch all relevant data in parallel
       const patientsWithData = await Promise.all(
-        patients.map(async (patient) => {
-          const [appointmentsResult, evolutionsResult] = await Promise.all([
-            supabase
-              .from('appointments')
-              .select('id, date, time, status, therapist_id')
-              .eq('patient_id', patient.id)
-              .order('date', { ascending: false })
-              .limit(20),
-            supabase
-              .from('patient_evolutions')
-              .select('id, date, pain_level, evolution_score')
-              .eq('patient_id', patient.id)
-              .order('date', { ascending: false })
-              .limit(10),
+        patients.map(async (patient: any) => {
+          const [appointmentsSnap, evolutionsSnap] = await Promise.all([
+            getDocs(query(
+              collection(db, 'appointments'),
+              where('patient_id', '==', patient.id),
+              orderBy('date', 'desc'),
+              queryLimit(20)
+            )),
+            getDocs(query(
+              collection(db, 'patient_evolutions'),
+              where('patient_id', '==', patient.id),
+              orderBy('date', 'desc'),
+              queryLimit(10)
+            )),
           ]);
+
+          const appointments = appointmentsSnap.docs.map(convertDoc);
+          const evolutions = evolutionsSnap.docs.map(convertDoc);
 
           return {
             id: patient.id,
             name: patient.full_name,
-            lastAppointment: appointmentsResult.data?.find(a => a.status === 'completed')?.date,
-            appointmentCount: appointmentsResult.data?.filter(a => a.status === 'completed').length || 0,
-            missedAppointments: appointmentsResult.data?.filter(a => a.status === 'no_show' || a.status === 'cancelled').length || 0,
-            completedAppointments: appointmentsResult.data?.filter(a => a.status === 'completed').length || 0,
-            painLevelHistory: evolutionsResult.data
-              ?.filter(e => e.pain_level !== null)
-              .map(e => ({ date: e.date, level: e.pain_level || 0 })) || [],
-            evolutionScores: evolutionsResult.data
-              ?.filter(e => e.evolution_score !== null)
-              .map(e => ({ date: e.date, score: e.evolution_score || 0 })) || [],
+            lastAppointment: appointments?.find((a: any) => a.status === 'completed')?.date,
+            appointmentCount: appointments?.filter((a: any) => a.status === 'completed').length || 0,
+            missedAppointments: appointments?.filter((a: any) => a.status === 'no_show' || a.status === 'cancelled').length || 0,
+            completedAppointments: appointments?.filter((a: any) => a.status === 'completed').length || 0,
+            painLevelHistory: evolutions
+              ?.filter((e: any) => e.pain_level !== null)
+              .map((e: any) => ({ date: e.date, level: e.pain_level || 0 })) || [],
+            evolutionScores: evolutions
+              ?.filter((e: any) => e.evolution_score !== null)
+              .map((e: any) => ({ date: e.date, score: e.evolution_score || 0 })) || [],
           };
         })
       );
@@ -175,29 +196,28 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
     queryKey: AI_KEYS.scheduleRecommendations(options),
     queryFn: async (): Promise<ScheduleRecommendation[]> => {
       // Fetch patient data
-      const { data: patient, error: patientError } = await supabase
-        .from('patients')
-        .select('id, full_name, condition')
-        .eq('id', options.patientId)
-        .single();
-
-      if (patientError) throw patientError;
+      const patientDoc = await getDoc(doc(db, 'patients', options.patientId));
+      if (!patientDoc.exists()) throw new Error('Patient not found');
+      const patient = convertDoc(patientDoc);
 
       // Fetch last therapist
-      const { data: lastApt } = await supabase
-        .from('appointments')
-        .select('therapist_id')
-        .eq('patient_id', options.patientId)
-        .eq('status', 'atendido')
-        .order('date', { ascending: false })
-        .limit(1)
-        .single();
+      const lastAptQuery = query(
+        collection(db, 'appointments'),
+        where('patient_id', '==', options.patientId),
+        where('status', '==', 'atendido'),
+        orderBy('date', 'desc'),
+        queryLimit(1)
+      );
+      const lastAptSnap = await getDocs(lastAptQuery);
+      const lastApt = lastAptSnap.docs.map(convertDoc)[0];
 
       // Fetch therapists
-      const { data: therapists } = await supabase
-        .from('therapists')
-        .select('id, name, specialties')
-        .eq('status', 'active');
+      const therapistsQuery = query(
+        collection(db, 'therapists'),
+        where('status', '==', 'active')
+      );
+      const therapistsSnap = await getDocs(therapistsQuery);
+      const therapists = therapistsSnap.docs.map(convertDoc);
 
       // For now, return empty recommendations since we need availability data
       // This would be enhanced with actual availability data from the schedule
@@ -220,38 +240,36 @@ export function useTreatmentInsights(patientId: string) {
     queryKey: AI_KEYS.treatmentInsights(patientId),
     queryFn: async (): Promise<TreatmentInsight[]> => {
       // Fetch patient data
-      const { data: patient, error: patientError } = await supabase
-        .from('patients')
-        .select('id, full_name')
-        .eq('id', patientId)
-        .single();
-
-      if (patientError) throw patientError;
+      const patientDoc = await getDoc(doc(db, 'patients', patientId));
+      if (!patientDoc.exists()) throw new Error('Patient not found');
+      const patient = convertDoc(patientDoc);
 
       // Fetch evolution data
-      const { data: evolutions, error: evoError } = await supabase
-        .from('patient_evolutions')
-        .select('id, date, evolution_score, pain_level')
-        .eq('patient_id', patientId)
-        .order('date', { ascending: true });
-
-      if (evoError) throw evoError;
+      const evolutionsQuery = query(
+        collection(db, 'patient_evolutions'),
+        where('patient_id', '==', patientId),
+        orderBy('date', 'asc')
+      );
+      const evolutionsSnap = await getDocs(evolutionsQuery);
+      const evolutions = evolutionsSnap.docs.map(convertDoc);
 
       // Fetch active goals
-      const { data: goals } = await supabase
-        .from('patient_goals')
-        .select('id, title, target_value, current_value, deadline')
-        .eq('patient_id', patientId)
-        .eq('status', 'active');
+      const goalsQuery = query(
+        collection(db, 'patient_goals'),
+        where('patient_id', '==', patientId),
+        where('status', '==', 'active')
+      );
+      const goalsSnap = await getDocs(goalsQuery);
+      const goals = goalsSnap.docs.map(convertDoc);
 
       const evolutionData = {
         patientId: patient.id,
         patientName: patient.full_name,
-        scores: evolutions?.map(e => ({
+        scores: evolutions?.map((e: any) => ({
           date: e.date,
           score: e.evolution_score || 0,
         })) || [],
-        goals: goals?.map(g => ({
+        goals: goals?.map((g: any) => ({
           id: g.id,
           title: g.title,
           target: g.target_value,
@@ -278,15 +296,16 @@ export function useNextAppointmentSuggestion(patientId: string) {
     queryKey: AI_KEYS.nextAppointment(patientId),
     queryFn: async () => {
       // Fetch appointment history
-      const { data: appointments, error } = await supabase
-        .from('appointments')
-        .select('date, time, therapist_id, duration, type')
-        .eq('patient_id', patientId)
-        .eq('status', 'atendido')
-        .order('date', { ascending: false })
-        .limit(10);
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        where('patient_id', '==', patientId),
+        where('status', '==', 'atendido'),
+        orderBy('date', 'desc'),
+        queryLimit(10)
+      );
+      const appointmentsSnap = await getDocs(appointmentsQuery);
+      const appointments = appointmentsSnap.docs.map(convertDoc);
 
-      if (error) throw error;
       if (!appointments || appointments.length === 0) return null;
 
       return suggestNextAppointment(appointments);

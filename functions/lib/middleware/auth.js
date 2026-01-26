@@ -69,11 +69,23 @@ async function verifyToken(token) {
  */
 async function getProfile(userId) {
     const pool = (0, init_1.getPool)();
-    const result = await pool.query(`SELECT id, user_id, organization_id, role, full_name, email, is_active
+    let result = await pool.query(`SELECT id, user_id, organization_id, role, full_name, email, is_active
      FROM profiles
      WHERE user_id = $1`, [userId]);
     if (result.rows.length === 0) {
-        throw new https_1.HttpsError('not-found', 'Profile não encontrado para este usuário. Entre em contato com o suporte.');
+        // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
+        console.log(`[Auth Middleware] Creating default profile for user: ${userId}`);
+        const organizationId = 'default-org';
+        // 1. Ensure Organization exists
+        await pool.query(`INSERT INTO organizations (id, name, slug, active)
+       VALUES ($1, 'Clínica Principal', 'default-org', true)
+       ON CONFLICT (id) DO NOTHING`, [organizationId]);
+        // 2. Create Profile
+        // We fetch some basic info from Firebase Auth if possible, but here we use defaults
+        const newProfile = await pool.query(`INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, user_id, organization_id, role, full_name, email, is_active`, [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com', true]);
+        return newProfile.rows[0];
     }
     const profile = result.rows[0];
     if (!profile.is_active) {

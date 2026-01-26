@@ -1,9 +1,24 @@
+/**
+ * Dashboard Metrics Hook - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('user_roles') → Firestore collection 'user_roles'
+ * - supabase.from('contas_financeiras') → Firestore collection 'contas_financeiras'
+ * - supabase.from('profiles') → Firestore collection 'profiles'
+ * - Replaced all supabase queries with Firestore queries
+ * - Removed supabase client dependency
+ *
+ * Hook otimizado para buscar métricas do dashboard
+ * Usa Promise.all para paralelizar queries independentes
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, limit, getCountFromServer } from 'firebase/firestore';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
-import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 export interface TherapistPerformance {
   id: string;
@@ -49,6 +64,7 @@ export const useDashboardMetrics = () => {
   return useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: async (): Promise<DashboardMetrics> => {
+      const db = getFirebaseDb();
       const today = formatDateToLocalISO(new Date());
       const startOfCurrentMonth = formatDateToLocalISO(startOfMonth(new Date()));
       const startOfLastMonth = formatDateToLocalISO(startOfMonth(subMonths(new Date(), 1)));
@@ -57,166 +73,147 @@ export const useDashboardMetrics = () => {
       const weekStart = formatDateToLocalISO(startOfWeek(new Date(), { weekStartsOn: 1 }));
       const weekEnd = formatDateToLocalISO(endOfWeek(new Date(), { weekStartsOn: 1 }));
 
+      // Helper function to get count from snapshot
+      const getCount = async (collectionName: string, constraints: any[] = []) => {
+        const q = query(collection(db, collectionName), ...constraints);
+        const snapshot = await getCountFromServer(q);
+        return snapshot.data().count;
+      };
+
+      // Helper function to get docs with constraints
+      const getDocsData = async (collectionName: string, constraints: any[] = []) => {
+        const q = query(collection(db, collectionName), ...constraints);
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      };
+
       // Paralelizar todas as queries independentes usando Promise.all
       const [
         // Queries de contagem - Grupo 1
-        totalPacientesResult,
-        pacientesNovosResult,
-        agendamentosHojeResult,
-        agendamentosConcluidosResult,
-        totalAppointments30dResult,
-        noShowCountResult,
-        userRolesResult,
-        receitaAtualResult,
-        receitaAnteriorResult,
-        totalSessions30dResult,
-        receitaPorFisioResult,
-        weeklyDataResult,
-        agendamentosSemanaResult,
-        cancelamentosSemanaResult,
+        totalPacientes,
+        pacientesNovos,
+        agendamentosHoje,
+        agendamentosConcluidos,
+        totalAppointments30d,
+        noShowCount,
+        userRolesData,
+        receitaAtualData,
+        receitaAnteriorData,
+        totalSessions30d,
+        receitaPorFisioData,
+        weeklyData,
+        agendamentosSemana,
+        cancelamentosSemana,
       ] = await Promise.all([
         // Total de pacientes
-        supabase
-          .from('patients')
-          .select('*', { count: 'exact', head: true }),
+        getCount('patients'),
 
         // Pacientes novos este mês
-        supabase
-          .from('patients')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', startOfCurrentMonth),
+        getCount('patients', [where('created_at', '>=', startOfCurrentMonth)]),
 
         // Agendamentos hoje
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('appointment_date', today),
+        getCount('appointments', [where('appointment_date', '==', today)]),
 
         // Agendamentos concluídos hoje
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('appointment_date', today)
-          .eq('status', 'concluido'),
+        getCount('appointments', [
+          where('appointment_date', '==', today),
+          where('status', '==', 'concluido')
+        ]),
 
         // Total de agendamentos em 30 dias (para taxa de no-show)
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .gte('appointment_date', thirtyDaysAgo)
-          .lte('appointment_date', today),
+        getCount('appointments', [
+          where('appointment_date', '>=', thirtyDaysAgo),
+          where('appointment_date', '<=', today)
+        ]),
 
         // Contagem de no-show em 30 dias
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .gte('appointment_date', thirtyDaysAgo)
-          .lte('appointment_date', today)
-          .eq('status', 'falta'),
+        getCount('appointments', [
+          where('appointment_date', '>=', thirtyDaysAgo),
+          where('appointment_date', '<=', today),
+          where('status', '==', 'falta')
+        ]),
 
         // Fisioterapeutas ativos
-        supabase
-          .from('user_roles')
-          .select('user_id, role')
-          .in('role', ['admin', 'fisioterapeuta']),
+        getDocsData('user_roles', [
+          where('role', 'in', ['admin', 'fisioterapeuta'])
+        ]),
 
         // Receita mensal atual
-        supabase
-          .from('contas_financeiras')
-          .select('valor')
-          .eq('tipo', 'receita')
-          .eq('status', 'pago')
-          .gte('data_pagamento', startOfCurrentMonth),
+        getDocsData('contas_financeiras', [
+          where('tipo', '==', 'receita'),
+          where('status', '==', 'pago'),
+          where('data_pagamento', '>=', startOfCurrentMonth)
+        ]),
 
         // Receita mês anterior
-        supabase
-          .from('contas_financeiras')
-          .select('valor')
-          .eq('tipo', 'receita')
-          .eq('status', 'pago')
-          .gte('data_pagamento', startOfLastMonth)
-          .lt('data_pagamento', endOfLastMonth),
+        getDocsData('contas_financeiras', [
+          where('tipo', '==', 'receita'),
+          where('status', '==', 'pago'),
+          where('data_pagamento', '>=', startOfLastMonth),
+          where('data_pagamento', '<', endOfLastMonth)
+        ]),
 
         // Total de sessões em 30 dias
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .gte('appointment_date', thirtyDaysAgo)
-          .eq('status', 'concluido'),
+        getCount('appointments', [
+          where('appointment_date', '>=', thirtyDaysAgo),
+          where('status', '==', 'concluido')
+        ]),
 
-        // Receita por fisioterapeuta (removed join with profiles as it's on Firestore)
-        supabase
-          .from('appointments')
-          .select(`
-            therapist_id,
-            payment_amount,
-            status
-          `)
-          .gte('appointment_date', startOfCurrentMonth)
-          .eq('status', 'concluido'),
+        // Receita por fisioterapeuta
+        getDocsData('appointments', [
+          where('appointment_date', '>=', startOfCurrentMonth),
+          where('status', '==', 'concluido')
+        ]),
 
         // Dados semanais para tendência
-        supabase
-          .from('appointments')
-          .select('appointment_date, status')
-          .gte('appointment_date', weekStart)
-          .lte('appointment_date', weekEnd),
+        getDocsData('appointments', [
+          where('appointment_date', '>=', weekStart),
+          where('appointment_date', '<=', weekEnd)
+        ]),
 
         // Agendamentos da semana
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .gte('appointment_date', weekStart)
-          .lte('appointment_date', weekEnd),
+        getCount('appointments', [
+          where('appointment_date', '>=', weekStart),
+          where('appointment_date', '<=', weekEnd)
+        ]),
 
         // Cancelamentos da semana
-        supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .gte('appointment_date', weekStart)
-          .lte('appointment_date', weekEnd)
-          .eq('status', 'cancelado'),
+        getCount('appointments', [
+          where('appointment_date', '>=', weekStart),
+          where('appointment_date', '<=', weekEnd),
+          where('status', '==', 'cancelado')
+        ]),
       ]);
 
-      // Extrair resultados das queries
-      const totalPacientes = totalPacientesResult.count || 0;
-      const pacientesNovos = pacientesNovosResult.count || 0;
-      const agendamentosHoje = agendamentosHojeResult.count || 0;
-      const agendamentosConcluidos = agendamentosConcluidosResult.count || 0;
-      const totalAppointments30d = totalAppointments30dResult.count || 0;
-      const noShowCount = noShowCountResult.count || 0;
-      const totalSessions30d = totalSessions30dResult.count || 0;
-      const agendamentosSemana = agendamentosSemanaResult.count || 0;
-      const cancelamentosSemana = cancelamentosSemanaResult.count || 0;
-
       // Buscar pacientes ativos (requer query separada por causa do processamento)
-      const { data: activePatientsData } = await supabase
-        .from('appointments')
-        .select('patient_id')
-        .gte('appointment_date', thirtyDaysAgo)
-        .neq('status', 'cancelado');
+      const activePatientsData = await getDocsData('appointments', [
+        where('appointment_date', '>=', thirtyDaysAgo)
+      ]);
 
-      const uniqueActivePatients = new Set(activePatientsData?.map(a => a.patient_id) || []);
+      const uniqueActivePatients = new Set(
+        activePatientsData
+          .filter(a => a.status !== 'cancelado')
+          .map(a => a.patient_id)
+      );
       const pacientesAtivos = uniqueActivePatients.size;
 
       // Contar fisioterapeutas únicos no Firestore
-      const uniqueTherapistUserIds = [...new Set((userRolesResult.data || []).map(ur => ur.user_id))];
+      const uniqueTherapistUserIds = [...new Set((userRolesData || []).map((ur: any) => ur.user_id))];
       let fisioterapeutasAtivos = 0;
 
-      const db = getFirebaseDb();
       if (uniqueTherapistUserIds.length > 0) {
         // Query profiles from Firestore
         const profilesQ = query(
           collection(db, 'profiles'),
-          where('user_id', 'in', uniqueTherapistUserIds)
+          where('user_id', 'in', uniqueTherapistUserIds.slice(0, 10)) // Firestore 'in' limit is 10
         );
         const profilesSnap = await getDocs(profilesQ);
         fisioterapeutasAtivos = profilesSnap.size;
       }
 
       // Calcular métricas financeiras
-      const receitaMensal = receitaAtualResult.data?.reduce((sum, r) => sum + Number(r.valor), 0) || 0;
-      const receitaMesAnterior = receitaAnteriorResult.data?.reduce((sum, r) => sum + Number(r.valor), 0) || 0;
+      const receitaMensal = receitaAtualData?.reduce((sum: number, r: any) => sum + Number(r.valor || 0), 0) || 0;
+      const receitaMesAnterior = receitaAnteriorData?.reduce((sum: number, r: any) => sum + Number(r.valor || 0), 0) || 0;
       const crescimentoMensal = receitaMesAnterior > 0
         ? ((receitaMensal - receitaMesAnterior) / receitaMesAnterior) * 100
         : 0;
@@ -241,18 +238,23 @@ export const useDashboardMetrics = () => {
         : 0;
 
       const fisioStats = new Map<string, TherapistPerformance>();
-      const therapistIds = [...new Set(receitaPorFisioResult.data?.map(apt => apt.therapist_id).filter(Boolean))];
+      const therapistIds = [...new Set((receitaPorFisioData || [])
+        .map((apt: any) => apt.therapist_id)
+        .filter(Boolean))];
       const therapistProfiles = new Map<string, { full_name?: string }>();
 
       if (therapistIds.length > 0) {
-        const profileQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
+        const profileQ = query(
+          collection(db, 'profiles'),
+          where('user_id', 'in', therapistIds.slice(0, 10))
+        );
         const profileSnap = await getDocs(profileQ);
         profileSnap.forEach(doc => {
           therapistProfiles.set(doc.data().user_id, doc.data());
         });
       }
 
-      receitaPorFisioResult.data?.forEach((apt) => {
+      (receitaPorFisioData || []).forEach((apt: any) => {
         const tId = apt.therapist_id;
         if (!tId) return;
 
@@ -281,12 +283,12 @@ export const useDashboardMetrics = () => {
       for (let i = 0; i < 7; i++) {
         const day = subDays(new Date(weekEnd), 6 - i);
         const dayStr = formatDateToLocalISO(day);
-        const dayAppointments = weeklyDataResult.data?.filter(a => a.appointment_date === dayStr) || [];
+        const dayAppointments = (weeklyData || []).filter((a: any) => a.appointment_date === dayStr);
 
         tendenciaSemanal.push({
           dia: weekDays[i] ?? 'Dia',
           agendamentos: dayAppointments.length,
-          concluidos: dayAppointments.filter(a => a.status === 'concluido').length,
+          concluidos: dayAppointments.filter((a: any) => a.status === 'concluido').length,
         });
       }
 

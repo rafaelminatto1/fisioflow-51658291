@@ -1,6 +1,32 @@
+/**
+ * useCRM - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - crm_tarefas -> crm_tarefas
+ * - crm_campanhas -> crm_campanhas
+ * - crm_automacoes -> crm_automacoes
+ * - crm_pesquisas_nps -> crm_pesquisas_nps
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // Types
 export interface CRMTarefa {
@@ -16,6 +42,9 @@ export interface CRMTarefa {
   responsavel_id: string | null;
   concluida_em: string | null;
   created_at: string;
+  lead?: {
+    nome: string;
+  };
 }
 
 export interface CRMCampanha {
@@ -61,23 +90,37 @@ export interface NPSPesquisa {
   sugestoes: string | null;
   origem: string | null;
   respondido_em: string;
+  leads?: {
+    nome: string;
+  };
+  patients?: {
+    full_name: string;
+  };
 }
+
+// Helper to convert doc to type with id
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
 
 // ========== TAREFAS ==========
 export function useCRMTarefas(leadId?: string) {
   return useQuery({
     queryKey: ['crm-tarefas', leadId],
     queryFn: async () => {
-      let query = supabase
-        .from('crm_tarefas')
-        .select('*')
-        .order('data_vencimento', { ascending: true, nullsFirst: false });
+      let q = query(
+        collection(db, 'crm_tarefas'),
+        orderBy('data_vencimento', 'asc')
+      );
 
-      if (leadId) query = query.eq('lead_id', leadId);
+      if (leadId) {
+        q = query(
+          collection(db, 'crm_tarefas'),
+          where('lead_id', '==', leadId),
+          orderBy('data_vencimento', 'asc')
+        );
+      }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as CRMTarefa[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as CRMTarefa[];
     },
   });
 }
@@ -86,15 +129,33 @@ export function useTarefasPendentes() {
   return useQuery({
     queryKey: ['crm-tarefas-pendentes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('crm_tarefas')
-        .select('*, leads(nome)')
-        .in('status', ['pendente', 'em_andamento'])
-        .order('data_vencimento', { ascending: true, nullsFirst: false })
-        .limit(20);
+      // Firestore IN query limited to 10
+      const q = query(
+        collection(db, 'crm_tarefas'),
+        where('status', 'in', ['pendente', 'em_andamento']),
+        orderBy('data_vencimento', 'asc'),
+        limit(20)
+      );
 
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(q);
+      const tarefas = snapshot.docs.map(convertDoc) as CRMTarefa[];
+
+      // Fetch lead names manually since No-SQL doesn't join
+      const tarefasWithLeads = await Promise.all(tarefas.map(async (t) => {
+        if (t.lead_id) {
+          try {
+            const leadDoc = await getDoc(doc(db, 'leads', t.lead_id));
+            if (leadDoc.exists()) {
+              return { ...t, lead: { nome: leadDoc.data().nome } };
+            }
+          } catch (e) {
+            // Ignore error
+          }
+        }
+        return t;
+      }));
+
+      return tarefasWithLeads;
     },
   });
 }
@@ -103,12 +164,16 @@ export function useCreateTarefa() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (tarefa: Omit<CRMTarefa, 'id' | 'created_at' | 'concluida_em'>) => {
-      const { data, error } = await supabase.from('crm_tarefas').insert(tarefa).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'crm_tarefas'), {
+        ...tarefa,
+        created_at: new Date().toISOString()
+      });
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-tarefas'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-tarefas-pendentes'] });
       toast.success('Tarefa criada com sucesso.');
     },
     onError: () => toast.error('Erro ao criar tarefa.'),
@@ -119,12 +184,14 @@ export function useUpdateTarefa() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...tarefa }: Partial<CRMTarefa> & { id: string }) => {
-      const { data, error } = await supabase.from('crm_tarefas').update(tarefa).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'crm_tarefas', id);
+      await updateDoc(docRef, tarefa);
+      const updatedDoc = await getDoc(docRef);
+      return convertDoc(updatedDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-tarefas'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-tarefas-pendentes'] });
       toast.success('Tarefa atualizada.');
     },
     onError: () => toast.error('Erro ao atualizar tarefa.'),
@@ -135,17 +202,17 @@ export function useConcluirTarefa() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from('crm_tarefas')
-        .update({ status: 'concluida', concluida_em: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'crm_tarefas', id);
+      await updateDoc(docRef, {
+        status: 'concluida',
+        concluida_em: new Date().toISOString()
+      });
+      const updatedDoc = await getDoc(docRef);
+      return convertDoc(updatedDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-tarefas'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-tarefas-pendentes'] });
       toast.success('Tarefa concluída!');
     },
     onError: () => toast.error('Erro ao concluir tarefa.'),
@@ -156,11 +223,11 @@ export function useDeleteTarefa() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('crm_tarefas').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'crm_tarefas', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-tarefas'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-tarefas-pendentes'] });
       toast.success('Tarefa excluída.');
     },
     onError: () => toast.error('Erro ao excluir tarefa.'),
@@ -172,12 +239,12 @@ export function useCRMCampanhas() {
   return useQuery({
     queryKey: ['crm-campanhas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('crm_campanhas')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as CRMCampanha[];
+      const q = query(
+        collection(db, 'crm_campanhas'),
+        orderBy('created_at', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as CRMCampanha[];
     },
   });
 }
@@ -186,9 +253,12 @@ export function useCreateCampanha() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (campanha: Partial<CRMCampanha>) => {
-      const { data, error } = await supabase.from('crm_campanhas').insert(campanha as any).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'crm_campanhas'), {
+        ...campanha,
+        created_at: new Date().toISOString()
+      });
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-campanhas'] });
@@ -202,9 +272,10 @@ export function useUpdateCampanha() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...campanha }: Partial<CRMCampanha> & { id: string }) => {
-      const { data, error } = await supabase.from('crm_campanhas').update(campanha).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'crm_campanhas', id);
+      await updateDoc(docRef, campanha);
+      const updatedDoc = await getDoc(docRef);
+      return convertDoc(updatedDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-campanhas'] });
@@ -218,8 +289,7 @@ export function useDeleteCampanha() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('crm_campanhas').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'crm_campanhas', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-campanhas'] });
@@ -234,12 +304,12 @@ export function useCRMAutomacoes() {
   return useQuery({
     queryKey: ['crm-automacoes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('crm_automacoes')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as CRMAutomacao[];
+      const q = query(
+        collection(db, 'crm_automacoes'),
+        orderBy('created_at', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as CRMAutomacao[];
     },
   });
 }
@@ -248,9 +318,12 @@ export function useCreateAutomacao() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (automacao: Partial<CRMAutomacao>) => {
-      const { data, error } = await supabase.from('crm_automacoes').insert(automacao as any).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'crm_automacoes'), {
+        ...automacao,
+        created_at: new Date().toISOString()
+      });
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-automacoes'] });
@@ -264,9 +337,10 @@ export function useToggleAutomacao() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { data, error } = await supabase.from('crm_automacoes').update({ ativo }).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'crm_automacoes', id);
+      await updateDoc(docRef, { ativo });
+      const updatedDoc = await getDoc(docRef);
+      return convertDoc(updatedDoc);
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['crm-automacoes'] });
@@ -280,8 +354,7 @@ export function useDeleteAutomacao() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('crm_automacoes').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'crm_automacoes', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-automacoes'] });
@@ -296,13 +369,41 @@ export function useNPSPesquisas() {
   return useQuery({
     queryKey: ['crm-nps'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('crm_pesquisas_nps')
-        .select('*, leads(nome), patients(full_name)')
-        .order('respondido_em', { ascending: false });
+      const q = query(
+        collection(db, 'crm_pesquisas_nps'),
+        orderBy('respondido_em', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(convertDoc) as NPSPesquisa[];
 
-      if (error) throw error;
-      return data;
+      // Join with leads and patients
+      const enrichedData = await Promise.all(
+        data.map(async (item) => {
+          let leadName = 'Desconhecido';
+          let patientName = 'Desconhecido';
+
+          if (item.lead_id) {
+            try {
+              const leadDoc = await getDoc(doc(db, 'leads', item.lead_id));
+              if (leadDoc.exists()) leadName = leadDoc.data().nome;
+            } catch (e) { }
+          }
+          if (item.patient_id) {
+            try {
+              const patientDoc = await getDoc(doc(db, 'patients', item.patient_id));
+              if (patientDoc.exists()) patientName = patientDoc.data().full_name || patientDoc.data().name;
+            } catch (e) { }
+          }
+
+          return {
+            ...item,
+            leads: item.lead_id ? { nome: leadName } : undefined,
+            patients: item.patient_id ? { full_name: patientName } : undefined,
+          };
+        })
+      );
+
+      return enrichedData;
     },
   });
 }
@@ -311,8 +412,9 @@ export function useNPSMetrics() {
   return useQuery({
     queryKey: ['crm-nps-metrics'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('crm_pesquisas_nps').select('nota, categoria');
-      if (error) throw error;
+      const q = query(collection(db, 'crm_pesquisas_nps'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(d => d.data()) as { nota: number; categoria: string }[];
 
       const total = data.length;
       const promotores = data.filter(d => d.nota >= 9).length;
@@ -330,16 +432,16 @@ export function useCreateNPS() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (pesquisa: Partial<NPSPesquisa>) => {
-      const { data, error } = await supabase
-        .from('crm_pesquisas_nps')
-        .insert(pesquisa as any)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'crm_pesquisas_nps'), {
+        ...pesquisa,
+        respondido_em: pesquisa.respondido_em || new Date().toISOString()
+      });
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crm-nps'] });
+      queryClient.invalidateQueries({ queryKey: ['crm-nps-metrics'] });
       toast.success('Pesquisa registrada com sucesso.');
     },
     onError: () => toast.error('Erro ao registrar pesquisa.'),
@@ -352,11 +454,9 @@ export function useCRMAnalytics() {
     queryKey: ['crm-analytics'],
     queryFn: async () => {
       // Get all leads
-      const { data: leads, error: leadsError } = await supabase
-        .from('leads')
-        .select('estagio, origem, score, temperatura, created_at, updated_at, data_ultimo_contato');
-
-      if (leadsError) throw leadsError;
+      const q = query(collection(db, 'leads'));
+      const snapshot = await getDocs(q);
+      const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
 
       // Conversion by source
       const conversionBySource = Object.entries(
@@ -415,7 +515,7 @@ export function useCRMAnalytics() {
 }
 
 // ========== IMPORT LEADS ==========
-interface LeadImportData {
+export interface LeadImportData {
   nome?: string;
   name?: string;
   Nome?: string;
@@ -445,11 +545,22 @@ export function useImportLeads() {
         observacoes: lead.observacoes || lead.Observações || null,
         estagio: 'aguardando',
         data_primeiro_contato: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString()
       })).filter(l => l.nome);
 
-      const { data, error } = await supabase.from('leads').insert(formattedLeads).select();
-      if (error) throw error;
-      return data;
+      // Firestore batch write or individual adds
+      // For simplicity, individual adds for now, but batch is better for large imports
+      const results = [];
+      const batchSize = 500;
+
+      // Since it's potentially many, we should probably do it sequentially or parallel in chunks
+      // For now, simple map
+      for (const lead of formattedLeads) {
+        const docRef = await addDoc(collection(db, 'leads'), lead);
+        results.push({ id: docRef.id, ...lead });
+      }
+
+      return results;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -458,3 +569,4 @@ export function useImportLeads() {
     onError: () => toast.error('Erro ao importar leads.'),
   });
 }
+

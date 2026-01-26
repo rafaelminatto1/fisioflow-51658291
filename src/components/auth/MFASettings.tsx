@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
 import { mfaService } from '@/lib/auth/mfa';
-import { supabase } from '@/integrations/supabase/client';
 
 interface MFASettingsProps {
   userId: string;

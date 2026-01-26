@@ -1,0 +1,315 @@
+<html lang="en"><head></head><body class="bg-background-light dark:bg-background-dark font-sans text-text-light dark:text-text-dark antialiased h-screen overflow-hidden flex flex-col">```html
+
+
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Protocol View: Split Detail Variant</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1E88E5", // Blue from the buttons in screenshots
+                        "primary-dark": "#1565C0",
+                        "secondary": "#263238",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "border-light": "#E5E7EB",
+                        "border-dark": "#374151",
+                        "text-light": "#111827",
+                        "text-dark": "#F9FAFB",
+                        "text-muted-light": "#6B7280",
+                        "text-muted-dark": "#9CA3AF",
+                        "success": "#10B981", // Green for progress
+                        "warning": "#F59E0B", // Orange for restrictions
+                        "danger": "#EF4444",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+
+
+<header class="h-16 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark flex items-center justify-between px-6 shrink-0 z-10">
+<div class="flex items-center gap-4">
+<button class="text-text-muted-light dark:text-text-muted-dark hover:text-primary transition-colors">
+<span class="material-icons">arrow_back</span>
+</button>
+<div>
+<h1 class="text-lg font-semibold leading-tight">Protocolo Pós-Operatório Prótese de Quadril</h1>
+<div class="flex items-center gap-2 text-xs text-text-muted-light dark:text-text-muted-dark">
+<span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 px-2 py-0.5 rounded-full font-medium">Artroplastia Total de Quadril</span>
+<span class="flex items-center gap-1"><span class="material-icons text-[14px]">schedule</span> 12 semanas</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-muted-light dark:text-text-muted-dark hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+<span class="material-icons text-base">edit</span>
+                Editar
+            </button>
+<button class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-all hover:shadow-md">
+<span class="material-icons text-base">picture_as_pdf</span>
+                Exportar PDF
+            </button>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden relative">
+<aside class="w-full md:w-[400px] lg:w-[450px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col shrink-0 z-0">
+<div class="p-6 border-b border-border-light dark:border-border-dark bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-sm sticky top-0 z-10">
+<h2 class="text-sm uppercase tracking-wider font-semibold text-text-muted-light dark:text-text-muted-dark mb-4">Progresso do Paciente</h2>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-medium text-text-muted-light dark:text-text-muted-dark">
+<span>Semana 1</span>
+<span>Semana 6</span>
+<span>Semana 12</span>
+</div>
+<div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-green-400 to-green-600 w-1/3 rounded-full"></div>
+</div>
+</div>
+<div class="mt-6 grid grid-cols-2 gap-4">
+<div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-900/30">
+<div class="flex items-center gap-2 text-green-700 dark:text-green-400 mb-1">
+<span class="material-icons text-lg">check_circle</span>
+<span class="text-xs font-bold uppercase">Marcos</span>
+</div>
+<span class="text-2xl font-bold text-green-800 dark:text-green-300">7</span>
+</div>
+<div class="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-100 dark:border-orange-900/30">
+<div class="flex items-center gap-2 text-orange-700 dark:text-orange-400 mb-1">
+<span class="material-icons text-lg">warning</span>
+<span class="text-xs font-bold uppercase">Restrições</span>
+</div>
+<span class="text-2xl font-bold text-orange-800 dark:text-orange-300">5</span>
+</div>
+</div>
+</div>
+<div class="overflow-y-auto flex-1 p-4 space-y-3">
+<button class="w-full text-left group relative pl-4 pr-4 py-4 rounded-xl transition-all duration-200 bg-white dark:bg-gray-800 shadow-sm border-l-4 border-primary hover:shadow-md ring-1 ring-black/5 dark:ring-white/5">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center font-bold text-lg">
+                            1
+                        </div>
+<div class="flex-1">
+<h3 class="font-semibold text-text-light dark:text-text-dark mb-1 group-hover:text-primary transition-colors">Semana 1</h3>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark line-clamp-2">Mobilização precoce, transferências, marcha com andador.</p>
+<div class="flex gap-2 mt-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                                    3 Exercícios
+                                </span>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300">
+                                    2 Restrições
+                                </span>
+</div>
+</div>
+<span class="material-icons text-gray-300 dark:text-gray-600 group-hover:text-primary self-center">chevron_right</span>
+</div>
+</button>
+<button class="w-full text-left group pl-4 pr-4 py-4 rounded-xl transition-all duration-200 hover:bg-white dark:hover:bg-gray-800 border-l-4 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm">
+<div class="flex items-start gap-4 opacity-70 group-hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-lg">
+                            2
+                        </div>
+<div class="flex-1">
+<h3 class="font-semibold text-text-light dark:text-text-dark mb-1">Semana 2</h3>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark line-clamp-2">Exercícios ativos assistidos, fortalecimento isométrico.</p>
+</div>
+</div>
+</button>
+<button class="w-full text-left group pl-4 pr-4 py-4 rounded-xl transition-all duration-200 hover:bg-white dark:hover:bg-gray-800 border-l-4 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm">
+<div class="flex items-start gap-4 opacity-70 group-hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-lg">
+                            3
+                        </div>
+<div class="flex-1">
+<h3 class="font-semibold text-text-light dark:text-text-dark mb-1">Semana 3</h3>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark line-clamp-2">Marcha com muletas, exercícios em decúbito.</p>
+</div>
+</div>
+</button>
+<button class="w-full text-left group pl-4 pr-4 py-4 rounded-xl transition-all duration-200 hover:bg-white dark:hover:bg-gray-800 border-l-4 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm">
+<div class="flex items-start gap-4 opacity-70 group-hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-lg">
+                            4
+                        </div>
+<div class="flex-1">
+<h3 class="font-semibold text-text-light dark:text-text-dark mb-1">Semana 4</h3>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark line-clamp-2">Subir escadas, exercícios de equilíbrio.</p>
+</div>
+</div>
+</button>
+<button class="w-full text-left group pl-4 pr-4 py-4 rounded-xl transition-all duration-200 hover:bg-white dark:hover:bg-gray-800 border-l-4 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm">
+<div class="flex items-start gap-4 opacity-70 group-hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-lg">
+                            6
+                        </div>
+<div class="flex-1">
+<h3 class="font-semibold text-text-light dark:text-text-dark mb-1">Semana 6</h3>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark line-clamp-2">Marcha com bengala, fortalecimento progressivo.</p>
+</div>
+</div>
+</button>
+<button class="w-full text-left group pl-4 pr-4 py-4 rounded-xl transition-all duration-200 hover:bg-white dark:hover:bg-gray-800 border-l-4 border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm">
+<div class="flex items-start gap-4 opacity-70 group-hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-lg">
+                            12
+                        </div>
+<div class="flex-1">
+<h3 class="font-semibold text-text-light dark:text-text-dark mb-1">Semana 12</h3>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark line-clamp-2">Alta para atividades normais com precauções.</p>
+</div>
+</div>
+</button>
+</div>
+</aside>
+<section class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900/50 p-6 lg:p-10 relative">
+<div class="max-w-4xl mx-auto space-y-8">
+<div class="flex items-end justify-between border-b border-border-light dark:border-border-dark pb-6">
+<div>
+<span class="text-sm font-bold text-primary tracking-wider uppercase mb-2 block">Fase Inicial</span>
+<h2 class="text-3xl font-bold text-text-light dark:text-text-dark">Detalhes da Semana 1</h2>
+<p class="mt-2 text-text-muted-light dark:text-text-muted-dark max-w-2xl text-lg">
+                            Foco na mobilização precoce, segurança nas transferências e iniciação de marcha assistida. O objetivo principal é prevenir complicações de imobilidade.
+                        </p>
+</div>
+<div class="hidden lg:block">
+<div class="h-16 w-16 rounded-full bg-surface-light dark:bg-surface-dark border-2 border-primary p-1 flex items-center justify-center shadow-lg">
+<span class="text-xl font-bold text-primary">0-7</span>
+<span class="text-[10px] absolute mt-8 text-text-muted-light font-medium">DIAS</span>
+</div>
+</div>
+</div>
+<div class="bg-orange-50 dark:bg-orange-900/10 border-l-4 border-orange-500 rounded-r-lg p-5 shadow-sm">
+<h3 class="flex items-center gap-2 text-lg font-semibold text-orange-800 dark:text-orange-300 mb-3">
+<span class="material-icons">report_problem</span>
+                        Restrições Críticas (2)
+                    </h3>
+<ul class="space-y-2">
+<li class="flex items-start gap-3 bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm">
+<span class="material-icons text-orange-500 text-sm mt-1">close</span>
+<div>
+<strong class="block text-text-light dark:text-text-dark text-sm">Flexão do quadril &gt;90°</strong>
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">Evitar sentar em cadeiras baixas ou vaso sanitário normal.</span>
+</div>
+</li>
+<li class="flex items-start gap-3 bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm">
+<span class="material-icons text-orange-500 text-sm mt-1">close</span>
+<div>
+<strong class="block text-text-light dark:text-text-dark text-sm">Adução além da linha média</strong>
+<span class="text-xs text-text-muted-light dark:text-text-muted-dark">Não cruzar as pernas em nenhuma posição.</span>
+</div>
+</li>
+</ul>
+</div>
+<div>
+<h3 class="flex items-center gap-2 text-lg font-semibold text-text-light dark:text-text-dark mb-4">
+<span class="material-icons text-primary">fitness_center</span>
+                        Exercícios Prescritos
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+<div class="relative h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-blue-100 to-indigo-100 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+<span class="material-icons text-6xl text-gray-300 dark:text-gray-500 opacity-50">play_circle</span>
+</div>
+<img alt="Isometria de Quadríceps" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn8vAvPKqq0RsGcqtcaUoGr-ame_L_yaFZIJU4RvklwuI1WdsLpLzoEB3TYD6kmUMp5sTnwIqce3071MC72bWIW7veOmhDhVFtA1dv87wZcbHxwd6nPMyLiEqmcXxYbnlvixVqEKZSHFqAYaR26A_wmEXXZxSNFTyuZNxJxu8HLZo9dF58JP3pZQ7YG2P1S58ZsZi0poH0EP5dmWXBGHbtDotsbQd3WQ-nzGNYtLNpogYUwhWXhG9PXMvnz3OIpq8SA9zRXPJi7a0"/>
+<div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                    3 Séries x 10 Reps
+                                </div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<h4 class="font-bold text-lg text-text-light dark:text-text-dark mb-2">Isometria de Quadríceps</h4>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark mb-4 flex-1">
+                                    Contrair o músculo da coxa pressionando o joelho contra a maca/cama. Manter por 5 segundos.
+                                </p>
+<div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+<button class="text-primary hover:text-primary-dark text-sm font-medium flex items-center gap-1">
+                                        Ver detalhes <span class="material-icons text-sm">arrow_forward</span>
+</button>
+<span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Fortalecimento</span>
+</div>
+</div>
+</div>
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+<div class="relative h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-green-100 to-teal-100 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+<span class="material-icons text-6xl text-gray-300 dark:text-gray-500 opacity-50">play_circle</span>
+</div>
+<img alt="Flexão Plantar (Pump)" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcJpLjRf6VtRL0R_TiEBpkDza4YPFsyvPZXyZ3d71cMf3CR9eBPVhx_2jY-svnTcCkDEh7bpbgRyAECg3rErexhixl4xJaJs06ve_WOi9DJC4TL_AMgna0VYHA4-Tn5FQdgjxh4rlgLM1g0iFFV9rGsblO_2JIJifRKMqm3xN8x7eUwhQ9_Hwhhy7QIvJ6QWwcnbG2HLUkn1pe8kgPLZ4dQeolq__OUaiYCs_ig58XWUblF_0Sd3BER27uUR86nu4P92Y8iL2T4FI"/>
+<div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                                    20 Reps / Hora
+                                </div>
+</div>
+<div class="p-5 flex-1 flex flex-col">
+<h4 class="font-bold text-lg text-text-light dark:text-text-dark mb-2">Pumps de Tornozelo</h4>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark mb-4 flex-1">
+                                    Movimentar o pé para cima e para baixo vigorosamente para estimular a circulação.
+                                </p>
+<div class="mt-auto flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+<button class="text-primary hover:text-primary-dark text-sm font-medium flex items-center gap-1">
+                                        Ver detalhes <span class="material-icons text-sm">arrow_forward</span>
+</button>
+<span class="text-xs text-gray-400 font-medium uppercase tracking-wide">Circulatório</span>
+</div>
+</div>
+</div>
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col md:col-span-2">
+<div class="flex flex-col md:flex-row h-full">
+<div class="relative md:w-1/3 h-48 md:h-auto bg-gray-200 dark:bg-gray-700 overflow-hidden">
+<img alt="Treino de Marcha" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWxxeDnqSFpEn7qU6DnOHZGVcf3CCxrWb0yugDSUgJu3s_FYX8gE2F05h_-_B6oDWOIpt5B7JFkUbiUxorOUjb8mUj2a45D_GYSoHXsjOZiXSFmoLwmatJFWBAP3WODqTaJBuKdNSKo1UkEw6UbHEQ24dCw4OsGOxTXQ9SAbBCAE3YJc3jfUnPA5GibriXvOVyPMrfjfGYEP5BPj-Kv1gG2LD0vdZlxNJ-wtzFL9TQw38bVUvh4y6rfIHJhgf1kJOmVDhPwUsNU5w"/>
+<div class="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                                        Supervisionado
+                                    </div>
+</div>
+<div class="p-5 flex-1 flex flex-col justify-center">
+<h4 class="font-bold text-lg text-text-light dark:text-text-dark mb-2">Treino de Marcha com Andador</h4>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark mb-4">
+                                        Iniciar marcha em superfície plana. Avançar o andador, depois a perna operada, e por fim a perna sadia.
+                                        <br/><span class="text-xs italic mt-1 block text-primary">*Necessário acompanhamento profissional nas primeiras sessões.</span>
+</p>
+<div class="flex items-center gap-3">
+<button class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs font-medium text-text-light dark:text-text-dark transition-colors">
+                                            Ver vídeo demonstrativo
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-5 border border-blue-100 dark:border-blue-900/30">
+<h3 class="flex items-center gap-2 text-sm font-bold uppercase text-blue-800 dark:text-blue-300 mb-3 tracking-wide">
+<span class="material-icons text-base">sticky_note_2</span>
+                        Observações Clínicas
+                    </h3>
+<p class="text-sm text-blue-900 dark:text-blue-200 leading-relaxed">
+                        Paciente deve manter o curativo limpo e seco. Observar sinais logísticos na ferida operatória. Retorno ao médico cirurgião agendado para o 15º dia pós-operatório para retirada de pontos.
+                    </p>
+</div>
+<div class="h-16"></div>
+</div>
+</section>
+<div class="absolute bottom-6 right-8">
+<button class="group flex items-center justify-center w-14 h-14 bg-surface-light dark:bg-surface-dark text-primary border border-border-light dark:border-border-dark rounded-full shadow-lg hover:shadow-xl transition-all hover:w-auto hover:px-4 overflow-hidden">
+<span class="material-icons">chat</span>
+<span class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 ease-in-out group-hover:ml-2 text-sm font-medium">Falar com Fisio</span>
+</button>
+</div>
+</main>
+
+```</body></html>

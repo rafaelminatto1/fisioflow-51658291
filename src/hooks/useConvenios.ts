@@ -1,6 +1,26 @@
+/**
+ * useConvenios - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('convenios') → Firestore collection 'convenios'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Convenio {
   id: string;
@@ -20,17 +40,26 @@ export interface Convenio {
 
 export type ConvenioFormData = Pick<Convenio, 'nome' | 'cnpj' | 'telefone' | 'email' | 'contato_responsavel' | 'valor_repasse' | 'prazo_pagamento_dias' | 'observacoes' | 'ativo'>;
 
+// Helper: Convert Firestore doc to Convenio
+const convertDocToConvenio = (doc: any): Convenio => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Convenio;
+};
+
 export function useConvenios() {
   return useQuery({
     queryKey: ['convenios'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('convenios')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'convenios'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as Convenio[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToConvenio);
     },
   });
 }
@@ -40,14 +69,17 @@ export function useCreateConvenio() {
 
   return useMutation({
     mutationFn: async (convenio: ConvenioFormData) => {
-      const { data, error } = await supabase
-        .from('convenios')
-        .insert(convenio)
-        .select()
-        .single();
+      const convenioData = {
+        ...convenio,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'convenios'), convenioData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToConvenio(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['convenios'] });
@@ -64,15 +96,14 @@ export function useUpdateConvenio() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Convenio> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('convenios')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'convenios', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToConvenio(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['convenios'] });
@@ -89,12 +120,7 @@ export function useDeleteConvenio() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('convenios')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'convenios', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['convenios'] });

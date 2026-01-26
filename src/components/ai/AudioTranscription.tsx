@@ -1,10 +1,20 @@
+/**
+ * Audio Transcription Component - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.functions.invoke('ai-transcribe-session') → Firebase Functions httpsCallable()
+ * - Audio processing remains client-side
+ * - Removed unused Supabase imports
+ */
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Mic, Square, Play, Pause, Trash2, FileText, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 
 interface AudioTranscriptionProps {
   patientId: string;
@@ -23,7 +33,7 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcription, setTranscription] = useState('');
   const [recordingTime, setRecordingTime] = useState(0);
-  
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -32,7 +42,7 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
-      
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -75,7 +85,7 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -114,24 +124,28 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
       // Convert blob to base64
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
-      
+
       reader.onloadend = async () => {
         const base64Audio = reader.result as string;
 
-        // Call edge function
-        const { data, error } = await supabase.functions.invoke('ai-transcribe-session', {
-          body: {
-            audioData: base64Audio,
-            patientId
-          }
+        // Call Firebase Cloud Function
+        const functions = getFirebaseFunctions();
+        const transcribeFunction = httpsCallable(functions, 'ai-transcribe-session');
+        const result = await transcribeFunction({
+          audioData: base64Audio,
+          patientId
         });
 
-        if (error) throw error;
+        const data = result.data as any;
+
+        if (data?.error) {
+          throw new Error(data.error);
+        }
 
         if (data?.soapData) {
           setTranscription(JSON.stringify(data.soapData, null, 2));
           onTranscriptionComplete(data.soapData);
-          
+
           toast({
             title: 'Transcrição concluída',
             description: 'SOAP estruturado com sucesso!',
@@ -202,10 +216,10 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
                   <Trash2 className="h-5 w-5" />
                   Descartar
                 </Button>
-                <Button 
-                  onClick={transcribeAudio} 
+                <Button
+                  onClick={transcribeAudio}
                   disabled={isTranscribing}
-                  size="lg" 
+                  size="lg"
                   className="gap-2"
                 >
                   {isTranscribing ? (

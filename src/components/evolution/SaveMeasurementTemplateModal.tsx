@@ -19,7 +19,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
@@ -35,6 +34,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { getFirebaseDb, collection, addDoc } from '@/integrations/firebase/app';
+import { collection as collectionRef, addDoc as addDocToFirestore } from 'firebase/firestore';
 
 interface SaveMeasurementTemplateModalProps {
     open: boolean;
@@ -50,6 +51,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
     onSaved,
 }) => {
     const { user } = useAuth();
+    const db = getFirebaseDb();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -68,7 +70,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
 
         setLoading(true);
         try {
-            const { error } = await supabase.from('clinical_test_templates').insert({
+            await addDocToFirestore(collectionRef(db, 'clinical_test_templates'), {
                 name: formData.name,
                 category: formData.category,
                 target_joint: formData.target_joint,
@@ -77,9 +79,8 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                 created_by: user?.id,
                 organization_id: (user as any)?.organization_id,
                 is_custom: true,
+                created_at: new Date().toISOString(),
             });
-
-            if (error) throw error;
 
             toast.success('Modelo salvo com sucesso!', {
                 description: `O modelo "${formData.name}" agora está disponível na biblioteca.`,

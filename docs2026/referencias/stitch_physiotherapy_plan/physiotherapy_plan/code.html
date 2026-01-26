@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Physiotherapy Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#359EFF", "background-light": "#f5f7f8", "background-dark": "#0f1923", "surface-light": "#ffffff", "surface-dark": "#1c2e24", "text-main-light": "#111814", "text-main-dark": "#ffffff", "text-sub-light": "#618975", "text-sub-dark": "#a0b3a9", "border-light": "#dbe6e0", "border-dark": "#2a4034"}, fontFamily: {display: "Space Grotesk", body: ["Noto Sans", "sans-serif"]}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+        /* Custom scrollbar hiding for horizontal scroll areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark transition-colors duration-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden pb-24">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-50 flex items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pb-2 justify-between border-b border-transparent dark:border-border-dark">
+<div class="flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-text-main-light dark:text-text-main-dark" style="font-size: 24px;">arrow_back</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Recovery Plan</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex size-12 cursor-pointer items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-text-main-light dark:text-text-main-dark" style="font-size: 24px;">calendar_month</span>
+</button>
+</div>
+</div>
+<!-- AI Insight / Action Panel -->
+<div class="px-4 py-2 @container">
+<div class="flex flex-col items-start justify-between gap-4 rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark p-5 shadow-sm">
+<div class="flex flex-col gap-1 w-full">
+<div class="flex items-center justify-between w-full mb-1">
+<span class="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-1 text-xs font-bold text-green-800 dark:text-primary">
+<span class="material-symbols-outlined" style="font-size: 14px;">auto_awesome</span>
+                            AI Analysis
+                        </span>
+<span class="text-xs font-medium text-text-sub-light dark:text-text-sub-dark">Updated today</span>
+</div>
+<p class="text-base font-bold leading-tight">Diagnosis: Left Knee Meniscus</p>
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm font-normal leading-normal mt-1">
+                        High confidence (98%). Target recovery by Nov 15 based on current trajectory.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Weekly Calendar Strip -->
+<div class="w-full overflow-x-auto no-scrollbar py-2 px-4">
+<div class="flex min-w-full items-center justify-between gap-3">
+<!-- Day Item: Past -->
+<button class="flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark">
+<span class="text-xs font-medium text-text-sub-light dark:text-text-sub-dark">Mon</span>
+<span class="text-lg font-bold">21</span>
+<span class="mt-1 size-1.5 rounded-full bg-primary"></span>
+</button>
+<!-- Day Item: Past -->
+<button class="flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark">
+<span class="text-xs font-medium text-text-sub-light dark:text-text-sub-dark">Tue</span>
+<span class="text-lg font-bold">22</span>
+<span class="mt-1 size-1.5 rounded-full bg-primary"></span>
+</button>
+<!-- Day Item: Past -->
+<button class="flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark">
+<span class="text-xs font-medium text-text-sub-light dark:text-text-sub-dark">Wed</span>
+<span class="text-lg font-bold">23</span>
+<span class="mt-1 size-1.5 rounded-full bg-primary"></span>
+</button>
+<!-- Day Item: Active (Today) -->
+<button class="flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-primary text-text-main-light shadow-lg shadow-primary/30 transform scale-105 transition-transform">
+<span class="text-xs font-bold opacity-80">Thu</span>
+<span class="text-xl font-bold">24</span>
+<span class="mt-1 size-1.5 rounded-full bg-white"></span>
+</button>
+<!-- Day Item: Future -->
+<button class="flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark opacity-60">
+<span class="text-xs font-medium text-text-sub-light dark:text-text-sub-dark">Fri</span>
+<span class="text-lg font-bold">25</span>
+</button>
+<!-- Day Item: Future -->
+<button class="flex flex-col items-center justify-center min-w-[56px] h-[72px] rounded-2xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark opacity-60">
+<span class="text-xs font-medium text-text-sub-light dark:text-text-sub-dark">Sat</span>
+<span class="text-lg font-bold">26</span>
+</button>
+</div>
+</div>
+<!-- Stats Section -->
+<div class="grid grid-cols-2 gap-3 px-4 py-2">
+<!-- Progress Circle Card -->
+<div class="col-span-1 flex flex-col justify-between rounded-xl bg-surface-light dark:bg-surface-dark p-4 border border-border-light dark:border-border-dark">
+<div class="flex items-start justify-between">
+<p class="text-sm font-bold text-text-sub-light dark:text-text-sub-dark">Daily Goal</p>
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">donut_large</span>
+</div>
+<div class="mt-2">
+<p class="text-3xl font-bold tracking-tight">40%</p>
+<div class="mt-2 h-1.5 w-full rounded-full bg-background-light dark:bg-background-dark overflow-hidden">
+<div class="h-full w-[40%] rounded-full bg-primary"></div>
+</div>
+<p class="mt-1 text-xs text-text-sub-light dark:text-text-sub-dark">2 of 5 exercises done</p>
+</div>
+</div>
+<!-- Streak Card -->
+<div class="col-span-1 flex flex-col justify-between rounded-xl bg-surface-light dark:bg-surface-dark p-4 border border-border-light dark:border-border-dark">
+<div class="flex items-start justify-between">
+<p class="text-sm font-bold text-text-sub-light dark:text-text-sub-dark">Streak</p>
+<span class="material-symbols-outlined text-orange-500" style="font-size: 20px;">local_fire_department</span>
+</div>
+<div class="mt-2">
+<p class="text-3xl font-bold tracking-tight">12 <span class="text-sm font-medium text-text-sub-light dark:text-text-sub-dark">Days</span></p>
+<p class="mt-1 text-xs font-bold text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                        Keep it up!
+                    </p>
+</div>
+</div>
+</div>
+<!-- Section Header -->
+<div class="px-4 pt-4 pb-2 flex items-center justify-between">
+<h3 class="text-xl font-bold leading-tight tracking-[-0.015em]">Today's Routine</h3>
+<button class="text-sm font-bold text-primary hover:text-primary/80">View All</button>
+</div>
+<!-- Exercise List -->
+<div class="flex flex-col gap-3 px-4">
+<!-- Active/Next Exercise Card -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-surface-light dark:bg-surface-dark p-3 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-all">
+<div class="flex items-center gap-4">
+<div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-200">
+<img alt="Person stretching leg on yoga mat" class="h-full w-full object-cover" data-alt="Close up of leg exercises" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRsmhgulv6n5gYQGOhW1onpeJju-hC7wynZxEwYWTPnT1UTRuk_Eha21mNlLV6GuaxZvAp-UenraYmLruen9rsy2sXSt8fBzJPybD7cDH1PmF60oqtW1D-3Joi_S2DoOuj3x89uNubi4ZmYoROJSz5Dn4qmQUA3tuHF4yeF3TGBjVQcSUPxCGurK9ypj48fVocc14W6u_fyKdgUvwydvFBV-cDN7WDsGumsKLz2V2hrWFv1yXitIBO-4FbtJqD_Qyak_uOuHvSrLU"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+<span class="material-symbols-outlined text-white drop-shadow-md" style="font-size: 28px;">play_circle</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="rounded bg-orange-100 dark:bg-orange-900/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-700 dark:text-orange-300">Warm Up</span>
+</div>
+<h4 class="text-base font-bold leading-tight">Ankle Pumps</h4>
+<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-sub-light dark:text-text-sub-dark font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 2 mins</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">repeat</span> 20 reps</span>
+</div>
+</div>
+<div class="flex shrink-0 flex-col items-center gap-2">
+<button class="flex size-10 items-center justify-center rounded-full bg-primary text-text-main-light shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pending Exercise Card -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-surface-light dark:bg-surface-dark p-3 border border-border-light dark:border-border-dark">
+<div class="flex items-center gap-4">
+<div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-200">
+<img alt="Man doing leg raises on floor" class="h-full w-full object-cover opacity-90" data-alt="Side view of leg raise exercise" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArdncj7kJUiIoDUJj74HyLtsAV7Hczzt02-eaXbwxgSV28sqfpg8QdDoGO1119PUr0ETN50bVVjhyXbLmPHW94APRIGitrlgl8Wb9ZtPPZv3jqRHq5yCRjaFD_sjJ2NWpBXE5WnvyRXvjrKRrdalQ73PnmrSq8aQAhTsBrDUeNtUfumD-fCrZV7jSGxLxPGAIToEONlOTPI5x3qpE5wOwpmVVja3pbva7swUUQ4LesTFzx3y08qR1iukGt4zV2oj9A8oGZ1v08A6o"/>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="rounded bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">Strength</span>
+</div>
+<h4 class="text-base font-bold leading-tight">Straight Leg Raise</h4>
+<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-sub-light dark:text-text-sub-dark font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">fitness_center</span> 3 sets</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">repeat</span> 10 reps</span>
+</div>
+</div>
+<div class="flex shrink-0 flex-col items-center gap-2">
+<button class="flex size-10 items-center justify-center rounded-full bg-transparent border border-border-light dark:border-border-dark text-text-sub-light hover:bg-background-light dark:hover:bg-white/5">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Tooltip / Reason -->
+<div class="flex items-start gap-2 rounded-lg bg-background-light dark:bg-background-dark p-2 text-xs text-text-sub-light dark:text-text-sub-dark">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0">info</span>
+<p>Targets quadriceps strength without straining the meniscus.</p>
+</div>
+</div>
+<!-- Pending Exercise Card -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-surface-light dark:bg-surface-dark p-3 border border-border-light dark:border-border-dark">
+<div class="flex items-center gap-4">
+<div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-200">
+<img alt="Woman stretching knee on mat" class="h-full w-full object-cover opacity-90" data-alt="Knee flexion stretch" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwkdtWSDjMNE8NZVNQlsbpfL3zjt8gNJfxejjLewBLYYbXXXKdg5m52EVeRWXTPluGR8BpiyDEu2cKuIVBARR3G9APUeAQJEsCSvwX8H8BMTp50TxYLq4MZ29HuNvhmJUFgZ45JE_QMk1UsQh_e1w-N_2ktgR3u7FGvYogGcdSBSMgJ9EoFWDpENw_fnynJuYJRNMP76J4bsR8gIE2o4zHhWbjKwZH-gnJDAbRGMFI79CV1e2EpR7zi72ki-Yz3Dd5FgV_l2tQTiY"/>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="rounded bg-purple-100 dark:bg-purple-900/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">Mobility</span>
+</div>
+<h4 class="text-base font-bold leading-tight">Knee Flexion</h4>
+<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-sub-light dark:text-text-sub-dark font-medium">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> Hold 10s</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">repeat</span> 5 reps</span>
+</div>
+</div>
+<div class="flex shrink-0 flex-col items-center gap-2">
+<button class="flex size-10 items-center justify-center rounded-full bg-transparent border border-border-light dark:border-border-dark text-text-sub-light hover:bg-background-light dark:hover:bg-white/5">
+<span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Completed Exercise Card (Dimmed) -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-surface-light/50 dark:bg-surface-dark/50 p-3 border border-border-light dark:border-border-dark opacity-60">
+<div class="flex items-center gap-4">
+<div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-200 grayscale">
+<img alt="Generic gym background" class="h-full w-full object-cover" data-alt="Abstract gym texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwZiWq4xhttolaCmO82-RiPnFnwdU7sY7ehI3fvFi1cQEN5-ltiiZ7wDn4ACWz_bNOJDpdY1mDATshBZdYVVBE1fkvSXjzbNgDqELkdN6w4N1JAstb2UdaGOBG8vCuQNqkXsVEgwW_CWyIyQw1CA7c0LAeNsnJkwssR9SASJhw3lcQvG-iwSKG9yfUB7R-N0Fs1UU3GVDBpIZpHPL1YNQpIlvOJFAJYmt3zdeeIZ_-eNam1GdJ4LD846pTHTAIdQRdRvZOf7lxans"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/10">
+<span class="material-symbols-outlined text-white" style="font-size: 28px;">check</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">Done</span>
+</div>
+<h4 class="text-base font-bold leading-tight line-through decoration-text-sub-light">Heel Slides</h4>
+<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-sub-light dark:text-text-sub-dark font-medium">
+<span class="flex items-center gap-1">Completed 9:00 AM</span>
+</div>
+</div>
+<div class="flex shrink-0 flex-col items-center gap-2">
+<div class="flex size-10 items-center justify-center rounded-full bg-primary/20 text-green-700 dark:text-primary">
+<span class="material-symbols-outlined">check</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button & Bottom Bar -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent z-40">
+<button class="w-full flex items-center justify-center gap-2 rounded-xl bg-primary h-14 text-text-main-light text-base font-bold shadow-xl shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">play_circle</span>
+                Start Daily Session
+            </button>
+<!-- Simple Navigation Placeholder -->
+<div class="mt-4 flex justify-around items-center pt-2 border-t border-border-light dark:border-border-dark opacity-60">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-sub-light dark:text-text-sub-dark hover:text-text-main-light dark:hover:text-text-main-dark transition-colors">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-[10px] font-medium">Progress</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-sub-light dark:text-text-sub-dark hover:text-text-main-light dark:hover:text-text-main-dark transition-colors">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

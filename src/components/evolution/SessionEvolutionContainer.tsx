@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseAuth, getFirebaseDb, doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, addDoc } from '@/integrations/firebase/app';
+import { doc as docRef, getDoc as getDocFromFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, addDoc as addDocToFirestore } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { SOAPFormPanel } from './SOAPFormPanel';
@@ -42,6 +43,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentOrganization } = useOrganizations();
+  const auth = getFirebaseAuth();
+  const db = getFirebaseDb();
 
   const appointmentId = propAppointmentId || params.appointmentId;
   const [patientId, setPatientId] = useState(propPatientId || '');
@@ -88,22 +91,27 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
       // Load appointment data
       if (appointmentId) {
-        const { data: appointmentData, error: appointmentError } = await supabase
-          .from('appointments')
-          .select(`
-            *,
-            patients:patient_id (*)
-          `)
-          .eq('id', appointmentId)
-          .single();
+        const appointmentRef = docRef(db, 'appointments', appointmentId);
+        const appointmentSnap = await getDocFromFirestore(appointmentRef);
 
-        if (appointmentError) throw appointmentError;
+        if (!appointmentSnap.exists()) {
+          throw new Error('Appointment not found');
+        }
 
-        setAppointment(appointmentData);
-        // Cast to any to handle the joined data structure which TS/Supabase might strictly type as array or single depending on query
-        setPatient(appointmentData.patients as any);
-        currentPatientId = appointmentData.patient_id;
-        setPatientId(currentPatientId);
+        const appointmentData = appointmentSnap.data();
+
+        // Load patient
+        if (appointmentData.patient_id) {
+          const patientRef = docRef(db, 'patients', appointmentData.patient_id);
+          const patientSnap = await getDocFromFirestore(patientRef);
+          if (patientSnap.exists()) {
+            setPatient({ id: patientSnap.id, ...patientSnap.data() });
+            currentPatientId = appointmentData.patient_id;
+            setPatientId(currentPatientId);
+          }
+        }
+
+        setAppointment({ id: appointmentSnap.id, ...appointmentData });
 
         // Load existing SOAP if any
         if (appointmentData.notes) {
@@ -121,53 +129,52 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         }
       } else if (propPatientId) {
         // Load patient directly
-        const { data: patientData, error: patientError } = await supabase
-          .from('patients')
-          .select('*')
-          .eq('id', propPatientId)
-          .single();
+        const patientRef = docRef(db, 'patients', propPatientId);
+        const patientSnap = await getDocFromFirestore(patientRef);
 
-        if (patientError) throw patientError;
-        setPatient(patientData);
+        if (!patientSnap.exists()) {
+          throw new Error('Patient not found');
+        }
+
+        setPatient({ id: patientSnap.id, ...patientSnap.data() });
         currentPatientId = propPatientId;
       }
 
       // Load patient related data
       if (currentPatientId) {
         // Calculate session number
-        const { count } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('patient_id', currentPatientId)
-          .eq('status', 'atendido');
-
-        const calculatedSessionNumber = (count || 0) + 1;
+        const appointmentsQuery = queryFromFirestore(
+          collectionRef(db, 'appointments'),
+          whereFn('patient_id', '==', currentPatientId),
+          whereFn('status', '==', 'atendido')
+        );
+        const appointmentsSnap = await getDocsFromCollection(appointmentsQuery);
+        const calculatedSessionNumber = appointmentsSnap.size + 1;
         setSessionNumber(calculatedSessionNumber);
 
         // Load surgeries
-        const { data: surgeryData } = await supabase
-          .from('patient_surgeries')
-          .select('*')
-          .eq('patient_id', currentPatientId)
-          .order('surgery_date', { ascending: false });
-
-        setSurgeries(surgeryData || []);
+        const surgeriesQuery = queryFromFirestore(
+          collectionRef(db, 'patient_surgeries'),
+          whereFn('patient_id', '==', currentPatientId)
+        );
+        const surgeriesSnap = await getDocsFromCollection(surgeriesQuery);
+        setSurgeries(surgeriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // Load pathologies
-        const { data: pathologyData } = await supabase
-          .from('patient_pathologies')
-          .select('*')
-          .eq('patient_id', currentPatientId);
-
-        setPathologies(pathologyData || []);
+        const pathologiesQuery = queryFromFirestore(
+          collectionRef(db, 'patient_pathologies'),
+          whereFn('patient_id', '==', currentPatientId)
+        );
+        const pathologiesSnap = await getDocsFromCollection(pathologiesQuery);
+        setPathologies(pathologiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // Load goals
-        const { data: goalsData } = await supabase
-          .from('patient_goals')
-          .select('*')
-          .eq('patient_id', currentPatientId);
-
-        setGoals(goalsData || []);
+        const goalsQuery = queryFromFirestore(
+          collectionRef(db, 'patient_goals'),
+          whereFn('patient_id', '==', currentPatientId)
+        );
+        const goalsSnap = await getDocsFromCollection(goalsQuery);
+        setGoals(goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // Check mandatory tests
         const result = await MandatoryTestAlertService.checkMandatoryTests(
@@ -188,7 +195,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     } finally {
       setIsLoading(false);
     }
-  }, [appointmentId, propPatientId, testsCompleted, toast]);
+  }, [appointmentId, propPatientId, testsCompleted, toast, db]);
 
   useEffect(() => {
     loadData();
@@ -280,49 +287,46 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
     setIsSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Save SOAP record (RLS garante isolamento multi-tenancy via patient_id, que tem organization_id)
-      const { data: soapRecord, error: soapError } = await supabase
-        .from('soap_records')
-        .insert({
-          patient_id: patientId,
-          appointment_id: appointmentId || null,
-          subjective: trimmedSubjective,
-          objective: trimmedObjective,
-          assessment: trimmedAssessment,
-          plan: trimmedPlan,
-          created_by: user.id,
-          record_date: new Date().toISOString().split('T')[0]
-        })
-        .select()
-        .single();
+      // Save SOAP record
+      const soapRecordRef = docRef(collectionRef(db, 'soap_records'));
+      const soapRecordData = {
+        patient_id: patientId,
+        appointment_id: appointmentId || null,
+        subjective: trimmedSubjective,
+        objective: trimmedObjective,
+        assessment: trimmedAssessment,
+        plan: trimmedPlan,
+        created_by: user.uid,
+        record_date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString()
+      };
+      await setDocToFirestore(soapRecordRef, soapRecordData);
+      const soapRecordId = soapRecordRef.id;
 
-      if (soapData && soapRecord) {
+      if (soapData && soapRecordId) {
         // Also update the note created in treatment_session if needed or just rely on appointment linkage
-      }
-
-      if (soapError) {
-        logger.error('Erro ao salvar registro SOAP', soapError, 'SessionEvolutionContainer');
-        throw soapError;
       }
 
       // Save to treatment_sessions (Exercises Performed)
       // First, check if a session already exists for this appointment to avoid duplicates
       let existingSessionId = null;
       if (appointmentId) {
-        const { data: existingSession } = await supabase
-          .from('treatment_sessions')
-          .select('id')
-          .eq('appointment_id', appointmentId)
-          .single();
-        if (existingSession) existingSessionId = existingSession.id;
+        const sessionsQuery = queryFromFirestore(
+          collectionRef(db, 'treatment_sessions'),
+          whereFn('appointment_id', '==', appointmentId)
+        );
+        const sessionsSnap = await getDocsFromCollection(sessionsQuery);
+        if (!sessionsSnap.empty) {
+          existingSessionId = sessionsSnap.docs[0].id;
+        }
       }
 
       const sessionData = {
         patient_id: patientId,
-        therapist_id: user.id,
+        therapist_id: user.uid,
         appointment_id: appointmentId || null,
         session_date: new Date().toISOString(),
         session_type: 'treatment',
@@ -334,45 +338,25 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         exercises_performed: sessionExercises,
         observations: soapData.assessment,
         status: 'completed',
-        created_by: user.id
+        created_by: user.uid,
+        created_at: new Date().toISOString()
       };
 
-      let sessionError;
       if (existingSessionId) {
-        const { error } = await supabase
-          .from('treatment_sessions')
-          .update(sessionData)
-          .eq('id', existingSessionId);
-        sessionError = error;
+        await updateDocInFirestore(docRef(db, 'treatment_sessions', existingSessionId), sessionData);
       } else {
-        const { error } = await supabase
-          .from('treatment_sessions')
-          .insert(sessionData);
-        sessionError = error;
-      }
-
-      if (sessionError) {
-        console.warn('Error saving treatment_sessions:', sessionError);
+        await addDocToFirestore(collectionRef(db, 'treatment_sessions'), sessionData);
       }
 
       // Update appointment status
       if (appointmentId) {
-        const { error: appointmentError } = await supabase
-          .from('appointments')
-          .update({
-            status: 'Realizado',
-            notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecord.id, exercises: sessionExercises })
-          })
-          .eq('id', appointmentId)
-          .eq('organization_id', currentOrganization.id); // Garantir que só atualiza da própria organização
-
-        if (appointmentError) {
-          logger.error('Erro ao atualizar agendamento', appointmentError, 'SessionEvolutionContainer');
-          throw appointmentError;
-        }
+        await updateDocInFirestore(docRef(db, 'appointments', appointmentId), {
+          status: 'Realizado',
+          notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecordId, exercises: sessionExercises })
+        });
       }
 
-      logger.info('Evolução salva com sucesso', { soapRecordId: soapRecord.id, patientId }, 'SessionEvolutionContainer');
+      logger.info('Evolução salva com sucesso', { soapRecordId: soapRecordId, patientId }, 'SessionEvolutionContainer');
 
       // Award XP for session completion
       if (patientId) {

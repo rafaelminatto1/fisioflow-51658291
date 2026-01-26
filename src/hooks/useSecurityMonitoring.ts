@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 interface LoginAttempt {
   id: string;
@@ -11,6 +12,7 @@ interface LoginAttempt {
 }
 
 interface SuspiciousActivity {
+  id: string;
   email: string;
   failed_attempts: number;
   last_attempt: string;
@@ -21,14 +23,15 @@ export function useSecurityMonitoring() {
   const { data: recentAttempts = [], isLoading: attemptsLoading } = useQuery({
     queryKey: ['login-attempts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('login_attempts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const db = getFirebaseDb();
+      const q = query(
+        collection(db, 'login_attempts'),
+        orderBy('created_at', 'desc'),
+        limit(50)
+      );
 
-      if (error) throw error;
-      return data as LoginAttempt[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as LoginAttempt[];
     },
     staleTime: 30 * 1000,
   });
@@ -36,12 +39,11 @@ export function useSecurityMonitoring() {
   const { data: suspiciousActivity = [], isLoading: suspiciousLoading } = useQuery({
     queryKey: ['suspicious-activity'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('suspicious_login_activity')
-        .select('*');
+      const db = getFirebaseDb();
+      const q = query(collection(db, 'suspicious_login_activity'));
 
-      if (error) throw error;
-      return data as SuspiciousActivity[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SuspiciousActivity[];
     },
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000, // Refresh every minute

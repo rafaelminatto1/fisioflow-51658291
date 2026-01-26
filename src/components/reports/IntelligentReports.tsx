@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseFunctions } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
 import { toast } from '@/hooks/use-toast';
 import { FileText, Calendar as CalendarIcon, Loader2, Download } from 'lucide-react';
 import { format } from 'date-fns';
@@ -28,21 +29,21 @@ export default function IntelligentReports({ patientId, patientName }: Intellige
       setLoading(true);
       setReport(null);
 
-      const { data, error } = await supabase.functions.invoke('intelligent-reports', {
-        body: {
-          patientId,
-          reportType,
-          dateRange: {
-            start: startDate.toISOString(),
-            end: endDate.toISOString(),
-          }
+      const functions = getFirebaseFunctions();
+      const intelligentReportsFunction = httpsCallable(functions, 'intelligent-reports');
+
+      const result = await intelligentReportsFunction({
+        patientId,
+        reportType,
+        dateRange: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
         }
       });
 
-      if (error) throw error;
+      const data = result.data as { report?: string };
+      setReport(data.report || '');
 
-      setReport(data.report);
-      
       toast({
         title: '📄 Relatório gerado com sucesso',
         description: 'Análise completa com IA concluída',
@@ -61,7 +62,7 @@ export default function IntelligentReports({ patientId, patientName }: Intellige
 
   const downloadReport = () => {
     if (!report) return;
-    
+
     const blob = new Blob([report], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -145,8 +146,8 @@ export default function IntelligentReports({ patientId, patientName }: Intellige
             </div>
           </div>
 
-          <Button 
-            onClick={generateReport} 
+          <Button
+            onClick={generateReport}
             disabled={loading}
             className="w-full"
             size="lg"

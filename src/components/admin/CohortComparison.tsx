@@ -16,7 +16,6 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { format, subMonths, differenceInYears } from 'date-fns';
 import {
   BarChart,

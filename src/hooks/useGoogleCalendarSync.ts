@@ -1,11 +1,14 @@
 /**
  * Hook para gerenciar sincronização com Google Calendar
  * @module hooks/useGoogleCalendarSync
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - user_google_tokens -> Firestore collection 'user_google_tokens' (docId = userId)
  */
 
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Appointment } from '@/types/appointment';
 import {
@@ -16,6 +19,16 @@ import {
   refreshAccessToken,
   SyncResult,
 } from '@/lib/calendar/google-sync';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  updateDoc
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // =====================================================================
 // QUERY KEYS
@@ -35,31 +48,30 @@ const GOOGLE_SYNC_KEYS = {
  * Hook para verificar se há conexão ativa com Google Calendar
  */
 export function useGoogleCalendarConnection() {
+  const { user } = useAuth();
+
   return useQuery({
     queryKey: GOOGLE_SYNC_KEYS.token(),
     queryFn: async (): Promise<{ connected: boolean; email?: string }> => {
-      const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Buscar token salvo
-      const { data: tokenData, error } = await supabase
-        .from('user_google_tokens')
-        .select('access_token, refresh_token, email')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error || !tokenData) {
         return { connected: false };
       }
 
+      // Buscar token salvo (Firestore)
+      const docRef = doc(db, 'user_google_tokens', user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return { connected: false };
+      }
+
+      const data = docSnap.data();
       return {
         connected: true,
-        email: tokenData.email,
+        email: data.email,
       };
     },
+    enabled: !!user,
   });
 }
 
@@ -73,6 +85,7 @@ export function useGoogleCalendarConnection() {
 export function useGoogleCalendarAuthUrl() {
   return useMutation({
     mutationFn: async (state?: string): Promise<string> => {
+      // Usar função existente (client-side ou server-side helper)
       return createGoogleAuthUrl(state);
     },
   });
@@ -87,18 +100,17 @@ export function useGoogleCalendarAuthUrl() {
  */
 export function useGoogleCalendarOAuth() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (code: string): Promise<{ success: boolean; email?: string }> => {
       try {
-        // Trocar código por token
-        const token = await exchangeCodeForToken(code);
-
-        // Obter informações do usuário
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           throw new Error('Usuário não autenticado');
         }
+
+        // Trocar código por token
+        const token = await exchangeCodeForToken(code);
 
         // Buscar email do Google Calendar
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -112,20 +124,18 @@ export function useGoogleCalendarOAuth() {
           token.email = userInfo.email;
         }
 
-        // Salvar token no banco
-        const { error: insertError } = await supabase
-          .from('user_google_tokens')
-          .upsert({
-            user_id: user.id,
-            access_token: token.access_token,
-            refresh_token: token.refresh_token,
-            expiry_date: token.expiry_date?.toISOString(),
-            email: token.email,
-            scope: token.scope?.join(','),
-            updated_at: new Date().toISOString(),
-          });
-
-        if (insertError) throw insertError;
+        // Salvar token no banco (Firestore) - Usar setDoc com merge ou overwrite? 
+        // Como o ID é o uid, podemos usar setDoc para criar ou atualizar.
+        const docRef = doc(db, 'user_google_tokens', user.uid);
+        await setDoc(docRef, {
+          user_id: user.uid,
+          access_token: token.access_token,
+          refresh_token: token.refresh_token,
+          expiry_date: token.expiry_date?.toISOString(),
+          email: token.email,
+          scope: token.scope?.join(','),
+          updated_at: new Date().toISOString(),
+        });
 
         queryClient.invalidateQueries({ queryKey: GOOGLE_SYNC_KEYS.token() });
 
@@ -158,37 +168,48 @@ export function useGoogleCalendarOAuth() {
  * Hook para sincronizar um appointment para o Google Calendar
  */
 export function useSyncToGoogle() {
+  const { user } = useAuth();
+
   return useMutation({
     mutationFn: async (appointment: Appointment): Promise<SyncResult> => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
       // Buscar token
-      const { data: tokenData, error } = await supabase
-        .from('user_google_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const docRef = doc(db, 'user_google_tokens', user.uid);
+      const docSnap = await getDoc(docRef);
 
-      if (error || !tokenData) {
+      if (!docSnap.exists()) {
         throw new Error('Google Calendar não conectado');
       }
 
+      const tokenData = docSnap.data();
+
       // Verificar se token expirou e renovar se necessário
-      let token = tokenData as GoogleOAuthToken;
-      if (token.expiry_date && new Date(token.expiry_date) < new Date()) {
+      let token: GoogleOAuthToken = {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expiry_date: tokenData.expiry_date ? new Date(tokenData.expiry_date) : undefined,
+        scope: tokenData.scope ? tokenData.scope.split(',') : [],
+        email: tokenData.email
+      };
+
+      if (token.expiry_date && token.expiry_date < new Date()) {
         if (token.refresh_token) {
-          token = await refreshAccessToken(token.refresh_token);
-          // Atualizar token no banco
-          await supabase
-            .from('user_google_tokens')
-            .update({
+          try {
+            const refreshed = await refreshAccessToken(token.refresh_token);
+            token = refreshed;
+
+            // Atualizar token no banco
+            await updateDoc(docRef, {
               access_token: token.access_token,
               expiry_date: token.expiry_date?.toISOString(),
-            })
-            .eq('user_id', user.id);
+              updated_at: new Date().toISOString()
+            });
+          } catch (e) {
+            throw new Error('Token expirado. Por favor, reconecte sua conta.');
+          }
         } else {
           throw new Error('Token expirado. Por favor, reconecte sua conta.');
         }
@@ -235,21 +256,17 @@ export function useSyncToGoogle() {
  */
 export function useDisconnectGoogleCalendar() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
-      // Deletar token
-      const { error } = await supabase
-        .from('user_google_tokens')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      // Deletar token no Firestore
+      const docRef = doc(db, 'user_google_tokens', user.uid);
+      await deleteDoc(docRef);
 
       queryClient.invalidateQueries({ queryKey: GOOGLE_SYNC_KEYS.token() });
 
