@@ -1,24 +1,42 @@
-import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * usePurchaseVoucher - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.functions.invoke() → Firebase Functions (httpsCallable)
+ * - Voucher payment processing via Firebase Functions
+ */
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+const functions = getFunctions();
 
 export function usePurchaseVoucher() {
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (voucherId: string) => {
-      const { data, error } = await supabase.functions.invoke('create-voucher-checkout', {
-        body: { voucherId },
-      });
+      const createCheckout = httpsCallable(functions, 'create-voucher-checkout');
 
-      if (error) throw error;
-      return data;
+      try {
+        const result = await createCheckout({ voucherId });
+        const data = result.data as any;
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        return data;
+      } catch (error: any) {
+        throw error;
+      }
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data.url) {
         // Abrir checkout em nova aba
         window.open(data.url, '_blank');
-        
+
         toast({
           title: 'Redirecionando para pagamento',
           description: 'Aguarde enquanto você é redirecionado para o Stripe.',
@@ -38,19 +56,28 @@ export function usePurchaseVoucher() {
 
 export function useVerifyVoucherPayment() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const { data, error } = await supabase.functions.invoke('verify-voucher-payment', {
-        body: { sessionId },
-      });
+      const verifyPayment = httpsCallable(functions, 'verify-voucher-payment');
 
-      if (error) throw error;
-      return data;
+      try {
+        const result = await verifyPayment({ sessionId });
+        const data = result.data as any;
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        return data;
+      } catch (error: any) {
+        throw error;
+      }
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['user-vouchers'] });
-      
+
       if (data.success) {
         toast({
           title: 'Voucher ativado!',

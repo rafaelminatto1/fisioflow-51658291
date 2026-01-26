@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';

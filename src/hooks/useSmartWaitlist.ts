@@ -1,6 +1,9 @@
 /**
- * Hooks inteligentes para gerenciamento de lista de espera
- * @module hooks/useSmartWaitlist
+ * useSmartWaitlist - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('waitlist') → Firestore collection 'waitlist'
+ * - Joins replaced with separate queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,6 +22,10 @@ import {
   WaitlistRecommendation,
   WaitlistAnalytics,
 } from '@/lib/waitlist/smart-waitlist';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, updateDoc } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // =====================================================================
 // HOOK: SMART WAITLIST RECOMMENDATIONS
@@ -171,7 +178,6 @@ export function useAutoOfferSlots() {
       maxCandidates?: number;
     }) => {
       const { WhatsAppService } = await import('@/lib/services/WhatsAppService');
-      const { supabase } = await import('@/integrations/supabase/client');
       const results = [];
 
       for (let i = 0; i < Math.min(recommendation.candidates.length, maxCandidates); i++) {
@@ -193,16 +199,14 @@ export function useAutoOfferSlots() {
           continue;
         }
 
-        // Update waitlist entry status to 'offered'
-        await supabase
-          .from('waitlist')
-          .update({
-            status: 'offered',
-            offered_slot: `${slot.dateString} ${slot.time}`,
-            offered_at: new Date().toISOString(),
-            offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          })
-          .eq('id', entry.id);
+        // Update waitlist entry status to 'offered' using Firestore
+        const waitlistRef = doc(db, 'waitlist', entry.id);
+        await updateDoc(waitlistRef, {
+          status: 'offered',
+          offered_slot: `${slot.dateString} ${slot.time}`,
+          offered_at: new Date().toISOString(),
+          offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        });
 
         // Send WhatsApp offer
         const sendResult = await WhatsAppService.sendSlotOffer({
@@ -235,7 +239,6 @@ export function useAutoOfferSlots() {
       const failCount = results.filter(r => !r.success).length;
 
       if (successCount > 0) {
-        // Toast is handled by toast from sonner - import at top if needed
         console.log(`[useAutoOfferSlots] ${successCount} ofertas enviadas com sucesso`);
       }
       if (failCount > 0) {

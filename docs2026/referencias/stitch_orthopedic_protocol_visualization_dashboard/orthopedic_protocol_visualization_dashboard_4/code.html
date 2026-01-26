@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>High-Tech Clinical Interface Variant</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary-neon: #00f2ff;
+            --primary-glow: rgba(0, 242, 255, 0.4);
+            --secondary-teal: #14b8a6;
+            --secondary-muted: #5eead4;
+            --bg-deep: #0a1114;
+            --card-bg: #111d23;
+            --accent-border: #1e3a4a;
+            --text-high: #ffffff;
+            --text-med: #a5b4bc;
+            --text-low: #64748b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-high);
+        }
+        .neo-glass {
+            background: rgba(17, 29, 35, 0.8);
+            border: 1px solid var(--accent-border);
+            backdrop-filter: blur(10px);
+        }
+        .neon-border {
+            border: 1px solid var(--primary-neon);
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+        .neon-text-glow {
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+        .mono-data {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .clinical-btn {
+            background: linear-gradient(135deg, #00f2ff 0%, #00d4ff 100%);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+        .clinical-btn:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        .action-chip {
+            border: 1px solid var(--secondary-teal);
+            color: var(--secondary-muted);
+            font-weight: 600;
+        }
+        .restriction-card {
+            background: rgba(220, 38, 38, 0.05);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4">
+<div class="w-full max-w-[480px] space-y-6 pb-24">
+<header class="text-center mb-4">
+<h1 class="text-2xl font-bold tracking-tight text-white mb-1">High-Tech Clinical Interface</h1>
+<p class="text-[var(--text-low)] text-xs uppercase tracking-[0.2em] font-medium">Variant 5 of 5 • Diagnostic Mode</p>
+</header>
+<div class="neo-glass rounded-2xl overflow-hidden border-t-2 border-t-[var(--primary-neon)]">
+<div class="p-5 flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<h2 class="text-sm font-semibold text-[var(--text-med)] uppercase tracking-wider">Daily Recovery Progress</h2>
+<span class="text-[var(--primary-neon)] font-bold text-lg neon-text-glow">70%</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-[#1a2e38]" cx="64" cy="64" fill="transparent" r="56" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-[var(--primary-neon)]" cx="64" cy="64" fill="transparent" r="56" stroke="currentColor" stroke-dasharray="351.8" stroke-dashoffset="105.5" stroke-width="8" style="filter: drop-shadow(0 0 6px var(--primary-glow))"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-2xl font-bold">70%</span>
+<span class="text-[10px] text-[var(--text-low)] uppercase font-semibold">Complete</span>
+</div>
+</div>
+<div class="flex-1 space-y-3">
+<div class="grid grid-cols-2 gap-2 text-[10px] mono-data">
+<div>
+<p class="text-[var(--text-low)]">HEALTH</p>
+<p class="text-[var(--text-high)]">17.80</p>
+</div>
+<div>
+<p class="text-[var(--text-low)]">SESSIONS</p>
+<p class="text-[var(--text-high)]">28/40</p>
+</div>
+<div>
+<p class="text-[var(--text-low)]">VOL/SEC</p>
+<p class="text-[var(--text-high)]">3.2k/m</p>
+</div>
+<div>
+<p class="text-[var(--text-low)]">AVG DUR</p>
+<p class="text-[var(--text-high)]">14m</p>
+</div>
+</div>
+<img alt="Medical Graph" class="w-full h-12 rounded border border-[var(--accent-border)] object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkHBAU7mV6JTiLFwM_DukRmvgqcnVoGiRRE1yNKcxVp8-TAhsPjj6JO2L0skJPB648I8hjdUX9cv76TymEUrhn8KIUL-rqsq8M1nVV1h7oJTGNRmOJCLyRnrFow5WQP94KNpdGTfQG0xFbitrqpf-Ui0C5DgX4PE08YUsSuqbH4SMuTqq9G6dPU5BnQskJaxH1joGNoMpEZXQ9oFNShYkZNr5mKHaB-bNgfWQyaW1E0wVHsB8lNnPc5e5OQLOMAfNYhAIK_rV78lY"/>
+</div>
+</div>
+<div class="space-y-3">
+<button class="clinical-btn w-full py-3.5 rounded-xl text-black font-extrabold text-sm uppercase tracking-widest">
+                        Export Clinical Letterhead
+                    </button>
+<div class="flex justify-between text-xs font-medium px-1">
+<span class="text-[var(--text-med)]">Compliance: <span class="text-[var(--secondary-teal)]">95%</span></span>
+<span class="text-[var(--text-med)]">Session Time: <span class="text-[var(--secondary-teal)]">14m</span></span>
+</div>
+</div>
+</div>
+<div class="bg-[rgba(0,0,0,0.4)] py-2 text-center border-t border-[var(--accent-border)]">
+<span class="text-[10px] uppercase tracking-widest text-[var(--text-low)] font-semibold">Physiotherapy Protocol Management</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[var(--primary-neon)] text-lg">clinical_notes</span>
+<h3 class="text-lg font-bold">Phase 1: Early Mobilization</h3>
+</div>
+<div class="neo-glass rounded-2xl p-5 border-l-4 border-l-[var(--primary-neon)] space-y-5">
+<div>
+<h4 class="text-xs font-bold text-[var(--text-low)] uppercase tracking-wider mb-4">Clinical Tasks</h4>
+<div class="space-y-4">
+<div class="group relative bg-[#0d161a] border border-[var(--accent-border)] rounded-xl p-3 flex items-center gap-4 hover:border-[var(--primary-neon)] transition-colors">
+<div class="w-16 h-16 rounded-lg bg-[#1a2e38] flex-shrink-0 flex items-center justify-center">
+<img alt="Knee Exercise" class="rounded" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBROMSU9uOJpQwGhJSKZKjgLE1OOVQin_rH0o-SQlgMGe53IeQ2dJJHZxPJvpA2ELLRu_rbB1kfKkLLoKL-WDRFqzmS1diEr9GtMtfeBmfh2ml5SgUh6HexTF_mhPFVNr4HzxW2hkQ6uPp_rm7ZGdlKgPDKayOWDPLB0NkOzsr8yLnHaZlMKLklakDqZBk8Jh9_1uCMvo7YaYuGN7Je7wK1xfo2cpPd7qa3RyfHxnvh7hVZUiJIX7zPFDB2GcJ6yTO0VA-RH41FdeA"/>
+</div>
+<div class="flex-1">
+<p class="text-[10px] text-[var(--secondary-teal)] font-bold uppercase mb-0.5">Mission: Initial</p>
+<h5 class="text-sm font-bold text-white leading-tight mb-2">Mobilização Precoce</h5>
+<button class="action-chip px-3 py-1 rounded-md text-[10px] uppercase tracking-tighter hover:bg-[var(--secondary-teal)] hover:text-white transition-all">
+                                    Mark Complete
+                                </button>
+</div>
+<div class="w-12 h-12 flex items-center justify-center opacity-40">
+<span class="material-symbols-outlined text-[var(--primary-neon)] text-2xl">accessibility_new</span>
+</div>
+</div>
+<div class="group relative bg-[#0d161a] border border-[var(--accent-border)] rounded-xl p-3 flex items-center gap-4 hover:border-[var(--primary-neon)] transition-colors">
+<div class="w-16 h-16 rounded-lg bg-[#1a2e38] flex-shrink-0 overflow-hidden">
+<img alt="Transfer Assistance" class="object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKG81l3HGgYPwuXF5kMsaw6FE9U-Svc8Q61KO7oSJha5z7BvmGlkiLSADE6U5YiWDm9XLujHQlWaJcnvm-Qh53jBV3jekwRQrI-Wa_LA1EEPOLf9o2NZXXtbHIKg-Qtz3MUm39LTqb2QtIlCgMelXvm5l8NFRE7qegl_xQmchikKMV14ydwlxetFf1NLFlmUz0-Su45tH7dBL6_mD0RJ5DGnyakFzOpbcHpRjEnILbwTa8phUEeJp9nVR7z264xWpbZ-86DnA6ph8"/>
+</div>
+<div class="flex-1">
+<p class="text-[10px] text-[var(--secondary-teal)] font-bold uppercase mb-0.5">Mission: Core</p>
+<h5 class="text-sm font-bold text-white leading-tight mb-2">Transferências Posturais</h5>
+<button class="action-chip px-3 py-1 rounded-md text-[10px] uppercase tracking-tighter hover:bg-[var(--secondary-teal)] hover:text-white transition-all">
+                                    Mark Complete
+                                </button>
+</div>
+<div class="w-12 h-12 flex items-center justify-center opacity-40">
+<span class="material-symbols-outlined text-[var(--primary-neon)] text-2xl">directions_walk</span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h4 class="text-xs font-bold text-[var(--text-low)] uppercase tracking-wider mb-3">Obstáculos a Evitar</h4>
+<div class="grid grid-cols-2 gap-3">
+<div class="restriction-card rounded-xl p-3 flex flex-col items-center text-center">
+<div class="relative mb-2">
+<img alt="Knee Restriction" class="w-16 h-16 rounded border border-red-900/50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYns-k7ikapTHol8HDdzZpFjtKw3X1zsR7XYX09_nFY95VxiCkliw5pX2czF8iBxvh0fKwtTKDH24zEMgZ5k5lvOUw8O7E0nolHyKgp6FVajX76ZZELtC3J9xk_nFBJOWZfW2JUxUJ3rbETzDveb0t3EG3F5-GgS2OK5Ex-yOxsmK7Re83OJ_Xa7Rl-1t1UjOsNqn6a8CiEUzICOOIwr4SyF8fYtFetLK2gj647JOFbLr8n2gOkKqU5bbTtcjcWfHWZRUyFbabdBg"/>
+<span class="absolute -bottom-1 -right-1 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[14px] font-bold">close</span>
+</span>
+</div>
+<p class="text-[10px] font-black text-red-400 uppercase leading-tight mb-1">Restriction</p>
+<p class="text-[11px] font-bold text-white">Flexion &gt; 90°</p>
+</div>
+<div class="restriction-card rounded-xl p-3 flex flex-col items-center text-center">
+<div class="relative mb-2">
+<img alt="Hip Restriction" class="w-16 h-16 rounded border border-red-900/50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANtosR2_4xGtDRBOeRuFJwhb_A7N0xJ6RUk77RKP_HgKMA1SReXV_efbl7lf7fp_5kWs6FusyhTkg3QEL_4gSI42sGPihsVKMByich4nX1oxJ9aZhuFobCaWgYkRL1ivF4ny5IxmwDUW-fB0nJgzgoauBwuneBfGXs3wOwc3-WCTLK4RBPKpOuFVL1euLKWeuhvfwuf7DxP460SfSqMeIguzKXo65NBv97cbI3Tsr95GGGurc1MTrv-K2sB44wLYaFYfojnPnotKQ"/>
+<span class="absolute -bottom-1 -right-1 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[14px] font-bold">close</span>
+</span>
+</div>
+<p class="text-[10px] font-black text-red-400 uppercase leading-tight mb-1">Restriction</p>
+<p class="text-[11px] font-bold text-white">Forbidden Adduction</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="opacity-50 relative">
+<div class="absolute inset-0 flex items-center justify-center z-10">
+<div class="bg-black/40 backdrop-blur-sm p-2 rounded-full border border-[var(--primary-neon)]">
+<span class="material-symbols-outlined text-[var(--primary-neon)] text-2xl">lock</span>
+</div>
+</div>
+<div class="neo-glass rounded-2xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-[#1a2e38]">
+<span class="material-symbols-outlined text-sm text-[var(--text-med)]">fitness_center</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-[var(--text-low)] uppercase">Nível 2</p>
+<p class="text-sm font-bold">Phase 2: Strengthening</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-[var(--text-low)]">chevron_right</span>
+</div>
+</div>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 bg-[#0a1114]/95 backdrop-blur-md border-t border-[var(--accent-border)] px-6 py-4 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-[var(--text-low)] group-hover:text-[var(--primary-neon)] transition-colors">home</span>
+<span class="text-[10px] font-medium text-[var(--text-low)] uppercase tracking-tighter">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 group relative">
+<span class="material-symbols-outlined text-[var(--primary-neon)] neon-text-glow">assignment</span>
+<span class="text-[10px] font-bold text-[var(--primary-neon)] uppercase tracking-tighter">Protocols</span>
+<div class="absolute -top-1 w-1 h-1 bg-[var(--primary-neon)] rounded-full shadow-[0_0_8px_var(--primary-glow)]"></div>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-[var(--text-low)] group-hover:text-[var(--primary-neon)] transition-colors">insights</span>
+<span class="text-[10px] font-medium text-[var(--text-low)] uppercase tracking-tighter">Analytics</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<span class="material-symbols-outlined text-[var(--text-low)] group-hover:text-[var(--primary-neon)] transition-colors">person</span>
+<span class="text-[10px] font-medium text-[var(--text-low)] uppercase tracking-tighter">Patient Profile</span>
+</button>
+</nav>
+
+</body></html>

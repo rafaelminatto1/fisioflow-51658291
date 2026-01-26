@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Database, Download, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseDb, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
+import { collection as collectionRef, getDocs as getDocsFromCollection } from 'firebase/firestore';
 
 export function BackupSettings() {
     const [isExporting, setIsExporting] = useState(false);
@@ -21,8 +22,8 @@ export function BackupSettings() {
                 }
             };
 
-            // Fetch critical tables
-            const tables = [
+            // Fetch critical collections
+            const collections = [
                 'patients',
                 'appointments',
                 'transactions',
@@ -30,10 +31,12 @@ export function BackupSettings() {
                 'patient_packages'
             ];
 
-            await Promise.all(tables.map(async (table) => {
-                const { data, error } = await supabase.from(table).select('*');
-                if (error) throw error;
-                backupData[table] = data;
+            const db = getFirebaseDb();
+
+            await Promise.all(collections.map(async (colName) => {
+                const colRef = collectionRef(db, colName);
+                const snapshot = await getDocsFromCollection(colRef);
+                backupData[colName] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             }));
 
             // Create Blob

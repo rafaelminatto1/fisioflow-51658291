@@ -24,8 +24,10 @@ import {
 import { ClinicalFieldType, EvaluationForm } from '@/types/clinical-forms';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseAuth, getFirebaseDb, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from '@/integrations/firebase/app';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, deleteDoc as deleteDocFromFirestore } from 'firebase/firestore';
 
 interface FormBuilderProps {
     formId?: string; // If provided, we are editing specific fields for this form
@@ -51,6 +53,8 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
     const [descricao, setDescricao] = useState(initialData?.descricao || '');
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
+    const auth = getFirebaseAuth();
+    const db = getFirebaseDb();
 
     useEffect(() => {
         if (initialData) {
@@ -70,7 +74,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
 
         if (fields.length === 0) {
             // Safety check: if we are editing an existing form that HAD fields, and now has 0, warn.
-            // Simplified logic: just error if generic empty for now, unless user explicitly deleted all? 
+            // Simplified logic: just error if generic empty for now, unless user explicitly deleted all?
             // Let's stick to: "Formulário deve ter pelo menos um campo".
             toast({ title: "Erro", description: "Adicione pelo menos um campo à ficha.", variant: "destructive" });
             return;
@@ -81,92 +85,78 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
 
         setIsSaving(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            const user = auth.currentUser;
             if (!user) throw new Error('Usuário não autenticado');
 
             let currentFormId = formId;
 
             // 1. Update or Create Form
             if (formId) {
-                const { error: formError } = await supabase
-                    .from('evaluation_forms')
-                    .update({
-                        nome,
-                        descricao,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', formId);
-
-                if (formError) throw formError;
+                const formRef = docRef(db, 'evaluation_forms', formId);
+                await updateDocInFirestore(formRef, {
+                    nome,
+                    descricao,
+                    updated_at: new Date().toISOString()
+                });
             } else {
                 // Create new form
-                const { data: newForm, error: formError } = await supabase
-                    .from('evaluation_forms')
-                    .insert({
-                        nome,
-                        descricao,
-                        tipo: 'custom', // Default for new builder forms
-                        ativo: true,
-                        // organization_id usually handled by trigger or RLS provided context, or we fetch user's org
-                    })
-                    .select()
-                    .single();
+                const newFormRef = docRef(collectionRef(db, 'evaluation_forms'));
+                currentFormId = newFormRef.id;
 
-                if (formError) throw formError;
-                currentFormId = newForm.id;
+                await setDocToFirestore(newFormRef, {
+                    nome,
+                    descricao,
+                    tipo: 'custom', // Default for new builder forms
+                    ativo: true,
+                    created_at: new Date().toISOString(),
+                    // organization_id usually handled by trigger or RLS provided context, or we fetch user's org
+                });
             }
 
             // 2. Sync Fields (Delete all and recreate is easiest for order/updates, but might break responses references?
-            // Better: Upsert. But simpler for now: 
-            // Strategy: Delete all existing fields for this form and re-insert. 
+            // Better: Upsert. But simpler for now:
+            // Strategy: Delete all existing fields for this form and re-insert.
             // WARNING: This changes IDs. If records depend on field IDs, this is bad.
             // Better Strategy: Upsert based on some criteria? No, we have dragging ordering.
             // Let's rely on matching IDs if they exist (were loaded from DB), otherwise create new.
 
-            // For now, to ensure clean state and order, we might delete-insert if no data exists yet. 
-            // But if there's data, we must preserve IDs. 
+            // For now, to ensure clean state and order, we might delete-insert if no data exists yet.
+            // But if there's data, we must preserve IDs.
             // Our `useFormBuilder` uses generic UUIDs for new fields. Existing fields have DB IDs.
 
             // Let's try upserting.
 
             const fieldsToUpsert = fields.map((f, index) => ({
-                id: f.id.length === 36 ? f.id : undefined, // Send ID if it looks like a UUID (it always does in our hook), but if it's new it won't exist in DB.
-                // Actually, if we generated a random UUID locally, upsert will try to find it. It won't find it, so it inserts.
-                // If it was loaded from DB, it finds it and updates.
                 form_id: currentFormId,
                 tipo_campo: f.tipo_campo,
                 label: f.label,
                 placeholder: f.placeholder,
-                opcoes: f.opcoes ? JSON.stringify(f.opcoes) : null, // supabase client might handle array needed for jsonb automatically? Try array first.
-                // Note: checking types.ts earlier, opcoes is Json | null. Array of strings is valid Json.
+                opcoes: f.opcoes || null, // Array of strings is valid Json.
                 ordem: index,
                 obrigatorio: f.obrigatorio
             }));
 
             // We need to handle deletions. Fields in DB that are NOT in `fields` array should be deleted.
             if (formId) {
-                const { data: existingFields } = await supabase
-                    .from('evaluation_form_fields')
-                    .select('id')
-                    .eq('form_id', formId);
+                const q = queryFromFirestore(collectionRef(db, 'evaluation_form_fields'), whereFn('form_id', '==', formId));
+                const existingFieldsSnap = await getDocsFromCollection(q);
 
                 const currentIds = new Set(fields.map(f => f.id));
-                const idsToDelete = existingFields?.filter(ef => !currentIds.has(ef.id)).map(ef => ef.id) || [];
+                const idsToDelete = existingFieldsSnap.docs.filter(docSnap => !currentIds.has(docSnap.id)).map(docSnap => docSnap.id);
 
                 if (idsToDelete.length > 0) {
-                    await supabase.from('evaluation_form_fields').delete().in('id', idsToDelete);
+                    for (const id of idsToDelete) {
+                        await deleteDocFromFirestore(docRef(db, 'evaluation_form_fields', id));
+                    }
                 }
             }
 
-            // Upsert
-            const { error: fieldsError } = await supabase
-                .from('evaluation_form_fields')
-                .upsert(fieldsToUpsert.map(f => ({
-                    ...f,
-                    opcoes: f.opcoes ? JSON.parse(f.opcoes as string) : null // Revert to object/array for supabase client
-                })));
-
-            if (fieldsError) throw fieldsError;
+            // Upsert each field
+            for (const f of fieldsToUpsert) {
+                const fieldId = fields[fieldsToUpsert.indexOf(f)].id;
+                const fieldRef = docRef(db, 'evaluation_form_fields', fieldId);
+                await setDocToFirestore(fieldRef, f, { merge: true });
+            }
 
             toast({
                 title: "Sucesso",

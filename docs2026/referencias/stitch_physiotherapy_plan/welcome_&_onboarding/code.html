@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html class="light dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhysioAI - Welcome</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#359EFF", "background-light": "#f5f7f8", "background-dark": "#0f1923"}, fontFamily: {display: "Space Grotesk", body: ["Noto Sans", "sans-serif"]}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#111814] dark:text-white transition-colors duration-300 font-display selection:bg-primary selection:text-black">
+<div class="relative flex h-screen w-full flex-col overflow-hidden bg-background-light dark:bg-background-dark">
+<!-- Header: Floating Logo -->
+<div class="absolute top-0 left-0 w-full z-20 flex justify-center pt-12 pb-4 safe-top">
+<div class="flex items-center gap-2 px-4 py-1.5 bg-white/90 dark:bg-black/40 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/5 shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">orthopedics</span>
+<span class="text-xs font-bold tracking-widest uppercase text-gray-900 dark:text-white">PhysioAI</span>
+</div>
+</div>
+<!-- Hero Section: Immersive Illustration -->
+<div class="relative flex-grow w-full flex flex-col justify-start">
+<!-- Image Container -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat" data-alt="Futuristic 3D medical illustration of a joint structure with glowing green data scanning grid" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB6wTJUbd5heAYEklM8RluSEPGqfDofQoRajYTsAOrk2XZDBiGy6WO-Apb67JruC1iDXk7fxAwSQz7mOEp8pAajSb30FJeRxAJ1XIZURU_gge2HwITLJcqJ3gfVlfPbVzL5jks1gfWMcG4TgW63oS2no3H0z3vx9-l_OCbqCD0ac9aKSHH2ZYG91qkCH706iH5qWkyM6MZjw0_qhkT7y8vHQbsALTmqgYMWsWEP0_OHUiwRaS2Qtrv3N872nYXRZ3gmx1K4v-uV0FE");'>
+<!-- Dynamic Overlay to blend image into background content -->
+<div class="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-background-light dark:from-black/20 dark:via-transparent dark:to-background-dark h-full w-full"></div>
+<!-- Additional bottom fade for smoother transition -->
+<div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background-light dark:from-background-dark to-transparent"></div>
+</div>
+</div>
+<!-- Content Section: Bottom Sheet style -->
+<div class="relative z-10 flex flex-col items-center w-full px-6 pb-8 pt-0 bg-transparent">
+<!-- Pagination Indicators -->
+<div class="flex flex-row items-center justify-center gap-2 mb-6">
+<div class="h-1.5 w-6 rounded-full bg-primary shadow-[0_0_8px_rgba(19,236,128,0.6)]"></div>
+<div class="h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+<div class="h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+</div>
+<!-- Typography -->
+<div class="text-center w-full max-w-sm mb-8 animate-fade-in-up">
+<h1 class="text-[#111814] dark:text-white text-[34px] leading-[1.1] font-bold tracking-[-0.02em] mb-4">
+                    Precision Physio <br/>
+<span class="text-primary relative inline-block">
+                        Analysis
+                        <!-- Decorative underline/accent -->
+<svg class="absolute -bottom-1 left-0 w-full h-2 text-primary/30" preserveaspectratio="none" viewbox="0 0 100 10">
+<path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" stroke-width="3"></path>
+</svg>
+</span>
+</h1>
+<p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-relaxed px-2">
+                    Harness the power of AI to analyze medical imagery. Get instant feedback on your orthopedic health and personalized recovery plans.
+                </p>
+</div>
+<!-- Action Area -->
+<div class="w-full max-w-sm flex flex-col gap-4">
+<!-- Primary CTA -->
+<button class="group relative w-full flex items-center justify-center gap-2 bg-primary hover:bg-[#0fd672] active:scale-[0.98] transition-all duration-200 rounded-xl py-4 px-6 shadow-[0_8px_20px_-4px_rgba(19,236,128,0.4)] hover:shadow-[0_12px_24px_-4px_rgba(19,236,128,0.6)]">
+<span class="text-[#102219] text-lg font-bold tracking-wide">Analyze My Scan</span>
+<span class="material-symbols-outlined text-[#102219] text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+<!-- Shine effect on hover -->
+<div class="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+<div class="absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 group-hover:left-[200%] transition-all duration-700"></div>
+</div>
+</button>
+<!-- Secondary Link -->
+<button class="w-full py-2 text-center text-gray-500 dark:text-gray-500 text-sm font-medium hover:text-gray-900 dark:hover:text-white transition-colors">
+                    Already a member? <span class="text-[#111814] dark:text-gray-300 font-bold ml-1">Log in</span>
+</button>
+</div>
+<!-- Bottom Safe Area Spacer -->
+<div class="h-6 w-full"></div>
+</div>
+</div>
+</body></html>

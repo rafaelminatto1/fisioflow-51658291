@@ -1,20 +1,46 @@
+/**
+ * usePrestadores - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - prestadores -> prestadores
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PrestadorCreate, PrestadorUpdate } from '@/lib/validations/prestador';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+
+// Helper to convert doc
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
 
 export function usePrestadores(eventoId: string) {
   return useQuery({
     queryKey: ['prestadores', eventoId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('prestadores')
-        .select('*')
-        .eq('evento_id', eventoId)
-        .order('created_at', { ascending: false });
+      if (!eventoId) return [];
 
-      if (error) throw error;
-      return data;
+      const q = query(
+        collection(db, 'prestadores'),
+        where('evento_id', '==', eventoId),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as any[];
     },
     enabled: !!eventoId,
   });
@@ -26,14 +52,12 @@ export function useCreatePrestador() {
 
   return useMutation({
     mutationFn: async (prestador: PrestadorCreate) => {
-      const { data, error } = await supabase
-        .from('prestadores')
-        .insert([prestador as any])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'prestadores'), {
+        ...prestador,
+        created_at: new Date().toISOString()
+      });
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc) as any;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.evento_id] });
@@ -45,7 +69,7 @@ export function useCreatePrestador() {
     onError: (error: unknown) => {
       toast({
         title: 'Erro ao adicionar prestador',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -58,15 +82,11 @@ export function useUpdatePrestador() {
 
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: PrestadorUpdate; eventoId: string }) => {
-      const { data: updated, error } = await supabase
-        .from('prestadores')
-        .update(data as any)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'prestadores', id);
+      await updateDoc(docRef, data as any);
 
-      if (error) throw error;
-      return { ...updated, evento_id: eventoId };
+      const updated = await getDoc(docRef);
+      return { ...convertDoc(updated), evento_id: eventoId } as any;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.evento_id] });
@@ -78,7 +98,7 @@ export function useUpdatePrestador() {
     onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar prestador',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -91,12 +111,7 @@ export function useDeletePrestador() {
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const { error } = await supabase
-        .from('prestadores')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'prestadores', id));
       return eventoId;
     },
     onSuccess: (eventoId) => {
@@ -109,7 +124,7 @@ export function useDeletePrestador() {
     onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover prestador',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -122,25 +137,18 @@ export function useMarcarPagamento() {
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const { data: prestador, error: fetchError } = await supabase
-        .from('prestadores')
-        .select('status_pagamento')
-        .eq('id', id)
-        .single();
+      const docRef = doc(db, 'prestadores', id);
+      const snapshot = await getDoc(docRef);
 
-      if (fetchError) throw fetchError;
+      if (!snapshot.exists()) throw new Error('Prestador não encontrado');
+      const prestador = snapshot.data();
 
       const novoStatus = prestador.status_pagamento === 'PAGO' ? 'PENDENTE' : 'PAGO';
 
-      const { data, error } = await supabase
-        .from('prestadores')
-        .update({ status_pagamento: novoStatus })
-        .eq('id', id)
-        .select()
-        .single();
+      await updateDoc(docRef, { status_pagamento: novoStatus });
+      const updated = await getDoc(docRef);
 
-      if (error) throw error;
-      return { ...data, eventoId };
+      return { ...convertDoc(updated), eventoId } as any;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.eventoId] });
@@ -152,9 +160,10 @@ export function useMarcarPagamento() {
     onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar status',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
   });
 }
+

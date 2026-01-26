@@ -1,3 +1,10 @@
+/**
+ * MainLayout - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Auth:
+ * - supabase.auth.signOut() → signOut() from firebase/auth
+ */
+
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
@@ -27,7 +34,8 @@ import {
   Stethoscope
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { signOut } from 'firebase/auth';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -57,7 +65,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut(getFirebaseAuth());
       toast({
         title: 'Sessão encerrada',
         description: 'Você foi desconectado com sucesso.',

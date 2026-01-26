@@ -1,13 +1,34 @@
+/**
+ * useCommunications - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('communication_logs') → Firestore collection 'communication_logs'
+ * - Joins with patients replaced with separate queries
+ * - Enums preserved as TypeScript types
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
 
-type CommunicationType = Database['public']['Enums']['communication_type'];
-type CommunicationStatus = Database['public']['Enums']['communication_status'];
+const db = getFirebaseDb();
+
+type CommunicationType = 'email' | 'whatsapp' | 'sms' | 'push';
+type CommunicationStatus = 'pendente' | 'enviado' | 'entregue' | 'lido' | 'falha';
 
 export interface Communication {
   id: string;
@@ -32,30 +53,61 @@ export interface Communication {
   } | null;
 }
 
+// Helper to convert Firestore doc to Communication
+const convertDocToCommunication = (doc: any, patientData?: any): Communication => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    patient: patientData,
+  } as Communication;
+};
+
 export function useCommunications(filters?: { channel?: string; status?: string }) {
   return useQuery({
     queryKey: ['communications', filters],
     queryFn: async () => {
-      let query = supabase
-        .from('communication_logs')
-        .select(`
-          *,
-          patient:patients(id, full_name, email, phone)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
+      let baseQuery = query(
+        collection(db, 'communication_logs'),
+        orderBy('created_at', 'desc'),
+        limit(100)
+      );
 
+      // Apply filters via client-side filtering after query
+      const snapshot = await getDocs(baseQuery);
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Communication[];
+
+      // Filter by channel
       if (filters?.channel && filters.channel !== 'all') {
-        query = query.eq('type', filters.channel as CommunicationType);
+        data = data.filter(c => c.type === filters.channel);
       }
 
+      // Filter by status
       if (filters?.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status as CommunicationStatus);
+        data = data.filter(c => c.status === filters.status);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as Communication[];
+      // Fetch patient data for each communication
+      const patientIds = data
+        .map(c => c.patient_id)
+        .filter((id): id is string => id !== null);
+
+      const patientMap = new Map<string, any>();
+      for (const patientId of patientIds) {
+        const patientDoc = await getDoc(doc(db, 'patients', patientId));
+        if (patientDoc.exists()) {
+          patientMap.set(patientId, {
+            id: patientDoc.id,
+            ...patientDoc.data(),
+          });
+        }
+      }
+
+      // Attach patient data to communications
+      return data.map(c => ({
+        ...c,
+        patient: c.patient_id ? patientMap.get(c.patient_id) || null : null,
+      }));
     },
   });
 }
@@ -64,22 +116,19 @@ export function useCommunicationStats() {
   return useQuery({
     queryKey: ['communication-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('communication_logs')
-        .select('type, status');
-
-      if (error) throw error;
+      const snapshot = await getDocs(collection(db, 'communication_logs'));
+      const data = snapshot.docs.map(doc => doc.data());
 
       const stats = {
-        total: data?.length || 0,
-        sent: data?.filter(c => c.status === 'enviado').length || 0,
-        delivered: data?.filter(c => c.status === 'entregue').length || 0,
-        failed: data?.filter(c => c.status === 'falha').length || 0,
-        pending: data?.filter(c => c.status === 'pendente').length || 0,
+        total: data.length || 0,
+        sent: data.filter((c: any) => c.status === 'enviado').length || 0,
+        delivered: data.filter((c: any) => c.status === 'entregue').length || 0,
+        failed: data.filter((c: any) => c.status === 'falha').length || 0,
+        pending: data.filter((c: any) => c.status === 'pendente').length || 0,
         byChannel: {
-          email: data?.filter(c => c.type === 'email').length || 0,
-          whatsapp: data?.filter(c => c.type === 'whatsapp').length || 0,
-          sms: data?.filter(c => c.type === 'sms').length || 0,
+          email: data.filter((c: any) => c.type === 'email').length || 0,
+          whatsapp: data.filter((c: any) => c.type === 'whatsapp').length || 0,
+          sms: data.filter((c: any) => c.type === 'sms').length || 0,
         },
       };
 
@@ -105,7 +154,6 @@ export function useSendCommunication() {
       // Get organization_id from profile in Firestore
       if (!user) throw new Error('Usuário não autenticado');
 
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profileData = profileDoc.exists() ? profileDoc.data() : null;
 
@@ -113,23 +161,26 @@ export function useSendCommunication() {
         throw new Error('Organização não encontrada');
       }
 
-      const { data: result, error } = await supabase
-        .from('communication_logs')
-        .insert({
-          type: data.type,
-          patient_id: data.patient_id,
-          recipient: data.recipient,
-          subject: data.subject || null,
-          body: data.body,
-          status: 'pendente' as CommunicationStatus,
-          organization_id: profileData.organization_id,
-        })
-        .select()
-        .single();
+      const communicationData = {
+        type: data.type,
+        patient_id: data.patient_id,
+        recipient: data.recipient,
+        subject: data.subject || null,
+        body: data.body,
+        status: 'pendente' as CommunicationStatus,
+        organization_id: profileData.organization_id,
+        created_at: new Date().toISOString(),
+        sent_at: null,
+        delivered_at: null,
+        read_at: null,
+        error_message: null,
+        appointment_id: null,
+      };
 
-      if (error) throw error;
+      const docRef = await addDoc(collection(db, 'communication_logs'), communicationData);
+      const docSnap = await getDoc(docRef);
 
-      return result;
+      return { id: docRef.id, ...docSnap.data() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications'] });
@@ -147,12 +198,7 @@ export function useDeleteCommunication() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('communication_logs')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'communication_logs', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications'] });
@@ -170,15 +216,14 @@ export function useResendCommunication() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from('communication_logs')
-        .update({ status: 'pendente' as CommunicationStatus, error_message: null })
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'communication_logs', id);
+      await updateDoc(docRef, {
+        status: 'pendente' as CommunicationStatus,
+        error_message: null,
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return { id, ...docSnap.data() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications'] });

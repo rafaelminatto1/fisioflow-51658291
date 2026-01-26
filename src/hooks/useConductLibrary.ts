@@ -1,6 +1,27 @@
+/**
+ * useConductLibrary - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('conduct_library') → Firestore collection 'conduct_library'
+ * - supabase.auth.getUser() → Firebase Auth (imported from contexts/AuthContext)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface ConductTemplate {
   id: string;
@@ -22,22 +43,33 @@ export interface CreateConductData {
   organization_id?: string;
 }
 
+// Helper to convert Firestore doc to ConductTemplate
+const convertDocToConductTemplate = (doc: any): ConductTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as ConductTemplate;
+};
+
 export const useConductLibrary = (category?: string) => {
   return useQuery({
     queryKey: ['conduct-library', category],
     queryFn: async () => {
-      let query = supabase
-        .from('conduct_library')
-        .select('*')
-        .order('title');
+      const q = query(
+        collection(db, 'conduct_library'),
+        orderBy('title')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(convertDocToConductTemplate);
+
+      // Filter by category if provided
       if (category) {
-        query = query.eq('category', category);
+        data = data.filter(c => c.category === category);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as ConductTemplate[];
+      return data;
     }
   });
 };
@@ -45,23 +77,23 @@ export const useConductLibrary = (category?: string) => {
 export const useCreateConduct = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateConductData) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('Usuário não autenticado');
 
-      const { data: conduct, error } = await supabase
-        .from('conduct_library')
-        .insert({
-          ...data,
-          created_by: userData.user.id
-        })
-        .select()
-        .single();
+      const conductData = {
+        ...data,
+        created_by: user.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return conduct as ConductTemplate;
+      const docRef = await addDoc(collection(db, 'conduct_library'), conductData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToConductTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conduct-library'] });
@@ -86,12 +118,7 @@ export const useDeleteConduct = () => {
 
   return useMutation({
     mutationFn: async (conductId: string) => {
-      const { error } = await supabase
-        .from('conduct_library')
-        .delete()
-        .eq('id', conductId);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'conduct_library', conductId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conduct-library'] });

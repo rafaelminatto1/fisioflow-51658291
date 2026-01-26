@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PrescribedExercise {
@@ -25,32 +26,65 @@ export const usePrescribedExercises = (patientId: string) => {
         queryKey: ['prescribed-exercises', patientId],
         queryFn: async () => {
             if (!patientId) return [];
-            const { data, error } = await supabase
-                .from('prescribed_exercises')
-                .select('*, exercise:exercises(name)')
-                .eq('patient_id', patientId)
-                .eq('is_active', true);
 
-            if (error) throw error;
-            return data as PrescribedExercise[];
+            const q = query(
+                collection(db, 'prescribed_exercises'),
+                where('patient_id', '==', patientId),
+                where('is_active', '==', true)
+            );
+
+            const snapshot = await getDocs(q);
+
+            // Fetch exercises separately to join the data
+            const prescriptions = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as PrescribedExercise[];
+
+            // Get unique exercise IDs
+            const exerciseIds = [...new Set(prescriptions.map(p => p.exercise_id))];
+
+            // Fetch exercise details
+            if (exerciseIds.length > 0) {
+                const exercisesQuery = query(
+                    collection(db, 'exercises')
+                );
+                const exercisesSnapshot = await getDocs(exercisesQuery);
+                const exercises = exercisesSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                const exerciseMap = new Map(exercises.map(e => [e.id, e]));
+
+                // Join exercise data
+                return prescriptions.map(p => ({
+                    ...p,
+                    exercise: exerciseMap.get(p.exercise_id)
+                }));
+            }
+
+            return prescriptions;
         },
         enabled: !!patientId
     });
 
     const addPrescription = useMutation({
         mutationFn: async (newPrescription: Omit<PrescribedExercise, 'id' | 'patient_id' | 'is_active'>) => {
-            const { data, error } = await supabase
-                .from('prescribed_exercises')
-                .insert({
-                    ...newPrescription,
-                    patient_id: patientId,
-                    is_active: true
-                })
-                .select()
-                .single();
+            const data = {
+                ...newPrescription,
+                patient_id: patientId,
+                is_active: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            };
 
-            if (error) throw error;
-            return data;
+            const docRef = await addDoc(collection(db, 'prescribed_exercises'), data);
+
+            return {
+                id: docRef.id,
+                ...data
+            };
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prescribed-exercises', patientId] });
@@ -60,15 +94,18 @@ export const usePrescribedExercises = (patientId: string) => {
 
     const updatePrescription = useMutation({
         mutationFn: async ({ id, ...updates }: Partial<PrescribedExercise> & { id: string }) => {
-            const { data, error } = await supabase
-                .from('prescribed_exercises')
-                .update(updates)
-                .eq('id', id)
-                .select()
-                .single();
+            const docRef = doc(db, 'prescribed_exercises', id);
+            const data = {
+                ...updates,
+                updated_at: new Date().toISOString(),
+            };
 
-            if (error) throw error;
-            return data;
+            await updateDoc(docRef, data);
+
+            return {
+                id,
+                ...data
+            };
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prescribed-exercises', patientId] });
@@ -77,12 +114,13 @@ export const usePrescribedExercises = (patientId: string) => {
 
     const removePrescription = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase
-                .from('prescribed_exercises')
-                .update({ is_active: false })
-                .eq('id', id);
+            const docRef = doc(db, 'prescribed_exercises', id);
+            const data = {
+                is_active: false,
+                updated_at: new Date().toISOString(),
+            };
 
-            if (error) throw error;
+            await updateDoc(docRef, data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prescribed-exercises', patientId] });

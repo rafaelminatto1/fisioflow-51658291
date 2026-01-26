@@ -2,15 +2,17 @@
  * TESTE DE FLUXO COMPLETO - FISIOFLOW (E2E Spec)
  *
  * Fluxo ponta a ponta:
- * 1. Criar Agendamento
- * 2. Obter ID do Agendamento
- * 3. Navegar para /patient-evolution/{appointmentId}
- * 4. Preencher Evolução SOAP completa (S, O, A, P)
+ * 1. Login
+ * 2. Fechar Onboarding (se aparecer)
+ * 3. Criar Agendamento de Avaliação (criação dinâmica)
+ * 4. Verificar redirecionamento automático para Evolução
+ * 5. Preencher Evolução SOAP completa
+ * 6. Salvar e validar sucesso
  */
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8083';
 const CREDENTIALS = {
   email: 'REDACTED_EMAIL',
   password: 'REDACTED'
@@ -18,328 +20,182 @@ const CREDENTIALS = {
 
 // Configure test for Chromium only with extended timeout
 test.use({ browserName: 'chromium' });
-test.setTimeout(120000);
+test.setTimeout(120000); // 2 minutes
 
-test('fluxo completo: agendamento -> atendimento -> evolução SOAP', async ({ page }) => {
-  console.log('\n' + '█'.repeat(70));
-  console.log('█    TESTE FLUXO COMPLETO');
-  console.log('█'.repeat(70));
+test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', async ({ page, context }) => {
+  // Clear cookies for fresh session
+  await context.clearCookies();
 
   // ========================================
   // ETAPA 0: LOGIN
   // ========================================
   console.log('\n📍 ETAPA 0: Login');
-  console.log('-'.repeat(70));
-
-  await page.goto(`${BASE_URL}/auth`);
-  await page.waitForTimeout(5000);
+  await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded' });
 
   await page.fill('#login-email', CREDENTIALS.email);
   await page.fill('#login-password', CREDENTIALS.password);
   await page.click('button:has-text("Entrar na Plataforma")');
 
-  await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 45000 });
-  await page.waitForTimeout(3000);
+  // Wait for login to complete (check for dashboard or schedule URL)
+  await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 30000 });
   console.log('✅ Login realizado');
 
   // ========================================
-  // ETAPA 1: CRIAR AGENDAMENTO
+  // ETAPA 1: FECHAR ONBOARDING (SE APARECER)
   // ========================================
-  console.log('\n📍 ETAPA 1: Criar Agendamento');
-  console.log('-'.repeat(70));
+  console.log('\n📍 ETAPA 1: Verificar Onboarding');
 
-  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(5000);
-  await page.screenshot({ path: '/tmp/fluxo-01-agenda.png', fullPage: true });
-
-  // Clicar em Novo Agendamento
-  console.log('\nClicando em "Novo Agendamento"...');
-  await page.click('button:has-text("Novo Agendamento")');
-
-  // Aguardar o modal carregar completamente
-  await page.waitForSelector('[role="dialog"]', { state: 'visible', timeout: 10000 });
-  await page.waitForTimeout(2000);
-  await page.screenshot({ path: '/tmp/fluxo-02a-modal-aberto.png', fullPage: true });
-
-  // Preencher formulário - PatientCombobox usa role="combobox"
-  console.log('\nPreenchendo formulário...');
-
-  // Selecionar paciente via PatientCombobox
-  console.log('  Selecionando paciente...');
-
-  // Encontrar o combobox que esteja visível e estável
-  const combobox = page.locator('[role="dialog"] [role="combobox"]').first();
-  const comboboxCount = await combobox.count();
-
-  if (comboboxCount > 0) {
-    console.log(`    Combobox encontrado no modal`);
-    // Esperar o elemento estar estável
-    await combobox.waitFor({ state: 'visible', timeout: 5000 });
-    await combobox.click({ force: true });
-    await page.waitForTimeout(1000);
-
-    // Agora procurar opções de paciente
-    const patientOptions = page.locator('[role="option"]').or(page.locator('[data-value]'));
-    const optionCount = await patientOptions.count();
-
-    if (optionCount > 0) {
-      console.log(`    ${optionCount} opções de paciente encontradas`);
-      await patientOptions.first().waitFor({ state: 'visible', timeout: 3000 });
-      await patientOptions.first().click();
-      await page.waitForTimeout(500);
-      console.log('  ✓ Paciente selecionado');
+  // Tenta fechar o modal de onboarding se ele aparecer em até 10 segundos
+  try {
+    const onboardingCloseBtn = page.locator('button:has-text("Pular Tour"), button[aria-label="Close"], button:has-text("Fechar")').first();
+    if (await onboardingCloseBtn.isVisible({ timeout: 5000 })) {
+      await onboardingCloseBtn.click();
+      console.log('✅ Onboarding fechado');
     } else {
-      console.log('    Nenhuma opção de paciente encontrada após abrir dropdown');
+      console.log('ℹ️ Onboarding não apareceu');
     }
+  } catch (e) {
+    console.log('ℹ️ Onboarding não detectado ou erro ao fechar');
+  }
+
+  // ========================================
+  // ETAPA 2: CRIAR AGENDAMENTO DE AVALIAÇÃO
+  // ========================================
+  console.log('\n📍 ETAPA 2: Criar Agendamento');
+
+  // Garantir que estamos na agenda
+  await page.goto(`${BASE_URL}/schedule`);
+
+  // Clicar em "Novo" ou "Novo Agendamento"
+  const newAppointmentBtn = page.locator('button:has-text("Novo"), button:has-text("Novo Agendamento")').first();
+  await newAppointmentBtn.waitFor({ state: 'visible' });
+  await newAppointmentBtn.click();
+  console.log('  ✓ Botão Novo Agendamento clicado');
+
+  // Selecionar Paciente (Combo box)
+  // Assume que existe pelo menos um paciente ou usa um genérico
+  // O componente usa cmbox, geralmente trigger -> input -> option
+  const patientTrigger = page.locator('button[role="combobox"]').first();
+  await patientTrigger.click();
+  await page.waitForTimeout(500); // Animation
+
+  // Tentar selecionar o primeiro paciente da lista
+  const firstOption = page.locator('[role="listbox"] [role="option"]').first();
+  // Se não encontrar, tenta digitar "Maria"
+  if (await firstOption.isVisible()) {
+    await firstOption.click();
+    console.log('  ✓ Paciente selecionado da lista');
   } else {
-    console.log('    Combobox não encontrado no modal');
+    // Fallback: digitar e criar/selecionar
+    await page.keyboard.type('Teste');
+    await page.waitForTimeout(1000);
+    await page.locator('[role="option"]').first().click();
+    console.log('  ✓ Paciente "Teste" selecionado');
   }
 
-  // Data e horário - assume valores padrão já estão corretos
-  console.log('  ✓ Usando data/horário padrão');
+  // Definir Status para "Avaliação" (Crítico para o redirecionamento)
+  // Procura pelo Select de Status
+  // O label é "Status *" e o select está próximo
+  // Vamos tentar localizar pelo texto do valor atual ou label
+  // Melhor abordagem: Clicar no Select que tem o status default (geralmente "Agendado")
+  const statusSelect = page.locator('button[role="combobox"]:has-text("Agendado"), button[role="combobox"]:has-text("Avaliação")').first();
+  // Nota: o Select do shadcn usa button role combobox. Pode ter conflito com paciente.
+  // Vamos usar label locator se possível
 
-  await page.screenshot({ path: '/tmp/fluxo-02-form.png', fullPage: true });
+  // Alternativa: Encontrar label "Status *" e pegar o button próximo
+  // const statusLabel = page.locator('label:has-text("Status *")');
+  // await statusLabel.click(); // Focus helps? No.
 
-  // Salvar
-  console.log('\nSalvando agendamento...');
-  await page.click('button:has-text("Criar")');
-  await page.waitForTimeout(5000);
-  console.log('  ✓ Agendamento salvo');
+  // Vamos tentar achar todos os comboboxes e pegar o segundo (Paciente é o primeiro, Tipo o segundo, Status o terceiro?)
+  // Na estrutura vista:
+  // PatientSelectionSection -> Combobox
+  // DateTimeSection -> Popover (Date), Select (Time), Select (Duration)
+  // TypeAndStatusSection -> Select (Type), Select (Status)
 
-  // Recarregar agenda
-  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(5000);
-  await page.screenshot({ path: '/tmp/fluxo-03-agenda-com-card.png', fullPage: true });
+  // Vamos pelo texto placeholder ou valor padrão
+  // O valor padrão de Status é 'agendado' que mostra uma bolinha azul/cinza e o texto "Agendado"
+  const statusTrigger = page.locator('div.space-y-1\\.5:has(label:has-text("Status")) button[role="combobox"]');
+  await statusTrigger.click();
+  await page.locator('[role="option"]:has-text("Avaliação")').click();
+  console.log('  ✓ Status definido para Avaliação');
+
+  // Selecionar Horário (obrigatório) - Pega o primeiro disponível na lista
+  const timeTrigger = page.locator('div.space-y-1\\.5:has(label:has-text("Horário")) button[role="combobox"]');
+  await timeTrigger.click();
+  // Selecionar primeira opção (que não seja header/disabled se houver)
+  await page.locator('[role="option"]').first().click();
+  console.log('  ✓ Horário selecionado');
+
+  // Clicar em "Iniciar Avaliação" (Botão de submit muda texto quando status é avaliacao)
+  const submitBtn = page.locator('button[type="submit"]:has-text("Iniciar Avaliação")');
+  await submitBtn.click();
+  console.log('  ✓ Botão de criação clicado');
 
   // ========================================
-  // ETAPA 2: CLICAR NO CARD E INICIAR ATENDIMENTO
+  // ETAPA 3: VERIFICAR REDIRECIONAMENTO
   // ========================================
-  console.log('\n📍 ETAPA 2: Clicar no Card do Agendamento e Iniciar Atendimento');
-  console.log('-'.repeat(70));
+  console.log('\n📍 ETAPA 3: Verificar Redirecionamento para Evolução');
 
-  // Procurar pelo primeiro card de agendamento e clicar
-  console.log('\nProcurando card de agendamento...');
+  // O redirecionamento pode levar para /patients/{id}/evaluations/new... ou /patient-evolution/...
+  // Vamos esperar URL mudar
+  await page.waitForURL(url => url.pathname.includes('/evaluations/') || url.pathname.includes('/patient-evolution/'), { timeout: 20000 });
+  console.log(`  ✓ Redirecionado para: ${page.url()}`);
+  await page.waitForTimeout(2000); // Esperar carregamento inicial
+  await page.screenshot({ path: '/tmp/fluxo-03-redirecionamento.png' });
 
-  // Usar o botão "Ver Detalhes" que é visível em cada card
-  const verDetalhesButton = page.locator('button:has-text("Ver Detalhes")').first();
-  const buttonCount = await verDetalhesButton.count();
+  // ========================================
+  // ETAPA 4: PREENCHER EVOLUÇÃO SOAP
+  // ========================================
+  console.log('\n📍 ETAPA 4: Preencher SOAP');
 
-  if (buttonCount > 0) {
-    console.log(`  ✓ Botão "Ver Detalhes" encontrado, clicando...`);
-    await verDetalhesButton.click();
-    await page.waitForTimeout(3000);
-  } else {
-    console.log('  ! Botão "Ver Detalhes" não encontrado');
-    // Tentar clicar em um elemento do card
-    const cardText = page.locator('text=Confirmado, text=Agendado').first();
-    if (await cardText.count() > 0) {
-      await cardText.click();
-      await page.waitForTimeout(3000);
+  const fillTextarea = async (placeholder: string, value: string) => {
+    // Tenta encontrar por placeholder ou label próximo
+    const locator = page.locator(`textarea[placeholder*="${placeholder}" i], textarea[name*="${placeholder.toLowerCase()}" i]`).first();
+    if (await locator.count() > 0) {
+      await locator.fill(value);
+      console.log(`  ✓ Campo "${placeholder}" preenchido`);
+      return true;
     }
-  }
+    // Fallback: tentar pelo índice se soubermos a ordem
+    return false;
+  };
 
-  // Agora deve aparecer o modal QuickEdit com o botão "Iniciar Atendimento"
-  console.log('\nProcurando botão "Iniciar Atendimento"...');
+  // Tentar preencher campos padrão
+  // Ajuste estes seletores conforme sua UI real de evolução
 
-  // O botão pode estar dentro de um dropdown ou direto no modal
-  const iniciarButtonSelectors = [
-    'button:has-text("Iniciar Atendimento")',
-    'text=Iniciar Atendimento',
-    '[role="menuitem"]:has-text("Iniciar Atendimento")',
-    'span:has-text("Iniciar Atendimento")',
-    'div:has-text("Iniciar Atendimento")'
-  ];
+  // S - Subjetivo
+  const sFilled = await fillTextarea('Queixas', 'Paciente relata melhora parcial.');
+  if (!sFilled) await page.locator('textarea').nth(0).fill('Paciente relata melhora parcial.'); // Fallback 1º textarea
 
-  let buttonClicked = false;
-  for (const sel of iniciarButtonSelectors) {
-    const count = await page.locator(sel).count();
-    if (count > 0) {
-      console.log(`  ✓ Botão encontrado: ${sel}`);
-      await page.locator(sel).first().click();
-      buttonClicked = true;
-      await page.waitForTimeout(3000);
-      break;
-    }
-  }
+  // O - Objetivo
+  const oFilled = await fillTextarea('Objetivo', 'Amplitude de movimento preservada.');
+  if (!oFilled && await page.locator('textarea').count() > 1) await page.locator('textarea').nth(1).fill('ADM preservada.');
 
-  if (!buttonClicked) {
-    console.log('  ! Botão "Iniciar Atendimento" não encontrado no modal');
-    console.log('  Listando elementos visíveis no modal:');
-    const modalElements = await page.locator('[role="dialog"] *, .modal *').all();
-    for (let i = 0; i < Math.min(modalElements.length, 15); i++) {
-      const text = await modalElements[i].textContent();
-      if (text && text.trim() && text.trim().length < 50) {
-        console.log(`    - "${text.trim()}"`);
-      }
-    }
-  }
+  // A - Avaliação
+  const aFilled = await fillTextarea('Avaliação', 'Boa evolução do quadro.');
+  if (!aFilled && await page.locator('textarea').count() > 2) await page.locator('textarea').nth(2).fill('Boa evolução.');
 
-  // Verificar se navegou para página de evolução
-  const url = page.url();
-  console.log(`  URL atual: ${url}`);
+  // P - Plano
+  const pFilled = await fillTextarea('Conduta', 'Manter exercícios de fortalecimento.');
+  if (!pFilled && await page.locator('textarea').count() > 3) await page.locator('textarea').nth(3).fill('Manter conduta.');
 
-  let appointmentId = null;
-  if (url.includes('/patient-evolution/')) {
-    const match = url.match(/\/patient-evolution\/([^\/\?]+)/);
-    if (match) {
-      appointmentId = match[1];
-      console.log(`  ✓ ID do agendamento extraído da URL: ${appointmentId}`);
-    }
-  } else {
-    console.log('  ! Não navegou para página de evolução');
-    // Se não navegou, o teste não pode continuar
-    // Vamos marcar como falha mas não abortar
-  }
-
-  await page.screenshot({ path: '/tmp/fluxo-04-evolucao.png', fullPage: true });
-
-  // Skip SOAP filling if we didn't navigate to evolution page
-  if (!url.includes('/patient-evolution/')) {
-    console.log('\n⚠️ Pulando preenchimento SOAP - não está na página de evolução');
-    console.log('\n' + '█'.repeat(70));
-    console.log('█    RESULTADO');
-    console.log('█'.repeat(70));
-    console.log('\nStatus: ⚠️ TESTE INCOMPLETO');
-    console.log('  ✗ Não foi possível navegar para a página de evolução');
-    console.log('  ! Verifique se o botão "Iniciar Atendimento" está funcionando');
-    return;
-  }
+  await page.screenshot({ path: '/tmp/fluxo-04-soap-preenchido.png', fullPage: true });
 
   // ========================================
-  // ETAPA 3: PREENCHER EVOLUÇÃO SOAP
+  // ETAPA 5: SALVAR
   // ========================================
+  console.log('\n📍 ETAPA 5: Salvar Evolução');
 
-  // ========================================
-  // ETAPA 3: PREENCHER EVOLUÇÃO SOAP
-  // ========================================
-  console.log('\n📍 ETAPA 3: Preencher Evolução SOAP');
-  console.log('-'.repeat(70));
+  // Botão Salvar ou Finalizar
+  const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Finalizar")').first();
+  await saveBtn.click();
 
-  // SUBJETIVO (S)
-  console.log('\nPreenchendo SUBJETIVO...');
-  const subjectiveSelectors = [
-    'textarea[placeholder*="Queixas do paciente"]',
-    'textarea[placeholder*="relata"]',
-    'textarea[id*="subjective"]',
-    'textarea[name*="subjective"]'
-  ];
+  // Esperar sucesso (toast ou redirecionamento de volta)
+  // Geralmente volta para lista ou mostra toast
+  await expect(page.locator('div:has-text("sucesso"), div:has-text("salvo")').first()).toBeVisible({ timeout: 10000 });
+  console.log('✅ Evolução salva com sucesso');
 
-  let subjectiveFilled = false;
-  for (const sel of subjectiveSelectors) {
-    const count = await page.locator(sel).count();
-    if (count > 0) {
-      await page.locator(sel).first().fill('Paciente relata dor lombar há 6 meses com piora ao sentar. Tratamento fisioterapêutico prévio com melhora temporária, porém com recidiva.');
-      console.log(`  ✓ Subjetivo preenchido (${sel})`);
-      subjectiveFilled = true;
-      break;
-    }
-  }
-  expect(subjectiveFilled).toBeTruthy();
-  await page.waitForTimeout(1000);
-
-  // OBJETIVO (O)
-  console.log('\nPreenchendo OBJETIVO...');
-  const objectiveSelectors = [
-    'textarea[placeholder*="Achados clínicos"]',
-    'textarea[placeholder*="exame físico"]',
-    'textarea[id*="objective"]',
-    'textarea[name*="objective"]'
-  ];
-
-  let objectiveFilled = false;
-  for (const sel of objectiveSelectors) {
-    const count = await page.locator(sel).count();
-    if (count > 0) {
-      await page.locator(sel).first().fill('Postura ereta, mobilidade preservada. Força muscular 4/5. Reforços de tronco necessários.');
-      console.log(`  ✓ Objetivo preenchido (${sel})`);
-      objectiveFilled = true;
-      break;
-    }
-  }
-  expect(objectiveFilled).toBeTruthy();
-  await page.waitForTimeout(1000);
-
-  // AVALIAÇÃO (A)
-  console.log('\nPreenchendo AVALIAÇÃO...');
-  const assessmentSelectors = [
-    'textarea[placeholder*="Análise clínica"]',
-    'textarea[placeholder*="diagnóstico"]',
-    'textarea[id*="assessment"]',
-    'textarea[name*="assessment"]'
-  ];
-
-  let assessmentFilled = false;
-  for (const sel of assessmentSelectors) {
-    const count = await page.locator(sel).count();
-    if (count > 0) {
-      await page.locator(sel).first().fill('Lombalgia mecânica. Hérnia de disco L4-L5. Prognóstico favorável com tratamento conservador.');
-      console.log(`  ✓ Avaliação preenchida (${sel})`);
-      assessmentFilled = true;
-      break;
-    }
-  }
-  expect(assessmentFilled).toBeTruthy();
-  await page.waitForTimeout(1000);
-
-  // PLANO (P)
-  console.log('\nPreenchendo PLANO...');
-  const planSelectors = [
-    'textarea[placeholder*="Conduta"]',
-    'textarea[placeholder*="exercícios"]',
-    'textarea[id*="plan"]',
-    'textarea[name*="plan"]'
-  ];
-
-  let planFilled = false;
-  for (const sel of planSelectors) {
-    const count = await page.locator(sel).count();
-    if (count > 0) {
-      await page.locator(sel).first().fill('1) Alongamento 3x/semana, 2) Fortalecimento core diário, 3) Orientações posturais, 4) Retorno em 7 dias.');
-      console.log(`  ✓ Plano preenchido (${sel})`);
-      planFilled = true;
-      break;
-    }
-  }
-  expect(planFilled).toBeTruthy();
-
-  await page.screenshot({ path: '/tmp/fluxo-05-soap-cheio.png', fullPage: true });
-
-  // ========================================
-  // ETAPA 4: SALVAR
-  // ========================================
-  console.log('\n📍 ETAPA 4: Salvar Evolução');
-  console.log('-'.repeat(70));
-
-  const saveSelectors = [
-    'button:has-text("Salvar")',
-    'button:has-text("Finalizar")',
-    'button[type="submit"]'
-  ];
-
-  let saved = false;
-  for (const sel of saveSelectors) {
-    const count = await page.locator(sel).count();
-    if (count > 0) {
-      await page.click(sel);
-      console.log(`  ✓ Botão clicado: ${sel}`);
-      await page.waitForTimeout(5000);
-      saved = true;
-      break;
-    }
-  }
-
-  await page.screenshot({ path: '/tmp/fluxo-06-final.png', fullPage: true });
-
-  // ========================================
-  // RESULTADO FINAL
-  // ========================================
   console.log('\n' + '█'.repeat(70));
-  console.log('█    RESULTADO');
+  console.log('█    TESTE CONCLUÍDO COM SUCESSO');
   console.log('█'.repeat(70));
-  console.log('\nStatus: ✅ TESTE COMPLETO CONCLUÍDO');
-  console.log('  ✓ Subjetivo preenchido');
-  console.log('  ✓ Objetivo preenchido');
-  console.log('  ✓ Avaliação preenchida');
-  console.log('  ✓ Plano preenchido');
-  console.log('\n📸 Screenshots salvos em /tmp/fluxo-*.png');
 });

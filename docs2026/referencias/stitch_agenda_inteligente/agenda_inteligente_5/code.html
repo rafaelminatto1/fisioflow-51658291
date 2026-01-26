@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Daily Action Hub - FisioFlow</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-foreground": "#ffffff",
+                        "secondary": "#f1f5f9",
+                        "background-light": "#ffffff",
+                        "background-dark": "#020817", // darker shadcn style
+                        "border": "#e2e8f0",
+                        "muted": "#64748b",
+                        "success": "#10b981", // Emerald 500
+                        "danger": "#ef4444", // Red 500
+                        "neutral": "#94a3b8", // Slate 400
+                        "warning": "#f59e0b", // Amber 500
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", // shadcn default
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+                        'elevation': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-slate-50 text-slate-950 font-display antialiased overflow-hidden h-screen flex flex-col">
+<header class="flex-none bg-white border-b border-border z-20 px-4 py-3 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-3">
+<button class="text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[24px]">menu</span>
+</button>
+<div>
+<h1 class="text-lg font-bold leading-tight tracking-tight text-slate-900">Hoje</h1>
+<div class="flex items-center gap-1 text-xs text-muted font-medium cursor-pointer">
+<span>Quarta, 13 Set</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors group">
+<span class="material-symbols-outlined text-[24px]">filter_list</span>
+</button>
+<button class="text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors group">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto relative bg-slate-50 p-4 space-y-4">
+<div class="space-y-3">
+<h2 class="text-xs font-semibold uppercase text-slate-500 tracking-wider">Ações Urgentes</h2>
+<div class="bg-white p-4 rounded-lg shadow-card border-l-4 border-warning flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-800">Confirmar Próxima Sessão</p>
+<span class="text-xs font-medium text-warning bg-warning/10 px-2 py-0.5 rounded-full">30 min</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold text-slate-900">João Silva</p>
+<p class="text-sm text-slate-600">Avaliação Joelho (Pós-op)</p>
+<p class="text-xs text-slate-500">Hoje, 08:30 - 09:15</p>
+</div>
+<div class="flex gap-2 pt-2 border-t border-border mt-3">
+<button class="flex-1 px-3 py-2 bg-success text-white text-sm font-medium rounded-lg shadow-sm hover:bg-success/90 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">check</span> Confirmar
+</button>
+<button class="flex-1 px-3 py-2 border border-border text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">call</span> Ligar
+</button>
+</div>
+</div>
+<div class="bg-white p-4 rounded-lg shadow-card border-l-4 border-danger flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-800">Seguir com Paciente</p>
+<span class="text-xs font-medium text-danger bg-danger/10 px-2 py-0.5 rounded-full">Atrasado</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold text-slate-900">Maria Souza</p>
+<p class="text-sm text-slate-600">Fisioterapia (Sessão 4/10)</p>
+<p class="text-xs text-slate-500">Confirmado, 09:30 - 10:30</p>
+</div>
+<div class="flex gap-2 pt-2 border-t border-border mt-3">
+<button class="flex-1 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">sticky_note_2</span> Ver Anotações
+</button>
+<button class="flex-1 px-3 py-2 border border-border text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">message</span> Mensagem
+</button>
+</div>
+</div>
+</div>
+<div class="space-y-3 pt-6">
+<h2 class="text-xs font-semibold uppercase text-slate-500 tracking-wider">Compromissos do Dia</h2>
+<div class="bg-white p-4 rounded-lg shadow-card border-l-4 border-primary flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-800">Iniciar Sessão</p>
+<span class="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">Agora</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold text-slate-900">Beatriz Costa</p>
+<p class="text-sm text-slate-600">Recovery Boots</p>
+<p class="text-xs text-slate-500">Hoje, 15:00 - 15:45</p>
+</div>
+<div class="flex gap-2 pt-2 border-t border-border mt-3">
+<button class="flex-1 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span> Iniciar
+</button>
+<button class="flex-1 px-3 py-2 border border-border text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">event_note</span> Detalhes
+</button>
+</div>
+</div>
+<div class="bg-white p-4 rounded-lg shadow-card border-l-4 border-primary flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-800">Próxima Sessão</p>
+<span class="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">13:00 - 14:30</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold text-slate-900">Grupo Ombro</p>
+<p class="text-sm text-slate-600">Treino funcional e fortalecimento</p>
+<div class="flex items-center gap-1 text-xs text-slate-500 mt-1">
+<span class="material-symbols-outlined text-[14px]">group</span>
+                            3 Pacientes
+                        </div>
+</div>
+<div class="flex gap-2 pt-2 border-t border-border mt-3">
+<button class="flex-1 px-3 py-2 border border-border text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">edit_calendar</span> Reagendar
+</button>
+<button class="flex-1 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">group</span> Ver Grupo
+</button>
+</div>
+</div>
+<div class="bg-white p-4 rounded-lg shadow-card border-l-4 border-neutral opacity-80 flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-800 line-through">Sessão Realizada</p>
+<span class="text-xs font-medium text-neutral bg-neutral/10 px-2 py-0.5 rounded-full">Finalizado</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold text-slate-900 line-through">Pedro Martins</p>
+<p class="text-sm text-slate-600 line-through">Liberação Miofascial</p>
+<p class="text-xs text-slate-500 line-through">Hoje, 07:00 - 07:50</p>
+</div>
+<div class="flex gap-2 pt-2 border-t border-border mt-3">
+<button class="flex-1 px-3 py-2 border border-border text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-1" disabled="">
+<span class="material-symbols-outlined text-[18px]">check_circle</span> Concluído
+</button>
+</div>
+</div>
+<div class="bg-white p-4 rounded-lg shadow-card border-l-4 border-danger opacity-80 flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-800 line-through">Sessão Cancelada</p>
+<span class="text-xs font-medium text-danger bg-danger/10 px-2 py-0.5 rounded-full">Cancelado</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold text-slate-900 line-through">Carlos Pereira</p>
+<p class="text-sm text-slate-600 line-through">Avaliação Postural</p>
+<p class="text-xs text-slate-500 line-through">Hoje, 11:00 - 11:30</p>
+</div>
+<div class="flex gap-2 pt-2 border-t border-border mt-3">
+<button class="flex-1 px-3 py-2 bg-danger text-white text-sm font-medium rounded-lg shadow-sm hover:bg-danger/90 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">undo</span> Desfazer
+</button>
+<button class="flex-1 px-3 py-2 border border-border text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">event_busy</span> Marcar Novo
+</button>
+</div>
+</div>
+</div>
+<div class="space-y-3 pt-6 pb-20">
+<h2 class="text-xs font-semibold uppercase text-slate-500 tracking-wider">Oportunidades de Agendamento</h2>
+<div class="bg-white p-4 rounded-lg border shadow-card flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-base font-bold text-slate-800">Ana Clara</p>
+<p class="text-sm text-slate-600">Pós-op LCA</p>
+</div>
+<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded font-medium">Alta Prioridade</span>
+</div>
+<div class="text-sm text-slate-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                    Pref: Manhã (08-11h)
+                </div>
+<button class="w-full mt-2 bg-slate-900 text-white text-sm font-medium py-2 rounded-lg hover:bg-slate-800 shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Agendar
+</button>
+</div>
+<div class="bg-white p-4 rounded-lg border shadow-card flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-base font-bold text-slate-800">Roberto Dias</p>
+<p class="text-sm text-slate-600">Avaliação Lombar</p>
+</div>
+</div>
+<div class="text-sm text-slate-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                    Pref: Final da tarde
+                </div>
+<button class="w-full mt-2 border border-slate-200 text-slate-700 text-sm font-medium py-2 rounded-lg hover:bg-slate-50 shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Agendar
+</button>
+</div>
+</div>
+</main>
+<div class="absolute bottom-6 right-6 z-40">
+<button class="flex items-center justify-center w-14 h-14 bg-primary text-white rounded-full shadow-elevation hover:bg-blue-600 transition-all active:scale-95 group">
+<span class="material-symbols-outlined text-[32px] group-hover:rotate-90 transition-transform">add</span>
+</button>
+</div>
+
+</body></html>

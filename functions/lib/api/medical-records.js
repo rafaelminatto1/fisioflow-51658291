@@ -37,7 +37,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.getPatientRecords = void 0;
+exports.savePainRecord = exports.getPainRecords = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.getPatientRecords = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const pg_1 = require("pg");
 const auth_1 = require("../middleware/auth");
@@ -327,6 +327,65 @@ exports.updateTreatmentSession = (0, https_1.onCall)(async (request) => {
       RETURNING *
     `;
         const result = await pool.query(query, values);
+        return { data: result.rows[0] };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Busca registros de dor de um paciente
+ */
+exports.getPainRecords = (0, https_1.onCall)(async (request) => {
+    await getAuth(request); // Authorization check
+    const { patientId } = request.data || {};
+    if (!patientId) {
+        throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        const result = await pool.query(`SELECT
+        id, patient_id, pain_level, pain_type,
+        body_part, notes, created_at, updated_at
+      FROM patient_pain_records
+      WHERE patient_id = $1
+      ORDER BY created_at DESC`, [patientId]);
+        return { data: result.rows };
+    }
+    finally {
+        await pool.end();
+    }
+});
+/**
+ * Registra um novo evento de dor
+ */
+exports.savePainRecord = (0, https_1.onCall)(async (request) => {
+    const auth = await getAuth(request);
+    const { patientId, level, type, bodyPart, notes } = request.data || {};
+    if (!patientId || level === undefined || !type || !bodyPart) {
+        throw new https_1.HttpsError('invalid-argument', 'patientId, level, type e bodyPart são obrigatórios');
+    }
+    const pool = new pg_1.Pool({
+        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
+        ssl: { rejectUnauthorized: false },
+    });
+    try {
+        const result = await pool.query(`INSERT INTO patient_pain_records (
+        patient_id, pain_level, pain_type,
+        body_part, notes, organization_id, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`, [
+            patientId,
+            level,
+            type,
+            bodyPart,
+            notes || null,
+            auth.organizationId,
+            auth.userId
+        ]);
         return { data: result.rows[0] };
     }
     finally {

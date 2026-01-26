@@ -1,3 +1,19 @@
+/**
+ * Marketing Service - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.storage.from('exports').upload() → Firebase Storage uploadBytes()
+ * - supabase.from('marketing_exports').insert() → Firestore addDoc()
+ */
+
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseStorage } from '@/integrations/firebase/storage';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+const db = getFirebaseDb();
+const storage = getFirebaseStorage();
+
 export interface MarketingExportParams {
     patientId: string;
     organizationId: string;
@@ -9,9 +25,15 @@ export interface MarketingExportParams {
 
 // 1. Check Consent
 export const checkMarketingConsent = async (patientId: string): Promise<boolean> => {
-    // In real app, query table public.consent_records
-    // Mock response for now:
+    // In real app, query Firestore collection 'conssent_records'
+    // For now, we use a mock implementation:
     console.log(`[MarketingService] Checking consent for patient ${patientId}`);
+
+    // TODO: Implement actual Firestore query
+    // const consentRef = doc(db, 'consent_records', patientId);
+    // const consentSnap = await getDoc(consentRef);
+    // return consentSnap.exists() ? consentSnap.data().marketing_enabled : false;
+
     return new Promise(resolve => setTimeout(() => resolve(true), 500));
 };
 
@@ -19,24 +41,53 @@ export const checkMarketingConsent = async (patientId: string): Promise<boolean>
 export const createMarketingExportRecord = async (params: MarketingExportParams, blob: Blob) => {
     console.log('[MarketingService] Creating export record...', params);
 
-    // 1. Upload Blob to Storage (Mock)
-    // const fileName = `marketing_${params.patientId}_${Date.now()}.mp4`;
-    // const { data: uploadData, error: uploadError } = await supabase.storage.from('exports').upload(fileName, blob);
+    try {
+        // 1. Upload Blob to Firebase Storage
+        const fileName = `marketing_${params.patientId}_${Date.now()}.mp4`;
+        const storageRef = ref(storage, `exports/${fileName}`);
 
-    // 2. Insert DB Record (Mock)
-    /* 
-    const { error } = await supabase.from('marketing_exports').insert({
-        patient_id: params.patientId,
-        organization_id: params.organizationId,
-        consent_id: '...', // Would need to fetch valid consent ID
-        export_type: 'video_comparison',
-        file_path: fileName,
-        is_anonymized: params.isAnonymized,
-        metrics_overlay: params.metrics
-    });
-    */
+        await uploadBytes(storageRef, blob, {
+            customMetadata: {
+                contentType: 'video/mp4',
+                patientId: params.patientId,
+                organizationId: params.organizationId,
+                isAnonymized: params.isAnonymized.toString(),
+            }
+        });
 
-    return { success: true, url: URL.createObjectURL(blob) };
+        const downloadUrl = await getDownloadURL(storageRef);
+
+        // 2. Insert DB Record in Firestore
+        const exportData = {
+            patient_id: params.patientId,
+            organization_id: params.organizationId,
+            // consent_id: '...', // Would need to fetch valid consent ID
+            export_type: 'video_comparison',
+            file_path: fileName,
+            file_url: downloadUrl,
+            is_anonymized: params.isAnonymized,
+            metrics_overlay: params.metrics,
+            created_at: new Date().toISOString(),
+        };
+
+        const docRef = await addDoc(collection(db, 'marketing_exports'), exportData);
+
+        console.log('[MarketingService] Export record created with ID:', docRef.id);
+
+        return {
+            success: true,
+            url: downloadUrl,
+            id: docRef.id
+        };
+    } catch (error) {
+        console.error('[MarketingService] Error creating export record:', error);
+        // Fallback to local blob URL if storage fails
+        return {
+            success: false,
+            url: URL.createObjectURL(blob),
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
+    }
 };
 
 // 3. Caption Generator

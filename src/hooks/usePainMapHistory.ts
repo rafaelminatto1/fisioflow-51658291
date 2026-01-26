@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import type { PainMapRecord, BodyRegion, PainMapPoint } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
 
@@ -45,15 +46,17 @@ export function usePainMapHistory(patientId: string) {
   return useQuery({
     queryKey: ['pain-map-history', patientId],
     queryFn: async (): Promise<PainMapHistoryData> => {
-      const { data: painMapsData, error } = await supabase
-        .from('pain_maps' as any)
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('recorded_at', { ascending: false });
+      const q = query(
+        collection(db, 'pain_maps'),
+        where('patient_id', '==', patientId),
+        orderBy('recorded_at', 'desc')
+      );
 
-      if (error) throw error;
-
-      const painMaps = (painMapsData as any as PainMapRecord[]) || [];
+      const snapshot = await getDocs(q);
+      const painMaps = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as PainMapRecord[];
 
       // Calculate evolution data
       const evolutionData = painMaps
@@ -99,20 +102,20 @@ export function usePainMapHistory(patientId: string) {
 
       // Generate insights
       const insights: PainMapInsight[] = [];
-      
+
       if (painMaps.length >= 2) {
         const firstSession = painMaps[painMaps.length - 1];
         const lastSession = painMaps[0];
-        
+
         const firstAvg = (firstSession.pain_points as PainMapPoint[]).length > 0
           ? (firstSession.pain_points as PainMapPoint[]).reduce((s, p) => s + p.intensity, 0) / (firstSession.pain_points as PainMapPoint[]).length
           : 0;
         const lastAvg = (lastSession.pain_points as PainMapPoint[]).length > 0
           ? (lastSession.pain_points as PainMapPoint[]).reduce((s, p) => s + p.intensity, 0) / (lastSession.pain_points as PainMapPoint[]).length
           : 0;
-        
+
         const reduction = firstAvg > 0 ? ((firstAvg - lastAvg) / firstAvg) * 100 : 0;
-        
+
         if (reduction > 20) {
           insights.push({
             type: 'improvement',
@@ -144,10 +147,10 @@ export function usePainMapHistory(patientId: string) {
         // Check for regional improvements
         const firstRegions = new Map<BodyRegion, number>();
         const lastRegions = new Map<BodyRegion, number>();
-        
+
         (firstSession.pain_points as PainMapPoint[]).forEach(p => firstRegions.set(p.region, p.intensity));
         (lastSession.pain_points as PainMapPoint[]).forEach(p => lastRegions.set(p.region, p.intensity));
-        
+
         let bestImprovement = { region: '' as string, value: 0 };
         firstRegions.forEach((intensity, region) => {
           const lastIntensity = lastRegions.get(region) || 0;
@@ -171,7 +174,7 @@ export function usePainMapHistory(patientId: string) {
       const avgPainLevel = painMaps.length > 0
         ? painMaps.reduce((sum, pm) => sum + pm.global_pain_level, 0) / painMaps.length
         : 0;
-      
+
       const firstPain = painMaps.length > 0 ? painMaps[painMaps.length - 1].global_pain_level : 0;
       const lastPain = painMaps.length > 0 ? painMaps[0].global_pain_level : 0;
       const painReduction = firstPain > 0 ? ((firstPain - lastPain) / firstPain) * 100 : 0;
@@ -213,7 +216,7 @@ export function comparePainMaps(
   session2: PainMapRecord
 ): { comparisons: ComparisonResult[]; overallChange: number } {
   const allRegions = new Set<BodyRegion>();
-  
+
   (session1.pain_points as PainMapPoint[]).forEach(p => allRegions.add(p.region));
   (session2.pain_points as PainMapPoint[]).forEach(p => allRegions.add(p.region));
 
@@ -248,7 +251,7 @@ export function comparePainMaps(
   const avg2 = (session2.pain_points as PainMapPoint[]).length > 0
     ? (session2.pain_points as PainMapPoint[]).reduce((s, p) => s + p.intensity, 0) / (session2.pain_points as PainMapPoint[]).length
     : 0;
-  
+
   const overallChange = avg1 > 0 ? ((avg1 - avg2) / avg1) * 100 : 0;
 
   return { comparisons, overallChange };
