@@ -1,28 +1,36 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { format, subMonths, eachMonthOfInterval, startOfMonth } from "date-fns";
+import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function FinancialAnalytics() {
   const { data: monthlyRevenue } = useQuery({
     queryKey: ["financial-monthly-revenue"],
     queryFn: async () => {
+      const db = getFirebaseDb();
       const last6Months = eachMonthOfInterval({
         start: subMonths(new Date(), 5),
         end: new Date(),
       });
 
       const promises = last6Months.map(async (month) => {
-        const { data } = await supabase
-          .from("appointments")
-          .select("payment_amount")
-          .gte("appointment_date", format(startOfMonth(month), "yyyy-MM-dd"))
-          .lt("appointment_date", format(startOfMonth(subMonths(month, -1)), "yyyy-MM-dd"))
-          .eq("payment_status", "pago");
+        const monthStart = startOfMonth(month);
+        const monthEnd = startOfMonth(addMonths(month, 1));
 
-        const receita = data?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
+        const q = query(
+          collection(db, "appointments"),
+          where("appointment_date", ">=", monthStart.toISOString()),
+          where("appointment_date", "<", monthEnd.toISOString()),
+          where("payment_status", "==", "pago")
+        );
+
+        const snapshot = await getDocs(q);
+        const appointments = snapshot.docs.map(doc => doc.data());
+
+        const receita = appointments.reduce((sum, appt: any) => sum + (appt.payment_amount || 0), 0);
 
         return {
           mes: format(month, "MMM/yy", { locale: ptBR }),
@@ -37,19 +45,23 @@ export function FinancialAnalytics() {
   const { data: paymentMethods } = useQuery({
     queryKey: ["financial-payment-methods"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("payments")
-        .select("amount, payment_method")
-        .gte("created_at", format(subMonths(new Date(), 1), "yyyy-MM-dd"));
+      const db = getFirebaseDb();
+      const oneMonthAgo = subMonths(new Date(), 1);
+
+      const q = query(
+        collection(db, "payments"),
+        where("created_at", ">=", oneMonthAgo.toISOString())
+      );
+
+      const snapshot = await getDocs(q);
+      const payments = snapshot.docs.map(doc => doc.data());
 
       const paymentMap = new Map<string, number>();
-      // let total = 0;
 
-      data?.forEach((payment) => {
+      payments.forEach((payment: any) => {
         const method = payment.payment_method || "Outros";
         const amount = Number(payment.amount) || 0;
         paymentMap.set(method, (paymentMap.get(method) || 0) + amount);
-        // total += amount;
       });
 
       return Array.from(paymentMap.entries()).map(([metodo, valor]) => ({

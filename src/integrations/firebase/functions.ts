@@ -18,7 +18,15 @@ const DEFAULT_REGION = 'us-central1';
 /** Timeout padrão para chamadas de função (em segundos) */
 const DEFAULT_TIMEOUT = 60;
 
-const functions = getFunctions(app, DEFAULT_REGION);
+const functionsInstance = getFunctions(app, DEFAULT_REGION);
+
+/**
+ * Get Firebase Functions instance
+ * Export this for use in services that need the raw instance
+ */
+export function getFirebaseFunctions() {
+  return functionsInstance;
+}
 
 // ============================================================================
 // TYPES
@@ -77,7 +85,7 @@ export async function callFunction<TRequest, TResponse>(
 ): Promise<TResponse> {
   try {
     const callable = httpsCallable<TRequest, TResponse>(
-      functions,
+      functionsInstance,
       functionName,
       options?.timeout ? { timeout: options.timeout * 1000 } : undefined
     );

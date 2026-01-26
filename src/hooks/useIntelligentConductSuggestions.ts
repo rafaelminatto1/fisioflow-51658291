@@ -1,6 +1,31 @@
+/**
+ * useIntelligentConductSuggestions - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - patient_pathologies -> patient_pathologies collection
+ * - medical_records -> medical_records collection
+ * - conduct_library -> conduct_library collection
+ * - Uses useSoapRecords for SOAP data (already migrated)
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
 import { useSoapRecords } from './useSoapRecords';
+
+const db = getFirebaseDb();
+
+// Helper to convert doc
+const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
 
 export interface ConductSuggestion {
   id: string;
@@ -18,22 +43,23 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
     queryKey: ['intelligent-conduct-suggestions', patientId],
     queryFn: async () => {
       // Buscar patologias do paciente
-      const { data: pathologies, error: pathError } = await supabase
-        .from('patient_pathologies')
-        .select('pathology_name, status')
-        .eq('patient_id', patientId)
-        .eq('status', 'em_tratamento');
-
-      if (pathError) throw pathError;
+      const pathologiesQuery = query(
+        collection(db, 'patient_pathologies'),
+        where('patient_id', '==', patientId),
+        where('status', '==', 'em_tratamento')
+      );
+      const pathologiesSnap = await getDocs(pathologiesQuery);
+      const pathologies = pathologiesSnap.docs.map(convertDoc);
 
       // Buscar avaliação médica recente
-      const { data: medicalRecord } = await supabase
-        .from('medical_records')
-        .select('chief_complaint, medical_history')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const medicalRecordsQuery = query(
+        collection(db, 'medical_records'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc'),
+        limit(1)
+      );
+      const medicalRecordsSnap = await getDocs(medicalRecordsQuery);
+      const medicalRecord = !medicalRecordsSnap.empty ? convertDoc(medicalRecordsSnap.docs[0]) : null;
 
       // Extrair palavras-chave das últimas evoluções
       const recentKeywords = soapRecords
@@ -44,24 +70,21 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
         .filter((word, index, arr) => arr.indexOf(word) === index)
         .slice(0, 20);
 
-      // Buscar condutas da biblioteca baseadas em patologias
-      const pathologyNames = pathologies?.map(p => p.pathology_name.toLowerCase()) || [];
-
-      const { data: conducts, error: conductError } = await supabase
-        .from('conduct_library')
-        .select('*');
-
-      if (conductError) throw conductError;
+      // Buscar condutas da biblioteca
+      const conductsQuery = query(collection(db, 'conduct_library'));
+      const conductsSnap = await getDocs(conductsQuery);
+      const conducts = conductsSnap.docs.map(convertDoc);
 
       // Calcular relevância para cada conduta
       const suggestions: ConductSuggestion[] = conducts
-        .map(conduct => {
+        .map((conduct: any) => {
           let score = 0;
           const reasons: string[] = [];
 
           const conductText = `${conduct.title} ${conduct.description || ''} ${conduct.conduct_text}`.toLowerCase();
 
           // Pontuação por patologia correspondente
+          const pathologyNames = pathologies.map((p: any) => p.pathology_name.toLowerCase());
           pathologyNames.forEach(pathology => {
             if (conductText.includes(pathology) || conduct.category.toLowerCase().includes(pathology)) {
               score += 50;
@@ -76,15 +99,15 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
               keywordMatches++;
             }
           });
-          
+
           if (keywordMatches > 0) {
             score += keywordMatches * 5;
             reasons.push(`Palavras-chave em comum (${keywordMatches})`);
           }
 
           // Pontuação por categoria
-          if (conduct.category.toLowerCase().includes('dor') && 
-              (medicalRecord?.chief_complaint?.toLowerCase().includes('dor') || 
+          if (conduct.category.toLowerCase().includes('dor') &&
+              (medicalRecord?.chief_complaint?.toLowerCase().includes('dor') ||
                soapRecords.some(r => r.subjective?.toLowerCase().includes('dor')))) {
             score += 20;
             reasons.push('Categoria relacionada à queixa');

@@ -1,5 +1,11 @@
 /**
- * Analytics Export Hook
+ * Analytics Export Hook - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('patient_risk_scores') → Firestore collection 'patient_risk_scores'
+ * - Removed supabase client dependency
  *
  * Provides functionality to export patient analytics data
  * in various formats (PDF, CSV, JSON, Excel).
@@ -9,7 +15,8 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -798,6 +805,7 @@ export function useBatchAnalyticsExport() {
       setIsExporting(true);
       setProgress(0);
 
+      const db = getFirebaseDb();
       const results: AnalyticsExportData[] = [];
       const total = patientIds.length;
 
@@ -807,40 +815,42 @@ export function useBatchAnalyticsExport() {
         setProgress(Math.round((i / total) * 100));
 
         // Fetch patient data
-        const { data: patient, error } = await supabase
-          .from('patients')
-          .select('id, full_name, email, phone')
-          .eq('id', patientId)
-          .single();
+        const patientRef = doc(db, 'patients', patientId);
+        const patientSnap = await getDoc(patientRef);
 
-        if (error || !patient) continue;
+        if (!patientSnap.exists()) continue;
+
+        const patient = { id: patientSnap.id, ...patientSnap.data() };
 
         // Fetch session count
-        const { count: sessionCount } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('patient_id', patientId)
-          .in('status', ['atendido', 'confirmado']);
+        const appointmentsQuery = query(
+          collection(db, 'appointments'),
+          where('patient_id', '==', patientId),
+          where('status', 'in', ['atendido', 'confirmado'])
+        );
+        const appointmentsSnap = await getDocs(appointmentsQuery);
+        const sessionCount = appointmentsSnap.size;
 
         // Fetch risk score
-        const { data: riskScore } = await supabase
-          .from('patient_risk_scores')
-          .select('dropout_risk_score, overall_progress_percentage')
-          .eq('patient_id', patientId)
-          .order('calculated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const riskScoreQuery = query(
+          collection(db, 'patient_risk_scores'),
+          where('patient_id', '==', patientId),
+          orderBy('calculated_at', 'desc'),
+          limit(1)
+        );
+        const riskScoreSnap = await getDocs(riskScoreQuery);
+        const riskScore = riskScoreSnap.empty ? null : { id: riskScoreSnap.docs[0].id, ...riskScoreSnap.docs[0].data() };
 
         const exportData: AnalyticsExportData = {
           patientInfo: {
             id: patient.id,
-            name: patient.full_name,
+            name: patient.full_name || '',
             email: patient.email || undefined,
             phone: patient.phone || undefined,
             exportDate: format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
           },
           progressSummary: {
-            totalSessions: sessionCount || 0,
+            totalSessions: sessionCount,
             totalPainReduction: 0,
             goalsAchieved: 0,
             overallProgress: Math.round(riskScore?.overall_progress_percentage || 0),

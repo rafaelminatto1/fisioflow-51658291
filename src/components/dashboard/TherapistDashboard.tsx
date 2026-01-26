@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChartWidget } from './ChartWidget';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Profile } from '@/types/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

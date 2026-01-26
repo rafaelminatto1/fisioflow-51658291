@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { useTelemedicineRooms, useCreateTelemedicineRoom } from '@/hooks/useTelemedicine';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Video, Plus, Clock, Users, Play, Copy, Loader2, Calendar, PhoneCall } from 'lucide-react';
 import { format } from 'date-fns';

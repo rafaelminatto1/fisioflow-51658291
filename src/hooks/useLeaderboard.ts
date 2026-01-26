@@ -1,6 +1,14 @@
+/**
+ * useLeaderboard - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
+ * - supabase.from('achievements_log') → Firestore collection 'achievements_log'
+ * - Client-side filtering for complex queries
+ */
+
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { subDays, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -9,6 +17,17 @@ import {
   EngagementData,
 } from '@/types/gamification';
 import { downloadCSV } from '@/utils/csvExport';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES
@@ -64,76 +83,106 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['gamification-leaderboard', filters],
     queryFn: async (): Promise<{ leaderboard: LeaderboardEntry[]; totalCount: number }> => {
-      let query = supabase
-        .from('patient_gamification')
-        .select(`
-          patient_id,
-          level,
-          total_points,
-          current_streak,
-          longest_streak,
-          last_activity_date,
-          patients!inner(full_name, email)
-        `);
+      // Build base query
+      const sortColumn = filters.sortBy === 'total_xp' ? 'total_points' : filters.sortBy;
+      let baseQuery = query(
+        collection(db, 'patient_gamification'),
+        orderBy(sortColumn, filters.order === 'asc' ? 'asc' : 'desc')
+      );
 
-      // Apply period filter
+      const snapshot = await getDocs(baseQuery);
+
+      // Get all gamification data
+      let gamificationData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Apply period filter (client-side for date range + sort combo)
       if (filters.period === 'week') {
-        const weekAgo = subDays(new Date(), 7).toISOString();
-        query = query.gte('last_activity_date', weekAgo);
+        const weekAgo = subDays(new Date(), 7);
+        gamificationData = gamificationData.filter((p: any) => {
+          const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
+          return lastActivity && lastActivity >= weekAgo;
+        });
       } else if (filters.period === 'month') {
-        const monthAgo = subDays(new Date(), 30).toISOString();
-        query = query.gte('last_activity_date', monthAgo);
+        const monthAgo = subDays(new Date(), 30);
+        gamificationData = gamificationData.filter((p: any) => {
+          const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
+          return lastActivity && lastActivity >= monthAgo;
+        });
+      }
+
+      // Get total count before pagination
+      const totalCount = gamificationData.length;
+
+      // Fetch patient names for search filter and display
+      const patientIds = gamificationData.map((p: any) => p.id);
+      const patientsMap: Record<string, any> = {};
+
+      // Fetch patient data in batches (Firestore limitation)
+      for (const patientId of patientIds) {
+        const patientQuery = query(
+          collection(db, 'patients'),
+          where('__name__', '==', patientId),
+          limit(1)
+        );
+        const patientSnap = await getDocs(patientQuery);
+        if (!patientSnap.empty) {
+          patientsMap[patientId] = patientSnap.docs[0].data();
+        }
       }
 
       // Apply search filter
       if (filters.search && filters.search.trim()) {
-        query = query.ilike('patients.full_name', `%${filters.search.trim()}%`);
+        const searchLower = filters.search.trim().toLowerCase();
+        gamificationData = gamificationData.filter((p: any) => {
+          const patientName = patientsMap[p.id]?.full_name || '';
+          return patientName.toLowerCase().includes(searchLower);
+        });
       }
 
-      // Apply sorting
-      const sortColumn = filters.sortBy === 'total_xp' ? 'total_points' : filters.sortBy;
-      query = query.order(sortColumn, { ascending: filters.order === 'asc' });
-
-      // Get total count for pagination
-      const { count: totalCount } = await query;
+      // Re-sort after filtering (since we fetched all sorted data initially)
+      const descOrder = filters.order === 'desc';
+      gamificationData.sort((a: any, b: any) => {
+        const aVal = a[sortColumn] || 0;
+        const bVal = b[sortColumn] || 0;
+        return descOrder ? bVal - aVal : aVal - bVal;
+      });
 
       // Apply pagination
       const from = (filters.page - 1) * filters.pageSize;
-      const to = from + filters.pageSize - 1;
-      query = query.range(from, to);
+      const paginatedData = gamificationData.slice(from, from + filters.pageSize);
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        return { leaderboard: [], totalCount: totalCount || 0 };
+      if (paginatedData.length === 0) {
+        return { leaderboard: [], totalCount };
       }
 
-      // Get achievement counts for all patients in one query
-      const patientIds = data.map((p: any) => p.patient_id);
-      const { data: achievementsData } = await supabase
-        .from('achievements_log')
-        .select('patient_id, achievement_id')
-        .in('patient_id', patientIds);
+      // Get achievement counts for paginated patients
+      const paginatedPatientIds = paginatedData.map((p: any) => p.id);
+      const achievementMap: Record<string, number> = {};
 
-      // Count achievements per patient
-      const achievementMap = (achievementsData || []).reduce((acc, log) => {
-        acc[log.patient_id] = (acc[log.patient_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      for (const patientId of paginatedPatientIds) {
+        const achievementsQuery = query(
+          collection(db, 'achievements_log'),
+          where('patient_id', '==', patientId)
+        );
+        const achievementsSnap = await getDocs(achievementsQuery);
+        achievementMap[patientId] = achievementsSnap.size;
+      }
 
       // Transform data to leaderboard entries
-      const leaderboard: LeaderboardEntry[] = data.map((p: any, index) => {
+      const leaderboard: LeaderboardEntry[] = paginatedData.map((p: any, index) => {
+        const patientInfo = patientsMap[p.id] || {};
         const entry: LeaderboardEntry = {
-          patient_id: p.patient_id,
-          patient_name: p.patients?.full_name || 'Desconhecido',
-          email: p.patients?.email,
+          patient_id: p.id,
+          patient_name: patientInfo.full_name || 'Desconhecido',
+          email: patientInfo.email,
           level: p.level,
           total_xp: p.total_points || 0,
           current_streak: p.current_streak || 0,
           longest_streak: p.longest_streak || 0,
-          achievements_count: achievementMap[p.patient_id] || 0,
+          achievements_count: achievementMap[p.id] || 0,
           last_activity: p.last_activity_date || '',
         };
 
@@ -145,7 +194,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
 
       return {
         leaderboard,
-        totalCount: totalCount || 0,
+        totalCount,
       };
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -230,15 +279,22 @@ export const useEngagementData = (defaultDays: number = 30): UseEngagementDataRe
   const { data, isLoading } = useQuery({
     queryKey: ['gamification-engagement-data', days],
     queryFn: async (): Promise<EngagementData[]> => {
-      const startDate = subDays(new Date(), days).toISOString();
+      const startDate = subDays(new Date(), days);
 
-      const { data: transactions } = await supabase
-        .from('xp_transactions')
-        .select('created_at, amount, reason, patient_id')
-        .gte('created_at', startDate)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'xp_transactions'),
+        where('created_at', '>=', startDate.toISOString()),
+        orderBy('created_at', 'asc')
+      );
 
-      if (!transactions || transactions.length === 0) return [];
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return [];
+
+      const transactions = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      }));
 
       // Group by date
       const grouped = transactions.reduce((acc, t) => {

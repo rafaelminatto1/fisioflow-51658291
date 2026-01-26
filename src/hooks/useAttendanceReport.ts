@@ -1,9 +1,19 @@
+/**
+ * useAttendanceReport - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('user_roles') → Firestore collection 'user_roles'
+ * - Joins with patients replaced with separate queries
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export type PeriodFilter = 'week' | 'month' | 'quarter' | 'year' | 'custom';
 export type StatusFilter = 'all' | 'concluido' | 'faltou' | 'cancelado';
@@ -112,42 +122,55 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
     queryKey: ['attendance-report', filters.period, filters.therapistId, filters.status, filters.startDate?.toISOString(), filters.endDate?.toISOString()],
     queryFn: async (): Promise<AttendanceMetrics> => {
       const { start, end } = getDateRange(filters.period, filters.startDate, filters.endDate);
+      const startDateStr = format(start, 'yyyy-MM-dd');
+      const endDateStr = format(end, 'yyyy-MM-dd');
 
       // Build base query
-      let query = supabase
-        .from('appointments')
-        .select(`
-          id,
-          appointment_date,
-          appointment_time,
-          status,
-          notes,
-          therapist_id,
-          patient_id,
-          patients!inner(id, full_name, phone)
-        `)
-        .gte('appointment_date', format(start, 'yyyy-MM-dd'))
-        .lte('appointment_date', format(end, 'yyyy-MM-dd'));
+      let baseQuery = query(
+        collection(db, 'appointments'),
+        where('appointment_date', '>=', startDateStr),
+        where('appointment_date', '<=', endDateStr),
+        orderBy('appointment_date', 'desc')
+      );
 
+      const snapshot = await getDocs(baseQuery);
+      let appointmentsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Apply therapist filter
       if (filters.therapistId && filters.therapistId !== 'all') {
-        query = query.eq('therapist_id', filters.therapistId);
+        appointmentsList = appointmentsList.filter((a: any) => a.therapist_id === filters.therapistId);
       }
 
+      // Apply status filter
       if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        appointmentsList = appointmentsList.filter((a: any) => a.status === filters.status);
       }
 
-      const { data: appointments, error } = await query;
+      // Fetch patient data for all appointments
+      const patientIds = appointmentsList
+        .map((a: any) => a.patient_id)
+        .filter((id: string | null): id is string => id !== null);
 
-      if (error) throw error;
+      const patientMap = new Map<string, any>();
+      await Promise.all([...new Set(patientIds)].map(async (patientId) => {
+        const patientDoc = await getDoc(doc(db, 'patients', patientId));
+        if (patientDoc.exists()) {
+          patientMap.set(patientId, {
+            id: patientDoc.id,
+            ...patientDoc.data(),
+          });
+        }
+      }));
 
-      const appointmentsList = appointments || [];
+      // Attach patient data to appointments
+      appointmentsList = appointmentsList.map((a: any) => ({
+        ...a,
+        patients: patientMap.get(a.patient_id) || null,
+      }));
 
       // Fetch therapist names from Firestore
-      const db = getFirebaseDb();
       const therapistNames = new Map<string, string>();
-
-      const uniqueTherapistIds = [...new Set(appointmentsList.map(a => a.therapist_id).filter(Boolean))];
+      const uniqueTherapistIds = [...new Set(appointmentsList.map((a: any) => a.therapist_id).filter(Boolean))];
 
       await Promise.all(uniqueTherapistIds.map(async (tid) => {
         if (!tid) return;
@@ -161,9 +184,9 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
 
       // Calculate basic metrics
       const total = appointmentsList.length;
-      const attended = appointmentsList.filter(a => a.status === 'concluido').length;
-      const noShow = appointmentsList.filter(a => a.status === 'faltou').length;
-      const cancelled = appointmentsList.filter(a => a.status === 'cancelado').length;
+      const attended = appointmentsList.filter((a: any) => a.status === 'concluido').length;
+      const noShow = appointmentsList.filter((a: any) => a.status === 'faltou').length;
+      const cancelled = appointmentsList.filter((a: any) => a.status === 'cancelado').length;
 
       const attendanceRate = total > 0 ? Math.round((attended / total) * 100) : 0;
       const cancellationRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
@@ -182,7 +205,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
         dayOfWeekMap.set(i, { total: 0, attended: 0, noShow: 0, cancelled: 0 });
       }
 
-      appointmentsList.forEach(apt => {
+      appointmentsList.forEach((apt: any) => {
         const dayIndex = getDay(new Date(apt.appointment_date + 'T12:00:00'));
         const dayData = dayOfWeekMap.get(dayIndex)!;
         dayData.total++;
@@ -208,13 +231,13 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
         const monthStart = startOfMonth(monthDate);
         const monthEnd = endOfMonth(monthDate);
 
-        const monthAppointments = appointmentsList.filter(apt => {
+        const monthAppointments = appointmentsList.filter((apt: any) => {
           const aptDate = new Date(apt.appointment_date);
           return aptDate >= monthStart && aptDate <= monthEnd;
         });
 
         const monthTotal = monthAppointments.length;
-        const monthAttended = monthAppointments.filter(a => a.status === 'concluido').length;
+        const monthAttended = monthAppointments.filter((a: any) => a.status === 'concluido').length;
 
         monthlyEvolution.push({
           month: format(monthDate, 'MMM', { locale: ptBR }),
@@ -225,7 +248,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
 
       // Therapist breakdown
       const therapistMap = new Map<string, TherapistAttendance>();
-      appointmentsList.forEach(apt => {
+      appointmentsList.forEach((apt: any) => {
         const therapistId = apt.therapist_id || 'unknown';
         const therapistName = therapistNames.get(therapistId) || 'Não atribuído';
 
@@ -258,7 +281,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
         hourlyMap.set(h, { total: 0, noShow: 0 });
       }
 
-      appointmentsList.forEach(apt => {
+      appointmentsList.forEach((apt: any) => {
         const hour = parseInt(apt.appointment_time.split(':')[0]);
         if (hourlyMap.has(hour)) {
           const data = hourlyMap.get(hour)!;
@@ -278,7 +301,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
 
       // Appointment details
       const appointmentDetails: AppointmentDetail[] = appointmentsList
-        .map(apt => ({
+        .map((apt: any) => ({
           id: apt.id,
           patientName: (apt.patients as { full_name?: string; name?: string } | null)?.full_name || (apt.patients as { full_name?: string; name?: string } | null)?.name || 'Paciente',
           patientPhone: (apt.patients as { phone?: string } | null)?.phone,
@@ -368,14 +391,17 @@ export const useTherapists = () => {
   return useQuery({
     queryKey: ['therapists-list'],
     queryFn: async () => {
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .in('role', ['admin', 'fisioterapeuta']);
+      // Query user_roles for admin and fisioterapeuta roles
+      const q = query(
+        collection(db, 'user_roles'),
+        where('role', 'in', ['admin', 'fisioterapeuta'])
+      );
 
-      const userIds = [...new Set((userRoles || []).map(ur => ur.user_id))];
+      const snapshot = await getDocs(q);
+      const userRoles = snapshot.docs.map(doc => doc.data());
 
-      const db = getFirebaseDb();
+      const userIds = [...new Set((userRoles || []).map((ur: any) => ur.user_id))];
+
       const profiles = await Promise.all(userIds.map(async (id) => {
         const profileDoc = await getDoc(doc(db, 'profiles', id));
         return profileDoc.exists() ? { id, full_name: profileDoc.data().full_name } : null;

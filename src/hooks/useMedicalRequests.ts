@@ -1,156 +1,203 @@
+/**
+ * useMedicalRequests - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - medical_requests -> medical_requests collection
+ * - medical_request_files -> medical_request_files collection
+ * - Firebase Storage for file uploads
+ * - Auth through useAuth() from AuthContext
+ */
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb, getFirebaseStorage } from '@/integrations/firebase/app';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  orderBy,
+  getDoc,
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+
+const db = getFirebaseDb();
+
+// Helper to convert doc
+const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
 
 export interface MedicalRequestFile {
-    id: string;
-    file_path: string;
-    file_name: string;
-    file_type: string;
-    file_size: number;
+  id: string;
+  file_path: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
 }
 
 export interface MedicalRequest {
-    id: string;
-    patient_id: string;
-    doctor_name: string | null;
-    request_date: string | null;
-    notes: string | null;
-    created_at: string;
-    files?: MedicalRequestFile[];
+  id: string;
+  patient_id: string;
+  doctor_name: string | null;
+  request_date: string | null;
+  notes: string | null;
+  created_at: string;
+  files?: MedicalRequestFile[];
 }
 
 export const useMedicalRequests = (patientId?: string | null) => {
-    const [requests, setRequests] = useState<MedicalRequest[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const { profile } = useAuth();
-    const organizationId = profile?.organization_id;
+  const [requests, setRequests] = useState<MedicalRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
 
-    const fetchRequests = useCallback(async () => {
-        if (!patientId || !organizationId) {
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('medical_requests')
-                .select(`
-          *,
-          files:medical_request_files(*)
-        `)
-                .eq('patient_id', patientId)
-                .eq('organization_id', organizationId)
-                .order('request_date', { ascending: false });
-
-            if (error) throw error;
-            setRequests(data || []);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [patientId, organizationId]);
-
-    useEffect(() => {
-        fetchRequests();
-    }, [fetchRequests]);
-
-    const addRequest = async (
-        data: { doctorName: string; date: Date; notes: string },
-        files: File[]
-    ) => {
-        if (!patientId || !organizationId) return false;
-
-        try {
-            // 1. Create request
-            const { data: requestData, error: requestError } = await supabase
-                .from('medical_requests')
-                .insert({
-                    patient_id: patientId,
-                    organization_id: organizationId,
-                    doctor_name: data.doctorName,
-                    request_date: data.date.toISOString(),
-                    notes: data.notes
-                })
-                .select()
-                .single();
-
-            if (requestError) throw requestError;
-
-            // 2. Upload files
-            if (files.length > 0) {
-                const fileUploads = files.map(async (file) => {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${requestData.id}/${crypto.randomUUID()}.${fileExt}`;
-
-                    const { error: uploadError } = await supabase.storage
-                        .from('medical-requests')
-                        .upload(fileName, file);
-
-                    if (uploadError) throw uploadError;
-
-                    return {
-                        medical_request_id: requestData.id,
-                        organization_id: organizationId,
-                        file_path: fileName,
-                        file_name: file.name,
-                        file_type: file.type,
-                        file_size: file.size
-                    };
-                });
-
-                const uploadedFilesData = await Promise.all(fileUploads);
-
-                const { error: filesDbError } = await supabase
-                    .from('medical_request_files')
-                    .insert(uploadedFilesData);
-
-                if (filesDbError) throw filesDbError;
-            }
-
-            toast.success('Pedido médico salvo com sucesso');
-            fetchRequests();
-            return true;
-        } catch (error) {
-            console.error('Error adding medical request:', error);
-            toast.error('Erro ao salvar pedido médico');
-            return false;
-        }
-    };
-
-    const deleteRequest = async (requestId: string) => {
-        if (!organizationId) return;
-
-        try {
-            // Get files to delete from storage
-            const { data: files } = await supabase
-                .from('medical_request_files')
-                .select('file_path')
-                .eq('medical_request_id', requestId);
-
-            if (files && files.length > 0) {
-                const { error: storageError } = await supabase.storage
-                    .from('medical-requests')
-                    .remove(files.map(f => f.file_path));
-
-                if (storageError) console.error('Error deleting files from storage', storageError);
-            }
-
-            const { error } = await supabase
-                .from('medical_requests')
-                .delete()
-                .eq('id', requestId);
-
-            if (error) throw error;
-
-            toast.success('Pedido removido');
-            fetchRequests();
-        } catch (error) {
-            console.error('Error deleting request:', error);
-            toast.error('Erro ao remover pedido');
-        }
+  const fetchRequests = useCallback(async () => {
+    if (!patientId || !organizationId) {
+      setIsLoading(false);
+      return;
     }
 
-    return { requests, isLoading, addRequest, deleteRequest };
+    try {
+      const q = query(
+        collection(db, 'medical_requests'),
+        where('patient_id', '==', patientId),
+        where('organization_id', '==', organizationId),
+        orderBy('request_date', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      const requestsData = await Promise.all(
+        snapshot.docs.map(async (requestDoc) => {
+          const requestData = convertDoc(requestDoc);
+
+          // Fetch files for this request
+          const filesQ = query(
+            collection(db, 'medical_request_files'),
+            where('medical_request_id', '==', requestDoc.id)
+          );
+          const filesSnap = await getDocs(filesQ);
+          const files = filesSnap.docs.map(convertDoc);
+
+          return { ...requestData, files };
+        })
+      );
+
+      setRequests(requestsData || []);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [patientId, organizationId]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const addRequest = async (
+    data: { doctorName: string; date: Date; notes: string },
+    files: File[]
+  ) => {
+    if (!patientId || !organizationId) return false;
+
+    try {
+      // 1. Create request
+      const requestRef = await addDoc(collection(db, 'medical_requests'), {
+        patient_id: patientId,
+        organization_id: organizationId,
+        doctor_name: data.doctorName,
+        request_date: data.date.toISOString(),
+        notes: data.notes,
+        created_at: new Date().toISOString()
+      });
+
+      const requestData = { id: requestRef.id };
+
+      // 2. Upload files
+      if (files.length > 0) {
+        const storage = getFirebaseStorage();
+
+        const fileUploads = files.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${requestData.id}/${crypto.randomUUID()}.${fileExt}`;
+          const storageRef = ref(storage, `medical-requests/${fileName}`);
+
+          await uploadBytes(storageRef, file);
+          const downloadUrl = await getDownloadURL(storageRef);
+
+          return {
+            medical_request_id: requestData.id,
+            organization_id: organizationId,
+            file_path: fileName,
+            file_name: file.name,
+            file_type: file.type,
+            file_size: file.size,
+            download_url: downloadUrl
+          };
+        });
+
+        const uploadedFilesData = await Promise.all(fileUploads);
+
+        // Insert file records
+        await Promise.all(
+          uploadedFilesData.map(fileData =>
+            addDoc(collection(db, 'medical_request_files'), fileData)
+          )
+        );
+      }
+
+      toast.success('Pedido médico salvo com sucesso');
+      fetchRequests();
+      return true;
+    } catch (error) {
+      console.error('Error adding medical request:', error);
+      toast.error('Erro ao salvar pedido médico');
+      return false;
+    }
+  };
+
+  const deleteRequest = async (requestId: string) => {
+    if (!organizationId) return;
+
+    try {
+      // Get files to delete from storage
+      const filesQ = query(
+        collection(db, 'medical_request_files'),
+        where('medical_request_id', '==', requestId)
+      );
+      const filesSnap = await getDocs(filesQ);
+
+      if (!filesSnap.empty) {
+        const storage = getFirebaseStorage();
+
+        // Delete files from storage
+        await Promise.all(
+          filesSnap.docs.map(async (fileDoc) => {
+            const fileData = convertDoc(fileDoc);
+            const storageRef = ref(storage, `medical-requests/${fileData.file_path}`);
+            await deleteObject(storageRef);
+          })
+        );
+
+        // Delete file records
+        await Promise.all(
+          filesSnap.docs.map(fileDoc =>
+            deleteDoc(doc(db, 'medical_request_files', fileDoc.id))
+          )
+        );
+      }
+
+      // Delete request
+      await deleteDoc(doc(db, 'medical_requests', requestId));
+
+      toast.success('Pedido removido');
+      fetchRequests();
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast.error('Erro ao remover pedido');
+    }
+  };
+
+  return { requests, isLoading, addRequest, deleteRequest };
 };

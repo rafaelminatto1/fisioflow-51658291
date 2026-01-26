@@ -1,28 +1,37 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function AppointmentAnalytics() {
   const { data: dailyData } = useQuery({
     queryKey: ["appointment-daily-analytics"],
     queryFn: async () => {
+      const db = getFirebaseDb();
       const last30Days = eachDayOfInterval({
         start: subDays(new Date(), 29),
         end: new Date(),
       });
 
       const promises = last30Days.map(async (day) => {
-        const { count } = await supabase
-          .from("appointments")
-          .select("*", { count: "exact", head: true })
-          .eq("appointment_date", format(day, "yyyy-MM-dd"));
+        const dayStart = startOfDay(day);
+        const dayEnd = endOfDay(day);
+
+        const q = query(
+          collection(db, "appointments"),
+          where("appointment_date", ">=", dayStart.toISOString()),
+          where("appointment_date", "<=", dayEnd.toISOString())
+        );
+
+        const snapshot = await getDocs(q);
+        const count = snapshot.docs.length;
 
         return {
           date: format(day, "dd/MM", { locale: ptBR }),
-          agendamentos: count || 0,
+          agendamentos: count,
         };
       });
 
@@ -33,17 +42,23 @@ export function AppointmentAnalytics() {
   const { data: statusData } = useQuery({
     queryKey: ["appointment-status-analytics"],
     queryFn: async () => {
+      const db = getFirebaseDb();
+      const thirtyDaysAgo = subDays(new Date(), 30);
       const statuses = ["agendado", "confirmado", "concluido", "cancelado"];
+
       const promises = statuses.map(async (status) => {
-        const { count } = await supabase
-          .from("appointments")
-          .select("*", { count: "exact", head: true })
-          .eq("status", status)
-          .gte("appointment_date", format(subDays(new Date(), 30), "yyyy-MM-dd"));
+        const q = query(
+          collection(db, "appointments"),
+          where("status", "==", status),
+          where("appointment_date", ">=", thirtyDaysAgo.toISOString())
+        );
+
+        const snapshot = await getDocs(q);
+        const count = snapshot.docs.length;
 
         return {
           status: status.charAt(0).toUpperCase() + status.slice(1),
-          total: count || 0,
+          total: count,
         };
       });
 

@@ -1,8 +1,29 @@
+/**
+ * useExerciseProtocols - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('exercise_protocols') → Firestore collection 'exercise_protocols'
+ * - Preserved offline caching logic with indexedDB
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { protocolsCacheService } from '@/lib/offline/ProtocolsCacheService';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface ProtocolMilestone {
   week: number;
@@ -41,8 +62,17 @@ export interface ExerciseProtocol {
 interface ProtocolsQueryResult {
   data: ExerciseProtocol[];
   isFromCache: boolean;
-  source: 'supabase' | 'indexeddb' | 'localstorage' | 'memory';
+  source: 'firestore' | 'indexeddb' | 'localstorage' | 'memory';
 }
+
+// Helper to convert Firestore doc to ExerciseProtocol
+const convertDocToExerciseProtocol = (doc: any): ExerciseProtocol => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as ExerciseProtocol;
+};
 
 // Helpers copiados para garantir robustez (DRY seria melhor, mas evita quebra agora)
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
@@ -102,33 +132,18 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
   }
 
   try {
-    const query = supabase
-      .from('exercise_protocols')
-      .select('*')
-      .order('condition_name');
+    const q = query(
+      collection(db, 'exercise_protocols'),
+      orderBy('condition_name')
+    );
 
     const result = await retryWithBackoff(() =>
-      withTimeout(query, 10000), // 10s timeout
+      withTimeout(getDocs(q), 10000), // 10s timeout
       3,
       1000
     );
 
-    const { data, error } = result;
-
-    if (error) {
-      if (isNetworkError(error)) {
-        logger.warn('Network error fetching protocols, falling back to cache', { error }, 'useExerciseProtocols');
-        const cacheResult = await protocolsCacheService.getFromCache();
-        return {
-          data: cacheResult.data,
-          isFromCache: true,
-          source: cacheResult.source as any
-        };
-      }
-      throw error;
-    }
-
-    const protocols = (data || []) as ExerciseProtocol[];
+    const protocols = result.docs.map(convertDocToExerciseProtocol);
 
     // Atualizar cache
     protocolsCacheService.saveToCache(protocols);
@@ -136,11 +151,15 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
     return {
       data: protocols,
       isFromCache: false,
-      source: 'supabase'
+      source: 'firestore'
     };
 
   } catch (error) {
-    logger.error('Critical error fetching protocols', error, 'useExerciseProtocols');
+    if (isNetworkError(error)) {
+      logger.warn('Network error fetching protocols, falling back to cache', { error }, 'useExerciseProtocols');
+    } else {
+      logger.error('Critical error fetching protocols', error, 'useExerciseProtocols');
+    }
     const cacheResult = await protocolsCacheService.getFromCache();
     return {
       data: cacheResult.data,
@@ -176,14 +195,16 @@ export const useExerciseProtocols = () => {
 
   const createMutation = useMutation({
     mutationFn: async (protocol: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('exercise_protocols')
-        .insert([protocol])
-        .select()
-        .single();
+      const protocolData = {
+        ...protocol,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'exercise_protocols'), protocolData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToExerciseProtocol(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-protocols'] });
@@ -196,15 +217,14 @@ export const useExerciseProtocols = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...protocol }: Partial<ExerciseProtocol> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('exercise_protocols')
-        .update(protocol)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'exercise_protocols', id);
+      await updateDoc(docRef, {
+        ...protocol,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToExerciseProtocol(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-protocols'] });
@@ -217,12 +237,7 @@ export const useExerciseProtocols = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('exercise_protocols')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'exercise_protocols', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-protocols'] });

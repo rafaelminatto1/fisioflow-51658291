@@ -169,3 +169,7 @@ fastlane/test_output
 # Code Injection
 iOSInjectionProject/
 iOSInjectionProject/
+
+# Firebase Service Account Keys (NEVER commit these!)
+*-firebase-admin.json
+firebase-admin*.json

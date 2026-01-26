@@ -12,8 +12,11 @@ import {
   Save,
   Loader2,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { ConductReplication } from './ConductReplication';
+import { SOAPAssistant } from '@/components/ai/SOAPAssistant';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface SOAPData {
@@ -152,6 +155,7 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
   lastSaved,
 }) => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [showSOAPAssistant, setShowSOAPAssistant] = useState(false);
 
   const handleFieldChange = useCallback((key: keyof SOAPData, value: string) => {
     onChange({ ...data, [key]: value });
@@ -249,6 +253,17 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-2">
+          {/* SOAP Assistant Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSOAPAssistant(true)}
+            className="gap-1.5 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Assistente SOAP</span>
+          </Button>
+
           {showReplication && (
             <ConductReplication
               patientId={patientId}
@@ -275,6 +290,27 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
           )}
         </div>
       </CardContent>
+
+      {/* SOAP Assistant Dialog */}
+      <Dialog open={showSOAPAssistant} onOpenChange={setShowSOAPAssistant}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+              Assistente SOAP - IA
+            </DialogTitle>
+          </DialogHeader>
+          <SOAPAssistant
+            patientId={patientId}
+            currentSOAP={data}
+            onSOAPGenerated={(soapData) => {
+              onChange({ ...data, ...soapData });
+              setShowSOAPAssistant(false);
+            }}
+            onCancel={() => setShowSOAPAssistant(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

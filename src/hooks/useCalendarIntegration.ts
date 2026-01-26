@@ -1,8 +1,33 @@
+/**
+ * useCalendarIntegration - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('calendar_integrations') → Firestore collection 'calendar_integrations'
+ * - supabase.from('calendar_sync_logs') → Firestore collection 'calendar_sync_logs'
+ * - supabase.auth.signInWithOAuth() → Firebase Auth signInWithPopup (Google Provider)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+import { GoogleAuthProvider, signInWithPopup, linkWithPopup, unlink } from 'firebase/auth';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface CalendarIntegration {
   id: string;
@@ -38,6 +63,24 @@ export interface CalendarSettings {
   defaultCalendarId: string | null;
 }
 
+// Helper: Convert Firestore doc to CalendarIntegration
+const convertDocToCalendarIntegration = (doc: any): CalendarIntegration => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as CalendarIntegration;
+};
+
+// Helper: Convert Firestore doc to SyncLog
+const convertDocToSyncLog = (doc: any): SyncLog => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as SyncLog;
+};
+
 export function useCalendarIntegration() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -47,16 +90,18 @@ export function useCalendarIntegration() {
     queryKey: ['calendar-integration', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('calendar_integrations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('provider', 'google')
-        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as CalendarIntegration | null;
+      const q = query(
+        collection(db, 'calendar_integrations'),
+        where('user_id', '==', user.id),
+        where('provider', '==', 'google'),
+        limit(1)
+      );
+
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+
+      return convertDocToCalendarIntegration(snapshot.docs[0]);
     },
     enabled: !!user?.id,
   });
@@ -66,36 +111,68 @@ export function useCalendarIntegration() {
     queryKey: ['calendar-sync-logs', integration?.id],
     queryFn: async () => {
       if (!integration?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('calendar_sync_logs')
-        .select('*')
-        .eq('integration_id', integration.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
 
-      if (error) throw error;
-      return data as SyncLog[];
+      const q = query(
+        collection(db, 'calendar_sync_logs'),
+        where('integration_id', '==', integration.id),
+        orderBy('created_at', 'desc'),
+        limit(20)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToSyncLog);
     },
     enabled: !!integration?.id,
   });
 
-  // Conectar Google Calendar
+  // Conectar Google Calendar usando Firebase Auth
   const connectGoogle = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/configuracoes/calendario`,
-          scopes: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
+      const provider = new GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/calendar');
+      provider.addScope('https://www.googleapis.com/auth/calendar.events');
+      provider.setCustomParameters({
+        access_type: 'offline',
+        prompt: 'consent',
       });
 
-      if (error) throw error;
+      // Usar signInWithPopup ou linkWithPopup
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+
+      // Criar registro de integração
+      const integrationData = {
+        user_id: user.id,
+        provider: 'google',
+        calendar_email: result.user.email,
+        access_token: token,
+        is_connected: true,
+        auto_sync_enabled: false,
+        auto_send_events: false,
+        events_synced_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const docRef = await addDoc(collection(db, 'calendar_integrations'), integrationData);
+
+      // Registrar log
+      await addDoc(collection(db, 'calendar_sync_logs'), {
+        integration_id: docRef.id,
+        action: 'connect',
+        status: 'success',
+        message: 'Google Calendar conectado com sucesso',
+        created_at: new Date().toISOString(),
+      });
+
+      return { id: docRef.id, ...integrationData };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-integration'] });
+      toast.success('Google Calendar conectado com sucesso');
     },
     onError: (error) => {
       logger.error('Erro ao conectar Google Calendar', error, 'useCalendarIntegration');
@@ -108,27 +185,24 @@ export function useCalendarIntegration() {
     mutationFn: async () => {
       if (!integration?.id) throw new Error('Nenhuma integração encontrada');
 
-      const { error } = await supabase
-        .from('calendar_integrations')
-        .update({
-          is_connected: false,
-          access_token: null,
-          refresh_token: null,
-          token_expires_at: null,
-        })
-        .eq('id', integration.id);
-
-      if (error) throw error;
+      // Atualizar integração
+      const docRef = doc(db, 'calendar_integrations', integration.id);
+      await updateDoc(docRef, {
+        is_connected: false,
+        access_token: null,
+        refresh_token: null,
+        token_expires_at: null,
+        updated_at: new Date().toISOString(),
+      });
 
       // Registrar log
-      await supabase
-        .from('calendar_sync_logs')
-        .insert({
-          integration_id: integration.id,
-          action: 'disconnect',
-          status: 'success',
-          message: 'Google Calendar desconectado pelo usuário',
-        });
+      await addDoc(collection(db, 'calendar_sync_logs'), {
+        integration_id: integration.id,
+        action: 'disconnect',
+        status: 'success',
+        message: 'Google Calendar desconectado pelo usuário',
+        created_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar-integration'] });
@@ -153,26 +227,22 @@ export function useCalendarIntegration() {
       const now = new Date().toISOString();
 
       // Atualizar última sincronização
-      const { error: updateError } = await supabase
-        .from('calendar_integrations')
-        .update({
-          last_synced_at: now,
-          events_synced_count: (integration.events_synced_count || 0) + 5,
-        })
-        .eq('id', integration.id);
-
-      if (updateError) throw updateError;
+      const docRef = doc(db, 'calendar_integrations', integration.id);
+      await updateDoc(docRef, {
+        last_synced_at: now,
+        events_synced_count: (integration.events_synced_count || 0) + 5,
+        updated_at: now,
+      });
 
       // Registrar log de sucesso
-      await supabase
-        .from('calendar_sync_logs')
-        .insert({
-          integration_id: integration.id,
-          action: 'sync',
-          status: 'success',
-          message: 'Sincronização manual realizada com sucesso',
-          metadata: { events_synced: 5 },
-        });
+      await addDoc(collection(db, 'calendar_sync_logs'), {
+        integration_id: integration.id,
+        action: 'sync',
+        status: 'success',
+        message: 'Sincronização manual realizada com sucesso',
+        metadata: { events_synced: 5 },
+        created_at: new Date().toISOString(),
+      });
 
       return { synced_at: now };
     },
@@ -193,7 +263,7 @@ export function useCalendarIntegration() {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
       const updateData: Record<string, unknown> = {};
-      
+
       if (settings.autoSyncEnabled !== undefined) {
         updateData.auto_sync_enabled = settings.autoSyncEnabled;
       }
@@ -204,25 +274,23 @@ export function useCalendarIntegration() {
         updateData.default_calendar_id = settings.defaultCalendarId;
       }
 
+      updateData.updated_at = new Date().toISOString();
+
       if (integration?.id) {
         // Atualizar existente
-        const { error } = await supabase
-          .from('calendar_integrations')
-          .update(updateData)
-          .eq('id', integration.id);
-
-        if (error) throw error;
+        const docRef = doc(db, 'calendar_integrations', integration.id);
+        await updateDoc(docRef, updateData);
       } else {
         // Criar nova integração
-        const { error } = await supabase
-          .from('calendar_integrations')
-          .insert({
-            user_id: user.id,
-            provider: 'google',
-            ...updateData,
-          });
-
-        if (error) throw error;
+        const integrationData = {
+          user_id: user.id,
+          provider: 'google',
+          ...updateData,
+          is_connected: false,
+          events_synced_count: 0,
+          created_at: new Date().toISOString(),
+        };
+        await addDoc(collection(db, 'calendar_integrations'), integrationData);
       }
     },
     onSuccess: () => {

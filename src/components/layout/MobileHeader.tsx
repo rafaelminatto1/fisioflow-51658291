@@ -1,10 +1,18 @@
+/**
+ * Mobile Header - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Auth:
+ * - supabase.auth.signOut() → signOut() from Firebase Auth
+ */
+
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Stethoscope } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import {
   LayoutDashboard,
@@ -45,19 +53,20 @@ export function MobileHeader() {
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: 'Erro ao sair',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
+    try {
+      const auth = getFirebaseAuth();
+      await signOut(auth);
       toast({
         title: 'Logout realizado',
         description: 'Até breve!',
       });
       navigate('/auth');
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao sair',
+        description: error?.message || 'Ocorreu um erro',
+        variant: 'destructive',
+      });
     }
   };
 

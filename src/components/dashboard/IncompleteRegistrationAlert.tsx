@@ -3,7 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, limit, onSnapshot } from 'firebase/firestore';
 import { PatientHelpers } from '@/types';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -20,60 +21,29 @@ export const IncompleteRegistrationAlert: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const fetchIncompletePatients = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('patients')
-          .select('id, name:full_name')
-          .eq('incomplete_registration', true)
-          // Limit increased to 10 since we have a scrollable area now, but still good to cap it
-          .limit(10);
+    const db = getFirebaseDb();
 
-        if (error) {
-          console.error('Error fetching incomplete patients:', error);
-          return;
-        }
+    const q = query(
+      collection(db, 'patients'),
+      where('incomplete_registration', '==', true),
+      limit(10)
+    );
 
-        if (data) {
-          setIncompletePatients(data);
-        }
-      } catch (err) {
-        console.error('Unexpected error in IncompleteRegistrationAlert:', err);
-      }
-    };
-
-    fetchIncompletePatients();
-
-    // FIX: Track subscription state to avoid WebSocket errors
-    let isSubscribed = false;
-    const channel = supabase.channel('incomplete-patients-changes');
-
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'patients',
-          filter: 'incomplete_registration=eq.true',
-        },
-        () => {
-          fetchIncompletePatients();
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
-
-    return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const patients: Patient[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        patients.push({
+          id: doc.id,
+          name: data.full_name || data.name || 'Paciente',
         });
-      }
-    };
+      });
+      setIncompletePatients(patients);
+    }, (error) => {
+      console.error('Error fetching incomplete patients:', error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const visiblePatients = incompletePatients.filter(

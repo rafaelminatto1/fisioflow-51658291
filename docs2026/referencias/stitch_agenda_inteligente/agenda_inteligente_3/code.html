@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Wellness Stream - FisioFlow</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6B46C1", // Warm, welcoming purple
+                        "primary-light": "#EDE9FE", // Lighter shade for backgrounds
+                        "primary-foreground": "#ffffff",
+                        "secondary": "#f1f5f9",
+                        "background-light": "#FDFCFB", // Off-white, soft background
+                        "background-dark": "#020817",
+                        "border": "#e2e8f0",
+                        "muted": "#9CA3AF", // Soft gray
+                        "success-pastel": "#D1FAE5", // Light green for confirmed
+                        "success-text": "#047857",
+                        "danger-pastel": "#FEE2E2", // Light red for cancelled
+                        "danger-text": "#B91C1C",
+                        "pending-pastel": "#FCE5CA", // Light orange for waitlist/pending
+                        "pending-text": "#C2410C",
+                        "scheduled-pastel": "#E0F2FE", // Light blue for scheduled
+                        "scheduled-text": "#0B78C2",
+                        "completed-pastel": "#E5E7EB", // Light gray for completed
+                        "completed-text": "#4B5563",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.75rem", // More rounded corners
+                        "lg": "1rem",
+                        "xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'card': '0 4px 10px rgba(0,0,0,0.05)',
+                        'elevation': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.header-gradient {
+            background: linear-gradient(to bottom, #FDFCFB, #FDFCFB 80%, rgba(253, 252, 251, 0.5));
+        }.sticky-overlay::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to top, rgba(253, 252, 251, 0), #FDFCFB);
+            pointer-events: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-950 font-display antialiased overflow-hidden h-screen flex flex-col">
+<header class="flex-none bg-background-light border-b border-gray-100 z-20 px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 header-gradient">
+<div class="flex items-center gap-3">
+<button class="text-slate-600 hover:bg-gray-50 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[28px]">menu</span>
+</button>
+<div class="flex flex-col">
+<h1 class="text-xl font-bold leading-tight tracking-tight text-slate-800">Seu Stream de Bem-Estar</h1>
+<p class="text-sm text-muted font-medium">Hoje, Quarta, 13 Set</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="relative text-primary bg-primary-light p-2 rounded-full transition-colors group">
+<span class="material-symbols-outlined text-[28px]">pending_actions</span>
+<span class="absolute top-1 right-1 flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto relative bg-background-light p-4 space-y-4">
+<section class="bg-pending-pastel rounded-xl p-4 shadow-card border border-orange-100">
+<div class="flex items-center justify-between mb-3">
+<h2 class="text-lg font-semibold text-pending-text flex items-center gap-2">
+<span class="material-symbols-outlined text-[24px]">contact_mail</span>
+                        Conexões Pendentes
+                        <span class="bg-pending-text text-white text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+</h2>
+<button class="text-pending-text hover:text-pending-text/80 text-sm font-medium">Ver Todas</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-50 shadow-sm">
+<img alt="Avatar Ana Clara" class="w-10 h-10 rounded-full object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCTJsgjzm4ZaaoEfnz6D5ZBZKl0LHytXsgsuNu9QQJV4WE7jCMcp7FyqGE5enWaOl3r2xW27d5cr4WQxkh89jr1GAyjgprvzTByGtm4zFrYkUbVBhQutvhXmMFO_1bMu3AqH1N2jaY9j9HwNa7rJBDY5K7dnobsLTnFYddfTgKlPNjGdUAwXYZTaTwtLUv8q26G-arM_ZH7J8WTYwFIYG2Aua2L7UX9F3K2uouHi_G4I9V7aERDW67bavWAH7f0Le6B88F7uQbEqKe"/>
+<div>
+<p class="font-semibold text-sm text-slate-800">Ana Clara</p>
+<p class="text-xs text-muted">Aguardando Consulta Inicial</p>
+</div>
+<button class="ml-auto bg-pending-text text-white text-xs px-3 py-1.5 rounded-lg hover:opacity-90">Conectar</button>
+</div>
+<div class="flex items-center gap-3 bg-white p-3 rounded-lg border border-orange-50 shadow-sm">
+<img alt="Avatar Roberto Dias" class="w-10 h-10 rounded-full object-cover shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPgrVeifpH5OFZ0sGUXWqFL6wxMD39_jUel2FnK0qUJGXgkDzHHuCU16uRUm7q1Ky10n8bGXHMDWNrvrYMT3t4LLKtkYNrEsy55LoclKC05Qqlb8P0ZsjT9qufH4H2T02ZeRhUqFmCnJcmcTaxrA5YHFFr82y54iv6cplFqVui4nGMAYUXxdRky2d153e5kf52h7JJH6_8l7swTBT9LEk5qQ9vLYUomPD4foz0U-uMfRnbXt-qRRkaI0Y0kazycnD5xpeZhVXEYq0w"/>
+<div>
+<p class="font-semibold text-sm text-slate-800">Roberto Dias</p>
+<p class="text-xs text-muted">Avaliação Lombar (Manhã)</p>
+</div>
+<button class="ml-auto bg-pending-text text-white text-xs px-3 py-1.5 rounded-lg hover:opacity-90">Conectar</button>
+</div>
+</div>
+</section>
+<h2 class="text-xl font-bold text-slate-800 mt-6 mb-3 sticky top-[72px] z-10 bg-background-light pt-2 -mx-4 px-4 pb-2 -mt-4 sticky-overlay">Próximos Encontros</h2>
+<div class="flex items-center gap-4 bg-completed-pastel rounded-xl p-4 shadow-card border border-gray-200 opacity-80">
+<img alt="Avatar Pedro Martins" class="w-16 h-16 rounded-full object-cover shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2KaV5P9JG_CPmcJXSgdEOIUWwUEHLVEs5xfg0dIpPb5oXlyDl8LjLUwZNE0xIaRMQ4KSpN72x3mz60-9LvJ2cOR65SvCCIxmZrCMaWTp7c_zPTDeMnWyyX44madYRm01Di5nCIlff8EkpYlvp2phaB6pZFUJBa1_rwyGayQNG-SS-Diid1j2KEYSxyYkeZY2QSWyK4Yx0CavfV34FfA8qRxkOnDyeta8isZ8yQ3fBgxUm93IrNft1jYe7DJa3-T_S-UHjvHUI887q"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-completed-text mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                        Concluído
+                    </p>
+<h3 class="text-lg font-semibold text-slate-700 line-through">Pedro Martins</h3>
+<p class="text-sm text-slate-500 line-through">07:00 - 07:50 | Liberação Miofascial</p>
+</div>
+<span class="material-symbols-outlined text-[28px] text-slate-400">chevron_right</span>
+</div>
+<div class="flex items-center gap-4 bg-scheduled-pastel rounded-xl p-4 shadow-card border border-blue-100">
+<img alt="Avatar João Silva" class="w-16 h-16 rounded-full object-cover shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtADgzxKTq9Yq-cJAbtv8HOIZ5Y5tS1PN87e9rbkEUWSs5RNGEvy9QDLQec6p2nAIxGFmrAc2ZjaTkCVvhN8CTcegjdsA5QAlIooKZlzeW6B-yUlqrZgWm_Iby8Rdkq1l7GrwJuVawX7HEBzigwe3fs8OLIJaZy4KQBkx66VN3NeG8sObsj-IJ-bAWAJHPRG_vsMl0DlbjIyZD1ePK6HDhDirBV3ZUeiHkSq3Wdr_-xT8cRWCPoTfWaRRA39bTTScCa74DtYNe36b7"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-scheduled-text mb-1">
+                        Agendado para <span class="font-semibold">08:30 - 09:15</span>
+</p>
+<h3 class="text-lg font-semibold text-slate-800">João Silva</h3>
+<p class="text-sm text-slate-600">Avaliação Detalhada do Joelho (Pós-operatório)</p>
+</div>
+<span class="material-symbols-outlined text-[28px] text-blue-600">chevron_right</span>
+</div>
+<div class="flex items-center gap-4 bg-success-pastel rounded-xl p-4 shadow-card border border-emerald-100">
+<img alt="Avatar Maria Souza" class="w-16 h-16 rounded-full object-cover shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsnEkuhVXbxbt5xyiu_gXbp2IFJgUaWt7dAwO1f0fpH3tfDym7fGN2854Ta8DVbZUEbdOJWYahB9ApGefVxIxQRZkQMYGlxhKX8KpCHhWC_1zMGgW4_qdwVgFye7zT_mRUe_AOrZimAE7mtqwQ-QOyW0IitvpaJFRioSAeEhoc611RLMkYNwNR-C0dN72xCbwOrwE59epWYsTtepqyRHAhMgw8wArw3YI1atUl6WK81Od1ex29ITvfnYg7AIs3VWymPf29kyVxVcwH"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-success-text mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                        Confirmado
+                    </p>
+<h3 class="text-lg font-semibold text-slate-800">Maria Souza</h3>
+<p class="text-sm text-slate-600">09:30 - 10:30 | Sessão de Fisioterapia (4/10)</p>
+</div>
+<span class="material-symbols-outlined text-[28px] text-green-600">chevron_right</span>
+</div>
+<div class="flex items-center gap-4 bg-danger-pastel rounded-xl p-4 shadow-card border border-red-100 opacity-60">
+<img alt="Avatar Carlos Pereira" class="w-16 h-16 rounded-full object-cover shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1TTApgdeK-FUvdMrZA_Iv7w1eKVkxjGMADsvLTTkvo6ogjlPfHifvCL00fzqtdkfasNh14H9Ahms0-GDZzizJst8XCMfWVUt6jYNCh0z3sqznK6GqLrEFiNmLgbiAMwArevHlJi1C7dzIj9Ll3KvSlsS250FbW8q9DnODDG5vRXn5Wgz3PTGOiuRfRS4Sjm0Rnd9YJy8R5aR-UbqIQ_u-0BdhBXvBqbAVh8i_l1jSw4PkGSwFg7Ef7FQc6-Qyfk4UULN_66eiOqDt"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-danger-text mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">cancel</span>
+                        Cancelado
+                    </p>
+<h3 class="text-lg font-semibold text-slate-700 line-through">Carlos Pereira</h3>
+<p class="text-sm text-slate-500 line-through">11:00 - 11:30 | Avaliação Inicial</p>
+</div>
+<span class="material-symbols-outlined text-[28px] text-slate-400">chevron_right</span>
+</div>
+<div class="flex items-center gap-4 bg-scheduled-pastel rounded-xl p-4 shadow-card border border-blue-100">
+<div class="w-16 h-16 rounded-full bg-blue-200 flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-[36px] text-blue-700">groups</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-scheduled-text mb-1">
+                        Agendado para <span class="font-semibold">13:00 - 14:30</span>
+</p>
+<h3 class="text-lg font-semibold text-slate-800">Sessão Grupo Ombro</h3>
+<p class="text-sm text-slate-600">Treino funcional e fortalecimento para 3 pacientes.</p>
+</div>
+<span class="material-symbols-outlined text-[28px] text-blue-600">chevron_right</span>
+</div>
+<div class="flex items-center gap-4 bg-scheduled-pastel rounded-xl p-4 shadow-card border border-blue-100">
+<img alt="Avatar Beatriz Costa" class="w-16 h-16 rounded-full object-cover shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9QwrGU-egx-Zo7YrL2lrl_WDkozFfH_FOGcGA4Y6VuWAD4ugTkx4yIMGhNl6XjKlPAUv7q86yDG1D1lygKaUzitSFg_oJFjAxjD8vvT03juHxlVzxJpYx0UKSq0nGWY_Xr8pAGamd49l2HDFLTl6V8nilWO6RnU7vH5sP8ygj8hEiztVmuiaSBnq4gRZnmP9_lL2s7PrBiIzwG4slXZQSAQT7v8uwbuwDPaigwc6rqIEsROOnSlMzPIqSFASjpsFv8TjbnM9ngNXX"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-scheduled-text mb-1">
+                        Agendado para <span class="font-semibold">15:00 - 15:45</span>
+</p>
+<h3 class="text-lg font-semibold text-slate-800">Beatriz Costa</h3>
+<p class="text-sm text-slate-600">Sessão de Recuperação com Botas Pneumáticas</p>
+</div>
+<span class="material-symbols-outlined text-[28px] text-blue-600">chevron_right</span>
+</div>
+<div class="text-center text-muted py-8 text-sm">
+            Fim do stream de hoje. Próximos agendamentos amanhã!
+        </div>
+</main>
+<div class="absolute bottom-6 right-6 z-40">
+<button class="flex items-center justify-center w-16 h-16 bg-primary text-white rounded-full shadow-elevation hover:bg-purple-700 transition-all active:scale-95 group">
+<span class="material-symbols-outlined text-[36px] group-hover:rotate-90 transition-transform">add</span>
+</button>
+</div>
+
+</body></html>

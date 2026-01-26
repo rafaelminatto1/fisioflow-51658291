@@ -1,24 +1,19 @@
 /**
- * Offline Sync Service
+ * Offline Sync Service - Migrated to Firebase
  *
- * Provides automatic background synchronization for offline actions and data updates.
- * Uses the Background Sync API when available, with polling fallback.
- *
- * Features:
- * - Automatic background sync via Service Worker
- * - Periodic polling fallback for browsers without Background Sync
- * - Batch processing of queued actions
- * - Retry logic with exponential backoff
- * - Statistics tracking and event emission
- * - React Query integration for cache invalidation
- *
- * @module offlineSync
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('exercises') → Firestore collection 'exercises'
+ * - Uses IndexedDB for offline caching
  */
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
 import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, limit as limitClause } from 'firebase/firestore';
+
+// const db = getFirebaseDb(); // Moved inside functions
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -492,7 +487,9 @@ class OfflineSyncService {
 
     try {
       console.log('[OfflineSyncService] Starting critical data caching...');
-      const db = await getDB();
+      // Initialize both databases correctly
+      const firestoreDb = getFirebaseDb();
+      const localDb = await getDB();
 
       // 1. Cache upcoming appointments (next 24 hours)
       const today = new Date();
@@ -504,26 +501,36 @@ class OfflineSyncService {
       const todayStr = today.toISOString().split('T')[0];
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-      const { data: appointments, error: apptError } = await supabase
-        .from('appointments')
-        .select('*, patients(*)')
-        .gte('appointment_date', todayStr)
-        .lte('appointment_date', tomorrowStr);
+      let appointments;
+      let apptError: Error | null = null;
 
-      if (apptError) {
-        console.warn('[OfflineSyncService] Error caching appointments:', apptError.message);
+      try {
+        const appointmentsQ = query(
+          collection(firestoreDb, 'appointments'),
+          where('appointment_date', '>=', todayStr),
+          where('appointment_date', '<=', tomorrowStr)
+        );
+        const appointmentsSnapshot = await getDocs(appointmentsQ);
+        appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (error: any) {
+        if (error?.code === 'permission-denied') {
+          console.log('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.');
+          appointments = [];
+        } else {
+          apptError = error as Error;
+          console.warn('[OfflineSyncService] Error fetching appointments:', apptError.message);
+          appointments = [];
+        }
       }
 
       if (appointments && appointments.length > 0) {
-        const tx = db.transaction(['appointments', 'patients'], 'readwrite');
+        const tx = localDb.transaction(['appointments', 'patients'], 'readwrite');
         const apptStore = tx.objectStore('appointments');
-        const patientStore = tx.objectStore('patients');
 
         for (const appt of appointments) {
           await apptStore.put(appt);
-          if (appt.patients) {
-            await patientStore.put(appt.patients);
-          }
+          // Note: Firebase doesn't auto-join like Supabase, so patients would need separate query
+          // For now, we just store the appointment data
         }
         await tx.done;
         console.log(`[OfflineSyncService] Cached ${appointments.length} appointments`);
@@ -532,13 +539,26 @@ class OfflineSyncService {
       }
 
       // 2. Cache common exercises (first 100)
-      const { data: exercises } = await supabase
-        .from('exercises')
-        .select('*')
-        .limit(100);
+      let exercises;
+      try {
+        const exercisesQ = query(
+          collection(firestoreDb, 'exercises'),
+          limitClause(100)
+        );
+        const exercisesSnapshot = await getDocs(exercisesQ);
+        exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (error: any) {
+        if (error?.code === 'permission-denied') {
+          console.log('[OfflineSyncService] Permission denied for exercises. Skipping.');
+          exercises = [];
+        } else {
+          console.warn('[OfflineSyncService] Error fetching exercises:', error);
+          exercises = [];
+        }
+      }
 
-      if (exercises) {
-        const tx = db.transaction('exercises', 'readwrite');
+      if (exercises && exercises.length > 0) {
+        const tx = localDb.transaction('exercises', 'readwrite');
         const store = tx.store;
         for (const ex of exercises) {
           await store.put(ex);

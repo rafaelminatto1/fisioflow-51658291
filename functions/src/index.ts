@@ -4,7 +4,6 @@
  */
 
 import * as functions from 'firebase-functions/v2';
-// import { onRequest } from 'firebase-functions/v2/https';
 
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
@@ -94,9 +93,21 @@ export { apiEvaluate };
 import { healthCheck } from './api/health';
 export { healthCheck };
 
+// Upload API (replaces Vercel Blob /api/upload)
+export { generateUploadToken, confirmUpload, deleteFile as deleteStorageFile, listUserFiles } from './api/upload';
+
 // Admin Functions
 import { createAdminUser } from './admin/create-user';
 export { createAdminUser };
+
+// ============================================================================
+// AI FUNCTIONS
+// ============================================================================
+
+export { exerciseSuggestion as aiExerciseSuggestion } from './ai/exercise-suggestion';
+export { soapGeneration as aiSoapGeneration } from './ai/soap-generation';
+export { clinicalAnalysis as aiClinicalAnalysis } from './ai/clinical-analysis';
+export { movementAnalysis as aiMovementAnalysis } from './ai/movement-analysis';
 
 // ============================================================================
 // REALTIME FUNCTIONS
@@ -181,45 +192,66 @@ export const onAppointmentUpdated = functions.firestore.onDocumentWritten('appoi
 });
 
 // ============================================================================
-// AUTH TRIGGERS
+// SCHEDULED FUNCTIONS (Cron Jobs)
 // ============================================================================
 
-import { getPool } from './init';
+export { dailyReminders } from './crons/reminders';
+export { dailyReports, weeklySummary } from './crons/daily-reports';
+export { expiringVouchers, birthdays, cleanup, dataIntegrity } from './crons/additional-crons';
+
+// ============================================================================
+// WORKFLOWS (Substituem Inngest)
+// ============================================================================
+
+// Notification Workflows
+export { sendNotification, sendNotificationBatch, processNotificationQueue, emailWebhook } from './workflows/notifications';
+
+// Appointment Workflows
+export { appointmentReminders, onAppointmentCreatedWorkflow, onAppointmentUpdatedWorkflow } from './workflows/appointments';
+
+// Patient Reactivation Workflow
+export { patientReactivation } from './workflows/reactivation';
+
+// ============================================================================
+// AUTH TRIGGERS
+// ============================================================================
 
 /**
  * Trigger disparado quando um novo usuário é criado no Firebase Auth.
  * Cria o perfil correspondente na tabela profiles do Cloud SQL.
+ *
+ * TODO: Temporarily disabled - onUserCreated not available in firebase-functions v2
  */
-export const onUserCreated = functions.auth.user().onCreate(async (user) => {
-    const pool = getPool();
-    const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
-
-    try {
-        console.log(`[onUserCreated] Criando perfil para usuário: ${user.uid} (${user.email})`);
-
-        await pool.query(
-            `INSERT INTO profiles (
-                user_id, 
-                organization_id, 
-                full_name, 
-                email, 
-                role, 
-                email_verified,
-                is_active
-            ) VALUES ($1, $2, $3, $4, $5, $6, true)
-            ON CONFLICT (user_id) DO NOTHING`,
-            [
-                user.uid,
-                DEFAULT_ORG_ID,
-                user.displayName || 'Novo Usuário',
-                user.email,
-                'fisioterapeuta', // Papel padrão
-                user.emailVerified || false
-            ]
-        );
-
-        console.log(`[onUserCreated] Perfil criado com sucesso para ${user.uid}`);
-    } catch (error) {
-        console.error(`[onUserCreated] Erro ao criar perfil para ${user.uid}:`, error);
-    }
-});
+// export const onUserCreatedHandler = onUserCreatedFn(async (user: any) => {
+//     const pool = getPool();
+//     const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
+//
+//     try {
+//         console.log(`[onUserCreated] Criando perfil para usuário: ${user.uid} (${user.email})`);
+//
+//         await pool.query(
+//             `INSERT INTO profiles (
+//                 user_id,
+//                 organization_id,
+//                 full_name,
+//                 email,
+//                 role,
+//                 email_verified,
+//                 is_active
+//             ) VALUES ($1, $2, $3, $4, $5, $6, true)
+//             ON CONFLICT (user_id) DO NOTHING`,
+//             [
+//                 user.uid,
+//                 DEFAULT_ORG_ID,
+//                 user.displayName || 'Novo Usuário',
+//                 user.email,
+//                 'fisioterapeuta', // Papel padrão
+//                 user.emailVerified || false
+//             ]
+//         );
+//
+//         console.log(`[onUserCreated] Perfil criado com sucesso para ${user.uid}`);
+//     } catch (error) {
+//         console.error(`[onUserCreated] Erro ao criar perfil para ${user.uid}:`, error);
+//     }
+// });

@@ -1,7 +1,16 @@
+/**
+ * Auth Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('user_invitations') → Firestore collection 'user_invitations'
+ * - supabase.auth.getUser() → useAuth() from AuthContext
+ */
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth, AuthError } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -95,15 +104,15 @@ export default function Auth() {
       if (!inviteToken) return;
 
       try {
-        const { data, error } = await supabase
-          .from('user_invitations')
-          .select('email, role')
-          .eq('token', inviteToken)
-          .is('used_at', null)
-          .gt('expires_at', new Date().toISOString())
-          .single();
+        const db = getFirebaseDb();
+        const q = query(
+          collection(db, 'user_invitations'),
+          where('token', '==', inviteToken),
+          where('used_at', '==', null)
+        );
+        const snapshot = await getDocs(q);
 
-        if (error || !data) {
+        if (snapshot.empty) {
           toast({
             title: 'Convite inválido',
             description: 'Este convite expirou ou já foi utilizado',
@@ -112,7 +121,19 @@ export default function Auth() {
           return;
         }
 
-        setInvitationData(data);
+        const data = snapshot.docs[0].data();
+
+        // Check if expired
+        if (data.expires_at && new Date(data.expires_at) < new Date()) {
+          toast({
+            title: 'Convite expirado',
+            description: 'Este convite expirou',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        setInvitationData({ email: data.email, role: data.role });
         setEmail(data.email);
         toast({
           title: 'Convite válido!',

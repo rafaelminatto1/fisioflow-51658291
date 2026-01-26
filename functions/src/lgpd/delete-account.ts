@@ -16,10 +16,10 @@ import * as logger from 'firebase-functions/logger';
  */
 enum RetentionPolicy {
   IMMEDIATE = 'immediate',           // Deletar imediatamente
-  30_DAYS = '30_days',              // Manter por 30 dias (direito de arrependimento)
-  6_MONTHS = '6_months',            // Manter por 6 meses (contingência)
-  1_YEAR = '1_year',                // Manter por 1 ano (obrigações fiscais básicas)
-  5_YEARS = '5_years',              // Manter por 5 anos (obrigações fiscais completas)
+  DAYS_30 = '30_days',              // Manter por 30 dias (direito de arrependimento)
+  MONTHS_6 = '6_months',            // Manter por 6 meses (contingência)
+  YEAR_1 = '1_year',                // Manter por 1 ano (obrigações fiscais básicas)
+  YEARS_5 = '5_years',              // Manter por 5 anos (obrigações fiscais completas)
   MEDICAL_INDEFINITE = 'medical',   // Manter indefinidamente (prontuário médico)
 }
 
@@ -36,12 +36,12 @@ const COLLECTION_RETENTION_POLICY: Record<string, RetentionPolicy> = {
   'contacts': RetentionPolicy.IMMEDIATE,
 
   // Agendamentos - 6 meses para contingência
-  'appointments': RetentionPolicy.6_MONTHS,
+  'appointments': RetentionPolicy.MONTHS_6,
 
   // Dados financeiros - 5 anos (obrigação fiscal)
-  'payments': RetentionPolicy.5_YEARS,
-  'vouchers': RetentionPolicy.5_YEARS,
-  'invoices': RetentionPolicy.5_YEARS,
+  'payments': RetentionPolicy.YEARS_5,
+  'vouchers': RetentionPolicy.YEARS_5,
+  'invoices': RetentionPolicy.YEARS_5,
 
   // Prontuário médico - INDEFINIDO (obrigação legal Código de Ética Médica)
   'patients': RetentionPolicy.MEDICAL_INDEFINITE,
@@ -50,16 +50,16 @@ const COLLECTION_RETENTION_POLICY: Record<string, RetentionPolicy> = {
   'medical_records': RetentionPolicy.MEDICAL_INDEFINITE,
 
   // Planos de exercício - anonimizar após 1 ano
-  'exercise_plans': RetentionPolicy.1_YEAR,
+  'exercise_plans': RetentionPolicy.YEAR_1,
 
   // Notificações - deletar imediatamente
   'notifications': RetentionPolicy.IMMEDIATE,
 
   // Logs de auditoria - 6 meses
-  'audit_logs': RetentionPolicy.6_MONTHS,
+  'audit_logs': RetentionPolicy.MONTHS_6,
 
   // Uploads de arquivos - 30 dias
-  'uploads': RetentionPolicy.30_DAYS,
+  'uploads': RetentionPolicy.DAYS_30,
 };
 
 /**
@@ -289,9 +289,9 @@ async function deleteUserData(userId: string) {
         deletedCollections.push(collection);
         break;
 
-      case RetentionPolicy.30_DAYS:
-      case RetentionPolicy.6_MONTHS:
-      case RetentionPolicy.1_YEAR:
+      case RetentionPolicy.DAYS_30:
+      case RetentionPolicy.MONTHS_6:
+      case RetentionPolicy.YEAR_1:
         // Anonimizar dados (remover identificadores pessoais)
         snapshot.docs.forEach(doc => {
           batch.update(doc.ref, {
@@ -305,7 +305,7 @@ async function deleteUserData(userId: string) {
         anonymizedCollections.push(collection);
         break;
 
-      case RetentionPolicy.5_YEARS:
+      case RetentionPolicy.YEARS_5:
         // Marcar para deleção futura, manter dados fiscais
         snapshot.docs.forEach(doc => {
           batch.update(doc.ref, {

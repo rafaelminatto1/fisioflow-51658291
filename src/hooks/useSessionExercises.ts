@@ -1,26 +1,33 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 
 export const useSessionExercises = (patientId: string) => {
-    const queryClient = useQueryClient();
-
     // Fetch the most recent treatment session to get previous exercises
     const lastSessionQuery = useQuery({
         queryKey: ['last-treatment-session', patientId],
         queryFn: async () => {
             if (!patientId) return null;
 
-            const { data, error } = await supabase
-                .from('treatment_sessions')
-                .select('*')
-                .eq('patient_id', patientId)
-                .order('session_date', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const q = query(
+                collection(db, 'treatment_sessions'),
+                where('patient_id', '==', patientId),
+                orderBy('session_date', 'desc'),
+                limit(1)
+            );
 
-            if (error) throw error;
-            return data;
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                return null;
+            }
+
+            const doc = snapshot.docs[0];
+            return {
+                id: doc.id,
+                ...doc.data()
+            };
         },
         enabled: !!patientId
     });
