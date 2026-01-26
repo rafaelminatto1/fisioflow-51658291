@@ -1,5 +1,18 @@
+/**
+ * useAnalytics - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from("patient_activity_summary") → Firestore collection 'patient_activity_summary'
+ * - supabase.from("financial_summary") → Firestore collection 'financial_summary'
+ * - supabase.from("new_patients_by_period") → Firestore collection 'new_patients_by_period'
+ * - supabase.from("daily_metrics") → Firestore collection 'daily_metrics'
+ */
+
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+
+const db = getFirebaseDb();
 
 export interface PatientActivitySummary {
   id: string;
@@ -47,16 +60,18 @@ export interface DailyMetrics {
   sessions_used: number;
 }
 
+// Helper function to convert Firestore doc to type
+const convertDoc = <T>(doc: any): T => {
+  return { id: doc.id, ...doc.data() } as T;
+};
+
 export function usePatientActivitySummary() {
   return useQuery({
     queryKey: ["patient-activity-summary"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("patient_activity_summary")
-        .select("*");
-
-      if (error) throw error;
-      return data as PatientActivitySummary[];
+      const q = query(collection(db, "patient_activity_summary"));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => convertDoc<PatientActivitySummary>(doc));
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
@@ -66,12 +81,9 @@ export function useFinancialSummary() {
   return useQuery({
     queryKey: ["financial-summary"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("financial_summary")
-        .select("*");
-
-      if (error) throw error;
-      return data as FinancialSummary[];
+      const q = query(collection(db, "financial_summary"));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => convertDoc<FinancialSummary>(doc));
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -81,12 +93,9 @@ export function useNewPatientsByPeriod() {
   return useQuery({
     queryKey: ["new-patients-by-period"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("new_patients_by_period")
-        .select("*");
-
-      if (error) throw error;
-      return data as NewPatientsByPeriod[];
+      const q = query(collection(db, "new_patients_by_period"));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => convertDoc<NewPatientsByPeriod>(doc));
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -96,18 +105,26 @@ export function useDailyMetrics(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: ["daily-metrics", startDate, endDate],
     queryFn: async () => {
-      let query = supabase.from("daily_metrics").select("*");
+      let q = query(collection(db, "daily_metrics"));
 
+      // Note: Firestore requires composite indexes for multiple range queries
+      // For now, we'll fetch all and filter on the client side
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(doc => convertDoc<DailyMetrics>(doc));
+
+      // Filter by date range if provided
       if (startDate) {
-        query = query.gte("metric_date", startDate);
+        data = data.filter((m: DailyMetrics) => m.metric_date >= startDate);
       }
       if (endDate) {
-        query = query.lte("metric_date", endDate);
+        data = data.filter((m: DailyMetrics) => m.metric_date <= endDate);
       }
 
-      const { data, error } = await query.order("metric_date", { ascending: false });
+      // Sort by date descending
+      data.sort((a: DailyMetrics, b: DailyMetrics) =>
+        b.metric_date.localeCompare(a.metric_date)
+      );
 
-      if (error) throw error;
       return data as DailyMetrics[];
     },
     staleTime: 5 * 60 * 1000,

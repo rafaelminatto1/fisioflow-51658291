@@ -5,9 +5,9 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
-import { getFunctions, Functions } from 'firebase/functions';
+import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 
 // Configuração do Firebase (carregada das variáveis de ambiente)
 const firebaseConfig = {
@@ -91,7 +91,7 @@ export function getFirebaseStorage(): FirebaseStorage {
  * Obtém a instância do Firebase Functions
  * Configurada para usar a região correta
  */
-export function getFirebaseFunctions(region: string = 'southamerica-east1'): Functions {
+export function getFirebaseFunctions(region: string = 'us-central1'): Functions {
   if (!functionsInstance) {
     functionsInstance = getFunctions(getFirebaseApp(), region);
   }
@@ -154,3 +154,13 @@ export const auth = getFirebaseAuth();
 export const db = getFirebaseDb();
 export const storage = getFirebaseStorage();
 export const functions = getFirebaseFunctions();
+
+/**
+ * Re-export Firestore functions for convenience
+ */
+export { doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc };
+
+/**
+ * Re-export Functions helper for convenience
+ */
+export { httpsCallable };

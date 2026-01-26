@@ -1,5 +1,16 @@
+/**
+ * useGamificationAdmin - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
+ * - supabase.from('xp_transactions') → Firestore collection 'xp_transactions'
+ * - supabase.from('achievements_log') → Firestore collection 'achievements_log'
+ * - supabase.from('achievements') → Firestore collection 'achievements'
+ * - supabase.from('gamification_settings') → Firestore collection 'gamification_settings'
+ * - Parallel queries preserved using Promise.all
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { subDays, subMonths, startOfDay, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -13,6 +24,21 @@ import {
   LeaderboardEntry,
   LeaderboardFilters,
 } from '@/types/gamification';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES
@@ -69,79 +95,70 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
     queryKey: ['gamification-admin-stats', days],
     queryFn: async (): Promise<GamificationStats> => {
       const today = new Date();
-      const startDate = subDays(today, days).toISOString();
-      const sevenDaysAgo = subDays(today, 7).toISOString(); // Keep for specific "recent" metric
+      const startDate = subDays(today, days);
+      const sevenDaysAgo = subDays(today, 7);
 
       // Parallel queries using Promise.all
       const [
-        totalPatientsResult,
-        xpDataResult,
-        profilesResult,
-        activeInPeriodResult,
-        active7DaysResult,
-        achievementsCountResult,
-        atRiskCountResult,
+        totalPatientsSnap,
+        xpDataSnap,
+        profilesSnap,
+        achievementsSnap,
       ] = await Promise.all([
         // Total patients with gamification
-        supabase
-          .from('patient_gamification')
-          .select('*', { count: 'exact', head: true }),
+        getDocs(collection(db, 'patient_gamification')),
 
         // Total XP awarded (filtered by date)
-        supabase
-          .from('xp_transactions')
-          .select('amount, xp_amount')
-          .gte('created_at', startDate),
+        getDocs(query(
+          collection(db, 'xp_transactions'),
+          where('created_at', '>=', startDate.toISOString())
+        )),
 
         // All profiles for averages
-        supabase
-          .from('patient_gamification')
-          .select('level, current_streak, total_points'),
-
-        // Active patients in selected period
-        supabase
-          .from('patient_gamification')
-          .select('*', { count: 'exact', head: true })
-          .gte('last_activity_date', startDate),
-
-        // Active patients last 7 days (fixed metric)
-        supabase
-          .from('patient_gamification')
-          .select('*', { count: 'exact', head: true })
-          .gte('last_activity_date', sevenDaysAgo),
+        getDocs(collection(db, 'patient_gamification')),
 
         // Total achievements unlocked (filtered by date)
-        supabase
-          .from('achievements_log')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', startDate),
-
-        // At-risk patients (no activity in 7+ days)
-        supabase
-          .from('patient_gamification')
-          .select('*', { count: 'exact', head: true })
-          .lt('last_activity_date', sevenDaysAgo),
+        getDocs(query(
+          collection(db, 'achievements_log'),
+          where('created_at', '>=', startDate.toISOString())
+        )),
       ]);
 
       // Calculate statistics
-      const totalPatients = totalPatientsResult.count || 0;
+      const allProfiles = profilesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const totalPatients = allProfiles.length;
+
       // Support both 'amount' and 'xp_amount' column names
-      const totalXpAwarded = xpDataResult.data?.reduce((sum, t) => {
-        const amount = (t as any).amount || (t as any).xp_amount || 0;
-        return sum + amount;
-      }, 0) || 0;
-      const profiles = profilesResult.data || [];
-      const activeLast30Days = activeInPeriodResult.count || 0; // Renamed var, keeping prop name for compat
-      const activeLast7Days = active7DaysResult.count || 0;
-      const achievementsUnlocked = achievementsCountResult.count || 0;
-      const atRiskPatients = atRiskCountResult.count || 0;
+      const totalXpAwarded = xpDataSnap.docs.reduce((sum, doc) => {
+        const data = doc.data();
+        const amount = (data as any).amount || (data as any).xp_amount || 0;
+        return sum + (typeof amount === 'number' ? amount : 0);
+      }, 0);
+
+      const profiles = allProfiles;
+      const activeLast30Days = profiles.filter((p: any) => {
+        const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
+        return lastActivity && lastActivity >= startDate;
+      }).length;
+
+      const activeLast7Days = profiles.filter((p: any) => {
+        const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
+        return lastActivity && lastActivity >= sevenDaysAgo;
+      }).length;
+
+      const achievementsUnlocked = achievementsSnap.size;
+
+      const atRiskPatients = profiles.filter((p: any) => {
+        const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
+        return lastActivity && lastActivity < sevenDaysAgo;
+      }).length;
 
       const averageLevel = profiles.length > 0
-        ? profiles.reduce((sum, p) => sum + p.level, 0) / profiles.length
+        ? profiles.reduce((sum, p: any) => sum + (p.level || 0), 0) / profiles.length
         : 0;
 
       const averageStreak = profiles.length > 0
-        ? profiles.reduce((sum, p) => sum + p.current_streak, 0) / profiles.length
+        ? profiles.reduce((sum, p: any) => sum + (p.current_streak || 0), 0) / profiles.length
         : 0;
 
       const engagementRate = totalPatients > 0
@@ -153,7 +170,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
         totalXpAwarded,
         averageLevel: Math.round(averageLevel * 10) / 10,
         averageStreak: Math.round(averageStreak * 10) / 10,
-        activeLast30Days, // Represents active in "days" period
+        activeLast30Days,
         activeLast7Days,
         achievementsUnlocked,
         engagementRate: Math.round(engagementRate * 10) / 10,
@@ -170,15 +187,19 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
   const { data: engagementData, isLoading: engagementLoading } = useQuery({
     queryKey: ['gamification-admin-engagement', days],
     queryFn: async (): Promise<EngagementData[]> => {
-      const startDate = subDays(new Date(), days).toISOString();
+      const startDate = subDays(new Date(), days);
 
-      const { data: transactions } = await supabase
-        .from('xp_transactions')
-        .select('created_at, amount, xp_amount, reason, patient_id')
-        .gte('created_at', startDate)
-        .order('created_at', { ascending: true });
+      const q = query(
+        collection(db, 'xp_transactions'),
+        where('created_at', '>=', startDate.toISOString()),
+        orderBy('created_at', 'asc')
+      );
 
-      if (!transactions || transactions.length === 0) return [];
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return [];
+
+      const transactions = snapshot.docs.map(doc => doc.data());
 
       // Group by date
       const grouped = transactions.reduce((acc, t) => {
@@ -228,33 +249,46 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
     queryFn: async (): Promise<AtRiskPatient[]> => {
       const sevenDaysAgo = subDays(new Date(), 7);
 
-      const { data } = await supabase
-        .from('patient_gamification')
-        .select(`
-          patient_id,
-          last_activity_date,
-          level,
-          patients!inner(full_name, email)
-        `)
-        .lt('last_activity_date', sevenDaysAgo.toISOString())
-        .order('last_activity_date', { ascending: true })
-        .limit(50);
+      const q = query(
+        collection(db, 'patient_gamification'),
+        where('last_activity_date', '<', sevenDaysAgo.toISOString()),
+        orderBy('last_activity_date', 'asc'),
+        limit(50)
+      );
 
-      if (!data) return [];
+      const snapshot = await getDocs(q);
 
-      return data.map((p: any) => {
-        const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
+      if (snapshot.empty) return [];
+
+      // Fetch patient names for each at-risk patient
+      const results: AtRiskPatient[] = [];
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        const patientId = doc.id;
+
+        // Fetch patient info
+        const patientQuery = query(
+          collection(db, 'patients'),
+          where('__name__', '==', patientId),
+          limit(1)
+        );
+        const patientSnap = await getDocs(patientQuery);
+        const patientInfo = patientSnap.empty ? {} : patientSnap.docs[0].data();
+
+        const lastActivity = data.last_activity_date ? new Date(data.last_activity_date) : null;
         const daysInactive = lastActivity ? differenceInDays(new Date(), lastActivity) : 999;
 
-        return {
-          patient_id: p.patient_id,
-          patient_name: p.patients?.full_name || 'Desconhecido',
-          email: p.patients?.email,
-          level: p.level,
-          lastActivity: p.last_activity_date,
+        results.push({
+          patient_id: patientId,
+          patient_name: (patientInfo as any).full_name || 'Desconhecido',
+          email: (patientInfo as any).email,
+          level: data.level,
+          lastActivity: data.last_activity_date,
           daysInactive,
-        };
-      });
+        });
+      }
+
+      return results;
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
@@ -266,33 +300,32 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
   const { data: popularAchievements, isLoading: popularAchievementsLoading } = useQuery({
     queryKey: ['gamification-admin-popular-achievements'],
     queryFn: async (): Promise<PopularAchievement[]> => {
-      const [achievementsResult, unlockedResult] = await Promise.all([
-        supabase.from('achievements').select('id, code, title'),
-        supabase.from('achievements_log').select('achievement_id, achievement_title'),
+      const [achievementsSnap, unlockedSnap, patientsSnap] = await Promise.all([
+        getDocs(collection(db, 'achievements')),
+        getDocs(collection(db, 'achievements_log')),
+        getDocs(collection(db, 'patient_gamification')),
       ]);
 
-      if (!achievementsResult.data || !unlockedResult.data) return [];
+      if (achievementsSnap.empty) return [];
 
       // Count unlocks per achievement - support both UUID and TEXT achievement_id
-      const unlockCounts = unlockedResult.data.reduce((acc, log) => {
-        const key = log.achievement_id || log.achievement_title || 'unknown';
+      const unlockCounts = unlockedSnap.docs.reduce((acc, doc) => {
+        const data = doc.data();
+        const key = data.achievement_id || data.achievement_title || 'unknown';
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
-      const totalPatients = await supabase
-        .from('patient_gamification')
-        .select('*', { count: 'exact', head: true });
+      const total = patientsSnap.size || 1;
 
-      const total = totalPatients.count || 1;
-
-      return achievementsResult.data
-        .map(a => {
+      return achievementsSnap.docs
+        .map(doc => {
+          const data = doc.data();
           // Try to match by id, then by code, then by title
-          const count = unlockCounts[a.id] || unlockCounts[a.code] || unlockCounts[a.title] || 0;
+          const count = unlockCounts[doc.id] || unlockCounts[data.code] || unlockCounts[data.title] || 0;
           return {
-            id: a.id,
-            title: a.title,
+            id: doc.id,
+            title: data.title,
             unlockedCount: count,
             totalPatients: total,
             unlockRate: (count / total) * 100,
@@ -311,24 +344,27 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
   const { data: levelSettings, isLoading: levelSettingsLoading } = useQuery({
     queryKey: ['gamification-admin-level-settings'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('gamification_settings')
-        .select('*')
-        .in('key', [
+      const q = query(
+        collection(db, 'gamification_settings'),
+        where('key', 'in', [
           'level_progression_type',
           'level_base_xp',
           'level_multiplier',
           'level_titles',
           'level_rewards',
-        ]);
+        ])
+      );
 
-      if (!data) return null;
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return null;
 
       const getSetting = (key: string, defaultValue: any) => {
-        const setting = data.find(s => s.key === key);
-        if (!setting?.value) return defaultValue;
+        const settingDoc = snapshot.docs.find(doc => doc.data().key === key);
+        if (!settingDoc?.data()?.value) return defaultValue;
         try {
-          return typeof defaultValue === 'number' ? Number(setting.value) : setting.value;
+          const value = settingDoc.data().value;
+          return typeof defaultValue === 'number' ? Number(value) : value;
         } catch {
           return defaultValue;
         }
@@ -387,33 +423,27 @@ function useAdjustXp() {
   return useMutation({
     mutationFn: async ({ patientId, amount, reason }: { patientId: string; amount: number; reason: string }) => {
       // Get current profile
-      const { data: current } = await supabase
-        .from('patient_gamification')
-        .select('*')
-        .eq('patient_id', patientId)
-        .maybeSingle();
+      const docRef = doc(db, 'patient_gamification', patientId);
+      const docSnap = await getDoc(docRef);
 
-      if (!current) {
+      if (!docSnap.exists()) {
         throw new Error('Perfil de gamificação não encontrado');
       }
 
+      const current = docSnap.data();
       const oldTotal = current.total_points || 0;
       const newTotal = Math.max(0, oldTotal + amount);
 
       // Update profile
-      const { error } = await supabase
-        .from('patient_gamification')
-        .update({ total_points: newTotal })
-        .eq('patient_id', patientId);
-
-      if (error) throw error;
+      await updateDoc(docRef, { total_points: newTotal });
 
       // Log transaction
-      await supabase.from('xp_transactions').insert({
+      await addDoc(collection(db, 'xp_transactions'), {
         patient_id: patientId,
         amount,
         reason: 'manual_adjustment',
         description: reason,
+        created_at: new Date().toISOString(),
       });
 
       return { patientId, amount, newTotal };
@@ -444,15 +474,12 @@ function useResetStreak() {
 
   return useMutation({
     mutationFn: async ({ patientId, patientName }: { patientId: string; patientName?: string }) => {
-      const { error } = await supabase
-        .from('patient_gamification')
-        .update({
-          current_streak: 0,
-          last_activity_date: new Date().toISOString(),
-        })
-        .eq('patient_id', patientId);
+      const docRef = doc(db, 'patient_gamification', patientId);
+      await updateDoc(docRef, {
+        current_streak: 0,
+        last_activity_date: new Date().toISOString(),
+      });
 
-      if (error) throw error;
       return { patientId, patientName };
     },
     onSuccess: (result) => {
@@ -485,22 +512,39 @@ function useUpdateLevelSettings() {
       baseXp: number;
       multiplier: number;
     }) => {
-      const updates = [
-        supabase
-          .from('gamification_settings')
-          .update({ value: settings.progressionType })
-          .eq('key', 'level_progression_type'),
+      // Get all setting documents
+      const q = query(
+        collection(db, 'gamification_settings'),
+        where('key', 'in', [
+          'level_progression_type',
+          'level_base_xp',
+          'level_multiplier',
+        ])
+      );
 
-        supabase
-          .from('gamification_settings')
-          .update({ value: settings.baseXp })
-          .eq('key', 'level_base_xp'),
+      const snapshot = await getDocs(q);
 
-        supabase
-          .from('gamification_settings')
-          .update({ value: settings.multiplier })
-          .eq('key', 'level_multiplier'),
-      ];
+      // Update each setting
+      const updates = snapshot.docs.map(docSnap => {
+        const key = docSnap.data().key;
+        let value: string | number;
+
+        switch (key) {
+          case 'level_progression_type':
+            value = settings.progressionType;
+            break;
+          case 'level_base_xp':
+            value = settings.baseXp;
+            break;
+          case 'level_multiplier':
+            value = settings.multiplier;
+            break;
+          default:
+            return Promise.resolve();
+        }
+
+        return updateDoc(doc(db, 'gamification_settings', docSnap.id), { value });
+      });
 
       await Promise.all(updates);
       return settings;

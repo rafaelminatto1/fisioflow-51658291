@@ -37,9 +37,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.createAdminUser = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.getPatientRecords = exports.getPatientFinancialSummary = exports.createPayment = exports.listPayments = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
+exports.deleteStorageFile = exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
+exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.createAdminUser = exports.listUserFiles = void 0;
 const functions = __importStar(require("firebase-functions/v2"));
-// import { onRequest } from 'firebase-functions/v2/https';
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
 // ============================================================================
@@ -70,6 +70,12 @@ exports.listExercises = apiExercises.listExercises;
 exports.getExercise = apiExercises.getExercise;
 exports.searchSimilarExercises = apiExercises.searchSimilarExercises;
 exports.getExerciseCategories = apiExercises.getExerciseCategories;
+exports.getPrescribedExercises = apiExercises.getPrescribedExercises;
+exports.logExercise = apiExercises.logExercise;
+exports.createExercise = apiExercises.createExercise;
+exports.updateExercise = apiExercises.updateExercise;
+exports.deleteExercise = apiExercises.deleteExercise;
+exports.mergeExercises = apiExercises.mergeExercises;
 // API de Avaliações
 const apiAssessments = __importStar(require("./api/assessments"));
 exports.listAssessments = apiAssessments.listAssessments;
@@ -78,14 +84,27 @@ exports.createAssessment = apiAssessments.createAssessment;
 exports.updateAssessment = apiAssessments.updateAssessment;
 exports.listAssessmentTemplates = apiAssessments.listAssessmentTemplates;
 exports.getAssessmentTemplate = apiAssessments.getAssessmentTemplate;
+// API de Perfis
+const apiProfile = __importStar(require("./api/profile"));
+exports.getProfile = apiProfile.getProfile;
+exports.updateProfile = apiProfile.updateProfile;
 // API de Pagamentos
 const apiPayments = __importStar(require("./api/payments"));
 exports.listPayments = apiPayments.listPayments;
 exports.createPayment = apiPayments.createPayment;
-exports.getPatientFinancialSummary = apiPayments.getPatientFinancialSummary;
+// API Financeira (Transações)
+const apiFinancial = __importStar(require("./api/financial"));
+exports.listTransactions = apiFinancial.listTransactions;
+exports.createTransaction = apiFinancial.createTransaction;
+exports.updateTransaction = apiFinancial.updateTransaction;
+exports.deleteTransaction = apiFinancial.deleteTransaction;
+exports.findTransactionByAppointmentId = apiFinancial.findTransactionByAppointmentId;
+exports.getEventReport = apiFinancial.getEventReport;
 // API de Prontuários
 const apiMedicalRecords = __importStar(require("./api/medical-records"));
 exports.getPatientRecords = apiMedicalRecords.getPatientRecords;
+exports.getPainRecords = apiMedicalRecords.getPainRecords;
+exports.savePainRecord = apiMedicalRecords.savePainRecord;
 exports.createMedicalRecord = apiMedicalRecords.createMedicalRecord;
 exports.updateMedicalRecord = apiMedicalRecords.updateMedicalRecord;
 exports.listTreatmentSessions = apiMedicalRecords.listTreatmentSessions;
@@ -97,9 +116,26 @@ Object.defineProperty(exports, "apiEvaluate", { enumerable: true, get: function 
 // Health Check
 const health_1 = require("./api/health");
 Object.defineProperty(exports, "healthCheck", { enumerable: true, get: function () { return health_1.healthCheck; } });
+// Upload API (replaces Vercel Blob /api/upload)
+var upload_1 = require("./api/upload");
+Object.defineProperty(exports, "generateUploadToken", { enumerable: true, get: function () { return upload_1.generateUploadToken; } });
+Object.defineProperty(exports, "confirmUpload", { enumerable: true, get: function () { return upload_1.confirmUpload; } });
+Object.defineProperty(exports, "deleteStorageFile", { enumerable: true, get: function () { return upload_1.deleteFile; } });
+Object.defineProperty(exports, "listUserFiles", { enumerable: true, get: function () { return upload_1.listUserFiles; } });
 // Admin Functions
 const create_user_1 = require("./admin/create-user");
 Object.defineProperty(exports, "createAdminUser", { enumerable: true, get: function () { return create_user_1.createAdminUser; } });
+// ============================================================================
+// AI FUNCTIONS
+// ============================================================================
+var exercise_suggestion_1 = require("./ai/exercise-suggestion");
+Object.defineProperty(exports, "aiExerciseSuggestion", { enumerable: true, get: function () { return exercise_suggestion_1.exerciseSuggestion; } });
+var soap_generation_1 = require("./ai/soap-generation");
+Object.defineProperty(exports, "aiSoapGeneration", { enumerable: true, get: function () { return soap_generation_1.soapGeneration; } });
+var clinical_analysis_1 = require("./ai/clinical-analysis");
+Object.defineProperty(exports, "aiClinicalAnalysis", { enumerable: true, get: function () { return clinical_analysis_1.clinicalAnalysis; } });
+var movement_analysis_1 = require("./ai/movement-analysis");
+Object.defineProperty(exports, "aiMovementAnalysis", { enumerable: true, get: function () { return movement_analysis_1.movementAnalysis; } });
 // ============================================================================
 // REALTIME FUNCTIONS
 // ============================================================================
@@ -168,4 +204,76 @@ exports.onAppointmentUpdated = functions.firestore.onDocumentWritten('appointmen
         });
     }
 });
+// ============================================================================
+// SCHEDULED FUNCTIONS (Cron Jobs)
+// ============================================================================
+var reminders_1 = require("./crons/reminders");
+Object.defineProperty(exports, "dailyReminders", { enumerable: true, get: function () { return reminders_1.dailyReminders; } });
+var daily_reports_1 = require("./crons/daily-reports");
+Object.defineProperty(exports, "dailyReports", { enumerable: true, get: function () { return daily_reports_1.dailyReports; } });
+Object.defineProperty(exports, "weeklySummary", { enumerable: true, get: function () { return daily_reports_1.weeklySummary; } });
+var additional_crons_1 = require("./crons/additional-crons");
+Object.defineProperty(exports, "expiringVouchers", { enumerable: true, get: function () { return additional_crons_1.expiringVouchers; } });
+Object.defineProperty(exports, "birthdays", { enumerable: true, get: function () { return additional_crons_1.birthdays; } });
+Object.defineProperty(exports, "cleanup", { enumerable: true, get: function () { return additional_crons_1.cleanup; } });
+Object.defineProperty(exports, "dataIntegrity", { enumerable: true, get: function () { return additional_crons_1.dataIntegrity; } });
+// ============================================================================
+// WORKFLOWS (Substituem Inngest)
+// ============================================================================
+// Notification Workflows
+var notifications_1 = require("./workflows/notifications");
+Object.defineProperty(exports, "sendNotification", { enumerable: true, get: function () { return notifications_1.sendNotification; } });
+Object.defineProperty(exports, "sendNotificationBatch", { enumerable: true, get: function () { return notifications_1.sendNotificationBatch; } });
+Object.defineProperty(exports, "processNotificationQueue", { enumerable: true, get: function () { return notifications_1.processNotificationQueue; } });
+Object.defineProperty(exports, "emailWebhook", { enumerable: true, get: function () { return notifications_1.emailWebhook; } });
+// Appointment Workflows
+var appointments_1 = require("./workflows/appointments");
+Object.defineProperty(exports, "appointmentReminders", { enumerable: true, get: function () { return appointments_1.appointmentReminders; } });
+Object.defineProperty(exports, "onAppointmentCreatedWorkflow", { enumerable: true, get: function () { return appointments_1.onAppointmentCreatedWorkflow; } });
+Object.defineProperty(exports, "onAppointmentUpdatedWorkflow", { enumerable: true, get: function () { return appointments_1.onAppointmentUpdatedWorkflow; } });
+// Patient Reactivation Workflow
+var reactivation_1 = require("./workflows/reactivation");
+Object.defineProperty(exports, "patientReactivation", { enumerable: true, get: function () { return reactivation_1.patientReactivation; } });
+// ============================================================================
+// AUTH TRIGGERS
+// ============================================================================
+/**
+ * Trigger disparado quando um novo usuário é criado no Firebase Auth.
+ * Cria o perfil correspondente na tabela profiles do Cloud SQL.
+ *
+ * TODO: Temporarily disabled - onUserCreated not available in firebase-functions v2
+ */
+// export const onUserCreatedHandler = onUserCreatedFn(async (user: any) => {
+//     const pool = getPool();
+//     const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
+//
+//     try {
+//         console.log(`[onUserCreated] Criando perfil para usuário: ${user.uid} (${user.email})`);
+//
+//         await pool.query(
+//             `INSERT INTO profiles (
+//                 user_id,
+//                 organization_id,
+//                 full_name,
+//                 email,
+//                 role,
+//                 email_verified,
+//                 is_active
+//             ) VALUES ($1, $2, $3, $4, $5, $6, true)
+//             ON CONFLICT (user_id) DO NOTHING`,
+//             [
+//                 user.uid,
+//                 DEFAULT_ORG_ID,
+//                 user.displayName || 'Novo Usuário',
+//                 user.email,
+//                 'fisioterapeuta', // Papel padrão
+//                 user.emailVerified || false
+//             ]
+//         );
+//
+//         console.log(`[onUserCreated] Perfil criado com sucesso para ${user.uid}`);
+//     } catch (error) {
+//         console.error(`[onUserCreated] Erro ao criar perfil para ${user.uid}:`, error);
+//     }
+// });
 //# sourceMappingURL=index.js.map

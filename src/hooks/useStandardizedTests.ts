@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getFirebaseDb, getFirebaseAuth } from "@/integrations/firebase/app";
+import { collection, query, where, getDocs, orderBy, addDoc } from "firebase/firestore";
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface StandardizedTestResult {
   id: string;
@@ -20,23 +24,20 @@ export const useStandardizedTests = (patientId: string) => {
   return useQuery({
     queryKey: ["standardized-tests", patientId],
     queryFn: async (): Promise<StandardizedTestResult[]> => {
-      const { data, error } = await supabase
-        .from("standardized_test_results")
-        .select("*")
-        .eq("patient_id", patientId)
-        .order("created_at", { ascending: false });
+      const q = query(
+        collection(db, "standardized_test_results"),
+        where("patient_id", "==", patientId),
+        orderBy("created_at", "desc")
+      );
 
-      if (error) {
-        console.error("Erro ao buscar testes padronizados:", error);
-        toast.error("Erro ao carregar histórico de testes");
-        throw error;
-      }
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      return (data || []).map(item => ({
+      return data.map(item => ({
         ...item,
-        test_type: item.test_type as 'oswestry' | 'lysholm' | 'dash',
-        answers: item.answers as Record<string, number>,
-      }));
+        test_type: (item as any).test_type as 'oswestry' | 'lysholm' | 'dash',
+        answers: (item as any).answers as Record<string, number>,
+      })) as StandardizedTestResult[];
     },
     enabled: !!patientId,
   });
@@ -55,31 +56,25 @@ export const useSaveStandardizedTest = () => {
       interpretation: string;
       answers: Record<string, number>;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const user = auth.currentUser;
+
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
 
-      const { data, error } = await supabase
-        .from("standardized_test_results")
-        .insert({
-          ...testData,
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      const newTest = {
+        ...testData,
+        created_by: user.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      if (error) {
-        console.error("Erro ao salvar teste:", error);
-        throw error;
-      }
-
-      return data;
+      const docRef = await addDoc(collection(db, "standardized_test_results"), newTest);
+      return { id: docRef.id, ...newTest };
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: ["standardized-tests", variables.patient_id] 
+      queryClient.invalidateQueries({
+        queryKey: ["standardized-tests", variables.patient_id]
       });
       toast.success("Teste salvo com sucesso!");
     },

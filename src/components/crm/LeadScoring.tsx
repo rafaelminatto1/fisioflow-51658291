@@ -13,7 +13,8 @@ import {
   CheckCircle2, Clock, Phone, Mail, Calendar
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb, collection, getDocs, query as queryFn, orderBy, doc, getDoc } from '@/integrations/firebase/app';
+import { collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, orderBy as orderByFn, doc as docRef, getDoc as getDocFromFirestore } from 'firebase/firestore';
 import { useLeadScoring } from './hooks/useLeadScoring';
 
 const TIERS = {
@@ -29,20 +30,35 @@ interface LeadScoringProps {
 
 export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'rules' | 'settings'>('overview');
+  const db = getFirebaseDb();
 
   // Buscar scores calculados
   const { data: scores = [], isLoading } = useQuery({
     queryKey: ['lead-scores', _leadId],
     queryFn: async () => {
-      let query = supabase.from('lead_scores').select('*, leads(*)');
-      if (_leadId) {
-        query = query.eq('lead_id', _leadId);
-      }
-      const { data, error } = await query.order('total_score', { ascending: false });
-      if (error) throw error;
+      let q = queryFromFirestore(collectionRef(db, 'lead_scores'), orderByFn('total_score', 'desc'));
 
-      // Cast the response to expected type to avoid SelectQueryError inference
-      return data as unknown as Array<{
+      const snapshot = await getDocsFromCollection(q);
+
+      const results = await Promise.all(snapshot.docs.map(async (docSnap) => {
+        const data = docSnap.data();
+        // Fetch lead data
+        const leadRef = docRef(db, 'leads', data.lead_id);
+        const leadSnap = await getDocFromFirestore(leadRef);
+
+        return {
+          id: docSnap.id,
+          ...data,
+          leads: leadSnap.exists() ? { name: leadSnap.data().name } : null
+        };
+      }));
+
+      // Filter by lead_id if provided
+      if (_leadId) {
+        return results.filter((r: any) => r.lead_id === _leadId);
+      }
+
+      return results as unknown as Array<{
         id: string;
         lead_id: string;
         total_score: number;

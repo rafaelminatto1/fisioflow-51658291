@@ -1,6 +1,30 @@
+/**
+ * useFornecedores - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('fornecedores') → Firestore collection 'fornecedores'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Fornecedor {
   id: string;
@@ -26,18 +50,26 @@ export interface Fornecedor {
 
 export type FornecedorFormData = Omit<Fornecedor, 'id' | 'created_at' | 'updated_at'>;
 
+// Helper to convert Firestore doc to Fornecedor
+const convertDocToFornecedor = (doc: any): Fornecedor => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Fornecedor;
+};
+
 export function useFornecedores() {
   return useQuery({
     queryKey: ['fornecedores'],
     queryFn: async () => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data, error } = await supabase
-        .from('fornecedores')
-        .select('id, organization_id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, email, telefone, categoria, ativo, created_at, updated_at')
-        .order('razao_social');
+      const q = query(
+        collection(db, 'fornecedores'),
+        orderBy('razao_social')
+      );
 
-      if (error) throw error;
-      return data as Fornecedor[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToFornecedor);
     },
     staleTime: 1000 * 60 * 10, // 10 minutos
     gcTime: 1000 * 60 * 20,
@@ -49,15 +81,17 @@ export function useCreateFornecedor() {
 
   return useMutation({
     mutationFn: async (fornecedor: FornecedorFormData) => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data, error } = await supabase
-        .from('fornecedores')
-        .insert(fornecedor)
-        .select('id, organization_id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, email, telefone, categoria, ativo, created_at, updated_at')
-        .single();
+      const fornecedorData = {
+        ...fornecedor,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'fornecedores'), fornecedorData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToFornecedor(docSnap);
     },
     // Optimistic update - adiciona fornecedor antes da resposta do servidor
     onMutate: async (newFornecedor) => {
@@ -68,6 +102,7 @@ export function useCreateFornecedor() {
       const optimisticFornecedor: Fornecedor = {
         ...newFornecedor,
         id: `temp-${Date.now()}`,
+        organization_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -94,16 +129,14 @@ export function useUpdateFornecedor() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Fornecedor> & { id: string }) => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data, error } = await supabase
-        .from('fornecedores')
-        .update(updates)
-        .eq('id', id)
-        .select('id, organization_id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, email, telefone, categoria, ativo, created_at, updated_at')
-        .single();
+      const docRef = doc(db, 'fornecedores', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToFornecedor(docSnap);
     },
     // Optimistic update - atualiza fornecedor antes da resposta do servidor
     onMutate: async ({ id, ...updates }) => {
@@ -136,12 +169,7 @@ export function useDeleteFornecedor() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('fornecedores')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'fornecedores', id));
     },
     // Optimistic update - remove fornecedor da lista visualmente
     onMutate: async (id) => {

@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, where, orderBy, limit, getDoc, doc } from "firebase/firestore";
 import { Users, UserMinus, CreditCard, UserPlus, TrendingUp, Clock } from "lucide-react";
 import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,14 +23,20 @@ export function InternalDashboard() {
   const { data: activePatients, isLoading: loadingActive } = useQuery({
     queryKey: ["active-patients-dashboard"],
     queryFn: async () => {
-      const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd");
-      const { data: appointments } = await supabase
-        .from("appointments")
-        .select("patient_id")
-        .gte("appointment_date", thirtyDaysAgo);
+      const db = getFirebaseDb();
+      const thirtyDaysAgo = subDays(new Date(), 30);
 
-      const uniquePatientIds = [...new Set(appointments?.map(a => a.patient_id) || [])];
-      return uniquePatientIds.length;
+      const q = query(
+        collection(db, "appointments"),
+        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
+      );
+
+      const snapshot = await getDocs(q);
+      const patientIds = new Set(
+        snapshot.docs.map(doc => (doc.data() as any).patient_id).filter(Boolean)
+      );
+
+      return patientIds.size;
     },
   });
 
@@ -37,34 +44,43 @@ export function InternalDashboard() {
   const { data: inactivePatients, isLoading: loadingInactive } = useQuery({
     queryKey: ["inactive-patients-list"],
     queryFn: async () => {
-      const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd");
+      const db = getFirebaseDb();
+      const thirtyDaysAgo = subDays(new Date(), 30);
 
       // Buscar todos os pacientes
-      const { data: allPatients } = await supabase
-        .from("patients")
-        .select("id, full_name, phone, email, created_at");
+      const allPatientsQuery = query(
+        collection(db, "patients"),
+        orderBy("full_name")
+      );
+      const allPatientsSnapshot = await getDocs(allPatientsQuery);
+      const allPatients = allPatientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Buscar pacientes com agendamentos recentes
-      const { data: recentAppointments } = await supabase
-        .from("appointments")
-        .select("patient_id")
-        .gte("appointment_date", thirtyDaysAgo);
+      const recentAppointmentsQuery = query(
+        collection(db, "appointments"),
+        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
+      );
+      const recentAppointmentsSnapshot = await getDocs(recentAppointmentsQuery);
 
-      const activePatientIds = new Set(recentAppointments?.map(a => a.patient_id) || []);
+      const activePatientIds = new Set(
+        recentAppointmentsSnapshot.docs.map(doc => (doc.data() as any).patient_id).filter(Boolean)
+      );
 
       // Filtrar inativos
-      const inactive = allPatients?.filter(p => !activePatientIds.has(p.id)) || [];
+      const inactive = allPatients.filter(p => !activePatientIds.has(p.id));
 
       // Buscar última consulta de cada paciente inativo
       const inactiveWithLastAppointment = await Promise.all(
-        inactive.slice(0, 20).map(async (patient) => {
-          const { data: lastAppt } = await supabase
-            .from("appointments")
-            .select("appointment_date")
-            .eq("patient_id", patient.id)
-            .order("appointment_date", { ascending: false })
-            .limit(1)
-            .single();
+        inactive.slice(0, 20).map(async (patient: any) => {
+          const lastApptQuery = query(
+            collection(db, "appointments"),
+            where("patient_id", "==", patient.id),
+            orderBy("appointment_date", "desc"),
+            limit(1)
+          );
+          const lastApptSnapshot = await getDocs(lastApptQuery);
+
+          const lastAppt = !lastApptSnapshot.empty ? lastApptSnapshot.docs[0].data() : null;
 
           return {
             ...patient,
@@ -84,33 +100,46 @@ export function InternalDashboard() {
   const { data: patientsWithSessions, isLoading: loadingSessions } = useQuery({
     queryKey: ["patients-with-sessions"],
     queryFn: async () => {
-      const { data: packages } = await supabase
-        .from("session_packages")
-        .select(`
-          id,
-          patient_id,
-          total_sessions,
-          used_sessions,
-          remaining_sessions,
-          status,
-          patients (
-            id,
-            full_name,
-            phone
-          )
-        `)
-        .eq("status", "ativo")
-        .gt("remaining_sessions", 0);
+      const db = getFirebaseDb();
 
-      return packages?.map(pkg => ({
-        id: pkg.id,
-        patientId: pkg.patient_id,
-        patientName: (pkg.patients as { full_name?: string } | null)?.full_name || "N/A",
-        patientPhone: (pkg.patients as { phone?: string } | null)?.phone || null,
-        totalSessions: pkg.total_sessions,
-        usedSessions: pkg.used_sessions,
-        remainingSessions: pkg.remaining_sessions,
-      })) || [];
+      const q = query(
+        collection(db, "session_packages"),
+        where("status", "==", "ativo"),
+        where("remaining_sessions", ">", 0)
+      );
+
+      const snapshot = await getDocs(q);
+
+      const packages = await Promise.all(
+        snapshot.docs.map(async (pkgDoc) => {
+          const pkg = { id: pkgDoc.id, ...pkgDoc.data() } as any;
+
+          // Get patient data
+          let patientName = "N/A";
+          let patientPhone = null;
+
+          if (pkg.patient_id) {
+            const patientDoc = await getDoc(doc(db, "patients", pkg.patient_id));
+            if (patientDoc.exists()) {
+              const patientData = patientDoc.data();
+              patientName = patientData.full_name || "N/A";
+              patientPhone = patientData.phone || null;
+            }
+          }
+
+          return {
+            id: pkg.id,
+            patientId: pkg.patient_id,
+            patientName,
+            patientPhone,
+            totalSessions: pkg.total_sessions,
+            usedSessions: pkg.used_sessions,
+            remainingSessions: pkg.remaining_sessions,
+          };
+        })
+      );
+
+      return packages;
     },
   });
 
@@ -118,51 +147,61 @@ export function InternalDashboard() {
   const { data: newPatientsData } = useQuery({
     queryKey: ["new-patients-by-period"],
     queryFn: async () => {
+      const db = getFirebaseDb();
       const now = new Date();
-      const todayStart = format(startOfDay(now), "yyyy-MM-dd");
-      const weekStart = format(startOfWeek(now, { locale: ptBR }), "yyyy-MM-dd");
-      const monthStart = format(startOfMonth(now), "yyyy-MM-dd");
+      const todayStart = startOfDay(now);
+      const weekStart = startOfWeek(now, { locale: ptBR });
+      const monthStart = startOfMonth(now);
 
       // Hoje
-      const { count: todayCount } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", `${todayStart}T00:00:00`);
+      const todayQuery = query(
+        collection(db, "patients"),
+        where("created_at", ">=", todayStart.toISOString())
+      );
+      const todaySnapshot = await getDocs(todayQuery);
+      const todayCount = todaySnapshot.docs.length;
 
       // Semana
-      const { count: weekCount } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", `${weekStart}T00:00:00`);
+      const weekQuery = query(
+        collection(db, "patients"),
+        where("created_at", ">=", weekStart.toISOString())
+      );
+      const weekSnapshot = await getDocs(weekQuery);
+      const weekCount = weekSnapshot.docs.length;
 
       // Mês
-      const { count: monthCount } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", `${monthStart}T00:00:00`);
+      const monthQuery = query(
+        collection(db, "patients"),
+        where("created_at", ">=", monthStart.toISOString())
+      );
+      const monthSnapshot = await getDocs(monthQuery);
+      const monthCount = monthSnapshot.docs.length;
 
       // Últimos 6 meses para gráfico
       const sixMonthsData = await Promise.all(
-        Array.from({ length: 6 }, (_, i) => {
+        Array.from({ length: 6 }, async (_, i) => {
           const monthDate = subMonths(now, 5 - i);
-          const start = format(startOfMonth(monthDate), "yyyy-MM-dd");
-          const end = format(subDays(startOfMonth(subMonths(monthDate, -1)), 1), "yyyy-MM-dd");
-          return supabase
-            .from("patients")
-            .select("*", { count: "exact", head: true })
-            .gte("created_at", `${start}T00:00:00`)
-            .lte("created_at", `${end}T23:59:59`)
-            .then(({ count }) => ({
-              month: format(monthDate, "MMM", { locale: ptBR }),
-              count: count || 0,
-            }));
+          const start = startOfMonth(monthDate);
+          const end = startOfMonth(subMonths(monthDate, -1));
+
+          const monthQuery = query(
+            collection(db, "patients"),
+            where("created_at", ">=", start.toISOString()),
+            where("created_at", "<", end.toISOString())
+          );
+          const monthSnapshot = await getDocs(monthQuery);
+
+          return {
+            month: format(monthDate, "MMM", { locale: ptBR }),
+            count: monthSnapshot.docs.length,
+          };
         })
       );
 
       return {
-        today: todayCount || 0,
-        thisWeek: weekCount || 0,
-        thisMonth: monthCount || 0,
+        today: todayCount,
+        thisWeek: weekCount,
+        thisMonth: monthCount,
         byMonth: sixMonthsData,
       };
     },
@@ -172,10 +211,9 @@ export function InternalDashboard() {
   const { data: totalPatients } = useQuery({
     queryKey: ["total-patients-count"],
     queryFn: async () => {
-      const { count } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true });
-      return count || 0;
+      const db = getFirebaseDb();
+      const snapshot = await getDocs(collection(db, "patients"));
+      return snapshot.docs.length;
     },
   });
 
@@ -392,7 +430,7 @@ export function InternalDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inactivePatients?.list?.map((patient) => (
+                  {inactivePatients?.list?.map((patient: any) => (
                     <TableRow key={patient.id}>
                       <TableCell className="font-medium">{PatientHelpers.getName(patient)}</TableCell>
                       <TableCell>{patient.phone || "-"}</TableCell>

@@ -1,5 +1,18 @@
-import { supabase } from "@/integrations/supabase/client";
-import { GoalProfile, GoalTarget } from "@/lib/goals/goalProfiles.seed";
+/**
+ * Goals Admin Service - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.auth.getSession() → Firebase Auth currentUser.getIdToken()
+ * - Direct fetch() → Firebase Functions httpsCallable()
+ */
+
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { GoalProfile, GoalTarget } from '@/lib/goals/goalProfiles.seed';
+
+const functions = getFirebaseFunctions();
+const auth = getFirebaseAuth();
 
 export interface ProfileListItem {
     id: string;
@@ -20,129 +33,104 @@ export interface ProfileDetail extends ProfileListItem {
     targets: GoalTarget[];
 }
 
+/**
+ * Helper to get auth token for Firebase Functions
+ */
+async function getAuthToken(): Promise<string> {
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error('User not authenticated');
+    }
+    return user.getIdToken();
+}
+
 export const goalsAdminService = {
     /**
      * List all goal profiles
      */
-    async listProfiles() {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/goals-admin/profiles`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json',
-                },
+    async listProfiles(): Promise<ProfileListItem[]> {
+        const token = await getAuthToken();
+
+        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
+        const { data } = await goalsAdminFunction({
+            action: 'list',
+            headers: {
+                'Authorization': `Bearer ${token}`,
             }
-        );
+        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to list profiles');
-        }
-
-        const result = await response.json();
-        return result.data as ProfileListItem[];
+        return (data as any)?.data as ProfileListItem[];
     },
 
     /**
      * Get a specific profile with targets
      */
-    async getProfile(id: string) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/goals-admin/profiles/${id}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json',
-                },
+    async getProfile(id: string): Promise<ProfileDetail> {
+        const token = await getAuthToken();
+
+        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
+        const { data } = await goalsAdminFunction({
+            action: 'get',
+            profileId: id,
+            headers: {
+                'Authorization': `Bearer ${token}`,
             }
-        );
+        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to get profile');
-        }
-
-        const result = await response.json();
-        return result.data as ProfileDetail;
+        return (data as any)?.data as ProfileDetail;
     },
 
     /**
      * Create a new draft profile
      */
-    async createProfile(id: string, name: string, description: string) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/goals-admin/profiles`,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id, name, description }),
+    async createProfile(id: string, name: string, description: string): Promise<GoalProfile> {
+        const token = await getAuthToken();
+
+        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
+        const { data } = await goalsAdminFunction({
+            action: 'create',
+            profileData: { id, name, description },
+            headers: {
+                'Authorization': `Bearer ${token}`,
             }
-        );
+        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to create profile');
-        }
-
-        const result = await response.json();
-        return result.data;
+        return (data as any)?.data as GoalProfile;
     },
 
     /**
      * Update profile metadata and targets
      */
-    async updateProfile(id: string, updates: Partial<GoalProfile>) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/goals-admin/profiles/${id}`,
-            {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updates),
+    async updateProfile(id: string, updates: Partial<GoalProfile>): Promise<GoalProfile> {
+        const token = await getAuthToken();
+
+        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
+        const { data } = await goalsAdminFunction({
+            action: 'update',
+            profileId: id,
+            updates,
+            headers: {
+                'Authorization': `Bearer ${token}`,
             }
-        );
+        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update profile');
-        }
-
-        const result = await response.json();
-        return result.data;
+        return (data as any)?.data as GoalProfile;
     },
 
     /**
      * Publish a draft profile
      */
-    async publishProfile(id: string) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/goals-admin/profiles/${id}/publish`,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session?.access_token}`,
-                    'Content-Type': 'application/json',
-                },
+    async publishProfile(id: string): Promise<GoalProfile> {
+        const token = await getAuthToken();
+
+        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-publish');
+        const { data } = await goalsAdminFunction({
+            profileId: id,
+            headers: {
+                'Authorization': `Bearer ${token}`,
             }
-        );
+        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to publish profile');
-        }
-
-        const result = await response.json();
-        return result.data;
+        return (data as any)?.data as GoalProfile;
     },
 };

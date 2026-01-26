@@ -1,7 +1,30 @@
+/**
+ * useEvaluationForms - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
+ * - supabase.from('evaluation_form_fields') → Firestore collection 'evaluation_form_fields'
+ * - Preserved JSON serialization for opcoes field
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -13,23 +36,43 @@ export type EvaluationFormFormData = {
 
 export type EvaluationFormFieldFormData = Omit<EvaluationFormField, 'id' | 'created_at' | 'form_id'>;
 
+// Helper to convert Firestore doc to EvaluationForm
+const convertDocToEvaluationForm = (doc: any): EvaluationForm => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as EvaluationForm;
+};
+
+// Helper to convert Firestore doc to EvaluationFormField
+const convertDocToEvaluationFormField = (doc: any): EvaluationFormField => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as EvaluationFormField;
+};
+
 export function useEvaluationForms(tipo?: string) {
   return useQuery({
     queryKey: ['evaluation-forms', tipo],
     queryFn: async () => {
-      let query = supabase
-        .from('evaluation_forms')
-        .select('*')
-        .eq('ativo', true)
-        .order('nome');
+      const q = query(
+        collection(db, 'evaluation_forms'),
+        where('ativo', '==', true),
+        orderBy('nome')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(convertDocToEvaluationForm);
+
+      // Filter by tipo if provided
       if (tipo) {
-        query = query.eq('tipo', tipo);
+        data = data.filter(f => f.tipo === tipo);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as EvaluationForm[];
+      return data;
     },
   });
 }
@@ -40,25 +83,21 @@ export function useEvaluationFormWithFields(formId: string | undefined) {
     queryFn: async () => {
       if (!formId) return null;
 
-      const { data: form, error: formError } = await supabase
-        .from('evaluation_forms')
-        .select('*')
-        .eq('id', formId)
-        .single();
+      const formDoc = await getDoc(doc(db, 'evaluation_forms', formId));
+      if (!formDoc.exists()) {
+        throw new Error('Ficha não encontrada');
+      }
 
-      if (formError) throw formError;
+      const q = query(
+        collection(db, 'evaluation_form_fields'),
+        where('form_id', '==', formId),
+        orderBy('ordem')
+      );
 
-      const { data: fields, error: fieldsError } = await supabase
-        .from('evaluation_form_fields')
-        .select('*')
-        .eq('form_id', formId)
-        .order('ordem');
+      const fieldsSnap = await getDocs(q);
+      const fields = fieldsSnap.docs.map(convertDocToEvaluationFormField);
 
-      if (fieldsError) throw fieldsError;
-
-      // Cast fields to ensure they match our frontend type (e.g. tipo_campo string -> enum)
-      // We assume the DB values match the enum values
-      return { ...form, fields } as unknown as EvaluationFormWithFields;
+      return { ...convertDocToEvaluationForm(formDoc), fields } as unknown as EvaluationFormWithFields;
     },
     enabled: !!formId,
   });
@@ -69,14 +108,17 @@ export function useCreateEvaluationForm() {
 
   return useMutation({
     mutationFn: async (form: EvaluationFormFormData) => {
-      const { data, error } = await supabase
-        .from('evaluation_forms')
-        .insert(form)
-        .select()
-        .single();
+      const formData = {
+        ...form,
+        ativo: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'evaluation_forms'), formData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToEvaluationForm(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -93,15 +135,14 @@ export function useUpdateEvaluationForm() {
 
   return useMutation({
     mutationFn: async ({ id, ...form }: Partial<EvaluationForm> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('evaluation_forms')
-        .update(form)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'evaluation_forms', id);
+      await updateDoc(docRef, {
+        ...form,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToEvaluationForm(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -118,12 +159,8 @@ export function useDeleteEvaluationForm() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('evaluation_forms')
-        .update({ ativo: false })
-        .eq('id', id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'evaluation_forms', id);
+      await updateDoc(docRef, { ativo: false });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -141,38 +178,35 @@ export function useDuplicateEvaluationForm() {
   return useMutation({
     mutationFn: async (id: string) => {
       // 1. Get original form
-      const { data: originalForm, error: formError } = await supabase
-        .from('evaluation_forms')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const originalDoc = await getDoc(doc(db, 'evaluation_forms', id));
+      if (!originalDoc.exists()) {
+        throw new Error('Ficha não encontrada');
+      }
 
-      if (formError) throw formError;
+      const originalForm = convertDocToEvaluationForm(originalDoc);
 
       // 2. Create new form
-      const { data: newForm, error: createError } = await supabase
-        .from('evaluation_forms')
-        .insert({
-          nome: `${originalForm.nome} (Cópia)`,
-          descricao: originalForm.descricao,
-          referencias: originalForm.referencias,
-          tipo: originalForm.tipo,
-          ativo: true,
-          organization_id: originalForm.organization_id, // Preserve org if applicable
-          created_by: originalForm.created_by // Preserve creator or let DB handle defaults
-        })
-        .select()
-        .single();
+      const formData = {
+        nome: `${originalForm.nome} (Cópia)`,
+        descricao: originalForm.descricao,
+        referencias: originalForm.referencias,
+        tipo: originalForm.tipo,
+        ativo: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (createError) throw createError;
+      const newFormRef = await addDoc(collection(db, 'evaluation_forms'), formData);
+      const newFormSnap = await getDoc(newFormRef);
+      const newForm = convertDocToEvaluationForm(newFormSnap);
 
       // 3. Get original fields
-      const { data: fields, error: fieldsError } = await supabase
-        .from('evaluation_form_fields')
-        .select('*')
-        .eq('form_id', id);
-
-      if (fieldsError) throw fieldsError;
+      const q = query(
+        collection(db, 'evaluation_form_fields'),
+        where('form_id', '==', id)
+      );
+      const fieldsSnap = await getDocs(q);
+      const fields = fieldsSnap.docs.map(convertDocToEvaluationFormField);
 
       // 4. Insert new fields
       if (fields && fields.length > 0) {
@@ -188,13 +222,13 @@ export function useDuplicateEvaluationForm() {
           descricao: f.descricao,
           minimo: f.minimo,
           maximo: f.maximo,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }));
 
-        const { error: insertFieldsError } = await supabase
-          .from('evaluation_form_fields')
-          .insert(newFields);
-
-        if (insertFieldsError) throw insertFieldsError;
+        await Promise.all(
+          newFields.map(field => addDoc(collection(db, 'evaluation_form_fields'), field))
+        );
       }
 
       return newForm;
@@ -216,18 +250,18 @@ export function useAddFormField() {
 
   return useMutation({
     mutationFn: async ({ formId, field }: { formId: string; field: EvaluationFormFieldFormData }) => {
-      const { data, error } = await supabase
-        .from('evaluation_form_fields')
-        .insert({
-          ...field,
-          form_id: formId,
-          opcoes: field.opcoes ? JSON.stringify(field.opcoes) : null
-        })
-        .select()
-        .single();
+      const fieldData = {
+        ...field,
+        form_id: formId,
+        opcoes: field.opcoes ? JSON.stringify(field.opcoes) : null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'evaluation_form_fields'), fieldData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToEvaluationFormField(docSnap);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-form', variables.formId] });
@@ -244,20 +278,19 @@ export function useUpdateFormField() {
 
   return useMutation({
     mutationFn: async ({ id, _formId, ...field }: Partial<EvaluationFormField> & { id: string; formId: string }) => {
+      const docRef = doc(db, 'evaluation_form_fields', id);
       const updateData: Record<string, unknown> = { ...field };
+
       if (updateData.opcoes) {
         updateData.opcoes = JSON.stringify(updateData.opcoes);
       }
 
-      const { data, error } = await supabase
-        .from('evaluation_form_fields')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
+      updateData.updated_at = new Date().toISOString();
 
-      if (error) throw error;
-      return data;
+      await updateDoc(docRef, updateData);
+
+      const docSnap = await getDoc(docRef);
+      return convertDocToEvaluationFormField(docSnap);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-form', variables.formId] });
@@ -274,12 +307,7 @@ export function useDeleteFormField() {
 
   return useMutation({
     mutationFn: async ({ id, _formId }: { id: string; formId: string }) => {
-      const { error } = await supabase
-        .from('evaluation_form_fields')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'evaluation_form_fields', id));
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-form', variables.formId] });
@@ -305,19 +333,19 @@ export function useImportEvaluationForm() {
   return useMutation({
     mutationFn: async (data: EvaluationFormImportData) => {
       // 1. Create form
-      const { data: form, error: formError } = await supabase
-        .from('evaluation_forms')
-        .insert({
-          nome: data.nome,
-          descricao: data.descricao,
-          referencias: data.referencias,
-          tipo: data.tipo,
-          ativo: true,
-        })
-        .select()
-        .single();
+      const formData = {
+        nome: data.nome,
+        descricao: data.descricao,
+        referencias: data.referencias,
+        tipo: data.tipo,
+        ativo: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (formError) throw formError;
+      const formRef = await addDoc(collection(db, 'evaluation_forms'), formData);
+      const formSnap = await getDoc(formRef);
+      const form = convertDocToEvaluationForm(formSnap);
 
       // 2. Insert fields
       if (data.fields && data.fields.length > 0) {
@@ -333,13 +361,13 @@ export function useImportEvaluationForm() {
           descricao: f.descricao,
           minimo: f.minimo,
           maximo: f.maximo,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }));
 
-        const { error: fieldsError } = await supabase
-          .from('evaluation_form_fields')
-          .insert(fieldsToInsert);
-
-        if (fieldsError) throw fieldsError;
+        await Promise.all(
+          fieldsToInsert.map(field => addDoc(collection(db, 'evaluation_form_fields'), field))
+        );
       }
 
       return form;

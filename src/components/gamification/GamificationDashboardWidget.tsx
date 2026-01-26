@@ -5,7 +5,6 @@ import { Trophy, Target, Award, Flame, TrendingUp, Loader2 } from 'lucide-react'
 import { LevelProgressWidget } from './widgets/LevelProgressWidget';
 import { RecentAchievementsWidget } from './widgets/RecentAchievementsWidget';
 import { DailyQuestsWidget } from './widgets/DailyQuestsWidget';
-import { supabase } from '@/integrations/supabase/client';
 import { GamificationTriggerService, type LevelCalculationResult } from '@/lib/services/gamificationTriggers';
 
 interface GamificationDashboardWidgetProps {

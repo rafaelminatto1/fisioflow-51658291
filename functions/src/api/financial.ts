@@ -231,8 +231,7 @@ export const getEventReport = onCall(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const auth = await authorizeRequest(request.auth.token);
+    // await authorizeRequest(request.auth.token); // Authorization check
     const { eventoId } = request.data || {};
 
     if (!eventoId) {

@@ -1,6 +1,24 @@
+/**
+ * usePatientStats - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('soap_records') → Firestore collection 'soap_records'
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays } from 'date-fns';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  documentId
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -71,10 +89,10 @@ interface ClassificationStats {
 // ============================================================================================
 
 // Status mappings for better type safety
-const COMPLETED_STATUSES = ['completed', 'Realizado'] as const;
-const SCHEDULED_STATUSES = ['scheduled', 'confirmed'] as const;
-const MISSED_STATUSES = ['cancelled', 'no_show', 'missed', 'Cancelado'] as const;
-const NO_SHOW_STATUSES = ['no_show', 'missed'] as const;
+const COMPLETED_STATUSES = ['completed', 'Realizado', 'concluido'] as const;
+const SCHEDULED_STATUSES = ['scheduled', 'confirmed', 'agendado', 'confirmado'] as const;
+const MISSED_STATUSES = ['cancelled', 'no_show', 'missed', 'Cancelado', 'cancelado', 'falta'] as const;
+const NO_SHOW_STATUSES = ['no_show', 'missed', 'falta'] as const;
 
 // Classification thresholds (in days)
 const THRESHOLDS = {
@@ -314,6 +332,24 @@ function classifyPatient(stats: ClassificationStats): PatientClassification {
   return 'active';
 }
 
+// Helper to convert Firestore doc to Appointment
+const convertDocToAppointment = (doc: any): Appointment => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Appointment;
+};
+
+// Helper to convert Firestore doc to SOAPRecord
+const convertDocToSOAPRecord = (doc: any): SOAPRecord => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as SOAPRecord;
+};
+
 // ============================================================================================
 // HOOKS
 // ============================================================================================
@@ -331,33 +367,27 @@ export const usePatientStats = (patientId: string | undefined) => {
       }
 
       // Fetch all patient appointments
-      // Select only necessary columns to reduce payload size
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('id, patient_id, appointment_date, status, payment_status')
-        .eq('patient_id', patientId)
-        .order('appointment_date', { ascending: false });
-
-      if (appointmentsError) {
-        throw new Error(`Erro ao buscar agendamentos: ${appointmentsError.message}`);
-      }
+      const appointmentsQ = query(
+        collection(db, 'appointments'),
+        where('patient_id', '==', patientId),
+        orderBy('appointment_date', 'desc')
+      );
+      const appointmentsSnap = await getDocs(appointmentsQ);
+      const appointments = appointmentsSnap.docs.map(convertDocToAppointment);
 
       // Fetch finalized SOAP records
-      // Select only necessary columns to reduce payload size
-      const { data: soapRecords, error: soapError } = await supabase
-        .from('soap_records')
-        .select('id, patient_id, created_at, status')
-        .eq('patient_id', patientId)
-        .eq('status', 'finalized');
-
-      if (soapError) {
-        throw new Error(`Erro ao buscar registros SOAP: ${soapError.message}`);
-      }
+      const soapQ = query(
+        collection(db, 'soap_records'),
+        where('patient_id', '==', patientId),
+        where('status', '==', 'finalized')
+      );
+      const soapSnap = await getDocs(soapQ);
+      const soapRecords = soapSnap.docs.map(convertDocToSOAPRecord);
 
       // Calculate statistics
       const stats = calculatePatientStats({
-        appointments: appointments || [],
-        soapRecords: soapRecords || [],
+        appointments,
+        soapRecords,
       });
 
       // Determine classification
@@ -385,35 +415,38 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
         return {};
       }
 
-      // Fetch all appointments for the patients in one query
-      // Select only necessary columns to reduce payload size
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('id, patient_id, appointment_date, status, payment_status')
-        .in('patient_id', patientIds);
+      // Firestore has limit of 10 items in 'in' query, so we need to batch
+      const batchSize = 10;
+      const allAppointments: Appointment[] = [];
+      const allSoapRecords: SOAPRecord[] = [];
 
-      if (appointmentsError) {
-        throw new Error(`Erro ao buscar agendamentos: ${appointmentsError.message}`);
-      }
+      for (let i = 0; i < patientIds.length; i += batchSize) {
+        const batch = patientIds.slice(i, i + batchSize);
 
-      // Fetch all SOAP records for the patients in one query
-      // Select only necessary columns to reduce payload size
-      const { data: soapRecords, error: soapError } = await supabase
-        .from('soap_records')
-        .select('id, patient_id, created_at, status')
-        .in('patient_id', patientIds)
-        .eq('status', 'finalized');
+        // Fetch appointments
+        const appointmentsQ = query(
+          collection(db, 'appointments'),
+          where(documentId(), 'in', batch)
+        );
+        const appointmentsSnap = await getDocs(appointmentsQ);
+        allAppointments.push(...appointmentsSnap.docs.map(convertDocToAppointment));
 
-      if (soapError) {
-        throw new Error(`Erro ao buscar registros SOAP: ${soapError.message}`);
+        // Fetch SOAP records
+        const soapQ = query(
+          collection(db, 'soap_records'),
+          where('patient_id', 'in', batch),
+          where('status', '==', 'finalized')
+        );
+        const soapSnap = await getDocs(soapQ);
+        allSoapRecords.push(...soapSnap.docs.map(convertDocToSOAPRecord));
       }
 
       // Process each patient
       const statsMap: Record<string, PatientStats> = {};
 
       for (const id of patientIds) {
-        const patientAppointments = (appointments || []).filter(a => a.patient_id === id);
-        const patientSoapRecords = (soapRecords || []).filter(s => s.patient_id === id);
+        const patientAppointments = allAppointments.filter(a => a.patient_id === id);
+        const patientSoapRecords = allSoapRecords.filter(s => s.patient_id === id);
 
         const stats = calculatePatientStats({
           appointments: patientAppointments,

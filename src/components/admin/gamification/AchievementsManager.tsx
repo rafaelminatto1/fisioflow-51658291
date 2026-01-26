@@ -1,6 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+    collection,
+    doc,
+    getDocs,
+    query,
+    orderBy,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    writeBatch,
+    QueryDocumentSnapshot
+} from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -55,13 +67,19 @@ export default function AchievementsManager() {
     const { data: achievements, isLoading } = useQuery({
         queryKey: ['admin-achievements'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('achievements')
-                .select('*')
-                .order('xp_reward', { ascending: true });
+            const achievementsRef = collection(db, 'achievements');
+            const q = query(achievementsRef, orderBy('xp_reward', 'asc'));
+            const querySnapshot = await getDocs(q);
 
-            if (error) throw error;
-            return data as Achievement[];
+            const achievements: Achievement[] = [];
+            querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+                achievements.push({
+                    id: doc.id,
+                    ...doc.data()
+                } as Achievement);
+            });
+
+            return achievements;
         }
     });
 
@@ -90,22 +108,27 @@ export default function AchievementsManager() {
 
     const upsertAchievement = useMutation({
         mutationFn: async (values: Partial<Achievement>) => {
-            const { data, error } = await supabase
-                .from('achievements')
-                .upsert({
-                    id: editingAchievement?.id,
-                    code: values.code!,
-                    title: values.title!,
-                    description: values.description!,
-                    xp_reward: values.xp_reward,
-                    icon: values.icon,
-                    category: values.category || 'general',
-                })
-                .select()
-                .single();
+            const achievementData = {
+                code: values.code!,
+                title: values.title!,
+                description: values.description!,
+                xp_reward: values.xp_reward || 0,
+                icon: values.icon || null,
+                category: values.category || 'general',
+                updated_at: new Date().toISOString()
+            };
 
-            if (error) throw error;
-            return data;
+            if (editingAchievement?.id) {
+                // Update existing achievement
+                const achievementRef = doc(db, 'achievements', editingAchievement.id);
+                await updateDoc(achievementRef, achievementData);
+                return { id: editingAchievement.id, ...achievementData };
+            } else {
+                // Create new achievement
+                achievementData.created_at = new Date().toISOString();
+                const docRef = await addDoc(collection(db, 'achievements'), achievementData);
+                return { id: docRef.id, ...achievementData };
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-achievements'] });
@@ -128,12 +151,14 @@ export default function AchievementsManager() {
     const deleteAchievement = useMutation({
         mutationFn: async (id: string | string[]) => {
             const ids = Array.isArray(id) ? id : [id];
-            const { error } = await supabase
-                .from('achievements')
-                .delete()
-                .in('id', ids);
+            const batch = writeBatch(db);
 
-            if (error) throw error;
+            ids.forEach(id => {
+                const achievementRef = doc(db, 'achievements', id);
+                batch.delete(achievementRef);
+            });
+
+            await batch.commit();
         },
         onSuccess: (_, ids) => {
             queryClient.invalidateQueries({ queryKey: ['admin-achievements'] });

@@ -1,3 +1,11 @@
+/**
+ * Aniversariantes Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - Client-side filtering by month and birth_date
+ */
+
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -6,7 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Cake, Gift, Phone, Mail, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 interface Aniversariante {
   id: string;
@@ -25,25 +36,29 @@ export default function AniversariantesPage() {
   const { data: aniversariantes = [], isLoading } = useQuery({
     queryKey: ['aniversariantes', mesSelecionado],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id, name, birth_date, phone, email')
-        .eq('status', 'ativo')
-        .not('birth_date', 'is', null);
-      
-      if (error) throw error;
-      
+      const q = query(
+        collection(db, 'patients'),
+        where('status', '==', 'ativo')
+      );
+
+      const snapshot = await getDocs(q);
+
       // Filtrar por mês e calcular dados
-      return (data || [])
-        .filter(p => {
+      return snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((p: any) => {
           if (!p.birth_date) return false;
           const birthMonth = new Date(p.birth_date).getMonth() + 1;
           return birthMonth === mesSelecionado;
         })
-        .map(p => ({
-          ...p,
-          dia: new Date(p.birth_date!).getDate(),
-          idade: new Date().getFullYear() - new Date(p.birth_date!).getFullYear(),
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          birth_date: p.birth_date,
+          phone: p.phone,
+          email: p.email,
+          dia: new Date(p.birth_date).getDate(),
+          idade: new Date().getFullYear() - new Date(p.birth_date).getFullYear(),
         }))
         .sort((a, b) => a.dia - b.dia) as Aniversariante[];
     },

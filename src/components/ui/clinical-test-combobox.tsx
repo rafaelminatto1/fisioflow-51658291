@@ -17,7 +17,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 import {
     Tooltip,
@@ -66,13 +67,17 @@ export function ClinicalTestCombobox({
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-combobox'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('clinical_test_templates')
-                .select('id, name, name_en, category, target_joint, purpose, tags, type, fields_definition')
-                .order('name');
+            const db = getFirebaseDb();
+            const q = query(
+                collection(db, 'clinical_test_templates'),
+                orderBy('name')
+            );
 
-            if (error) throw error;
-            return data as ClinicalTest[];
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as ClinicalTest));
         }
     });
 
