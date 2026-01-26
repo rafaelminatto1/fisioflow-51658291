@@ -1,3 +1,11 @@
+/**
+ * NFSe Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('nfse_config').upsert() → setDoc() with merge option
+ * - Uses setDoc with { merge: true } to emulate upsert behavior
+ */
+
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -18,15 +26,16 @@ import {
   Search, Filter, RefreshCw, Copy, Printer
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
+
+const db = getFirebaseDb();
 
 interface NFSe {
   id: string;
@@ -746,9 +755,7 @@ export default function NFSePage() {
                       checked={config?.auto_emissao || false}
                       onCheckedChange={(checked) => {
                         // Atualizar configuração
-                        supabase.from('nfse_config').upsert({
-                          auto_emissao: checked,
-                        }).then(() => {
+                        setDoc(doc(db, 'nfse_config', 'default'), { auto_emissao: checked }, { merge: true }).then(() => {
                           queryClient.invalidateQueries({ queryKey: ['nfse-config'] });
                           toast.success('Configuração atualizada!');
                         });
@@ -761,7 +768,7 @@ export default function NFSePage() {
                     <Select
                       defaultValue={config?.ambiente || 'homologacao'}
                       onValueChange={(v: 'homologacao' | 'producao') => {
-                        supabase.from('nfse_config').upsert({ ambiente: v });
+                        setDoc(doc(db, 'nfse_config', 'default'), { ambiente: v }, { merge: true });
                       }}
                     >
                       <SelectTrigger>
@@ -780,7 +787,7 @@ export default function NFSePage() {
                       defaultValue={config?.municipio_codigo || ''}
                       placeholder="Ex: 3550308 (São Paulo)"
                       onBlur={(e) => {
-                        supabase.from('nfse_config').upsert({ municipio_codigo: e.target.value });
+                        setDoc(doc(db, 'nfse_config', 'default'), { municipio_codigo: e.target.value }, { merge: true });
                       }}
                     />
                   </div>
@@ -791,7 +798,7 @@ export default function NFSePage() {
                       defaultValue={config?.inscricao_municipal || ''}
                       placeholder="Número da inscrição municipal"
                       onBlur={(e) => {
-                        supabase.from('nfse_config').upsert({ inscricao_municipal: e.target.value });
+                        setDoc(doc(db, 'nfse_config', 'default'), { inscricao_municipal: e.target.value }, { merge: true });
                       }}
                     />
                   </div>
@@ -803,7 +810,7 @@ export default function NFSePage() {
                       step="0.01"
                       defaultValue={config?.aliquota_iss?.toString() || '5'}
                       onBlur={(e) => {
-                        supabase.from('nfse_config').upsert({ aliquota_iss: parseFloat(e.target.value) });
+                        setDoc(doc(db, 'nfse_config', 'default'), { aliquota_iss: parseFloat(e.target.value) }, { merge: true });
                       }}
                     />
                   </div>

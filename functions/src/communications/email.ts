@@ -537,9 +537,17 @@ function renderEmailTemplate(templateId: EmailTemplate, data: Record<string, any
  * Retorna o ID do template no SendGrid (se configurado)
  */
 function getSendGridTemplateId(templateId: EmailTemplate): string | undefined {
-  const templateIds: Record<EmailTemplate, string> = {
+  const templateIds: Partial<Record<EmailTemplate, string>> = {
     [EmailTemplate.APPOINTMENT_CONFIRMATION]: 'd-xxxxx',
     [EmailTemplate.APPOINTMENT_REMINDER]: 'd-xxxxx',
+    [EmailTemplate.APPOINTMENT_CANCELLED]: 'd-xxxxx',
+    [EmailTemplate.APPOINTMENT_RESCHEDULED]: 'd-xxxxx',
+    [EmailTemplate.WELCOME]: 'd-xxxxx',
+    [EmailTemplate.PASSWORD_RESET]: 'd-xxxxx',
+    [EmailTemplate.PAYMENT_CONFIRMATION]: 'd-xxxxx',
+    [EmailTemplate.VOUCHER_PURCHASED]: 'd-xxxxx',
+    [EmailTemplate.EVOLUTION_SHARED]: 'd-xxxxx',
+    [EmailTemplate.EXERCISE_PLAN_ASSIGNED]: 'd-xxxxx',
     // Adicionar outros templates conforme necessário
   };
 

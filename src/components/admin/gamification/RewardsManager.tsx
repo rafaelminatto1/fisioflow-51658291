@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+    collection,
+    doc,
+    getDocs,
+    query,
+    orderBy,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    QueryDocumentSnapshot
+} from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,36 +56,47 @@ export default function RewardsManager() {
     const { data: rewards, isLoading } = useQuery({
         queryKey: ['admin-rewards'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('rewards')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const rewardsRef = collection(db, 'rewards');
+            const q = query(rewardsRef, orderBy('created_at', 'desc'));
+            const querySnapshot = await getDocs(q);
 
-            if (error) throw error;
-            return data as Reward[];
+            const rewards: Reward[] = [];
+            querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+                rewards.push({
+                    id: doc.id,
+                    ...doc.data()
+                } as Reward);
+            });
+
+            return rewards;
         }
     });
 
     const upsertReward = useMutation({
         mutationFn: async (values: Partial<Reward>) => {
-            const { data, error } = await supabase
-                .from('rewards')
-                .upsert({
-                    id: editingReward?.id,
-                    title: values.title!,
-                    description: values.description,
-                    point_cost: values.point_cost!,
-                    icon: values.icon || 'Gift',
-                    category: values.category || 'general',
-                    stock: values.stock,
-                    is_active: values.is_active ?? true,
-                    image_url: values.image_url
-                })
-                .select()
-                .single();
+            const rewardData = {
+                title: values.title!,
+                description: values.description || null,
+                point_cost: values.point_cost!,
+                icon: values.icon || 'Gift',
+                category: values.category || 'general',
+                stock: values.stock || null,
+                is_active: values.is_active ?? true,
+                image_url: values.image_url || null,
+                updated_at: new Date().toISOString()
+            };
 
-            if (error) throw error;
-            return data;
+            if (editingReward?.id) {
+                // Update existing reward
+                const rewardRef = doc(db, 'rewards', editingReward.id);
+                await updateDoc(rewardRef, rewardData);
+                return { id: editingReward.id, ...rewardData };
+            } else {
+                // Create new reward
+                rewardData.created_at = new Date().toISOString();
+                const docRef = await addDoc(collection(db, 'rewards'), rewardData);
+                return { id: docRef.id, ...rewardData };
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-rewards'] });
@@ -96,12 +118,11 @@ export default function RewardsManager() {
 
     const toggleActive = useMutation({
         mutationFn: async ({ id, currentState }: { id: string, currentState: boolean }) => {
-            const { error } = await supabase
-                .from('rewards')
-                .update({ is_active: !currentState })
-                .eq('id', id);
-
-            if (error) throw error;
+            const rewardRef = doc(db, 'rewards', id);
+            await updateDoc(rewardRef, {
+                is_active: !currentState,
+                updated_at: new Date().toISOString()
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-rewards'] });
@@ -110,12 +131,8 @@ export default function RewardsManager() {
 
     const deleteReward = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase
-                .from('rewards')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
+            const rewardRef = doc(db, 'rewards', id);
+            await deleteDoc(rewardRef);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-rewards'] });

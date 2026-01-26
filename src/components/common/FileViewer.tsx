@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Eye, Download, FileText, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseStorage, ref, getDownloadURL } from '@/integrations/firebase/storage';
 
 interface FileViewerProps {
     files: {
@@ -19,12 +19,38 @@ interface FileViewerProps {
 export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-    const getPublicUrl = (path: string) => {
-        const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
-        return data.publicUrl;
+    const getPublicUrl = async (path: string): Promise<string> => {
+        const storage = getFirebaseStorage();
+        const storageRef = ref(storage, `${bucketName}/${path}`);
+        return await getDownloadURL(storageRef);
+    };
+
+    // Cache for URLs to avoid repeated fetches
+    const urlCache = new Map<string, string>();
+
+    const getCachedUrl = async (path: string): Promise<string> => {
+        if (!urlCache.has(path)) {
+            const url = await getPublicUrl(path);
+            urlCache.set(path, url);
+        }
+        return urlCache.get(path)!;
     };
 
     const selectedFile = selectedIndex !== null ? files[selectedIndex] : null;
+    const [urls, setUrls] = useState<Map<string, string>>(new Map());
+
+    // Fetch all URLs on mount
+    React.useEffect(() => {
+        const fetchUrls = async () => {
+            const newUrls = new Map<string, string>();
+            await Promise.all(files.map(async (file) => {
+                const url = await getCachedUrl(file.file_path);
+                newUrls.set(file.file_path, url);
+            }));
+            setUrls(newUrls);
+        };
+        fetchUrls();
+    }, [files]);
 
     const handleNext = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -48,7 +74,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
         <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2">
                 {files.slice(0, 4).map((file, idx) => {
-                    const url = getPublicUrl(file.file_path);
+                    const url = urls.get(file.file_path);
                     const isImage = file.file_type?.startsWith('image/') || file.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
 
                     // Show +N overlay for the last item if there are more than 4
@@ -61,7 +87,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                             className="relative group/file rounded-md overflow-hidden border bg-muted aspect-square cursor-pointer"
                             onClick={() => setSelectedIndex(idx)}
                         >
-                            {isImage ? (
+                            {isImage && url ? (
                                 <OptimizedImage src={url} alt={file.file_name} className="w-full h-full transition-transform group-hover/file:scale-105" aspectRatio="auto" />
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full p-2 text-center bg-gray-50">
@@ -92,7 +118,8 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                             className="text-white hover:bg-white/20 rounded-full"
                             onClick={() => {
                                 if (selectedFile) {
-                                    window.open(getPublicUrl(selectedFile.file_path), '_blank');
+                                    const url = urls.get(selectedFile.file_path);
+                                    if (url) window.open(url, '_blank');
                                 }
                             }}
                         >
@@ -111,9 +138,9 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                     <div className="flex-1 flex items-center justify-center relative min-h-[50vh]">
                         {selectedFile && (
                             <>
-                                {selectedFile.file_type?.startsWith('image/') || selectedFile.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                                {(selectedFile.file_type?.startsWith('image/') || selectedFile.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) && urls.get(selectedFile.file_path) ? (
                                     <img
-                                        src={getPublicUrl(selectedFile.file_path)}
+                                        src={urls.get(selectedFile.file_path)}
                                         alt={selectedFile.file_name}
                                         className="max-w-full max-h-[85vh] object-contain"
                                     />
@@ -123,7 +150,10 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                                         <h3 className="text-xl font-medium mb-2">{selectedFile.file_name}</h3>
                                         <Button
                                             variant="secondary"
-                                            onClick={() => window.open(getPublicUrl(selectedFile.file_path), '_blank')}
+                                            onClick={() => {
+                                                const url = urls.get(selectedFile.file_path);
+                                                if (url) window.open(url, '_blank');
+                                            }}
                                         >
                                             <Download className="w-4 h-4 mr-2" />
                                             Baixar Arquivo

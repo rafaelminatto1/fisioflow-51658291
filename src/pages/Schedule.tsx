@@ -1,3 +1,11 @@
+/**
+ * Schedule Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - Uses useAppointments hook which is already migrated to Firebase
+ * - No direct Supabase queries in this file
+ */
+
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
@@ -17,7 +25,6 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';

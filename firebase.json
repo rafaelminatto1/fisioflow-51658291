@@ -1,49 +1,4 @@
 {
-  "dataconnect": {
-    "source": "dataconnect"
-  },
-  "hosting": {
-    "public": "dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/api/v1/evaluate",
-        "function": "apiEvaluate"
-      },
-      {
-        "source": "/api/v1/exercises/**",
-        "function": "apiExercises"
-      },
-      {
-        "source": "/api/v1/patients/**",
-        "function": "apiPatients"
-      },
-      {
-        "source": "/api/v1/appointments/**",
-        "function": "apiAppointments"
-      },
-      {
-        "source": "/api/v1/payments/**",
-        "function": "apiPayments"
-      },
-      {
-        "source": "/api/v1/ai/**",
-        "function": "aiChat"
-      },
-      {
-        "source": "/api/**",
-        "function": "apiRouter"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  },
   "functions": [
     {
       "source": "functions",
@@ -54,14 +9,51 @@
         "firebase-debug.log",
         "firebase-debug.*.log"
       ],
-      "predeploy": []
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ],
+      "env": [
+        {
+          "variables": {
+            "CLOUD_SQL_CONNECTION_NAME": "fisioflow-migration:us-central1:fisioflow-pg",
+            "DB_NAME": "fisioflow",
+            "DB_USER": "fisioflow",
+            "DB_PASS": "fisioflow2024",
+            "DB_SOCKET_PATH": "/cloudsql",
+            "ABLY_API_KEY": "zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30",
+            "NODE_ENV": "production"
+          }
+        }
+      ]
     }
   ],
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
   "storage": {
     "rules": "storage.rules"
   },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "ui": { "enabled": true },
+    "singleProjectMode": true
   }
 }

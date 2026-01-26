@@ -11,28 +11,31 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Verificadores de papel (Role checkers) com proteção de existência
+    function hasRole(role) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
+    }
+
     // Verificar se o usuário é admin
     function isAdmin() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return hasRole('admin');
     }
 
     // Verificar se o usuário é fisioterapeuta
     function isPhysiotherapist() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'fisioterapeuta';
+      return hasRole('fisioterapeuta');
     }
 
     // Verificar se o usuário é estagiário
     function isIntern() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'estagiario';
+      return hasRole('estagiario');
     }
 
     // Verificar se o usuário é paciente
     function isPatient() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'paciente';
+      return hasRole('paciente');
     }
 
     // Verificar se é profissional (fisioterapeuta ou estagiário)
@@ -80,15 +83,46 @@ service cloud.firestore {
     }
     
     // ============================================================================================
+    // ORGANIZATIONS COLLECTION (ADDED)
+    // ============================================================================================
+
+    match /organizations/{organizationId} {
+      // Leitura: todos autenticados podem ver (necessário para o contexto da app)
+      allow read: if isAuthenticated();
+      
+      // Criação/Atualização: apenas admin ou profissionais
+      allow write: if isAdmin() || isProfessional();
+    }
+    
+    // ============================================================================================
     // PROFILES COLLECTION (ADDED)
     // ============================================================================================
     
     match /profiles/{userId} {
-      // Leitura pública permitida para agendamento (busca por slug)
-      allow read: if true;
+      // Leitura pública permitida para agendamento (busca por slug) -> Changed to isAuthenticated() to be broader for internal usage
+      allow read: if isAuthenticated();
       
       // Criação/Atualização: apenas o próprio usuário ou admin
       allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+    }
+    
+    // ============================================================================================
+    // ONBOARDING PROGRESS COLLECTION (ADDED)
+    // ============================================================================================
+    
+    match /onboarding_progress/{userId} {
+      // Leitura/Escrita: apenas o próprio usuário
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ============================================================================================
+    // USER ROLES COLLECTION (ADDED)
+    // ============================================================================================
+    
+    match /user_roles/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Escrita apenas por admin via backend (idealmente) ou regras mais estritas
+      allow write: if isAdmin();
     }
 
     // ============================================================================================
@@ -102,7 +136,7 @@ service cloud.firestore {
                      (isPatient() && isOwner('userId'));
 
       // Criação: apenas profissionais e admin
-      allow create: if isProfessional() && isValidSize();
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
 
       // Atualização: profissionais podem atualizar pacientes que atendem
       // pacientes podem atualizar dados limitados
@@ -124,7 +158,7 @@ service cloud.firestore {
                      isAdmin();
 
       // Criação: profissionais e admin
-      allow create: if isProfessional() && isValidSize();
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
 
       // Atualização: profissionais que atendem, admin
       allow update: if isProfessional() || isAdmin();
@@ -173,10 +207,10 @@ service cloud.firestore {
     // ============================================================================================
 
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
       allow create: if false; 
-      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId || isAdmin();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.user_id;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.user_id || isAdmin();
     }
 
     // ============================================================================================

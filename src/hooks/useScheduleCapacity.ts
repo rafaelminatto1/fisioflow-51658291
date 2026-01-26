@@ -1,8 +1,29 @@
+/**
+ * useScheduleCapacity - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - schedule_capacity_config -> schedule_capacity_config
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 const capacitySchema = z.object({
   day_of_week: z.number().min(0).max(6),
@@ -24,32 +45,33 @@ export interface ScheduleCapacity {
   updated_at: string;
 }
 
+// Helper to convert doc
+const convertDoc = (doc: any): ScheduleCapacity => ({ id: doc.id, ...doc.data() } as ScheduleCapacity);
+
 export function useScheduleCapacity() {
   const { toast } = useToast();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
-  // Validate user ID format (must be UUID)
-  const isValidUserId = user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+  // Validate user ID format (must be UUID) - Firebase IDs are not UUIDs usually, but generic check
+  const isValidUserId = !!user?.uid;
 
   const organizationId = profile?.organization_id;
 
   const { data: capacities, isLoading } = useQuery({
     queryKey: ['schedule-capacity', organizationId],
     queryFn: async () => {
-      let query = supabase
-        .from('schedule_capacity_config')
-        .select('*')
-        .order('day_of_week', { ascending: true })
-        .order('start_time', { ascending: true });
+      if (!organizationId) return [];
 
-      if (organizationId) {
-        query = query.eq('organization_id', organizationId);
-      }
+      const q = query(
+        collection(db, 'schedule_capacity_config'),
+        where('organization_id', '==', organizationId),
+        orderBy('day_of_week', 'asc'),
+        orderBy('start_time', 'asc')
+      );
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as ScheduleCapacity[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc);
     },
     enabled: !!organizationId,
   });
@@ -62,20 +84,18 @@ export function useScheduleCapacity() {
 
       const validated = capacitySchema.parse(formData);
 
-      const { data, error } = await supabase
-        .from('schedule_capacity_config')
-        .insert({
-          day_of_week: validated.day_of_week,
-          start_time: validated.start_time,
-          end_time: validated.end_time,
-          max_patients: validated.max_patients,
-          organization_id: organizationId,
-        } as any)
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'schedule_capacity_config'), {
+        day_of_week: validated.day_of_week,
+        start_time: validated.start_time,
+        end_time: validated.end_time,
+        max_patients: validated.max_patients,
+        organization_id: organizationId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
-      if (error) throw error;
-      return data;
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity', organizationId] });
@@ -100,24 +120,22 @@ export function useScheduleCapacity() {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
 
-      const insertData = formDataArray.map(formData => {
+      const promises = formDataArray.map(async formData => {
         const validated = capacitySchema.parse(formData);
-        return {
+        const docRef = await addDoc(collection(db, 'schedule_capacity_config'), {
           day_of_week: validated.day_of_week,
           start_time: validated.start_time,
           end_time: validated.end_time,
           max_patients: validated.max_patients,
           organization_id: organizationId,
-        };
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        const newDoc = await getDoc(docRef);
+        return convertDoc(newDoc);
       });
 
-      const { data, error } = await supabase
-        .from('schedule_capacity_config')
-        .insert(insertData as any)
-        .select();
-
-      if (error) throw error;
-      return data;
+      return await Promise.all(promises);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity', organizationId] });
@@ -142,12 +160,8 @@ export function useScheduleCapacity() {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
 
-      const { error } = await supabase
-        .from('schedule_capacity_config')
-        .update(data)
-        .eq('id', id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'schedule_capacity_config', id);
+      await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
@@ -171,12 +185,7 @@ export function useScheduleCapacity() {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
 
-      const { error } = await supabase
-        .from('schedule_capacity_config')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'schedule_capacity_config', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
@@ -310,3 +319,4 @@ export function useScheduleCapacity() {
     authError: !isValidUserId ? 'Sessão de usuário inválida' : null,
   };
 }
+

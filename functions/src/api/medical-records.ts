@@ -399,7 +399,7 @@ export const updateTreatmentSession = onCall(async (request) => {
  * Busca registros de dor de um paciente
  */
 export const getPainRecords = onCall(async (request) => {
-  const auth = await getAuth(request);
+  await getAuth(request); // Authorization check
   const { patientId } = request.data || {};
 
   if (!patientId) {

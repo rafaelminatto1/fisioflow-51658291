@@ -137,7 +137,8 @@ exports.realtimePublish = (0, https_1.onRequest)(async (req, res) => {
     }
     catch (error) {
         console.error('Erro ao publicar no Ably:', error);
-        res.status(500).json({ error: error.message });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        res.status(500).json({ error: errorMessage });
     }
 });
 /**

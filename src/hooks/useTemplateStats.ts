@@ -1,6 +1,28 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * useTemplateStats - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
+ * - supabase.rpc() → Direct Firestore operations
+ * - Client-side aggregation for statistics
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EvaluationForm } from '@/types/clinical-forms';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+  limit as limitFn,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 /**
  * Hook para obter estatísticas gerais dos templates
@@ -9,54 +31,40 @@ export function useTemplateStats() {
   return useQuery({
     queryKey: ['template-stats'],
     queryFn: async () => {
-      // Get total count
-      const { count: total, error: totalError } = await supabase
-        .from('evaluation_forms')
-        .select('*', { count: 'exact', head: true })
-        .eq('ativo', true);
+      // Get all active forms
+      const q = query(
+        collection(db, 'evaluation_forms'),
+        where('ativo', '==', true)
+      );
 
-      if (totalError) throw totalError;
+      const snapshot = await getDocs(q);
+      const forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      // Get favorites count
-      const { count: favorites, error: favError } = await supabase
-        .from('evaluation_forms')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_favorite', true)
-        .eq('ativo', true);
-
-      if (favError) throw favError;
+      // Calculate stats
+      const total = forms.length;
+      const favorites = forms.filter((f: any) => f.is_favorite).length;
 
       // Get recently used (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { data: recentForms, error: recentError } = await supabase
-        .from('evaluation_forms')
-        .select('usage_count')
-        .eq('ativo', true)
-        .gte('last_used_at', thirtyDaysAgo.toISOString())
-        .not('last_used_at', 'is', null);
-
-      if (recentError) throw recentError;
-
-      const recentlyUsed = recentForms?.reduce((sum, form) => sum + (form.usage_count || 0), 0) || 0;
+      const recentlyUsed = forms
+        .filter((f: any) => {
+          const lastUsed = f.last_used_at ? new Date(f.last_used_at) : null;
+          return lastUsed && lastUsed >= thirtyDaysAgo;
+        })
+        .reduce((sum, f: any) => sum + (f.usage_count || 0), 0);
 
       // Get templates by category
-      const { data: byCategoryData, error: catError } = await supabase
-        .from('evaluation_forms')
-        .select('tipo')
-        .eq('ativo', true);
-
-      if (catError) throw catError;
-
       const byCategory: Record<string, number> = {};
-      byCategoryData?.forEach((form) => {
-        byCategory[form.tipo] = (byCategory[form.tipo] || 0) + 1;
+      forms.forEach((form) => {
+        const tipo = (form as any).tipo;
+        byCategory[tipo] = (byCategory[tipo] || 0) + 1;
       });
 
       return {
-        total: total || 0,
-        favorites: favorites || 0,
+        total,
+        favorites,
         recentlyUsed,
         byCategory,
       };
@@ -69,15 +77,31 @@ export function useTemplateStats() {
  * Deve ser chamado quando uma avaliação é criada usando o template
  */
 export function useIncrementTemplateUsage() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (templateId: string) => {
-      // Call the database function to increment usage
-      const { data, error } = await supabase.rpc('increment_template_usage', {
-        template_id: templateId,
+      const docRef = doc(db, 'evaluation_forms', templateId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error('Template não encontrado');
+      }
+
+      const currentData = docSnap.data();
+      const currentUsage = currentData?.usage_count || 0;
+
+      await updateDoc(docRef, {
+        usage_count: currentUsage + 1,
+        last_used_at: new Date().toISOString(),
       });
 
-      if (error) throw error;
-      return data;
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['template-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-forms', 'most-used'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-forms', 'recently-used'] });
+
+      return { id: templateId, usage_count: currentUsage + 1 };
     },
   });
 }
@@ -85,20 +109,25 @@ export function useIncrementTemplateUsage() {
 /**
  * Hook para obter templates mais usados
  */
-export function useMostUsedTemplates(limit = 10) {
+export function useMostUsedTemplates(limitNum = 10) {
   return useQuery({
-    queryKey: ['evaluation-forms', 'most-used', limit],
+    queryKey: ['evaluation-forms', 'most-used', limitNum],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('evaluation_forms')
-        .select('*')
-        .eq('ativo', true)
-        .not('usage_count', 'is', null)
-        .order('usage_count', { ascending: false })
-        .limit(limit);
+      const q = query(
+        collection(db, 'evaluation_forms'),
+        where('ativo', '==', true)
+      );
 
-      if (error) throw error;
-      return data as EvaluationForm[];
+      const snapshot = await getDocs(q);
+      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Filter and sort by usage_count client-side
+      forms = forms
+        .filter((f: any) => f.usage_count !== null && f.usage_count > 0)
+        .sort((a: any, b: any) => b.usage_count - a.usage_count)
+        .slice(0, limitNum);
+
+      return forms as EvaluationForm[];
     },
   });
 }
@@ -106,20 +135,29 @@ export function useMostUsedTemplates(limit = 10) {
 /**
  * Hook para obter templates recentemente usados
  */
-export function useRecentlyUsedTemplates(limit = 6) {
+export function useRecentlyUsedTemplates(limitNum = 6) {
   return useQuery({
-    queryKey: ['evaluation-forms', 'recently-used', limit],
+    queryKey: ['evaluation-forms', 'recently-used', limitNum],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('evaluation_forms')
-        .select('*')
-        .eq('ativo', true)
-        .not('last_used_at', 'is', null)
-        .order('last_used_at', { ascending: false })
-        .limit(limit);
+      const q = query(
+        collection(db, 'evaluation_forms'),
+        where('ativo', '==', true)
+      );
 
-      if (error) throw error;
-      return data as EvaluationForm[];
+      const snapshot = await getDocs(q);
+      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Filter and sort by last_used_at client-side
+      forms = forms
+        .filter((f: any) => f.last_used_at !== null)
+        .sort((a: any, b: any) => {
+          const aTime = new Date(a.last_used_at).getTime();
+          const bTime = new Date(b.last_used_at).getTime();
+          return bTime - aTime;
+        })
+        .slice(0, limitNum);
+
+      return forms as EvaluationForm[];
     },
   });
 }

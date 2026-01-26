@@ -17,7 +17,6 @@ import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
@@ -298,12 +297,13 @@ const ScheduleRefactored = () => {
 
   const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', appointment.id);
+      const { deleteDoc } = await import('firebase/firestore');
+      const { getFirebaseDb } = await import('@/integrations/firebase/app');
+      const { doc: docFn } = await import('firebase/firestore');
 
-      if (error) throw error;
+      const db = getFirebaseDb();
+      await deleteDoc(docFn(db, 'appointments', appointment.id));
+
       toast({
         title: '✅ Agendamento excluído',
         description: `Agendamento de ${appointment.patientName} foi excluído.`

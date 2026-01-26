@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#6366f1", // Indigo 500, a vibrant yet professional blue/purple
+            "background-light": "#f3f4f6", // Gray 100
+            "background-dark": "#0f172a", // Slate 900
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem", // 8px
+          },
+        },
+      },
+    };
+  </script>
+<style>::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #4b5563;border-radius: 20px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background-color: #4a5568;
+    }
+  </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 antialiased">
+<div class="flex h-screen">
+<aside class="w-64 bg-white dark:bg-slate-900 flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-slate-800">
+<div class="p-4 flex items-center gap-3 border-b border-gray-200 dark:border-slate-800">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons-outlined text-white">spa</span>
+</div>
+<h1 class="text-xl font-bold text-gray-900 dark:text-white">FisioFlow</h1>
+</div>
+<nav class="flex-1 overflow-y-auto p-4 space-y-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 dark:bg-primary/20 text-primary font-semibold" href="#">
+<span class="material-icons-outlined text-xl">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400" href="#">
+<span class="material-icons-outlined text-xl">people</span>
+<span>Pacientes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400" href="#">
+<span class="material-icons-outlined text-xl">event</span>
+<span>Agendamentos</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400" href="#">
+<span class="material-icons-outlined text-xl">description</span>
+<span>Notas SOAP</span>
+</a>
+</nav>
+<div class="p-4 border-t border-gray-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-indigo-200 dark:bg-indigo-900 rounded-full flex items-center justify-center text-indigo-800 dark:text-indigo-300 font-bold">
+<span>R</span>
+</div>
+<div>
+<p class="font-semibold text-sm text-gray-900 dark:text-white">Rafael Minatto</p>
+<p class="text-xs text-gray-500 dark:text-gray-400">rafaelstarton@gmail.com</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto p-6 md:p-8">
+<div class="max-w-7xl mx-auto h-full flex flex-col">
+<header class="mb-8 flex-shrink-0">
+<h2 class="text-3xl font-bold text-gray-900 dark:text-white">Prontuário Eletrônico do Paciente</h2>
+<p class="text-gray-500 dark:text-gray-400 mt-1">Sessão de Fisioterapia - 15 de Julho, 2024</p>
+</header>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 auto-rows-fr">
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subjetivo (S)</h3>
+<div class="flex flex-col flex-grow min-h-0">
+<div class="border border-gray-300 dark:border-slate-700 rounded-md mb-2">
+<div class="flex items-center p-2 border-b border-gray-300 dark:border-slate-700 space-x-1 text-gray-500 dark:text-gray-400">
+<button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800"><span class="material-icons-outlined text-base">format_bold</span></button>
+<button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800"><span class="material-icons-outlined text-base">format_italic</span></button>
+<button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800"><span class="material-icons-outlined text-base">format_underlined</span></button>
+<button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800"><span class="material-icons-outlined text-base">format_list_bulleted</span></button>
+<button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800"><span class="material-icons-outlined text-base">format_list_numbered</span></button>
+</div>
+</div>
+<textarea class="w-full p-3 bg-transparent border border-gray-300 dark:border-slate-700 rounded-md focus:ring-primary focus:border-primary text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 flex-grow resize-none" id="subjective" placeholder="Relato do paciente sobre sua condição..."></textarea>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Objetivo (O)</h3>
+<textarea class="w-full p-3 bg-transparent border border-gray-300 dark:border-slate-700 rounded-md focus:ring-primary focus:border-primary text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 flex-grow resize-none" id="objective" placeholder="Observações e dados mensuráveis..."></textarea>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Avaliação (A)</h3>
+<textarea class="w-full p-3 bg-transparent border border-gray-300 dark:border-slate-700 rounded-md focus:ring-primary focus:border-primary text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 flex-grow resize-none" id="assessment" placeholder="Diagnóstico e análise clínica..."></textarea>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plano (P)</h3>
+<textarea class="w-full p-3 bg-transparent border border-gray-300 dark:border-slate-700 rounded-md focus:ring-primary focus:border-primary text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 flex-grow resize-none" id="plan" placeholder="Plano de tratamento e próximas etapas..."></textarea>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Mapa Corporal Anatômico</h3>
+<div class="flex-grow flex items-center justify-center p-2 min-h-0">
+<img alt="Interactive 3D anatomical human body map showing muscle groups" class="max-h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjBB-nMiA655nH34vdvYLubfEOuQr4c_KlicMNVbX4h-CcEyvrN5Ks4F5-JpuXVWNoMDweSINLZvR7MrUdy-nB7LcZnkbKGvoQZh1LmcmZmzUeLsj8FbkqPPqc0Fxr4JGY-sO_L36Gy1X7Ks6LOMspNm5F_uZ5zCnpGh68Qw3ILZJZCQZJH6xZuDHU9lNyOVtjJkt7hXcToNbhzNIhgRBBjeS87UwY2stzTVfNi0Up6TXLu2Yk_YbdOGuX4zuPg9B0qMpS_w_NImV_"/>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Metas do Paciente</h3>
+<div class="space-y-4 flex-grow flex flex-col justify-center">
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Progresso Geral</span>
+<span class="text-sm font-medium text-primary">75%</span>
+</div>
+<div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2.5">
+<div class="bg-primary h-2.5 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<div class="text-center bg-gray-50 dark:bg-slate-800/50 p-4 rounded-md border border-dashed border-gray-300 dark:border-slate-700">
+<p class="text-sm text-gray-500 dark:text-gray-400">Próxima meta em:</p>
+<p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">2 dias, 4 horas</p>
+</div>
+</div>
+</div>
+<div class="lg:col-span-full flex justify-end">
+<button class="bg-primary text-white font-semibold px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900 transition-colors">Salvar Nota</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Lazy load pages for better performance with webpack chunk names for better debugging
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
+const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));
 
 // Core pages - High priority chunks
 const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "./pages/Index"));
@@ -264,6 +265,10 @@ export function AppRoutes() {
 
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
             <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
+
+            {/* Seed Data Route - Temporary */}
+            <Route path="/seed-data" element={<ProtectedRoute><SeedData /></ProtectedRoute>} />
+
             <Route path="*" element={<NotFound />} />
         </Routes>
     );

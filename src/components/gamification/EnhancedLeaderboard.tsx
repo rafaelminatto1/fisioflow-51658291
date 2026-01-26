@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, query, orderBy, limit, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,15 +51,25 @@ export function EnhancedLeaderboard({
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ['enhanced-leaderboard', period, category],
     queryFn: async () => {
-      // Simular dados para diferentes períodos e categorias
-      // Em produção, isso viria de RPCs específicas
-      const { data, error } = await supabase.rpc('get_leaderboard', {
-        limit_count: 100
+      // Query Firebase Firestore for leaderboard data
+      const gamificationRef = collection(db, 'patient_gamification');
+      const q = query(gamificationRef, orderBy('total_points', 'desc'), limit(100));
+      const querySnapshot = await getDocs(q);
+
+      let entries: LeaderboardEntry[] = [];
+
+      querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+        const data = doc.data();
+        entries.push({
+          patient_id: doc.id,
+          display_name: data.display_name || 'Paciente',
+          level: data.level || 1,
+          total_xp: data.total_points || 0,
+          current_streak: data.current_streak || 0,
+          achievements_count: data.achievements_count || 0,
+          rank: 0 // Will be set after sorting
+        } as LeaderboardEntry);
       });
-
-      if (error) throw error;
-
-      let entries = data as LeaderboardEntry[];
 
       // Ordenar baseado na categoria selecionada
       const sortField: LeaderboardSort = category === 'level' ? 'level' :

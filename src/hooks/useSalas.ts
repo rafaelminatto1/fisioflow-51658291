@@ -1,6 +1,30 @@
+/**
+ * useSalas - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('salas') → Firestore collection 'salas'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Sala {
   id: string;
@@ -17,17 +41,26 @@ export interface Sala {
 
 export type SalaFormData = Pick<Sala, 'nome' | 'capacidade' | 'descricao' | 'cor' | 'equipamentos' | 'ativo'>;
 
+// Helper to convert Firestore doc to Sala
+const convertDocToSala = (doc: any): Sala => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Sala;
+};
+
 export function useSalas() {
   return useQuery({
     queryKey: ['salas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('salas')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'salas'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as Sala[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToSala);
     },
   });
 }
@@ -37,14 +70,17 @@ export function useCreateSala() {
 
   return useMutation({
     mutationFn: async (sala: SalaFormData) => {
-      const { data, error } = await supabase
-        .from('salas')
-        .insert(sala)
-        .select()
-        .single();
+      const salaData = {
+        ...sala,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'salas'), salaData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToSala(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salas'] });
@@ -61,15 +97,14 @@ export function useUpdateSala() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Sala> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('salas')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'salas', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToSala(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salas'] });
@@ -86,12 +121,7 @@ export function useDeleteSala() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('salas')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'salas', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salas'] });

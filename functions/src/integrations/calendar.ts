@@ -158,7 +158,7 @@ export const syncToGoogleCalendar = onCall({
         conferenceDataVersion: 1,
       });
 
-      googleEventId = response.data.id;
+      googleEventId = response.data.id || null;
 
       // Salvar ID do evento no Firestore
       await appointmentDoc.ref.update({
@@ -308,7 +308,7 @@ export const exportToICal = onCall({
 
   return {
     success: true,
-    icalData,
+    iCalData,
     filename: `fisioflow_agenda_${new Date().toISOString().split('T')[0]}.ics`,
   };
 });

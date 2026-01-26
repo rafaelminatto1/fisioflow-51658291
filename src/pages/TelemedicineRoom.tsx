@@ -1,3 +1,11 @@
+/**
+ * Telemedicine Room Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('telemedicine_rooms') → Firestore collection 'telemedicine_rooms'
+ * - Joins with patients and profiles replaced with separate queries
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,13 +14,16 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import {
   Video, VideoOff, Mic, MicOff, Phone, PhoneOff,
   Users, Clock, Loader2, Share2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 const TelemedicineRoom = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -31,17 +42,26 @@ const TelemedicineRoom = () => {
   const { data: room, isLoading } = useQuery({
     queryKey: ['telemedicine-room', roomId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('telemedicine_rooms')
-        .select(`
-          *,
-          patients:patient_id (name, email, phone),
-          profiles:therapist_id (full_name)
-        `)
-        .eq('id', roomId)
-        .single();
-      if (error) throw error;
-      return data;
+      if (!roomId) throw new Error('Room ID is required');
+
+      const roomDoc = await getDoc(doc(db, 'telemedicine_rooms', roomId));
+      if (!roomDoc.exists()) {
+        throw new Error('Sala não encontrada');
+      }
+
+      const roomData = { id: roomDoc.id, ...roomDoc.data() };
+
+      // Fetch patient and therapist data separately (manual join)
+      const [patientDoc, therapistDoc] = await Promise.all([
+        getDoc(doc(db, 'patients', roomData.patient_id)),
+        roomData.therapist_id ? getDoc(doc(db, 'profiles', roomData.therapist_id)) : Promise.resolve({ exists: false })
+      ]);
+
+      return {
+        ...roomData,
+        patients: patientDoc.exists() ? { id: patientDoc.id, ...patientDoc.data() } : null,
+        profiles: therapistDoc.exists() ? { id: therapistDoc.id, ...therapistDoc.data() } : null
+      };
     },
     enabled: !!roomId
   });
@@ -49,14 +69,12 @@ const TelemedicineRoom = () => {
   // Start session mutation
   const startSession = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
-        .from('telemedicine_rooms')
-        .update({
-          status: 'ativo',
-          started_at: new Date().toISOString()
-        })
-        .eq('id', roomId);
-      if (error) throw error;
+      if (!roomId) throw new Error('Room ID is required');
+
+      await updateDoc(doc(db, 'telemedicine_rooms', roomId), {
+        status: 'ativo',
+        started_at: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['telemedicine-room', roomId] });
@@ -68,16 +86,14 @@ const TelemedicineRoom = () => {
   // End session mutation
   const endSession = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
-        .from('telemedicine_rooms')
-        .update({
-          status: 'encerrado',
-          ended_at: new Date().toISOString(),
-          duration_minutes: Math.floor(elapsedTime / 60),
-          notas: notes
-        })
-        .eq('id', roomId);
-      if (error) throw error;
+      if (!roomId) throw new Error('Room ID is required');
+
+      await updateDoc(doc(db, 'telemedicine_rooms', roomId), {
+        status: 'encerrado',
+        ended_at: new Date().toISOString(),
+        duration_minutes: Math.floor(elapsedTime / 60),
+        notas: notes
+      });
     },
     onSuccess: () => {
       stopMedia();
@@ -97,41 +113,35 @@ const TelemedicineRoom = () => {
         setStream(mediaStream);
         if (videoRef.current) {
           // Main video would typically be remote stream, but for local testing:
-          // videoRef.current.srcObject = mediaStream; 
+          // videoRef.current.srcObject = mediaStream;
         }
-        if (selfVideoRef.current) {
-          selfVideoRef.current.srcObject = mediaStream;
-        }
-      } catch (err) {
-        console.error('Error accessing media:', err);
-        toast.error('Erro ao acessar câmera/microfone');
+      } catch (error) {
+        console.error('Error accessing media devices:', error);
+        toast.error('Não foi possível acessar câmera/microfone');
       }
     };
 
     initMedia();
 
     return () => {
-      stopMedia();
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
     };
   }, []);
 
-  // Timer for session duration
+  // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isConnected && room?.status === 'ativo') {
+    if (isConnected) {
       interval = setInterval(() => {
         setElapsedTime(prev => prev + 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [isConnected, room?.status]);
-
-  const stopMedia = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isConnected]);
 
   const toggleVideo = () => {
     if (stream) {
@@ -153,39 +163,37 @@ const TelemedicineRoom = () => {
     }
   };
 
-  const copyRoomLink = () => {
-    const url = `${window.location.origin}/telemedicine-room/${roomId}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Link copiado!');
+  const stopMedia = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsConnected(false);
   };
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Sala não encontrada</h2>
-            <p className="text-muted-foreground mb-4">
-              O link da sala pode estar incorreto ou expirado.
-            </p>
-            <Button onClick={() => navigate('/telemedicine')}>
-              Voltar
-            </Button>
-          </CardContent>
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">Sala não encontrada</p>
+          <Button onClick={() => navigate('/telemedicine')} className="mt-4">
+            Voltar
+          </Button>
         </Card>
       </div>
     );
@@ -193,143 +201,169 @@ const TelemedicineRoom = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex flex-col lg:flex-row h-screen">
-        {/* Video Area */}
-        <div className="flex-1 relative bg-black">
-          {/* Main Video */}
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-
-          {/* Video overlay controls */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant={room.status === 'ativo' ? 'default' : 'secondary'}>
-                  {room.status === 'ativo' ? 'Ao Vivo' : 'Aguardando'}
-                </Badge>
-                {isConnected && (
-                  <Badge variant="outline" className="text-white border-white">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {formatTime(elapsedTime)}
-                  </Badge>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant={isAudioOn ? 'secondary' : 'destructive'}
-                  onClick={toggleAudio}
-                >
-                  {isAudioOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant={isVideoOn ? 'secondary' : 'destructive'}
-                  onClick={toggleVideo}
-                >
-                  {isVideoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={copyRoomLink}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-
-                {room.status === 'aguardando' ? (
-                  <Button onClick={() => startSession.mutate()} className="bg-success hover:bg-success/90">
-                    <Phone className="h-5 w-5 mr-2" />
-                    Iniciar
-                  </Button>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    onClick={() => endSession.mutate()}
-                  >
-                    <PhoneOff className="h-5 w-5 mr-2" />
-                    Encerrar
-                  </Button>
-                )}
-              </div>
+      {/* Header */}
+      <div className="border-b px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold">Telemedicina</h1>
+          <Badge variant={room.status === 'ativo' ? 'default' : 'secondary'}>
+            {room.status}
+          </Badge>
+          {isConnected && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="w-4 h-4" />
+              {formatTime(elapsedTime)}
             </div>
-          </div>
-
-          {/* Self video (picture-in-picture) */}
-          <div className="absolute top-4 right-4 w-48 h-36 bg-muted rounded-lg overflow-hidden shadow-lg border-2 border-primary/20">
-            <video
-              ref={selfVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-cover transform scale-x-[-1]"
-            />
-          </div>
+          )}
         </div>
+        <Button
+          variant="destructive"
+          onClick={() => endSession.mutate()}
+          disabled={endSession.isPending}
+        >
+          <PhoneOff className="w-4 h-4 mr-2" />
+          Encerrar Sessão
+        </Button>
+      </div>
 
-        {/* Sidebar */}
-        <div className="w-full lg:w-80 border-l bg-card flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Teleconsulta</h2>
-            <p className="text-sm text-muted-foreground">
-              Sala: {room.room_code || roomId}
-            </p>
-          </div>
+      <div className="p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Video Area */}
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="aspect-video bg-black flex items-center justify-center">
+              <CardContent className="p-0 flex-1 flex items-center justify-center">
+                {!isConnected ? (
+                  <div className="text-center text-white">
+                    <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p>Aguardando início da sessão...</p>
+                  </div>
+                ) : (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Patient Info */}
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">{(room.patients as any)?.name || 'Paciente'}</p>
-                <p className="text-sm text-muted-foreground">
-                  {(room.patients as any)?.phone || 'Sem telefone'}
-                </p>
-              </div>
-            </div>
-          </div>
+            {/* Self Video */}
+            {isConnected && (
+              <Card className="w-48 h-36 bg-black">
+                <CardContent className="p-0 h-full">
+                  <video
+                    ref={selfVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Notes */}
-          <div className="flex-1 p-4 flex flex-col">
-            <label className="text-sm font-medium mb-2">
-              Anotações da Sessão
-            </label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Anote observações importantes durante a sessão..."
-              className="flex-1 resize-none"
-            />
-          </div>
-
-          {/* Session Info */}
-          <div className="p-4 border-t bg-muted/30">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status:</span>
-                <span className="capitalize">{room.status}</span>
-              </div>
-              {room.started_at && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Início:</span>
-                  <span>{format(new Date(room.started_at), 'HH:mm', { locale: ptBR })}</span>
+            {/* Controls */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleVideo}
+                    disabled={!isConnected}
+                  >
+                    {isVideoOn ? <Video /> : <VideoOff />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleAudio}
+                    disabled={!isConnected}
+                  >
+                    {isAudioOn ? <Mic /> : <MicOff />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={!isConnected}
+                  >
+                    <Share2 />
+                  </Button>
+                  {!isConnected ? (
+                    <Button
+                      onClick={() => startSession.mutate()}
+                      disabled={startSession.isPending}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Iniciar Sessão
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      onClick={() => endSession.mutate()}
+                      disabled={endSession.isPending}
+                    >
+                      <PhoneOff className="w-4 h-4 mr-2" />
+                      Encerrar
+                    </Button>
+                  )}
                 </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Terapeuta:</span>
-                <span>{(room.profiles as any)?.full_name || '-'}</span>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Side Panel */}
+          <div className="space-y-4">
+            {/* Patient Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Paciente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {room.patients ? (
+                  <div className="space-y-2">
+                    <p className="font-medium">{room.patients.name}</p>
+                    <p className="text-sm text-muted-foreground">{room.patients.email}</p>
+                    <p className="text-sm text-muted-foreground">{room.patients.phone}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Carregando...</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Notes */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Notas da Sessão</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Adicione notas sobre a sessão..."
+                  rows={6}
+                  disabled={!isConnected}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Session Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Informações</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Agendado para:</span>
+                  <span>{room.scheduled_at ? format(new Date(room.scheduled_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duração:</span>
+                  <span>{isConnected ? formatTime(elapsedTime) : '-'}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

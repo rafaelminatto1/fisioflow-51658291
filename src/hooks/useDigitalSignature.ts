@@ -1,6 +1,26 @@
+/**
+ * useDigitalSignature - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('document_signatures') → Firestore collection 'document_signatures'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface DocumentSignature {
   id: string;
@@ -17,22 +37,33 @@ export interface DocumentSignature {
   created_at: string;
 }
 
+// Helper to convert Firestore doc to DocumentSignature
+const convertDocToDocumentSignature = (doc: any): DocumentSignature => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as DocumentSignature;
+};
+
 export function useDocumentSignatures(documentId?: string) {
   return useQuery({
     queryKey: ['document-signatures', documentId],
     queryFn: async () => {
-      let query = supabase
-        .from('document_signatures')
-        .select('*')
-        .order('signed_at', { ascending: false });
+      let q = query(
+        collection(db, 'document_signatures'),
+        orderBy('signed_at', 'desc')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(convertDocToDocumentSignature);
+
+      // Filter by documentId if provided
       if (documentId) {
-        query = query.eq('document_id', documentId);
+        data = data.filter(s => s.document_id === documentId);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data as unknown) as DocumentSignature[];
+      return data;
     },
     enabled: true
   });
@@ -52,17 +83,16 @@ export function useCreateSignature() {
       signature_image: string;
       signature_hash: string;
     }) => {
-      const { data: signature, error } = await supabase
-        .from('document_signatures')
-        .insert({
-          ...data,
-          signed_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      const signatureData = {
+        ...data,
+        signed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return (signature as unknown) as DocumentSignature;
+      const docRef = await addDoc(collection(db, 'document_signatures'), signatureData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToDocumentSignature(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['document-signatures'] });
@@ -84,15 +114,20 @@ export function useCreateSignature() {
 export function useVerifySignature() {
   return useMutation({
     mutationFn: async ({ documentId, hash }: { documentId: string; hash: string }) => {
-      const { data, error } = await supabase
-        .from('document_signatures')
-        .select('*')
-        .eq('document_id', documentId)
-        .eq('signature_hash', hash)
-        .single();
+      const q = query(
+        collection(db, 'document_signatures'),
+        where('document_id', '==', documentId),
+        where('signature_hash', '==', hash),
+        limit(1)
+      );
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return { valid: !!data, signature: (data as unknown) as DocumentSignature | null };
+      const snapshot = await getDocs(q);
+      const valid = !snapshot.empty;
+
+      return {
+        valid,
+        signature: valid ? convertDocToDocumentSignature(snapshot.docs[0]) : null
+      };
     }
   });
 }

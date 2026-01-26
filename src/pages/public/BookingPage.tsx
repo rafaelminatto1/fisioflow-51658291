@@ -1,8 +1,17 @@
+/**
+ * Booking Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.functions.invoke() → Firebase Functions httpsCallable()
+ * - Firestore queries for profiles already implemented
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -15,6 +24,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Calendar as CalendarIcon, Clock, CheckCircle2, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const db = getFirebaseDb();
 
 interface PublicProfile {
     id: string;
@@ -81,25 +92,22 @@ export const BookingPage = () => {
 
         setBookingLoading(true);
         try {
-            // Call Edge Function for secure booking
-            const { data, error } = await supabase.functions.invoke('public-booking', {
-                body: {
-                    slug,
-                    date: new Date(selectedDate).toISOString(),
-                    time: selectedTime,
-                    patient: {
-                        name: formData.name,
-                        email: formData.email,
-                        phone: formData.phone,
-                        notes: formData.notes
-                    }
+            // Call Firebase Function for secure booking
+            const functions = getFirebaseFunctions();
+            const publicBookingFunction = httpsCallable(functions, 'public-booking');
+            const result = await publicBookingFunction({
+                slug,
+                date: new Date(selectedDate).toISOString(),
+                time: selectedTime,
+                patient: {
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    notes: formData.notes
                 }
             });
 
-            if (error) {
-                console.error('Edge Function Error:', error);
-                throw new Error(error.message || 'Erro ao processar agendamento');
-            }
+            const data = result.data as any;
 
             if (data?.error) {
                 throw new Error(data.error);

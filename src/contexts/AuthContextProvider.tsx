@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
-import { profileApi } from '@/integrations/firebase/functions';
+import { getFirebaseDb, doc, getDoc, setDoc } from '@/integrations/firebase/app';
+import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore } from 'firebase/firestore'; // Import these explicitly to match usage pattern
+// import { profileApi } from '@/integrations/firebase/functions'; // Removed unused
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
 import { logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
@@ -17,21 +19,65 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
   const { toast } = useToast();
 
-  const fetchProfile = useCallback(async (): Promise<Profile | null> => {
+  /**
+   * Garante que o perfil exista no Firestore (defensivo)
+   */
+  const ensureProfile = async (firebaseUser: User) => {
     try {
-      const response = await profileApi.getCurrent();
+      const db = getFirebaseDb();
+      const profileRef = docRef(db, 'profiles', firebaseUser.uid);
+      const profileSnap = await getDocFromFirestore(profileRef);
 
-      if (!response || !response.data) {
-        logger.warn('Perfil não encontrado no Cloud SQL', null, 'AuthContextProvider');
-        return null;
+      if (!profileSnap.exists()) {
+        // Criar perfil se não existir
+        await setDocToFirestore(profileRef, {
+          user_id: firebaseUser.uid,
+          full_name: firebaseUser.displayName || null,
+          email: firebaseUser.email || null,
+          avatar_url: firebaseUser.photoURL || null,
+          phone: null,
+          organization_id: null,
+          onboarding_completed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        // Retornar dados iniciais
+        return {
+          id: profileRef.id,
+          user_id: firebaseUser.uid,
+          full_name: firebaseUser.displayName || null,
+          email: firebaseUser.email || null,
+          role: 'paciente' // Default role
+        } as Profile;
       }
-
-      return response.data as Profile;
+      return { id: profileSnap.id, ...profileSnap.data() } as Profile;
     } catch (err) {
-      logger.error('Erro ao buscar perfil via Cloud Functions', err, 'AuthContextProvider');
+      logger.error('Erro ao garantir perfil', err, 'AuthContextProvider');
+      return null;
+    }
+  };
+
+  const fetchProfile = useCallback(async (firebaseUser: User): Promise<Profile | null> => {
+    try {
+      // Usar a mesma lógica de "ensure" para garantir criação
+      const profile = await ensureProfile(firebaseUser);
+
+      // Se tivermos o perfil, podemos buscar a role extra se necessário, 
+      // mas por enquanto assumimos que o ensure retorna tudo.
+      // NOTE: User roles might be in 'user_roles' collection too? 
+      // Rules suggest 'user_roles' exists. Let's try to merge if needed, 
+      // but 'profiles' usually has 'role'. 
+      // Let's stick to reading 'profiles' first as per existing code structure.
+
+      return profile;
+    } catch (err) {
+      logger.error('Erro ao buscar perfil via Firestore', err, 'AuthContextProvider');
       return null;
     }
   }, []);
+
+  // ... (refreshProfile implementation adjusting to take user from state or arg)
 
   const refreshProfile = useCallback(async () => {
     if (!user) {
@@ -40,7 +86,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     try {
-      const profileData = await fetchProfile();
+      const profileData = await fetchProfile(user);
       setProfile(profileData);
     } catch (err) {
       logger.error('Erro ao atualizar perfil', err, 'AuthContextProvider');
@@ -59,9 +105,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setLoading(false);
         setInitialized(true);
 
-        // Carregar perfil do banco de dados (PG via Cloud Functions)
+        // Carregar perfil do Firestore
         try {
-          const profileData = await fetchProfile();
+          const profileData = await fetchProfile(firebaseUser);
           if (mounted) setProfile(profileData);
         } catch (err) {
           logger.error('Erro ao carregar perfil', err, 'AuthContextProvider');
@@ -144,12 +190,19 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return { error: { message: 'Usuário não autenticado' } };
       }
 
-      const response = await profileApi.update(updates);
+      const db = getFirebaseDb();
+      const profileRef = docRef(db, 'profiles', user.uid);
 
-      if (response.error) {
-        logger.error('Erro ao atualizar perfil via Cloud Functions', response.error, 'AuthContextProvider');
-        return { error: { message: response.error } };
-      }
+      // Import updateDoc usage if needed, or use specific import
+      const { updateDoc } = await import('firebase/firestore');
+      await updateDoc(profileRef, {
+        ...updates,
+        updated_at: new Date().toISOString()
+      });
+
+      // const response = await profileApi.update(updates); // Removed
+
+      // if (response.error) ... removed
 
       // Atualizar estado local
       if (profile) {

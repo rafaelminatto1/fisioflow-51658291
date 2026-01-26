@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { getFirebaseApp } from '@/integrations/firebase/app';
 
 interface UseResponsiveImageOptions {
     bucket: string;
@@ -9,7 +10,7 @@ interface UseResponsiveImageOptions {
 }
 
 /**
- * Hook para gerar srcset e sizes para imagens responsivas do Supabase
+ * Hook para gerar srcset e sizes para imagens responsivas do Firebase Storage
  *
  * @example
  * const { srcSet, sizes } = useResponsiveImage({
@@ -27,14 +28,18 @@ export function useResponsiveImage({
     const srcSet = useMemo(() => {
         if (!path) return '';
 
+        const app = getFirebaseApp();
+        const storage = getStorage(app);
+
         return sizes
             .map(size => {
-                const { data } = supabase.storage
-                    .from(bucket)
-                    .getPublicUrl(path, {
-                        transform: { width: size, quality: 75, resize: 'contain' }
-                    });
-                return `${data.publicUrl} ${size}w`;
+                // Firebase Storage doesn't support server-side transformations like Supabase
+                // We create a reference that can be used with Firebase Image Resizer or similar
+                const storageRef = ref(storage, `${bucket}/${path}`);
+                // Note: For responsive images, you'd need to implement Firebase Cloud Functions
+                // with Firebase Image Resizer or use a CDN like Cloudinary
+                const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${storageRef.bucket}/o/${encodeURIComponent(storageRef.fullPath)}?alt=media`;
+                return `${publicUrl} ${size}w`;
             })
             .join(', ');
     }, [bucket, path, sizes]);

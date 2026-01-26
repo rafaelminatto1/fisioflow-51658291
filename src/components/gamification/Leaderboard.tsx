@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, query, orderBy, limit, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Medal, Crown, User, Loader2 } from 'lucide-react';
@@ -22,10 +23,29 @@ export function Leaderboard({ currentPatientId }: LeaderboardProps) {
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ['leaderboard'],
     queryFn: async () => {
-      // Call the secure RPC function
-      const { data, error } = await supabase.rpc('get_leaderboard', { limit_count: 50 });
-      if (error) throw error;
-      return data as LeaderboardEntry[];
+      // Query Firebase Firestore for leaderboard data
+      const gamificationRef = collection(db, 'patient_gamification');
+      const q = query(gamificationRef, orderBy('total_points', 'desc'), limit(50));
+      const querySnapshot = await getDocs(q);
+
+      const entries: LeaderboardEntry[] = [];
+      querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+        const data = doc.data();
+        entries.push({
+          patient_id: doc.id,
+          total_points: data.total_points || 0,
+          level: data.level || 1,
+          current_streak: data.current_streak || 0,
+          display_name: data.display_name || 'Paciente',
+          rank: 0 // Will be set after sorting
+        } as LeaderboardEntry);
+      });
+
+      // Add rank after sorting
+      return entries.map((entry, index) => ({
+        ...entry,
+        rank: index + 1
+      }));
     },
     staleTime: 1000 * 60 * 15, // Cache for 15 minutes
   });

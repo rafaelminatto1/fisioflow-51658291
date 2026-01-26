@@ -19,9 +19,16 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
 let serviceAccount;
 
-if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
-  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+// Resolver caminho relativo para absoluto
+const resolvedKeyPath = serviceAccountPath && serviceAccountPath.startsWith('./')
+  ? path.join(__dirname, '..', serviceAccountPath)
+  : serviceAccountPath;
+
+if (resolvedKeyPath && fs.existsSync(resolvedKeyPath)) {
+  serviceAccount = JSON.parse(fs.readFileSync(resolvedKeyPath, 'utf8'));
+  console.log('✅ Service account key carregada:', resolvedKeyPath);
 } else {
+  console.error('❌ Service account key não encontrada em:', resolvedKeyPath);
   // Tentar usar variáveis de ambiente individuais
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
   if (!projectId) {
@@ -37,18 +44,21 @@ if (serviceAccountPath && fs.existsSync(serviceAccountPath)) {
 
 // Inicializar Firebase Admin
 try {
-  if (serviceAccount.privateKey) {
+  if (serviceAccount.private_key) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
+    console.log('✅ Firebase Admin inicializado com service account');
   } else {
     // Usar Application Default Credentials
     admin.initializeApp({
-      projectId: serviceAccount.projectId
+      projectId: serviceAccount.project_id
     });
+    console.log('⚠️  Firebase Admin inicializado sem credenciais explícitas');
   }
 } catch (e) {
   console.error('❌ Erro ao inicializar Firebase Admin:', e.message);
+  console.error('Detalhes:', e);
   process.exit(1);
 }
 
@@ -233,7 +243,7 @@ async function verifyCollection(collectionName) {
 
 async function main() {
   console.log('🔥 Inicializando coleções do Firebase Firestore\n');
-  console.log('Projeto:', serviceAccount.projectId);
+  console.log('Projeto:', serviceAccount.project_id || serviceAccount.projectId);
   console.log('');
 
   const results = {

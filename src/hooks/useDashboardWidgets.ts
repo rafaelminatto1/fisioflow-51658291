@@ -1,7 +1,18 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * Dashboard Widgets Hook - Firebase Compatible
+ *
+ * This hook is already compatible with Firebase as it:
+ * - Uses useAuth() from '@/contexts/AuthContext' (not supabase.auth)
+ * - Stores widget preferences in localStorage
+ * - No database queries required
+ *
+ * No migration needed.
+ */
 
-export type WidgetType = 
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+
+export type WidgetType =
   | 'appointments-today'
   | 'revenue-month'
   | 'patients-active'
@@ -59,17 +70,17 @@ const defaultWidgets: DashboardWidget[] = [
 export function useDashboardWidgets() {
   const [widgets, setWidgets] = useState<DashboardWidget[]>(defaultWidgets);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadWidgets();
-  }, []);
+  }, [user]);
 
   const loadWidgets = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const saved = localStorage.getItem(`dashboard-widgets-${user.id}`);
+      const saved = localStorage.getItem(`dashboard-widgets-${user.uid}`);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -94,10 +105,9 @@ export function useDashboardWidgets() {
 
   const saveWidgets = async (newWidgets: DashboardWidget[]) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      localStorage.setItem(`dashboard-widgets-${user.id}`, JSON.stringify(newWidgets));
+      localStorage.setItem(`dashboard-widgets-${user.uid}`, JSON.stringify(newWidgets));
       setWidgets(newWidgets);
     } catch (error) {
       console.error('Error saving widgets:', error);

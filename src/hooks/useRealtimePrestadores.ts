@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 /**
- * Hook para inscrições Realtime na tabela prestadores
- * FIX: Track subscription state to avoid WebSocket errors
+ * Hook para inscrições Realtime na tabela prestadores (Firestore)
  */
 export function useRealtimePrestadores(eventoId: string) {
   const queryClient = useQueryClient();
@@ -12,36 +14,25 @@ export function useRealtimePrestadores(eventoId: string) {
   useEffect(() => {
     if (!eventoId) return;
 
-    // FIX: Track subscription state to avoid WebSocket errors
-    let isSubscribed = false;
-    const channel = supabase.channel(`prestadores-${eventoId}`);
+    const q = query(
+      collection(db, 'prestadores'),
+      where('evento_id', '==', eventoId)
+    );
 
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'prestadores',
-          filter: `evento_id=eq.${eventoId}`
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['prestadores', eventoId] });
-          queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      // Snapshot changes invoke this callback
+      // We don't necessarily need the data here if we just want to invalidate queries
+      // But we can check if there are changes
+      if (!snapshot.metadata.hasPendingWrites) {
+        queryClient.invalidateQueries({ queryKey: ['prestadores', eventoId] });
+        queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+      }
+    }, (error) => {
+      console.error("Error in useRealtimePrestadores subscription:", error);
+    });
 
     return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
+      unsubscribe();
     };
   }, [eventoId, queryClient]);
 }

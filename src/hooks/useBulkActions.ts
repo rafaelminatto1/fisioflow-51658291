@@ -1,6 +1,18 @@
+/**
+ * Bulk Actions Hook - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('appointments').delete() → Firestore batch delete
+ * - supabase.from('appointments').update() → Firestore batch update
+ * - Removed supabase client dependency
+ *
+ * Provides functionality for bulk operations on appointments
+ */
+
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, doc, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
 
@@ -42,12 +54,24 @@ export function useBulkActions() {
     if (selectedIds.size === 0) return;
 
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .in('id', Array.from(selectedIds));
+      const db = getFirebaseDb();
+      const batch = writeBatch(db);
 
-      if (error) throw error;
+      // Firestore batch operations are limited to 500 operations
+      const ids = Array.from(selectedIds);
+      const chunks = [];
+      for (let i = 0; i < ids.length; i += 500) {
+        chunks.push(ids.slice(i, i + 500));
+      }
+
+      for (const chunk of chunks) {
+        const chunkBatch = writeBatch(db);
+        chunk.forEach(id => {
+          const docRef = doc(db, 'appointments', id);
+          chunkBatch.delete(docRef);
+        });
+        await chunkBatch.commit();
+      }
 
       toast({
         title: 'Sucesso',
@@ -71,12 +95,23 @@ export function useBulkActions() {
     if (selectedIds.size === 0) return;
 
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status })
-        .in('id', Array.from(selectedIds));
+      const db = getFirebaseDb();
 
-      if (error) throw error;
+      // Firestore batch operations are limited to 500 operations
+      const ids = Array.from(selectedIds);
+      const chunks = [];
+      for (let i = 0; i < ids.length; i += 500) {
+        chunks.push(ids.slice(i, i + 500));
+      }
+
+      for (const chunk of chunks) {
+        const chunkBatch = writeBatch(db);
+        chunk.forEach(id => {
+          const docRef = doc(db, 'appointments', id);
+          chunkBatch.update(docRef, { status });
+        });
+        await chunkBatch.commit();
+      }
 
       toast({
         title: 'Sucesso',

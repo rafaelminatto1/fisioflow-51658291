@@ -1,8 +1,15 @@
+/**
+ * Patient Profile Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - Uses migrated hooks (usePatientEvolutionReport, useSoapRecords, etc.)
+ * - No direct Supabase queries in this file
+ */
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { PatientHelpers } from '@/types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';

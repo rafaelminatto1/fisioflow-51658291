@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, addDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
 
 export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE';
@@ -52,7 +53,8 @@ export function calculateDiff(
  */
 export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
   try {
-    const { error } = await supabase.from('audit_log').insert({
+    const db = getFirebaseDb();
+    await addDoc(collection(db, 'audit_log'), {
       action: entry.action,
       table_name: entry.table_name,
       record_id: entry.record_id || null,
@@ -61,11 +63,6 @@ export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
       changes: entry.changes || null,
       timestamp: new Date().toISOString(),
     });
-
-    if (error) {
-      logger.error('Erro ao registrar entrada de auditoria', error, 'AuditMiddleware');
-      return false;
-    }
 
     return true;
   } catch (error) {

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html class="light dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Image Upload/Capture - Orthopedic Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#359EFF", "background-light": "#f5f7f8", "background-dark": "#0f1923", "surface-light": "#ffffff", "surface-dark": "#1a2e24", "text-main-light": "#111814", "text-main-dark": "#e0e6e3", "text-sub-light": "#618975", "text-sub-dark": "#8fa899"}, fontFamily: {display: "Space Grotesk", body: ["Noto Sans", "sans-serif"]}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto shadow-2xl bg-background-light dark:bg-background-dark">
+<!-- TopAppBar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<button class="text-text-main-light dark:text-text-main-dark flex size-12 shrink-0 items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</button>
+<h2 class="text-text-main-light dark:text-text-main-dark text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Upload Scan</h2>
+</div>
+<!-- BodyText: Subtitle -->
+<div class="px-4 pt-2 pb-4">
+<p class="text-text-sub-light dark:text-text-sub-dark text-base font-normal leading-normal text-center">
+                Select an X-ray, MRI, or CT scan for AI assessment.
+            </p>
+</div>
+<!-- ActionPanel: Tips -->
+<div class="px-4 pb-4 @container">
+<div class="flex flex-1 flex-col items-start justify-between gap-4 rounded-lg border border-[#dbe6e0] dark:border-[#2a4034] bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+<div class="flex flex-row gap-3 items-start">
+<div class="shrink-0 pt-1 text-primary">
+<span class="material-symbols-outlined filled">lightbulb</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-text-main-light dark:text-text-main-dark text-base font-bold leading-tight">Tips for best results</p>
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm font-normal leading-normal">
+                            Ensure good lighting and avoid glare. Place physical films against a backlight or a plain white screen if possible.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Take Photo -->
+<div class="px-4 pb-4 @container">
+<div class="flex flex-col items-stretch justify-start rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] bg-surface-light dark:bg-surface-dark overflow-hidden transition-transform active:scale-[0.99] duration-150">
+<div class="w-full h-40 bg-center bg-no-repeat bg-cover relative" data-alt="Doctor holding a smartphone focusing on an X-ray image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCx_MMqBsyL3Vy_INbudWokbEz32ovlvuHy6iAJ11XqnklqykpP8B2ZM8WjzrKLVkXWE4KMCdCPTOS2QPqRQmCEsHg_kZtB_vLjn7q94hfKv9cNWVxyw-DeQREbY2aPkwhyWIWSL77ONQHNR1oQkmNmZ29E-gwDP6xcOGQOfU4CVo0Kerri3jGk9720L3uUNfM0TCqQ8aU7c0uctMq4JgasZM1E0NO7rlkb7Ob8CGY4_3tD_Hr1DTFfsppMiwrf7wtSyW3VFCP3fUk");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+<span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+</div>
+</div>
+<div class="flex w-full grow flex-col items-stretch justify-center gap-1 p-4">
+<p class="text-text-main-light dark:text-text-main-dark text-lg font-bold leading-tight tracking-[-0.015em]">Take Photo</p>
+<div class="flex flex-col gap-3 justify-between sm:flex-row sm:items-end">
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm font-normal leading-normal">Capture directly using camera</p>
+<button class="flex w-full sm:w-auto cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-primary/90 transition-colors text-[#111814] text-sm font-bold leading-normal gap-2">
+<span class="material-symbols-outlined text-[18px]">shutter_speed</span>
+<span class="truncate">Open Camera</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Upload File -->
+<div class="px-4 pb-4 @container">
+<div class="flex flex-col items-stretch justify-start rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] bg-surface-light dark:bg-surface-dark overflow-hidden transition-transform active:scale-[0.99] duration-150">
+<div class="w-full h-40 bg-center bg-no-repeat bg-cover relative" data-alt="Digital tablet displaying medical records and folder icons" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCfvGF_IkTerulqTUylLi9PmMQg2ME0tYZxm2nH-vQPzc1_00IldBDW-sj1DshMVh5b7kzXfjDaCq9ZirbGk6EAD5ntX4mCdOOL4CF51b4S4wgQAo9R0gQ0VyDkJo9BDyGilKiedj9NCBrO4SkcsfQzRTl1yYKr2K3Rk4AvGokC22YuJvZ6K7f7YcnDm3hxs-rzNYTZE9D64dt0qoBmuiSOy8esxYH6wc1XqZ-Be_drMb889ZCyrFjo0AZbkcgU5eDMpwlt0pc-qVU");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+<span class="material-symbols-outlined text-white text-3xl">folder_open</span>
+</div>
+</div>
+<div class="flex w-full grow flex-col items-stretch justify-center gap-1 p-4">
+<p class="text-text-main-light dark:text-text-main-dark text-lg font-bold leading-tight tracking-[-0.015em]">Upload File</p>
+<div class="flex flex-col gap-3 justify-between sm:flex-row sm:items-end">
+<p class="text-text-sub-light dark:text-text-sub-dark text-sm font-normal leading-normal">Select JPG, PNG, or PDF</p>
+<button class="flex w-full sm:w-auto cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-surface-light dark:bg-surface-dark border-2 border-primary text-text-main-light dark:text-text-main-dark hover:bg-primary/10 transition-colors text-sm font-bold leading-normal gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">upload_file</span>
+<span class="truncate">Choose from Gallery</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent/History Section (Optional but good for layout balance) -->
+<div class="px-4 pt-2">
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-text-main-light dark:text-text-main-dark text-base font-bold">Recent Uploads</h3>
+<button class="text-primary text-sm font-medium hover:underline">View All</button>
+</div>
+<div class="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+<!-- Recent Item 1 -->
+<div class="flex-shrink-0 w-24 flex flex-col gap-1">
+<div class="w-24 h-24 rounded-lg bg-gray-200 dark:bg-gray-800 bg-center bg-cover border border-gray-100 dark:border-gray-700" data-alt="Thumbnail of a knee X-ray scan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCpgPecsv5vw5OrT3W3c0Kutu1XuLVPiOaheda4T9u4fHHvk17nTPkduncGYNjElkDpXYQQhQaswl2KEF3HLrkHXE4sQ8rfplrB1mPsgxUg8jFmjaWLy4m9oWhM0sFCbJ0VT1Jr_3ptJdEBaPRJO23Xls42Jzwjykp1l_LqeFpFXpGHF-1XLwguCtvFjj-svYOJyR0GpCWs4HPK0iA0p_BCLGCYB_dYSP7C0PHNDEzM2zvY8_VbmxoiAqSo5dAHEuWOpgk0JvU6qUU')"></div>
+<span class="text-xs text-text-main-light dark:text-text-main-dark font-medium truncate">Knee_Scan_01.jpg</span>
+</div>
+<!-- Recent Item 2 -->
+<div class="flex-shrink-0 w-24 flex flex-col gap-1">
+<div class="w-24 h-24 rounded-lg bg-gray-200 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-700">
+<span class="material-symbols-outlined text-gray-400 text-3xl">picture_as_pdf</span>
+</div>
+<span class="text-xs text-text-main-light dark:text-text-main-dark font-medium truncate">Report_Final.pdf</span>
+</div>
+<!-- Recent Item 3 -->
+<div class="flex-shrink-0 w-24 flex flex-col gap-1">
+<div class="w-24 h-24 rounded-lg bg-gray-200 dark:bg-gray-800 bg-center bg-cover border border-gray-100 dark:border-gray-700" data-alt="Thumbnail of a chest X-ray" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBpAhE38-eeMp9kTUZp0jYgnt0Nz5Ec_uYnKDFufwBiqNoUCow7OtkTivSdxUV6CeXDURtvQ6dcrEKHZ8GHel1r-NL26LC65BQjV4GXx-lZSPG2noA5SBMvAFO8f66InpSNzyzL2M84eAVyzXGrRElqwmCTnIkjjIOtPBshfZjhFjvWeFbySIHJoO0ELE7yJgKCyCeD5889mQZLpTkDjoVCcB9_qIplVnIZjbP7W3Jv2j9tmqndx9cylBj_piXGahPsZbC0ouyEeQg')"></div>
+<span class="text-xs text-text-main-light dark:text-text-main-dark font-medium truncate">Chest_Xray.png</span>
+</div>
+</div>
+</div>
+<div class="grow"></div>
+<!-- Footer Privacy Badge -->
+<div class="p-6 flex flex-col items-center justify-center gap-2 mt-4 opacity-70">
+<div class="flex items-center gap-1.5 text-text-sub-light dark:text-text-sub-dark">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span class="text-xs font-medium uppercase tracking-wider">Secure &amp; Private Upload</span>
+</div>
+<p class="text-[10px] text-center text-text-sub-light dark:text-text-sub-dark max-w-[200px]">
+                Your data is encrypted and HIPAA compliant.
+            </p>
+</div>
+<!-- Bottom Spacer -->
+<div class="h-5"></div>
+</div>
+</body></html>

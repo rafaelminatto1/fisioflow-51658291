@@ -1,7 +1,25 @@
+/**
+ * useReports - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - All Supabase queries migrated to Firestore collections
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  getCountFromServer,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface DashboardKPIs {
   activePatients: number;
@@ -44,22 +62,27 @@ export interface OccupancyReport {
   averageOccupancy: number;
 }
 
+// Helper function to convert Firestore doc
+const convertDoc = (doc: any): any => {
+  return { id: doc.id, ...doc.data() };
+};
+
 // Função auxiliar para calcular NPS
 async function calculateNPS(): Promise<number> {
   try {
-    const { data: surveys, error } = await supabase
-      .from('satisfaction_surveys')
-      .select('nps_score')
-      .not('nps_score', 'is', null)
-      .not('responded_at', 'is', null);
+    const q = query(
+      collection(db, 'satisfaction_surveys')
+    );
+    const snapshot = await getDocs(q);
+    const surveys = snapshot.docs.map(doc => doc.data());
 
-    if (error || !surveys || surveys.length === 0) {
+    if (!surveys || surveys.length === 0) {
       return 0;
     }
 
     const total = surveys.length;
-    const promotores = surveys.filter(s => s.nps_score && s.nps_score >= 9).length;
-    const detratores = surveys.filter(s => s.nps_score && s.nps_score <= 6).length;
+    const promotores = surveys.filter((s: any) => s.nps_score && s.nps_score >= 9).length;
+    const detratores = surveys.filter((s: any) => s.nps_score && s.nps_score <= 6).length;
 
     const nps = total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0;
     return nps;
@@ -73,23 +96,29 @@ async function calculateNPS(): Promise<number> {
 async function calculateExerciseAdherence(patientId?: string): Promise<number> {
   try {
     // Adesão simplificada baseada em sessões completadas
-    let query = supabase
-      .from('sessions')
-      .select('id, status')
-      .eq('status', 'completed');
+    let q = query(
+      collection(db, 'sessions'),
+      where('status', '==', 'completed'),
+      limit(100)
+    );
 
     if (patientId) {
-      query = query.eq('patient_id', patientId);
+      q = query(
+        collection(db, 'sessions'),
+        where('status', '==', 'completed'),
+        where('patient_id', '==', patientId),
+        limit(100)
+      );
     }
 
-    const { data: sessions, error } = await query.limit(100);
+    const snapshot = await getDocs(q);
 
-    if (error || !sessions) {
+    if (snapshot.empty) {
       return 0;
     }
 
     // Estimar adesão baseada em sessões
-    return sessions.length > 0 ? Math.min(85, 50 + sessions.length) : 0;
+    return snapshot.size > 0 ? Math.min(85, 50 + snapshot.size) : 0;
   } catch (error) {
     logger.error('Erro ao calcular adesão de exercícios', error, 'useReports');
     return 0;
@@ -104,32 +133,38 @@ export function useDashboardKPIs(period: string = 'month') {
       const { startDate, endDate } = getPeriodDates(period);
 
       // Pacientes ativos
-      const { count: activePatients } = await supabase
-        .from('patients')
-        .select('id', { count: 'exact' })
-        .eq('is_active', true);
+      const activePatientsQ = query(
+        collection(db, 'patients'),
+        where('is_active', '==', true)
+      );
+      const activePatientsSnap = await getCountFromServer(activePatientsQ);
+      const activePatients = activePatientsSnap.data().count;
 
       // Receita do período
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('status', 'paid')
-        .gte('paid_at', startDate)
-        .lte('paid_at', endDate);
+      const paymentsQ = query(
+        collection(db, 'payments'),
+        where('status', '==', 'paid'),
+        where('paid_at', '>=', startDate),
+        where('paid_at', '<=', endDate)
+      );
+      const paymentsSnap = await getDocs(paymentsQ);
+      const payments = paymentsSnap.docs.map(doc => doc.data());
 
-      const monthlyRevenue = (payments || []).reduce((sum: number, p: { amount?: number }) => sum + (p.amount || 0), 0);
+      const monthlyRevenue = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
       // Agendamentos do período
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('id, status')
-        .gte('start_time', startDate)
-        .lte('start_time', endDate);
+      const appointmentsQ = query(
+        collection(db, 'appointments'),
+        where('start_time', '>=', startDate),
+        where('start_time', '<=', endDate)
+      );
+      const appointmentsSnap = await getDocs(appointmentsQ);
+      const appointments = appointmentsSnap.docs.map(doc => doc.data());
 
-      const totalAppointments = appointments?.length || 0;
-      const completedAppointments = appointments?.filter(a => a.status === 'atendido').length || 0;
-      const noShowAppointments = appointments?.filter(a => a.status === 'faltou').length || 0;
-      const confirmedAppointments = appointments?.filter(a => ['confirmado', 'atendido'].includes(a.status)).length || 0;
+      const totalAppointments = appointments.length;
+      const completedAppointments = appointments.filter((a: any) => a.status === 'atendido').length;
+      const noShowAppointments = appointments.filter((a: any) => a.status === 'faltou').length;
+      const confirmedAppointments = appointments.filter((a: any) => ['confirmado', 'atendido'].includes(a.status)).length;
 
       const occupancyRate = totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
       const noShowRate = totalAppointments > 0 ? (noShowAppointments / totalAppointments) * 100 : 0;
@@ -137,12 +172,13 @@ export function useDashboardKPIs(period: string = 'month') {
 
       // Agendamentos de hoje
       const today = new Date().toISOString().split('T')[0];
-      const { count: appointmentsToday } = await supabase
-        .from('appointments')
-        .select('id', { count: 'exact' })
-        .gte('start_time', `${today}T00:00:00`)
-        .lt('start_time', `${today}T23:59:59`)
-        .neq('status', 'cancelado');
+      const todayQ = query(
+        collection(db, 'appointments'),
+        where('start_time', '>=', `${today}T00:00:00`),
+        where('start_time', '<=', `${today}T23:59:59`)
+      );
+      const todaySnap = await getCountFromServer(todayQ);
+      const appointmentsToday = todaySnap.data().count;
 
       // Gráfico de receita
       const revenueChart = await getRevenueChart(startDate, endDate);
@@ -168,37 +204,38 @@ export function useFinancialReport(startDate: string, endDate: string) {
     queryKey: ['reports', 'financial', startDate, endDate],
     queryFn: async () => {
       // Receitas
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('amount, method')
-        .eq('status', 'completed')
-        .gte('paid_at', startDate)
-        .lte('paid_at', endDate + 'T23:59:59');
+      const paymentsQ = query(
+        collection(db, 'payments'),
+        where('status', '==', 'completed'),
+        where('paid_at', '>=', startDate),
+        where('paid_at', '<=', endDate + 'T23:59:59')
+      );
+      const paymentsSnap = await getDocs(paymentsQ);
+      const payments = paymentsSnap.docs.map(doc => doc.data());
 
-      const totalRevenue = (payments || []).reduce((sum, p: { amount?: number }) => sum + (p.amount || 0), 0);
+      const totalRevenue = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
       // Por método
       const revenueByMethod: Record<string, number> = {};
-      (payments || []).forEach((p: { amount?: number; method?: string }) => {
+      payments.forEach((p: any) => {
         const method = p.method || 'outros';
         revenueByMethod[method] = (revenueByMethod[method] || 0) + (p.amount || 0);
       });
 
       // Por terapeuta
-      const { data: sessions } = await supabase
-        .from('sessions')
-        .select(`
-          therapist_id,
-          therapist:profiles(id, full_name)
-        `)
-        .eq('status', 'completed')
-        .gte('started_at', startDate)
-        .lte('started_at', endDate + 'T23:59:59');
+      const sessionsQ = query(
+        collection(db, 'sessions'),
+        where('status', '==', 'completed'),
+        where('started_at', '>=', startDate),
+        where('started_at', '<=', endDate + 'T23:59:59')
+      );
+      const sessionsSnap = await getDocs(sessionsQ);
+      const sessions = sessionsSnap.docs.map(doc => doc.data());
 
       const therapistMap: Record<string, { name: string; revenue: number; sessions: number }> = {};
-      (sessions || []).forEach((s: { therapist_id?: string; therapist?: { name?: string } }) => {
+      sessions.forEach((s: any) => {
         const id = s.therapist_id || 'unassigned';
-        const name = s.therapist?.full_name || 'Não atribuído';
+        const name = s.therapist_name || 'Não atribuído';
         if (!therapistMap[id]) {
           therapistMap[id] = { name, revenue: 0, sessions: 0 };
         }
@@ -206,7 +243,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
       });
 
       // Estimar receita por terapeuta (dividir proporcional)
-      const avgPerSession = sessions?.length > 0 ? totalRevenue / sessions.length : 0;
+      const avgPerSession = sessions.length > 0 ? totalRevenue / sessions.length : 0;
       Object.values(therapistMap).forEach(t => {
         t.revenue = t.sessions * avgPerSession;
       });
@@ -221,14 +258,16 @@ export function useFinancialReport(startDate: string, endDate: string) {
         .sort((a, b) => b.revenue - a.revenue);
 
       // Taxa de inadimplência
-      const { data: pendingPayments } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('status', 'pending')
-        .gte('created_at', startDate)
-        .lte('created_at', endDate + 'T23:59:59');
+      const pendingQ = query(
+        collection(db, 'payments'),
+        where('status', '==', 'pending'),
+        where('created_at', '>=', startDate),
+        where('created_at', '<=', endDate + 'T23:59:59')
+      );
+      const pendingSnap = await getDocs(pendingQ);
+      const pendingPayments = pendingSnap.docs.map(doc => doc.data());
 
-      const totalPending = (pendingPayments || []).reduce((sum: number, p: { amount?: number }) => sum + (p.amount || 0), 0);
+      const totalPending = pendingPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
       const delinquencyRate = (totalRevenue + totalPending) > 0
         ? (totalPending / (totalRevenue + totalPending)) * 100
         : 0;
@@ -255,35 +294,39 @@ export function usePatientEvolution(patientId: string | undefined) {
       if (!patientId) return null;
 
       // Dados do paciente
-      const { data: patient, error: patientError } = await supabase
-        .from('patients')
-        .select('id, full_name')
-        .eq('id', patientId)
-        .single();
+      const patientQ = query(
+        collection(db, 'patients'),
+        where('id', '==', patientId),
+        limit(1)
+      );
+      const patientSnap = await getDocs(patientQ);
 
-      if (patientError || !patient) throw new Error('Paciente não encontrado');
+      if (patientSnap.empty) throw new Error('Paciente não encontrado');
+      const patient = convertDoc(patientSnap.docs[0]);
 
       // Sessões
-      const { data: sessions } = await supabase
-        .from('sessions')
-        .select('id, eva_score, started_at, completed_at')
-        .eq('patient_id', patientId)
-        .eq('status', 'completed')
-        .order('started_at', { ascending: true });
+      const sessionsQ = query(
+        collection(db, 'sessions'),
+        where('patient_id', '==', patientId),
+        where('status', '==', 'completed'),
+        orderBy('started_at', 'asc')
+      );
+      const sessionsSnap = await getDocs(sessionsQ);
+      const sessions = sessionsSnap.docs.map(doc => doc.data());
 
-      const totalSessions = sessions?.length || 0;
+      const totalSessions = sessions.length;
 
       // Evolução da dor
-      const painEvolution = (sessions || [])
-        .filter((s: { eva_score?: number | null }) => s.eva_score !== null)
-        .map((s: { started_at?: string; eva_score?: number }) => ({
+      const painEvolution = sessions
+        .filter((s: any) => s.eva_score !== null)
+        .map((s: any) => ({
           date: s.started_at?.split('T')[0] || '',
           averageEva: s.eva_score || 0,
         }));
 
       // Duração do tratamento
       let treatmentDuration = 'N/A';
-      if (sessions && sessions.length >= 2) {
+      if (sessions.length >= 2) {
         const firstSession = new Date(sessions[0].started_at);
         const lastSession = new Date(sessions[sessions.length - 1].started_at);
         const diffDays = Math.ceil((lastSession.getTime() - firstSession.getTime()) / (1000 * 60 * 60 * 24));
@@ -331,11 +374,13 @@ export function useOccupancyReport(startDate: string, endDate: string) {
   return useQuery({
     queryKey: ['reports', 'occupancy', startDate, endDate],
     queryFn: async () => {
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('start_time, status')
-        .gte('start_time', startDate)
-        .lte('start_time', endDate + 'T23:59:59');
+      const appointmentsQ = query(
+        collection(db, 'appointments'),
+        where('start_time', '>=', startDate),
+        where('start_time', '<=', endDate + 'T23:59:59')
+      );
+      const appointmentsSnap = await getDocs(appointmentsQ);
+      const appointments = appointmentsSnap.docs.map(doc => doc.data());
 
       const dayOccupancy: Record<string, { total: number; occupied: number }> = {
         'Segunda': { total: 0, occupied: 0 },
@@ -348,7 +393,7 @@ export function useOccupancyReport(startDate: string, endDate: string) {
 
       const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-      (appointments || []).forEach(apt => {
+      appointments.forEach((apt: any) => {
         const date = new Date(apt.start_time);
         const dayName = dayNames[date.getDay()];
 
@@ -419,15 +464,17 @@ async function getRevenueChart(
   startDate: string,
   endDate: string
 ): Promise<{ date: string; revenue: number }[]> {
-  const { data } = await supabase
-    .from('payments')
-    .select('amount, paid_at')
-    .eq('status', 'completed')
-    .gte('paid_at', startDate)
-    .lte('paid_at', endDate);
+  const q = query(
+    collection(db, 'payments'),
+    where('status', '==', 'completed'),
+    where('paid_at', '>=', startDate),
+    where('paid_at', '<=', endDate)
+  );
+  const snapshot = await getDocs(q);
+  const data = snapshot.docs.map(doc => doc.data());
 
   const revenueByDate: Record<string, number> = {};
-  (data || []).forEach((p: { amount?: number; paid_at?: string }) => {
+  data.forEach((p: any) => {
     const date = p.paid_at?.split('T')[0];
     if (date) {
       revenueByDate[date] = (revenueByDate[date] || 0) + (p.amount || 0);
@@ -469,7 +516,7 @@ export function useExportReport() {
       doc.text('Receita por Método:', 20, y);
       y += 10;
       Object.entries(report.revenueByMethod).forEach(([method, value]) => {
-        doc.text(`  ${method}: R$ ${value.toFixed(2)}`, 20, y);
+        doc.text(`  ${method}: R$ ${(value as number).toFixed(2)}`, 20, y);
         y += 8;
       });
     }
@@ -479,4 +526,3 @@ export function useExportReport() {
 
   return { exportToPDF };
 }
-

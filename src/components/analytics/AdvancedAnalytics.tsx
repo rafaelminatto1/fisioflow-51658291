@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
 
@@ -11,36 +12,44 @@ export default function AdvancedAnalytics() {
   const { data: metrics } = useQuery({
     queryKey: ['analytics-metrics'],
     queryFn: async () => {
-      const [patients, appointments, events, transactions] = await Promise.all([
-        supabase.from('patients').select('id', { count: 'exact' }),
-        supabase.from('appointments').select('id, created_at, status', { count: 'exact' }),
-        supabase.from('eventos').select('id, custo_total_estimado', { count: 'exact' }),
-        supabase.from('transacoes').select('valor, tipo, created_at'),
+      const db = getFirebaseDb();
+
+      const [patientsSnapshot, appointmentsSnapshot, eventsSnapshot, transactionsSnapshot] = await Promise.all([
+        getDocs(query(collection(db, 'patients'))),
+        getDocs(query(collection(db, 'appointments'), orderBy('created_at', 'desc'))),
+        getDocs(query(collection(db, 'eventos'))),
+        getDocs(query(collection(db, 'transacoes')))
       ]);
 
-      const totalRevenue = transactions.data?.reduce((sum, t) => 
+      const transactions: any[] = [];
+      transactionsSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() }));
+
+      const totalRevenue = transactions.reduce((sum, t) =>
         t.tipo === 'receita' ? sum + (t.valor || 0) : sum, 0
       ) || 0;
 
-      const totalExpenses = transactions.data?.reduce((sum, t) => 
+      const totalExpenses = transactions.reduce((sum, t) =>
         t.tipo === 'despesa' ? sum + (t.valor || 0) : sum, 0
       ) || 0;
 
+      const appointments: any[] = [];
+      appointmentsSnapshot.forEach((doc) => appointments.push({ id: doc.id, ...doc.data() }));
+
       const thisMonth = new Date();
       thisMonth.setDate(1);
-      const appointmentsThisMonth = appointments.data?.filter(a => 
-        new Date(a.created_at) >= thisMonth
+      const appointmentsThisMonth = appointments.filter(a =>
+        new Date(a.created_at?.toDate ? a.created_at.toDate() : a.created_at) >= thisMonth
       ).length || 0;
 
       return {
-        totalPatients: patients.count || 0,
-        totalAppointments: appointments.count || 0,
-        totalEvents: events.count || 0,
+        totalPatients: patientsSnapshot.size,
+        totalAppointments: appointmentsSnapshot.size,
+        totalEvents: eventsSnapshot.size,
         totalRevenue,
         totalExpenses,
         netProfit: totalRevenue - totalExpenses,
         appointmentsThisMonth,
-        completedAppointments: appointments.data?.filter(a => a.status === 'completed').length || 0,
+        completedAppointments: appointments.filter(a => a.status === 'completed').length || 0,
       };
     },
   });
@@ -48,15 +57,24 @@ export default function AdvancedAnalytics() {
   const { data: appointmentsByMonth } = useQuery({
     queryKey: ['appointments-by-month'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('appointments')
-        .select('created_at, status')
-        .gte('created_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString());
+      const db = getFirebaseDb();
+      const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+
+      const q = query(
+        collection(db, 'appointments'),
+        where('created_at', '>=', startDate),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      const data: any[] = [];
+      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
 
       const monthlyData: Record<string, { total: number; completed: number; cancelled: number }> = {};
-      
-      data?.forEach(apt => {
-        const month = new Date(apt.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+
+      data.forEach(apt => {
+        const date = apt.created_at?.toDate ? apt.created_at.toDate() : new Date(apt.created_at);
+        const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         if (!monthlyData[month]) monthlyData[month] = { total: 0, completed: 0, cancelled: 0 };
         monthlyData[month].total++;
         if (apt.status === 'completed') monthlyData[month].completed++;
@@ -70,13 +88,14 @@ export default function AdvancedAnalytics() {
   const { data: appointmentStatus } = useQuery({
     queryKey: ['appointment-status'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('appointments')
-        .select('status');
+      const db = getFirebaseDb();
+      const snapshot = await getDocs(query(collection(db, 'appointments')));
 
       const statusCount: Record<string, number> = {};
-      data?.forEach(apt => {
-        statusCount[apt.status] = (statusCount[apt.status] || 0) + 1;
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const status = data.status || 'unknown';
+        statusCount[status] = (statusCount[status] || 0) + 1;
       });
 
       return Object.entries(statusCount).map(([name, value]) => ({ name, value }));
@@ -86,24 +105,33 @@ export default function AdvancedAnalytics() {
   const { data: financialByMonth } = useQuery({
     queryKey: ['financial-by-month'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('transacoes')
-        .select('valor, tipo, created_at')
-        .gte('created_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString());
+      const db = getFirebaseDb();
+      const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+
+      const q = query(
+        collection(db, 'transacoes'),
+        where('created_at', '>=', startDate),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      const data: any[] = [];
+      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
 
       const monthlyData: Record<string, { receita: number; despesa: number }> = {};
-      
-      data?.forEach(t => {
-        const month = new Date(t.created_at).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+
+      data.forEach(t => {
+        const date = t.created_at?.toDate ? t.created_at.toDate() : new Date(t.created_at);
+        const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         if (!monthlyData[month]) monthlyData[month] = { receita: 0, despesa: 0 };
         if (t.tipo === 'receita') monthlyData[month].receita += t.valor || 0;
         if (t.tipo === 'despesa') monthlyData[month].despesa += t.valor || 0;
       });
 
-      return Object.entries(monthlyData).map(([month, data]) => ({ 
-        month, 
+      return Object.entries(monthlyData).map(([month, data]) => ({
+        month,
         ...data,
-        lucro: data.receita - data.despesa 
+        lucro: data.receita - data.despesa
       }));
     },
   });

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
@@ -9,20 +10,26 @@ export function PatientAnalytics() {
   const { data: genderData } = useQuery({
     queryKey: ["patient-status-analytics"],
     queryFn: async () => {
-      // Usar status dos pacientes ao invés de gender
-      const { count: activeCount } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "ativo");
+      const db = getFirebaseDb();
 
-      const { count: inactiveCount } = await supabase
-        .from("patients")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "inativo");
+      // Usar status dos pacientes ao invés de gender
+      const activeQuery = query(
+        collection(db, "patients"),
+        where("status", "==", "ativo")
+      );
+      const activeSnapshot = await getDocs(activeQuery);
+      const activeCount = activeSnapshot.docs.length;
+
+      const inactiveQuery = query(
+        collection(db, "patients"),
+        where("status", "==", "inativo")
+      );
+      const inactiveSnapshot = await getDocs(inactiveQuery);
+      const inactiveCount = inactiveSnapshot.docs.length;
 
       return [
-        { name: "Ativos", value: activeCount || 0 },
-        { name: "Inativos", value: inactiveCount || 0 },
+        { name: "Ativos", value: activeCount },
+        { name: "Inativos", value: inactiveCount },
       ];
     },
   });
@@ -30,9 +37,14 @@ export function PatientAnalytics() {
   const { data: ageData } = useQuery({
     queryKey: ["patient-age-analytics"],
     queryFn: async () => {
-      const { data: patients } = await supabase
-        .from("patients")
-        .select("birth_date");
+      const db = getFirebaseDb();
+      const patientsQuery = query(
+        collection(db, "patients"),
+        orderBy("full_name")
+      );
+      const snapshot = await getDocs(patientsQuery);
+
+      const patients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       const ageRanges = {
         "0-17": 0,
@@ -42,7 +54,7 @@ export function PatientAnalytics() {
         "70+": 0,
       };
 
-      patients?.forEach((p) => {
+      patients.forEach((p: any) => {
         if (p.birth_date) {
           const age = new Date().getFullYear() - new Date(p.birth_date).getFullYear();
           if (age < 18) ageRanges["0-17"]++;
@@ -53,7 +65,7 @@ export function PatientAnalytics() {
         }
       });
 
-      return Object.entries(ageRanges).map(([faixa, total]) => ({ faixa, total }));
+      return Object.entries(ageRanges).map(([faixa, total]) => ({ faixa, total: total as number }));
     },
   });
 

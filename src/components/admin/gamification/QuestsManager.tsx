@@ -1,6 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+    collection,
+    doc,
+    getDocs,
+    query,
+    orderBy,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    writeBatch,
+    QueryDocumentSnapshot
+} from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -58,13 +70,19 @@ export default function QuestsManager() {
     const { data: quests, isLoading } = useQuery({
         queryKey: ['admin-quests'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('quest_definitions')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const questRef = collection(db, 'quest_definitions');
+            const q = query(questRef, orderBy('created_at', 'desc'));
+            const querySnapshot = await getDocs(q);
 
-            if (error) throw error;
-            return data as QuestDefinition[];
+            const quests: QuestDefinition[] = [];
+            querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+                quests.push({
+                    id: doc.id,
+                    ...doc.data()
+                } as QuestDefinition);
+            });
+
+            return quests;
         }
     });
 
@@ -96,22 +114,27 @@ export default function QuestsManager() {
 
     const upsertQuest = useMutation({
         mutationFn: async (values: Partial<QuestDefinition>) => {
-            const { data, error } = await supabase
-                .from('quest_definitions')
-                .upsert({
-                    id: editingQuest?.id,
-                    title: values.title!,
-                    description: values.description,
-                    xp_reward: values.xp_reward,
-                    icon: values.icon,
-                    category: values.category || 'daily',
-                    is_active: values.is_active ?? true
-                })
-                .select()
-                .single();
+            const questData = {
+                title: values.title!,
+                description: values.description || null,
+                xp_reward: values.xp_reward || 0,
+                icon: values.icon || null,
+                category: values.category || 'daily',
+                is_active: values.is_active ?? true,
+                updated_at: new Date().toISOString()
+            };
 
-            if (error) throw error;
-            return data;
+            if (editingQuest?.id) {
+                // Update existing quest
+                const questRef = doc(db, 'quest_definitions', editingQuest.id);
+                await updateDoc(questRef, questData);
+                return { id: editingQuest.id, ...questData };
+            } else {
+                // Create new quest
+                questData.created_at = new Date().toISOString();
+                const docRef = await addDoc(collection(db, 'quest_definitions'), questData);
+                return { id: docRef.id, ...questData };
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-quests'] });
@@ -133,12 +156,11 @@ export default function QuestsManager() {
 
     const toggleActive = useMutation({
         mutationFn: async ({ id, currentState }: { id: string, currentState: boolean }) => {
-            const { error } = await supabase
-                .from('quest_definitions')
-                .update({ is_active: !currentState })
-                .eq('id', id);
-
-            if (error) throw error;
+            const questRef = doc(db, 'quest_definitions', id);
+            await updateDoc(questRef, {
+                is_active: !currentState,
+                updated_at: new Date().toISOString()
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-quests'] });
@@ -148,12 +170,14 @@ export default function QuestsManager() {
     const deleteQuest = useMutation({
         mutationFn: async (id: string | string[]) => {
             const ids = Array.isArray(id) ? id : [id];
-            const { error } = await supabase
-                .from('quest_definitions')
-                .delete()
-                .in('id', ids);
+            const batch = writeBatch(db);
 
-            if (error) throw error;
+            ids.forEach(id => {
+                const questRef = doc(db, 'quest_definitions', id);
+                batch.delete(questRef);
+            });
+
+            await batch.commit();
         },
         onSuccess: (_, ids) => {
             queryClient.invalidateQueries({ queryKey: ['admin-quests'] });
@@ -191,21 +215,25 @@ export default function QuestsManager() {
         setDeleteDialogOpen(false);
     };
 
-    const bulkToggleActive = (active: boolean) => {
+    const bulkToggleActive = async (active: boolean) => {
         if (selectedIds.size === 0) return;
 
-        Promise.all(
-            Array.from(selectedIds).map(id =>
-                supabase.from('quest_definitions').update({ is_active: active }).eq('id', id)
-            )
-        ).then(() => {
-            queryClient.invalidateQueries({ queryKey: ['admin-quests'] });
-            toast({
-                title: "Sucesso",
-                description: `${selectedIds.size} missão(ões) ${active ? 'ativada(s)' : 'desativada(s)'}`
+        const batch = writeBatch(db);
+        Array.from(selectedIds).forEach(id => {
+            const questRef = doc(db, 'quest_definitions', id);
+            batch.update(questRef, {
+                is_active: active,
+                updated_at: new Date().toISOString()
             });
-            setSelectedIds(new Set());
         });
+
+        await batch.commit();
+        queryClient.invalidateQueries({ queryKey: ['admin-quests'] });
+        toast({
+            title: "Sucesso",
+            description: `${selectedIds.size} missão(ões) ${active ? 'ativada(s)' : 'desativada(s)'}`
+        });
+        setSelectedIds(new Set());
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

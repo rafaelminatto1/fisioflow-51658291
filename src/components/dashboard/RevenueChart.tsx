@@ -1,6 +1,7 @@
 // Gráfico de receita em tempo real
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
@@ -12,27 +13,39 @@ interface RevenueData {
   revenue: number;
 }
 
+interface PaymentDocument {
+  amount: number;
+  created_at: Timestamp;
+  status: string;
+}
+
 export function RevenueChart() {
   const [data, setData] = useState<RevenueData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadRevenueData = useCallback(async () => {
     try {
+      const db = getFirebaseDb();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7); // Últimos 7 dias
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase typed schema doesn't include payments table
-      const { data: payments } = await (supabase as any)
-        .from('payments')
-        .select('amount, created_at')
-        .eq('status', 'paid')
-        .gte('created_at', startDate.toISOString())
-        .order('created_at', { ascending: true });
+      const paymentsQuery = query(
+        collection(db, 'payments'),
+        where('status', '==', 'paid'),
+        where('created_at', '>=', Timestamp.fromDate(startDate)),
+        orderBy('created_at', 'asc')
+      );
 
-      if (payments) {
+      // Use onSnapshot for realtime updates
+      const unsubscribe = onSnapshot(paymentsQuery, (snapshot) => {
+        const payments: PaymentDocument[] = [];
+        snapshot.forEach((doc) => {
+          payments.push(doc.data() as PaymentDocument);
+        });
+
         // Agrupar por dia
-        const grouped = (payments as Array<{ amount: number; created_at: string }>).reduce((acc: Record<string, number>, payment: { amount: number; created_at: string }) => {
-          const date = format(new Date(payment.created_at), 'yyyy-MM-dd');
+        const grouped = payments.reduce((acc: Record<string, number>, payment: PaymentDocument) => {
+          const date = format(payment.created_at.toDate(), 'yyyy-MM-dd');
           acc[date] = (acc[date] || 0) + (payment.amount || 0);
           return acc;
         }, {});
@@ -43,46 +56,25 @@ export function RevenueChart() {
         }));
 
         setData(chartData);
-      }
+        setLoading(false);
+      }, (error) => {
+        logger.error('Erro ao carregar dados de receita', error, 'RevenueChart');
+        setLoading(false);
+      });
 
-      setLoading(false);
+      return unsubscribe;
     } catch (error) {
       logger.error('Erro ao carregar dados de receita', error, 'RevenueChart');
       setLoading(false);
+      return () => {};
     }
   }, []);
 
   useEffect(() => {
-    loadRevenueData();
-
-    // FIX: Track subscription state to avoid WebSocket errors
-    let isSubscribed = false;
-    const channel = supabase.channel('revenue-chart');
-
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'payments',
-          filter: 'status=eq.completed',
-        },
-        () => {
-          loadRevenueData();
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
-
+    const unsubscribe = loadRevenueData();
     return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
-        });
+      if (unsubscribe) {
+        unsubscribe();
       }
     };
   }, [loadRevenueData]);
@@ -131,4 +123,3 @@ export function RevenueChart() {
     </Card>
   );
 }
-

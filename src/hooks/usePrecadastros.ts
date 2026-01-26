@@ -1,10 +1,29 @@
+/**
+ * usePrecadastros - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('precadastro_tokens') → Firestore collection 'precadastro_tokens'
+ * - supabase.from('precadastros') → Firestore collection 'precadastros'
+ * - Joins with tokens replaced with separate queries
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
-import type { Json } from '@/integrations/supabase/types';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface PrecadastroToken {
   id: string;
@@ -34,9 +53,10 @@ export interface Precadastro {
   status: string;
   converted_at: string | null;
   patient_id: string | null;
-  dados_adicionais: Json | null;
+  dados_adicionais: Record<string, any> | null;
   created_at: string;
   updated_at: string;
+  token_nome?: string; // Joined field
 }
 
 export function usePrecadastroTokens() {
@@ -46,20 +66,19 @@ export function usePrecadastroTokens() {
     queryFn: async () => {
       if (!user) return [];
 
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profileData = profileDoc.exists() ? profileDoc.data() : null;
 
       if (!profileData?.organization_id) return [];
 
-      const { data, error } = await supabase
-        .from('precadastro_tokens')
-        .select('*')
-        .eq('organization_id', profileData.organization_id)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'precadastro_tokens'),
+        where('organization_id', '==', profileData.organization_id),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as PrecadastroToken[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PrecadastroToken[];
     },
     enabled: !!user
   });
@@ -72,20 +91,36 @@ export function usePrecadastros() {
     queryFn: async () => {
       if (!user) return [];
 
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profileData = profileDoc.exists() ? profileDoc.data() : null;
 
       if (!profileData?.organization_id) return [];
 
-      const { data, error } = await supabase
-        .from('precadastros')
-        .select('*, precadastro_tokens:token_id(nome)')
-        .eq('organization_id', profileData.organization_id)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'precadastros'),
+        where('organization_id', '==', profileData.organization_id),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(q);
+      const precadastros = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Fetch token names for each precadastro
+      const tokenIds = precadastros.map((p: any) => p.token_id).filter(Boolean);
+      const tokenMap = new Map<string, string>();
+
+      await Promise.all([...new Set(tokenIds)].map(async (tokenId) => {
+        const tokenDoc = await getDoc(doc(db, 'precadastro_tokens', tokenId));
+        if (tokenDoc.exists()) {
+          tokenMap.set(tokenId, tokenDoc.data().nome);
+        }
+      }));
+
+      // Attach token names
+      return precadastros.map((p: any) => ({
+        ...p,
+        token_nome: tokenMap.get(p.token_id),
+      })) as Precadastro[];
     },
     enabled: !!user
   });
@@ -99,7 +134,6 @@ export function useCreatePrecadastroToken() {
     mutationFn: async (data: Partial<PrecadastroToken>) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profileData = profileDoc.exists() ? profileDoc.data() : null;
 
@@ -108,18 +142,18 @@ export function useCreatePrecadastroToken() {
       // Generate unique token
       const token = crypto.randomUUID().replace(/-/g, '').slice(0, 12);
 
-      const { data: result, error } = await supabase
-        .from('precadastro_tokens')
-        .insert({
-          ...data,
-          organization_id: profileData.organization_id,
-          token
-        })
-        .select()
-        .single();
+      const tokenData = {
+        ...data,
+        organization_id: profileData.organization_id,
+        token,
+        usos_atuais: 0,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return result;
+      const docRef = await addDoc(collection(db, 'precadastro_tokens'), tokenData);
+      const docSnap = await getDoc(docRef);
+
+      return { id: docRef.id, ...docSnap.data() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
@@ -136,12 +170,8 @@ export function useUpdatePrecadastroToken() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<PrecadastroToken> & { id: string }) => {
-      const { error } = await supabase
-        .from('precadastro_tokens')
-        .update(data)
-        .eq('id', id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'precadastro_tokens', id);
+      await updateDoc(docRef, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
@@ -158,12 +188,12 @@ export function useUpdatePrecadastro() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<Precadastro> & { id: string }) => {
-      const { error } = await supabase
-        .from('precadastros')
-        .update(data)
-        .eq('id', id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'precadastros', id);
+      const updateData = {
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+      await updateDoc(docRef, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precadastros'] });

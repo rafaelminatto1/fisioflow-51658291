@@ -1,10 +1,20 @@
+/**
+ * Treatment Assistant Component - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.functions.invoke('ai-treatment-assistant') → Firebase Functions httpsCallable()
+ * - Removed unused Supabase imports
+ * - AI calls now use Firebase Cloud Functions
+ */
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import {
   Brain,
   Sparkles,
@@ -36,14 +46,19 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
       setActiveAction(action);
       setSuggestion(null);
 
-      const { data, error } = await supabase.functions.invoke('ai-treatment-assistant', {
-        body: { patientId, action }
-      });
+      // Call Firebase Cloud Function
+      const functions = getFirebaseFunctions();
+      const treatmentAssistantFunction = httpsCallable(functions, 'ai-treatment-assistant');
+      const result = await treatmentAssistantFunction({ patientId, action });
 
-      if (error) throw error;
+      const data = result.data as any;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       setSuggestion(data.suggestion);
-      
+
       toast({
         title: '✨ Análise de IA concluída',
         description: 'Sugestões geradas com sucesso',
@@ -80,7 +95,7 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
 
       {/* Action Buttons Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
+        <Card
           className="cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 border-2 hover:border-primary/50"
           onClick={() => !loading && callAI('suggest_treatment')}
         >
@@ -100,7 +115,7 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 border-2 hover:border-primary/50"
           onClick={() => !loading && callAI('predict_adherence')}
         >
@@ -120,7 +135,7 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 border-2 hover:border-primary/50"
           onClick={() => !loading && callAI('generate_report')}
         >

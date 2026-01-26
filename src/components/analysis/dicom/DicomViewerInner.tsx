@@ -11,7 +11,8 @@ import {
     StackViewport,
     getRenderingEngine,
 } from '@cornerstonejs/core';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseFunctions } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
 import {
     ToolGroupManager,
     PanTool,
@@ -132,8 +133,11 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
                 console.warn("DICOM Loader disabled for build verification");
             } else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
                 try {
+                    const functions = getFirebaseFunctions();
+                    const dicomProxyFunction = httpsCallable(functions, 'dicom-proxy');
+
                     const path = `studies/${studyInstanceUid}/series/${seriesInstanceUid}/instances`;
-                    const { data: instances, error } = await supabase.functions.invoke('dicom-proxy', {
+                    const result = await dicomProxyFunction({
                         method: 'GET',
                         headers: {
                             'Accept': 'application/dicom+json',
@@ -141,9 +145,10 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
                         }
                     });
 
-                    if (!error && instances && instances.length > 0) {
+                    if (result.data) {
+                        const instances = result.data as Array<Record<string, { Value?: string[] }>>;
                         const baseUrl = wadoUrl;
-                        imageIds = instances.map((inst: Record<string, { Value?: string[] }>) => {
+                        imageIds = instances.map((inst) => {
                             const sopUid = inst['00080018']?.Value?.[0];
                             const dicomWebPath = `studies/${studyInstanceUid}/series/${seriesInstanceUid}/instances/${sopUid}/frames/1`;
                             return `wadors:${baseUrl}?path=${encodeURIComponent(dicomWebPath)}`;

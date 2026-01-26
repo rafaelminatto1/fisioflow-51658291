@@ -13,13 +13,29 @@ import {
     AddCustomFieldDialog,
     SaveAsTemplateDialog,
 } from '@/components/evaluation';
+/**
+ * New Evaluation Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - supabase.from('patient_goals') → Firestore collection 'patient_goals'
+ * - supabase.from('patient_pathologies') → Firestore collection 'patient_pathologies'
+ * - supabase.from('patient_surgeries') → Firestore collection 'patient_surgeries'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('patient_evaluation_responses') → Firestore collection 'patient_evaluation_responses'
+ * - Joins replaced with separate queries
+ */
+
 import type { EvaluationTemplate, TemplateField } from '@/components/evaluation';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from 'firebase/firestore';
 import { PatientHelpers } from '@/types';
+
+const db = getFirebaseDb();
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
@@ -56,22 +72,23 @@ export default function NewEvaluationPage() {
         queryFn: async () => {
             if (!patientId) return null;
 
-            const [patientRes, goalsRes, pathologiesRes, surgeriesRes, appointmentsRes] = await Promise.all([
-                supabase.from('patients').select('*').eq('id', patientId).single(),
-                supabase.from('patient_goals').select('*').eq('patient_id', patientId),
-                supabase.from('patient_pathologies').select('*').eq('patient_id', patientId),
-                supabase.from('patient_surgeries').select('*').eq('patient_id', patientId),
-                supabase.from('appointments').select('*').eq('patient_id', patientId).order('appointment_date', { ascending: false }).limit(20)
+            const [patientDoc, goalsQuery, pathologiesQuery, surgeriesQuery, appointmentsQuery] = await Promise.all([
+                getDoc(doc(db, 'patients', patientId)),
+                getDocs(query(collection(db, 'patient_goals'), where('patient_id', '==', patientId))),
+                getDocs(query(collection(db, 'patient_pathologies'), where('patient_id', '==', patientId))),
+                getDocs(query(collection(db, 'patient_surgeries'), where('patient_id', '==', patientId))),
+                getDocs(query(collection(db, 'appointments'), where('patient_id', '==', patientId), orderBy('appointment_date', 'desc'), limitClause(20)))
             ]);
 
-            if (patientRes.error) throw patientRes.error;
+            if (!patientDoc.exists()) throw new Error('Paciente não encontrado');
 
             return {
-                ...patientRes.data,
-                goals: goalsRes.data || [],
-                pathologies: pathologiesRes.data || [],
-                surgeries: surgeriesRes.data || [],
-                appointments: appointmentsRes.data || []
+                id: patientDoc.id,
+                ...patientDoc.data(),
+                goals: goalsQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                pathologies: pathologiesQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                surgeries: surgeriesQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                appointments: appointmentsQuery.docs.map(doc => ({ id: doc.id, ...doc.data() }))
             };
         },
         enabled: !!patientId
@@ -118,19 +135,13 @@ export default function NewEvaluationPage() {
         try {
             // Save evaluation responses
             if (selectedTemplate && Object.keys(fieldValues).length > 0) {
-                const { error: responseError } = await supabase
-                    .from('patient_evaluation_responses')
-                    .insert({
-                        patient_id: patientId,
-                        form_id: selectedTemplate.id,
-                        responses: fieldValues,
-                        appointment_id: appointmentId || null,
-                    });
-
-                if (responseError) {
-                    console.error('Error saving evaluation responses:', responseError);
-                    throw responseError;
-                }
+                await addDoc(collection(db, 'patient_evaluation_responses'), {
+                    patient_id: patientId,
+                    form_id: selectedTemplate.id,
+                    responses: fieldValues,
+                    appointment_id: appointmentId || null,
+                    created_at: new Date().toISOString(),
+                });
 
                 // Increment template usage counter
                 await incrementTemplateUsage.mutateAsync(selectedTemplate.id);
@@ -143,7 +154,7 @@ export default function NewEvaluationPage() {
 
             // Update appointment status if applicable
             if (appointmentId) {
-                await supabase.from('appointments').update({ status: 'realizado' }).eq('id', appointmentId);
+                await updateDoc(doc(db, 'appointments', appointmentId), { status: 'realizado' });
             }
 
             navigate('/schedule');

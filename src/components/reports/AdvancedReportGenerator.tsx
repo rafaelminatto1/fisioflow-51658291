@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Checkbox } from '@/components/ui/checkbox';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -45,17 +46,31 @@ export function AdvancedReportGenerator() {
   };
 
   const fetchReportData = async () => {
+    const db = getFirebaseDb();
     const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
     const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null;
 
-    let query = supabase.from('appointments').select('*, patients(full_name, email, phone)');
+    let q = query(collection(db, 'appointments'), orderBy('appointment_date', 'desc'));
 
-    if (startDate) query = query.gte('appointment_date', startDate);
-    if (endDate) query = query.lte('appointment_date', endDate);
+    if (startDate) {
+      q = query(collection(db, 'appointments'), where('appointment_date', '>=', startDate), orderBy('appointment_date', 'desc'));
+    }
+    if (endDate) {
+      q = query(collection(db, 'appointments'), where('appointment_date', '<=', endDate), orderBy('appointment_date', 'desc'));
+    }
 
-    const { data, error } = await query;
+    const snapshot = await getDocs(q);
+    const data: any[] = [];
+    snapshot.forEach((doc) => {
+      const appointmentData = doc.data();
+      // For now, we'll just get the basic data. Patient names would need to be fetched separately.
+      data.push({
+        id: doc.id,
+        ...appointmentData,
+        patients: { full_name: appointmentData.patient_name || 'N/A' }
+      });
+    });
 
-    if (error) throw error;
     return data;
   };
 

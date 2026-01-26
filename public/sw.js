@@ -66,14 +66,14 @@ const CONFIG = {
 /**
  * Gera nome do cache baseado em tipo
  */
-function getCacheName(type: string): string {
+function getCacheName(type) {
   return `${CONFIG.CACHE_PREFIX}-${type}-${CONFIG.CACHE_VERSION}`;
 }
 
 /**
  * Determina a estratégia de cache baseado na URL
  */
-function getStrategy(url: URL): string {
+function getStrategy(url) {
   const pathname = url.pathname;
 
   // Assets estáticos
@@ -103,14 +103,14 @@ function getStrategy(url: URL): string {
 /**
  * Verifica se a requisição é navegational (página)
  */
-function isNavigationRequest(request: Request): boolean {
+function isNavigationRequest(request) {
   return request.mode === 'navigate';
 }
 
 /**
  * Converte stream para texto
  */
-async function streamToText(stream: ReadableStream): Promise<string> {
+async function streamToText(stream) {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let result = '';
@@ -131,7 +131,7 @@ async function streamToText(stream: ReadableStream): Promise<string> {
 /**
  * Cache First: Tenta cache primeiro, se não existe vai para rede
  */
-async function cacheFirst(request: Request, cacheName: string): Promise<Response> {
+async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
 
   // Tentar cache primeiro
@@ -163,7 +163,7 @@ async function cacheFirst(request: Request, cacheName: string): Promise<Response
 /**
  * Network First: Tenta rede primeiro, se falhar usa cache
  */
-async function networkFirst(request: Request, cacheName: string): Promise<Response> {
+async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
 
   try {
@@ -197,7 +197,7 @@ async function networkFirst(request: Request, cacheName: string): Promise<Respon
 /**
  * Stale While Revalidate: Retorna cache imediatamente, atualiza em background
  */
-async function staleWhileRevalidate(request: Request, cacheName: string): Promise<Response> {
+async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
 
   // Buscar cache em paralelo com rede
@@ -229,7 +229,7 @@ async function staleWhileRevalidate(request: Request, cacheName: string): Promis
 /**
  * Network Only: Apenas rede, sem cache
  */
-async function networkOnly(request: Request): Promise<Response> {
+async function networkOnly(request) {
   return fetch(request);
 }
 
@@ -286,7 +286,7 @@ self.addEventListener('activate', (event) => {
       const cacheNames = await caches.keys();
       const cachesToDelete = cacheNames.filter(name => {
         return name.startsWith(CONFIG.CACHE_PREFIX) &&
-               !name.includes(CONFIG.CACHE_VERSION);
+          !name.includes(CONFIG.CACHE_VERSION);
       });
 
       await Promise.all(
@@ -478,7 +478,7 @@ async function syncEvolutions() {
 /**
  * Busca dados pendentes do IndexedDB
  */
-async function getPendingData(store: string): Promise<any[]> {
+async function getPendingData(store) {
   // Implementação depende da estrutura do IndexedDB
   // Por ora retorna array vazio
   return [];
@@ -487,7 +487,7 @@ async function getPendingData(store: string): Promise<any[]> {
 /**
  * Remove dado pendente do IndexedDB
  */
-async function removePendingData(store: string, id: string): Promise<void> {
+async function removePendingData(store, id) {
   // Implementação depende da estrutura do IndexedDB
 }
 

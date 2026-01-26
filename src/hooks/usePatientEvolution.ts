@@ -1,12 +1,40 @@
+/**
+ * usePatientEvolution - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patient_surgeries') → Firestore collection 'patient_surgeries'
+ * - supabase.from('patient_goals') → Firestore collection 'patient_goals'
+ * - supabase.from('patient_pathologies') → Firestore collection 'patient_pathologies'
+ * - supabase.from('evolution_measurements') → Firestore collection 'evolution_measurements'
+ * - supabase.from('treatment_sessions') → Firestore collection 'treatment_sessions'
+ * - supabase.auth.getUser() → Firebase Auth currentUser
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { getAuth } from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getAuth();
 
 // Types
 export interface PatientSurgery {
@@ -69,19 +97,24 @@ export interface EvolutionMeasurement {
   created_at: string;
 }
 
+// Helper para obter usuário atual
+const getCurrentUser = () => {
+  return auth.currentUser;
+};
+
 // Hook para cirurgias
 export const usePatientSurgeries = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-surgeries', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_surgeries')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('surgery_date', { ascending: false });
+      const q = query(
+        collection(db, 'patient_surgeries'),
+        where('patient_id', '==', patientId),
+        orderBy('surgery_date', 'desc')
+      );
 
-      if (error) throw error;
-      return data as PatientSurgery[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSurgery[];
     },
     enabled: !!patientId
   });
@@ -92,14 +125,14 @@ export const usePatientGoals = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-goals', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_goals')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'patient_goals'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as PatientGoal[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoal[];
     },
     enabled: !!patientId
   });
@@ -110,14 +143,14 @@ export const usePatientPathologies = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-pathologies', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_pathologies')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'patient_pathologies'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as PatientPathology[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPathology[];
     },
     enabled: !!patientId
   });
@@ -128,13 +161,22 @@ export const useRequiredMeasurements = (pathologyNames: string[]) => {
   return useQuery({
     queryKey: ['required-measurements', pathologyNames],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('pathology_required_measurements')
-        .select('*')
-        .in('pathology_name', pathologyNames);
+      // Firestore não tem "in" para múltiplos valores em strings facilmente
+      // Vamos fazer queries separadas e combinar
+      const allResults: PathologyRequiredMeasurement[] = [];
 
-      if (error) throw error;
-      return data as PathologyRequiredMeasurement[];
+      for (const name of pathologyNames) {
+        const q = query(
+          collection(db, 'pathology_required_measurements'),
+          where('pathology_name', '==', name)
+        );
+        const snapshot = await getDocs(q);
+        snapshot.docs.forEach(doc => {
+          allResults.push({ id: doc.id, ...doc.data() } as PathologyRequiredMeasurement);
+        });
+      }
+
+      return allResults;
     },
     enabled: pathologyNames.length > 0
   });
@@ -145,14 +187,14 @@ export const useEvolutionMeasurements = (patientId: string) => {
   return useQuery({
     queryKey: ['evolution-measurements', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('evolution_measurements')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('measured_at', { ascending: false });
+      const q = query(
+        collection(db, 'evolution_measurements'),
+        where('patient_id', '==', patientId),
+        orderBy('measured_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as EvolutionMeasurement[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as EvolutionMeasurement[];
     },
     enabled: !!patientId
   });
@@ -165,23 +207,20 @@ export const useCreateMeasurement = () => {
 
   return useMutation({
     mutationFn: async (measurement: Omit<EvolutionMeasurement, 'id' | 'created_at'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const user = getCurrentUser();
+      if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('evolution_measurements')
-        .insert({
-          ...measurement,
-          created_by: userData.user.id
-        })
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'evolution_measurements'), {
+        ...measurement,
+        created_by: user.uid,
+        created_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['evolution-measurements', data.patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as any).patient_id] });
       toast({
         title: 'Medição registrada',
         description: 'A medição foi registrada com sucesso.'
@@ -204,15 +243,14 @@ export const useUpdateGoal = () => {
 
   return useMutation({
     mutationFn: async ({ goalId, data }: { goalId: string; data: Partial<PatientGoal> }) => {
-      const { data: goal, error } = await supabase
-        .from('patient_goals')
-        .update(data)
-        .eq('id', goalId)
-        .select()
-        .single();
+      const docRef = doc(db, 'patient_goals', goalId);
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return goal as PatientGoal;
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data() } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -228,15 +266,17 @@ export const useCompleteGoal = () => {
 
   return useMutation({
     mutationFn: async (goalId: string) => {
-      const { data: goal, error } = await supabase
-        .from('patient_goals')
-        .update({ status: 'concluido', completed_at: new Date().toISOString() })
-        .eq('id', goalId)
-        .select()
-        .single();
+      const docRef = doc(db, 'patient_goals', goalId);
+      const updateData = {
+        status: 'concluido',
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return goal as PatientGoal;
+      await updateDoc(docRef, updateData);
+
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data() } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -252,24 +292,22 @@ export const useCreateGoal = () => {
 
   return useMutation({
     mutationFn: async (goal: Omit<PatientGoal, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'status'> & { status?: PatientGoal['status'] }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Usuário não autenticado');
+      const user = getCurrentUser();
+      if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('patient_goals')
-        .insert({
-          ...goal,
-          status: goal.status || 'em_andamento',
-          created_by: userData.user.id
-        })
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'patient_goals'), {
+        ...goal,
+        status: goal.status || 'em_andamento',
+        created_by: user.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as any).patient_id] });
       toast({
         title: 'Objetivo criado',
         description: 'O objetivo foi criado com sucesso.'
@@ -292,23 +330,23 @@ export const useUpdateGoalStatus = () => {
 
   return useMutation({
     mutationFn: async ({ goalId, status }: { goalId: string; status: 'em_andamento' | 'concluido' | 'cancelado' }) => {
-      const updates: { status: string; completed_at?: string } = { status };
+      const docRef = doc(db, 'patient_goals', goalId);
+      const updates: any = {
+        status,
+        updated_at: new Date().toISOString(),
+      };
+
       if (status === 'concluido') {
         updates.completed_at = new Date().toISOString();
       }
 
-      const { data, error } = await supabase
-        .from('patient_goals')
-        .update(updates)
-        .eq('id', goalId)
-        .select()
-        .single();
+      await updateDoc(docRef, updates);
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as any).patient_id] });
       toast({
         title: 'Objetivo atualizado',
         description: 'O status do objetivo foi atualizado.'
@@ -402,18 +440,22 @@ export function usePatientEvolutionData() {
         ...soapData
       });
 
-      // Save to treatment_sessions
-      const { data: { user } } = await supabase.auth.getUser();
+      // Save to treatment_sessions (Firebase)
+      const user = getCurrentUser();
       if (user && appointmentId) {
-        const { data: existingSession } = await supabase
-          .from('treatment_sessions')
-          .select('id')
-          .eq('appointment_id', appointmentId)
-          .maybeSingle();
+        // Check if session exists
+        const q = query(
+          collection(db, 'treatment_sessions'),
+          where('appointment_id', '==', appointmentId),
+          limit(1)
+        );
+
+        const snapshot = await getDocs(q);
+        const existingSession = snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 
         const sessionData = {
           patient_id: patientId,
-          therapist_id: user.id,
+          therapist_id: user.uid,
           appointment_id: appointmentId,
           session_date: new Date().toISOString(),
           session_type: 'treatment',
@@ -424,13 +466,14 @@ export function usePatientEvolutionData() {
           exercises_performed: [],
           observations: soapData.assessment || '',
           status: 'completed',
-          created_by: user.id
+          created_by: user.uid,
+          updated_at: new Date().toISOString(),
         };
 
         if (existingSession) {
-          await supabase.from('treatment_sessions').update(sessionData).eq('id', existingSession.id);
+          await updateDoc(doc(db, 'treatment_sessions', existingSession.id), sessionData);
         } else {
-          await supabase.from('treatment_sessions').insert(sessionData);
+          await addDoc(collection(db, 'treatment_sessions'), sessionData);
         }
       }
 

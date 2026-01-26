@@ -1,6 +1,17 @@
+/**
+ * useTemplateFavorites - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
+ * - Optimistic updates preserved
+ */
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, updateDoc, doc, query, where, orderBy } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 /**
  * Hook para gerenciar favoritos de templates
@@ -10,12 +21,8 @@ export function useToggleFavorite() {
 
   return useMutation({
     mutationFn: async ({ templateId, isFavorite }: { templateId: string; isFavorite: boolean }) => {
-      const { error } = await supabase
-        .from('evaluation_forms')
-        .update({ is_favorite: !isFavorite })
-        .eq('id', templateId);
-
-      if (error) throw error;
+      const docRef = doc(db, 'evaluation_forms', templateId);
+      await updateDoc(docRef, { is_favorite: !isFavorite });
       return { templateId, newFavoriteStatus: !isFavorite };
     },
     onMutate: async ({ templateId, isFavorite }) => {
@@ -62,15 +69,15 @@ export function useFavoriteTemplates() {
   return useQuery({
     queryKey: ['evaluation-forms', 'favorites'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('evaluation_forms')
-        .select('*')
-        .eq('is_favorite', true)
-        .eq('ativo', true)
-        .order('nome');
+      const q = query(
+        collection(db, 'evaluation_forms'),
+        where('is_favorite', '==', true),
+        where('ativo', '==', true),
+        orderBy('nome', 'asc')
+      );
 
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
   });
 }

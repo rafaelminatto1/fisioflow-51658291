@@ -1,8 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+    collection,
+    query,
+    where,
+    onSnapshot,
+    Query,
+    limit
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 interface UseRealtimeSubscriptionProps {
     table: string;
@@ -14,15 +24,14 @@ interface UseRealtimeSubscriptionProps {
 }
 
 /**
- * Hook reutilizável para inscrições no Supabase Realtime.
- * Gerencia automaticamente o filtro por organização e invalidação de queries.
- *
- * FIX: Tracka o estado da subscription para evitar erros de WebSocket
- * "WebSocket is closed before the connection is established"
+ * Hook reutilizável para inscrições no Firebase Firestore Realtime.
+ * Substitui o Supabase Realtime.
+ * 
+ * Adaptação do filtro: Tenta converter filtros simples do Supabase (col=eq.val)
  */
 export function useRealtimeSubscription({
     table,
-    schema = 'public',
+    schema = 'public', // Ignored in Firebase
     queryKey,
     event = '*',
     filter,
@@ -31,12 +40,10 @@ export function useRealtimeSubscription({
     const queryClient = useQueryClient();
     const { profile } = useAuth();
     const organizationId = profile?.organization_id;
-    const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const isSubscribedRef = useRef(false);
 
     useEffect(() => {
         // Só inscrever se estiver habilitado e tivermos o ID da organização (se necessário)
-        // Se um filtro específico for passado, usamos ele. Se não, tentamos filtrar por organização automaticamente.
         const effectiveFilter = filter !== undefined
             ? filter
             : organizationId
@@ -48,70 +55,49 @@ export function useRealtimeSubscription({
         }
 
         const channelName = `${table}-changes-${organizationId || 'all'}`;
-        logger.info(`Configurando Realtime para ${table}`, { channelName, filter: effectiveFilter }, 'useRealtimeSubscription');
+        logger.info(`Configurando Realtime (Firestore) para ${table}`, { channelName, filter: effectiveFilter }, 'useRealtimeSubscription');
 
-        // Reset subscription state
-        isSubscribedRef.current = false;
+        isSubscribedRef.current = true; // Optimistic
 
-        const channel = supabase.channel(channelName);
+        // Build Query
+        const colRef = collection(db, table);
+        let q: Query = colRef;
 
-        // Type assertion para evitar erro de TypeScript com postgres_changes
-        // O tipo Database genérico não reconhece as tabelas específicas
-        (channel as any)
-            .on(
-                'postgres_changes',
-                {
-                    event,
-                    schema,
-                    table,
-                    filter: effectiveFilter
-                },
-                () => {
-                    logger.info(`Realtime event: ${table}`, {}, 'useRealtimeSubscription');
-
-                    // Invalidar queries se queryKey for fornecida
-                    if (queryKey) {
-                        queryClient.invalidateQueries({ queryKey });
-                    }
-
-                    // Notificações básicas (pode ser expandido ou customizado)
-                    // Isso substitui a lógica repetida no useAppointments e outros
-                    // Futuramente pode aceitar um callback 'onEvent' para customização
+        // Try to parse Supabase filter: "field=eq.value"
+        if (effectiveFilter) {
+            const match = effectiveFilter.match(/^(.+)=eq\.(.+)$/);
+            if (match) {
+                const [, field, value] = match;
+                // Clean quotes if present
+                const effectiveValue = value.replace(/^['"]|['"]$/g, '');
+                if (effectiveValue) {
+                    q = query(colRef, where(field, '==', effectiveValue));
                 }
-            )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    isSubscribedRef.current = true;
-                    logger.debug(`Realtime conectado: ${channelName}`, {}, 'useRealtimeSubscription');
-                }
-                if (status === 'CHANNEL_ERROR') {
-                    logger.error(`Erro no canal Realtime: ${channelName}`, {}, 'useRealtimeSubscription');
-                }
-                if (status === 'TIMED_OUT') {
-                    logger.warn(`Timeout no canal Realtime: ${channelName}`, {}, 'useRealtimeSubscription');
-                }
-                if (status === 'CLOSED') {
-                    isSubscribedRef.current = false;
-                    logger.debug(`Canal Realtime fechado: ${channelName}`, {}, 'useRealtimeSubscription');
-                }
-            });
+            } else if (effectiveFilter === 'organization_id=eq.undefined') {
+                // Skip if organization_id is undefined string
+                isSubscribedRef.current = false;
+                return;
+            }
+        }
 
-        channelRef.current = channel;
+        // Firestore listener
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            // Check if there are changes (though snapshot always means update or local init)
+            // Invalidating queries
+            if (queryKey) {
+                queryClient.invalidateQueries({ queryKey });
+            }
+            logger.debug(`Realtime update on ${table}`, { docs: snapshot.size }, 'useRealtimeSubscription');
+
+        }, (error) => {
+            logger.error(`Erro no listener Realtime: ${channelName}`, error, 'useRealtimeSubscription');
+            isSubscribedRef.current = false;
+        });
 
         return () => {
-            logger.debug(`Cleanup subscription ${channelName}`, { isSubscribed: isSubscribedRef.current }, 'useRealtimeSubscription');
-
-            // Só chama removeChannel se a subscription foi estabelecida
-            // Isso previne o erro "WebSocket is closed before the connection is established"
-            if (isSubscribedRef.current && channelRef.current) {
-                supabase.removeChannel(channelRef.current).catch((err) => {
-                    // Ignora erros de cleanup - o canal pode já ter sido fechado
-                    logger.debug(`Erro ao remover canal (ignorado): ${channelName}`, err, 'useRealtimeSubscription');
-                });
-            }
-
+            logger.debug(`Cleanup subscription ${channelName}`, {}, 'useRealtimeSubscription');
             isSubscribedRef.current = false;
-            channelRef.current = null;
+            unsubscribe();
         };
     }, [table, schema, event, filter, enabled, queryClient, organizationId, queryKey]);
 }

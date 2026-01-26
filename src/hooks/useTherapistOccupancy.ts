@@ -1,8 +1,17 @@
+/**
+ * useTherapistOccupancy - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('user_roles') → Firestore collection 'user_roles'
+ * - supabase.from('profiles') → Firestore collection 'profiles'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - Joins replaced with separate queries
+ */
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore';
 
 export interface TherapistOccupancyData {
   id: string;
@@ -114,26 +123,45 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       let todayAppointments: any[] = [];
 
       if (therapistIds.length > 0) {
-        const { data: appointmentsData, error: aptsError } = await supabase
-          .from('appointments')
-          .select('id, therapist_id, appointment_date, appointment_time, duration, status')
-          .gte('appointment_date', format(start, 'yyyy-MM-dd'))
-          .lte('appointment_date', format(end, 'yyyy-MM-dd'))
-          .neq('status', 'cancelado')
-          .in('therapist_id', therapistIds);
+        // Firestore has a limit of 10 items per 'in' query, so we need to chunk
+        const chunkSize = 10;
+        const chunks = [];
+        for (let i = 0; i < therapistIds.length; i += chunkSize) {
+          chunks.push(therapistIds.slice(i, i + chunkSize));
+        }
 
-        if (aptsError) throw aptsError;
-        appointments = appointmentsData || [];
+        // Buscar agendamentos do período
+        const periodAppointmentsResults = await Promise.all(
+          chunks.map(chunk =>
+            getDocs(
+              query(
+                collection(db, 'appointments'),
+                where('therapist_id', 'in', chunk),
+                where('appointment_date', '>=', format(start, 'yyyy-MM-dd')),
+                where('appointment_date', '<=', format(end, 'yyyy-MM-dd'))
+              )
+            )
+          )
+        );
+        appointments = periodAppointmentsResults.flatMap(snapshot =>
+          snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        ).filter(a => a.status !== 'cancelado');
 
         // Buscar agendamentos de hoje para dados horários
-        const { data: todayData } = await supabase
-          .from('appointments')
-          .select('id, therapist_id, appointment_time, duration, status')
-          .eq('appointment_date', today)
-          .neq('status', 'cancelado')
-          .in('therapist_id', therapistIds);
-
-        todayAppointments = todayData || [];
+        const todayAppointmentsResults = await Promise.all(
+          chunks.map(chunk =>
+            getDocs(
+              query(
+                collection(db, 'appointments'),
+                where('therapist_id', 'in', chunk),
+                where('appointment_date', '==', today)
+              )
+            )
+          )
+        );
+        todayAppointments = todayAppointmentsResults.flatMap(snapshot =>
+          snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        ).filter(a => a.status !== 'cancelado');
       }
 
       // Calcular métricas por fisioterapeuta

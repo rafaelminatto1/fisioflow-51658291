@@ -1,9 +1,30 @@
+/**
+ * useSatisfactionSurveys - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('satisfaction_surveys') → Firestore collection 'satisfaction_surveys'
+ * - Joins with patients, appointments replaced with separate queries
+ * - Therapist names from Firestore profiles
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface SatisfactionSurvey {
   id: string;
@@ -66,48 +87,71 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
   return useQuery({
     queryKey: ['satisfaction-surveys', filters],
     queryFn: async () => {
-      let supaQuery = supabase
-        .from('satisfaction_surveys')
-        .select(`
-          *,
-          patient:patients(id, full_name),
-          appointment:appointments(id, start_time)
-        `)
-        .order('sent_at', { ascending: false });
+      const q = query(
+        collection(db, 'satisfaction_surveys'),
+        orderBy('sent_at', 'desc')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Apply filters
       if (filters?.patient_id) {
-        supaQuery = supaQuery.eq('patient_id', filters.patient_id);
+        data = data.filter((item: any) => item.patient_id === filters.patient_id);
       }
 
       if (filters?.therapist_id) {
-        supaQuery = supaQuery.eq('therapist_id', filters.therapist_id);
+        data = data.filter((item: any) => item.therapist_id === filters.therapist_id);
       }
 
       if (filters?.start_date) {
-        supaQuery = supaQuery.gte('sent_at', filters.start_date);
+        data = data.filter((item: any) => item.sent_at >= filters.start_date);
       }
 
       if (filters?.end_date) {
-        supaQuery = supaQuery.lte('sent_at', filters.end_date);
+        data = data.filter((item: any) => item.sent_at <= filters.end_date);
       }
 
       if (filters?.responded !== undefined) {
-        if (filters.responded) {
-          supaQuery = supaQuery.not('responded_at', 'is', null);
-        } else {
-          supaQuery = supaQuery.is('responded_at', null);
-        }
+        data = data.filter((item: any) => {
+          const hasResponded = item.responded_at !== null;
+          return filters.responded ? hasResponded : !hasResponded;
+        });
       }
 
-      const { data, error } = await supaQuery;
-      if (error) throw error;
+      // Fetch patient data
+      const patientIds = data.map((item: any) => item.patient_id).filter(Boolean);
+      const patientMap = new Map<string, any>();
 
-      // Enrich with therapist names from Firestore
-      const therapistIds = [...new Set((data || []).map(item => item.therapist_id).filter(Boolean))];
+      await Promise.all([...new Set(patientIds)].map(async (patientId) => {
+        const patientDoc = await getDoc(doc(db, 'patients', patientId));
+        if (patientDoc.exists()) {
+          patientMap.set(patientId, {
+            id: patientDoc.id,
+            full_name: patientDoc.data().full_name,
+          });
+        }
+      }));
+
+      // Fetch appointment data
+      const appointmentIds = data.map((item: any) => item.appointment_id).filter(Boolean);
+      const appointmentMap = new Map<string, any>();
+
+      await Promise.all([...new Set(appointmentIds)].map(async (appointmentId) => {
+        const appointmentDoc = await getDoc(doc(db, 'appointments', appointmentId));
+        if (appointmentDoc.exists()) {
+          appointmentMap.set(appointmentId, {
+            id: appointmentDoc.id,
+            start_time: appointmentDoc.data().start_time,
+          });
+        }
+      }));
+
+      // Fetch therapist names from Firestore
+      const therapistIds = [...new Set(data.map((item: any) => item.therapist_id).filter(Boolean))];
       const therapistMap = new Map<string, string>();
 
       if (therapistIds.length > 0) {
-        const db = getFirebaseDb();
         const profilesQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
         const profilesSnap = await getDocs(profilesQ);
         profilesSnap.forEach(doc => {
@@ -116,8 +160,10 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       }
 
       // Map data to expected format
-      return (data || []).map((item: any) => ({
+      return data.map((item: any) => ({
         ...item,
+        patient: patientMap.get(item.patient_id),
+        appointment: appointmentMap.get(item.appointment_id),
         therapist: item.therapist_id ? {
           id: item.therapist_id,
           name: therapistMap.get(item.therapist_id) || 'Terapeuta'
@@ -131,32 +177,29 @@ export function useSurveyStats() {
   return useQuery({
     queryKey: ['survey-stats'],
     queryFn: async () => {
-      const { data: surveys, error } = await supabase
-        .from('satisfaction_surveys')
-        .select('nps_score, responded_at, q_care_quality, q_professionalism, q_communication');
+      const snapshot = await getDocs(collection(db, 'satisfaction_surveys'));
+      const surveys = snapshot.docs.map(doc => doc.data());
 
-      if (error) throw error;
-
-      const total = surveys?.length || 0;
-      const respondedSurveys = surveys?.filter(s => s.responded_at) || [];
+      const total = surveys.length || 0;
+      const respondedSurveys = surveys.filter((s: any) => s.responded_at);
       const respondedCount = respondedSurveys.length;
 
-      const promotores = respondedSurveys.filter(s => s.nps_score && s.nps_score >= 9).length;
-      const neutros = respondedSurveys.filter(s => s.nps_score && s.nps_score >= 7 && s.nps_score <= 8).length;
-      const detratores = respondedSurveys.filter(s => s.nps_score && s.nps_score <= 6).length;
+      const promotores = respondedSurveys.filter((s: any) => s.nps_score && s.nps_score >= 9).length;
+      const neutros = respondedSurveys.filter((s: any) => s.nps_score && s.nps_score >= 7 && s.nps_score <= 8).length;
+      const detratores = respondedSurveys.filter((s: any) => s.nps_score && s.nps_score <= 6).length;
 
       const nps = respondedCount > 0 ? Math.round(((promotores - detratores) / respondedCount) * 100) : 0;
 
       const avgCareQuality = respondedCount > 0
-        ? respondedSurveys.reduce((sum, s) => sum + (s.q_care_quality || 0), 0) / respondedCount
+        ? respondedSurveys.reduce((sum, s: any) => sum + (s.q_care_quality || 0), 0) / respondedCount
         : 0;
 
       const avgProfessionalism = respondedCount > 0
-        ? respondedSurveys.reduce((sum, s) => sum + (s.q_professionalism || 0), 0) / respondedCount
+        ? respondedSurveys.reduce((sum, s: any) => sum + (s.q_professionalism || 0), 0) / respondedCount
         : 0;
 
       const avgCommunication = respondedCount > 0
-        ? respondedSurveys.reduce((sum, s) => sum + (s.q_communication || 0), 0) / respondedCount
+        ? respondedSurveys.reduce((sum, s: any) => sum + (s.q_communication || 0), 0) / respondedCount
         : 0;
 
       const responseRate = total > 0 ? Math.round((respondedCount / total) * 100) : 0;
@@ -184,7 +227,6 @@ export function useCreateSurvey() {
     mutationFn: async (data: CreateSurveyData) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profileData = profileDoc.exists() ? profileDoc.data() : null;
 
@@ -192,21 +234,30 @@ export function useCreateSurvey() {
         throw new Error('Organização não encontrada');
       }
 
-      const { data: survey, error } = await supabase
-        .from('satisfaction_surveys')
-        .insert({
-          ...data,
-          organization_id: profileData.organization_id,
-          responded_at: new Date().toISOString(),
-        })
-        .select(`
-          *,
-          patient:patients(id, full_name)
-        `)
-        .single();
+      const surveyData = {
+        ...data,
+        organization_id: profileData.organization_id,
+        sent_at: new Date().toISOString(),
+        responded_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return survey as SatisfactionSurvey;
+      const docRef = await addDoc(collection(db, 'satisfaction_surveys'), surveyData);
+      const docSnap = await getDoc(docRef);
+
+      // Fetch patient data
+      const patientDoc = await getDoc(doc(db, 'patients', data.patient_id));
+      const patient = patientDoc.exists() ? {
+        id: patientDoc.id,
+        full_name: patientDoc.data().full_name,
+      } : null;
+
+      return {
+        id: docRef.id,
+        ...docSnap.data(),
+        patient,
+      } as SatisfactionSurvey;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys'] });
@@ -224,15 +275,16 @@ export function useUpdateSurvey() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<CreateSurveyData> & { id: string }) => {
-      const { data: survey, error } = await supabase
-        .from('satisfaction_surveys')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'satisfaction_surveys', id);
+      const updateData = {
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return survey as SatisfactionSurvey;
+      await updateDoc(docRef, updateData);
+
+      const docSnap = await getDoc(docRef);
+      return { id, ...docSnap.data() } as SatisfactionSurvey;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys'] });
@@ -250,12 +302,7 @@ export function useDeleteSurvey() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('satisfaction_surveys')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'satisfaction_surveys', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys'] });
@@ -267,4 +314,3 @@ export function useDeleteSurvey() {
     },
   });
 }
-

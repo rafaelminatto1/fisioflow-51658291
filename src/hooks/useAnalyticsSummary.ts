@@ -1,9 +1,26 @@
+/**
+ * useAnalyticsSummary - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - Count queries replaced with getDocs() and array length
+ * - Client-side aggregation for revenue calculations
+ */
+
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { queryConfigs } from "@/lib/queryConfig";
 import { logger } from "@/lib/errors/logger";
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 interface AnalyticsSummary {
   totalAppointments: number;
@@ -70,63 +87,75 @@ export function useAnalyticsSummary() {
         ] = await Promise.allSettled([
           retryWithBackoff(() =>
             withTimeout(
-              supabase
-                .from("appointments")
-                .select("*", { count: "exact", head: true })
-                .gte("appointment_date", formatDateToLocalISO(currentMonthStart))
-                .lte("appointment_date", formatDateToLocalISO(currentMonthEnd)),
+              getDocs(
+                query(
+                  collection(db, 'appointments'),
+                  where('appointment_date', '>=', formatDateToLocalISO(currentMonthStart)),
+                  where('appointment_date', '<=', formatDateToLocalISO(currentMonthEnd))
+                )
+              ),
               8000
             )
           ),
           retryWithBackoff(() =>
             withTimeout(
-              supabase
-                .from("appointments")
-                .select("*", { count: "exact", head: true })
-                .gte("appointment_date", formatDateToLocalISO(lastMonthStart))
-                .lte("appointment_date", formatDateToLocalISO(lastMonthEnd)),
+              getDocs(
+                query(
+                  collection(db, 'appointments'),
+                  where('appointment_date', '>=', formatDateToLocalISO(lastMonthStart)),
+                  where('appointment_date', '<=', formatDateToLocalISO(lastMonthEnd))
+                )
+              ),
               8000
             )
           ),
           retryWithBackoff(() =>
             withTimeout(
-              supabase
-                .from("appointments")
-                .select("patient_id")
-                .gte("appointment_date", formatDateToLocalISO(subMonths(now, 1)))
-                .lte("appointment_date", formatDateToLocalISO(now)),
+              getDocs(
+                query(
+                  collection(db, 'appointments'),
+                  where('appointment_date', '>=', formatDateToLocalISO(subMonths(now, 1))),
+                  where('appointment_date', '<=', formatDateToLocalISO(now))
+                )
+              ),
               8000
             )
           ),
           retryWithBackoff(() =>
             withTimeout(
-              supabase
-                .from("appointments")
-                .select("patient_id")
-                .gte("appointment_date", formatDateToLocalISO(subMonths(now, 2)))
-                .lte("appointment_date", formatDateToLocalISO(lastMonthEnd)),
+              getDocs(
+                query(
+                  collection(db, 'appointments'),
+                  where('appointment_date', '>=', formatDateToLocalISO(subMonths(now, 2))),
+                  where('appointment_date', '<=', formatDateToLocalISO(lastMonthEnd))
+                )
+              ),
               8000
             )
           ),
           retryWithBackoff(() =>
             withTimeout(
-              supabase
-                .from("appointments")
-                .select("payment_amount")
-                .gte("appointment_date", formatDateToLocalISO(currentMonthStart))
-                .lte("appointment_date", formatDateToLocalISO(currentMonthEnd))
-                .eq("payment_status", "pago"),
+              getDocs(
+                query(
+                  collection(db, 'appointments'),
+                  where('appointment_date', '>=', formatDateToLocalISO(currentMonthStart)),
+                  where('appointment_date', '<=', formatDateToLocalISO(currentMonthEnd)),
+                  where('payment_status', '==', 'pago')
+                )
+              ),
               8000
             )
           ),
           retryWithBackoff(() =>
             withTimeout(
-              supabase
-                .from("appointments")
-                .select("payment_amount")
-                .gte("appointment_date", formatDateToLocalISO(lastMonthStart))
-                .lte("appointment_date", formatDateToLocalISO(lastMonthEnd))
-                .eq("payment_status", "pago"),
+              getDocs(
+                query(
+                  collection(db, 'appointments'),
+                  where('appointment_date', '>=', formatDateToLocalISO(lastMonthStart)),
+                  where('appointment_date', '<=', formatDateToLocalISO(lastMonthEnd)),
+                  where('payment_status', '==', 'pago')
+                )
+              ),
               8000
             )
           ),
@@ -134,27 +163,27 @@ export function useAnalyticsSummary() {
 
         // Extrair dados com fallback para valores padrão
         const currentAppointments = currentAppointmentsResult.status === "fulfilled"
-          ? currentAppointmentsResult.value.count || 0
+          ? currentAppointmentsResult.value.docs.length
           : 0;
 
         const lastAppointments = lastAppointmentsResult.status === "fulfilled"
-          ? lastAppointmentsResult.value.count || 0
+          ? lastAppointmentsResult.value.docs.length
           : 0;
 
         const activePatients = activePatientsResult.status === "fulfilled"
-          ? new Set(activePatientsResult.value.data?.map(a => a.patient_id) || []).size
+          ? new Set(activePatientsResult.value.docs.map(d => d.data().patient_id)).size
           : 0;
 
         const lastMonthUniquePatients = lastMonthPatientsResult.status === "fulfilled"
-          ? new Set(lastMonthPatientsResult.value.data?.map(a => a.patient_id) || []).size
+          ? new Set(lastMonthPatientsResult.value.docs.map(d => d.data().patient_id)).size
           : 0;
 
         const monthlyRevenue = currentPaymentsResult.status === "fulfilled"
-          ? currentPaymentsResult.value.data?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0
+          ? currentPaymentsResult.value.docs.reduce((sum, d) => sum + (d.data().payment_amount || 0), 0)
           : 0;
 
         const lastMonthRevenue = lastPaymentsResult.status === "fulfilled"
-          ? lastPaymentsResult.value.data?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0
+          ? lastPaymentsResult.value.docs.reduce((sum, d) => sum + (d.data().payment_amount || 0), 0)
           : 0;
 
         // Taxa de ocupação (simplificado: 160 slots por mês)

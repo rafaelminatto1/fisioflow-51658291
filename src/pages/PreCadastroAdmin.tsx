@@ -3,12 +3,15 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, orderBy, addDoc, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { PreCadastroStats } from '@/components/precadastro/PreCadastroStats';
 import { PreCadastroList } from '@/components/precadastro/PreCadastroList';
 import { LinkManagement } from '@/components/precadastro/LinkManagement';
+
+const db = getFirebaseDb();
 
 const PreCadastroAdmin = () => {
   const { user } = useAuth();
@@ -19,12 +22,9 @@ const PreCadastroAdmin = () => {
   const { data: tokens, isLoading: tokensLoading } = useQuery({
     queryKey: ['precadastro-tokens'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('precadastro_tokens')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      const q = query(collection(db, 'precadastro_tokens'), orderBy('created_at', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
   });
 
@@ -32,12 +32,9 @@ const PreCadastroAdmin = () => {
   const { data: precadastros, isLoading: precadastrosLoading } = useQuery({
     queryKey: ['precadastros'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('precadastros')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      const q = query(collection(db, 'precadastros'), orderBy('created_at', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
   });
 
@@ -48,22 +45,21 @@ const PreCadastroAdmin = () => {
 
       const organizationId = orgData?.id;
 
-      const { data, error } = await supabase
-        .from('precadastro_tokens')
-        .insert({
-          organization_id: organizationId,
-          nome: newToken.nome || 'Link de Pré-cadastro',
-          descricao: newToken.descricao,
-          max_usos: newToken.max_usos ? parseInt(newToken.max_usos) : null,
-          expires_at: new Date(Date.now() + newToken.validade_dias * 24 * 60 * 60 * 1000).toISOString(),
-          campos_obrigatorios: newToken.campos_obrigatorios,
-          campos_opcionais: newToken.campos_opcionais
-        })
-        .select()
-        .single();
+      const tokenData = {
+        organization_id: organizationId,
+        nome: newToken.nome || 'Link de Pré-cadastro',
+        descricao: newToken.descricao,
+        max_usos: newToken.max_usos ? parseInt(newToken.max_usos) : null,
+        expires_at: new Date(Date.now() + newToken.validade_dias * 24 * 60 * 60 * 1000).toISOString(),
+        campos_obrigatorios: newToken.campos_obrigatorios,
+        campos_opcionais: newToken.campos_opcionais,
+        created_at: new Date().toISOString(),
+        ativo: true,
+        usage_count: 0
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'precadastro_tokens'), tokenData);
+      return { id: docRef.id, ...tokenData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
@@ -77,11 +73,8 @@ const PreCadastroAdmin = () => {
   // Toggle token status
   const toggleToken = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
-      const { error } = await supabase
-        .from('precadastro_tokens')
-        .update({ ativo })
-        .eq('id', id);
-      if (error) throw error;
+      const tokenRef = doc(db, 'precadastro_tokens', id);
+      await updateDoc(tokenRef, { ativo });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
@@ -92,14 +85,11 @@ const PreCadastroAdmin = () => {
   // Update precadastro status
   const updatePrecadastro = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from('precadastros')
-        .update({
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-      if (error) throw error;
+      const precadastroRef = doc(db, 'precadastros', id);
+      await updateDoc(precadastroRef, {
+        status,
+        updated_at: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precadastros'] });

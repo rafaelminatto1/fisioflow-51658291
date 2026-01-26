@@ -1,21 +1,37 @@
 /**
- * Optimized Query Hook for Supabase
+ * Optimized Query Hook for Firebase
  *
  * Provides automatic caching, pagination, and performance tracking
- * for Supabase queries without external dependencies.
+ * for Firestore queries.
+ *
+ * Adapts Supabase-style query options to Firestore.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  query,
+  where,
+  orderBy as firestoreOrderBy,
+  limit as firestoreLimit,
+  getDocs,
+  startAfter,
+  QueryConstraint,
+  DocumentData,
+  QueryDocumentSnapshot
+} from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
+
+const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface OptimizedQueryOptions {
-  table: string;
-  columns?: string;
+  table: string; // Maps to Collection
+  columns?: string; // Ignored in Firestore (always fetches full doc)
   filter?: { column: string; operator: string; value: unknown };
   orderBy?: { column: string; ascending?: boolean };
   limit?: number;
@@ -111,7 +127,7 @@ function setCache<T>(key: string, data: T[], ttl: number): void {
 export function invalidateQueryCache(table?: string): void {
   if (table) {
     for (const key of queryCache.keys()) {
-      if (key.startsWith(`"${table}"`)) {
+      if (key.includes(`"table":"${table}"`)) {
         queryCache.delete(key);
       }
     }
@@ -204,31 +220,42 @@ export function useOptimizedQuery<T = unknown>(
     const startTime = performance.now();
 
     try {
-      let query = supabase.from(table).select(columns);
+      const constraints: QueryConstraint[] = [];
 
       // Apply filter
       if (filter) {
-        query = query.filter(filter.column, filter.operator, filter.value);
+        // Map Supabase operators to Firestore
+        let op: any = '==';
+        if (filter.operator === 'eq') op = '==';
+        else if (filter.operator === 'neq') op = '!=';
+        else if (filter.operator === 'gt') op = '>';
+        else if (filter.operator === 'gte') op = '>=';
+        else if (filter.operator === 'lt') op = '<';
+        else if (filter.operator === 'lte') op = '<=';
+        else if (filter.operator === 'in') op = 'in';
+        else if (filter.operator === 'contains') op = 'array-contains';
+        // Note: 'ilike', 'like', 'is' might not be directly supported
+
+        constraints.push(where(filter.column, op, filter.value));
       }
 
       // Apply order
       if (orderBy) {
-        query = query.order(orderBy.column, { ascending: orderBy.ascending ?? true });
+        constraints.push(firestoreOrderBy(orderBy.column, orderBy.ascending !== false ? 'asc' : 'desc'));
       }
 
       // Apply limit
-      query = query.limit(limit);
-
-      const { data: result, error: queryError } = await query;
-
-      if (queryError) {
-        throw queryError;
+      if (limit) {
+        constraints.push(firestoreLimit(limit));
       }
 
+      const q = query(collection(db, table), ...constraints);
+      const snapshot = await getDocs(q);
+      const result = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
+
       if (isMounted.current) {
-        const typedData = (result as T[]) || [];
-        setData(typedData);
-        setCache(cacheKey.current, typedData, cacheTtl);
+        setData(result);
+        setCache(cacheKey.current, result, cacheTtl);
 
         const duration = performance.now() - startTime;
         trackQueryMetric({
@@ -239,7 +266,7 @@ export function useOptimizedQuery<T = unknown>(
         });
 
         logger.debug(`Query completed: ${table}`, {
-          rowCount: typedData.length,
+          rowCount: result.length,
           duration: `${duration.toFixed(2)}ms`,
         }, 'useOptimizedQuery');
       }
@@ -291,6 +318,11 @@ export function useOptimizedQuery<T = unknown>(
 export function usePaginatedQuery<T = unknown>(
   options: PaginatedQueryOptions
 ): PaginatedQueryResult<T> {
+  // Simplified pagination for Firestore (client-side or simplistic cursor which is hard without state)
+  // For standard compatibility, just fetching limited set or full set logic
+  // Firestore offset is expensive.
+  // We'll implement a basic version that might not support true deep pagination efficiently but minimal change for API.
+
   const {
     pageSize = 20,
     initialPage = 1,
@@ -300,53 +332,71 @@ export function usePaginatedQuery<T = unknown>(
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalCount, setTotalCount] = useState(0);
   const [allData, setAllData] = useState<T[]>([]);
+  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null);
+
+  // Firestore pagination usually needs cursors.
+  // Emulating 'page number' pagination is inefficient in NoSQL.
+  // We will pull the requested page by creating a query.
 
   const fetchPageData = useCallback(async (page: number) => {
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
+    // Note: This logic is imperfect for random access pages (goToPage)
+    // unless we fetch all and slice, or use limit relative to start (expensive).
+    // Falling back to "Fetch all and slice" client side if dataset is small,
+    // OR just supporting page 1.
+    // Given 'PaginatedQuery' name, we'll try client-side slice for transition.
 
-    let query = supabase
-      .from(baseOptions.table)
-      .select(baseOptions.columns || '*', { count: 'exact' });
-
-    // Apply filter
-    if (baseOptions.filter) {
-      query = query.filter(
-        baseOptions.filter.column,
-        baseOptions.filter.operator,
-        baseOptions.filter.value
-      );
-    }
-
-    // Apply order
-    if (baseOptions.orderBy) {
-      query = query.order(baseOptions.orderBy.column, {
-        ascending: baseOptions.orderBy.ascending ?? true,
-      });
-    }
-
-    // Apply range
-    query = query.range(from, to);
+    // Better migration: Use useOptimizedQuery with large limit and slice in JS?
+    // Or if collection is huge, we need cursor based.
+    // Let's implement partial logic.
 
     const startTime = performance.now();
-    const { data, error, count } = await query;
-    const duration = performance.now() - startTime;
+    try {
+      // Fetch "all" (with a reasonable safety limit)
+      const constraints: QueryConstraint[] = [];
+      if (baseOptions.filter) {
+        // ... (same filter mapping as above)
+        let op: any = '==';
+        if (baseOptions.filter.operator === 'eq') op = '==';
+        else if (baseOptions.filter.operator === 'neq') op = '!=';
+        else if (baseOptions.filter.operator === 'gt') op = '>';
+        else if (baseOptions.filter.operator === 'gte') op = '>=';
+        else if (baseOptions.filter.operator === 'lt') op = '<';
+        else if (baseOptions.filter.operator === 'lte') op = '<=';
+        else if (baseOptions.filter.operator === 'in') op = 'in';
+        else if (baseOptions.filter.operator === 'contains') op = 'array-contains';
+        constraints.push(where(baseOptions.filter.column, op, baseOptions.filter.value));
+      }
+      if (baseOptions.orderBy) {
+        constraints.push(firestoreOrderBy(baseOptions.orderBy.column, baseOptions.orderBy.ascending !== false ? 'asc' : 'desc'));
+      }
 
-    if (error) {
+      // Safety limit 1000
+      constraints.push(firestoreLimit(1000));
+
+      const q = query(collection(db, baseOptions.table), ...constraints);
+      const snapshot = await getDocs(q);
+      const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize;
+      const pageDocs = allDocs.slice(from, to);
+
+      const duration = performance.now() - startTime;
+      trackQueryMetric({
+        queryKey: `paginated:${baseOptions.table}:${page}`,
+        duration,
+        cacheHit: false,
+        timestamp: Date.now(),
+      });
+
+      return {
+        data: pageDocs,
+        count: allDocs.length
+      };
+    } catch (error: any) {
       throw error;
     }
 
-    trackQueryMetric({
-      queryKey: `paginated:${baseOptions.table}:${page}`,
-      duration,
-      cacheHit: false,
-      timestamp: Date.now(),
-    });
-
-    return {
-      data: (data as T[]) || [],
-      count: count || 0,
-    };
   }, [baseOptions, pageSize]);
 
   const nextPage = useCallback(() => {
@@ -417,58 +467,67 @@ export function useInfiniteQuery<T = unknown>(
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
 
     setIsLoading(true);
-    const from = data.length;
-    const to = from + batchSize - 1;
 
     try {
-      let query = supabase
-        .from(baseOptions.table)
-        .select(baseOptions.columns || '*');
+      const constraints: QueryConstraint[] = [];
 
       if (baseOptions.filter) {
-        query = query.filter(
-          baseOptions.filter.column,
-          baseOptions.filter.operator,
-          baseOptions.filter.value
-        );
+        // ... filter mapping
+        let op: any = '==';
+        if (baseOptions.filter.operator === 'eq') op = '==';
+        else if (baseOptions.filter.operator === 'neq') op = '!=';
+        else if (baseOptions.filter.operator === 'gt') op = '>';
+        else if (baseOptions.filter.operator === 'gte') op = '>=';
+        else if (baseOptions.filter.operator === 'lt') op = '<';
+        else if (baseOptions.filter.operator === 'lte') op = '<=';
+        else if (baseOptions.filter.operator === 'in') op = 'in';
+        else if (baseOptions.filter.operator === 'contains') op = 'array-contains';
+        constraints.push(where(baseOptions.filter.column, op, baseOptions.filter.value));
       }
-
       if (baseOptions.orderBy) {
-        query = query.order(baseOptions.orderBy.column, {
-          ascending: baseOptions.orderBy.ascending ?? true,
-        });
+        constraints.push(firestoreOrderBy(baseOptions.orderBy.column, baseOptions.orderBy.ascending !== false ? 'asc' : 'desc'));
       }
 
-      query = query.range(from, to);
+      constraints.push(firestoreLimit(batchSize));
 
-      const { data: result, error } = await query;
+      if (lastDoc) {
+        constraints.push(startAfter(lastDoc));
+      }
 
-      if (error) throw error;
+      const q = query(collection(db, baseOptions.table), ...constraints);
+      const snapshot = await getDocs(q);
+      const newData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
 
-      const newData = (result as T[]) || [];
+      if (!snapshot.empty) {
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+      }
+
       setData(prev => [...prev, ...newData]);
-      setHasMore(newData.length === batchSize);
+      setHasMore(snapshot.docs.length === batchSize);
+
     } catch (err) {
       logger.error('Infinite query failed', err, 'useInfiniteQuery');
     } finally {
       setIsLoading(false);
     }
   }, [
-    data.length,
     batchSize,
     isLoading,
     hasMore,
     baseOptions,
+    lastDoc
   ]);
 
   const reset = useCallback(() => {
     setData([]);
     setHasMore(true);
+    setLastDoc(null);
   }, []);
 
   useEffect(() => {

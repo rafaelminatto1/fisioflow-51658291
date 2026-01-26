@@ -1,6 +1,30 @@
+/**
+ * useFormasPagamento - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('formas_pagamento') → Firestore collection 'formas_pagamento'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface FormaPagamento {
   id: string;
@@ -16,17 +40,26 @@ export interface FormaPagamento {
 
 export type FormaPagamentoFormData = Pick<FormaPagamento, 'nome' | 'tipo' | 'taxa_percentual' | 'dias_recebimento' | 'ativo'>;
 
+// Helper to convert Firestore doc to FormaPagamento
+const convertDocToFormaPagamento = (doc: any): FormaPagamento => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as FormaPagamento;
+};
+
 export function useFormasPagamento() {
   return useQuery({
     queryKey: ['formas_pagamento'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('formas_pagamento')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'formas_pagamento'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as FormaPagamento[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToFormaPagamento);
     },
   });
 }
@@ -36,14 +69,17 @@ export function useCreateFormaPagamento() {
 
   return useMutation({
     mutationFn: async (forma: FormaPagamentoFormData) => {
-      const { data, error } = await supabase
-        .from('formas_pagamento')
-        .insert(forma)
-        .select()
-        .single();
+      const formaData = {
+        ...forma,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'formas_pagamento'), formaData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToFormaPagamento(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formas_pagamento'] });
@@ -60,15 +96,14 @@ export function useUpdateFormaPagamento() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<FormaPagamento> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('formas_pagamento')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'formas_pagamento', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToFormaPagamento(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formas_pagamento'] });
@@ -85,12 +120,7 @@ export function useDeleteFormaPagamento() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('formas_pagamento')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'formas_pagamento', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formas_pagamento'] });

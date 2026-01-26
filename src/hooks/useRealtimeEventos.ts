@@ -1,86 +1,84 @@
+/**
+ * useRealtimeEventos - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.channel('eventos-changes') → Firestore onSnapshot for real-time updates
+ * - supabase.postgres_changes → Firestore onSnapshot
+ */
+
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 /**
  * Hook para inscrições Realtime na tabela eventos
- * FIX: Track subscription state to avoid WebSocket errors
+ * Migrated from Supabase Realtime to Firestore onSnapshot
  */
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    // FIX: Track subscription state to avoid WebSocket errors
-    let isSubscribed = false;
-    const channel = supabase.channel('eventos-changes');
+    // Firestore onSnapshot for real-time updates
+    const q = query(
+      collection(db, 'eventos'),
+      orderBy('created_at', 'desc'),
+      limit(100)
+    );
 
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'eventos'
-        },
-        (payload) => {
-          logger.info('Novo evento criado', { eventId: payload.new.id, nome: payload.new.nome }, 'useRealtimeEventos');
-          queryClient.invalidateQueries({ queryKey: ['eventos'] });
-          queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const newEvento = { id: change.doc.id, ...change.doc.data() };
+            logger.info('Novo evento criado', { eventId: newEvento.id }, 'useRealtimeEventos');
+            queryClient.invalidateQueries({ queryKey: ['eventos'] });
+            queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
 
-          toast({
-            title: '🎉 Novo evento criado',
-            description: `${payload.new.nome} foi adicionado`,
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'eventos'
-        },
-        (payload) => {
-          logger.info('Evento atualizado', { eventId: payload.new.id }, 'useRealtimeEventos');
-          queryClient.invalidateQueries({ queryKey: ['eventos'] });
-          queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
-          queryClient.invalidateQueries({ queryKey: ['eventos', payload.new.id] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-        schema: 'public',
-          table: 'eventos'
-        },
-        (payload) => {
-          logger.info('Evento deletado', { eventId: payload.old.id }, 'useRealtimeEventos');
-          queryClient.invalidateQueries({ queryKey: ['eventos'] });
-          queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+            toast({
+              title: '🎉 Novo evento criado',
+              description: `${newEvento.nome} foi adicionado`,
+            });
+          } else if (change.type === 'modified') {
+            const updatedEvento = { id: change.doc.id, ...change.doc.data() };
+            logger.info('Evento atualizado', { eventId: updatedEvento.id }, 'useRealtimeEventos');
+            queryClient.invalidateQueries({ queryKey: ['eventos'] });
+            queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['eventos', updatedEvento.id] });
+          } else if (change.type === 'removed') {
+            const deletedEvento = { id: change.doc.id, ...change.doc.data() };
+            logger.info('Evento deletado', { eventId: deletedEvento.id }, 'useRealtimeEventos');
+            queryClient.invalidateQueries({ queryKey: ['eventos'] });
+            queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
 
-          toast({
-            title: 'Evento removido',
-            description: 'Um evento foi excluído',
-            variant: 'destructive',
-          });
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
+            toast({
+              title: 'Evento removido',
+              description: 'Um evento foi excluído',
+              variant: 'destructive',
+            });
+          }
+        });
+      },
+      (error) => {
+        logger.error('Real-time eventos error', error, 'useRealtimeEventos');
+      }
+    );
 
     return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
+      unsubscribe();
     };
   }, [queryClient, toast]);
 }

@@ -68,20 +68,32 @@ export const PatientService = {
 
     /**
      * Fetch active patients for an organization
+     * Uses Firebase Cloud Functions API
      */
     async getActivePatients(organizationId: string) {
         if (!organizationId) throw AppError.badRequest('Organization ID is required');
 
-        const response = await patientsApi.list({ status: 'active', limit: 1000 });
-        // Return thenable-like object to match previous Supabase query builder if possible,
-        // OR update return to just be the data/error structure if callers await it.
-        // Supabase returns { data, error }. callers await it.
-        // patientsApi returns { data: ... } keys.
+        try {
+            logger.info('PatientService: fetching patients from Firebase Functions', { organizationId }, 'PatientService');
+            // TEMP: Removendo filtro de status para debug
+            const response = await patientsApi.list({ limit: 1000 });
 
-        // We need to map the cloud function response structure to what consumers expect.
-        // Consumers expect { data: Row[], error: null } from Supabase query.
+            const patients = response.data || [];
+            logger.info('PatientService: patients fetched from Firebase Functions', {
+                count: patients.length,
+                organizationId,
+                hasData: Array.isArray(response.data),
+            }, 'PatientService');
 
-        return { data: response.data || [], error: null };
+            return { data: patients, error: null };
+        } catch (error: any) {
+            logger.error('PatientService: error fetching patients from Firebase Functions', {
+                error: error?.message || error,
+                organizationId,
+                errorName: error?.name,
+            }, 'PatientService');
+            return { data: [], error };
+        }
     },
 
     /**
@@ -94,8 +106,7 @@ export const PatientService = {
             const response = await patientsApi.get(id);
             return { data: response.data, error: null };
         } catch (error: any) {
-            // Map Firebase error to Supabase-like error if needed or generic AppError
-            return { data: null, error: error };
+            return { data: null, error };
         }
     },
 

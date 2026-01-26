@@ -1,6 +1,31 @@
+/**
+ * useVouchers - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('vouchers') → Firestore collection 'vouchers'
+ * - supabase.from('user_vouchers') → Firestore collection 'user_vouchers'
+ * - supabase.auth.getUser() → Firebase Auth context
+ * - supabase.rpc() → Direct Firestore operations
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Voucher {
   id: string;
@@ -33,37 +58,52 @@ export function useVouchers() {
   return useQuery({
     queryKey: ['vouchers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('vouchers')
-        .select('*')
-        .eq('ativo', true)
-        .order('preco');
+      const q = query(
+        collection(db, 'vouchers'),
+        where('ativo', '==', true),
+        orderBy('preco', 'asc')
+      );
 
-      if (error) throw error;
-      return data as Voucher[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Voucher[];
     },
   });
 }
 
 export function useUserVouchers() {
+  const { user } = useAuth();
+
   return useQuery({
     queryKey: ['user-vouchers'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('user_vouchers')
-        .select(`
-          *,
-          voucher:vouchers(*)
-        `)
-        .eq('user_id', user.id)
-        .order('data_compra', { ascending: false });
+      const q = query(
+        collection(db, 'user_vouchers'),
+        where('user_id', '==', user.uid),
+        orderBy('data_compra', 'desc')
+      );
 
-      if (error) throw error;
-      return data as UserVoucher[];
+      const snapshot = await getDocs(q);
+      const userVouchers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Fetch voucher data for each user voucher
+      const voucherIds = userVouchers.map((uv: any) => uv.voucher_id).filter(Boolean);
+      const voucherMap = new Map<string, any>();
+
+      await Promise.all([...new Set(voucherIds)].map(async (voucherId) => {
+        const voucherDoc = await getDoc(doc(db, 'vouchers', voucherId));
+        if (voucherDoc.exists()) {
+          voucherMap.set(voucherId, { id: voucherId, ...voucherDoc.data() });
+        }
+      }));
+
+      return userVouchers.map((uv: any) => ({
+        ...uv,
+        voucher: voucherMap.get(uv.voucher_id),
+      })) as UserVoucher[];
     },
+    enabled: !!user,
   });
 }
 
@@ -72,14 +112,16 @@ export function useCreateVoucher() {
 
   return useMutation({
     mutationFn: async (voucher: Omit<Voucher, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('vouchers')
-        .insert(voucher)
-        .select()
-        .single();
+      const voucherData = {
+        ...voucher,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'vouchers'), voucherData);
+      const docSnap = await getDoc(docRef);
+
+      return { id: docRef.id, ...docSnap.data() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vouchers'] });
@@ -96,15 +138,16 @@ export function useUpdateVoucher() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Voucher> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('vouchers')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'vouchers', id);
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      await updateDoc(docRef, updateData);
+
+      const docSnap = await getDoc(docRef);
+      return { id, ...docSnap.data() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vouchers'] });
@@ -121,13 +164,27 @@ export function useDecrementVoucherSession() {
 
   return useMutation({
     mutationFn: async (userVoucherId: string) => {
-      const { data, error } = await supabase.rpc('decrementar_sessao_voucher', {
-        _user_voucher_id: userVoucherId,
+      const docRef = doc(db, 'user_vouchers', userVoucherId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error('Voucher não encontrado');
+      }
+
+      const currentData = docSnap.data();
+      const sessoesRestantes = currentData?.sessoes_restantes || 0;
+
+      if (sessoesRestantes <= 0) {
+        throw new Error('Voucher inválido ou sem sessões disponíveis');
+      }
+
+      await updateDoc(docRef, {
+        sessoes_restantes: sessoesRestantes - 1,
       });
 
-      if (error) throw error;
-      if (!data) throw new Error('Voucher inválido ou sem sessões disponíveis');
-      return data;
+      // Return updated data
+      const updatedSnap = await getDoc(docRef);
+      return { id: userVoucherId, ...updatedSnap.data() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-vouchers'] });
@@ -144,12 +201,7 @@ export function useDeleteVoucher() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('vouchers')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'vouchers', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vouchers'] });
@@ -165,13 +217,13 @@ export function useAllVouchers() {
   return useQuery({
     queryKey: ['all-vouchers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('vouchers')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'vouchers'),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as Voucher[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Voucher[];
     },
   });
 }

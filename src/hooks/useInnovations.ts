@@ -1,6 +1,44 @@
+/**
+ * useInnovations - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - patient_levels -> patient_levels
+ * - gamification_rewards -> gamification_rewards
+ * - patient_achievements -> patient_achievements
+ * - achievements_log -> achievements_log
+ * - clinic_inventory -> clinic_inventory
+ * - inventory_movements -> inventory_movements
+ * - staff_performance_metrics -> staff_performance_metrics
+ * - appointment_predictions -> appointment_predictions
+ * - revenue_forecasts -> revenue_forecasts
+ * - whatsapp_exercise_queue -> whatsapp_exercise_queue
+ * - patient_self_assessments -> patient_self_assessments
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+  limit,
+  setDoc,
+  writeBatch
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
+
+// Helper
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
 
 // ==================== GAMIFICATION ====================
 
@@ -43,14 +81,11 @@ export function usePatientLevel(patientId: string) {
   return useQuery({
     queryKey: ['patient-level', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_levels')
-        .select('*')
-        .eq('patient_id', patientId)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data as PatientLevel | null;
+      const q = query(collection(db, 'patient_levels'), where('patient_id', '==', patientId));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return null;
+      return convertDoc<PatientLevel>(snapshot.docs[0]);
     },
     enabled: !!patientId,
   });
@@ -60,14 +95,14 @@ export function useGamificationRewards() {
   return useQuery({
     queryKey: ['gamification-rewards'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gamification_rewards')
-        .select('*')
-        .eq('is_active', true)
-        .order('xp_required', { ascending: true });
-      
-      if (error) throw error;
-      return data as GamificationReward[];
+      const q = query(
+        collection(db, 'gamification_rewards'),
+        where('is_active', '==', true),
+        orderBy('xp_required', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as GamificationReward[];
     },
   });
 }
@@ -76,14 +111,29 @@ export function usePatientAchievements(patientId: string) {
   return useQuery({
     queryKey: ['patient-achievements', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_achievements')
-        .select('*, reward:gamification_rewards(*)')
-        .eq('patient_id', patientId)
-        .order('unlocked_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as PatientAchievement[];
+      const q = query(
+        collection(db, 'patient_achievements'),
+        where('patient_id', '==', patientId),
+        orderBy('unlocked_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      const achievements = snapshot.docs.map(convertDoc) as PatientAchievement[];
+
+      // Manual join for reward details
+      const achievementsWithRewards = await Promise.all(
+        achievements.map(async (achievement) => {
+          if (achievement.reward_id) {
+            const rewardSnap = await getDoc(doc(db, 'gamification_rewards', achievement.reward_id));
+            if (rewardSnap.exists()) {
+              return { ...achievement, reward: convertDoc<GamificationReward>(rewardSnap) };
+            }
+          }
+          return achievement;
+        })
+      );
+
+      return achievementsWithRewards;
     },
     enabled: !!patientId,
   });
@@ -91,19 +141,22 @@ export function usePatientAchievements(patientId: string) {
 
 export function useAddXP() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ patientId, xp, achievementTitle }: { patientId: string; xp: number; achievementTitle: string }) => {
-      const { error } = await supabase
-        .from('achievements_log')
-        .insert({
-          patient_id: patientId,
-          achievement_id: crypto.randomUUID(),
-          achievement_title: achievementTitle,
-          xp_reward: xp,
-        });
-      
-      if (error) throw error;
+      // Add to log
+      await addDoc(collection(db, 'achievements_log'), {
+        patient_id: patientId,
+        achievement_id: crypto.randomUUID(),
+        achievement_title: achievementTitle,
+        xp_reward: xp,
+        created_at: new Date().toISOString()
+      });
+
+      // Update patient level/XP logic would ideally be here or in a Cloud Function trigger.
+      // For now we just log it as per original code which just inserted to log?
+      // Original code: inserts to achievements_log. Note: It does NOT automatically update patient_levels table in the original Supabase code shown, perhaps a Trigger did that?
+      // Assuming logic exists elsewhere or just logging for now.
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-level', variables.patientId] });
@@ -148,14 +201,14 @@ export function useInventory() {
   return useQuery({
     queryKey: ['inventory'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clinic_inventory')
-        .select('*')
-        .eq('is_active', true)
-        .order('item_name');
-      
-      if (error) throw error;
-      return data as InventoryItem[];
+      const q = query(
+        collection(db, 'clinic_inventory'),
+        where('is_active', '==', true),
+        orderBy('item_name')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as InventoryItem[];
     },
   });
 }
@@ -165,11 +218,11 @@ export function useCreateInventoryItem() {
 
   return useMutation({
     mutationFn: async (item: Partial<InventoryItem>) => {
-      const { error } = await supabase
-        .from('clinic_inventory')
-        .insert(item);
-
-      if (error) throw error;
+      await addDoc(collection(db, 'clinic_inventory'), {
+        ...item,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
@@ -180,15 +233,11 @@ export function useCreateInventoryItem() {
 
 export function useUpdateInventoryItem() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<InventoryItem> & { id: string }) => {
-      const { error } = await supabase
-        .from('clinic_inventory')
-        .update(updates)
-        .eq('id', id);
-      
-      if (error) throw error;
+      const docRef = doc(db, 'clinic_inventory', id);
+      await updateDoc(docRef, { ...updates, updated_at: new Date().toISOString() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
@@ -201,33 +250,36 @@ export function useInventoryMovements(inventoryId?: string) {
   return useQuery({
     queryKey: ['inventory-movements', inventoryId],
     queryFn: async () => {
-      let query = supabase
-        .from('inventory_movements')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      
+      let q = query(
+        collection(db, 'inventory_movements'),
+        orderBy('created_at', 'desc'),
+        limit(100)
+      );
+
       if (inventoryId) {
-        query = query.eq('inventory_id', inventoryId);
+        q = query(
+          collection(db, 'inventory_movements'),
+          where('inventory_id', '==', inventoryId),
+          orderBy('created_at', 'desc'),
+          limit(100)
+        );
       }
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as InventoryMovement[];
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as InventoryMovement[];
     },
   });
 }
 
 export function useCreateMovement() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (movement: Partial<InventoryMovement>) => {
-      const { error: movementError } = await supabase
-        .from('inventory_movements')
-        .insert(movement);
-      
-      if (movementError) throw movementError;
+      await addDoc(collection(db, 'inventory_movements'), {
+        ...movement,
+        created_at: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
@@ -259,18 +311,20 @@ export function useStaffPerformance(therapistId?: string, startDate?: string, en
   return useQuery({
     queryKey: ['staff-performance', therapistId, startDate, endDate],
     queryFn: async () => {
-      let query = supabase
-        .from('staff_performance_metrics')
-        .select('*')
-        .order('metric_date', { ascending: false });
-      
-      if (therapistId) query = query.eq('therapist_id', therapistId);
-      if (startDate) query = query.gte('metric_date', startDate);
-      if (endDate) query = query.lte('metric_date', endDate);
-      
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as StaffPerformance[];
+      let q = query(collection(db, 'staff_performance_metrics'), orderBy('metric_date', 'desc'));
+
+      if (therapistId) {
+        q = query(q, where('therapist_id', '==', therapistId));
+      }
+      if (startDate) {
+        q = query(q, where('metric_date', '>=', startDate));
+      }
+      if (endDate) {
+        q = query(q, where('metric_date', '<=', endDate));
+      }
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as StaffPerformance[];
     },
   });
 }
@@ -293,14 +347,14 @@ export function useAppointmentPredictions() {
   return useQuery({
     queryKey: ['appointment-predictions'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('appointment_predictions')
-        .select('*')
-        .order('no_show_probability', { ascending: false })
-        .limit(50);
-      
-      if (error) throw error;
-      return data as AppointmentPrediction[];
+      const q = query(
+        collection(db, 'appointment_predictions'),
+        orderBy('no_show_probability', 'desc'),
+        limit(50)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as AppointmentPrediction[];
     },
   });
 }
@@ -326,14 +380,14 @@ export function useRevenueForecasts() {
   return useQuery({
     queryKey: ['revenue-forecasts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('revenue_forecasts')
-        .select('*')
-        .order('forecast_date', { ascending: true })
-        .limit(90);
-      
-      if (error) throw error;
-      return data as RevenueForecast[];
+      const q = query(
+        collection(db, 'revenue_forecasts'),
+        orderBy('forecast_date', 'asc'),
+        limit(90)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as RevenueForecast[];
     },
   });
 }
@@ -359,28 +413,27 @@ export function useWhatsAppExerciseQueue() {
   return useQuery({
     queryKey: ['whatsapp-exercise-queue'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('whatsapp_exercise_queue')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      
-      if (error) throw error;
-      return data as WhatsAppExerciseQueue[];
+      const q = query(
+        collection(db, 'whatsapp_exercise_queue'),
+        orderBy('created_at', 'desc'),
+        limit(100)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as WhatsAppExerciseQueue[];
     },
   });
 }
 
 export function useCreateWhatsAppExercise() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (data: Partial<WhatsAppExerciseQueue>) => {
-      const { error } = await supabase
-        .from('whatsapp_exercise_queue')
-        .insert(data);
-      
-      if (error) throw error;
+      await addDoc(collection(db, 'whatsapp_exercise_queue'), {
+        ...data,
+        created_at: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp-exercise-queue'] });
@@ -408,16 +461,23 @@ export function usePatientSelfAssessments(patientId?: string) {
   return useQuery({
     queryKey: ['patient-self-assessments', patientId],
     queryFn: async () => {
-      let query = supabase
-        .from('patient_self_assessments')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (patientId) query = query.eq('patient_id', patientId);
-      
-      const { data, error } = await query.limit(100);
-      if (error) throw error;
-      return data as PatientSelfAssessment[];
+      let q = query(
+        collection(db, 'patient_self_assessments'),
+        orderBy('created_at', 'desc'),
+        limit(100)
+      );
+
+      if (patientId) {
+        q = query(
+          collection(db, 'patient_self_assessments'),
+          where('patient_id', '==', patientId),
+          orderBy('created_at', 'desc'),
+          limit(100)
+        );
+      }
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as PatientSelfAssessment[];
     },
   });
 }

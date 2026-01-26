@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, doc, getDocs, query, orderBy, updateDoc, writeBatch, QueryDocumentSnapshot } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -23,26 +24,35 @@ export default function GamificationSettings() {
     const { data: settings, isLoading } = useQuery({
         queryKey: ['gamification-settings'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('gamification_settings')
-                .select('*')
-                .order('key');
+            const settingsRef = collection(db, 'gamification_settings');
+            const q = query(settingsRef, orderBy('key'));
+            const querySnapshot = await getDocs(q);
 
-            if (error) throw error;
-            return data as GamificationSetting[];
+            const settings: GamificationSetting[] = [];
+            querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+                settings.push({
+                    key: doc.id,
+                    ...doc.data()
+                } as GamificationSetting);
+            });
+
+            return settings;
         }
     });
 
     const updateSettings = useMutation({
         mutationFn: async (updatedItems: Record<string, any>) => {
-            const promises = Object.entries(updatedItems).map(([key, value]) =>
-                supabase
-                    .from('gamification_settings')
-                    .update({ value, updated_at: new Date().toISOString() })
-                    .eq('key', key)
-            );
+            const batch = writeBatch(db);
 
-            await Promise.all(promises);
+            Object.entries(updatedItems).forEach(([key, value]) => {
+                const settingRef = doc(db, 'gamification_settings', key);
+                batch.update(settingRef, {
+                    value,
+                    updated_at: new Date().toISOString()
+                });
+            });
+
+            await batch.commit();
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['gamification-settings'] });

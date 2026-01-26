@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface ActivityEvent {
   id: string;
@@ -22,7 +23,7 @@ const MAX_ACTIVITIES = 20; // Limitar para evitar crescimento infinito
 
 /**
  * RealtimeActivityFeed otimizado com React.memo
- * Não cria subscriptions duplicadas - usa dados iniciais do RealtimeContext
+ * Não cria subscriptions duplicadas - usa dados iniciais do Firebase Firestore
  * Implementa cleanup adequado para evitar memory leaks
  */
 export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
@@ -32,271 +33,174 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
   /**
    * Carregar atividades recentes ao montar
-   * Cleanup adequado com AbortController
+   * Cleanup adequado com unsubscribe functions
    */
   useEffect(() => {
     if (authLoading || !user) return;
 
-    const abortController = new AbortController();
-    const signal = abortController.signal;
+    const db = getFirebaseDb();
+    const unsubscribers: Array<() => void> = [];
 
     const loadRecentActivities = async () => {
       try {
         setIsLoading(true);
 
-        // Função auxiliar para timeout com AbortSignal
-        const withTimeout = <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
-          return Promise.race([
-            Promise.resolve(promise),
-            new Promise<T>((_, reject) =>
-              setTimeout(() => {
-                if (!signal.aborted) reject(new Error(`Timeout após ${timeoutMs}ms`));
-              }, timeoutMs)
-            ),
-          ]);
-        };
+        // Fetch appointments first
+        const appointmentsQuery = query(
+          collection(db, 'appointments'),
+          orderBy('created_at', 'desc'),
+          limit(5)
+        );
 
-        // Tentar carregar com retry
-        let appointments = null;
-        let retries = 0;
-        const maxRetries = 3;
+        const appointmentsSnapshot = await getDocs(appointmentsQuery);
+        const appointments: any[] = [];
 
-        while (retries < maxRetries && !appointments && !signal.aborted) {
-          try {
-            // Fetch appointments first
-            const result = await withTimeout(
-              supabase
-                .from('appointments')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(5),
-              8000
-            );
-
-            if (signal.aborted) return;
-
-            if (result.data) {
-              appointments = result.data;
-
-              // Manually fetch patient names to avoid relationship 400 errors
-              const patientIds = [...new Set(appointments.map(a => a.patient_id).filter(Boolean))];
-
-              let patientsData: { id: string, name: string }[] | null = null;
-
-              if (patientIds.length > 0 && !signal.aborted) {
-                const { data } = await supabase
-                  .from('patients')
-                  .select('id, name:full_name')
-                  .in('id', patientIds);
-                patientsData = data;
-              }
-
-              if (signal.aborted) return;
-
-              const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
-
-              // Attach names to appointments
-              appointments = appointments.map(apt => ({
-                ...apt,
-                patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
-              }));
-            }
-
-            break;
-          } catch {
-            retries++;
-            if (retries < maxRetries && !signal.aborted) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-            }
+        // Manually fetch patient names to avoid relationship errors
+        const patientIds = new Set<string>();
+        appointmentsSnapshot.forEach((doc) => {
+          const data = doc.data();
+          appointments.push({ id: doc.id, ...data });
+          if (data.patient_id) {
+            patientIds.add(data.patient_id);
           }
+        });
+
+        const patientMap = new Map<string, string>();
+
+        // Fetch patient data
+        if (patientIds.size > 0) {
+          const patientPromises = Array.from(patientIds).map(async (patientId) => {
+            const patientDoc = await getDoc(doc(db, 'patients', patientId));
+            if (patientDoc.exists()) {
+              const patientData = patientDoc.data();
+              return { id: patientId, name: patientData.full_name || patientData.name || 'Paciente desconhecido' };
+            }
+            return { id: patientId, name: 'Paciente desconhecido' };
+          });
+
+          const patients = await Promise.all(patientPromises);
+          patients.forEach((p) => patientMap.set(p.id, p.name));
         }
 
-        if (signal.aborted) return;
+        // Attach names to appointments
+        const appointmentsWithNames = appointments.map((apt) => ({
+          ...apt,
+          patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
+        }));
 
         const activityList: ActivityEvent[] = [];
 
-        if (appointments) {
-          appointments.forEach(apt => {
-            activityList.push({
-              id: apt.id,
-              type: 'appointment',
-              title: 'Novo Agendamento',
-              description: `${apt.patients?.name || 'Paciente'} - ${format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
-              timestamp: new Date(apt.created_at),
-              icon: Calendar,
-              variant: 'default',
-            });
+        appointmentsWithNames.forEach((apt) => {
+          activityList.push({
+            id: apt.id,
+            type: 'appointment',
+            title: 'Novo Agendamento',
+            description: `${apt.patients?.name || 'Paciente'} - ${format(apt.appointment_date?.toDate ? apt.appointment_date.toDate() : new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+            timestamp: apt.created_at?.toDate ? apt.created_at.toDate() : new Date(apt.created_at),
+            icon: Calendar,
+            variant: 'default',
           });
-        }
+        });
 
         setActivities(activityList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+        setIsLoading(false);
       } catch (error) {
-        if (!signal.aborted) {
-          console.error('Error loading activities:', error);
-          setActivities([]);
-        }
-      } finally {
-        if (!signal.aborted) {
-          setIsLoading(false);
-        }
+        console.error('Error loading activities:', error);
+        setActivities([]);
+        setIsLoading(false);
       }
     };
 
     loadRecentActivities();
 
-    // Cleanup function - cancela operações pendentes
-    return () => {
-      abortController.abort();
-    };
-  }, [user, authLoading]);
+    // Setup realtime subscriptions
+    const appointmentsQuery = query(
+      collection(db, 'appointments'),
+      orderBy('created_at', 'desc'),
+      limit(10)
+    );
 
-  /**
-   * Setup realtime subscriptions com cleanup adequado
-   * Usa canais únicos para evitar duplicação com RealtimeContext
-   * Com tratamento de erros melhorado para falhas de WebSocket
-   *
-  // FIX: Track subscription state to avoid WebSocket errors
-   */
-  useEffect(() => {
-    // Only subscribe if we have an organization ID
-    if (!user || authLoading || !user.id) return;
+    const appointmentsUnsub = onSnapshot(appointmentsQuery, async (snapshot) => {
+      const newActivities: ActivityEvent[] = [];
 
-    // AbortController para cancelar operações pendentes
-    const abortController = new AbortController();
-    const signal = abortController.signal;
+      for (const change of snapshot.docChanges()) {
+        if (change.type === 'added') {
+          const apt = change.doc.data();
+          const patientId = apt.patient_id;
 
-    // FIX: Track subscription states
-    let appointmentsSubscribed = false;
-    let patientsSubscribed = false;
-
-    // Use organization-specific channel to avoid cross-tenant data leaks and allow proper RLS
-    // We can't easily get org_id from user object in this context without a proper hook, 
-    // but assuming RLS handles the security, we still need unique channel names to avoid conflicts.
-    // Ideally we should filter by organization_id, but the user object might not have it directly 
-    // depending on the auth implementation. 
-    // Let's rely on the fact that the RealtimeContext does this correctly and try to mimic it or
-    // just rely on RLS if possible. However, the error "Realtime: No organization_id" suggests deeper issues.
-
-    // Better approach: filter by the current user's organization if possible.
-    // Since we don't have easy access to orgId here without prop drilling or context,
-    // let's try to get it from the user metadata or profile if available, 
-    // OR just rely on the table subscription with RLS (which seems to be failing/timing out).
-
-    // The previous error "Channel error or timeout" often happens when too many clients subscribe 
-    // to the global 'public:appointments'.
-
-    const channelId = `activity-feed-${user.id}-${Date.now()}`;
-
-    // Channel único com nome específico
-    const appointmentsChannel = supabase.channel(`${channelId}-appointments`, {
-      config: {
-        broadcast: { self: false },
-        presence: { key: '' }
-      }
-    });
-
-    (appointmentsChannel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'appointments',
-          // If we had orgId we would filter: filter: `organization_id=eq.${orgId}`
-        },
-        async (payload: any) => {
-          if (signal.aborted) return;
-
-          try {
-            const { data: patient } = await supabase
-              .from('patients')
-              .select('name:full_name')
-              .eq('id', payload.new.patient_id)
-              .single();
-
-            if (signal.aborted) return;
-
-            const newActivity: ActivityEvent = {
-              id: `activity-${payload.new.id}-${Date.now()}`,
-              type: 'appointment',
-              title: 'Novo Agendamento',
-              description: `${patient?.name || 'Paciente'} - ${format(new Date(payload.new.appointment_date), 'dd/MM/yyyy HH:mm')}`,
-              timestamp: new Date(),
-              icon: Calendar,
-              variant: 'success',
-            };
-
-            setActivities(prev => [newActivity, ...prev].slice(0, MAX_ACTIVITIES));
-          } catch (error) {
-            if (!signal.aborted) {
-              console.error('Error processing appointment activity:', error);
+          let patientName = 'Paciente';
+          if (patientId) {
+            try {
+              const patientDoc = await getDoc(doc(db, 'patients', patientId));
+              if (patientDoc.exists()) {
+                const patientData = patientDoc.data();
+                patientName = patientData.full_name || patientData.name || 'Paciente';
+              }
+            } catch (e) {
+              console.error('Error fetching patient:', e);
             }
           }
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          appointmentsSubscribed = true;
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn('RealtimeActivityFeed: Channel error or timeout, will retry');
-        }
-      });
-
-    const patientsChannel = supabase.channel(`${channelId}-patients`, {
-      config: {
-        broadcast: { self: false },
-        presence: { key: '' }
-      }
-    });
-
-    (patientsChannel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'patients',
-        },
-        (payload: any) => {
-          if (signal.aborted) return;
 
           const newActivity: ActivityEvent = {
-            id: `patient-${payload.new.id}-${Date.now()}`,
+            id: `activity-${change.doc.id}-${Date.now()}`,
+            type: 'appointment',
+            title: 'Novo Agendamento',
+            description: `${patientName} - ${format(apt.appointment_date?.toDate ? apt.appointment_date.toDate() : new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+            timestamp: new Date(),
+            icon: Calendar,
+            variant: 'success',
+          };
+
+          newActivities.push(newActivity);
+        }
+      }
+
+      if (newActivities.length > 0) {
+        setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
+      }
+    }, (error) => {
+      console.warn('RealtimeActivityFeed: Appointments subscription error', error);
+    });
+
+    unsubscribers.push(appointmentsUnsub);
+
+    const patientsQuery = query(
+      collection(db, 'patients'),
+      orderBy('created_at', 'desc'),
+      limit(10)
+    );
+
+    const patientsUnsub = onSnapshot(patientsQuery, (snapshot) => {
+      const newActivities: ActivityEvent[] = [];
+
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const patient = change.doc.data();
+          const newActivity: ActivityEvent = {
+            id: `patient-${change.doc.id}-${Date.now()}`,
             type: 'patient',
             title: 'Novo Paciente',
-            description: payload.new.name || 'Novo paciente cadastrado',
+            description: patient.full_name || patient.name || 'Novo paciente cadastrado',
             timestamp: new Date(),
             icon: User,
             variant: 'success',
           };
-
-          setActivities(prev => [newActivity, ...prev].slice(0, MAX_ACTIVITIES));
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          patientsSubscribed = true;
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn('RealtimeActivityFeed: Channel error or timeout, will retry');
+          newActivities.push(newActivity);
         }
       });
 
-    // Cleanup - remove canais e cancela operações pendentes
+      if (newActivities.length > 0) {
+        setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
+      }
+    }, (error) => {
+      console.warn('RealtimeActivityFeed: Patients subscription error', error);
+    });
+
+    unsubscribers.push(patientsUnsub);
+
+    // Cleanup function
     return () => {
-      abortController.abort();
-
-      // Só remove canais se foram inscritos com sucesso
-      if (appointmentsSubscribed) {
-        supabase.removeChannel(appointmentsChannel).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
-
-      if (patientsSubscribed) {
-        supabase.removeChannel(patientsChannel).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
+      unsubscribers.forEach((unsub) => unsub());
     };
   }, [user, authLoading]);
 

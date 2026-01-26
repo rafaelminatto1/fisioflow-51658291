@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format, addDays, subDays, eachDayOfInterval } from "date-fns";
+import { format, addDays, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -11,6 +12,8 @@ export function PredictiveAnalytics() {
   const { data: predictions } = useQuery({
     queryKey: ["predictive-analytics"],
     queryFn: async () => {
+      const db = getFirebaseDb();
+
       // Buscar dados dos últimos 30 dias
       const last30Days = eachDayOfInterval({
         start: subDays(new Date(), 29),
@@ -18,12 +21,17 @@ export function PredictiveAnalytics() {
       });
 
       const historicalPromises = last30Days.map(async (day) => {
-        const { count } = await supabase
-          .from("appointments")
-          .select("*", { count: "exact", head: true })
-          .eq("appointment_date", format(day, "yyyy-MM-dd"));
+        const dayStart = startOfDay(day);
+        const dayEnd = endOfDay(day);
 
-        return count || 0;
+        const q = query(
+          collection(db, "appointments"),
+          where("appointment_date", ">=", dayStart.toISOString()),
+          where("appointment_date", "<=", dayEnd.toISOString())
+        );
+
+        const snapshot = await getDocs(q);
+        return snapshot.docs.length;
       });
 
       const historicalCounts = await Promise.all(historicalPromises);
@@ -56,20 +64,27 @@ export function PredictiveAnalytics() {
   const { data: insights } = useQuery({
     queryKey: ["predictive-insights"],
     queryFn: async () => {
-      // Taxa de cancelamento
-      const { count: totalAppointments } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .gte("appointment_date", format(subDays(new Date(), 30), "yyyy-MM-dd"));
+      const db = getFirebaseDb();
+      const thirtyDaysAgo = subDays(new Date(), 30);
 
-      const { count: canceledAppointments } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "cancelado")
-        .gte("appointment_date", format(subDays(new Date(), 30), "yyyy-MM-dd"));
+      // Taxa de cancelamento
+      const totalAppointmentsQuery = query(
+        collection(db, "appointments"),
+        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
+      );
+      const totalAppointmentsSnapshot = await getDocs(totalAppointmentsQuery);
+      const totalAppointments = totalAppointmentsSnapshot.docs.length;
+
+      const canceledAppointmentsQuery = query(
+        collection(db, "appointments"),
+        where("status", "==", "cancelado"),
+        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
+      );
+      const canceledAppointmentsSnapshot = await getDocs(canceledAppointmentsQuery);
+      const canceledAppointments = canceledAppointmentsSnapshot.docs.length;
 
       const cancellationRate = totalAppointments
-        ? Math.round((canceledAppointments || 0) / totalAppointments * 100)
+        ? Math.round(canceledAppointments / totalAppointments * 100)
         : 0;
 
       // Taxa de comparecimento

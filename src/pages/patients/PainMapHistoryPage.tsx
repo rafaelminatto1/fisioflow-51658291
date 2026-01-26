@@ -18,7 +18,6 @@ import {
   ArrowLeft, Calendar, FileText, TrendingDown, Activity,
   MapPin, Target, Clock, Download, GitCompare
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { usePainMapHistory } from '@/hooks/usePainMapHistory';
 import { PainMapComparisonModal } from '@/components/pain-map/PainMapComparisonModal';
 import { PainMapService } from '@/lib/services/painMapService';

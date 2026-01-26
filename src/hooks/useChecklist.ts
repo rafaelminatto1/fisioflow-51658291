@@ -1,20 +1,41 @@
+/**
+ * useChecklist - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('checklist_items') → Firestore collection 'checklist_items'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ChecklistItemCreate, ChecklistItemUpdate } from '@/lib/validations/checklist';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export function useChecklist(eventoId: string) {
   return useQuery({
     queryKey: ['checklist', eventoId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('checklist_items')
-        .select('*')
-        .eq('evento_id', eventoId)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'checklist_items'),
+        where('evento_id', '==', eventoId),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     enabled: !!eventoId,
   });
@@ -26,14 +47,10 @@ export function useCreateChecklistItem() {
 
   return useMutation({
     mutationFn: async (item: ChecklistItemCreate) => {
-      const { data, error } = await supabase
-        .from('checklist_items')
-        .insert([item])
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, 'checklist_items'), item);
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['checklist', data.evento_id] });
@@ -58,15 +75,11 @@ export function useUpdateChecklistItem() {
 
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: ChecklistItemUpdate; eventoId: string }) => {
-      const { data: updated, error } = await supabase
-        .from('checklist_items')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'checklist_items', id);
+      await updateDoc(docRef, data);
 
-      if (error) throw error;
-      return { ...updated, evento_id: eventoId };
+      const docSnap = await getDoc(docRef);
+      return { id: docSnap.id, ...docSnap.data(), eventoId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['checklist', data.evento_id] });
@@ -91,28 +104,18 @@ export function useToggleChecklistItem() {
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const { data: item, error: fetchError } = await supabase
-        .from('checklist_items')
-        .select('status')
-        .eq('id', id)
-        .single();
+      const docRef = doc(db, 'checklist_items', id);
+      const docSnap = await getDoc(docRef);
 
-      if (fetchError) throw fetchError;
-
+      const item = { id: docSnap.id, ...docSnap.data() } as any;
       const novoStatus = item.status === 'OK' ? 'ABERTO' : 'OK';
 
-      const { data, error } = await supabase
-        .from('checklist_items')
-        .update({ status: novoStatus })
-        .eq('id', id)
-        .select()
-        .single();
+      await updateDoc(docRef, { status: novoStatus });
 
-      if (error) throw error;
-      return { ...data, eventoId };
+      return { ...item, status: novoStatus, eventoId };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['checklist', data.eventoId] });
+      queryClient.invalidateQueries({ queryKey: ['checklist', data.evento_id] });
     },
     onError: (error: unknown) => {
       toast({
@@ -130,12 +133,7 @@ export function useDeleteChecklistItem() {
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const { error } = await supabase
-        .from('checklist_items')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'checklist_items', id));
       return eventoId;
     },
     onSuccess: (eventoId) => {

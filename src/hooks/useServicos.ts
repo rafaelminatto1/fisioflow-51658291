@@ -1,6 +1,30 @@
+/**
+ * useServicos - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('servicos') → Firestore collection 'servicos'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Servico {
   id: string;
@@ -20,18 +44,26 @@ export interface Servico {
 
 export type ServicoFormData = Omit<Servico, 'id' | 'created_at' | 'updated_at'>;
 
+// Helper to convert Firestore doc to Servico
+const convertDocToServico = (doc: any): Servico => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Servico;
+};
+
 export function useServicos() {
   return useQuery({
     queryKey: ['servicos'],
     queryFn: async () => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data, error } = await supabase
-        .from('servicos')
-        .select('id, organization_id, nome, descricao, duracao_padrao, tipo_cobranca, valor, centro_custo, permite_agendamento_online, cor, ativo, created_at, updated_at')
-        .order('nome');
+      const q = query(
+        collection(db, 'servicos'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as Servico[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToServico);
     },
     staleTime: 1000 * 60 * 15, // 15 minutos - serviços mudam pouco
     gcTime: 1000 * 60 * 30,
@@ -43,15 +75,17 @@ export function useCreateServico() {
 
   return useMutation({
     mutationFn: async (servico: ServicoFormData) => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data, error } = await supabase
-        .from('servicos')
-        .insert(servico)
-        .select('id, organization_id, nome, descricao, duracao_padrao, tipo_cobranca, valor, centro_custo, permite_agendamento_online, cor, ativo, created_at, updated_at')
-        .single();
+      const servicoData = {
+        ...servico,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'servicos'), servicoData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToServico(docSnap);
     },
     // Optimistic update - adiciona serviço antes da resposta do servidor
     onMutate: async (newServico) => {
@@ -62,6 +96,7 @@ export function useCreateServico() {
       const optimisticServico: Servico = {
         ...newServico,
         id: `temp-${Date.now()}`,
+        organization_id: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -88,16 +123,14 @@ export function useUpdateServico() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Servico> & { id: string }) => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data, error } = await supabase
-        .from('servicos')
-        .update(updates)
-        .eq('id', id)
-        .select('id, organization_id, nome, descricao, duracao_padrao, tipo_cobranca, valor, centro_custo, permite_agendamento_online, cor, ativo, created_at, updated_at')
-        .single();
+      const docRef = doc(db, 'servicos', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToServico(docSnap);
     },
     // Optimistic update - atualiza serviço antes da resposta do servidor
     onMutate: async ({ id, ...updates }) => {
@@ -130,12 +163,7 @@ export function useDeleteServico() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('servicos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'servicos', id));
     },
     // Optimistic update - remove serviço da lista visualmente
     onMutate: async (id) => {

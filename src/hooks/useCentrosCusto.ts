@@ -1,6 +1,30 @@
+/**
+ * useCentrosCusto - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('centros_custo') → Firestore collection 'centros_custo'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface CentroCusto {
   id: string;
@@ -14,17 +38,26 @@ export interface CentroCusto {
 
 export type CentroCustoFormData = Pick<CentroCusto, 'nome' | 'descricao' | 'ativo'>;
 
+// Helper to convert Firestore doc to CentroCusto
+const convertDocToCentroCusto = (doc: any): CentroCusto => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as CentroCusto;
+};
+
 export function useCentrosCusto() {
   return useQuery({
     queryKey: ['centros_custo'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('centros_custo')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'centros_custo'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as CentroCusto[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToCentroCusto);
     },
   });
 }
@@ -34,14 +67,17 @@ export function useCreateCentroCusto() {
 
   return useMutation({
     mutationFn: async (centro: CentroCustoFormData) => {
-      const { data, error } = await supabase
-        .from('centros_custo')
-        .insert(centro)
-        .select()
-        .single();
+      const centroData = {
+        ...centro,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'centros_custo'), centroData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToCentroCusto(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['centros_custo'] });
@@ -58,15 +94,14 @@ export function useUpdateCentroCusto() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<CentroCusto> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('centros_custo')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'centros_custo', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToCentroCusto(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['centros_custo'] });
@@ -83,12 +118,7 @@ export function useDeleteCentroCusto() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('centros_custo')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'centros_custo', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['centros_custo'] });

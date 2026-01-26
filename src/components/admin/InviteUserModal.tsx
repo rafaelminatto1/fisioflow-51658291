@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { httpsCallable, getFirebaseFunctions } from '@/integrations/firebase/app';
+import { httpsCallable as httpsCallableFromFirebase } from 'firebase/functions';
 import { emailSchema } from '@/lib/validations/auth';
 
 interface InviteUserModalProps {
@@ -40,15 +41,14 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
         return;
       }
 
-      // Chamar função RPC para criar convite
-      const { data, error: rpcError } = await supabase.rpc('create_user_invitation', {
-        _email: email,
-        _role: role,
-      });
+      // Chamar Firebase Function para criar convite
+      const functions = getFirebaseFunctions();
+      const createInvitation = httpsCallableFromFirebase(functions, 'createUserInvitation');
 
-      if (rpcError) {
-        throw rpcError;
-      }
+      const { data } = await createInvitation({
+        email,
+        role,
+      });
 
       if (!data) {
         throw new Error('Nenhum dado retornado');

@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
   LayoutDashboard,
@@ -324,19 +323,24 @@ export function Sidebar() {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: 'Erro ao sair',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
+    try {
+      const { getFirebaseAuth } = await import('@/integrations/firebase/app');
+      const { signOut: signOutFn } = await import('firebase/auth');
+
+      const auth = getFirebaseAuth();
+      await signOutFn(auth);
+
       toast({
         title: 'Logout realizado',
         description: 'Até breve!',
       });
       navigate('/auth');
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao sair',
+        description: error?.message || 'Ocorreu um erro',
+        variant: 'destructive',
+      });
     }
   };
 

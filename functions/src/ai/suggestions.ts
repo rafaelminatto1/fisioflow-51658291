@@ -8,8 +8,9 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { firestore } from 'firebase-admin';
-import * as logger from 'firebase-functions/logger';
+import { getAdminDb } from '../init';
+
+const firestore = getAdminDb();
 
 /**
  * Cloud Function: Sugerir exercícios baseado em diagnóstico
@@ -31,7 +32,7 @@ export const suggestExercises = onCall({
   };
 
   // Buscar exercícios da biblioteca
-  let query = firestore().collection('exercises');
+  let query: any = firestore.collection('exercises');
 
   if (bodyPart) {
     // Buscar exercícios que mencionam a parte do corpo
@@ -41,7 +42,7 @@ export const suggestExercises = onCall({
 
   const exercisesSnapshot = await query.limit(50).get();
 
-  const exercises = exercisesSnapshot.docs.map(doc => ({
+  const exercises = exercisesSnapshot.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
   }));
@@ -81,14 +82,14 @@ export const analyzePatientRecord = onCall({
   const { patientId } = request.data as { patientId: string };
 
   // Buscar evoluções do paciente
-  const evolutionsSnapshot = await firestore()
+  const evolutionsSnapshot = await firestore
     .collection('evolutions')
     .where('patientId', '==', patientId)
     .orderBy('createdAt', 'desc')
     .limit(20)
     .get();
 
-  const evolutions = evolutionsSnapshot.docs.map(doc => doc.data());
+  const evolutions = evolutionsSnapshot.docs.map((doc: any) => doc.data());
 
   if (evolutions.length < 2) {
     return {
@@ -206,7 +207,7 @@ export const patientChatbot = onCall({
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
 
-  const { message, conversationHistory } = request.data as {
+  const { message, conversationHistory: _conversationHistory } = request.data as {
     message: string;
     conversationHistory?: Array<{ role: string; content: string }>;
   };
@@ -216,7 +217,6 @@ export const patientChatbot = onCall({
 
   // Detectar intenções
   let intent = '';
-  const entities: Record<string, string> = {};
 
   if (lowerMessage.includes('agendar') || lowerMessage.includes('marcar') || lowerMessage.includes('horário')) {
     intent = 'schedule_appointment';
@@ -238,15 +238,14 @@ export const patientChatbot = onCall({
   const response = generateChatbotResponse(intent, message);
 
   // Salvar conversa para histórico e melhoria contínua
-  await firestore()
-    .collection('chatbot_conversations')
-    .add({
-      userId: request.auth.uid,
-      message,
-      intent,
-      response,
-      timestamp: firestore.FieldValue.serverTimestamp(),
-    });
+  const conversationRef = firestore.collection('chatbot_conversations').doc();
+  await conversationRef.create({
+    userId: request.auth.uid,
+    message,
+    intent,
+    response,
+    timestamp: new Date().toISOString(),
+  });
 
   return {
     success: true,
@@ -300,7 +299,7 @@ function filterExercisesByCriteria(
       const description = (ex.description || '').toLowerCase();
 
       // Remover exercícios conflitantes com limitações
-      return !criteria.limitations.some(limitation =>
+      return !criteria.limitations!.some(limitation =>
         tags.includes(limitation) || description.includes(limitation)
       );
     });
@@ -329,7 +328,7 @@ function rankExercisesByRelevance(
     }
 
     // Pontuação por tags correspondentes
-    if (context.goals) {
+    if (context.goals && context.goals.length > 0) {
       context.goals.forEach(goal => {
         if (ex.tags?.includes(goal)) {
           score += 5;
@@ -349,7 +348,7 @@ function rankExercisesByRelevance(
 
     return { ...ex, relevanceScore: score };
   })
-  .sort((a, b) => b.relevanceScore - a.relevanceScore);
+  .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore);
 }
 
 /**
@@ -391,14 +390,14 @@ function analyzePainTrend(evolutions: any[]): 'improving' | 'stable' | 'worsenin
  */
 async function calculateAdherenceRate(patientId: string, evolutions: any[]): Promise<number> {
   // Buscar agendamentos do paciente
-  const appointmentsSnapshot = await firestore()
+  const appointmentsSnapshot = await firestore
     .collection('appointments')
     .where('patientId', '==', patientId)
     .where('date', '<=', new Date().toISOString())
     .limit(50)
     .get();
 
-  const appointments = appointmentsSnapshot.docs.map(doc => doc.data());
+  const appointments = appointmentsSnapshot.docs.map((doc: any) => doc.data());
 
   if (appointments.length === 0) {
     return 100; // Sem dados para calcular

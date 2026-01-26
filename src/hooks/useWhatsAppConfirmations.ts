@@ -1,6 +1,27 @@
+/**
+ * useWhatsAppConfirmations - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('whatsapp_messages') → Firestore collection 'whatsapp_messages'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - Joins with patients replaced with separate queries
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface WhatsAppMessage {
   id: string;
@@ -22,37 +43,58 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['whatsapp-messages', appointmentId],
     queryFn: async () => {
-      let query = supabase
-        .from('whatsapp_messages')
-        .select('*')
-        .order('sent_at', { ascending: false });
+      const q = query(
+        collection(db, 'whatsapp_messages'),
+        orderBy('sent_at', 'desc')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WhatsAppMessage[];
+
+      // Filter by appointment_id if provided
       if (appointmentId) {
-        query = query.eq('appointment_id', appointmentId);
+        data = data.filter((m: WhatsAppMessage) => m.appointment_id === appointmentId);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as WhatsAppMessage[];
+      return data;
     },
   });
 
   const { data: pendingConfirmations = [], isLoading: loadingPending } = useQuery({
     queryKey: ['pending-confirmations'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients(id, name, phone)
-        `)
-        .eq('confirmation_status', 'pending')
-        .gte('appointment_date', new Date().toISOString().split('T')[0])
-        .order('appointment_date')
-        .order('appointment_time');
+      const today = new Date().toISOString().split('T')[0];
 
-      if (error) throw error;
-      return data || [];
+      const q = query(
+        collection(db, 'appointments'),
+        where('confirmation_status', '==', 'pending'),
+        where('appointment_date', '>=', today),
+        orderBy('appointment_date', 'asc'),
+        orderBy('appointment_time', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Fetch patient data for each appointment
+      const patientIds = appointments.map((a: any) => a.patient_id).filter(Boolean);
+      const patientMap = new Map<string, any>();
+
+      await Promise.all([...new Set(patientIds)].map(async (patientId) => {
+        const patientDoc = await getDoc(doc(db, 'patients', patientId));
+        if (patientDoc.exists()) {
+          patientMap.set(patientId, {
+            id: patientDoc.id,
+            name: patientDoc.data().full_name,
+            phone: patientDoc.data().phone,
+          });
+        }
+      }));
+
+      return appointments.map((a: any) => ({
+        ...a,
+        patients: patientMap.get(a.patient_id),
+      }));
     },
   });
 
@@ -69,27 +111,26 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
       messageContent: string;
     }) => {
       // Inserir registro da mensagem
-      const { error } = await supabase
-        .from('whatsapp_messages')
-        .insert([{
-          appointment_id: appointmentId,
-          patient_id: patientId,
-          message_type: messageType,
-          message_content: messageContent,
-          status: 'sent',
-        }]);
+      const messageData = {
+        appointment_id: appointmentId,
+        patient_id: patientId,
+        message_type: messageType,
+        message_content: messageContent,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
+      await addDoc(collection(db, 'whatsapp_messages'), messageData);
 
       // Atualizar appointment com timestamp do lembrete
-      const updateField = messageType === 'reminder_24h' 
-        ? 'reminder_sent_24h' 
+      const updateField = messageType === 'reminder_24h'
+        ? 'reminder_sent_24h'
         : 'reminder_sent_2h';
 
-      await supabase
-        .from('appointments')
-        .update({ [updateField]: new Date().toISOString() })
-        .eq('id', appointmentId);
+      const appointmentRef = doc(db, 'appointments', appointmentId);
+      await updateDoc(appointmentRef, {
+        [updateField]: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp-messages'] });
@@ -109,16 +150,12 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
       appointmentId: string;
       method?: 'whatsapp' | 'phone' | 'email' | 'manual';
     }) => {
-      const { error } = await supabase
-        .from('appointments')
-        .update({
-          confirmation_status: 'confirmed',
-          confirmed_at: new Date().toISOString(),
-          confirmation_method: method,
-        })
-        .eq('id', appointmentId);
-
-      if (error) throw error;
+      const appointmentRef = doc(db, 'appointments', appointmentId);
+      await updateDoc(appointmentRef, {
+        confirmation_status: 'confirmed',
+        confirmed_at: new Date().toISOString(),
+        confirmation_method: method,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });

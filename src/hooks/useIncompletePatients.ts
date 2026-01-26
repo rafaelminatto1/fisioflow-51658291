@@ -1,6 +1,17 @@
+/**
+ * useIncompletePatients - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - Supabase Realtime → Firestore onSnapshot() for real-time updates
+ */
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 interface IncompletePatient {
   id: string;
@@ -14,64 +25,46 @@ export const useIncompletePatients = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchIncompletePatients = async () => {
-      setIsLoading(true);
-      try {
-        const { data: patients, error } = await supabase
-          .from('patients')
-          .select('id, full_name, phone')
-          .eq('incomplete_registration', true)
-          .order('created_at', { ascending: false });
+    setIsLoading(true);
 
-        if (error) throw error;
+    const q = query(
+      collection(db, 'patients'),
+      where('incomplete_registration', '==', true),
+      orderBy('created_at', 'desc')
+    );
 
-        // Map full_name to name for the frontend
-        const mappedPatients = (patients || []).map(p => ({
-          ...p,
-          name: p.full_name
-        }));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        try {
+          // Map full_name to name for the frontend
+          const mappedPatients = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              name: data.full_name,
+              phone: data.phone,
+            };
+          });
 
-        setData(mappedPatients);
-        setError(null);
-      } catch (err) {
+          setData(mappedPatients);
+          setError(null);
+        } catch (err) {
+          logger.error('Erro ao processar pacientes incompletos', err, 'useIncompletePatients');
+          setError(err instanceof Error ? err.message : 'Erro desconhecido');
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      (err) => {
         logger.error('Erro ao buscar pacientes incompletos', err, 'useIncompletePatients');
         setError(err.message);
-      } finally {
         setIsLoading(false);
       }
-    };
-
-    fetchIncompletePatients();
-
-    // FIX: Track subscription state to avoid WebSocket errors
-    let isSubscribed = false;
-    const channel = supabase.channel('incomplete-patients-updates');
-
-    (channel as any)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'patients',
-          filter: 'incomplete_registration=eq.true',
-        },
-        () => {
-          fetchIncompletePatients();
-        }
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') {
-          isSubscribed = true;
-        }
-      });
+    );
 
     return () => {
-      if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
-        });
-      }
+      unsubscribe();
     };
   }, []);
 

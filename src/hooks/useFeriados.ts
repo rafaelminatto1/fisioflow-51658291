@@ -1,6 +1,31 @@
+/**
+ * useFeriados - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('feriados') → Firestore collection 'feriados'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Feriado {
   id: string;
@@ -16,25 +41,36 @@ export interface Feriado {
 
 export type FeriadoFormData = Omit<Feriado, 'id' | 'created_at' | 'updated_at'>;
 
+// Helper to convert Firestore doc to Feriado
+const convertDocToFeriado = (doc: any): Feriado => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Feriado;
+};
+
 export function useFeriados(year?: number) {
   return useQuery({
     queryKey: ['feriados', year],
     queryFn: async () => {
-      let query = supabase
-        .from('feriados')
-        .select('*')
-        .order('data');
+      let q = query(
+        collection(db, 'feriados'),
+        orderBy('data')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(convertDocToFeriado);
+
+      // Filter by year if provided
       if (year) {
-        query = query
-          .gte('data', `${year}-01-01`)
-          .lte('data', `${year}-12-31`);
+        data = data.filter(f => {
+          const feriadoDate = new Date(f.data);
+          return feriadoDate.getFullYear() === year;
+        });
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as Feriado[];
+      return data;
     },
   });
 }
@@ -44,14 +80,17 @@ export function useCreateFeriado() {
 
   return useMutation({
     mutationFn: async (feriado: FeriadoFormData) => {
-      const { data, error } = await supabase
-        .from('feriados')
-        .insert(feriado)
-        .select()
-        .single();
+      const feriadoData = {
+        ...feriado,
+        organization_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'feriados'), feriadoData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToFeriado(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feriados'] });
@@ -68,15 +107,14 @@ export function useUpdateFeriado() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Feriado> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('feriados')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'feriados', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToFeriado(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feriados'] });
@@ -93,12 +131,7 @@ export function useDeleteFeriado() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('feriados')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'feriados', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feriados'] });

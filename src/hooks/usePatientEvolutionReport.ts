@@ -1,6 +1,28 @@
+/**
+ * usePatientEvolutionReport - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('soap_records') → Firestore collection 'soap_records'
+ * - supabase.from('evolution_measurements') → Firestore collection 'evolution_measurements'
+ * - supabase.from('session_packages') → Firestore collection 'session_packages'
+ * - supabase.from('pain_maps') → Firestore collection 'pain_maps'
+ * - Joins with profiles replaced with separate queries
+ */
+
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface PatientEvolutionData {
   sessions: {
@@ -12,6 +34,7 @@ export interface PatientEvolutionData {
     therapist: string;
     duration: number;
   }[];
+  currentPainLevel: number;
   initialPainLevel: number;
   totalSessions: number;
   prescribedSessions?: number;
@@ -32,42 +55,34 @@ export const usePatientEvolutionReport = (patientId: string) => {
     queryKey: ["patient-evolution-report", patientId],
     queryFn: async (): Promise<PatientEvolutionData> => {
       // Buscar registros SOAP do paciente
-      const { data: soapRecords, error: soapError } = await supabase
-        .from("soap_records")
-        .select(`
-          id,
-          record_date,
-          created_at,
-          objective,
-          plan,
-          created_by
-        `)
-        .eq("patient_id", patientId)
-        .order("record_date", { ascending: true });
-
-      if (soapError) throw soapError;
+      const soapQ = query(
+        collection(db, 'soap_records'),
+        where('patient_id', '==', patientId),
+        orderBy('record_date', 'asc')
+      );
+      const soapSnap = await getDocs(soapQ);
+      const soapRecords = soapSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Buscar medições de evolução
-      const { data: measurements, error: measError } = await supabase
-        .from("evolution_measurements")
-        .select("*")
-        .eq("patient_id", patientId)
-        .order("measured_at", { ascending: true });
-
-      if (measError) throw measError;
+      const measurementsQ = query(
+        collection(db, 'evolution_measurements'),
+        where('patient_id', '==', patientId),
+        orderBy('measured_at', 'asc')
+      );
+      const measurementsSnap = await getDocs(measurementsQ);
+      const measurements = measurementsSnap.docs.map(doc => doc.data());
 
       // Buscar sessões prescritas (pacotes)
-      const { data: packageData } = await supabase
-        .from("session_packages")
-        .select("total_sessions")
-        .eq("patient_id", patientId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      const packagesQ = query(
+        collection(db, 'session_packages'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc')
+      );
+      const packagesSnap = await getDocs(packagesQ);
+      const packageData = packagesSnap.docs.length > 0 ? packagesSnap.docs[0].data() : null;
       const prescribedSessions = packageData?.total_sessions || 0;
 
-      if ((!soapRecords || soapRecords.length === 0) && (!measurements || measurements.length === 0)) {
+      if (soapRecords.length === 0 && measurements.length === 0) {
         return {
           sessions: [],
           currentPainLevel: 0,
@@ -112,39 +127,47 @@ export const usePatientEvolutionReport = (patientId: string) => {
       });
 
       // Buscar mapas de dor associados às sessões
-      const soapIds = soapRecords?.map(r => r.id) || [];
+      const soapIds = soapRecords.map(r => r.id);
 
-      let painMaps: Array<{ id: string; pain_points?: unknown }> | null = [];
+      let painMaps: Array<{ session_id: string; global_pain_level?: number }> = [];
       if (soapIds.length > 0) {
-        const { data } = await supabase
-          .from("pain_maps")
-          .select("session_id, global_pain_level")
-          .in("session_id", soapIds);
-        painMaps = data;
+        // Firestore has a limit of 10 items per 'in' query
+        const chunkSize = 10;
+        const chunks = [];
+        for (let i = 0; i < soapIds.length; i += chunkSize) {
+          chunks.push(soapIds.slice(i, i + chunkSize));
+        }
+
+        const painMapsResults = await Promise.all(
+          chunks.map(chunk =>
+            getDocs(
+              query(collection(db, 'pain_maps'), where('session_id', 'in', chunk))
+            )
+          )
+        );
+        painMaps = painMapsResults.flatMap(snapshot =>
+          snapshot.docs.map(doc => ({ session_id: doc.data().session_id, global_pain_level: doc.data().global_pain_level }))
+        );
       }
 
       const painMapsBySession = new Map(
-        painMaps?.map(pm => [pm.session_id, pm.global_pain_level]) || []
+        painMaps.map(pm => [pm.session_id, pm.global_pain_level])
       );
 
       // Buscar informações dos terapeutas
       const therapistIds = [...new Set(soapRecords.map(r => r.created_by))];
 
-      let profiles: Array<{ full_name?: string }> | null = [];
+      const therapistMap = new Map<string, string>();
       if (therapistIds.length > 0) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", therapistIds);
-        profiles = data;
+        const profilesQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
+        const profilesSnap = await getDocs(profilesQ);
+        profilesSnap.forEach(doc => {
+          therapistMap.set(doc.data().user_id, doc.data().full_name);
+        });
       }
 
-      const therapistMap = new Map(
-        profiles?.map(p => [p.id, p.full_name]) || []
-      );
-
       // Processar sessões
-      const sessions = soapRecords.map((record) => {
+      const sessions = soapRecords.map((record: any) => {
         const painLevel = painMapsBySession.get(record.id) || 0;
 
         // Estimativa de mobilidade baseada no nível de dor (inverso)

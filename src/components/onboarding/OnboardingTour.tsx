@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import {
   Users, Calendar, FileText, CreditCard,
   MessageSquare, CheckCircle, ArrowRight, X, Heart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getFirebaseAuth, getFirebaseDb, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore } from 'firebase/firestore';
 
 interface OnboardingStep {
   id: string;
@@ -79,26 +81,32 @@ export const OnboardingTour = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const auth = getFirebaseAuth();
+  const db = getFirebaseDb();
 
   // Check onboarding status
   const { data: onboardingData } = useQuery({
     queryKey: ['onboarding-progress'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          unsubscribe();
+          if (!user) {
+            resolve(null);
+            return;
+          }
 
-      const { data, error } = await supabase
-        .from('onboarding_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+          const progressRef = docRef(db, 'onboarding_progress', user.uid);
+          const docSnap = await getDocFromFirestore(progressRef);
 
-      // If no record, user hasn't seen onboarding
-      if (error && error.code === 'PGRST116') {
-        return { show: true };
-      }
+          if (!docSnap.exists()) {
+            resolve({ show: true });
+            return;
+          }
 
-      return data;
+          resolve(docSnap.data());
+        });
+      });
     }
   });
 
@@ -108,43 +116,37 @@ export const OnboardingTour = () => {
       const data = onboardingData as any;
       if (data?.show && !data?.completed_at) {
         setIsOpen(true);
-        
-        // Create onboarding record
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('organization_id')
-            .eq('user_id', user.id)
-            .single();
 
-          await supabase
-            .from('onboarding_progress')
-            .upsert({
-              user_id: user.id,
-              organization_id: profile?.organization_id,
-              tour_shown: true,
-            });
+        // Create onboarding record
+        const user = auth.currentUser;
+        if (user) {
+          const profileRef = docRef(db, 'profiles', user.uid);
+          const profileSnap = await getDocFromFirestore(profileRef);
+
+          const onboardingRef = docRef(db, 'onboarding_progress', user.uid);
+          await setDocToFirestore(onboardingRef, {
+            user_id: user.uid,
+            organization_id: profileSnap.data()?.organization_id,
+            tour_shown: true,
+          }, { merge: true });
         }
       }
     };
 
     initOnboarding();
-  }, [onboardingData]);
+  }, [onboardingData, auth, db]);
 
   // Complete onboarding mutation
   const completeOnboarding = useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
-      await supabase
-        .from('onboarding_progress')
-        .update({
-          completed_at: new Date().toISOString(),
-          completed_steps: onboardingSteps.map(s => s.id),
-        })
-        .eq('user_id', user.id);
+      const progressRef = docRef(db, 'onboarding_progress', user.uid);
+      await updateDocInFirestore(progressRef, {
+        completed_at: new Date().toISOString(),
+        completed_steps: onboardingSteps.map(s => s.id),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
@@ -154,15 +156,13 @@ export const OnboardingTour = () => {
   // Skip onboarding mutation
   const skipOnboarding = useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return;
 
-      await supabase
-        .from('onboarding_progress')
-        .update({
-          skipped_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
+      const progressRef = docRef(db, 'onboarding_progress', user.uid);
+      await updateDocInFirestore(progressRef, {
+        skipped_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => {
       setIsOpen(false);
@@ -232,13 +232,13 @@ export const OnboardingTour = () => {
               Anterior
             </Button>
           )}
-          
+
           {step.action && (
             <Button variant="secondary" onClick={handleAction}>
               {step.action}
             </Button>
           )}
-          
+
           <Button onClick={handleNext}>
             {currentStep < onboardingSteps.length - 1 ? (
               <>

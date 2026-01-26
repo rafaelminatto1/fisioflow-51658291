@@ -1,6 +1,29 @@
+/**
+ * useEventoTemplates - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('evento_templates') → Firestore collection 'evento_templates'
+ * - supabase.from('eventos') → Firestore collection 'eventos'
+ * - supabase.from('checklist_items') → Firestore collection 'checklist_items'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export type EventoTemplate = {
   id: string;
@@ -10,19 +33,30 @@ export type EventoTemplate = {
   gratuito: boolean;
   valor_padrao_prestador: number;
   checklist_padrao?: string[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+// Helper to convert Firestore doc to EventoTemplate
+const convertDocToEventoTemplate = (doc: any): EventoTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as EventoTemplate;
 };
 
 export function useEventoTemplates() {
   return useQuery({
     queryKey: ['evento-templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('evento_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'evento_templates'),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data as EventoTemplate[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToEventoTemplate);
     },
   });
 }
@@ -32,34 +66,42 @@ export function useCreateTemplateFromEvento() {
 
   return useMutation({
     mutationFn: async ({ eventoId, nome }: { eventoId: string; nome: string }) => {
-      const { data: evento, error: eventoError } = await supabase
-        .from('eventos')
-        .select('*, checklist_items(*)')
-        .eq('id', eventoId)
-        .single();
+      // Fetch evento with checklist items
+      const eventoDoc = await getDoc(doc(db, 'eventos', eventoId));
+      if (!eventoDoc.exists()) {
+        throw new Error('Evento não encontrado');
+      }
 
-      if (eventoError) throw eventoError;
+      const evento = { id: eventoDoc.id, ...eventoDoc.data() };
 
-      const { data, error } = await supabase
-        .from('evento_templates')
-        .insert({
-          nome,
-          descricao: evento.descricao,
-          categoria: evento.categoria,
-          gratuito: evento.gratuito,
-          valor_padrao_prestador: evento.valor_padrao_prestador,
-          checklist_padrao: evento.checklist_items?.map((item: Record<string, unknown>) => ({
-            titulo: item.titulo,
-            tipo: item.tipo,
-            quantidade: item.quantidade,
-            custo_unitario: item.custo_unitario,
-          })),
-        })
-        .select()
-        .single();
+      // Fetch checklist items for this evento
+      const checklistQ = query(
+        collection(db, 'checklist_items'),
+        where('evento_id', '==', eventoId)
+      );
+      const checklistSnapshot = await getDocs(checklistQ);
+      const checklistItems = checklistSnapshot.docs.map(doc => doc.data());
 
-      if (error) throw error;
-      return data;
+      const templateData = {
+        nome,
+        descricao: evento.descricao,
+        categoria: evento.categoria,
+        gratuito: evento.gratuito,
+        valor_padrao_prestador: evento.valor_padrao_prestador,
+        checklist_padrao: checklistItems.map((item: Record<string, unknown>) => ({
+          titulo: item.titulo,
+          tipo: item.tipo,
+          quantidade: item.quantidade,
+          custo_unitario: item.custo_unitario,
+        })),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const docRef = await addDoc(collection(db, 'evento_templates'), templateData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToEventoTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evento-templates'] });
@@ -88,31 +130,33 @@ export function useCreateEventoFromTemplate() {
       dataFim: string;
       local: string;
     }) => {
-      const { data: template, error: templateError } = await supabase
-        .from('evento_templates')
-        .select('*')
-        .eq('id', templateId)
-        .single();
+      // Fetch template
+      const templateDoc = await getDoc(doc(db, 'evento_templates', templateId));
+      if (!templateDoc.exists()) {
+        throw new Error('Template não encontrado');
+      }
 
-      if (templateError) throw templateError;
+      const template = { id: templateDoc.id, ...templateDoc.data() };
 
-      const { data: evento, error: eventoError } = await supabase
-        .from('eventos')
-        .insert({
-          nome: nomeEvento,
-          descricao: template.descricao,
-          categoria: template.categoria,
-          local,
-          data_inicio: dataInicio,
-          data_fim: dataFim,
-          gratuito: template.gratuito,
-          valor_padrao_prestador: template.valor_padrao_prestador,
-        })
-        .select()
-        .single();
+      // Create evento from template
+      const eventoData = {
+        nome: nomeEvento,
+        descricao: template.descricao,
+        categoria: template.categoria,
+        local,
+        data_inicio: dataInicio,
+        data_fim: dataFim,
+        gratuito: template.gratuito,
+        valor_padrao_prestador: template.valor_padrao_prestador,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (eventoError) throw eventoError;
+      const eventoDocRef = await addDoc(collection(db, 'eventos'), eventoData);
+      const eventoDocSnap = await getDoc(eventoDocRef);
+      const evento = { id: eventoDocSnap.id, ...eventoDocSnap.data() };
 
+      // Create checklist items if template has checklist_padrao
       if (template.checklist_padrao && Array.isArray(template.checklist_padrao)) {
         const checklistItems = template.checklist_padrao.map((item: Record<string, unknown>) => ({
           evento_id: evento.id,
@@ -120,13 +164,14 @@ export function useCreateEventoFromTemplate() {
           tipo: item.tipo,
           quantidade: typeof item.quantidade === 'number' ? item.quantidade : 1,
           custo_unitario: typeof item.custo_unitario === 'number' ? item.custo_unitario : 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         }));
 
-        const { error: checklistError } = await supabase
-          .from('checklist_items')
-          .insert(checklistItems);
-
-        if (checklistError) throw checklistError;
+        // Batch insert checklist items
+        await Promise.all(
+          checklistItems.map(item => addDoc(collection(db, 'checklist_items'), item))
+        );
       }
 
       return evento;
@@ -146,12 +191,7 @@ export function useDeleteTemplate() {
 
   return useMutation({
     mutationFn: async (templateId: string) => {
-      const { error } = await supabase
-        .from('evento_templates')
-        .delete()
-        .eq('id', templateId);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'evento_templates', templateId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evento-templates'] });

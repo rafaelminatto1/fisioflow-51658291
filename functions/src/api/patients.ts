@@ -4,25 +4,43 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { Pool } from 'pg';
+import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 
 /**
  * Lista pacientes com filtros opcionais
  */
 export const listPatients = onCall(async (request) => {
+  console.log('[listPatients] ===== START =====');
+
   if (!request.auth || !request.auth.token) {
+    console.error('[listPatients] Unauthenticated request');
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
+
+  console.log('[listPatients] Auth token present, uid:', request.auth.uid);
+
   const auth = await authorizeRequest(request.auth.token);
 
   const { status, search, limit = 50, offset = 0 } = request.data || {};
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-  });
+  // DEBUG: Log organization_id e query params
+  console.log('[listPatients] auth.organizationId:', auth.organizationId);
+  console.log('[listPatients] auth.userId:', auth.userId);
+  console.log('[listPatients] filters:', { status, search, limit, offset });
+
+  const pool = getPool();
+  console.log('[listPatients] Pool obtained');
 
   try {
+    // DEBUG: Verificar todos os pacientes no banco (sem filtro) para debug
+    console.log('[listPatients] Executing DEBUG query...');
+    const debugResult = await pool.query(
+      'SELECT id, name, organization_id, is_active FROM patients ORDER BY created_at DESC LIMIT 10'
+    );
+    console.log('[listPatients] DEBUG - All patients in DB:', JSON.stringify(debugResult.rows));
+    console.log('[listPatients] DEBUG - Total patients:', debugResult.rows.length);
+
     // Construir query dinâmica
     let query = `
       SELECT
@@ -82,8 +100,9 @@ export const listPatients = onCall(async (request) => {
       page: Math.floor(offset / limit) + 1,
       perPage: limit,
     };
-  } finally {
-    await pool.end();
+  } catch (error: any) {
+    console.error('Error in listPatients:', error);
+    throw new HttpsError('internal', error.message || 'Erro interno ao listar pacientes');
   }
 });
 
@@ -101,9 +120,7 @@ export const getPatient = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'patientId ou profileId é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-  });
+  const pool = getPool();
 
   try {
     let query = 'SELECT * FROM patients WHERE organization_id = $1';
@@ -124,8 +141,10 @@ export const getPatient = onCall(async (request) => {
     }
 
     return { data: result.rows[0] };
-  } finally {
-    await pool.end();
+  } catch (error: any) {
+    console.error('Error in getPatient:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', error.message || 'Erro interno ao buscar paciente');
   }
 });
 
@@ -133,20 +152,29 @@ export const getPatient = onCall(async (request) => {
  * Cria um novo paciente
  */
 export const createPatient = onCall(async (request) => {
+  console.log('[createPatient] ===== START =====');
+
   if (!request.auth || !request.auth.token) {
+    console.error('[createPatient] Unauthenticated request');
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
+
+  console.log('[createPatient] Auth token present, uid:', request.auth.uid);
+
   const auth = await authorizeRequest(request.auth.token);
   const data = request.data || {};
+
+  // DEBUG: Log organization_id ao criar paciente
+  console.log('[createPatient] auth.organizationId:', auth.organizationId);
+  console.log('[createPatient] auth.userId:', auth.userId);
+  console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone, organization_id: data.organization_id }));
 
   // Validar campos obrigatórios
   if (!data.name) {
     throw new HttpsError('invalid-argument', 'name é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-  });
+  const pool = getPool();
 
   try {
     // Verificar duplicidade de CPF
@@ -160,6 +188,14 @@ export const createPatient = onCall(async (request) => {
         throw new HttpsError('already-exists', 'Já existe um paciente com este CPF');
       }
     }
+
+    // [AUTO-FIX] Ensure organization exists to satisfy FK constraint
+    await pool.query(
+      `INSERT INTO organizations (id, name, slug, active)
+       VALUES ($1, 'Clínica Principal', 'default-org', true)
+       ON CONFLICT (id) DO NOTHING`,
+      [auth.organizationId]
+    );
 
     // Inserir paciente
     const result = await pool.query(
@@ -180,24 +216,37 @@ export const createPatient = onCall(async (request) => {
         data.emergency_contact ? JSON.stringify(data.emergency_contact) : null,
         data.medical_history || null,
         data.main_condition || null,
-        data.status || 'Inicial',
+        data.status || 'active',
         auth.organizationId,
       ]
     );
 
     const patient = result.rows[0];
 
+    console.log('[createPatient] Patient created:', JSON.stringify({
+      id: patient.id,
+      name: patient.name,
+      organization_id: patient.organization_id,
+      is_active: patient.is_active
+    }));
+
     // Publicar no Ably para atualização em tempo real
-    const realtime = await import('../realtime/publisher');
-    await realtime.publishPatientEvent(auth.organizationId, {
-      event: 'INSERT',
-      new: patient,
-      old: null,
-    });
+    try {
+      const realtime = await import('../realtime/publisher');
+      await realtime.publishPatientEvent(auth.organizationId, {
+        event: 'INSERT',
+        new: patient,
+        old: null,
+      });
+    } catch (err) {
+      console.error('Erro ao publicar evento no Ably:', err);
+    }
 
     return { data: patient };
-  } finally {
-    await pool.end();
+  } catch (error: any) {
+    console.error('Error in createPatient:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', error.message || 'Erro interno ao criar paciente');
   }
 });
 
@@ -215,9 +264,7 @@ export const updatePatient = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-  });
+  const pool = getPool();
 
   try {
     // Verificar se paciente existe e pertence à organização
@@ -283,16 +330,22 @@ export const updatePatient = onCall(async (request) => {
     const patient = result.rows[0];
 
     // Publicar no Ably
-    const realtime = await import('../realtime/publisher');
-    await realtime.publishPatientEvent(auth.organizationId, {
-      event: 'UPDATE',
-      new: patient,
-      old: existing.rows[0],
-    });
+    try {
+      const realtime = await import('../realtime/publisher');
+      await realtime.publishPatientEvent(auth.organizationId, {
+        event: 'UPDATE',
+        new: patient,
+        old: existing.rows[0],
+      });
+    } catch (err) {
+      console.error('Erro ao publicar evento no Ably:', err);
+    }
 
     return { data: patient };
-  } finally {
-    await pool.end();
+  } catch (error: any) {
+    console.error('Error in updatePatient:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', error.message || 'Erro interno ao atualizar paciente');
   }
 });
 
@@ -310,9 +363,7 @@ export const deletePatient = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-  });
+  const pool = getPool();
 
   try {
     // Soft delete
@@ -329,16 +380,22 @@ export const deletePatient = onCall(async (request) => {
     }
 
     // Publicar no Ably
-    const realtime = await import('../realtime/publisher');
-    await realtime.publishPatientEvent(auth.organizationId, {
-      event: 'DELETE',
-      new: null,
-      old: result.rows[0],
-    });
+    try {
+      const realtime = await import('../realtime/publisher');
+      await realtime.publishPatientEvent(auth.organizationId, {
+        event: 'DELETE',
+        new: null,
+        old: result.rows[0],
+      });
+    } catch (err) {
+      console.error('Erro ao publicar evento no Ably:', err);
+    }
 
     return { success: true };
-  } finally {
-    await pool.end();
+  } catch (error: any) {
+    console.error('Error in deletePatient:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', error.message || 'Erro interno ao excluir paciente');
   }
 });
 
@@ -356,9 +413,7 @@ export const getPatientStats = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-  });
+  const pool = getPool();
 
   try {
     // Verificar se paciente pertence à organização
@@ -408,7 +463,9 @@ export const getPatientStats = onCall(async (request) => {
         active_plans: parseInt(plansResult.rows[0].active_plans),
       },
     };
-  } finally {
-    await pool.end();
+  } catch (error: any) {
+    console.error('Error in getPatientStats:', error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', error.message || 'Erro interno ao buscar estatísticas');
   }
 });

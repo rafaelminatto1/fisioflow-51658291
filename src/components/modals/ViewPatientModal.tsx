@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import {
   User,
@@ -34,14 +35,15 @@ export const ViewPatientModal: React.FC<{
     queryFn: async () => {
       if (!patientId) return null;
 
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', patientId)
-        .single();
+      const db = getFirebaseDb();
+      const docRef = doc(db, 'patients', patientId);
+      const docSnap = await getDoc(docRef);
 
-      if (error) throw error;
-      return data;
+      if (!docSnap.exists()) {
+        throw new Error('Paciente não encontrado');
+      }
+
+      return { id: docSnap.id, ...docSnap.data() };
     },
     enabled: open && !!patientId
   });

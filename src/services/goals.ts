@@ -1,4 +1,35 @@
-import { supabase } from "@/integrations/supabase/client";
+/**
+ * Goals Service - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('goal_profiles') → Firestore collection 'goal_profiles'
+ * - supabase.from('goal_targets') → Firestore collection 'goal_targets'
+ * - supabase.from('goal_audit_logs') → Firestore collection 'goal_audit_logs'
+ * - supabase.auth.getUser() → Firebase Auth or useAuth()
+ * - supabase.rpc('publish_goal_profile') → Firebase Functions httpsCallable()
+ * - Joins replaced with separate queries and manual merging
+ */
+
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
+    writeBatch,
+    documentId
+} from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { Auth } from 'firebase/auth';
+
+const db = getFirebaseDb();
 
 // Types matching the DB schema manually for now (until types.ts is regenerated)
 export type GoalProfileStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -37,53 +68,120 @@ export interface GoalTarget {
     updated_at: string;
 }
 
+// Helper to get current user - this should be passed in or use useAuth() in components
+let authInstance: Auth | null = null;
+export const setAuthInstance = (auth: Auth) => {
+    authInstance = auth;
+};
+
+const getCurrentUserId = async (): Promise<string | null> => {
+    if (!authInstance) {
+        console.warn('Auth instance not set in goals service');
+        return null;
+    }
+    const user = authInstance.currentUser;
+    return user?.uid || null;
+};
+
 export const GoalService = {
     /**
      * Fetch all profiles, optionally filtered by status.
+     * Joins with targets manually.
      */
     async getProfiles(status?: GoalProfileStatus) {
-        let query = supabase
-            .from('goal_profiles')
-            .select('*, targets:goal_targets(*)') // Join targets
-            .order('updated_at', { ascending: false });
+        // Build query
+        let q = query(
+            collection(db, 'goal_profiles'),
+            orderBy('updated_at', 'desc')
+        );
 
+        const snapshot = await getDocs(q);
+        const profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GoalProfile));
+
+        // Filter by status if needed (client-side for status since we can't have multiple range filters)
+        let filteredProfiles = profiles;
         if (status) {
-            query = query.eq('status', status);
+            filteredProfiles = profiles.filter(p => p.status === status);
         }
 
-        const { data, error } = await query;
-        if (error) throw error;
-        return data;
+        // Fetch targets for all profiles
+        if (filteredProfiles.length > 0) {
+            const profileIds = filteredProfiles.map(p => p.id);
+
+            // Firestore has a limit of 10 items per 'in' query, so we need to chunk
+            const chunkSize = 10;
+            const chunks = [];
+            for (let i = 0; i < profileIds.length; i += chunkSize) {
+                chunks.push(profileIds.slice(i, i + chunkSize));
+            }
+
+            const allTargets: GoalTarget[] = [];
+            for (const chunk of chunks) {
+                const targetsQuery = query(
+                    collection(db, 'goal_targets'),
+                    where('profile_id', 'in', chunk)
+                );
+                const targetsSnapshot = await getDocs(targetsQuery);
+                allTargets.push(...targetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GoalTarget)));
+            }
+
+            // Attach targets to profiles
+            return filteredProfiles.map(profile => ({
+                ...profile,
+                targets: allTargets.filter(t => t.profile_id === profile.id)
+            }));
+        }
+
+        return filteredProfiles;
     },
 
     /**
      * Fetch a single profile by ID w/ targets
      */
     async getProfileById(id: string) {
-        const { data, error } = await supabase
-            .from('goal_profiles')
-            .select('*, targets:goal_targets(*)')
-            .eq('id', id)
-            .single();
+        const profileDoc = await getDoc(doc(db, 'goal_profiles', id));
 
-        if (error) throw error;
-        return data;
+        if (!profileDoc.exists()) {
+            throw new Error('Goal profile not found');
+        }
+
+        const profile = { id: profileDoc.id, ...profileDoc.data() } as GoalProfile;
+
+        // Fetch targets
+        const targetsQuery = query(
+            collection(db, 'goal_targets'),
+            where('profile_id', '==', id)
+        );
+        const targetsSnapshot = await getDocs(targetsQuery);
+        const targets = targetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GoalTarget));
+
+        return {
+            ...profile,
+            targets
+        };
     },
 
     /**
      * Internal helper to log audits
      */
-    async logAudit(action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PUBLISH' | 'ARCHIVE', entity: 'GoalProfile' | 'GoalTarget', entityId: string, before?: Record<string, unknown>, after?: Record<string, unknown>) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+    async logAudit(
+        action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PUBLISH' | 'ARCHIVE',
+        entity: 'GoalProfile' | 'GoalTarget',
+        entityId: string,
+        before?: Record<string, unknown>,
+        after?: Record<string, unknown>
+    ) {
+        const userId = await getCurrentUserId();
+        if (!userId) return;
 
-        await supabase.from('goal_audit_logs').insert({
-            actor_user_id: user.id,
+        await addDoc(collection(db, 'goal_audit_logs'), {
+            actor_user_id: userId,
             action,
             entity,
             entity_id: entityId,
-            before_state: before,
-            after_state: after
+            before_state: before || null,
+            after_state: after || null,
+            created_at: new Date().toISOString()
         });
     },
 
@@ -92,23 +190,22 @@ export const GoalService = {
      */
     async createProfile(profile: Partial<GoalProfile> & { id: string; name: string; description: string }) {
         const insertData = {
-            id: profile.id,
             name: profile.name,
             description: profile.description,
-            applicable_tests: profile.applicable_tests,
-            quality_gate: profile.quality_gate,
-            evidence: profile.evidence,
-            tags: profile.tags,
-            version: 1
+            applicable_tests: profile.applicable_tests || [],
+            quality_gate: profile.quality_gate || {},
+            evidence: profile.evidence || {},
+            tags: profile.tags || [],
+            status: 'DRAFT' as GoalProfileStatus,
+            version: 1,
+            published_at: null,
+            published_by_user_id: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
         };
-        
-        const { data, error } = await supabase
-            .from('goal_profiles')
-            .insert(insertData)
-            .select()
-            .single();
 
-        if (error) throw error;
+        const docRef = await addDoc(collection(db, 'goal_profiles'), insertData);
+        const data = { id: docRef.id, ...insertData } as GoalProfile;
 
         await this.logAudit('CREATE', 'GoalProfile', data.id, null, data);
 
@@ -120,62 +217,75 @@ export const GoalService = {
      */
     async updateProfile(id: string, updates: Partial<GoalProfile>) {
         // Fetch before state for audit
-        const { data: before } = await supabase.from('goal_profiles').select('*').eq('id', id).single();
+        const beforeDoc = await getDoc(doc(db, 'goal_profiles', id));
+        const before = beforeDoc.exists() ? { id: beforeDoc.id, ...beforeDoc.data() } : null;
 
-        const { data, error } = await supabase
-            .from('goal_profiles')
-            .update(updates)
-            .eq('id', id)
-            .eq('status', 'DRAFT') // Safety check
-            .select()
-            .single();
+        const updateData = {
+            ...updates,
+            updated_at: new Date().toISOString()
+        };
 
-        if (error) throw error;
+        const docRef = doc(db, 'goal_profiles', id);
+        await updateDoc(docRef, updateData);
 
-        await this.logAudit('UPDATE', 'GoalProfile', id, before, data);
+        // Fetch updated data
+        const afterDoc = await getDoc(docRef);
+        const data = { id: afterDoc.id, ...afterDoc.data() } as GoalProfile;
+
+        await this.logAudit('UPDATE', 'GoalProfile', id, before as Record<string, unknown> | null, data);
 
         return data;
     },
 
     /**
      * Replace all targets for a profile (Delete + Insert transaction ideally, but via client we do sequential)
-     * Note: Supabase JS doesn't support explicit transactions widely unless via RPC, but for this Admin feature:
-     * 1. Delete all targets for profile
-     * 2. Insert new targets
+     * Note: For Firestore, we use batched operations for better atomicity
      */
     async replaceTargets(profileId: string, targets: Omit<GoalTarget, 'id' | 'created_at' | 'updated_at'>[]) {
         // Prepare targets with profileId
+        const now = new Date().toISOString();
         const targetsToInsert = targets.map(t => ({
             ...t,
-            profile_id: profileId
+            profile_id: profileId,
+            created_at: now,
+            updated_at: now
         }));
 
-        // 1. Delete existing
-        const { error: deleteError } = await supabase
-            .from('goal_targets')
-            .delete()
-            .eq('profile_id', profileId);
+        // 1. Delete existing targets for this profile
+        const existingTargetsQuery = query(
+            collection(db, 'goal_targets'),
+            where('profile_id', '==', profileId)
+        );
+        const existingTargetsSnapshot = await getDocs(existingTargetsQuery);
 
-        if (deleteError) throw deleteError;
+        // Use batch for delete+insert (max 500 operations)
+        const batch = writeBatch(db);
 
-        // 2. Insert new
-        const { data, error: insertError } = await supabase
-            .from('goal_targets')
-            .insert(targetsToInsert)
-            .select();
+        // Delete existing
+        existingTargetsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
 
-        if (insertError) throw insertError;
-        return data;
+        // Insert new
+        const newTargets: GoalTarget[] = [];
+        for (const target of targetsToInsert) {
+            const newDocRef = doc(collection(db, 'goal_targets'));
+            batch.set(newDocRef, target);
+            newTargets.push({ id: newDocRef.id, ...target } as GoalTarget);
+        }
+
+        await batch.commit();
+        return newTargets;
     },
 
     /**
-     * Publish a Draft profile via RPC
+     * Publish a Draft profile via Firebase Function
      */
     async publishProfile(id: string) {
-        const { data, error } = await supabase
-            .rpc('publish_goal_profile', { profile_id: id });
+        const functions = getFirebaseFunctions();
+        const publishFunction = httpsCallable(functions, 'publishGoalProfile');
 
-        if (error) throw error;
-        return data;
+        const result = await publishFunction({ profileId: id });
+        return result.data;
     }
 };

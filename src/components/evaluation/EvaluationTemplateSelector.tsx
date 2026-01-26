@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 import { Check, ChevronsUpDown, FileText, Search, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -86,58 +87,59 @@ export function EvaluationTemplateSelector({
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ['evaluation-templates-with-fields', category],
         queryFn: async () => {
-            let query = supabase
-                .from('evaluation_forms')
-                .select(`
-          id,
-          nome,
-          descricao,
-          tipo,
-          referencias,
-          evaluation_form_fields (
-            id,
-            label,
-            tipo_campo,
-            placeholder,
-            opcoes,
-            ordem,
-            ordem,
-            obrigatorio,
-            grupo,
-            minimo,
-            maximo,
-            descricao
-          )
-        `)
-                .eq('ativo', true)
-                .order('nome');
+            const db = getFirebaseDb();
+            let q = query(
+                collection(db, 'evaluation_forms'),
+                where('ativo', '==', true),
+                orderBy('nome')
+            );
 
-            if (category) {
-                query = query.eq('tipo', category);
-            }
+            // Note: Firebase doesn't support multiple where clauses with different fields in a single query
+            // If category filtering is needed, we'll need to filter client-side or use a different approach
+            const snapshot = await getDocs(q);
 
-            const { data, error } = await query;
-            if (error) throw error;
+            const templatesWithFields = await Promise.all(
+                snapshot.docs.map(async (formDoc) => {
+                    const form = { id: formDoc.id, ...formDoc.data() } as any;
 
-            // Cast to any to avoid SelectQueryError issues with deep relations
-            const typedData = data as any[];
+                    // Skip if category is specified and doesn't match
+                    if (category && form.tipo !== category) {
+                        return null;
+                    }
 
-            return (typedData || []).map((t) => ({
-                id: t.id,
-                nome: t.nome,
-                descricao: t.descricao,
-                tipo: t.tipo,
-                referencias: t.referencias,
-                category: t.tipo,
-                fields: (t.evaluation_form_fields || []).map((f: any) => ({
-                    ...f,
-                    section: f.grupo,
-                    min: f.minimo,
-                    max: f.maximo,
-                    description: f.descricao,
-                    opcoes: typeof f.opcoes === 'string' ? JSON.parse(f.opcoes) : f.opcoes,
-                })).sort((a: TemplateField, b: TemplateField) => a.ordem - b.ordem),
-            })) as EvaluationTemplate[];
+                    // Fetch fields for this form
+                    const fieldsQuery = query(
+                        collection(db, 'evaluation_form_fields'),
+                        where('form_id', '==', form.id),
+                        orderBy('ordem')
+                    );
+                    const fieldsSnapshot = await getDocs(fieldsQuery);
+
+                    const fields = fieldsSnapshot.docs.map(fieldDoc => {
+                        const field = fieldDoc.data();
+                        return {
+                            ...field,
+                            section: field.grupo,
+                            min: field.minimo,
+                            max: field.maximo,
+                            description: field.descricao,
+                            opcoes: typeof field.opcoes === 'string' ? JSON.parse(field.opcoes) : field.opcoes,
+                        } as TemplateField;
+                    });
+
+                    return {
+                        id: form.id,
+                        nome: form.nome,
+                        descricao: form.descricao,
+                        tipo: form.tipo,
+                        referencias: form.referencias,
+                        category: form.tipo,
+                        fields: fields.sort((a, b) => a.ordem - b.ordem),
+                    } as EvaluationTemplate;
+                })
+            );
+
+            return templatesWithFields.filter((t): t is EvaluationTemplate => t !== null);
         },
     });
 

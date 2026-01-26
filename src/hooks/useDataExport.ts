@@ -1,6 +1,25 @@
+/**
+ * useDataExport - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('patients') → Firestore collection 'patients'
+ * - supabase.from('appointments') → Firestore collection 'appointments'
+ * - supabase.from('medical_records') → Firestore collection 'medical_records'
+ * - supabase.from('prescribed_exercises') → Firestore collection 'prescribed_exercises'
+ */
+
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export function useDataExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -10,32 +29,30 @@ export function useDataExport() {
     setIsExporting(true);
     try {
       // 1. Fetch patient profile
-      const { data: patient, error: patientError } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', patientId)
-        .single();
+      const patientDoc = await getDoc(doc(db, 'patients', patientId));
+      if (!patientDoc.exists()) {
+        throw new Error('Paciente não encontrado');
+      }
 
-      if (patientError) throw patientError;
+      const patient = { id: patientDoc.id, ...patientDoc.data() };
 
-      // 2. Fetch related data (appointments, records, etc)
-      // Usando Promise.all para paralelo
-      const [
-        { data: appointments },
-        { data: records },
-        { data: exercises }
-      ] = await Promise.all([
-        supabase.from('appointments').select('*').eq('patient_id', patientId),
-        supabase.from('medical_records').select('*').eq('patient_id', patientId),
-        supabase.from('prescribed_exercises').select('*').eq('patient_id', patientId)
+      // 2. Fetch related data (appointments, records, etc) in parallel
+      const [appointmentsSnap, recordsSnap, exercisesSnap] = await Promise.all([
+        getDocs(query(collection(db, 'appointments'), where('patient_id', '==', patientId))),
+        getDocs(query(collection(db, 'medical_records'), where('patient_id', '==', patientId))),
+        getDocs(query(collection(db, 'prescribed_exercises'), where('patient_id', '==', patientId)))
       ]);
+
+      const appointments = appointmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const records = recordsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const exercises = exercisesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       const fullData = {
         exportedAt: new Date().toISOString(),
         patient,
-        appointments: appointments || [],
-        medicalRecords: records || [],
-        prescribedExercises: exercises || [],
+        appointments,
+        medicalRecords: records,
+        prescribedExercises: exercises,
       };
 
       // 3. Trigger download

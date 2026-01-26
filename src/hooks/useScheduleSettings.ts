@@ -1,7 +1,31 @@
+/**
+ * useScheduleSettings - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - schedule_business_hours -> schedule_business_hours (Doc ID: orgId_day)
+ * - schedule_cancellation_rules -> schedule_cancellation_rules (Doc ID: orgId)
+ * - schedule_notification_settings -> schedule_notification_settings (Doc ID: orgId)
+ * - schedule_blocked_times -> schedule_blocked_times (Doc ID: auto, organization_id field)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // Types
 export interface BusinessHour {
@@ -63,6 +87,9 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Sábado' },
 ];
 
+// Helper to convert doc
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+
 export function useScheduleSettings() {
   const { toast } = useToast();
   const { user, profile } = useAuth();
@@ -74,33 +101,40 @@ export function useScheduleSettings() {
   const { data: businessHours, isLoading: isLoadingHours } = useQuery({
     queryKey: ['business-hours', organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schedule_business_hours')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('day_of_week');
-      if (error) throw error;
-      return data as BusinessHour[];
+      const q = query(
+        collection(db, 'schedule_business_hours'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
+      const hours = snapshot.docs.map(convertDoc) as BusinessHour[];
+      // Sort in JS because we query by organization_id
+      return hours.sort((a, b) => a.day_of_week - b.day_of_week);
     },
     enabled: !!organizationId,
   });
 
   const upsertBusinessHours = useMutation({
     mutationFn: async (hours: Partial<BusinessHour>[]) => {
-      const validHours = hours.filter(h => h.day_of_week !== undefined).map(h => ({
-        day_of_week: h.day_of_week as number,
-        is_open: h.is_open ?? true,
-        open_time: h.open_time ?? '07:00',
-        close_time: h.close_time ?? '21:00',
-        break_start: h.break_start || null,
-        break_end: h.break_end || null,
-        organization_id: organizationId,
-      }));
+      const validHours = hours.filter(h => h.day_of_week !== undefined);
 
-      const { error } = await supabase
-        .from('schedule_business_hours')
-        .upsert(validHours, { onConflict: 'organization_id,day_of_week' });
-      if (error) throw error;
+      const promises = validHours.map(async (h) => {
+        const docId = `${organizationId}_${h.day_of_week}`;
+        const docRef = doc(db, 'schedule_business_hours', docId);
+
+        const hourData = {
+          day_of_week: h.day_of_week,
+          is_open: h.is_open ?? true,
+          open_time: h.open_time ?? '07:00',
+          close_time: h.close_time ?? '21:00',
+          break_start: h.break_start || null,
+          break_end: h.break_end || null,
+          organization_id: organizationId,
+        };
+
+        await setDoc(docRef, hourData, { merge: true });
+      });
+
+      await Promise.all(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-hours'] });
@@ -115,23 +149,18 @@ export function useScheduleSettings() {
   const { data: cancellationRules, isLoading: isLoadingRules } = useQuery({
     queryKey: ['cancellation-rules', organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schedule_cancellation_rules')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .single();
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as CancellationRule | null;
+      const docRef = doc(db, 'schedule_cancellation_rules', organizationId!);
+      const snapshot = await getDoc(docRef);
+      if (!snapshot.exists()) return null;
+      return convertDoc(snapshot) as CancellationRule;
     },
     enabled: !!organizationId,
   });
 
   const upsertCancellationRules = useMutation({
     mutationFn: async (rules: Partial<CancellationRule>) => {
-      const { error } = await supabase
-        .from('schedule_cancellation_rules')
-        .upsert({ ...rules, organization_id: organizationId }, { onConflict: 'organization_id' });
-      if (error) throw error;
+      const docRef = doc(db, 'schedule_cancellation_rules', organizationId!);
+      await setDoc(docRef, { ...rules, organization_id: organizationId }, { merge: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cancellation-rules'] });
@@ -146,23 +175,18 @@ export function useScheduleSettings() {
   const { data: notificationSettings, isLoading: isLoadingNotifications } = useQuery({
     queryKey: ['notification-settings', organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schedule_notification_settings')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .single();
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as NotificationSettings | null;
+      const docRef = doc(db, 'schedule_notification_settings', organizationId!);
+      const snapshot = await getDoc(docRef);
+      if (!snapshot.exists()) return null;
+      return convertDoc(snapshot) as NotificationSettings;
     },
     enabled: !!organizationId,
   });
 
   const upsertNotificationSettings = useMutation({
     mutationFn: async (settings: Partial<NotificationSettings>) => {
-      const { error } = await supabase
-        .from('schedule_notification_settings')
-        .upsert({ ...settings, organization_id: organizationId }, { onConflict: 'organization_id' });
-      if (error) throw error;
+      const docRef = doc(db, 'schedule_notification_settings', organizationId!);
+      await setDoc(docRef, { ...settings, organization_id: organizationId }, { merge: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-settings'] });
@@ -177,23 +201,25 @@ export function useScheduleSettings() {
   const { data: blockedTimes, isLoading: isLoadingBlocked } = useQuery({
     queryKey: ['blocked-times', organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schedule_blocked_times')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('start_date');
-      if (error) throw error;
-      return data as BlockedTime[];
+      const q = query(
+        collection(db, 'schedule_blocked_times'),
+        where('organization_id', '==', organizationId),
+        orderBy('start_date', 'asc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as BlockedTime[];
     },
     enabled: !!organizationId,
   });
 
   const createBlockedTime = useMutation({
     mutationFn: async (blocked: Omit<BlockedTime, 'id' | 'created_by'>) => {
-      const { error } = await supabase
-        .from('schedule_blocked_times')
-        .insert({ ...blocked, organization_id: organizationId, created_by: user?.id });
-      if (error) throw error;
+      await addDoc(collection(db, 'schedule_blocked_times'), {
+        ...blocked,
+        organization_id: organizationId,
+        created_by: user?.uid,
+        created_at: new Date().toISOString()
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-times'] });
@@ -206,8 +232,7 @@ export function useScheduleSettings() {
 
   const deleteBlockedTime = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('schedule_blocked_times').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'schedule_blocked_times', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-times'] });

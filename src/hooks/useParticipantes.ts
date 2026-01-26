@@ -1,21 +1,49 @@
+/**
+ * useParticipantes - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('participantes') → Firestore collection 'participantes'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ParticipanteCreate, ParticipanteUpdate } from '@/lib/validations/participante';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+
+// Helper to convert Firestore doc to Participante
+const convertDocToParticipante = (doc: any): any => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  };
+};
 
 export function useParticipantes(eventoId: string) {
   return useQuery({
     queryKey: ['participantes', eventoId],
     queryFn: async () => {
-      // Optimized: Select only required columns instead of *
-      const { data, error } = await supabase
-        .from('participantes')
-        .select('id, evento_id, nome, email, telefone, status, confirmado, created_at, updated_at')
-        .eq('evento_id', eventoId)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'participantes'),
+        where('evento_id', '==', eventoId),
+        orderBy('created_at', 'desc')
+      );
 
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToParticipante);
     },
     enabled: !!eventoId,
     staleTime: 1000 * 60 * 5, // 5 minutos
@@ -29,15 +57,18 @@ export function useCreateParticipante() {
 
   return useMutation({
     mutationFn: async (participante: ParticipanteCreate) => {
-      // Optimized: Select only required columns
-      const { data, error } = await supabase
-        .from('participantes')
-        .insert([participante])
-        .select('id, evento_id, nome, email, telefone, status, confirmado, created_at, updated_at')
-        .single();
+      const participanteData = {
+        ...participante,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'participantes'), participanteData);
+      const snapshot = await getDocs(query(collection(db, 'participantes')));
+      const newDoc = snapshot.docs.find(doc => doc.id === docRef.id);
+
+      if (!newDoc) throw new Error('Failed to create participante');
+      return convertDocToParticipante(newDoc);
     },
     // Optimistic update - adiciona participante antes da resposta do servidor
     onMutate: async (newParticipante) => {
@@ -82,16 +113,17 @@ export function useUpdateParticipante() {
 
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: ParticipanteUpdate; eventoId: string }) => {
-      // Otimizado: Select apenas colunas necessárias
-      const { data: updated, error } = await supabase
-        .from('participantes')
-        .update(data)
-        .eq('id', id)
-        .select('id, evento_id, nome, email, telefone, status, confirmado, created_at, updated_at')
-        .single();
+      const docRef = doc(db, 'participantes', id);
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return { ...updated, evento_id: eventoId };
+      const snapshot = await getDocs(query(collection(db, 'participantes')));
+      const updatedDoc = snapshot.docs.find(doc => doc.id === id);
+
+      if (!updatedDoc) throw new Error('Failed to update participante');
+      return { ...convertDocToParticipante(updatedDoc), evento_id: eventoId };
     },
     // Optimistic update - atualiza participante antes da resposta do servidor
     onMutate: async ({ id, data, eventoId }) => {
@@ -132,12 +164,7 @@ export function useDeleteParticipante() {
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const { error } = await supabase
-        .from('participantes')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'participantes', id));
       return eventoId;
     },
     // Optimistic update - remove participante da lista visualmente
@@ -174,13 +201,13 @@ export function useExportParticipantes() {
 
   return useMutation({
     mutationFn: async (eventoId: string) => {
-      // Otimizado: Select apenas colunas necessárias para exportação
-      const { data, error } = await supabase
-        .from('participantes')
-        .select('nome, contato, instagram, segue_perfil, observacoes')
-        .eq('evento_id', eventoId);
+      const q = query(
+        collection(db, 'participantes'),
+        where('evento_id', '==', eventoId)
+      );
 
-      if (error) throw error;
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(convertDocToParticipante);
 
       // Criar CSV
       const headers = ['Nome', 'Contato', 'Instagram', 'Segue Perfil', 'Observações'];

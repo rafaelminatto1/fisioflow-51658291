@@ -1,49 +1,132 @@
-import { upload } from '@vercel/blob/client';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/integrations/firebase/app';
+/**
+ * File Upload Service - Migrated to Firebase Storage
+ *
+ * Migration from Vercel Blob to Firebase Storage:
+ * - uploadToBlob() → uploadFile() with public option
+ * - uploadToFirebase() → uploadFile()
+ * - All uploads now go through Firebase Storage
+ *
+ * @version 2.0.0 - Firebase Storage (replaces Vercel Blob)
+ *
+ * @deprecated Import from @/lib/firebase/storage instead
+ * This file is kept for backward compatibility
+ */
+
+import {
+  uploadFile,
+  uploadFiles,
+  uploadBase64,
+  uploadFromUrl,
+  getDownloadUrl,
+  deleteFile,
+  deleteFiles,
+  deleteFolder,
+  getFileMetadata,
+  listFiles,
+  updateFileMetadata,
+  getStorageStats,
+  copyFile,
+  moveFile,
+  STORAGE_FOLDERS,
+  SIZE_LIMITS,
+  type UploadOptions,
+  type UploadResult,
+  type StorageStats,
+} from '@/lib/firebase/storage';
+
+// ============================================================================
+// RE-EXPORTS FOR BACKWARD COMPATIBILITY
+// ============================================================================
+
+// Upload functions
+export { uploadFile, uploadFiles, uploadBase64, uploadFromUrl };
+
+// Download functions
+export { getDownloadUrl, getFileMetadata, listFiles };
+
+// Delete functions
+export { deleteFile, deleteFiles, deleteFolder };
+
+// Metadata functions
+export { updateFileMetadata, getStorageStats };
+
+// Utility functions
+export { copyFile, moveFile };
+
+// Types
+export type { UploadOptions, UploadResult, StorageStats };
+
+// Constants
+export { STORAGE_FOLDERS, SIZE_LIMITS };
+
+// ============================================================================
+// LEGACY FUNCTIONS (deprecated, maintained for compatibility)
+// ============================================================================
 
 /**
- * Upload a file to Vercel Blob (ideal for public assets like exercise videos)
+ * @deprecated Use uploadFile() with { public: true } instead
  */
 export async function uploadToBlob(file: File, folder: string = 'uploads') {
-    try {
-        const filename = `${folder}/${Date.now()}-${file.name}`;
-
-        // Use client-side upload which calls our /api/upload endpoint for auth
-        const newBlob = await upload(filename, file, {
-            access: 'public',
-            handleUploadUrl: '/api/upload',
-        });
-
-        return newBlob.url;
-    } catch (error) {
-        console.error('Error uploading to Vercel Blob:', error);
-        throw error;
-    }
+  console.warn('[uploadToBlob] Deprecated - use uploadFile() with { public: true }');
+  return uploadFile(file, { folder, public: true });
 }
 
 /**
- * Upload a file to Firebase Storage (ideal for secure documents)
+ * @deprecated Use uploadFile() instead
  */
 export async function uploadToFirebase(file: File, folder: string = 'documents') {
-    try {
-        const filename = `${folder}/${Date.now()}-${file.name}`;
-        const storageRef = ref(storage, filename);
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        return downloadURL;
-    } catch (error) {
-        console.error('Error uploading to Firebase Storage:', error);
-        throw error;
-    }
+  console.warn('[uploadToFirebase] Deprecated - use uploadFile()');
+  return uploadFile(file, { folder });
 }
 
 /**
- * Helper to determine storage strategy
+ * @deprecated All uploads now use Firebase Storage
  */
-export function getStorageStrategy(fileType: 'video' | 'image' | 'document') {
-    if (fileType === 'video' || fileType === 'image') {
-        return 'vercel-blob'; // High performance CDN
-    }
-    return 'firebase'; // Secure documents
+export function getStorageStrategy(_fileType: 'video' | 'image' | 'document'): 'firebase' {
+  // All uploads now go through Firebase Storage
+  // Public/private is controlled by the 'public' option
+  return 'firebase';
 }
+
+// ============================================================================
+// EXPORT EVERYTHING FROM FIREBASE STORAGE
+// ============================================================================
+
+// This allows a smooth migration:
+// Old code: import { uploadToBlob } from '@/lib/storage/upload'
+// New code: import { uploadFile } from '@/lib/firebase/storage'
+
+export {
+  // Upload
+  uploadFile,
+  uploadFiles,
+  uploadBase64,
+  uploadFromUrl,
+
+  // Download
+  getDownloadUrl,
+  getFileMetadata,
+  listFiles,
+
+  // Delete
+  deleteFile,
+  deleteFiles,
+  deleteFolder,
+
+  // Metadata
+  updateFileMetadata,
+  getStorageStats,
+
+  // Utility
+  copyFile,
+  moveFile,
+
+  // Types
+  type UploadOptions,
+  type UploadResult,
+  type StorageStats,
+
+  // Constants
+  STORAGE_FOLDERS,
+  SIZE_LIMITS,
+} from '@/lib/firebase/storage';

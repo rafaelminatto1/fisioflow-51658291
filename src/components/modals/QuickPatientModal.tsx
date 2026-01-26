@@ -8,10 +8,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AlertTriangle, UserPlus, Loader2, Phone, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
-import { useOrganizations } from '@/hooks/useOrganizations';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { patientsApi } from '@/integrations/firebase/functions';
 
 // ===== Schema de validação =====
 const quickPatientSchema = z.object({
@@ -66,29 +66,52 @@ const cleanPhoneNumber = (phone: string | undefined): string | null => {
 };
 
 // ===== Mensagens de erro amigáveis =====
-const getErrorMessage = (error: { code?: string; message?: string } | null | undefined): string => {
+const getErrorMessage = (error: { code?: string; message?: string; functionName?: string } | null | undefined): string => {
   const code = error?.code;
   const message = error?.message || '';
+  const functionName = error?.functionName || 'createPatient';
 
+  // Log detalhado para debug
+  console.error('[QuickPatientModal] Erro ao criar paciente:', { code, message, functionName, error });
+
+  // Erros específicos do Firebase/Postgres
   const errorMessages: Record<string, string> = {
     '23505': 'Já existe um paciente com este nome ou telefone cadastrado.',
     '42501': 'Sem permissão para criar pacientes. Verifique suas permissões.',
     '23503': 'Erro de referência: organização não encontrada.',
+    'not-found': 'Recurso não encontrado. Verifique a configuração do sistema.',
+    'permission-denied': 'Sem permissão para criar pacientes.',
+    'unauthenticated': 'Sessão expirada. Faça login novamente.',
+    'already-exists': 'Já existe um paciente com estes dados.',
   };
 
   if (code && errorMessages[code]) {
     return errorMessages[code];
   }
 
-  if (message.includes('row-level security')) {
+  // Erros do Firebase Functions
+  if (message.includes('FirebaseError') || message.includes('The project')) {
+    return 'Erro de conexão com o servidor. Tente novamente.';
+  }
+
+  if (message.includes('row-level security') || message.includes('insufficient permissions')) {
     return 'Sem permissão para criar pacientes. Verifique suas permissões.';
   }
 
-  if (message.includes('organization_id')) {
-    return 'Erro ao associar paciente à organização.';
+  if (message.includes('organization_id') || message.includes('organization')) {
+    return 'Erro ao associar paciente à organização. Verifique seu perfil.';
   }
 
-  return message || 'Não foi possível criar o paciente.';
+  if (message.includes('network')) {
+    return 'Erro de conexão. Verifique sua internet e tente novamente.';
+  }
+
+  // Se for um erro do FunctionCallError, tentar extrair mais informações
+  if (error instanceof Error && error.name === 'FunctionCallError') {
+    return `Erro ao chamar função ${functionName}. Verifique a conexão.`;
+  }
+
+  return message || 'Não foi possível criar o paciente. Tente novamente.';
 };
 
 // ===== Componente Principal =====
@@ -101,7 +124,7 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
+  const { user, profile } = useAuth(); // Firebase auth user and profile
   // useTransition para melhor UX durante operações assíncronas (React 18)
   const [isPending, startTransition] = useTransition();
 
@@ -129,69 +152,97 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
   // ===== Mutation para criar paciente =====
   const createPatientMutation = useMutation({
     mutationFn: async (data: QuickPatientFormData) => {
-      // Verificar autenticação
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-
-      if (authError) {
-        logger.error('Erro ao verificar autenticação', authError, 'QuickPatientModal');
-        throw new Error('Erro ao verificar autenticação. Tente novamente.');
-      }
-
-      const user = authData?.user;
+      // Verificar autenticação Firebase
       if (!user) {
+        logger.error('Usuário Firebase não autenticado', { user }, 'QuickPatientModal');
         throw new Error('Sessão expirada. Faça login novamente.');
       }
 
-      // Verificar organização
-      if (!currentOrganization?.id) {
-        logger.error('Organização não encontrada', { currentOrganization }, 'QuickPatientModal');
+      // Verificar organização (do profile do Firebase)
+      const organizationId = profile?.organization_id;
+      if (!organizationId) {
+        logger.error('Organização não encontrada no profile', { profile }, 'QuickPatientModal');
         throw new Error('Organização não encontrada. Tente fazer login novamente.');
       }
 
-      // Criar paciente (RLS já cuida das permissões)
-      const { data: newPatient, error } = await supabase
-        .from('patients')
-        .insert({
-          full_name: data.name.trim(),
-          phone: cleanPhoneNumber(data.phone),
+      // Log para debug
+      logger.info('Criando paciente via Firebase Functions', {
+        name: data.name.trim(),
+        phone: cleanPhoneNumber(data.phone),
+        organizationId,
+      }, 'QuickPatientModal');
+
+      // Criar paciente via Firebase Cloud Functions (PostgreSQL)
+      try {
+        const newPatient = await patientsApi.create({
+          name: data.name.trim(),
+          phone: cleanPhoneNumber(data.phone) || undefined,
           status: 'active',
           incomplete_registration: true,
-          organization_id: currentOrganization.id,
-        })
-        .select('id, full_name')
-        .single();
+          organization_id: organizationId,
+        });
 
-      if (error) {
-        logger.error('Erro ao criar paciente', error, 'QuickPatientModal');
-        throw error;
+        if (!newPatient) {
+          throw new Error('Paciente não foi criado. Tente novamente.');
+        }
+
+        logger.info('Paciente criado com sucesso via Firebase Functions', {
+          patientId: newPatient.id,
+          patientName: newPatient.name || newPatient.full_name
+        }, 'QuickPatientModal');
+
+        return newPatient;
+      } catch (err: any) {
+        // Capturar e logar erros do Firebase Functions
+        logger.error('Erro ao criar paciente via Firebase Functions', {
+          error: err,
+          errorMessage: err?.message,
+          errorCode: err?.code,
+          errorDetails: err?.details,
+        }, 'QuickPatientModal');
+
+        // Re-throw com contexto adicional para o getErrorMessage
+        const enhancedError = {
+          code: err?.code,
+          message: err?.message,
+          functionName: 'createPatient',
+        };
+        throw enhancedError;
       }
-
-      if (!newPatient) {
-        throw new Error('Paciente não foi criado. Tente novamente.');
-      }
-
-      return newPatient;
     },
     onSuccess: (newPatient) => {
-      logger.info('Paciente criado com sucesso', { patientId: newPatient.id }, 'QuickPatientModal');
+      logger.info('Paciente criado com sucesso', {
+        patientId: newPatient.id,
+        patientName: newPatient.name || newPatient.full_name
+      }, 'QuickPatientModal');
 
       // Usar startTransition para atualizações de estado não urgentes (React 18)
       startTransition(() => {
-        // Invalidar cache
+        // Invalidar cache para recarregar lista de pacientes
         queryClient.invalidateQueries({ queryKey: ['patients'] });
+        queryClient.invalidateQueries({ queryKey: ['activePatients'] });
+        queryClient.invalidateQueries({ queryKey: ['current-organization'] });
 
         toast({
           title: '✅ Paciente criado!',
-          description: `${newPatient.full_name} foi adicionado. Complete o cadastro quando possível.`,
+          description: `${newPatient.name || newPatient.full_name} foi adicionado. Complete o cadastro quando possível.`,
         });
 
         reset();
         onOpenChange(false);
-        onPatientCreated(newPatient.id, newPatient.full_name);
+        onPatientCreated(newPatient.id, newPatient.name || newPatient.full_name);
       });
     },
-    onError: (error: { code?: string; message?: string } | null | undefined) => {
+    onError: (error: any) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
+
+      // Melhorar o log para incluir FunctionCallError
+      if (error.name === 'FunctionCallError') {
+        logger.error('Detalhes do erro FunctionCallError', {
+          functionName: error.functionName,
+          originalError: error.originalError,
+        }, 'QuickPatientModal');
+      }
 
       toast({
         title: 'Erro ao criar paciente',

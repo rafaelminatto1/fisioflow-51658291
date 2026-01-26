@@ -1,3 +1,12 @@
+/**
+ * File Upload Test Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Storage:
+ * - supabase.auth.getUser() → useAuth() from AuthContext
+ * - supabase.storage.from().upload() → Firebase Storage uploadBytes()
+ * - supabase.storage.from().getPublicUrl() → getDownloadURL()
+ */
+
 import React, { useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,7 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, X, CheckCircle2, AlertCircle, FileText, FileImage, FileVideo } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useDropzone } from 'react-dropzone';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { getFirebaseStorage } from '@/integrations/firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface UploadedFile {
   id: string;
@@ -21,6 +32,7 @@ interface UploadedFile {
 }
 
 const FileUploadTest = () => {
+  const { user } = useAuth();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [, setIsDragging] = useState(false);
 
@@ -28,35 +40,23 @@ const FileUploadTest = () => {
     const { id: fileId, file } = uploadedFile;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('Usuário não autenticado.');
       }
-      const filePath = `${user.id}/${Date.now()}_${file.name}`;
+      const filePath = `${user.uid}/${Date.now()}_${file.name}`;
+      const storage = getFirebaseStorage();
+      const storageRef = ref(storage, `documents/${filePath}`);
 
-      const { error } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '31536000', // 1 ano para documentos
-          upsert: false,
-        });
+      // Upload file to Firebase Storage
+      await uploadBytes(storageRef, file);
 
-      if (error) {
-        throw error;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData) {
-        throw new Error('Não foi possível obter a URL pública.');
-      }
+      // Get public URL
+      const url = await getDownloadURL(storageRef);
 
       setFiles(prev =>
         prev.map(f =>
           f.id === fileId
-            ? { ...f, progress: 100, status: 'success', url: publicUrlData.publicUrl, path: filePath }
+            ? { ...f, progress: 100, status: 'success', url, path: filePath }
             : f
         )
       );
@@ -99,221 +99,138 @@ const FileUploadTest = () => {
       'application/pdf': ['.pdf'],
       'application/msword': ['.doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'video/*': ['.mp4', '.mov']
     }
   });
 
-  const removeFile = async (fileId: string) => {
-    const fileToRemove = files.find(f => f.id === fileId);
-    setFiles(prev => prev.filter(f => f.id !== fileId));
-
-    if (fileToRemove && fileToRemove.status === 'success' && fileToRemove.path) {
-      const { error } = await supabase.storage
-        .from('documents')
-        .remove([fileToRemove.path]);
-
-      if (error) {
-        setFiles(prev => [...prev, fileToRemove]);
-        toast({
-          title: 'Erro ao remover arquivo',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else {
-        toast({ title: 'Arquivo removido com sucesso' });
-      }
-    }
+  const removeFile = (id: string) => {
+    setFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const getFileIcon = (fileName: string) => {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) {
-      return <FileImage className="w-8 h-8 text-blue-500" />;
-    }
-    if (['mp4', 'mov', 'avi'].includes(ext || '')) {
-      return <FileVideo className="w-8 h-8 text-purple-500" />;
-    }
-    return <FileText className="w-8 h-8 text-gray-500" />;
+  const clearAll = () => {
+    setFiles([]);
   };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const totalFiles = files.length;
-  const successFiles = files.filter(f => f.status === 'success').length;
-  const uploadingFiles = files.filter(f => f.status === 'uploading').length;
-  const errorFiles = files.filter(f => f.status === 'error').length;
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        <section className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
-              <Upload className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Upload de Arquivos</h1>
-              <p className="text-muted-foreground">
-                Sistema de upload e gerenciamento de arquivos
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Badge variant="secondary">
-              {totalFiles} {totalFiles === 1 ? 'arquivo' : 'arquivos'}
-            </Badge>
-            {uploadingFiles > 0 && (
-              <Badge variant="default">
-                {uploadingFiles} enviando
-              </Badge>
-            )}
-          </div>
-        </section>
-
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Tamanho máximo por arquivo: 10MB. Formatos aceitos: imagens, PDF, DOC, DOCX, vídeos.
-          </AlertDescription>
-        </Alert>
-
-        <Card>
+      <div className="container mx-auto py-8 max-w-4xl">
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Área de Upload</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Teste de Upload de Arquivos
+            </CardTitle>
             <CardDescription>
-              Arraste arquivos ou clique para selecionar
+              Teste o upload de arquivos usando Firebase Storage
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
-                ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+              className={`
+                border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
+                transition-colors duration-200
+                ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}
+              `}
             >
               <input {...getInputProps()} />
-              <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
-              {isDragActive ? (
-                <p className="text-lg font-medium text-primary">Solte os arquivos aqui...</p>
-              ) : (
-                <>
-                  <p className="text-lg font-medium mb-2">
-                    Arraste arquivos aqui ou clique para selecionar
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Suporta múltiplos arquivos
-                  </p>
-                </>
-              )}
+              <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-lg font-medium mb-2">
+                {isDragActive ? 'Solte os arquivos aqui' : 'Arraste arquivos aqui ou clique para selecionar'}
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                PDF, DOC, DOCX, Imagens (máx. 10MB)
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {files.length > 0 && (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Arquivos</CardTitle>
-              <CardDescription>
-                {successFiles} de {totalFiles} arquivos enviados com sucesso
-              </CardDescription>
+              <Button variant="outline" size="sm" onClick={clearAll}>
+                Limpar Todos
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {files.map((uploadedFile) => (
-                  <div
-                    key={uploadedFile.id}
-                    className="flex items-center gap-4 p-4 border rounded-lg"
-                  >
-                    <div className="flex-shrink-0">
-                      {getFileIcon(uploadedFile.file.name)}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium truncate">
-                          {uploadedFile.file.name}
+                {files.map(file => {
+                  const getStatusIcon = () => {
+                    switch (file.status) {
+                      case 'success':
+                        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+                      case 'error':
+                        return <AlertCircle className="h-5 w-5 text-red-500" />;
+                      default:
+                        return null;
+                    }
+                  };
+
+                  const getFileIcon = () => {
+                    if (file.file.type.startsWith('image/')) {
+                      return <FileImage className="h-5 w-5 text-blue-500" />;
+                    } else if (file.file.type === 'application/pdf') {
+                      return <FileText className="h-5 w-5 text-red-500" />;
+                    } else {
+                      return <FileText className="h-5 w-5 text-gray-500" />;
+                    }
+                  };
+
+                  return (
+                    <div key={file.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                      {getFileIcon()}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{file.file.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(file.file.size / 1024).toFixed(2)} KB
                         </p>
+                        {file.status === 'uploading' && (
+                          <Progress value={file.progress} className="mt-2" />
+                        )}
+                        {file.url && (
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-500 hover:underline mt-1 block"
+                          >
+                            Ver arquivo
+                          </a>
+                        )}
+                        {file.error && (
+                          <p className="text-sm text-red-500 mt-1">{file.error}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={file.status === 'success' ? 'default' : file.status === 'error' ? 'destructive' : 'secondary'}
+                        >
+                          {file.status === 'uploading' ? 'Enviando...' : file.status === 'success' ? 'Sucesso' : 'Erro'}
+                        </Badge>
+                        {getStatusIcon()}
                         <Button
                           variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(uploadedFile.id)}
+                          size="icon"
+                          onClick={() => removeFile(file.id)}
+                          disabled={file.status === 'uploading'}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-muted-foreground">
-                          {formatFileSize(uploadedFile.file.size)}
-                        </span>
-                        {uploadedFile.status === 'success' && (
-                          <Badge variant="default" className="gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Concluído
-                          </Badge>
-                        )}
-                        {uploadedFile.status === 'error' && (
-                          <Badge variant="destructive" className="gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Erro
-                          </Badge>
-                        )}
-                        {uploadedFile.status === 'uploading' && (
-                          <Badge variant="secondary">
-                            {Math.round(uploadedFile.progress)}%
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      {uploadedFile.status === 'uploading' && (
-                        <Progress value={uploadedFile.progress} className="h-2" />
-                      )}
-
-                      {uploadedFile.status === 'success' && uploadedFile.url && (
-                        <a
-                          href={uploadedFile.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Visualizar arquivo
-                        </a>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
         )}
 
-        {totalFiles > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Estatísticas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{successFiles}</div>
-                  <div className="text-sm text-muted-foreground">Sucesso</div>
-                </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{uploadingFiles}</div>
-                  <div className="text-sm text-muted-foreground">Enviando</div>
-                </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{errorFiles}</div>
-                  <div className="text-sm text-muted-foreground">Erros</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {files.length > 0 && files.every(f => f.status !== 'uploading') && (
+          <Alert className="mt-4">
+            <AlertDescription>
+              {files.filter(f => f.status === 'success').length} de {files.length} arquivos foram enviados com sucesso.
+            </AlertDescription>
+          </Alert>
         )}
       </div>
     </MainLayout>

@@ -1,14 +1,23 @@
+/**
+ * useAvailableTimeSlots - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('schedule_business_hours') → Firestore collection 'schedule_business_hours'
+ * - supabase.from('schedule_blocked_times') → Firestore collection 'schedule_blocked_times'
+ */
+
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
 import type { BusinessHour, BlockedTime } from './useScheduleSettings';
 import { useAuth } from './useAuth';
 
 import { generateTimeSlots, TimeSlotInfo } from '@/utils/scheduleHelpers';
 
 export type { TimeSlotInfo };
+
+const db = getFirebaseDb();
 
 export function useAvailableTimeSlots(date: Date | null) {
   const { user } = useAuth();
@@ -18,7 +27,6 @@ export function useAvailableTimeSlots(date: Date | null) {
     queryKey: ['profile-org', user?.uid],
     queryFn: async () => {
       if (!user?.uid) return null;
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       if (profileDoc.exists()) {
         return profileDoc.data();
@@ -34,13 +42,13 @@ export function useAvailableTimeSlots(date: Date | null) {
   const { data: businessHours } = useQuery({
     queryKey: ['business-hours', organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schedule_business_hours')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('day_of_week');
-      if (error) throw error;
-      return data as BusinessHour[];
+      const q = query(
+        collection(db, 'schedule_business_hours'),
+        where('organization_id', '==', organizationId),
+        orderBy('day_of_week')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as BusinessHour[];
     },
     enabled: !!organizationId,
   });
@@ -49,12 +57,12 @@ export function useAvailableTimeSlots(date: Date | null) {
   const { data: blockedTimes } = useQuery({
     queryKey: ['blocked-times', organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('schedule_blocked_times')
-        .select('*')
-        .eq('organization_id', organizationId);
-      if (error) throw error;
-      return data as BlockedTime[];
+      const q = query(
+        collection(db, 'schedule_blocked_times'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as BlockedTime[];
     },
     enabled: !!organizationId,
   });

@@ -1,8 +1,32 @@
+/**
+ * useTarefas - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('tarefas') → Firestore collection 'tarefas'
+ * - supabase.auth.getUser() → Firebase Auth currentUser
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getUserOrganizationId } from '@/utils/userHelpers';
-import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  writeBatch,
+  documentId
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+const auth = getFirebaseAuth();
 
 export interface Tarefa {
   id: string;
@@ -56,17 +80,30 @@ export const PRIORIDADE_COLORS: Record<TarefaPrioridade, string> = {
   URGENTE: 'bg-red-500/20 text-red-400'
 };
 
+// Helper: Convert Firestore doc to Tarefa
+const convertDocToTarefa = (doc: any): Tarefa => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Tarefa;
+};
+
 export function useTarefas() {
   return useQuery({
     queryKey: ['tarefas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tarefas')
-        .select('*')
-        .order('order_index', { ascending: true });
+      const user = auth.currentUser;
+      if (!user) return [];
 
-      if (error) throw error;
-      return (data || []) as Tarefa[];
+      const q = query(
+        collection(db, 'tarefas'),
+        where('organization_id', '==', await getUserOrganizationId()),
+        orderBy('order_index', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToTarefa);
     },
     staleTime: 1000 * 60 * 5, // 5 minutos - dados considerados frescos
     gcTime: 1000 * 60 * 30, // 30 minutos - tempo para garbage collection
@@ -84,14 +121,14 @@ export function useProjectTarefas(projectId: string | undefined) {
     queryFn: async () => {
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-        .from('tarefas')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('order_index', { ascending: true });
+      const q = query(
+        collection(db, 'tarefas'),
+        where('project_id', '==', projectId),
+        orderBy('order_index', 'asc')
+      );
 
-      if (error) throw error;
-      return (data || []) as Tarefa[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToTarefa);
     },
     enabled: !!projectId, // Só executa se projectId for fornecido
     staleTime: 1000 * 60 * 5,
@@ -105,29 +142,36 @@ export function useCreateTarefa() {
 
   return useMutation({
     mutationFn: async (tarefa: Partial<Tarefa>) => {
-      // Get org_id from profile (migrated to helper that uses Firestore)
       const organization_id = await getUserOrganizationId();
-      const auth = getFirebaseAuth();
       const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Usuário não autenticado');
 
-      const { data, error } = await supabase
-        .from('tarefas')
-        .insert([{
-          titulo: tarefa.titulo!,
-          descricao: tarefa.descricao,
-          status: tarefa.status || 'A_FAZER',
-          prioridade: tarefa.prioridade || 'MEDIA',
-          data_vencimento: tarefa.data_vencimento,
-          tags: tarefa.tags || [],
-          order_index: tarefa.order_index || 0,
-          organization_id,
-          created_by: firebaseUser?.uid
-        }])
-        .select()
-        .single();
+      const tarefaData = {
+        titulo: tarefa.titulo!,
+        descricao: tarefa.descricao,
+        status: tarefa.status || 'A_FAZER',
+        prioridade: tarefa.prioridade || 'MEDIA',
+        data_vencimento: tarefa.data_vencimento,
+        tags: tarefa.tags || [],
+        order_index: tarefa.order_index || 0,
+        organization_id,
+        created_by: firebaseUser.uid,
+        project_id: tarefa.project_id,
+        parent_id: tarefa.parent_id,
+        checklist: tarefa.checklist,
+        attachments: tarefa.attachments,
+        dependencies: tarefa.dependencies,
+        start_date: tarefa.start_date,
+        responsavel_id: tarefa.responsavel_id,
+        lead_id: tarefa.lead_id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'tarefas'), tarefaData);
+      const docSnap = await getDoc(docRef);
+
+      return { id: docSnap.id, ...tarefaData };
     },
     onMutate: async (newTarefa) => {
       // Cancelar queries em andamento
@@ -186,15 +230,14 @@ export function useUpdateTarefa() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Tarefa> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('tarefas')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'tarefas', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToTarefa(docSnap);
     },
     onMutate: async (updatedTarefa) => {
       // Cancelar queries em andamento para evitar conflitos
@@ -218,8 +261,6 @@ export function useUpdateTarefa() {
       }
       toast.error('Erro ao atualizar tarefa: ' + err.message);
     },
-    // Removido onSettled - a atualização otimista já mantém o cache sincronizado
-    // Invalidação não é mais necessária pois confiamos na resposta do servidor
   });
 }
 
@@ -228,12 +269,7 @@ export function useDeleteTarefa() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('tarefas')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'tarefas', id));
       return id;
     },
     onMutate: async (deletedId) => {
@@ -269,16 +305,20 @@ export function useBulkUpdateTarefas() {
 
   return useMutation({
     mutationFn: async (tarefas: Array<{ id: string; status?: TarefaStatus; order_index?: number }>) => {
-      const promises = tarefas.map(({ id, ...updates }) =>
-        supabase.from('tarefas').update(updates).eq('id', id)
-      );
+      // Use batch for bulk updates (max 500 operations)
+      const batchSize = 500;
+      for (let i = 0; i < tarefas.length; i += batchSize) {
+        const batch = writeBatch(db);
+        const chunk = tarefas.slice(i, i + batchSize);
 
-      const results = await Promise.all(promises);
-      const errors = results.filter(r => r.error);
+        chunk.forEach(({ id, ...updates }) => {
+          const docRef = doc(db, 'tarefas', id);
+          batch.update(docRef, { ...updates, updated_at: new Date().toISOString() });
+        });
 
-      if (errors.length > 0) {
-        throw new Error('Erro ao atualizar algumas tarefas');
+        await batch.commit();
       }
+
       return tarefas;
     },
     onMutate: async (updatedTarefas) => {
@@ -307,6 +347,5 @@ export function useBulkUpdateTarefas() {
       }
       toast.error('Erro ao reordenar tarefas: ' + error.message);
     },
-    // Removido onSuccess - atualização otimista já mantém cache sincronizado
   });
 }

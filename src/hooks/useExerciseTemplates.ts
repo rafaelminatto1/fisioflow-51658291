@@ -1,6 +1,29 @@
+/**
+ * useExerciseTemplates - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('exercise_templates') → Firestore collection 'exercise_templates'
+ * - supabase.from('exercise_template_items') → Firestore collection 'exercise_template_items'
+ * - Joins with exercises handled by fetching exercise data separately
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface ExerciseTemplate {
   id: string;
@@ -46,38 +69,59 @@ export interface ExerciseTemplateItem {
   };
 }
 
+// Helper to convert Firestore doc to ExerciseTemplate
+const convertDocToExerciseTemplate = (doc: any): ExerciseTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as ExerciseTemplate;
+};
+
+// Helper to convert Firestore doc to ExerciseTemplateItem
+const convertDocToExerciseTemplateItem = (doc: any): ExerciseTemplateItem => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as ExerciseTemplateItem;
+};
+
 export const useExerciseTemplates = (category?: string) => {
   const queryClient = useQueryClient();
 
   const { data: templates = [], isLoading, error } = useQuery({
     queryKey: ['exercise-templates', category],
     queryFn: async () => {
-      let query = supabase
-        .from('exercise_templates')
-        .select('*')
-        .order('condition_name');
+      let q = query(
+        collection(db, 'exercise_templates'),
+        orderBy('condition_name')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(convertDocToExerciseTemplate);
+
+      // Filter by category if provided
       if (category) {
-        query = query.eq('category', category);
+        data = data.filter(t => t.category === category);
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as ExerciseTemplate[];
+      return data;
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (template: Omit<ExerciseTemplate, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('exercise_templates')
-        .insert([template])
-        .select()
-        .single();
+      const templateData = {
+        ...template,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'exercise_templates'), templateData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToExerciseTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-templates'] });
@@ -90,15 +134,14 @@ export const useExerciseTemplates = (category?: string) => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...template }: Partial<ExerciseTemplate> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('exercise_templates')
-        .update(template)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'exercise_templates', id);
+      await updateDoc(docRef, {
+        ...template,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToExerciseTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-templates'] });
@@ -111,12 +154,7 @@ export const useExerciseTemplates = (category?: string) => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('exercise_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'exercise_templates', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-templates'] });
@@ -149,31 +187,54 @@ export const useTemplateItems = (templateId?: string) => {
     queryFn: async () => {
       if (!templateId) return [];
 
-      const { data, error } = await supabase
-        .from('exercise_template_items')
-        .select(`
-          *,
-          exercise:exercises(id, name, description, category, difficulty)
-        `)
-        .eq('template_id', templateId)
-        .order('order_index');
+      const q = query(
+        collection(db, 'exercise_template_items'),
+        where('template_id', '==', templateId),
+        orderBy('order_index')
+      );
 
-      if (error) throw error;
-      return data as ExerciseTemplateItem[];
+      const snapshot = await getDocs(q);
+      const templateItems = snapshot.docs.map(convertDocToExerciseTemplateItem);
+
+      // Fetch exercise data for each item
+      const itemsWithExercise = await Promise.all(
+        templateItems.map(async (item) => {
+          if (item.exercise_id) {
+            const exerciseDoc = await getDoc(doc(db, 'exercises', item.exercise_id));
+            if (exerciseDoc.exists()) {
+              const exerciseData = exerciseDoc.data();
+              return {
+                ...item,
+                exercise: {
+                  id: exerciseDoc.id,
+                  name: exerciseData.name,
+                  description: exerciseData.description,
+                  category: exerciseData.category,
+                  difficulty: exerciseData.difficulty,
+                },
+              };
+            }
+          }
+          return item;
+        })
+      );
+
+      return itemsWithExercise as ExerciseTemplateItem[];
     },
     enabled: !!templateId,
   });
 
   const addItemMutation = useMutation({
     mutationFn: async (item: Omit<ExerciseTemplateItem, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase
-        .from('exercise_template_items')
-        .insert([item])
-        .select()
-        .single();
+      const itemData = {
+        ...item,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'exercise_template_items'), itemData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToExerciseTemplateItem(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-template-items', templateId] });
@@ -186,12 +247,7 @@ export const useTemplateItems = (templateId?: string) => {
 
   const removeItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('exercise_template_items')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'exercise_template_items', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-template-items', templateId] });
@@ -204,15 +260,11 @@ export const useTemplateItems = (templateId?: string) => {
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, ...item }: Partial<ExerciseTemplateItem> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('exercise_template_items')
-        .update(item)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'exercise_template_items', id);
+      await updateDoc(docRef, item);
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToExerciseTemplateItem(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-template-items', templateId] });

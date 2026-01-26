@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-blue-glow: rgba(0, 242, 255, 0.4);
+            --dark-bg: #0a1114;
+            --card-bg: #121d21;
+            --border-color: #1e2e35;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: #e2e8f0;
+        }
+        .mono-text {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .neon-border {
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 8px var(--neon-blue-glow);
+        }
+        .neon-text {
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue-glow);
+        }
+        .glass-panel {
+            background: rgba(18, 29, 33, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+        .chart-grid {
+            background-image: 
+                linear-gradient(to right, rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .subtle-grid {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8">
+<div class="w-full max-w-[440px] px-4 space-y-6">
+<header class="text-center">
+<h1 class="text-xl font-bold tracking-tight uppercase neon-text">High-Tech Clinical Interface</h1>
+<p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] mt-1 font-medium">Physiotherapy Protocol Management • Orthopedic Core v4.2</p>
+</header>
+<div class="glass-panel rounded-xl overflow-hidden shadow-2xl border-l-2 border-l-[var(--neon-blue)]">
+<div class="p-4 space-y-4">
+<div class="flex justify-between items-center border-b border-white/5 pb-2">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Overview</span>
+<span class="text-[10px] mono-text neon-text">70% RECOVERY EFFICIENCY</span>
+</div>
+<div class="grid grid-cols-12 gap-4">
+<div class="col-span-4 flex flex-col items-center justify-center">
+<div class="relative w-20 h-20">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-slate-800" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" stroke-width="3"></circle>
+<circle class="neon-text" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" stroke-dasharray="213.6" stroke-dashoffset="64.08" stroke-width="3"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-lg font-bold leading-none">70%</span>
+<span class="text-[7px] uppercase tracking-tighter text-slate-400">Complete</span>
+</div>
+</div>
+</div>
+<div class="col-span-8 flex flex-col justify-between">
+<div class="grid grid-cols-2 gap-x-3 gap-y-2">
+<div class="space-y-0.5">
+<p class="text-[8px] uppercase text-slate-500 font-bold tracking-wider">Medical Data</p>
+<div class="mono-text text-[9px] flex justify-between border-b border-white/5 pb-0.5">
+<span class="text-slate-400">HR Range:</span>
+<span class="text-white">67-84</span>
+</div>
+<div class="mono-text text-[9px] flex justify-between border-b border-white/5 pb-0.5">
+<span class="text-slate-400">VO2 Max:</span>
+<span class="text-white">39/42</span>
+</div>
+<div class="mono-text text-[9px] flex justify-between border-b border-white/5 pb-0.5">
+<span class="text-slate-400">Flexion:</span>
+<span class="text-white">102°</span>
+</div>
+</div>
+<div class="space-y-0.5">
+<p class="text-[8px] uppercase text-slate-500 font-bold tracking-wider">Sessions</p>
+<div class="mono-text text-[9px] flex justify-between border-b border-white/5 pb-0.5">
+<span class="text-slate-400">Time:</span>
+<span class="text-white">14m 20s</span>
+</div>
+<div class="mono-text text-[9px] flex justify-between border-b border-white/5 pb-0.5">
+<span class="text-slate-400">Loads:</span>
+<span class="text-white">28 reps</span>
+</div>
+<div class="mono-text text-[9px] flex justify-between border-b border-white/5 pb-0.5">
+<span class="text-slate-400">Compliance:</span>
+<span class="text-white">95%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="relative h-24 w-full bg-[#0d161a] rounded border border-white/5 overflow-hidden">
+<div class="absolute inset-0 chart-grid opacity-20"></div>
+<svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+<path d="M0 60 Q 40 40, 80 70 T 160 50 T 240 30 T 320 60 T 400 45" fill="none" stroke="var(--neon-blue)" stroke-width="1.5"></path>
+<path d="M0 60 Q 40 40, 80 70 T 160 50 T 240 30 T 320 60 T 400 45 L 400 96 L 0 96 Z" fill="url(#grad1)"></path>
+<defs>
+<linearGradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:var(--neon-blue);stop-opacity:0.2"></stop>
+<stop offset="100%" style="stop-color:var(--neon-blue);stop-opacity:0"></stop>
+</linearGradient>
+</defs>
+<circle cx="80" cy="70" fill="var(--neon-blue)" r="2"></circle>
+<circle cx="160" cy="50" fill="var(--neon-blue)" r="2"></circle>
+<circle cx="240" cy="30" fill="var(--neon-blue)" r="2"></circle>
+</svg>
+<div class="absolute bottom-1 right-2 text-[7px] mono-text text-slate-600">t/cycle 24h</div>
+</div>
+<button class="w-full py-3 bg-[var(--neon-blue)] text-black font-bold uppercase tracking-widest text-xs rounded shadow-[0_0_15px_rgba(0,242,255,0.3)] hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">description</span>
+                    Export Clinical Letterhead
+                </button>
+</div>
+</div>
+<div class="glass-panel rounded-xl overflow-hidden p-5 subtle-grid">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded bg-[#1e2e35] flex items-center justify-center neon-border">
+<span class="material-symbols-outlined text-[var(--neon-blue)] text-xl">clinical_notes</span>
+</div>
+<div>
+<h2 class="text-sm font-bold uppercase tracking-wide">Phase 1: Early Mobilization</h2>
+<p class="text-[9px] text-slate-500 font-medium">ESTIMATED DURATION: 14 DAYS</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="p-3 bg-white/5 rounded-lg border border-white/10 flex items-center gap-4">
+<div class="w-16 h-16 bg-black/40 rounded border border-white/5 p-1 flex items-center justify-center">
+<img alt="Anatomy" class="w-full h-full object-contain opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2St9_Tbjs4x8c9NTb_Elhn0qdsJqfVjecRF1s8n3MgOKpuUY16rBJTDxFlexXSuiRJC0MgiAhLKJPYCiZMBXpdgm-GpxkE2mnXluCxX9-vGOQDpGOs8GjEGjSJ9fqJVmWJb2ftYBN9zbULKe6Tixky8wxwxL6X3NT8w4FBWAhy6wZh-dP7VEpIAvkA-xdDYD7p7DuizqoD4tMEKIMUHh-IFfEJQ0P_xf8naO5tbx_TGIhmlKrdL2kA7gfk9lZN0DZfzMUCxuAWok"/>
+</div>
+<div class="flex-1 space-y-1">
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Mission 01</p>
+<h3 class="text-xs font-semibold">Precocious Mobilization</h3>
+<div class="flex gap-2 mt-1.5">
+<button class="px-3 py-1 bg-white/5 border border-[var(--neon-blue)]/30 text-[9px] font-bold text-[var(--neon-blue)] rounded hover:bg-[var(--neon-blue)]/10 transition-colors uppercase">Details</button>
+<button class="px-3 py-1 bg-[var(--neon-blue)] text-black text-[9px] font-bold rounded uppercase">Mark Complete</button>
+</div>
+</div>
+</div>
+<div class="p-3 bg-white/5 rounded-lg border border-white/10 flex items-center gap-4">
+<div class="w-16 h-16 bg-black/40 rounded border border-white/5 p-1 flex items-center justify-center overflow-hidden">
+<img alt="Anatomy" class="w-full h-full object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC38twTUhpW7Tn-6BCzZfZ3GV7QHO3IPSBcbYkXlcIsfC0w0n5zW2ej2uBln8ANT6eNRA_I32HeafeXCC383xHfBRPwiU9bWNBvOn9RdU-_ThKNQj9gY0UYQr_FI7TPSnDd9K0hRuAOiFr3CmyFvk_jm8TnQjwatNi_2I_eNx7DLFuACEth-dBORnyGVuGavxYQWGuZdELNIDkZU8necQXPoFKuWc9ta-SC0y37Vc6T2IiJmqo0J3YCjkRpt7kffb8JJ3A80bhX870"/>
+</div>
+<div class="flex-1 space-y-1">
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Mission 02</p>
+<h3 class="text-xs font-semibold">Active Transfer Protocols</h3>
+<div class="flex gap-2 mt-1.5">
+<button class="px-3 py-1 bg-white/5 border border-[var(--neon-blue)]/30 text-[9px] font-bold text-[var(--neon-blue)] rounded hover:bg-[var(--neon-blue)]/10 transition-colors uppercase">Details</button>
+<button class="px-3 py-1 bg-[var(--neon-blue)] text-black text-[9px] font-bold rounded uppercase">Mark Complete</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-5 border-t border-white/5">
+<h4 class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">Critical Restrictions</h4>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-red-500/5 border border-red-900/30 p-2 rounded flex gap-3">
+<div class="relative w-10 h-10 shrink-0">
+<img class="w-full h-full rounded opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjCa-oXtcJ52RnouP6tzolWWQhIRXloTpZBMZ2qV-0nhUHeS0wKWJdDzuPR8peOqdhpsyYZUwnwPWcL6i95pyn9XTZ89t0Gblr9EkTBhAP_RPvcE1CdU4z7HD-maNaAvjocp3PmdwCj46eSAykB4Uz8lydqMk_22B0G_Vh8-HM2FR-BDmyKtjrXzRsGgG9vd9rO_GIfhbVcu8pSz0ACwqC11cRVeYakv8Tm3IAVOm8MK_3Yec90BmO0FeadnizCITLVQc-ye0YVbA"/>
+</div>
+<div class="min-w-0">
+<p class="text-[8px] font-bold text-red-400 uppercase leading-tight">Flexion Limit</p>
+<p class="text-[9px] mono-text text-white/80 leading-tight mt-1">Avoid &gt; 90° ROM</p>
+</div>
+</div>
+<div class="bg-red-500/5 border border-red-900/30 p-2 rounded flex gap-3">
+<div class="relative w-10 h-10 shrink-0">
+<img class="w-full h-full rounded opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxQVA8zBd3YsIkM6sBZMuwScBdgb4QoVBlDB1NEOX_s6sTpvVYoTsOIWtPhc3LUvS7x9lOCQCBwaWZKqSKQf_7-Ya9wI_r_iC73WxNO4f0VxHZEpLjeGHhX_Ypjy1Wo2T-ioUKmuVyL0CBh_MtBLr70o4x_5WQZ3l3cDRBvb95jKU8Chbpizgu-QYIwsXObyakr7XNk7dKXcqV5vnolhwmohMW3ytYSYKvCzZsDVXEFCG772geHSfKhGdzpq4mi9sIsSx9iyh7uiE"/>
+</div>
+<div class="min-w-0">
+<p class="text-[8px] font-bold text-red-400 uppercase leading-tight">Adduction</p>
+<p class="text-[9px] mono-text text-white/80 leading-tight mt-1">Forbidden Zone</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-panel rounded-xl opacity-40 grayscale border-dashed border-white/20 p-4">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400">lock</span>
+<span class="text-xs font-bold uppercase tracking-widest text-slate-400">Phase 2: Strength</span>
+</div>
+<span class="text-[8px] mono-text text-slate-500">REQ: 100% PHASE 1</span>
+</div>
+</div>
+<nav class="flex justify-around items-center pt-2 pb-1 border-t border-white/5 w-full">
+<button class="flex flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-xl">home</span>
+<span class="text-[8px] uppercase font-bold tracking-tighter">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-[var(--neon-blue)]">
+<span class="material-symbols-outlined text-xl">assignment</span>
+<span class="text-[8px] uppercase font-bold tracking-tighter">Protocols</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-xl">leaderboard</span>
+<span class="text-[8px] uppercase font-bold tracking-tighter">Analytics</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-xl">person</span>
+<span class="text-[8px] uppercase font-bold tracking-tighter">Profile</span>
+</button>
+</nav>
+</div>
+
+</body></html>

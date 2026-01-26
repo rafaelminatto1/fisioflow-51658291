@@ -1,11 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFirebaseDb } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+/**
+ * usePushNotifications - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - push_subscriptions -> Firestore collection 'push_subscriptions'
+ */
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  addDoc,
+  deleteDoc
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
+
+export interface PushSubscription {
+  id: string;
+  user_id: string;
+  organization_id?: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  device_info?: {
+    userAgent: string;
+    platform: string;
+  };
+  active: boolean;
+  created_at: string;
+}
 
 export const usePushNotifications = () => {
   const { user } = useAuth();
@@ -28,14 +61,14 @@ export const usePushNotifications = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('push_subscriptions')
-        .select('*')
-        .eq('user_id', user.uid)
-        .eq('active', true);
+      const q = query(
+        collection(db, 'push_subscriptions'),
+        where('user_id', '==', user.uid),
+        where('active', '==', true)
+      );
 
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     enabled: !!user
   });
@@ -95,28 +128,43 @@ export const usePushNotifications = () => {
       // Save subscription to database
       if (!user) throw new Error('User not authenticated');
 
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profileData = profileDoc.exists() ? profileDoc.data() : null;
+      const endpoint = subscriptionJson.endpoint!;
 
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .upsert({
-          user_id: user.uid,
-          organization_id: profileData?.organization_id,
-          endpoint: subscriptionJson.endpoint!,
-          p256dh: subscriptionJson.keys?.p256dh || '',
-          auth: subscriptionJson.keys?.auth || '',
-          device_info: {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-          },
-          active: true,
-        }, {
-          onConflict: 'user_id,endpoint'
+      // Use endpoint as ID or composite ID to prevent duplicates if possible, 
+      // but here we just query to check existence or use a generated ID with where clause.
+      // Better strategy: Use a hash of endpoint as ID, or just query first.
+
+      // We will check if it exists:
+      const q = query(collection(db, 'push_subscriptions'), where('user_id', '==', user.uid), where('endpoint', '==', endpoint));
+      const existingSnap = await getDocs(q);
+
+      const subscriptionData = {
+        user_id: user.uid,
+        organization_id: profileData?.organization_id,
+        endpoint: endpoint,
+        p256dh: subscriptionJson.keys?.p256dh || '',
+        auth: subscriptionJson.keys?.auth || '',
+        device_info: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+        },
+        active: true,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!existingSnap.empty) {
+        // Update existing
+        const docRef = existingSnap.docs[0].ref;
+        await updateDoc(docRef, subscriptionData);
+      } else {
+        // Create new
+        await addDoc(collection(db, 'push_subscriptions'), {
+          ...subscriptionData,
+          created_at: new Date().toISOString()
         });
-
-      if (error) throw error;
+      }
 
       return subscription;
     },
@@ -141,11 +189,17 @@ export const usePushNotifications = () => {
 
         // Deactivate in database
         if (user) {
-          await supabase
-            .from('push_subscriptions')
-            .update({ active: false })
-            .eq('user_id', user.uid)
-            .eq('endpoint', subscription.endpoint);
+          const q = query(
+            collection(db, 'push_subscriptions'),
+            where('user_id', '==', user.uid),
+            where('endpoint', '==', subscription.endpoint)
+          );
+          const existingSnap = await getDocs(q);
+
+          if (!existingSnap.empty) {
+            const docRef = existingSnap.docs[0].ref;
+            await updateDoc(docRef, { active: false });
+          }
         }
       }
     },

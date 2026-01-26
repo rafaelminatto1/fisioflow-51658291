@@ -1,3 +1,11 @@
+/**
+ * CRM Campaigns Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('email_campanhas') → Firestore collection 'email_campanhas'
+ * - Uses deleteDoc() for deletion
+ */
+
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -16,10 +24,13 @@ import {
   XCircle, AlertCircle, TrendingUp, Filter, FileText
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { doc, deleteDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const db = getFirebaseDb();
 
 interface EmailCampaign {
   id: string;
@@ -211,8 +222,7 @@ export default function CRMCampanhasPage() {
   // Deletar campanha
   const deleteCampaign = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('email_campanhas').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'email_campanhas', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-campanhas'] });

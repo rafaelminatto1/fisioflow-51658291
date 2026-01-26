@@ -1,24 +1,57 @@
+/**
+ * useIntelligentReports - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - generated_reports -> generated_reports collection
+ * - Firebase Functions for report generation
+ * - Auth through useAuth() from AuthContext
+ */
+
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { getFirebaseApp } from '@/integrations/firebase/app';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+
+const functions = getFunctions(getFirebaseApp());
+const db = getFirebaseApp().firestore() || null;
+
+// Helper to convert doc
+const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
 
 export function useIntelligentReports(patientId?: string) {
+  const { user } = useAuth();
+
   const generateReport = useMutation({
-    mutationFn: async ({ 
-      patientId, 
-      reportType, 
-      dateRange 
-    }: { 
-      patientId: string; 
-      reportType: string; 
-      dateRange: { start: string; end: string } 
+    mutationFn: async ({
+      patientId,
+      reportType,
+      dateRange
+    }: {
+      patientId: string;
+      reportType: string;
+      dateRange: { start: string; end: string }
     }) => {
-      const { data, error } = await supabase.functions.invoke('intelligent-reports', {
-        body: { patientId, reportType, dateRange }
+      if (!user) throw new Error('User not authenticated');
+
+      const generateReportFn = httpsCallable(functions, 'intelligent-reports');
+      const result = await generateReportFn({
+        patientId,
+        reportType,
+        dateRange,
+        userId: user.uid
       });
 
-      if (error) throw error;
-      return data;
+      if (result.data.error) throw new Error(result.data.error);
+      return result.data;
     },
     onError: (error: Error) => {
       toast({
@@ -32,19 +65,19 @@ export function useIntelligentReports(patientId?: string) {
   const { data: recentReports, isLoading } = useQuery({
     queryKey: ['recent-reports', patientId],
     queryFn: async () => {
-      if (!patientId) return [];
-      
-      const { data, error } = await supabase
-        .from('generated_reports')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      if (!patientId || !db) return [];
 
-      if (error) throw error;
-      return data;
+      const q = query(
+        collection(db, 'generated_reports'),
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc'),
+        limit(10)
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc);
     },
-    enabled: !!patientId,
+    enabled: !!patientId && !!db,
   });
 
   return {

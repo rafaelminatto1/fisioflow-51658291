@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOrganizations } from '@/hooks/useOrganizations';
-import { supabase } from '@/integrations/supabase/client';
 import { formatCPF, formatPhoneInput } from '@/utils/formatInputs';
 import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeString, sanitizeEmail } from '@/lib/validations';
 import { logger } from '@/lib/errors/logger';

@@ -1,0 +1,32 @@
+{
+  "completed": [
+    "patient_gamification"
+  ],
+  "failed": [
+    {
+      "table": "xp_transactions",
+      "error": "Erro ao buscar dados (página 0): Could not find the table 'public.xp_transactions' in the schema cache"
+    },
+    {
+      "table": "shop_items",
+      "error": "Erro ao buscar dados (página 0): Could not find the table 'public.shop_items' in the schema cache"
+    },
+    {
+      "table": "user_inventory",
+      "error": "Erro ao buscar dados (página 0): Could not find the table 'public.user_inventory' in the schema cache"
+    },
+    {
+      "table": "patient_surgeries",
+      "error": "Erro ao buscar dados (página 0): Could not find the table 'public.patient_surgeries' in the schema cache"
+    },
+    {
+      "table": "patient_goals",
+      "error": "Erro ao buscar dados (página 0): Could not find the table 'public.patient_goals' in the schema cache"
+    },
+    {
+      "table": "patient_pathologies",
+      "error": "Erro ao buscar dados (página 0): Could not find the table 'public.patient_pathologies' in the schema cache"
+    }
+  ],
+  "startedAt": 1769396437469
+}

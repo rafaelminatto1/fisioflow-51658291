@@ -1,6 +1,27 @@
+/**
+ * useDocumentTemplates - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('atestado_templates') → Firestore collection 'atestado_templates'
+ * - supabase.from('contrato_templates') → Firestore collection 'contrato_templates'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 // Atestado Templates
 export interface AtestadoTemplate {
@@ -35,18 +56,36 @@ export interface ContratoTemplate {
 
 export type ContratoTemplateFormData = Partial<Pick<ContratoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>> & Pick<ContratoTemplate, 'nome' | 'descricao' | 'conteudo' | 'tipo' | 'ativo'>;
 
+// Helper to convert Firestore doc to AtestadoTemplate
+const convertDocToAtestadoTemplate = (doc: any): AtestadoTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as AtestadoTemplate;
+};
+
+// Helper to convert Firestore doc to ContratoTemplate
+const convertDocToContratoTemplate = (doc: any): ContratoTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as ContratoTemplate;
+};
+
 // Atestado Hooks
 export function useAtestadoTemplates() {
   return useQuery({
     queryKey: ['atestado_templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('atestado_templates')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'atestado_templates'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as AtestadoTemplate[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToAtestadoTemplate);
     },
   });
 }
@@ -56,14 +95,16 @@ export function useCreateAtestadoTemplate() {
 
   return useMutation({
     mutationFn: async (template: AtestadoTemplateFormData) => {
-      const { data, error } = await supabase
-        .from('atestado_templates')
-        .insert(template)
-        .select()
-        .single();
+      const templateData = {
+        ...template,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'atestado_templates'), templateData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToAtestadoTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atestado_templates'] });
@@ -80,15 +121,14 @@ export function useUpdateAtestadoTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<AtestadoTemplate> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('atestado_templates')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'atestado_templates', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToAtestadoTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atestado_templates'] });
@@ -105,12 +145,7 @@ export function useDeleteAtestadoTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('atestado_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'atestado_templates', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atestado_templates'] });
@@ -127,13 +162,13 @@ export function useContratoTemplates() {
   return useQuery({
     queryKey: ['contrato_templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contrato_templates')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'contrato_templates'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as ContratoTemplate[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToContratoTemplate);
     },
   });
 }
@@ -143,14 +178,16 @@ export function useCreateContratoTemplate() {
 
   return useMutation({
     mutationFn: async (template: ContratoTemplateFormData) => {
-      const { data, error } = await supabase
-        .from('contrato_templates')
-        .insert(template)
-        .select()
-        .single();
+      const templateData = {
+        ...template,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'contrato_templates'), templateData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToContratoTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato_templates'] });
@@ -167,15 +204,14 @@ export function useUpdateContratoTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ContratoTemplate> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('contrato_templates')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'contrato_templates', id);
+      await updateDoc(docRef, {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToContratoTemplate(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato_templates'] });
@@ -192,12 +228,7 @@ export function useDeleteContratoTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('contrato_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'contrato_templates', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato_templates'] });

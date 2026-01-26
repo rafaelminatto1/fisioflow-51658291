@@ -23,7 +23,6 @@ import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/da
 import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { ClipboardCheck } from 'lucide-react';
 
 interface ProtocolDetailViewProps {

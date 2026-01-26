@@ -28,7 +28,8 @@ import {
   RefreshCw, History, Award, Zap, User
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, doc, getDocs, query, where, orderBy, limit, getDoc, QueryDocumentSnapshot } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -61,14 +62,16 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['gamification-patient-detail', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_gamification')
-        .select('*')
-        .eq('patient_id', patientId)
-        .maybeSingle();
+      const profileRef = doc(db, 'patient_gamification', patientId);
+      const docSnapshot = await getDoc(profileRef);
 
-      if (error) throw error;
-      return data;
+      if (docSnapshot.exists()) {
+        return {
+          id: docSnapshot.id,
+          ...docSnapshot.data()
+        };
+      }
+      return null;
     },
     enabled: !!patientId && open,
   });
@@ -77,14 +80,17 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   const { data: patient } = useQuery({
     queryKey: ['patient-basic', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('full_name, email')
-        .eq('id', patientId)
-        .maybeSingle();
+      const patientRef = doc(db, 'patients', patientId);
+      const docSnapshot = await getDoc(patientRef);
 
-      if (error) throw error;
-      return data;
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        return {
+          full_name: data.full_name || '',
+          email: data.email || ''
+        };
+      }
+      return null;
     },
     enabled: !!patientId && open,
   });
@@ -93,15 +99,24 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   const { data: transactions } = useQuery({
     queryKey: ['gamification-transactions', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('xp_transactions')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const transactionsRef = collection(db, 'xp_transactions');
+      const q = query(
+        transactionsRef,
+        where('patient_id', '==', patientId),
+        orderBy('created_at', 'desc'),
+        limit(50)
+      );
+      const querySnapshot = await getDocs(q);
 
-      if (error) throw error;
-      return data || [];
+      const transactions: any[] = [];
+      querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+        transactions.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+
+      return transactions;
     },
     enabled: !!patientId && open && activeTab === 'history',
   });
@@ -110,18 +125,35 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   const { data: achievements } = useQuery({
     queryKey: ['gamification-achievements', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('achievements_log')
-        .select(`
-          *,
-          achievements!inner(title, icon, description)
-        `)
-        .eq('patient_id', patientId)
-        .order('unlocked_at', { ascending: false })
-        .limit(20);
+      const achievementsLogRef = collection(db, 'achievements_log');
+      const q = query(
+        achievementsLogRef,
+        where('patient_id', '==', patientId),
+        orderBy('unlocked_at', 'desc'),
+        limit(20)
+      );
+      const querySnapshot = await getDocs(q);
 
-      if (error) throw error;
-      return data || [];
+      const achievements: any[] = [];
+      for (const docSnapshot of querySnapshot.docs) {
+        const logData = {
+          id: docSnapshot.id,
+          ...docSnapshot.data()
+        };
+
+        // Fetch achievement details
+        if (logData.achievement_id) {
+          const achievementRef = doc(db, 'achievements', logData.achievement_id);
+          const achievementSnap = await getDoc(achievementRef);
+          if (achievementSnap.exists()) {
+            logData.achievements = achievementSnap.data();
+          }
+        }
+
+        achievements.push(logData);
+      }
+
+      return achievements;
     },
     enabled: !!patientId && open && activeTab === 'achievements',
   });

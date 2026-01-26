@@ -1,10 +1,20 @@
+/**
+ * AI Predictions Panel Component - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.functions.invoke('ai-treatment-assistant') → Firebase Functions httpsCallable()
+ * - Removed unused Supabase imports
+ * - AI predictions now use Firebase Cloud Functions
+ */
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { Brain, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 
 interface AIPredictionsPanelProps {
@@ -24,23 +34,31 @@ export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
       setLoading(true);
       setPredictions(null);
 
-      const { data, error } = await supabase.functions.invoke('ai-treatment-assistant', {
-        body: { patientId, action: 'predict_adherence' }
+      // Call Firebase Cloud Function
+      const functions = getFirebaseFunctions();
+      const treatmentAssistantFunction = httpsCallable(functions, 'ai-treatment-assistant');
+      const result = await treatmentAssistantFunction({
+        patientId,
+        action: 'predict_adherence'
       });
 
-      if (error) throw error;
+      const data = result.data as any;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       const suggestion = data.suggestion;
-      
+
       const riskMatch = suggestion.match(/Risco.*?(Baixo|Médio|Alto)/i);
       const risk = riskMatch ? riskMatch[1] : 'Médio';
-      
+
       setPredictions({
         adherenceRisk: risk,
         riskScore: risk === 'Baixo' ? 20 : risk === 'Médio' ? 50 : 80,
         factors: suggestion,
       });
-      
+
       toast({
         title: '🔮 Predições geradas',
         description: 'Análise preditiva concluída',
@@ -85,8 +103,8 @@ export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={runPredictions} 
+          <Button
+            onClick={runPredictions}
             disabled={loading}
             className="w-full"
             size="lg"
