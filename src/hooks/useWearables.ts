@@ -1,6 +1,26 @@
+/**
+ * useWearables - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - wearable_data -> wearable_data
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import {
+    collection,
+    addDoc,
+    query,
+    where,
+    orderBy,
+    getDocs,
+    getDoc,
+    doc
+} from 'firebase/firestore';
+import { useAuth } from '@/contexts/AuthContext';
+
+const db = getFirebaseDb();
 
 export interface WearableDataPoint {
     id: string;
@@ -11,48 +31,49 @@ export interface WearableDataPoint {
     unit?: string;
     timestamp: string;
     created_at: string;
+    organization_id?: string;
 }
+
+// Helper to convert doc
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
 
 export const useWearables = (patientId?: string) => {
     const queryClient = useQueryClient();
+    const { profile } = useAuth(); // We can get organization_id from context
 
     const { data: wearableData = [], isLoading, error } = useQuery({
         queryKey: ['wearables', patientId],
         queryFn: async () => {
             if (!patientId) return [];
 
-            const { data, error } = await supabase
-                .from('wearable_data')
-                .select('*')
-                .eq('patient_id', patientId)
-                .order('timestamp', { ascending: false });
+            const q = query(
+                collection(db, 'wearable_data'),
+                where('patient_id', '==', patientId),
+                orderBy('timestamp', 'desc')
+            );
 
-            if (error) throw error;
-            return data as unknown as WearableDataPoint[];
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(convertDoc) as WearableDataPoint[];
         },
         enabled: !!patientId,
     });
 
     const addWearableData = useMutation({
         mutationFn: async (newData: Omit<WearableDataPoint, 'id' | 'created_at'>) => {
-            // Get current user's org
-            const { data: userData } = await supabase.auth.getUser();
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('organization_id')
-                .eq('user_id', userData.user?.id)
-                .single();
+            if (!profile?.organization_id) {
+                // Try to fallback if profile not loaded but Auth user exists? 
+                // Context should handle profile loading.
+                throw new Error('Organization not found');
+            }
 
-            if (!profile?.organization_id) throw new Error('Organization not found');
+            const docRef = await addDoc(collection(db, 'wearable_data'), {
+                ...newData,
+                organization_id: profile.organization_id,
+                created_at: new Date().toISOString()
+            });
 
-            const { data, error } = await supabase
-                .from('wearable_data')
-                .insert([{ ...newData, organization_id: profile.organization_id }])
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
+            const newDoc = await getDoc(docRef);
+            return convertDoc(newDoc);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['wearables', patientId] });

@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useQuery } from '@tanstack/react-query';

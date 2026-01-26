@@ -1,4 +1,37 @@
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * Exercise Videos Service - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase:
+ * - supabase.from('exercise_videos') → Firestore collection 'exercise_videos'
+ * - supabase.storage.from('exercise-videos') → Firebase Storage
+ * - supabase.auth.getUser() → Firebase Auth
+ */
+
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit as limitClause,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query as firestoreQuery,
+  QueryConstraint,
+  and as firestoreAnd,
+  or as firestoreOr,
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getFirebaseStorage } from '@/integrations/firebase/storage';
+
+const db = getFirebaseDb();
+const storage = getFirebaseStorage();
+const auth = getFirebaseAuth();
 
 // ============================================================================
 // TYPES
@@ -129,35 +162,41 @@ export const exerciseVideosService = {
    */
   async getVideos(filters?: VideoFilterOptions): Promise<ExerciseVideo[]> {
     try {
-      let query = supabase
-        .from('exercise_videos')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const constraints: QueryConstraint[] = [
+        orderBy('created_at', 'desc')
+      ];
 
       if (filters?.category && filters.category !== 'all') {
-        query = query.eq('category', filters.category);
+        constraints.push(where('category', '==', filters.category));
       }
 
       if (filters?.difficulty && filters.difficulty !== 'all') {
-        query = query.eq('difficulty', filters.difficulty);
+        constraints.push(where('difficulty', '==', filters.difficulty));
       }
 
       if (filters?.bodyPart && filters.bodyPart !== 'all') {
-        query = query.contains('body_parts', [filters.bodyPart]);
+        constraints.push(where('body_parts', 'array-contains', filters.bodyPart));
       }
 
       if (filters?.equipment && filters.equipment !== 'all') {
-        query = query.contains('equipment', [filters.equipment]);
+        constraints.push(where('equipment', 'array-contains', filters.equipment));
       }
 
+      const q = firestoreQuery(collection(db, 'exercise_videos'), ...constraints);
+      const querySnapshot = await getDocs(q);
+
+      let videos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ExerciseVideo[];
+
+      // Client-side filtering for search term (Firestore doesn't support ILIKE)
       if (filters?.searchTerm) {
-        query = query.or(`title.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%`);
+        const searchLower = filters.searchTerm.toLowerCase();
+        videos = videos.filter(video =>
+          video.title.toLowerCase().includes(searchLower) ||
+          (video.description && video.description.toLowerCase().includes(searchLower))
+        );
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return (data || []) as ExerciseVideo[];
+      return videos;
     } catch (error) {
       console.error('[exerciseVideosService] getVideos error:', error);
       throw error;
@@ -169,14 +208,14 @@ export const exerciseVideosService = {
    */
   async getVideoById(id: string): Promise<ExerciseVideo> {
     try {
-      const { data, error } = await supabase
-        .from('exercise_videos')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const docRef = doc(db, 'exercise_videos', id);
+      const docSnap = await getDoc(docRef);
 
-      if (error) throw error;
-      return data as ExerciseVideo;
+      if (!docSnap.exists()) {
+        throw new Error('Vídeo não encontrado');
+      }
+
+      return { id: docSnap.id, ...docSnap.data() } as ExerciseVideo;
     } catch (error) {
       console.error('[exerciseVideosService] getVideoById error:', error);
       throw error;
@@ -188,14 +227,14 @@ export const exerciseVideosService = {
    */
   async getVideosByExerciseId(exerciseId: string): Promise<ExerciseVideo[]> {
     try {
-      const { data, error } = await supabase
-        .from('exercise_videos')
-        .select('*')
-        .eq('exercise_id', exerciseId)
-        .order('created_at', { ascending: false });
+      const q = firestoreQuery(
+        collection(db, 'exercise_videos'),
+        where('exercise_id', '==', exerciseId),
+        orderBy('created_at', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
 
-      if (error) throw error;
-      return (data || []) as ExerciseVideo[];
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ExerciseVideo[];
     } catch (error) {
       console.error('[exerciseVideosService] getVideosByExerciseId error:', error);
       throw error;
@@ -349,8 +388,8 @@ export const exerciseVideosService = {
   async uploadVideo(data: UploadVideoData): Promise<ExerciseVideo> {
     try {
       // Get authenticated user
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      const user = auth.currentUser;
+      if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
@@ -386,76 +425,59 @@ export const exerciseVideosService = {
       const videoExt = data.file.name.split('.').pop() || 'mp4';
       const timestamp = Date.now();
       const videoFileName = `${timestamp}_${sanitizedTitle}.${videoExt}`;
-      const videoPath = `videos/${user.id}/${videoFileName}`;
+      const videoPath = `videos/${user.uid}/${videoFileName}`;
 
-      const { error: videoUploadError } = await supabase.storage
-        .from('exercise-videos')
-        .upload(videoPath, data.file, {
-          cacheControl: '31536000', // 1 ano - vídeos não mudam
-          upsert: false,
-        });
+      const videoRef = ref(storage, `exercise-videos/${videoPath}`);
+      await uploadBytes(videoRef, data.file, {
+        customMetadata: {
+          contentType: data.file.type,
+          cacheControl: 'public, max-age=31536000', // 1 ano
+        }
+      });
 
-      if (videoUploadError) {
-        console.error('[exerciseVideosService] Video upload error:', videoUploadError);
-        throw new Error('Falha ao fazer upload do vídeo');
-      }
-
-      // Get public URL for video
-      const { data: videoUrlData } = supabase.storage
-        .from('exercise-videos')
-        .getPublicUrl(videoPath);
+      const videoUrl = await getDownloadURL(videoRef);
 
       // Upload thumbnail if available
       if (thumbnailFile) {
         const thumbnailExt = thumbnailFile.name.split('.').pop() || 'jpg';
         const thumbnailFileName = `${timestamp}_${sanitizedTitle}_thumb.${thumbnailExt}`;
-        const thumbnailPath = `thumbnails/${user.id}/${thumbnailFileName}`;
+        const thumbnailPath = `thumbnails/${user.uid}/${thumbnailFileName}`;
 
-        const { error: thumbUploadError } = await supabase.storage
-          .from('exercise-videos')
-          .upload(thumbnailPath, thumbnailFile, {
-            cacheControl: '31536000', // 1 ano - thumbnails estáticas
-            upsert: false,
+        try {
+          const thumbnailRef = ref(storage, `exercise-videos/${thumbnailPath}`);
+          await uploadBytes(thumbnailRef, thumbnailFile, {
+            customMetadata: {
+              contentType: thumbnailFile.type,
+              cacheControl: 'public, max-age=31536000',
+            }
           });
-
-        if (!thumbUploadError) {
-          const { data: thumbUrlData } = supabase.storage
-            .from('exercise-videos')
-            .getPublicUrl(thumbnailPath);
-          thumbnailUrl = thumbUrlData.publicUrl;
-        } else {
-          console.warn('[exerciseVideosService] Thumbnail upload error:', thumbUploadError);
+          thumbnailUrl = await getDownloadURL(thumbnailRef);
+        } catch (thumbError) {
+          console.warn('[exerciseVideosService] Thumbnail upload error:', thumbError);
         }
       }
 
       // Create database record
-      const { data: videoRecord, error: dbError } = await supabase
-        .from('exercise_videos')
-        .insert({
-          exercise_id: data.exercise_id || null,
-          title: data.title.trim(),
-          description: data.description?.trim() || null,
-          video_url: videoUrlData.publicUrl,
-          thumbnail_url: thumbnailUrl,
-          duration: Math.round(metadata.duration || 0),
-          file_size: data.file.size,
-          category: data.category,
-          difficulty: data.difficulty,
-          body_parts: data.body_parts,
-          equipment: data.equipment,
-          uploaded_by: user.id,
-        })
-        .select()
-        .single();
+      const videoData = {
+        exercise_id: data.exercise_id || null,
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl,
+        duration: Math.round(metadata.duration || 0),
+        file_size: data.file.size,
+        category: data.category,
+        difficulty: data.difficulty,
+        body_parts: data.body_parts,
+        equipment: data.equipment,
+        uploaded_by: user.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (dbError) {
-        // Cleanup uploaded files if DB insert fails
-        await supabase.storage.from('exercise-videos').remove([videoPath]);
-        console.error('[exerciseVideosService] DB insert error:', dbError);
-        throw new Error('Falha ao salvar registro do vídeo');
-      }
+      const docRef = await addDoc(collection(db, 'exercise_videos'), videoData);
 
-      return videoRecord as ExerciseVideo;
+      return { id: docRef.id, ...videoData } as ExerciseVideo;
     } catch (error) {
       console.error('[exerciseVideosService] uploadVideo error:', error);
       throw error;
@@ -474,18 +496,17 @@ export const exerciseVideosService = {
     updates: Partial<Omit<ExerciseVideo, 'id' | 'created_at' | 'uploaded_by' | 'video_url' | 'file_size'>>
   ): Promise<ExerciseVideo> {
     try {
-      const { data, error } = await supabase
-        .from('exercise_videos')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'exercise_videos', id);
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data as ExerciseVideo;
+      await updateDoc(docRef, updateData);
+
+      // Fetch and return updated document
+      const updatedDoc = await getDoc(docRef);
+      return { id: updatedDoc.id, ...updatedDoc.data() } as ExerciseVideo;
     } catch (error) {
       console.error('[exerciseVideosService] updateVideo error:', error);
       throw error;
@@ -502,41 +523,40 @@ export const exerciseVideosService = {
   async deleteVideo(id: string): Promise<ExerciseVideo> {
     try {
       // Get video record first
-      const { data: video, error: fetchError } = await supabase
-        .from('exercise_videos')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const docRef = doc(db, 'exercise_videos', id);
+      const docSnap = await getDoc(docRef);
 
-      if (fetchError || !video) {
+      if (!docSnap.exists()) {
         throw new Error('Vídeo não encontrado');
       }
 
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('exercise_videos')
-        .delete()
-        .eq('id', id);
+      const video = { id: docSnap.id, ...docSnap.data() } as ExerciseVideo;
 
-      if (dbError) throw dbError;
+      // Delete from database
+      await deleteDoc(docRef);
 
       // Delete files from storage (fire and forget, log errors only)
       const filesToDelete: string[] = [];
       const videoPath = this.extractPathFromUrl(video.video_url);
-      if (videoPath) filesToDelete.push(videoPath);
+      if (videoPath) filesToDelete.push(`exercise-videos/${videoPath}`);
 
       if (video.thumbnail_url) {
         const thumbPath = this.extractPathFromUrl(video.thumbnail_url);
-        if (thumbPath) filesToDelete.push(thumbPath);
+        if (thumbPath) filesToDelete.push(`exercise-videos/${thumbPath}`);
       }
 
       if (filesToDelete.length > 0) {
-        await supabase.storage.from('exercise-videos').remove(filesToDelete).catch((err) => {
+        await Promise.allSettled(
+          filesToDelete.map(path => {
+            const fileRef = ref(storage, path);
+            return deleteObject(fileRef);
+          })
+        ).catch((err) => {
           console.warn('[exerciseVideosService] Failed to delete storage files:', err);
         });
       }
 
-      return video as ExerciseVideo;
+      return video;
     } catch (error) {
       console.error('[exerciseVideosService] deleteVideo error:', error);
       throw error;
@@ -552,9 +572,14 @@ export const exerciseVideosService = {
    */
   extractPathFromUrl(url: string): string | null {
     try {
+      // Firebase Storage URLs format: https://firebasestorage.googleapis.com/v0/b/bucket/o/path?token=...
+      // We need to extract the path after /o/ and before the query string
       const urlObj = new URL(url);
-      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/exercise-videos\/(.+)$/);
-      return pathMatch ? pathMatch[1] : null;
+      const pathMatch = urlObj.pathname.match(/\/o\/(.+)$/);
+      if (pathMatch) {
+        return decodeURIComponent(pathMatch[1]);
+      }
+      return null;
     } catch {
       return null;
     }
@@ -583,13 +608,13 @@ export const exerciseVideosService = {
 
   /**
    * Get signed URL for private video access (if needed in future)
+   * Note: Firebase Storage doesn't have built-in signed URLs like Supabase.
+   * This would require setting up Firebase Cloud Storage signed URLs via GCS.
    */
   async getSignedUrl(videoPath: string, expiresIn: number = 3600): Promise<string> {
-    const { data, error } = await supabase.storage
-      .from('exercise-videos')
-      .createSignedUrl(videoPath, expiresIn);
-
-    if (error) throw error;
-    return data.signedUrl;
+    // For now, return the public URL
+    // In production, you might use Firebase Cloud Functions to generate signed URLs
+    const storageRef = ref(storage, `exercise-videos/${videoPath}`);
+    return getDownloadURL(storageRef);
   },
 };

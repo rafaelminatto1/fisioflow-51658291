@@ -1,6 +1,29 @@
+/**
+ * useLeads - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - leads -> leads
+ * - lead_historico -> lead_historico
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Lead {
   id: string;
@@ -28,15 +51,40 @@ export interface LeadHistorico {
   created_at: string;
 }
 
+// Helper
+const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+
 export function useLeads(estagio?: string) {
   return useQuery({
     queryKey: ['leads', estagio],
     queryFn: async () => {
-      let query = supabase.from('leads').select('id, nome, estagio, origem, responsavel_id, data_ultimo_contato').order('created_at', { ascending: false });
-      if (estagio) query = query.eq('estagio', estagio);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Lead[];
+      let q = query(collection(db, 'leads'), orderBy('created_at', 'desc'));
+
+      if (estagio) {
+        q = query(
+          collection(db, 'leads'),
+          where('estagio', '==', estagio),
+          orderBy('created_at', 'desc')
+        );
+      }
+
+      const snapshot = await getDocs(q);
+
+      // Select fields manually (client-side filtering of fields not possible in standard query, but we get full doc)
+      return snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          nome: data.nome,
+          estagio: data.estagio,
+          origem: data.origem,
+          responsavel_id: data.responsavel_id,
+          data_ultimo_contato: data.data_ultimo_contato,
+          // We return full object or partial based on interface? The original code returned partial.
+          // Typescript will check, but we are casting to Lead[]
+          ...data
+        } as Lead;
+      });
     },
   });
 }
@@ -46,13 +94,15 @@ export function useLeadHistorico(leadId: string | undefined) {
     queryKey: ['lead-historico', leadId],
     queryFn: async () => {
       if (!leadId) return [];
-      const { data, error } = await supabase
-        .from('lead_historico')
-        .select('*')
-        .eq('lead_id', leadId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as LeadHistorico[];
+
+      const q = query(
+        collection(db, 'lead_historico'),
+        where('lead_id', '==', leadId),
+        orderBy('created_at', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDoc) as LeadHistorico[];
     },
     enabled: !!leadId,
   });
@@ -62,9 +112,12 @@ export function useCreateLead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (lead: Omit<Lead, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase.from('leads').insert(lead).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'leads'), {
+        ...lead,
+        created_at: new Date().toISOString()
+      });
+      const newDoc = await getDoc(docRef);
+      return convertDoc(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -78,9 +131,10 @@ export function useUpdateLead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...lead }: Partial<Lead> & { id: string }) => {
-      const { data, error } = await supabase.from('leads').update(lead).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'leads', id);
+      await updateDoc(docRef, lead);
+      const updatedDoc = await getDoc(docRef);
+      return convertDoc(updatedDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -94,8 +148,7 @@ export function useDeleteLead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('leads').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'leads', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -109,11 +162,22 @@ export function useAddLeadHistorico() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (historico: Omit<LeadHistorico, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase.from('lead_historico').insert(historico).select().single();
-      if (error) throw error;
-      // Atualizar data do último contato
-      await supabase.from('leads').update({ data_ultimo_contato: new Date().toISOString().split('T')[0] }).eq('id', historico.lead_id);
-      return data;
+      // Add history
+      const histRef = await addDoc(collection(db, 'lead_historico'), {
+        ...historico,
+        created_at: new Date().toISOString()
+      });
+
+      // Update lead
+      if (historico.lead_id) {
+        const leadRef = doc(db, 'leads', historico.lead_id);
+        await updateDoc(leadRef, {
+          data_ultimo_contato: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      const newDoc = await getDoc(histRef);
+      return convertDoc(newDoc);
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['lead-historico', vars.lead_id] });
@@ -129,10 +193,10 @@ export function useLeadMetrics() {
   return useQuery({
     queryKey: ['lead-metrics'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('leads').select('estagio, origem');
-      if (error) throw error;
+      const q = query(collection(db, 'leads'));
+      const snapshot = await getDocs(q);
+      const leads = snapshot.docs.map(convertDoc) as Lead[];
 
-      const leads = data as Pick<Lead, 'estagio' | 'origem'>[];
       const total = leads.length;
       const porEstagio = {
         aguardando: leads.filter(l => l.estagio === 'aguardando').length,
@@ -148,3 +212,4 @@ export function useLeadMetrics() {
     },
   });
 }
+

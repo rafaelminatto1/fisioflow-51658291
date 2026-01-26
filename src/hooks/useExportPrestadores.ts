@@ -1,19 +1,31 @@
+/**
+ * useExportPrestadores - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('prestadores') → Firestore collection 'prestadores'
+ */
+
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export function useExportPrestadores() {
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (eventoId: string) => {
-      const { data, error } = await supabase
-        .from('prestadores')
-        .select('*')
-        .eq('evento_id', eventoId)
-        .order('nome', { ascending: true });
+      const q = query(
+        collection(db, 'prestadores'),
+        where('evento_id', '==', eventoId),
+        orderBy('nome', 'asc')
+      );
 
-      if (error) throw error;
+      const snapshot = await getDocs(q);
+
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Criar CSV
       const headers = ['Nome', 'Contato', 'CPF/CNPJ', 'Valor Acordado', 'Status Pagamento'];

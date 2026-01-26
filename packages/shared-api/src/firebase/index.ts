@@ -3,3 +3,7 @@ export * from './auth';
 export * from './notifications';
 export * from './presence';
 export * from './query';
+export * from './ai/live-config';
+export * from './ai/config';
+export * from './ai/models';
+export * from './ai/instance';

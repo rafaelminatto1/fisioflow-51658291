@@ -1,5 +1,17 @@
+/**
+ * useEventosStats - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from("eventos") → Firestore collection 'eventos'
+ * - supabase.from("pagamentos") → Firestore collection 'pagamentos'
+ * - supabase.from("participantes") → Firestore collection 'participantes'
+ */
+
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getFirebaseDb } from "@/integrations/firebase/app";
+import { collection, getDocs, getCountFromServer, query, where } from "firebase/firestore";
+
+const db = getFirebaseDb();
 
 interface EventosStats {
   totalEventos: number;
@@ -17,43 +29,40 @@ export function useEventosStats() {
   return useQuery({
     queryKey: ["eventos-stats"],
     queryFn: async (): Promise<EventosStats> => {
-      const { data: eventos, error: eventosError } = await supabase
-        .from("eventos")
-        .select("id, status");
+      // Fetch eventos
+      const eventosQ = query(collection(db, "eventos"));
+      const eventosSnap = await getDocs(eventosQ);
+      const eventos = eventosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      if (eventosError) throw eventosError;
+      const totalEventos = eventos.length;
+      const eventosAtivos = eventos.filter(
+        (e: any) => e.status === "AGENDADO" || e.status === "EM_ANDAMENTO"
+      ).length;
+      const eventosConcluidos = eventos.filter(
+        (e: any) => e.status === "CONCLUIDO"
+      ).length;
 
-      const totalEventos = eventos?.length || 0;
-      const eventosAtivos = eventos?.filter(
-        (e) => e.status === "AGENDADO" || e.status === "EM_ANDAMENTO"
-      ).length || 0;
-      const eventosConcluidos = eventos?.filter(
-        (e) => e.status === "CONCLUIDO"
-      ).length || 0;
-
-      const { data: pagamentos, error: pagamentosError } = await supabase
-        .from("pagamentos")
-        .select("valor, tipo");
-
-      if (pagamentosError) throw pagamentosError;
+      // Fetch pagamentos
+      const pagamentosQ = query(collection(db, "pagamentos"));
+      const pagamentosSnap = await getDocs(pagamentosQ);
+      const pagamentos = pagamentosSnap.docs.map(doc => doc.data());
 
       const receitaTotal = pagamentos
-        ?.filter((p) => p.tipo === "receita")
-        .reduce((sum, p) => sum + Number(p.valor || 0), 0) || 0;
+        .filter((p: any) => p.tipo === "receita")
+        .reduce((sum, p: any) => sum + Number(p.valor || 0), 0);
 
       const custoTotal = pagamentos
-        ?.filter((p) => p.tipo !== "receita")
-        .reduce((sum, p) => sum + Number(p.valor || 0), 0) || 0;
+        .filter((p: any) => p.tipo !== "receita")
+        .reduce((sum, p: any) => sum + Number(p.valor || 0), 0);
 
       const margemMedia = receitaTotal > 0
         ? Math.round(((receitaTotal - custoTotal) / receitaTotal) * 100)
         : 0;
 
-      const { count: totalParticipantes, error: participantesError } = await supabase
-        .from("participantes")
-        .select("*", { count: "exact", head: true });
-
-      if (participantesError) throw participantesError;
+      // Count participantes
+      const participantesQ = query(collection(db, "participantes"));
+      const participantesSnap = await getCountFromServer(participantesQ);
+      const totalParticipantes = participantesSnap.data().count;
 
       const mediaParticipantesPorEvento = totalEventos > 0
         ? Math.round((totalParticipantes || 0) / totalEventos)

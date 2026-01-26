@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { subDays, subMonths, format, differenceInDays, startOfMonth, parseISO } from 'date-fns';
 import { CACHE_TIMES, STALE_TIMES } from '@/lib/queryConfig';
 import { PatientHelpers } from '@/types';
+import { db } from '@/integrations/firebase/app';
 
 // Query keys for retention
 const RETENTION_KEYS = {
@@ -123,27 +124,45 @@ export function useRetentionMetrics() {
       const now = new Date();
 
       // Get all patients with their activity
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select(`
-          id,
-          created_at,
-          status
-        `);
+      const patientsQuery = query(
+        collection(db, 'patients')
+      );
+      const patientsSnap = await getDocs(patientsQuery);
 
-      if (patientsError) throw patientsError;
+      if (patientsSnap.empty) {
+        return {
+          churnRate: 0,
+          retentionRate: 0,
+          averageLTV: 0,
+          totalPatients: 0,
+          activePatients: 0,
+          inactivePatients: 0,
+          dormantPatients: 0,
+          atRiskCount: 0,
+          projectedRevenueLoss: 0,
+        };
+      }
+
+      const patients = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       // Get appointments for each patient
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('patient_id, appointment_date, status, payment_amount')
-        .order('appointment_date', { ascending: false });
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        orderBy('appointment_date', 'desc')
+      );
+      const appointmentsSnap = await getDocs(appointmentsQuery);
 
-      if (appointmentsError) throw appointmentsError;
+      const appointments = appointmentsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       // Group appointments by patient
       const appointmentsByPatient = new Map<string, typeof appointments>();
-      appointments?.forEach(apt => {
+      appointments.forEach(apt => {
         const existing = appointmentsByPatient.get(apt.patient_id) || [];
         existing.push(apt);
         appointmentsByPatient.set(apt.patient_id, existing);
@@ -156,7 +175,7 @@ export function useRetentionMetrics() {
       let totalLTV = 0;
       let projectedLoss = 0;
 
-      patients?.forEach(_patient => {
+      patients.forEach(_patient => {
         const patientAppointments = appointmentsByPatient.get(_patient.id) || [];
         const completedAppointments = patientAppointments.filter(a => a.status === 'concluido');
         const lastAppointment = completedAppointments[0];
@@ -186,7 +205,7 @@ export function useRetentionMetrics() {
         }
       });
 
-      const totalPatients = patients?.length || 0;
+      const totalPatients = patients.length;
       const churnRate = totalPatients > 0 ? ((inactiveCount + dormantCount) / totalPatients) * 100 : 0;
       const retentionRate = totalPatients > 0 ? (activeCount / totalPatients) * 100 : 0;
       const averageLTV = totalPatients > 0 ? totalLTV / totalPatients : 0;
@@ -215,21 +234,33 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
     queryFn: async (): Promise<PatientAtRisk[]> => {
       const now = new Date();
 
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, full_name, email, phone, status')
-        .eq('status', 'ativo');
+      const patientsQuery = query(
+        collection(db, 'patients'),
+        where('status', '==', 'ativo')
+      );
+      const patientsSnap = await getDocs(patientsQuery);
 
-      if (patientsError) throw patientsError;
+      if (patientsSnap.empty) {
+        return [];
+      }
 
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('patient_id, appointment_date, status, payment_amount');
+      const patients = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-      if (appointmentsError) throw appointmentsError;
+      const appointmentsQuery = query(
+        collection(db, 'appointments')
+      );
+      const appointmentsSnap = await getDocs(appointmentsQuery);
+
+      const appointments = appointmentsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       const appointmentsByPatient = new Map<string, typeof appointments>();
-      appointments?.forEach(apt => {
+      appointments.forEach(apt => {
         const existing = appointmentsByPatient.get(apt.patient_id) || [];
         existing.push(apt);
         appointmentsByPatient.set(apt.patient_id, existing);
@@ -237,7 +268,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
 
       const patientsAtRisk: PatientAtRisk[] = [];
 
-      patients?.forEach(patient => {
+      patients.forEach(patient => {
         const patientAppointments = appointmentsByPatient.get(patient.id) || [];
         const completedAppointments = patientAppointments.filter(a => a.status === 'concluido');
         const cancelledAppointments = patientAppointments.filter(a => a.status === 'cancelado');
@@ -272,8 +303,8 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
           patientsAtRisk.push({
             id: patient.id,
             name: PatientHelpers.getName(patient),
-            email: patient.email,
-            phone: patient.phone,
+            email: patient.email || null,
+            phone: patient.phone || null,
             lastAppointmentDate: lastAppointment?.appointment_date || null,
             daysSinceLastSession,
             cancellationRate: Math.round(cancellationRate * 100),
@@ -300,23 +331,35 @@ export function useCohortAnalysis(months: number = 12) {
       const now = new Date();
 
       // Get patients with creation date
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, created_at')
-        .gte('created_at', subMonths(now, months).toISOString());
+      const patientsQuery = query(
+        collection(db, 'patients'),
+        where('created_at', '>=', subMonths(now, months).toISOString())
+      );
+      const patientsSnap = await getDocs(patientsQuery);
 
-      if (patientsError) throw patientsError;
+      if (patientsSnap.empty) {
+        return [];
+      }
+
+      const patients = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       // Get all appointments
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('patient_id, appointment_date, status')
-        .eq('status', 'concluido');
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        where('status', '==', 'concluido')
+      );
+      const appointmentsSnap = await getDocs(appointmentsQuery);
 
-      if (appointmentsError) throw appointmentsError;
+      const appointments = appointmentsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       const appointmentsByPatient = new Map<string, Set<string>>();
-      appointments?.forEach(apt => {
+      appointments.forEach(apt => {
         const monthKey = format(parseISO(apt.appointment_date), 'yyyy-MM');
         const existing = appointmentsByPatient.get(apt.patient_id) || new Set();
         existing.add(monthKey);
@@ -325,7 +368,7 @@ export function useCohortAnalysis(months: number = 12) {
 
       // Group patients by cohort month
       const cohorts = new Map<string, string[]>();
-      patients?.forEach(patient => {
+      patients.forEach(patient => {
         const cohortMonth = format(parseISO(patient.created_at), 'yyyy-MM');
         const existing = cohorts.get(cohortMonth) || [];
         existing.push(patient.id);
@@ -386,24 +429,36 @@ export function useChurnTrends(months: number = 12) {
       const trends: ChurnTrend[] = [];
 
       // Get all patients
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, created_at');
+      const patientsQuery = query(
+        collection(db, 'patients')
+      );
+      const patientsSnap = await getDocs(patientsQuery);
 
-      if (patientsError) throw patientsError;
+      if (patientsSnap.empty) {
+        return [];
+      }
+
+      const patients = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       // Get all completed appointments
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('patient_id, appointment_date')
-        .eq('status', 'concluido')
-        .gte('appointment_date', subMonths(now, months + 3).toISOString());
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        where('status', '==', 'concluido'),
+        where('appointment_date', '>=', subMonths(now, months + 3).toISOString())
+      );
+      const appointmentsSnap = await getDocs(appointmentsQuery);
 
-      if (appointmentsError) throw appointmentsError;
+      const appointments = appointmentsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       // Group appointments by patient and month
       const lastAppointmentByPatient = new Map<string, Date>();
-      appointments?.forEach(apt => {
+      appointments.forEach(apt => {
         const aptDate = parseISO(apt.appointment_date);
         const current = lastAppointmentByPatient.get(apt.patient_id);
         if (!current || aptDate > current) {
@@ -420,7 +475,7 @@ export function useChurnTrends(months: number = 12) {
         let activeAtStart = 0;
         let churnedDuringMonth = 0;
 
-        patients?.forEach(patient => {
+        patients.forEach(patient => {
           const createdAt = parseISO(patient.created_at);
           if (createdAt > monthStart) return;
 
@@ -433,7 +488,7 @@ export function useChurnTrends(months: number = 12) {
             activeAtStart++;
 
             // Check if churned during this month
-            const nextApts = appointments?.filter(
+            const nextApts = appointments.filter(
               a => a.patient_id === patient.id &&
                 parseISO(a.appointment_date) >= monthStart &&
                 parseISO(a.appointment_date) < monthEnd
@@ -479,66 +534,62 @@ export function useSendReactivationCampaign() {
       channel: 'whatsapp' | 'email' | 'sms';
     }) => {
       // Create campaign in crm_campanhas
-      const { data: campaign, error: campaignError } = await supabase
-        .from('crm_campanhas')
-        .insert({
-          nome: `Reativação - ${format(new Date(), 'dd/MM/yyyy')}`,
-          tipo: channel,
-          conteudo: message,
-          status: 'enviando',
-          total_destinatarios: patientIds.length,
-        })
-        .select()
-        .single();
+      const campaignData = {
+        nome: `Reativação - ${format(new Date(), 'dd/MM/yyyy')}`,
+        tipo: channel,
+        conteudo: message,
+        status: 'enviando',
+        total_destinatarios: patientIds.length,
+        created_at: new Date().toISOString(),
+      };
 
-      if (campaignError) throw campaignError;
+      const campaignRef = await addDoc(collection(db, 'crm_campanhas'), campaignData);
 
       if (patientIds.length === 0) {
         // If no patients to send to, just complete the campaign immediately
-        await supabase
-          .from('crm_campanhas')
-          .update({
-            status: 'concluida',
-            total_enviados: 0,
-            concluida_em: new Date().toISOString(),
-          })
-          .eq('id', campaign.id);
+        await updateDoc(doc(db, 'crm_campanhas', campaignRef.id), {
+          status: 'concluida',
+          total_enviados: 0,
+          concluida_em: new Date().toISOString(),
+        });
 
-        return campaign;
+        return { id: campaignRef.id, ...campaignData };
       }
 
       // Get patient details for sending
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, full_name, phone, email')
-        .in('id', patientIds);
+      const patientsQuery = query(
+        collection(db, 'patients')
+      );
+      const patientsSnap = await getDocs(patientsQuery);
 
-      if (patientsError) throw patientsError;
+      const allPatients = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      const filteredPatients = allPatients.filter(p => patientIds.includes(p.id));
 
       // Here you would integrate with actual messaging service
       // For now, we'll just log the campaign envios
-      const envios = patients?.map(() => ({
-        campanha_id: campaign.id,
+      const envios = filteredPatients.map(() => ({
+        campanha_id: campaignRef.id,
         lead_id: null,
         status: 'enviado',
         enviado_em: new Date().toISOString(),
       }));
 
       if (envios?.length) {
-        await supabase.from('crm_campanha_envios').insert(envios);
+        await Promise.all(envios.map(e => addDoc(collection(db, 'crm_campanha_envios'), e)));
       }
 
       // Update campaign status
-      await supabase
-        .from('crm_campanhas')
-        .update({
-          status: 'concluida',
-          total_enviados: patientIds.length,
-          concluida_em: new Date().toISOString(),
-        })
-        .eq('id', campaign.id);
+      await updateDoc(doc(db, 'crm_campanhas', campaignRef.id), {
+        status: 'concluida',
+        total_enviados: patientIds.length,
+        concluida_em: new Date().toISOString(),
+      });
 
-      return campaign;
+      return { id: campaignRef.id, ...campaignData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: RETENTION_KEYS.all });

@@ -100,14 +100,25 @@ export const useActivePatients = () => {
       devValidate(PATIENT_SELECT.standard);
 
       try {
+        // Log antes de chamar a API
+        logger.info('useActivePatients: fetching patients', { organizationId }, 'usePatients');
+
         // Execute query via Service (getActivePatients returns a thenable query builder)
         const { data, error } = await PatientService.getActivePatients(organizationId!);
 
-        if (error) throw error;
+        if (error) {
+          logger.error('useActivePatients: error from PatientService', { error, organizationId }, 'usePatients');
+          throw error;
+        }
 
         // Transform data
         const validPatients = PatientService.mapPatientsFromDB(data);
-        console.log('useActivePatients: fetched patients', validPatients.length);
+        console.log('useActivePatients: fetched patients', {
+          count: validPatients.length,
+          patientIds: validPatients.map(p => p.id).slice(0, 5), // Log first 5 IDs for debugging
+          organizationId,
+        });
+        logger.info('useActivePatients: successfully fetched patients', { count: validPatients.length }, 'usePatients');
 
         // Save to cache for offline use
         if (validPatients.length > 0) {

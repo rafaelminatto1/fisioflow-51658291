@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, limit, getDoc, doc } from 'firebase/firestore';
 import {
   CommandDialog,
   CommandEmpty,
@@ -50,16 +51,24 @@ export function GlobalSearch() {
       setIsLoading(true);
       try {
         const searchResults: SearchResult[] = [];
+        const db = getFirebaseDb();
+        const queryLower = debouncedQuery.toLowerCase();
 
-        // Buscar eventos
-        const { data: eventos } = await supabase
-          .from('eventos')
-          .select('id, nome, local, categoria')
-          .or(`nome.ilike.%${debouncedQuery}%,local.ilike.%${debouncedQuery}%`)
-          .limit(5);
+        // Buscar eventos - Firebase doesn't have ilike, so we fetch all and filter client-side
+        // In production, you'd want to use a proper search solution like Algolia or Elasticsearch
+        const eventosQuery = query(
+          collection(db, 'eventos'),
+          orderBy('nome'),
+          limit(50)
+        );
+        const eventosSnapshot = await getDocs(eventosQuery);
 
-        if (eventos) {
-          eventos.forEach((evento) => {
+        eventosSnapshot.forEach((doc) => {
+          const evento = { id: doc.id, ...doc.data() } as any;
+          if (
+            evento.nome?.toLowerCase().includes(queryLower) ||
+            evento.local?.toLowerCase().includes(queryLower)
+          ) {
             searchResults.push({
               id: evento.id,
               type: 'evento',
@@ -67,48 +76,55 @@ export function GlobalSearch() {
               subtitle: `${evento.local} • ${evento.categoria}`,
               icon: Calendar,
             });
-          });
-        }
+          }
+        });
+
+        // Limit to 5 results
+        const filteredEventResults = searchResults.slice(0, 5);
 
         // Buscar participantes
-        const { data: participantes } = await supabase
-          .from('participantes')
-          .select('id, nome, evento_id, eventos(nome)')
-          .ilike('nome', `%${debouncedQuery}%`)
-          .limit(5);
+        const participantesQuery = query(
+          collection(db, 'participantes'),
+          orderBy('nome'),
+          limit(50)
+        );
+        const participantesSnapshot = await getDocs(participantesQuery);
 
-        if (participantes) {
-          participantes.forEach((participante: Record<string, unknown>) => {
-            searchResults.push({
-              id: participante.id as string,
+        participantesSnapshot.forEach((doc) => {
+          const participante = { id: doc.id, ...doc.data() } as any;
+          if (participante.nome?.toLowerCase().includes(queryLower)) {
+            filteredEventResults.push({
+              id: participante.id,
               type: 'participante',
-              title: participante.nome as string,
-              subtitle: ((participante.eventos as Record<string, unknown>)?.nome as string | undefined) || 'Evento',
+              title: participante.nome,
+              subtitle: 'Evento',
               icon: Users,
             });
-          });
-        }
+          }
+        });
 
         // Buscar prestadores
-        const { data: prestadores } = await supabase
-          .from('prestadores')
-          .select('id, nome, evento_id, eventos(nome)')
-          .ilike('nome', `%${debouncedQuery}%`)
-          .limit(5);
+        const prestadoresQuery = query(
+          collection(db, 'prestadores'),
+          orderBy('nome'),
+          limit(50)
+        );
+        const prestadoresSnapshot = await getDocs(prestadoresQuery);
 
-        if (prestadores) {
-          prestadores.forEach((prestador: Record<string, unknown>) => {
-            searchResults.push({
-              id: prestador.id as string,
+        prestadoresSnapshot.forEach((doc) => {
+          const prestador = { id: doc.id, ...doc.data() } as any;
+          if (prestador.nome?.toLowerCase().includes(queryLower)) {
+            filteredEventResults.push({
+              id: prestador.id,
               type: 'prestador',
-              title: prestador.nome as string,
-              subtitle: ((prestador.eventos as Record<string, unknown>)?.nome as string | undefined) || 'Evento',
+              title: prestador.nome,
+              subtitle: 'Evento',
               icon: Briefcase,
             });
-          });
-        }
+          }
+        });
 
-        setResults(searchResults);
+        setResults(filteredEventResults.slice(0, 15)); // Limit total results
       } catch (error) {
         console.error('Erro na busca:', error);
       } finally {

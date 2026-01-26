@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FolderOpen, Image as ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
 import { dicomWebClient, DicomStudy } from '@/services/dicom/dicomWebClient';
+import { getFirebaseFunctions } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
 import DicomViewer from './DicomViewer';
 
 interface DicomBrowserProps {
@@ -51,25 +53,12 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
             // Find series for this study
             // QIDO-RS: /studies/{studyUID}/series
             const studyUid = getTagValue(study, '0020000D');
-            // We use the client to search series. 
-            // We need to extend the client or just use invoke manually here for MVP if method missing?
-            // Let's implement series search inline or assume client has it? 
-            // The client artifact I wrote had `searchStudies`. It didn't have `searchSeries` explicitly implemented yet.
-            // I will implement it here using the generic proxy access logic or quick fetch.
-            // Actually, I should update the client. But for speed now, I'll invoke directly.
 
-            // Re-use `dicomWebClient` logic but for series path
-            // path: studies/{uid}/series
-
-            // We need to access the proxy function. 
-            // Let's just assume I added searchSeries to client or add it now.
-            // Wait, I can't edit the client file in this step without a tool call.
-            // I'll add a helper here.
-
-            const { supabase } = await import('@/integrations/supabase/client');
+            const functions = getFirebaseFunctions();
+            const dicomProxyFunction = httpsCallable(functions, 'dicom-proxy');
 
             const path = `studies/${studyUid}/series`;
-            const { data, error } = await supabase.functions.invoke('dicom-proxy', {
+            const result = await dicomProxyFunction({
                 method: 'GET',
                 headers: {
                     'Accept': 'application/dicom+json',
@@ -77,9 +66,10 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
                 }
             });
 
-            if (error) throw error;
-            setSeries(data);
-            setView('series');
+            if (result.data) {
+                setSeries(result.data as Record<string, unknown>[]);
+                setView('series');
+            }
 
         } catch (e) {
             console.error("Failed to load series", e);

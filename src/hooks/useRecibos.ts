@@ -1,6 +1,22 @@
+/**
+ * useRecibos - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('recibos') → Firestore collection 'recibos'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Recibo {
   id: string;
@@ -16,16 +32,26 @@ export interface Recibo {
   created_at: string;
 }
 
+// Helper to convert Firestore doc to Recibo
+const convertDocToRecibo = (doc: any): Recibo => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Recibo;
+};
+
 export function useRecibos() {
   return useQuery({
     queryKey: ['recibos'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('recibos')
-        .select('*')
-        .order('numero_recibo', { ascending: false });
-      if (error) throw error;
-      return data as Recibo[];
+      const q = query(
+        collection(db, 'recibos'),
+        orderBy('numero_recibo', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToRecibo);
     },
   });
 }
@@ -34,9 +60,18 @@ export function useCreateRecibo() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (recibo: Omit<Recibo, 'id' | 'numero_recibo' | 'created_at'>) => {
-      const { data, error } = await supabase.from('recibos').insert(recibo).select().single();
-      if (error) throw error;
-      return data;
+      const reciboData = {
+        ...recibo,
+        numero_recibo: Date.now(), // Generate sequential number
+        created_at: new Date().toISOString(),
+      };
+
+      const docRef = await addDoc(collection(db, 'recibos'), reciboData);
+      const snapshot = await getDocs(query(collection(db, 'recibos')));
+      const newDoc = snapshot.docs.find(doc => doc.id === docRef.id);
+
+      if (!newDoc) throw new Error('Failed to create recibo');
+      return convertDocToRecibo(newDoc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recibos'] });

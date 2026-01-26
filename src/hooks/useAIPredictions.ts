@@ -1,16 +1,30 @@
+/**
+ * useAIPredictions - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - Firebase Functions for AI predictions
+ * - Auth through useAuth() from AuthContext
+ */
+
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { httpsCallable } from 'firebase/functions';
+import { getFunctions } from 'firebase/functions';
 import { toast } from '@/hooks/use-toast';
+import { getFirebaseApp } from '@/integrations/firebase/app';
+
+const functions = getFunctions(getFirebaseApp());
 
 export function useAIPredictions() {
   const predictAdherence = useMutation({
     mutationFn: async (patientId: string) => {
-      const { data, error } = await supabase.functions.invoke('ai-treatment-assistant', {
-        body: { patientId, action: 'predict_adherence' }
+      const predictAdherenceFn = httpsCallable(functions, 'ai-treatment-assistant');
+      const result = await predictAdherenceFn({
+        patientId,
+        action: 'predict_adherence'
       });
 
-      if (error) throw error;
-      return data;
+      if (result.data.error) throw new Error(result.data.error);
+      return result.data;
     },
     onSuccess: () => {
       toast({
@@ -29,12 +43,14 @@ export function useAIPredictions() {
 
   const predictOutcome = useMutation({
     mutationFn: async (patientId: string) => {
-      const { data, error } = await supabase.functions.invoke('ai-treatment-assistant', {
-        body: { patientId, action: 'predict_outcome' }
+      const predictOutcomeFn = httpsCallable(functions, 'ai-treatment-assistant');
+      const result = await predictOutcomeFn({
+        patientId,
+        action: 'predict_outcome'
       });
 
-      if (error) throw error;
-      return data;
+      if (result.data.error) throw new Error(result.data.error);
+      return result.data;
     },
     onSuccess: () => {
       toast({

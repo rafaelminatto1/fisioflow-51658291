@@ -1,3 +1,11 @@
+/**
+ * Patient Evolution Page - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - Uses migrated hooks (usePatientEvolution, useSoapRecords, etc.)
+ * - No direct Supabase queries in this file
+ */
+
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -27,7 +35,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useCommandPalette } from '@/components/ui/CommandPalette';
 
 // Hooks

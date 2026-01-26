@@ -9,7 +9,6 @@ import { TrendingUp, Crown, Medal, Award, Search, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
