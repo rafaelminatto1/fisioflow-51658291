@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   Plus, BookOpen, Target, FileText,
   Dumbbell, VideoOff, Video,
-  Activity
+  Activity, Sparkles
 } from 'lucide-react';
 import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
 import { TemplateManager } from '@/components/exercises/TemplateManager';
@@ -16,6 +16,7 @@ import { ProtocolsManager } from '@/components/exercises/ProtocolsManager';
 import { ExerciseVideoLibrary } from '@/components/exercises/ExerciseVideoLibrary';
 import { ExerciseVideoUpload } from '@/components/exercises/ExerciseVideoUpload';
 import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
+import { ExerciseAI } from '@/components/ai/ExerciseAI';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
@@ -29,7 +30,7 @@ export default function Exercises() {
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols' | 'ai'>('library');
   const [showNewModal, setShowNewModal] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
@@ -91,7 +92,7 @@ export default function Exercises() {
   }, []);
 
   const handleTabChange = useCallback((v: string) => {
-    setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols');
+    setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols' | 'ai');
   }, []);
 
   const handleUploadClick = useCallback(() => {
@@ -316,6 +317,16 @@ export default function Exercises() {
                     {protocols.length}
                   </Badge>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="ai"
+                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20"
+                >
+                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
+                  <span className="hidden xs:inline">IA Assistente</span>
+                  <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 text-[10px] sm:text-xs bg-purple-500/20 text-purple-600">
+                    NOVO
+                  </Badge>
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -333,6 +344,15 @@ export default function Exercises() {
 
             <TabsContent value="protocols" className="m-0 p-3 sm:p-4 md:p-6">
               <ProtocolsManager />
+            </TabsContent>
+
+            <TabsContent value="ai" className="m-0 p-0 sm:p-0">
+              <ExerciseAI
+                exercises={exercises}
+                onExerciseSelect={(selectedExercises) => {
+                  console.log('Exercises selected:', selectedExercises);
+                }}
+              />
             </TabsContent>
           </Tabs>
         </Card>

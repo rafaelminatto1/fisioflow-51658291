@@ -1,6 +1,27 @@
+/**
+ * useEvolutionTemplates - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('evolution_templates') → Firestore collection 'evolution_templates'
+ * - Preserved optimistic updates pattern
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface EvolutionTemplate {
   id: string;
@@ -18,24 +39,34 @@ export interface EvolutionTemplate {
 
 export type EvolutionTemplateFormData = Omit<EvolutionTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'organization_id'>;
 
+// Helper to convert Firestore doc to EvolutionTemplate
+const convertDocToEvolutionTemplate = (doc: any): EvolutionTemplate => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as EvolutionTemplate;
+};
+
 export function useEvolutionTemplates(tipo?: string) {
   return useQuery({
     queryKey: ['evolution-templates', tipo],
     queryFn: async () => {
-      // Optimized: Select only required columns instead of *
-      let query = supabase
-        .from('evolution_templates')
-        .select('id, nome, tipo, descricao, conteudo, campos_padrao, ativo, organization_id, created_by, created_at, updated_at')
-        .eq('ativo', true)
-        .order('nome');
+      const q = query(
+        collection(db, 'evolution_templates'),
+        where('ativo', '==', true),
+        orderBy('nome')
+      );
 
+      const snapshot = await getDocs(q);
+      let data = snapshot.docs.map(convertDocToEvolutionTemplate);
+
+      // Filter by tipo if provided
       if (tipo) {
-        query = query.eq('tipo', tipo);
+        data = data.filter(t => t.tipo === tipo);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as EvolutionTemplate[];
+      return data;
     },
     staleTime: 1000 * 60 * 10, // 10 minutos - templates mudam pouco
     gcTime: 1000 * 60 * 30, // 30 minutos
@@ -47,15 +78,18 @@ export function useCreateEvolutionTemplate() {
 
   return useMutation({
     mutationFn: async (template: EvolutionTemplateFormData) => {
-      // Optimized: Select only required columns
-      const { data, error } = await supabase
-        .from('evolution_templates')
-        .insert(template)
-        .select('id, nome, tipo, descricao, conteudo, campos_padrao, ativo, organization_id, created_by, created_at, updated_at')
-        .single();
+      const templateData = {
+        ...template,
+        organization_id: null,
+        created_by: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'evolution_templates'), templateData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToEvolutionTemplate(docSnap);
     },
     // Optimistic update - adiciona template à lista antes da resposta do servidor
     onMutate: async (newTemplate) => {
@@ -100,16 +134,14 @@ export function useUpdateEvolutionTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...template }: Partial<EvolutionTemplate> & { id: string }) => {
-      // Optimized: Select only required columns
-      const { data, error } = await supabase
-        .from('evolution_templates')
-        .update(template)
-        .eq('id', id)
-        .select('id, nome, tipo, descricao, conteudo, campos_padrao, ativo, organization_id, created_by, created_at, updated_at')
-        .single();
+      const docRef = doc(db, 'evolution_templates', id);
+      await updateDoc(docRef, {
+        ...template,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return data;
+      const docSnap = await getDoc(docRef);
+      return convertDocToEvolutionTemplate(docSnap);
     },
     // Optimistic update - atualiza template na lista antes da resposta do servidor
     onMutate: async ({ id, ...template }) => {
@@ -143,12 +175,8 @@ export function useDeleteEvolutionTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('evolution_templates')
-        .update({ ativo: false })
-        .eq('id', id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'evolution_templates', id);
+      await updateDoc(docRef, { ativo: false });
     },
     // Optimistic update - remove template da lista visualmente
     onMutate: async (id) => {

@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import {
+    collection,
+    doc,
+    getDocs,
+    query,
+    orderBy,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    QueryDocumentSnapshot
+} from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,37 +55,48 @@ export default function ChallengesManager() {
     const { data: challenges, isLoading } = useQuery({
         queryKey: ['admin-challenges'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('weekly_challenges')
-                .select('*')
-                .order('start_date', { ascending: false });
+            const challengesRef = collection(db, 'weekly_challenges');
+            const q = query(challengesRef, orderBy('start_date', 'desc'));
+            const querySnapshot = await getDocs(q);
 
-            if (error) throw error;
-            return data as WeeklyChallenge[];
+            const challenges: WeeklyChallenge[] = [];
+            querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+                challenges.push({
+                    id: doc.id,
+                    ...doc.data()
+                } as WeeklyChallenge);
+            });
+
+            return challenges;
         }
     });
 
     const upsertChallenge = useMutation({
         mutationFn: async (values: Partial<WeeklyChallenge>) => {
-            const { data, error } = await supabase
-                .from('weekly_challenges')
-                .upsert({
-                    id: editingChallenge?.id,
-                    title: values.title!,
-                    description: values.description,
-                    xp_reward: values.xp_reward || 200,
-                    point_reward: values.point_reward || 50,
-                    start_date: values.start_date!,
-                    end_date: values.end_date!,
-                    target: values.target!,
-                    icon: values.icon || 'Target',
-                    is_active: values.is_active ?? true
-                })
-                .select()
-                .single();
+            const challengeData = {
+                title: values.title!,
+                description: values.description || null,
+                xp_reward: values.xp_reward || 200,
+                point_reward: values.point_reward || 50,
+                start_date: values.start_date!,
+                end_date: values.end_date!,
+                target: values.target!,
+                icon: values.icon || 'Target',
+                is_active: values.is_active ?? true,
+                updated_at: new Date().toISOString()
+            };
 
-            if (error) throw error;
-            return data;
+            if (editingChallenge?.id) {
+                // Update existing challenge
+                const challengeRef = doc(db, 'weekly_challenges', editingChallenge.id);
+                await updateDoc(challengeRef, challengeData);
+                return { id: editingChallenge.id, ...challengeData };
+            } else {
+                // Create new challenge
+                challengeData.created_at = new Date().toISOString();
+                const docRef = await addDoc(collection(db, 'weekly_challenges'), challengeData);
+                return { id: docRef.id, ...challengeData };
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-challenges'] });
@@ -96,12 +118,11 @@ export default function ChallengesManager() {
 
     const toggleActive = useMutation({
         mutationFn: async ({ id, currentState }: { id: string, currentState: boolean }) => {
-            const { error } = await supabase
-                .from('weekly_challenges')
-                .update({ is_active: !currentState })
-                .eq('id', id);
-
-            if (error) throw error;
+            const challengeRef = doc(db, 'weekly_challenges', id);
+            await updateDoc(challengeRef, {
+                is_active: !currentState,
+                updated_at: new Date().toISOString()
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-challenges'] });
@@ -110,12 +131,8 @@ export default function ChallengesManager() {
 
     const deleteChallenge = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase
-                .from('weekly_challenges')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
+            const challengeRef = doc(db, 'weekly_challenges', id);
+            await deleteDoc(challengeRef);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-challenges'] });

@@ -1,6 +1,30 @@
+/**
+ * useEmpresasParceiras - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('empresas_parceiras') → Firestore collection 'empresas_parceiras'
+ * - supabase.select() → getDocs()
+ * - supabase.insert() → addDoc()
+ * - supabase.update() → updateDoc()
+ * - supabase.delete() → deleteDoc()
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface EmpresaParceira {
   id: string;
@@ -15,17 +39,26 @@ export interface EmpresaParceira {
   updated_at: string;
 }
 
+// Helper to convert Firestore doc to EmpresaParceira
+const convertDocToEmpresaParceira = (doc: any): EmpresaParceira => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as EmpresaParceira;
+};
+
 export function useEmpresasParceiras() {
   return useQuery({
     queryKey: ['empresas-parceiras'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('empresas_parceiras')
-        .select('*')
-        .order('nome');
+      const q = query(
+        collection(db, 'empresas_parceiras'),
+        orderBy('nome')
+      );
 
-      if (error) throw error;
-      return data as EmpresaParceira[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToEmpresaParceira);
     },
   });
 }
@@ -36,14 +69,16 @@ export function useCreateEmpresaParceira() {
 
   return useMutation({
     mutationFn: async (empresa: Omit<EmpresaParceira, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('empresas_parceiras')
-        .insert([empresa])
-        .select()
-        .single();
+      const empresaData = {
+        ...empresa,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'empresas_parceiras'), empresaData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToEmpresaParceira(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['empresas-parceiras'] });
@@ -68,15 +103,14 @@ export function useUpdateEmpresaParceira() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EmpresaParceira> }) => {
-      const { data: updated, error } = await supabase
-        .from('empresas_parceiras')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'empresas_parceiras', id);
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return updated;
+      const docSnap = await getDoc(docRef);
+      return convertDocToEmpresaParceira(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['empresas-parceiras'] });
@@ -101,12 +135,7 @@ export function useDeleteEmpresaParceira() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('empresas_parceiras')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'empresas_parceiras', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['empresas-parceiras'] });

@@ -224,7 +224,9 @@
       "Bash(# Check if build completed successfully ls -la dist/)",
       "Bash(# Get accurate count - exclude .migrated and .backup files echo \"\"=== Status Atual da Migração ===\"\" echo \"\"\"\" echo \"\"Hooks principais ativos \\(excluindo .migrated e .backup\\):\"\" ls src/hooks/use*.ts)",
       "Bash(node:*)",
-      "Bash(playwright:*)"
+      "Bash(playwright:*)",
+      "Bash(gh auth:*)",
+      "Bash(wait:*)"
     ],
     "deny": [],
     "ask": [],

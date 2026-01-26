@@ -1,6 +1,27 @@
+/**
+ * useTransacoes - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - supabase.from('transacoes') → Firestore collection 'transacoes'
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export interface Transacao {
   id: string;
@@ -16,23 +37,34 @@ export interface Transacao {
   updated_at: string;
 }
 
+// Helper: Convert Firestore doc to Transacao
+const convertDocToTransacao = (doc: any): Transacao => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+  } as Transacao;
+};
+
 export function useTransacoes(userId?: string) {
   return useQuery({
     queryKey: ['transacoes', userId],
     queryFn: async () => {
-      let query = supabase
-        .from('transacoes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let q = query(
+        collection(db, 'transacoes'),
+        orderBy('created_at', 'desc')
+      );
 
       if (userId) {
-        query = query.eq('user_id', userId);
+        q = query(
+          collection(db, 'transacoes'),
+          where('user_id', '==', userId),
+          orderBy('created_at', 'desc')
+        );
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as Transacao[];
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(convertDocToTransacao);
     },
   });
 }
@@ -42,14 +74,16 @@ export function useCreateTransacao() {
 
   return useMutation({
     mutationFn: async (transacao: Omit<Transacao, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('transacoes')
-        .insert([transacao])
-        .select()
-        .single();
+      const transacaoData = {
+        ...transacao,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return data;
+      const docRef = await addDoc(collection(db, 'transacoes'), transacaoData);
+      const docSnap = await getDoc(docRef);
+
+      return convertDocToTransacao(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
@@ -66,15 +100,14 @@ export function useUpdateTransacao() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Transacao> }) => {
-      const { data: updated, error } = await supabase
-        .from('transacoes')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+      const docRef = doc(db, 'transacoes', id);
+      await updateDoc(docRef, {
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
 
-      if (error) throw error;
-      return updated;
+      const docSnap = await getDoc(docRef);
+      return convertDocToTransacao(docSnap);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
@@ -91,12 +124,7 @@ export function useDeleteTransacao() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('transacoes')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'transacoes', id));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });

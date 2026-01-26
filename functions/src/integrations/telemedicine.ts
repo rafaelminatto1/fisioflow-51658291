@@ -61,7 +61,7 @@ export const createTelemedicineRoom = onCall({
       if (now < expiryTime && existing.status === 'active') {
         return {
           success: true,
-          roomId: existingSnapshot.id,
+          roomId: existingSnapshot.docs[0].id,
           roomCode: existing.roomCode,
           existing: true,
         };
@@ -73,19 +73,18 @@ export const createTelemedicineRoom = onCall({
   const roomCode = generateRoomCode();
 
   // Criar sala
-  const roomRef = await firestore()
-    .collection('telemedicine_rooms')
-    .add({
-      therapistId,
-      patientId,
-      appointmentId: appointmentId || null,
-      scheduledFor,
-      roomCode,
-      status: 'scheduled',
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      activatedAt: null,
-      endedAt: null,
-    });
+  const roomRef = firestore().collection('telemedicine_rooms').doc();
+  await roomRef.create({
+    therapistId,
+    patientId,
+    appointmentId: appointmentId || null,
+    scheduledFor,
+    roomCode,
+    status: 'scheduled',
+    createdAt: firestore.FieldValue.serverTimestamp(),
+    activatedAt: null,
+    endedAt: null,
+  });
 
   // Se associado a agendamento, atualizar o agendamento
   if (appointmentId) {
@@ -138,27 +137,27 @@ export const joinTelemedicineRoom = onCall({
     throw new HttpsError('not-found', 'Sala não encontrada');
   }
 
-  const room = roomDoc.data();
+  const room = roomDoc.data()!;
 
   // Verificar permissões
   const userId = request.auth.uid;
 
-  if (role === 'therapist' && room.therapistId !== userId) {
+  if (role === 'therapist' && room!.therapistId !== userId) {
     throw new HttpsError('permission-denied', 'Você não tem permissão para acessar esta sala');
   }
 
-  if (role === 'patient' && room.patientId !== userId) {
+  if (role === 'patient' && room!.patientId !== userId) {
     throw new HttpsError('permission-denied', 'Você não tem permissão para acessar esta sala');
   }
 
   // Verificar código se fornecido
-  if (roomCode && room.roomCode !== roomCode) {
+  if (roomCode && room!.roomCode !== roomCode) {
     throw new HttpsError('permission-denied', 'Código da sala inválido');
   }
 
   // Verificar se a sala pode ser ativada
   const now = new Date();
-  const scheduledTime = new Date(room.scheduledFor);
+  const scheduledTime = new Date(room!.scheduledFor);
 
   // Só pode entrar 15 minutos antes ou até 30 minutos depois
   const earliestEntry = new Date(scheduledTime.getTime() - 15 * 60 * 1000);
@@ -171,7 +170,7 @@ export const joinTelemedicineRoom = onCall({
     );
   }
 
-  if (now > latestEntry && room.status === 'scheduled') {
+  if (now > latestEntry && room!.status === 'scheduled') {
     throw new HttpsError(
       'failed-precondition',
       'O horário da teleconsulta expirou.'
@@ -179,7 +178,7 @@ export const joinTelemedicineRoom = onCall({
   }
 
   // Ativar sala se ainda não está ativa
-  if (room.status === 'scheduled') {
+  if (room!.status === 'scheduled') {
     await roomDoc.ref.update({
       status: 'active',
       activatedAt: firestore.FieldValue.serverTimestamp(),
@@ -189,7 +188,7 @@ export const joinTelemedicineRoom = onCall({
 
   // Verificar se ambos já entraram
   const updatedRoom = await roomDoc.ref.get();
-  const updatedData = updatedRoom.data();
+  const updatedData = updatedRoom.data()!;
 
   const bothJoined = updatedData.therapistJoinedAt && updatedData.patientJoinedAt;
 
@@ -236,10 +235,10 @@ export const endTelemedicineRoom = onCall({
     throw new HttpsError('not-found', 'Sala não encontrada');
   }
 
-  const room = roomDoc.data();
+  const room = roomDoc.data()!;
 
   // Verificar permissão (apenas terapeuta pode encerrar)
-  if (room.therapistId !== request.auth.uid) {
+  if (room!.therapistId !== request.auth.uid) {
     const userDoc = await firestore()
       .collection('users')
       .doc(request.auth.uid)
@@ -259,10 +258,10 @@ export const endTelemedicineRoom = onCall({
   });
 
   // Criar registro da sessão no prontuário
-  if (room.appointmentId) {
+  if (room!.appointmentId) {
     await firestore()
       .collection('sessions')
-      .where('appointmentId', '==', room.appointmentId)
+      .where('appointmentId', '==', room!.appointmentId)
       .limit(1)
       .get()
       .then(snapshot => {
@@ -298,7 +297,7 @@ export const getTelemedicineHistory = onCall({
 
   const { limit = 20 } = request.data;
 
-  let query = firestore()
+  let query: any = firestore()
     .collection('telemedicine_rooms');
 
   // Filtar baseado no role

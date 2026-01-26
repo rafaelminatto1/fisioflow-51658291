@@ -6,7 +6,7 @@
  * @module communications/whatsapp
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 
@@ -352,7 +352,7 @@ async function sendWhatsAppTemplateMessage(params: {
     throw new Error(`WhatsApp API error: ${error}`);
   }
 
-  const result = await response.json();
+  const result = await response.json() as any;
   logger.info(`WhatsApp template sent: ${result.messages[0].id}`);
 
   return result;
@@ -391,7 +391,7 @@ async function sendWhatsAppTextMessage(params: {
     throw new Error(`WhatsApp API error: ${error}`);
   }
 
-  const result = await response.json();
+  const result = await response.json() as any;
   logger.info(`WhatsApp text sent: ${result.messages[0].id}`);
 
   return result;
@@ -440,7 +440,7 @@ export const whatsappWebhookHttp = onRequest({
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
-}, async (request, response) => {
+}, async (request: any, response: any) => {
   // Verificar token de verificação do WhatsApp
   const mode = request.query['hub.mode'];
   const challenge = request.query['hub.challenge'];
@@ -462,17 +462,17 @@ export const whatsappWebhookHttp = onRequest({
       for (const entry of body.entry) {
         for (const change of entry.changes) {
           if (change.field === 'messages') {
-            const value = change.value;
+            const changeValue: any = change.value;
 
-            if (value.messages && value.messages.length > 0) {
-              const message = value.messages[0];
+            if (changeValue.messages && changeValue.messages.length > 0) {
+              const message = changeValue.messages[0];
 
               // Processar mensagem recebida
               await handleIncomingWhatsAppMessage(message);
             }
           } else if (change.field === 'messaging_statuses') {
             // Processar atualização de status da mensagem
-            const statuses = value.statuses;
+            const statuses = change.value.statuses;
             if (statuses && statuses.length > 0) {
               await handleWhatsAppMessageStatus(statuses[0]);
             }

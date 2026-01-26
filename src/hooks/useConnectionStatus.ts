@@ -1,16 +1,25 @@
 /**
+ * useConnectionStatus - Migrated to Firebase
+ *
+ * Migration from Supabase to Firebase Firestore:
+ * - Connectivity check now uses Firestore instead of Supabase
+ * - Lightweight query to organizations collection for health check
+ *
  * Hook para monitorar status de conexão
  * Detecta online/offline com verificação real de conectividade (ping)
- * 
+ *
  * Melhorias:
  * - Verificação real de conectividade (não apenas navigator.onLine)
- * - Ping ao Supabase para confirmar conexão
+ * - Ping ao Firestore para confirmar conexão
  * - Estados mais granulares (checking, online, offline, reconnecting)
  * - Debounce para evitar flickering
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { logger } from '@/lib/errors/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { getFirebaseDb } from '@/integrations/firebase/app';
+import { collection, getDocs, limit, query } from 'firebase/firestore';
+
+const db = getFirebaseDb();
 
 export type ConnectionState = 'online' | 'offline' | 'checking' | 'reconnecting';
 
@@ -35,7 +44,7 @@ interface UseConnectionStatusOptions {
 }
 
 /**
- * Verifica conectividade real fazendo ping ao Supabase
+ * Verifica conectividade real fazendo ping ao Firestore
  */
 async function checkRealConnectivity(): Promise<boolean> {
     // Primeiro, verificar navigator.onLine
@@ -43,21 +52,17 @@ async function checkRealConnectivity(): Promise<boolean> {
         return false;
     }
 
-    // Fazer ping real ao Supabase
+    // Fazer ping real ao Firestore
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        // Usar health check simples do Supabase
-        const { error } = await supabase.from('organizations').select('id').limit(1).abortSignal(controller.signal);
-
-        clearTimeout(timeoutId);
+        // Usar health check simples com query leve ao Firestore
+        const q = query(collection(db, 'organizations'), limit(1));
+        await getDocs(q);
 
         // Se não há erro, está conectado
-        return !error;
+        return true;
     } catch (error) {
         // Erros de rede/timeout = offline
-        if (error instanceof Error && (error.name === 'AbortError' || error.message?.includes('fetch'))) {
+        if (error instanceof Error && (error.name === 'AbortError' || error.message?.includes('fetch') || error.message?.includes('network'))) {
             return false;
         }
         // Outros erros (ex: auth) podem significar que está online
