@@ -25,7 +25,8 @@ export function useMovimentacoesCaixa(dataInicio?: string, dataFim?: string) {
     queryFn: async () => {
       let query = supabase
         .from('movimentacoes_caixa')
-        .select('*')
+        // Performance: explicit column selection to reduce payload
+        .select('id, data, tipo, valor, descricao, categoria, forma_pagamento, created_at')
         .order('data', { ascending: false });
       
       if (dataInicio) query = query.gte('data', dataInicio);
@@ -44,7 +45,8 @@ export function useFluxoCaixaResumo() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('fluxo_caixa_resumo')
-        .select('*')
+        // Performance: explicit column selection to reduce payload
+        .select('mes, entradas, saidas, saldo')
         .order('mes', { ascending: false })
         .limit(12);
       
@@ -60,7 +62,8 @@ export function useCaixaDiario(data: string) {
     queryFn: async () => {
       const { data: movs, error } = await supabase
         .from('movimentacoes_caixa')
-        .select('*')
+        // Performance: explicit column selection to reduce payload
+        .select('id, data, tipo, valor, descricao, categoria, forma_pagamento, created_at')
         .eq('data', data)
         .order('created_at', { ascending: true });
       
