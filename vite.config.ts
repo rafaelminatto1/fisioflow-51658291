@@ -199,7 +199,7 @@ export default defineConfig(({ mode }) => {
             }
           ],
           navigationPreload: false,
-          maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+          maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
         },
         strategies: 'generateSW',
       }),
@@ -246,84 +246,17 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
-          /*
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // CRITICAL: React + Scheduler deve ser sempre o primeiro chunk carregado
-              // Scheduler é necessário para React 18 funcionar corretamente
-              if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
-                return 'react-vendor';
-              }
-              // Router depende de React, carregar após
-              if (id.includes('react-router')) {
-                return 'router-vendor';
-              }
-              // Bibliotecas de consulta que dependem de React
-              if (id.includes('@tanstack/react-query')) {
-                return 'query-vendor';
-              }
-              // Supabase para inicialização
-              if (id.includes('@supabase')) {
-                return 'supabase-vendor';
-              }
-              // Componentes UI que dependem de React
-              if (id.includes('@radix-ui') ||
-                id.includes('class-variance-authority') ||
-                id.includes('clsx') ||
-                id.includes('tailwind-merge') ||
-                id.includes('react-remove-scroll') ||
-                id.includes('aria-hidden')) {
-                return 'ui-vendor';
-              }
-              // Gráficos
-              if (id.includes('recharts')) {
-                return 'chart-vendor';
-              }
-              // Utilitários de data
-              if (id.includes('date-fns')) {
-                return 'date-vendor';
-              }
-              // Animações - pode ser lazy loaded
-              if (id.includes('framer-motion') || id.includes('motion')) {
-                return 'animation-vendor';
-              }
-              // Bibliotecas PDF
+              // PDF (Heavy, isolated)
               if (id.includes('jspdf') || id.includes('@react-pdf')) {
                 return 'pdf-vendor';
               }
-              // Excel
-              if (id.includes('xlsx')) {
-                return 'xlsx-vendor';
-              }
-              // Cornerstone DICOM
-              if (id.includes('@cornerstonejs')) {
-                return 'cornerstone-vendor';
-              }
-              // MediaPipe
-              if (id.includes('@mediapipe')) {
-                return 'mediapipe-vendor';
-              }
-              // Konva canvas
-              if (id.includes('konva')) {
-                return 'konva-vendor';
-              }
-              // Ícones
-              if (id.includes('lucide-react')) {
-                return 'icons-vendor';
-              }
-              // State management
-              if (id.includes('zustand')) {
-                return 'zustand-vendor';
-              }
-              // Bibliotecas de drag & drop
-              if (id.includes('@dnd-kit') || id.includes('@hello-pangea/dnd')) {
-                return 'dnd-vendor';
-              }
-              // Demais dependências
-              return 'vendor';
+
+              // EVERYTHING ELSE (React, Router, UI, Supabase, Utils, Icons, Forms, Date, Motion, Charts, Media) -> Default vendor
+              // Return null to allow default splitting for other dependencies
             }
           },
-          */
           experimentalMinChunkSize: 100000,
         },
         preserveEntrySignatures: 'strict',
