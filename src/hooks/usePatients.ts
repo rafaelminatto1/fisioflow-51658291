@@ -13,11 +13,9 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
-import { patientsApi } from '@/integrations/firebase/functions';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { PatientService } from '@/services/patientService';
@@ -25,7 +23,6 @@ import {
   PATIENT_QUERY_CONFIG,
   PATIENT_SELECT,
   devValidate,
-  type PatientDBStandard
 } from '@/lib/constants/patient-queries';
 import {
   isOnline,
@@ -149,31 +146,6 @@ export const useActivePatients = () => {
     staleTime: PATIENT_QUERY_CONFIG.staleTime,
     retry: PATIENT_QUERY_CONFIG.maxRetries,
   });
-
-  // Intelligent prefetch of related data
-  useEffect(() => {
-    if (result.data && result.data.length > 0) {
-      // Prefetch stats for first 10 patients
-      const patientsToPrefetch = result.data.slice(0, 10);
-
-      const timer = setTimeout(() => {
-        patientsToPrefetch.forEach((patient, index) => {
-          setTimeout(() => {
-            queryClient.prefetchQuery({
-              queryKey: ['patient-stats', patient.id],
-              queryFn: async () => {
-                const response = await patientsApi.getStats(patient.id);
-                return response.data;
-              },
-              staleTime: PATIENT_QUERY_CONFIG.staleTime,
-            });
-          }, index * 100); // Stagger by 100ms
-        });
-      }, 500); // Start after 500ms
-
-      return () => clearTimeout(timer);
-    }
-  }, [result.data, queryClient]);
 
   return result;
 };
