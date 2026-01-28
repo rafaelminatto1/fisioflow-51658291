@@ -236,7 +236,8 @@
       "Bash(PGPASSWORD=fisioflow2024 psql:*)",
       "Bash(do)",
       "Bash(git reset:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(yes:*)"
     ],
     "deny": [],
     "ask": [],
