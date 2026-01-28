@@ -4,6 +4,30 @@
  */
 
 import * as functions from 'firebase-functions/v2';
+import { setGlobalOptions } from 'firebase-functions/v2';
+import {
+    DB_PASS_SECRET,
+    DB_USER_SECRET,
+    DB_NAME_SECRET,
+    CLOUD_SQL_CONNECTION_NAME_SECRET
+} from './init';
+import {
+    WHATSAPP_PHONE_NUMBER_ID_SECRET,
+    WHATSAPP_ACCESS_TOKEN_SECRET
+} from './communications/whatsapp';
+
+// Set global options for all functions
+setGlobalOptions({
+    region: 'us-central1',
+    secrets: [
+        DB_PASS_SECRET,
+        DB_USER_SECRET,
+        DB_NAME_SECRET,
+        CLOUD_SQL_CONNECTION_NAME_SECRET,
+        WHATSAPP_PHONE_NUMBER_ID_SECRET,
+        WHATSAPP_ACCESS_TOKEN_SECRET
+    ]
+});
 
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
@@ -181,7 +205,7 @@ export const onAppointmentUpdated = functions.firestore.onDocumentWritten('appoi
     const after = event.data?.after.data();
 
     if (before && after) {
-         
+
         const realtime = await import('./realtime/publisher');
         await realtime.publishAppointmentEvent(after.organization_id, {
             event: 'UPDATE',
@@ -211,6 +235,9 @@ export { appointmentReminders, onAppointmentCreatedWorkflow, onAppointmentUpdate
 
 // Patient Reactivation Workflow
 export { patientReactivation } from './workflows/reactivation';
+
+// WhatsApp Test Functions
+export { testWhatsAppMessage, testWhatsAppTemplate } from './communications/whatsapp';
 
 // ============================================================================
 // AUTH TRIGGERS
