@@ -228,7 +228,13 @@
       "Bash(gh auth:*)",
       "Bash(wait:*)",
       "mcp__playwright__browser_evaluate",
-      "mcp__playwright__browser_press_key"
+      "mcp__playwright__browser_press_key",
+      "mcp__plugin_firebase_firebase__functions_get_logs",
+      "Bash(cloud-sql-proxy:*)",
+      "Bash(/tmp/cloud-sql-proxy:*)",
+      "Bash(timeout:*)",
+      "Bash(PGPASSWORD=fisioflow2024 psql:*)",
+      "Bash(do)"
     ],
     "deny": [],
     "ask": [],

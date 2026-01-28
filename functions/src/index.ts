@@ -124,6 +124,12 @@ export { generateUploadToken, confirmUpload, deleteFile as deleteStorageFile, li
 import { createAdminUser } from './admin/create-user';
 export { createAdminUser };
 
+// Migration Functions (temporary - can be removed after migration)
+import { runMigration } from './runMigration';
+export { runMigration };
+import { runMigrationHttp } from './runMigrationHttp';
+export { runMigrationHttp };
+
 // ============================================================================
 // AI FUNCTIONS
 // ============================================================================

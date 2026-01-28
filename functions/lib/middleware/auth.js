@@ -76,10 +76,12 @@ async function getProfile(userId) {
         if (result.rows.length === 0) {
             // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
             console.log(`[Auth Middleware] Creating default profile for user: ${userId}`);
-            const organizationId = 'default-org';
+            // Use a valid UUID for the default organization (required by PostgreSQL uuid type)
+            const organizationId = '11111111-1111-1111-1111-111111111111';
             // 1. Ensure Organization exists
-            await pool.query(`INSERT INTO organizations (id, name, slug, active)
-         VALUES ($1, 'Clínica Principal', 'default-org', true)
+            // Note: We use the same UUID for ID, but keep 'default-org' as the slug
+            await pool.query(`INSERT INTO organizations (id, name, slug, active, email)
+         VALUES ($1, 'Clínica Principal', 'default-org', true, 'admin@fisioflow.com.br')
          ON CONFLICT (id) DO NOTHING`, [organizationId]);
             // 2. Create Profile
             // We fetch some basic info from Firebase Auth if possible, but here we use defaults
@@ -112,8 +114,8 @@ async function getProfile(userId) {
  * @param organizationId - ID da organização do usuário
  */
 async function setRLSContext(pool, organizationId) {
-    await pool.query('SET LOCAL app.organization_id = $1', [organizationId]);
-    await pool.query('SET LOCAL app.user_id = $1', [organizationId]); // Fallback
+    await pool.query("SELECT set_config('app.organization_id', $1, true)", [organizationId]);
+    await pool.query("SELECT set_config('app.user_id', $1, true)", [organizationId]); // Fallback
 }
 /**
  * Autoriza uma requisição e retorna o contexto de autenticação completo
