@@ -1,27 +1,33 @@
-/**
- * API Functions: Exercises
- * Cloud Functions para gestão de exercícios
- */
-
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { Pool } from 'pg';
+import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
+import { Exercise } from '../types/models';
 
 /**
- * Lista exercícios com filtros
+ * Interfaces
  */
-export const listExercises = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface ListExercisesRequest {
+  category?: string;
+  difficulty?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+interface ListExercisesResponse {
+  data: Exercise[];
+  categories: string[];
+}
+
+export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   await authorizeRequest(request.auth.token);
 
-  const { category, difficulty, search, limit = 100, offset = 0 } = request.data || {};
+  const { category, difficulty, search, limit = 100, offset = 0 } = request.data;
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     let query = `
@@ -34,7 +40,7 @@ export const listExercises = onCall(async (request) => {
       FROM exercises
       WHERE is_active = true
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
     let paramCount = 0;
 
     if (category) {
@@ -66,32 +72,37 @@ export const listExercises = onCall(async (request) => {
     );
 
     return {
-      data: result.rows,
-      categories: categoriesResult.rows.map((r: any) => r.category),
+      data: result.rows as Exercise[],
+      categories: categoriesResult.rows.map((r: { category: string }) => r.category),
     };
-  } finally {
-    await pool.end();
+  } catch (error: unknown) {
+    console.error('Error in listExercises:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao listar exercícios';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Busca um exercício por ID
- */
-export const getExercise = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface GetExerciseRequest {
+  exerciseId: string;
+}
+
+interface GetExerciseResponse {
+  data: Exercise;
+}
+
+export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   await authorizeRequest(request.auth.token);
-  const { exerciseId } = request.data || {};
+  const { exerciseId } = request.data;
 
   if (!exerciseId) {
     throw new HttpsError('invalid-argument', 'exerciseId é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     const result = await pool.query(
@@ -103,30 +114,37 @@ export const getExercise = onCall(async (request) => {
       throw new HttpsError('not-found', 'Exercício não encontrado');
     }
 
-    return { data: result.rows[0] };
-  } finally {
-    await pool.end();
+    return { data: result.rows[0] as Exercise };
+  } catch (error: unknown) {
+    console.error('Error in getExercise:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercício';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Busca exercícios similares (usando pgvector se disponível)
- */
-export const searchSimilarExercises = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface SearchSimilarExercisesRequest {
+  exerciseId?: string;
+  query?: string;
+  limit?: number;
+}
+
+interface SearchSimilarExercisesResponse {
+  data: Exercise[];
+}
+
+export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Promise<SearchSimilarExercisesResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   await authorizeRequest(request.auth.token);
-  const { exerciseId, query: searchQuery, limit = 10 } = request.data || {};
+  const { exerciseId, query: searchQuery, limit = 10 } = request.data;
 
   if (!exerciseId && !searchQuery) {
     throw new HttpsError('invalid-argument', 'exerciseId ou query é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     let result;
@@ -134,7 +152,7 @@ export const searchSimilarExercises = onCall(async (request) => {
     if (exerciseId) {
       // Buscar exercício base para pegar categoria
       const baseResult = await pool.query(
-        'SELECT category, muscles FROM exercises WHERE id = $1',
+        'SELECT category FROM exercises WHERE id = $1',
         [exerciseId]
       );
 
@@ -166,25 +184,26 @@ export const searchSimilarExercises = onCall(async (request) => {
       );
     }
 
-    return { data: result.rows };
-  } finally {
-    await pool.end();
+    return { data: result.rows as Exercise[] };
+  } catch (error: unknown) {
+    console.error('Error in searchSimilarExercises:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercícios similares';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Lista categorias de exercícios
- */
-export const getExerciseCategories = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface GetExerciseCategoriesResponse {
+  data: { id: string, name: string }[];
+}
+
+export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   await authorizeRequest(request.auth.token);
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     const result = await pool.query(
@@ -195,34 +214,42 @@ export const getExerciseCategories = onCall(async (request) => {
     );
 
     return {
-      data: result.rows.map((r: any) => ({
+      data: result.rows.map((r: { category: string }) => ({
         id: r.category.toLowerCase().replace(/\s+/g, '-'),
         name: r.category,
       })),
     };
-  } finally {
-    await pool.end();
+  } catch (error: unknown) {
+    console.error('Error in getExerciseCategories:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao listar categorias';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Registra a realização de um exercício por um paciente
- */
-export const logExercise = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface LogExerciseRequest {
+  patientId: string;
+  prescriptionId: string;
+  difficulty: number;
+  notes?: string;
+}
+
+interface LogExerciseResponse {
+  data: any; // Using explicit any for now as ExerciseLog model is not strictly defined in models.ts yet
+}
+
+export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId, prescriptionId, difficulty, notes } = request.data || {};
+  const { patientId, prescriptionId, difficulty, notes } = request.data;
 
   if (!patientId || !prescriptionId) {
     throw new HttpsError('invalid-argument', 'patientId e prescriptionId são obrigatórios');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     // Verificar se paciente pertence à organização
@@ -250,29 +277,34 @@ export const logExercise = onCall(async (request) => {
     );
 
     return { data: result.rows[0] };
-  } finally {
-    await pool.end();
+  } catch (error: unknown) {
+    console.error('Error in logExercise:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao registrar exercício';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Busca exercícios prescritos para um paciente
- */
-export const getPrescribedExercises = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface GetPrescribedExercisesRequest {
+  patientId: string;
+}
+
+interface GetPrescribedExercisesResponse {
+  data: any[]; // Using explicit any for PrescribedExercise rich type
+}
+
+export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Promise<GetPrescribedExercisesResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId } = request.data || {};
+  const { patientId } = request.data;
 
   if (!patientId) {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     // Verificar se paciente pertence à organização
@@ -319,17 +351,40 @@ export const getPrescribedExercises = onCall(async (request) => {
     }));
 
     return { data };
-  } finally {
-    await pool.end();
+  } catch (error: unknown) {
+    console.error('Error in getPrescribedExercises:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prescrições';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Cria um novo exercício
- */
-export const createExercise = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface CreateExerciseRequest {
+  name: string;
+  category: string;
+  difficulty?: string;
+  description?: string;
+  instructions?: string;
+  muscles?: string[];
+  equipment?: string[];
+  video_url?: string;
+  thumbnail_url?: string;
+  duration_minutes?: number;
+  sets_recommended?: number;
+  reps_recommended?: number;
+  precautions?: string;
+  benefits?: string;
+  tags?: string[];
+  display_order?: number;
+}
+
+interface CreateExerciseResponse {
+  data: Exercise;
+}
+
+export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerciseResponse>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
 
@@ -337,12 +392,9 @@ export const createExercise = onCall(async (request) => {
     throw new HttpsError('permission-denied', 'Permissão insuficiente para criar exercícios');
   }
 
-  const exercise = request.data || {};
+  const exercise = request.data;
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     const result = await pool.query(
@@ -373,18 +425,23 @@ export const createExercise = onCall(async (request) => {
       ]
     );
 
-    return { data: result.rows[0] };
-  } finally {
-    await pool.end();
+    return { data: result.rows[0] as Exercise };
+  } catch (error: unknown) {
+    console.error('Error in createExercise:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao criar exercício';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Atualiza um exercício existente
- */
-export const updateExercise = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface UpdateExerciseRequest {
+  id: string;
+  [key: string]: any;
+}
+
+export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exercise }>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
 
@@ -392,22 +449,19 @@ export const updateExercise = onCall(async (request) => {
     throw new HttpsError('permission-denied', 'Permissão insuficiente para atualizar exercícios');
   }
 
-  const { id, ...updates } = request.data || {};
+  const { id, ...updates } = request.data;
 
   if (!id) {
     throw new HttpsError('invalid-argument', 'ID do exercício é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     const fields = Object.keys(updates).filter(k => k !== 'id');
     if (fields.length === 0) {
       const result = await pool.query('SELECT * FROM exercises WHERE id = $1', [id]);
-      return { data: result.rows[0] };
+      return { data: result.rows[0] as Exercise };
     }
 
     const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
@@ -422,18 +476,22 @@ export const updateExercise = onCall(async (request) => {
       throw new HttpsError('not-found', 'Exercício não encontrado');
     }
 
-    return { data: result.rows[0] };
-  } finally {
-    await pool.end();
+    return { data: result.rows[0] as Exercise };
+  } catch (error: unknown) {
+    console.error('Error in updateExercise:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar exercício';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Remove (desativa) um exercício
- */
-export const deleteExercise = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface DeleteExerciseRequest {
+  id: string;
+}
+
+export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: boolean }>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
 
@@ -441,16 +499,13 @@ export const deleteExercise = onCall(async (request) => {
     throw new HttpsError('permission-denied', 'Apenas administradores podem excluir exercícios');
   }
 
-  const { id } = request.data || {};
+  const { id } = request.data;
 
   if (!id) {
     throw new HttpsError('invalid-argument', 'ID do exercício é obrigatório');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     // Soft delete preferencialmente
@@ -464,17 +519,22 @@ export const deleteExercise = onCall(async (request) => {
     }
 
     return { success: true };
-  } finally {
-    await pool.end();
+  } catch (error: unknown) {
+    console.error('Error in deleteExercise:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir exercício';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
-/**
- * Une exercícios duplicados
- */
-export const mergeExercises = onCall(async (request) => {
-  if (!request.auth?.token) {
-    throw new HttpsError('unauthenticated', 'Autenticação necessária');
+interface MergeExercisesRequest {
+  keepId: string;
+  mergeIds: string[];
+}
+
+export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: boolean, deletedCount: number }>>(async (request) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
 
@@ -482,16 +542,13 @@ export const mergeExercises = onCall(async (request) => {
     throw new HttpsError('permission-denied', 'Apenas administradores podem unir exercícios');
   }
 
-  const { keepId, mergeIds } = request.data || {};
+  const { keepId, mergeIds } = request.data;
 
   if (!keepId || !Array.isArray(mergeIds) || mergeIds.length === 0) {
     throw new HttpsError('invalid-argument', 'keepId e mergeIds (array) são obrigatórios');
   }
 
-  const pool = new Pool({
-    connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    ssl: { rejectUnauthorized: false },
-  });
+  const pool = getPool();
 
   try {
     await pool.query('BEGIN');
@@ -520,11 +577,11 @@ export const mergeExercises = onCall(async (request) => {
 
     await pool.query('COMMIT');
 
-    return { success: true, deletedCount: deleteResult.rowCount };
-  } catch (err) {
+    return { success: true, deletedCount: deleteResult.rowCount || 0 };
+  } catch (err: unknown) {
     await pool.query('ROLLBACK');
-    throw err;
-  } finally {
-    await pool.end();
+    console.error('Error in mergeExercises:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Erro ao unir exercícios';
+    throw new HttpsError('internal', errorMessage);
   }
 });

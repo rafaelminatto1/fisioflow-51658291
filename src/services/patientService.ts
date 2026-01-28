@@ -3,8 +3,8 @@ import { patientsApi } from '@/integrations/firebase/functions';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { logger } from '@/lib/errors/logger';
 import {
-    PATIENT_SELECT,
     getPatientName,
     type PatientDBStandard
 } from '@/lib/constants/patient-queries';
@@ -77,6 +77,11 @@ export const PatientService = {
             logger.info('PatientService: fetching patients from Firebase Functions', { organizationId }, 'PatientService');
             // TEMP: Removendo filtro de status para debug
             const response = await patientsApi.list({ limit: 1000 });
+
+            console.log('📊 [PatientService] Raw response:', response);
+            console.log('📊 [PatientService] response.data:', response.data);
+            console.log('📊 [PatientService] response.data type:', typeof response.data);
+            console.log('📊 [PatientService] Is array?:', Array.isArray(response.data));
 
             const patients = response.data || [];
             logger.info('PatientService: patients fetched from Firebase Functions', {

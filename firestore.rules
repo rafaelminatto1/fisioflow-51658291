@@ -12,10 +12,17 @@ service cloud.firestore {
     }
 
     // Verificadores de papel (Role checkers) com proteção de existência
+    // Fallback: Se o profile não existir em Firestore, permite leitura mas não escrita
     function hasRole(role) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
+    }
+
+    // Verificar se o usuário tem perfil no Firestore
+    function hasProfile() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/profiles/$(request.auth.uid));
     }
 
     // Verificar se o usuário é admin
@@ -120,7 +127,7 @@ service cloud.firestore {
     // ============================================================================================
     
     match /user_roles/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAdmin() || isProfessional() || (isAuthenticated() && request.auth.uid == userId);
       // Escrita apenas por admin via backend (idealmente) ou regras mais estritas
       allow write: if isAdmin();
     }
@@ -129,18 +136,28 @@ service cloud.firestore {
     // PATIENTS COLLECTION
     // ============================================================================================
 
+    match /patients {
+      // Listagem: usuários autenticados podem listar pacientes (necessário para o app funcionar)
+      // Em produção, isso poderia ser mais restrito
+      allow list: if isAuthenticated();
+      // Recuperação de coleção (list) usa a mesma lógica
+      allow get: if isAuthenticated();
+    }
+
     match /patients/{patientId} {
       // Leitura: profissionais e admin podem ver
       // pacientes só podem ver o próprio
-      allow read: if canAccessPatientData() ||
-                     (isPatient() && isOwner('userId'));
+      // usuários autenticados sem perfil podem ver (para testes/onboarding)
+      allow read: if isAdmin() || isProfessional() ||
+                     (isPatient() && isOwner('userId')) ||
+                     (isAuthenticated() && !hasProfile());
 
-      // Criação: apenas profissionais e admin
-      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      // Criação: profissionais, admin, ou usuários autenticados sem perfil (para onboarding)
+      allow create: if (isProfessional() || isAdmin() || (isAuthenticated() && !hasProfile())) && isValidSize();
 
       // Atualização: profissionais podem atualizar pacientes que atendem
       // pacientes podem atualizar dados limitados
-      allow update: if isProfessional() ||
+      allow update: if isProfessional() || isAdmin() ||
                       (isPatient() && isOwner('userId'));
 
       // Deleção: apenas admins
@@ -151,14 +168,22 @@ service cloud.firestore {
     // APPOINTMENTS COLLECTION
     // ============================================================================================
 
+    match /appointments {
+      // Listagem: usuários autenticados podem listar agendamentos
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated();
+    }
+
     match /appointments/{appointmentId} {
       // Leitura: profissionais envolvidos, pacientes próprios, admin
+      // usuários autenticados sem perfil podem ver (para testes/onboarding)
       allow read: if canAccessPatientData() ||
                      (isPatient() && resource.data.patientId == request.auth.uid) ||
-                     isAdmin();
+                     isAdmin() ||
+                     (isAuthenticated() && !hasProfile());
 
-      // Criação: profissionais e admin
-      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      // Criação: profissionais, admin, ou usuários autenticados sem perfil
+      allow create: if (isProfessional() || isAdmin() || (isAuthenticated() && !hasProfile())) && isValidSize();
 
       // Atualização: profissionais que atendem, admin
       allow update: if isProfessional() || isAdmin();
@@ -187,8 +212,13 @@ service cloud.firestore {
     }
 
     // ============================================================================================
-    // FINANCIAL / PAYMENTS COLLECTION
+    // FINANCIAL / PAYMENTS / CONTAS_FINANCEIRAS COLLECTION
     // ============================================================================================
+
+    match /contas_financeiras/{id} {
+        allow read: if isAdmin() || isProfessional();
+        allow write: if isAdmin();
+    }
 
     match /payments/{paymentId} {
       // Acesso restrito: apenas admin

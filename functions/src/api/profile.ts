@@ -6,11 +6,16 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { authorizeRequest } from '../middleware/auth';
 import { getPool } from '../init';
+import { Profile } from '../types/models';
+
+interface GetProfileResponse {
+    data: Profile;
+}
 
 /**
  * Retorna o perfil completo do usuário autenticado
  */
-export const getProfile = onCall(async (request) => {
+export const getProfile = onCall<{}, Promise<GetProfileResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -37,24 +42,41 @@ export const getProfile = onCall(async (request) => {
             throw new HttpsError('not-found', 'Perfil não encontrado');
         }
 
-        return { data: result.rows[0] };
-    } catch (error: any) {
+        return { data: result.rows[0] as Profile };
+    } catch (error: unknown) {
         if (error instanceof HttpsError) throw error;
         console.error('Erro ao buscar perfil:', error);
-        throw new HttpsError('internal', 'Erro interno ao buscar perfil');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar perfil';
+        throw new HttpsError('internal', errorMessage);
     }
 });
+
+interface UpdateProfileRequest {
+    full_name?: string;
+    phone?: string;
+    avatar_url?: string;
+    crefito?: string;
+    specialties?: string[]; // Assuming array of strings for JSON
+    bio?: string;
+    birth_date?: string;
+    preferences?: Record<string, any>;
+    [key: string]: any;
+}
+
+interface UpdateProfileResponse {
+    data: Profile;
+}
 
 /**
  * Atualiza o perfil do usuário autenticado
  */
-export const updateProfile = onCall(async (request) => {
+export const updateProfile = onCall<UpdateProfileRequest, Promise<UpdateProfileResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
 
     const authContext = await authorizeRequest(request.auth.token);
-    const updates = request.data || {};
+    const updates = request.data;
 
     const pool = getPool();
 
@@ -66,7 +88,7 @@ export const updateProfile = onCall(async (request) => {
         ];
 
         const setClauses: string[] = [];
-        const values: any[] = [];
+        const values: (string | number | Date)[] = [];
         let paramCount = 0;
 
         for (const field of allowedFields) {
@@ -105,10 +127,11 @@ export const updateProfile = onCall(async (request) => {
 
         const result = await pool.query(query, values);
 
-        return { data: result.rows[0] };
-    } catch (error: any) {
+        return { data: result.rows[0] as Profile };
+    } catch (error: unknown) {
         if (error instanceof HttpsError) throw error;
         console.error('Erro ao atualizar perfil:', error);
-        throw new HttpsError('internal', 'Erro interno ao atualizar perfil');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar perfil';
+        throw new HttpsError('internal', errorMessage);
     }
 });

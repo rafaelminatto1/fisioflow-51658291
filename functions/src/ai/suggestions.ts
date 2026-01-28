@@ -1,14 +1,6 @@
-/**
- * Smart AI - Advanced Features
- *
- * Sistema de Inteligência Artificial para sugestão de exercícios,
- * análise de prontuários e predição de tempo de recuperação
- *
- * @module ai/suggestions
- */
-
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getAdminDb } from '../init';
+import { Exercise, Evolution, PatientInsights } from '../types/models';
 
 const firestore = getAdminDb();
 
@@ -36,13 +28,12 @@ export const suggestExercises = onCall({
 
   if (bodyPart) {
     // Buscar exercícios que mencionam a parte do corpo
-    // (requer busca full-text ou filtragem adicional)
     query = query.where('category', '==', mapBodyPartToCategory(bodyPart));
   }
 
   const exercisesSnapshot = await query.limit(50).get();
 
-  const exercises = exercisesSnapshot.docs.map((doc: any) => ({
+  const exercises: Exercise[] = exercisesSnapshot.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
   }));
@@ -89,7 +80,10 @@ export const analyzePatientRecord = onCall({
     .limit(20)
     .get();
 
-  const evolutions = evolutionsSnapshot.docs.map((doc: any) => doc.data());
+  const evolutions: Evolution[] = evolutionsSnapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 
   if (evolutions.length < 2) {
     return {
@@ -100,9 +94,9 @@ export const analyzePatientRecord = onCall({
   }
 
   // Analisar tendências
-  const insights = {
+  const insights: PatientInsights = {
     painTrend: analyzePainTrend(evolutions),
-    adherenceRate: calculateAdherenceRate(patientId, evolutions),
+    adherenceRate: await calculateAdherenceRate(patientId, evolutions),
     progressRate: calculateProgressRate(evolutions),
     recommendations: generateRecommendations(evolutions),
     riskFactors: identifyRiskFactors(evolutions),
@@ -184,7 +178,7 @@ export const predictRecoveryTime = onCall({
       minDays,
       maxDays,
       estimatedWeeks: Math.round(baseDays / 7),
-      confidence: 'moderate', // Aumentar com mais dados históricos
+      confidence: 'moderate',
       factors: {
         pathology,
         severity,
@@ -284,12 +278,12 @@ function mapBodyPartToCategory(bodyPart: string): string {
  * Filtra exercícios baseado em critérios
  */
 function filterExercisesByCriteria(
-  exercises: any[],
+  exercises: Exercise[],
   criteria: {
     pathology?: string;
     limitations?: string[];
   }
-): any[] {
+): Exercise[] {
   let filtered = [...exercises];
 
   // Filtrar por limitações físicas
@@ -312,13 +306,13 @@ function filterExercisesByCriteria(
  * Ordena exercícios por relevância
  */
 function rankExercisesByRelevance(
-  exercises: any[],
+  exercises: Exercise[],
   context: {
     pathology?: string;
     bodyPart?: string;
     goals?: string[];
   }
-): any[] {
+): Exercise[] {
   return exercises.map(ex => {
     let score = 0;
 
@@ -339,26 +333,26 @@ function rankExercisesByRelevance(
       });
     }
 
-    // Pontuação por dificuldade (preferir médias no início)
-    if (ex.difficulty === 'medio') {
+    // Pontuação por dificuldade
+    if (ex.difficulty === 'medio' || ex.difficulty === 'intermediate') {
       score += 2;
-    } else if (ex.difficulty === 'facil') {
+    } else if (ex.difficulty === 'facil' || ex.difficulty === 'beginner') {
       score += 1;
     }
 
     return { ...ex, relevanceScore: score };
   })
-  .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore);
+    .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
 }
 
 /**
  * Analisa tendência de dor
  */
-function analyzePainTrend(evolutions: any[]): 'improving' | 'stable' | 'worsening' {
+function analyzePainTrend(evolutions: Evolution[]): 'improving' | 'stable' | 'worsening' {
   const painLevels = evolutions
     .filter(e => e.painLevel !== null && e.painLevel !== undefined)
     .map(e => e.painLevel as number)
-    .reverse(); // Do mais antigo para o mais recente
+    .reverse();
 
   if (painLevels.length < 2) {
     return 'stable';
@@ -388,8 +382,7 @@ function analyzePainTrend(evolutions: any[]): 'improving' | 'stable' | 'worsenin
 /**
  * Calcula taxa de adesão ao tratamento
  */
-async function calculateAdherenceRate(patientId: string, evolutions: any[]): Promise<number> {
-  // Buscar agendamentos do paciente
+async function calculateAdherenceRate(patientId: string, _evolutions: Evolution[]): Promise<number> {
   const appointmentsSnapshot = await firestore
     .collection('appointments')
     .where('patientId', '==', patientId)
@@ -400,10 +393,9 @@ async function calculateAdherenceRate(patientId: string, evolutions: any[]): Pro
   const appointments = appointmentsSnapshot.docs.map((doc: any) => doc.data());
 
   if (appointments.length === 0) {
-    return 100; // Sem dados para calcular
+    return 100;
   }
 
-  // Contar comparecimentos
   const attended = appointments.filter(a =>
     a.status === 'concluido' || a.status === 'atendido'
   ).length;
@@ -414,7 +406,7 @@ async function calculateAdherenceRate(patientId: string, evolutions: any[]): Pro
 /**
  * Calcula taxa de progresso
  */
-function calculateProgressRate(evolutions: any[]): number {
+function calculateProgressRate(evolutions: Evolution[]): number {
   if (evolutions.length < 2) {
     return 0;
   }
@@ -422,25 +414,23 @@ function calculateProgressRate(evolutions: any[]): number {
   const first = evolutions[evolutions.length - 1];
   const last = evolutions[0];
 
-  // Comparar nível de dor inicial e final
-  if (first.painLevel !== null && last.painLevel !== null) {
+  if (first.painLevel !== null && last.painLevel !== null && first.painLevel !== undefined && last.painLevel !== undefined) {
     const improvement = first.painLevel - last.painLevel;
-    const maxPossible = first.painLevel; // Melhor caso: dor = 0
+    const maxPossible = first.painLevel;
 
     if (maxPossible > 0) {
       return Math.min(100, Math.round((improvement / maxPossible) * 100));
     }
   }
 
-  return 50; // Neutro se não tiver dados suficientes
+  return 50;
 }
 
 /**
  * Gera recomendações baseadas nas evoluções
  */
-function generateRecommendations(evolutions: any[]): string[] {
+function generateRecommendations(evolutions: Evolution[]): string[] {
   const recommendations: string[] = [];
-
   const painTrend = analyzePainTrend(evolutions);
 
   if (painTrend === 'improving') {
@@ -451,7 +441,7 @@ function generateRecommendations(evolutions: any[]): string[] {
   }
 
   const lastEvolution = evolutions[0];
-  if (lastEvolution?.painLevel >= 7) {
+  if (lastEvolution?.painLevel && lastEvolution.painLevel >= 7) {
     recommendations.push('Nível de dor elevado - considere ajustar intensidade dos exercícios');
   }
 
@@ -461,9 +451,8 @@ function generateRecommendations(evolutions: any[]): string[] {
 /**
  * Identifica fatores de risco
  */
-function identifyRiskFactors(evolutions: any[]): string[] {
+function identifyRiskFactors(evolutions: Evolution[]): string[] {
   const risks: string[] = [];
-
   const painTrend = analyzePainTrend(evolutions);
 
   if (painTrend === 'worsening') {
@@ -471,7 +460,7 @@ function identifyRiskFactors(evolutions: any[]): string[] {
   }
 
   const lastEvolution = evolutions[0];
-  if (lastEvolution?.painLevel >= 8) {
+  if (lastEvolution?.painLevel && lastEvolution.painLevel >= 8) {
     risks.push('Dor severa persistente');
   }
 
@@ -481,7 +470,7 @@ function identifyRiskFactors(evolutions: any[]): string[] {
 /**
  * Gera resposta do chatbot
  */
-function generateChatbotResponse(intent: string, message: string): string {
+function generateChatbotResponse(intent: string, _message: string): string {
   const responses: Record<string, string> = {
     'schedule_appointment': 'Para agendar uma sessão, você pode:\n\n1. Acessar a aba "Agenda" no app\n2. Clicar em "Novo Agendamento"\n3. Escolher data e horário disponível\n\nOu se preferir, me diga a data desejada e posso verificar a disponibilidade.',
     'exercises': 'Seus exercícios prescritos estão disponíveis na aba "Exercícios". Você pode ver vídeos, instruções e marcar quando completar cada um.\n\nDeseja ver seus planos de exercício?',
@@ -494,3 +483,4 @@ function generateChatbotResponse(intent: string, message: string): string {
 
   return responses[intent] || responses['general'];
 }
+

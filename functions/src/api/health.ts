@@ -4,13 +4,13 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
-import { Pool } from 'pg';
+import { getPool } from '../init';
 
 export const healthCheck = onRequest({
-  region: 'us-central1',
   memory: '256MiB',
   maxInstances: 1,
-  vpcConnector: 'projects/fisioflow-migration/locations/us-central1/connectors/cloudsql-connector',
+  vpcConnector: 'cloudsql-connector',
+  vpcConnectorEgressSettings: 'PRIVATE_RANGES_ONLY',
 }, async (req, res) => {
   // CORS headers
   res.set('Access-Control-Allow-Origin', '*');
@@ -28,24 +28,13 @@ export const healthCheck = onRequest({
   }
 
   try {
-    // Usar socket Unix do Cloud SQL
-    const pool = new Pool({
-      host: '/cloudsql/fisioflow-migration:us-central1:fisioflow-pg',
-      user: 'fisioflow',
-      password: 'fisioflow2024',
-      database: 'fisioflow',
-      max: 1,
-      connectionTimeoutMillis: 10000,
-    });
-
+    const pool = getPool();
     const result = await pool.query('SELECT COUNT(*) as count FROM exercises WHERE is_active = true');
     const dbTime = await pool.query('SELECT NOW() as server_time');
 
-    await pool.end();
-
     res.json({
       status: 'healthy',
-      database: 'connected (Unix socket)',
+      database: 'connected (centralized pool)',
       exercises_count: parseInt(result.rows[0].count),
       server_time: dbTime.rows[0].server_time,
       timestamp: new Date().toISOString()

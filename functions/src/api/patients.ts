@@ -6,11 +6,29 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
+import { Patient } from '../types/models';
 
 /**
  * Lista pacientes com filtros opcionais
  */
-export const listPatients = onCall(async (request) => {
+interface ListPatientsRequest {
+  status?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+interface ListPatientsResponse {
+  data: Patient[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
+/**
+ * Lista pacientes com filtros opcionais
+ */
+export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>(async (request) => {
   console.log('[listPatients] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -21,26 +39,11 @@ export const listPatients = onCall(async (request) => {
   console.log('[listPatients] Auth token present, uid:', request.auth.uid);
 
   const auth = await authorizeRequest(request.auth.token);
-
-  const { status, search, limit = 50, offset = 0 } = request.data || {};
-
-  // DEBUG: Log organization_id e query params
-  console.log('[listPatients] auth.organizationId:', auth.organizationId);
-  console.log('[listPatients] auth.userId:', auth.userId);
-  console.log('[listPatients] filters:', { status, search, limit, offset });
+  const { status, search, limit = 50, offset = 0 } = request.data;
 
   const pool = getPool();
-  console.log('[listPatients] Pool obtained');
 
   try {
-    // DEBUG: Verificar todos os pacientes no banco (sem filtro) para debug
-    console.log('[listPatients] Executing DEBUG query...');
-    const debugResult = await pool.query(
-      'SELECT id, name, organization_id, is_active FROM patients ORDER BY created_at DESC LIMIT 10'
-    );
-    console.log('[listPatients] DEBUG - All patients in DB:', JSON.stringify(debugResult.rows));
-    console.log('[listPatients] DEBUG - Total patients:', debugResult.rows.length);
-
     // Construir query dinâmica
     let query = `
       SELECT
@@ -51,7 +54,7 @@ export const listPatients = onCall(async (request) => {
       WHERE organization_id = $1
         AND is_active = true
     `;
-    const params: any[] = [auth.organizationId];
+    const params: (string | number)[] = [auth.organizationId];
     let paramCount = 1;
 
     if (status) {
@@ -77,7 +80,7 @@ export const listPatients = onCall(async (request) => {
       FROM patients
       WHERE organization_id = $1 AND is_active = true
     `;
-    const countParams: any[] = [auth.organizationId];
+    const countParams: (string | number)[] = [auth.organizationId];
     let countParamCount = 1;
 
     if (status) {
@@ -95,26 +98,42 @@ export const listPatients = onCall(async (request) => {
     const countResult = await pool.query(countQuery, countParams);
 
     return {
-      data: result.rows,
-      total: parseInt(countResult.rows[0].total),
+      data: result.rows as Patient[],
+      total: parseInt(countResult.rows[0].total, 10),
       page: Math.floor(offset / limit) + 1,
       perPage: limit,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in listPatients:', error);
-    throw new HttpsError('internal', error.message || 'Erro interno ao listar pacientes');
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao listar pacientes';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
 /**
  * Busca um paciente por ID
  */
-export const getPatient = onCall(async (request) => {
+interface GetPatientRequest {
+  patientId?: string;
+  profileId?: string;
+}
+
+interface GetPatientResponse {
+  data: Patient;
+}
+
+/**
+ * Busca um paciente por ID
+ */
+export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>(async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId, profileId } = request.data || {};
+  const { patientId, profileId } = request.data;
 
   if (!patientId && !profileId) {
     throw new HttpsError('invalid-argument', 'patientId ou profileId é obrigatório');
@@ -124,7 +143,7 @@ export const getPatient = onCall(async (request) => {
 
   try {
     let query = 'SELECT * FROM patients WHERE organization_id = $1';
-    const params: any[] = [auth.organizationId];
+    const params: (string | number)[] = [auth.organizationId];
 
     if (patientId) {
       query += ' AND id = $2';
@@ -140,18 +159,39 @@ export const getPatient = onCall(async (request) => {
       throw new HttpsError('not-found', 'Paciente não encontrado');
     }
 
-    return { data: result.rows[0] };
-  } catch (error: any) {
+    return { data: result.rows[0] as Patient };
+  } catch (error: unknown) {
     console.error('Error in getPatient:', error);
     if (error instanceof HttpsError) throw error;
-    throw new HttpsError('internal', error.message || 'Erro interno ao buscar paciente');
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar paciente';
+    throw new HttpsError('internal', errorMessage);
   }
 });
+
+interface CreatePatientRequest {
+  name: string;
+  phone?: string;
+  cpf?: string;
+  email?: string;
+  birth_date?: string;
+  gender?: string;
+  address?: any;
+  emergency_contact?: any;
+  medical_history?: string;
+  main_condition?: string;
+  status?: string;
+  organization_id?: string;
+  incomplete_registration?: boolean; // Added for quick registration
+}
+
+interface CreatePatientResponse {
+  data: Patient;
+}
 
 /**
  * Cria um novo paciente
  */
-export const createPatient = onCall(async (request) => {
+export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>(async (request) => {
   console.log('[createPatient] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -162,12 +202,12 @@ export const createPatient = onCall(async (request) => {
   console.log('[createPatient] Auth token present, uid:', request.auth.uid);
 
   const auth = await authorizeRequest(request.auth.token);
-  const data = request.data || {};
+  const data = request.data;
 
   // DEBUG: Log organization_id ao criar paciente
   console.log('[createPatient] auth.organizationId:', auth.organizationId);
   console.log('[createPatient] auth.userId:', auth.userId);
-  console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone, organization_id: data.organization_id }));
+  console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone }));
 
   // Validar campos obrigatórios
   if (!data.name) {
@@ -202,8 +242,8 @@ export const createPatient = onCall(async (request) => {
       `INSERT INTO patients (
         name, cpf, email, phone, birth_date, gender,
         address, emergency_contact, medical_history,
-        main_condition, status, organization_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        main_condition, status, organization_id, incomplete_registration
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *`,
       [
         data.name,
@@ -218,6 +258,7 @@ export const createPatient = onCall(async (request) => {
         data.main_condition || null,
         data.status || 'active',
         auth.organizationId,
+        data.incomplete_registration || false
       ]
     );
 
@@ -242,23 +283,46 @@ export const createPatient = onCall(async (request) => {
       console.error('Erro ao publicar evento no Ably:', err);
     }
 
-    return { data: patient };
-  } catch (error: any) {
+    return { data: patient as Patient };
+  } catch (error: unknown) {
     console.error('Error in createPatient:', error);
     if (error instanceof HttpsError) throw error;
-    throw new HttpsError('internal', error.message || 'Erro interno ao criar paciente');
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao criar paciente';
+    throw new HttpsError('internal', errorMessage);
   }
 });
 
 /**
  * Atualiza um paciente existente
  */
-export const updatePatient = onCall(async (request) => {
+interface UpdatePatientRequest {
+  patientId: string;
+  name?: string;
+  cpf?: string;
+  email?: string;
+  phone?: string;
+  birth_date?: string;
+  gender?: string;
+  medical_history?: string;
+  main_condition?: string;
+  status?: string;
+  progress?: number;
+  [key: string]: any; // Allow dynamic fields for now, but explicit is better
+}
+
+interface UpdatePatientResponse {
+  data: Patient;
+}
+
+/**
+ * Atualiza um paciente existente
+ */
+export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>(async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId, ...updates } = request.data || {};
+  const { patientId, ...updates } = request.data;
 
   if (!patientId) {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -279,7 +343,7 @@ export const updatePatient = onCall(async (request) => {
 
     // Construir SET dinâmico
     const setClauses: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | boolean | Date | null)[] = [];
     let paramCount = 1;
 
     const allowedFields = [
@@ -341,23 +405,32 @@ export const updatePatient = onCall(async (request) => {
       console.error('Erro ao publicar evento no Ably:', err);
     }
 
-    return { data: patient };
-  } catch (error: any) {
+    return { data: patient as Patient };
+  } catch (error: unknown) {
     console.error('Error in updatePatient:', error);
     if (error instanceof HttpsError) throw error;
-    throw new HttpsError('internal', error.message || 'Erro interno ao atualizar paciente');
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar paciente';
+    throw new HttpsError('internal', errorMessage);
   }
 });
+
+interface DeletePatientRequest {
+  patientId: string;
+}
+
+interface DeletePatientResponse {
+  success: boolean;
+}
 
 /**
  * Remove (soft delete) um paciente
  */
-export const deletePatient = onCall(async (request) => {
+export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>(async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId } = request.data || {};
+  const { patientId } = request.data;
 
   if (!patientId) {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -392,22 +465,40 @@ export const deletePatient = onCall(async (request) => {
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in deletePatient:', error);
     if (error instanceof HttpsError) throw error;
-    throw new HttpsError('internal', error.message || 'Erro interno ao excluir paciente');
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao excluir paciente';
+    throw new HttpsError('internal', errorMessage);
   }
 });
+
+interface GetPatientStatsRequest {
+  patientId: string;
+}
+
+interface GetPatientStatsResponse {
+  data: {
+    appointments: {
+      total: number;
+      completed: number;
+      scheduled: number;
+      upcoming: number;
+    };
+    treatment_sessions: number;
+    active_plans: number;
+  };
+}
 
 /**
  * Busca estatísticas de um paciente
  */
-export const getPatientStats = onCall(async (request) => {
+export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>(async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId } = request.data || {};
+  const { patientId } = request.data;
 
   if (!patientId) {
     throw new HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -456,16 +547,24 @@ export const getPatientStats = onCall(async (request) => {
       ),
     ]);
 
+    const apptStats = appointmentsResult.rows[0];
+
     return {
       data: {
-        appointments: appointmentsResult.rows[0],
-        treatment_sessions: parseInt(sessionsResult.rows[0].total_sessions),
-        active_plans: parseInt(plansResult.rows[0].active_plans),
+        appointments: {
+          total: parseInt(apptStats.total || '0', 10),
+          completed: parseInt(apptStats.completed || '0', 10),
+          scheduled: parseInt(apptStats.scheduled || '0', 10),
+          upcoming: parseInt(apptStats.upcoming || '0', 10),
+        },
+        treatment_sessions: parseInt(sessionsResult.rows[0].total_sessions || '0', 10),
+        active_plans: parseInt(plansResult.rows[0].active_plans || '0', 10),
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in getPatientStats:', error);
     if (error instanceof HttpsError) throw error;
-    throw new HttpsError('internal', error.message || 'Erro interno ao buscar estatísticas');
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar estatísticas';
+    throw new HttpsError('internal', errorMessage);
   }
 });
