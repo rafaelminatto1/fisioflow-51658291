@@ -198,7 +198,10 @@ export const useDashboardMetrics = () => {
       const pacientesAtivos = uniqueActivePatients.size;
 
       // Contar fisioterapeutas únicos no Firestore
-      const uniqueTherapistUserIds = [...new Set((userRolesData || []).map((ur: any) => ur.user_id))];
+      const uniqueTherapistUserIds = [...new Set((userRolesData || [])
+        .map((ur: any) => ur.user_id)
+        .filter(Boolean)
+      )];
       let fisioterapeutasAtivos = 0;
 
       if (uniqueTherapistUserIds.length > 0) {
@@ -250,7 +253,10 @@ export const useDashboardMetrics = () => {
         );
         const profileSnap = await getDocs(profileQ);
         profileSnap.forEach(doc => {
-          therapistProfiles.set(doc.data().user_id, doc.data());
+          const profileData = doc.data();
+          if (profileData && profileData.user_id) {
+            therapistProfiles.set(profileData.user_id, profileData);
+          }
         });
       }
 

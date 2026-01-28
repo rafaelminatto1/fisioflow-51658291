@@ -4,9 +4,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initSentry } from "@/lib/sentry/config";
+import { initAppCheck } from "@/lib/firebase/app-check";
 
-// Inicializar Sentry antes de renderizar a aplicação
+// Inicializar serviços globais
 initSentry();
+initAppCheck();
 
 // ============================================================================
 // ERROR HANDLERS
@@ -91,7 +93,15 @@ if (import.meta.env.DEV) {
   // Adicionar timestamp para evitar cache em dev
   const originalFetch = window.fetch;
   window.fetch = function (input, init) {
-    const url = typeof input === 'string' ? input : input.url;
+    let url = '';
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.toString();
+    } else {
+      url = input.url;
+    }
+
     if (url.includes('/sw.js')) {
       // Adicionar timestamp para SW em dev
       const separator = url.includes('?') ? '&' : '?';

@@ -55,7 +55,9 @@
     "patient:build:preview": "pnpm --filter @fisioflow/patient-ios build:preview",
     "patient:build:prod": "pnpm --filter @fisioflow/patient-ios build:prod",
     "professional:start": "pnpm --filter @fisioflow/professional-ios start",
-    "professional:build:prod": "pnpm --filter @fisioflow/professional-ios build:prod"
+    "professional:build:prod": "pnpm --filter @fisioflow/professional-ios build:prod",
+    "db:proxy": "bash ./scripts/db-proxy.sh",
+    "verify": "node scripts/health-check.js"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.7",
@@ -211,7 +213,6 @@
     "@capgo/capacitor-native-biometric": "^8.3.1",
     "@eslint/js": "^9.32.0",
     "@sentry/vite-plugin": "^4.6.1",
-    "@supabase/supabase-js": "^2.91.1",
     "@swc/core": "^1.13.5",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/dom": "^10.4.1",

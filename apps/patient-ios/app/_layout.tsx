@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, ToastProvider } from '@fisioflow/shared-ui';
 import { NotificationProvider } from '@fisioflow/shared-api';
+import { DevMenu } from '@/components/DevMenu';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -35,10 +36,12 @@ export default function RootLayout() {
         <NotificationProvider requestOnMount={true} registerOnMount={true} appType="patient">
           <ToastProvider position="top">
             <StatusBar style="auto" />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="(tabs)" />
-            </Stack>
+            <DevMenu>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </DevMenu>
           </ToastProvider>
         </NotificationProvider>
       </ThemeProvider>
