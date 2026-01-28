@@ -68,23 +68,6 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     try {
       setLoading(true);
 
-      // Load patients assigned to this therapist
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, name:full_name, status, phone, email, created_at')
-        .limit(5)
-        .order('created_at', { ascending: false });
-
-      if (patientsError) throw patientsError;
-
-      // Load treatment sessions for progress tracking
-      const { data: sessions, error: sessionsError } = await supabase
-        .from('treatment_sessions')
-        .select('*')
-        .eq('created_by', profile.id);
-
-      if (sessionsError) throw sessionsError;
-
       // Calculate occupancy rate (assuming 8 hour workday = 480 minutes)
       // Each appointment is typically 60 minutes
       const totalCapacityMinutes = 480; // 8 hours
@@ -93,46 +76,55 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         ? Math.round((bookedMinutes / totalCapacityMinutes) * 100)
         : 0;
 
-      // Calculate average sessions per patient (last 30 days)
+      // Count unique patients from appointments (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const recentSessions = sessions?.filter(s => {
-        const sessionDate = new Date(s.session_date);
-        return sessionDate >= thirtyDaysAgo;
-      }) || [];
+      const uniquePatients = new Set(
+        allAppointments
+          .filter(apt => {
+            const aptDate = new Date(apt.date);
+            return aptDate >= thirtyDaysAgo && apt.therapistId === profile.id;
+          })
+          .map(apt => apt.patientId)
+      );
 
-      const avgSessionsPerPatient = patients && patients.length > 0
-        ? (recentSessions.length / patients.length).toFixed(1)
-        : '0';
+      const myPatients = uniquePatients.size;
 
-      // Identify patients at risk (no appointment in last 30 days)
-      const patientsAtRisk = [];
-      if (patients) {
-        for (const patient of patients) {
-          // Get last appointment for this patient
-          const { data: lastAppointment } = await supabase
-            .from('appointments')
-            .select('appointment_date')
-            .eq('patient_id', patient.id)
-            .order('appointment_date', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      // Count completed sessions for this therapist
+      const completedSessions = allAppointments.filter(apt =>
+        apt.status === 'concluido' && apt.therapistId === profile.id
+      ).length;
 
-          if (lastAppointment) {
-            const daysSinceLastVisit = differenceInDays(
-              new Date(),
-              new Date(lastAppointment.appointment_date)
-            );
-            if (daysSinceLastVisit > 30) {
-              patientsAtRisk.push({
-                ...patient,
-                daysSinceLastVisit
-              });
-            }
+      // Calculate patients at risk (no appointment in last 30 days)
+      const lastAppointmentsByPatient = new Map<string, Date>();
+      allAppointments.forEach(apt => {
+        if (apt.patientId && apt.therapistId === profile.id) {
+          const existing = lastAppointmentsByPatient.get(apt.patientId);
+          const aptDate = new Date(apt.date);
+          if (!existing || aptDate > existing) {
+            lastAppointmentsByPatient.set(apt.patientId, aptDate);
           }
         }
-      }
+      });
+
+      let patientsAtRisk = 0;
+      lastAppointmentsByPatient.forEach(lastDate => {
+        const daysSince = differenceInDays(new Date(), lastDate);
+        if (daysSince > 30) {
+          patientsAtRisk++;
+        }
+      });
+
+      // Calculate average sessions per patient (last 30 days)
+      const recentAppointments = allAppointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= thirtyDaysAgo && apt.therapistId === profile.id;
+      });
+
+      const avgSessionsPerPatient = myPatients > 0
+        ? (recentAppointments.length / myPatients).toFixed(1)
+        : '0';
 
       // Generate progress data for the last 30 days
       const progressChartData = [];
@@ -149,12 +141,12 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
 
       setStats({
         todayAppointments: todayAppointments.length,
-        myPatients: patients?.length || 0,
-        completedSessions: sessions?.length || 0,
+        myPatients,
+        completedSessions,
         avgSatisfaction: 4.8, // Mock data
         occupancyRate,
         avgSessionsPerPatient: parseFloat(avgSessionsPerPatient),
-        patientsAtRisk: patientsAtRisk.length
+        patientsAtRisk
       });
 
       setProgressData(progressChartData);
@@ -169,7 +161,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     } finally {
       setLoading(false);
     }
-  }, [profile.id, todayAppointments.length]);
+  }, [profile.id, todayAppointments.length, allAppointments]);
 
   // Update stats when appointments change
   useEffect(() => {
