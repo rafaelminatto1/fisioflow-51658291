@@ -1,8 +1,4 @@
 "use strict";
-/**
- * API Functions: Assessments (Evaluations)
- * Cloud Functions para gestão de avaliações de pacientes
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,26 +35,14 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.getAssessmentTemplate = exports.listAssessmentTemplates = void 0;
 const https_1 = require("firebase-functions/v2/https");
-const pg_1 = require("pg");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
-/**
- * Helper para verificar auth e chamar authorizeRequest
- */
-async function getAuth(request) {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
-    }
-    return (0, auth_1.authorizeRequest)(request.auth.token);
-}
-/**
- * Lista templates de avaliação
- */
 exports.listAssessmentTemplates = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT
         id, name, description, category,
@@ -70,23 +54,24 @@ exports.listAssessmentTemplates = (0, https_1.onCall)(async (request) => {
       ORDER BY display_order, name`, [auth.organizationId]);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listAssessmentTemplates:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar templates';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca um template de avaliação com seções e perguntas
- */
 exports.getAssessmentTemplate = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { templateId } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { templateId } = request.data;
     if (!templateId) {
         throw new https_1.HttpsError('invalid-argument', 'templateId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Buscar template
         const templateResult = await pool.query(`SELECT * FROM assessment_templates
@@ -100,17 +85,21 @@ exports.getAssessmentTemplate = (0, https_1.onCall)(async (request) => {
         // Buscar seções
         const sectionsResult = await pool.query(`SELECT * FROM assessment_sections
        WHERE template_id = $1 AND is_active = true
-       ORDER BY order`, [templateId]);
-        // Buscar perguntas de cada seção
-        const sectionsWithQuestions = await Promise.all(sectionsResult.rows.map(async (section) => {
+       ORDER BY "order"`, [templateId]);
+        // Buscar perguntas para todas as seções de uma vez (mais eficiente que loops independentes)
+        const sectionIds = sectionsResult.rows.map((s) => s.id);
+        let sectionsWithQuestions = sectionsResult.rows.map((s) => ({ ...s, questions: [] }));
+        if (sectionIds.length > 0) {
             const questionsResult = await pool.query(`SELECT * FROM assessment_questions
-           WHERE section_id = $1 AND is_active = true
-           ORDER BY order`, [section.id]);
-            return {
-                ...section,
-                questions: questionsResult.rows,
-            };
-        }));
+         WHERE section_id = ANY($1) AND is_active = true
+         ORDER BY section_id, "order"`, [sectionIds]);
+            // Mapear perguntas para suas seções
+            questionsResult.rows.forEach((q) => {
+                const section = sectionsWithQuestions.find(s => s.id === q.section_id);
+                if (section)
+                    section.questions.push(q);
+            });
+        }
         return {
             data: {
                 ...template,
@@ -118,23 +107,24 @@ exports.getAssessmentTemplate = (0, https_1.onCall)(async (request) => {
             },
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getAssessmentTemplate:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar template';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Lista avaliações de um paciente
- */
 exports.listAssessments = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, status } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, status } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         let query = `
       SELECT
@@ -148,31 +138,34 @@ exports.listAssessments = (0, https_1.onCall)(async (request) => {
         AND a.organization_id = $2
     `;
         const params = [patientId, auth.organizationId];
+        let paramCount = 2;
         if (status) {
-            query += ` AND a.status = $3`;
+            paramCount++;
+            query += ` AND a.status = $${paramCount}`;
             params.push(status);
         }
         query += ` ORDER BY a.assessment_date DESC, a.created_at DESC`;
         const result = await pool.query(query, params);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listAssessments:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar avaliações';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca uma avaliação específica
- */
 exports.getAssessment = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { assessmentId } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { assessmentId } = request.data;
     if (!assessmentId) {
         throw new https_1.HttpsError('invalid-argument', 'assessmentId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Buscar avaliação
         const assessmentResult = await pool.query(`SELECT * FROM patient_assessments
@@ -198,23 +191,24 @@ exports.getAssessment = (0, https_1.onCall)(async (request) => {
             },
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getAssessment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar avaliação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Cria uma nova avaliação
- */
 exports.createAssessment = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, templateId, title, assessmentDate, responses, } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, templateId, title, assessmentDate, responses, } = request.data;
     if (!patientId || !templateId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId e templateId são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se template existe
         const templateCheck = await pool.query(`SELECT id FROM assessment_templates
@@ -224,66 +218,74 @@ exports.createAssessment = (0, https_1.onCall)(async (request) => {
         }
         // Iniciar transação
         await pool.query('BEGIN');
-        // Criar avaliação
-        const assessmentResult = await pool.query(`INSERT INTO patient_assessments (
-        patient_id, template_id, title, assessment_date,
-        performed_by, organization_id, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *`, [
-            patientId,
-            templateId,
-            title || 'Avaliação',
-            assessmentDate || new Date().toISOString().split('T')[0],
-            auth.userId,
-            auth.organizationId,
-            'completed',
-        ]);
-        const assessment = assessmentResult.rows[0];
-        // Inserir respostas
-        if (responses && Array.isArray(responses)) {
-            for (const response of responses) {
-                await pool.query(`INSERT INTO assessment_responses (
-            assessment_id, question_id,
-            answer_text, answer_number, answer_json
-          ) VALUES ($1, $2, $3, $4, $5)`, [
-                    assessment.id,
-                    response.question_id,
-                    response.answer_text || null,
-                    response.answer_number || null,
-                    response.answer_json ? JSON.stringify(response.answer_json) : null,
-                ]);
+        try {
+            // Criar avaliação
+            const assessmentResult = await pool.query(`INSERT INTO patient_assessments (
+          patient_id, template_id, title, assessment_date,
+          performed_by, organization_id, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *`, [
+                patientId,
+                templateId,
+                title || 'Avaliação',
+                assessmentDate || new Date().toISOString().split('T')[0],
+                auth.userId,
+                auth.organizationId,
+                'completed',
+            ]);
+            const assessment = assessmentResult.rows[0];
+            // Inserir respostas
+            if (responses && Array.isArray(responses)) {
+                for (const response of responses) {
+                    await pool.query(`INSERT INTO assessment_responses (
+              assessment_id, question_id,
+              answer_text, answer_number, answer_json
+            ) VALUES ($1, $2, $3, $4, $5)`, [
+                        assessment.id,
+                        response.question_id,
+                        response.answer_text || null,
+                        response.answer_number || null,
+                        response.answer_json ? JSON.stringify(response.answer_json) : null,
+                    ]);
+                }
             }
+            await pool.query('COMMIT');
+            // Publicar no Ably
+            try {
+                const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+                await realtime.publishPatientUpdate(patientId, {
+                    type: 'assessment_created',
+                    assessmentId: assessment.id,
+                });
+            }
+            catch (e) {
+                console.error('Error publishing to Ably:', e);
+            }
+            return { data: assessment };
         }
-        await pool.query('COMMIT');
-        // Publicar no Ably
-        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-        await realtime.publishPatientUpdate(patientId, {
-            type: 'assessment_created',
-            assessmentId: assessment.id,
-        });
-        return { data: assessment };
+        catch (e) {
+            await pool.query('ROLLBACK');
+            throw e;
+        }
     }
     catch (error) {
-        await pool.query('ROLLBACK');
-        throw error;
-    }
-    finally {
-        await pool.end();
+        console.error('Error in createAssessment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar avaliação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Atualiza uma avaliação
- */
 exports.updateAssessment = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { assessmentId, responses, ...updates } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { assessmentId, responses, ...updates } = request.data;
     if (!assessmentId) {
         throw new https_1.HttpsError('invalid-argument', 'assessmentId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se avaliação existe
         const existing = await pool.query('SELECT * FROM patient_assessments WHERE id = $1 AND organization_id = $2', [assessmentId, auth.organizationId]);
@@ -292,56 +294,62 @@ exports.updateAssessment = (0, https_1.onCall)(async (request) => {
         }
         // Iniciar transação
         await pool.query('BEGIN');
-        // Atualizar campos da avaliação
-        const setClauses = [];
-        const values = [];
-        let paramCount = 0;
-        const allowedFields = ['title', 'status', 'conclusion', 'recommendations', 'next_assessment_date'];
-        for (const field of allowedFields) {
-            if (field in updates) {
+        try {
+            // Atualizar campos da avaliação
+            const setClauses = [];
+            const values = [];
+            let paramCount = 0;
+            const allowedFields = ['title', 'status', 'conclusion', 'recommendations', 'next_assessment_date'];
+            for (const field of allowedFields) {
+                if (field in updates) {
+                    paramCount++;
+                    setClauses.push(`${field} = $${paramCount}`);
+                    values.push(updates[field]);
+                }
+            }
+            if (setClauses.length > 0) {
                 paramCount++;
-                setClauses.push(`${field} = $${paramCount}`);
-                values.push(updates[field]);
+                setClauses.push(`updated_at = $${paramCount}`);
+                values.push(new Date());
+                values.push(assessmentId, auth.organizationId);
+                await pool.query(`UPDATE patient_assessments
+           SET ${setClauses.join(', ')}
+           WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}`, values);
             }
-        }
-        if (setClauses.length > 0) {
-            paramCount++;
-            setClauses.push(`updated_at = $${paramCount}`);
-            values.push(new Date());
-            values.push(assessmentId, auth.organizationId);
-            await pool.query(`UPDATE patient_assessments
-         SET ${setClauses.join(', ')}
-         WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}`, values);
-        }
-        // Atualizar respostas se fornecidas
-        if (responses && Array.isArray(responses)) {
-            // Remover respostas antigas
-            await pool.query('DELETE FROM assessment_responses WHERE assessment_id = $1', [
-                assessmentId,
-            ]);
-            // Inserir novas respostas
-            for (const response of responses) {
-                await pool.query(`INSERT INTO assessment_responses (
-            assessment_id, question_id,
-            answer_text, answer_number, answer_json
-          ) VALUES ($1, $2, $3, $4, $5)`, [
+            // Atualizar respostas se fornecidas
+            if (responses && Array.isArray(responses)) {
+                // Remover respostas antigas
+                await pool.query('DELETE FROM assessment_responses WHERE assessment_id = $1', [
                     assessmentId,
-                    response.question_id,
-                    response.answer_text || null,
-                    response.answer_number || null,
-                    response.answer_json ? JSON.stringify(response.answer_json) : null,
                 ]);
+                // Inserir novas respostas
+                for (const response of responses) {
+                    await pool.query(`INSERT INTO assessment_responses (
+              assessment_id, question_id,
+              answer_text, answer_number, answer_json
+            ) VALUES ($1, $2, $3, $4, $5)`, [
+                        assessmentId,
+                        response.question_id,
+                        response.answer_text || null,
+                        response.answer_number || null,
+                        response.answer_json ? JSON.stringify(response.answer_json) : null,
+                    ]);
+                }
             }
+            await pool.query('COMMIT');
+            return { data: { success: true } };
         }
-        await pool.query('COMMIT');
-        return { data: { success: true } };
+        catch (e) {
+            await pool.query('ROLLBACK');
+            throw e;
+        }
     }
     catch (error) {
-        await pool.query('ROLLBACK');
-        throw error;
-    }
-    finally {
-        await pool.end();
+        console.error('Error in updateAssessment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar avaliação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=assessments.js.map

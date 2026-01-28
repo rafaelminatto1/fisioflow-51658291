@@ -6,16 +6,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { 
-  MessageCircle, 
-  Send, 
+import {
+  MessageCircle,
+  Send,
   CheckCircle2,
   Clock,
   AlertCircle,
   Bell,
-  Calendar
+  Calendar,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { useEffect } from 'react';
 
 interface WhatsAppIntegrationProps {
   patientId: string;
@@ -28,6 +34,25 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
   const [autoReminders, setAutoReminders] = useState(true);
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [exerciseReminders, setExerciseReminders] = useState(true);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const getHistory = httpsCallable(functions, 'getWhatsAppHistory');
+      const result = await getHistory({ patientId: _patientId });
+      setHistory((result.data as any).data || []);
+    } catch (error) {
+      console.error('Error fetching WhatsApp history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, [_patientId]);
 
   const templates = [
     {
@@ -64,26 +89,26 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
 
     try {
       setSendingMessage(true);
-      
       const messageToSend = customMessage || message;
-      
-      // Formatar número para WhatsApp (remover caracteres especiais)
-      const formattedPhone = patientPhone.replace(/\D/g, '');
-      
-      // Abrir WhatsApp Web com mensagem pré-preenchida
-      const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(messageToSend)}`;
-      window.open(whatsappUrl, '_blank');
-      
-      toast({
-        title: 'WhatsApp aberto',
-        description: 'Mensagem preparada para envio',
+
+      const sendCustomMessage = httpsCallable(functions, 'sendWhatsAppCustomMessage');
+      await sendCustomMessage({
+        to: patientPhone,
+        message: messageToSend
       });
-      
-      setMessage('');
-    } catch {
+
       toast({
-        title: 'Erro ao abrir WhatsApp',
-        description: 'Tente novamente',
+        title: 'Mensagem enviada',
+        description: 'A mensagem foi enviada via WhatsApp Business API',
+      });
+
+      setMessage('');
+      fetchHistory(); // Refresh history
+    } catch (error: any) {
+      console.error('Error sending WhatsApp message:', error);
+      toast({
+        title: 'Erro ao enviar mensagem',
+        description: error.message || 'Tente novamente',
         variant: 'destructive'
       });
     } finally {
@@ -147,7 +172,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
                 />
               </div>
 
-              <Button 
+              <Button
                 onClick={() => sendWhatsAppMessage()}
                 disabled={!message || sendingMessage}
                 className="w-full bg-green-500 hover:bg-green-600"
@@ -177,7 +202,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {templates.map((template) => (
-              <Card 
+              <Card
                 key={template.id}
                 className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
                 onClick={() => sendWhatsAppMessage(template.message)}
@@ -190,6 +215,78 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Message History */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Histórico de Mensagens
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchHistory}
+            disabled={loadingHistory}
+          >
+            <RefreshCw className={`h-4 w-4 ${loadingHistory ? 'animate-spin' : ''}`} />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            {loadingHistory && history.length === 0 ? (
+              <div className="flex justify-center py-8">
+                <Clock className="h-8 w-8 text-muted-foreground animate-pulse" />
+              </div>
+            ) : history.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhuma mensagem enviada ou recebida.
+              </p>
+            ) : (
+              history.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col p-3 rounded-lg border ${msg.status === 'received'
+                      ? 'bg-muted/30 mr-8'
+                      : 'bg-green-500/5 ml-8 border-green-500/20'
+                    }`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-[10px] font-medium uppercase text-muted-foreground">
+                      {msg.status === 'received' ? 'Recebido' : 'Enviado'}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {format(new Date(msg.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                  <div className="flex justify-end mt-1 gap-1">
+                    {msg.status === 'read' ? (
+                      <Badge variant="outline" className="text-[9px] py-0 h-4 bg-blue-500/10 text-blue-500 border-none">
+                        Lida
+                      </Badge>
+                    ) : msg.status === 'delivered' ? (
+                      <Badge variant="outline" className="text-[9px] py-0 h-4 bg-muted text-muted-foreground border-none">
+                        Entregue
+                      </Badge>
+                    ) : msg.status === 'sent' ? (
+                      <Badge variant="outline" className="text-[9px] py-0 h-4 bg-muted text-muted-foreground border-none">
+                        Enviada
+                      </Badge>
+                    ) : msg.status === 'failed' ? (
+                      <Badge variant="destructive" className="text-[9px] py-0 h-4 border-none">
+                        Falhou
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
