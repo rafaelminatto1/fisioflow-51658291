@@ -173,3 +173,4 @@ iOSInjectionProject/
 # Firebase Service Account Keys (NEVER commit these!)
 *-firebase-admin.json
 firebase-admin*.json
+functions/service-account-key.json
