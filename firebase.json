@@ -15,13 +15,12 @@
       "env": [
         {
           "variables": {
-            "CLOUD_SQL_CONNECTION_NAME": "fisioflow-migration:us-central1:fisioflow-pg",
-            "DB_NAME": "fisioflow",
-            "DB_USER": "fisioflow",
-            "DB_PASS": "fisioflow2024",
+            "DB_HOST": "35.192.122.198",
             "DB_SOCKET_PATH": "/cloudsql",
             "ABLY_API_KEY": "zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30",
-            "NODE_ENV": "production"
+            "NODE_ENV": "production",
+            "WHATSAPP_BUSINESS_ACCOUNT_ID": "806225345331804",
+            "WHATSAPP_PHONE_NUMBER": "+551158749885"
           }
         }
       ]
