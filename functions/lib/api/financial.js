@@ -12,7 +12,7 @@ exports.listTransactions = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { limit = 100, offset = 0 } = request.data || {};
+    const { limit = 100, offset = 0 } = request.data;
     const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT * FROM transacoes
@@ -23,7 +23,10 @@ exports.listTransactions = (0, https_1.onCall)(async (request) => {
     }
     catch (error) {
         console.error('Error in listTransactions:', error);
-        throw new https_1.HttpsError('internal', error.message || 'Erro ao listar transações');
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar transações';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -34,7 +37,7 @@ exports.createTransaction = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const data = request.data || {};
+    const data = request.data;
     if (!data.valor || !data.tipo) {
         throw new https_1.HttpsError('invalid-argument', 'Valor e tipo são obrigatórios');
     }
@@ -57,7 +60,10 @@ exports.createTransaction = (0, https_1.onCall)(async (request) => {
     }
     catch (error) {
         console.error('Error in createTransaction:', error);
-        throw new https_1.HttpsError('internal', error.message || 'Erro ao criar transação');
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar transação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -68,7 +74,7 @@ exports.updateTransaction = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { transactionId, ...updates } = request.data || {};
+    const { transactionId, ...updates } = request.data;
     if (!transactionId) {
         throw new https_1.HttpsError('invalid-argument', 'transactionId é obrigatório');
     }
@@ -80,7 +86,7 @@ exports.updateTransaction = (0, https_1.onCall)(async (request) => {
         }
         const setClauses = [];
         const values = [];
-        let paramCount = 1;
+        let paramCount = 0;
         const allowedFields = ['tipo', 'descricao', 'valor', 'status', 'metadata'];
         for (const field of allowedFields) {
             if (field in updates) {
@@ -114,7 +120,8 @@ exports.updateTransaction = (0, https_1.onCall)(async (request) => {
         console.error('Error in updateTransaction:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro ao atualizar transação');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar transação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -125,7 +132,7 @@ exports.deleteTransaction = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { transactionId } = request.data || {};
+    const { transactionId } = request.data;
     if (!transactionId) {
         throw new https_1.HttpsError('invalid-argument', 'transactionId é obrigatório');
     }
@@ -141,7 +148,8 @@ exports.deleteTransaction = (0, https_1.onCall)(async (request) => {
         console.error('Error in deleteTransaction:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro ao excluir transação');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir transação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -152,7 +160,7 @@ exports.findTransactionByAppointmentId = (0, https_1.onCall)(async (request) => 
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { appointmentId } = request.data || {};
+    const { appointmentId } = request.data;
     if (!appointmentId) {
         throw new https_1.HttpsError('invalid-argument', 'appointmentId é obrigatório');
     }
@@ -169,7 +177,10 @@ exports.findTransactionByAppointmentId = (0, https_1.onCall)(async (request) => 
     }
     catch (error) {
         console.error('Error in findTransactionByAppointmentId:', error);
-        throw new https_1.HttpsError('internal', error.message || 'Erro ao buscar transação');
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar transação';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -179,7 +190,7 @@ exports.getEventReport = (0, https_1.onCall)(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
-    const { eventoId } = request.data || {};
+    const { eventoId } = request.data;
     if (!eventoId) {
         throw new https_1.HttpsError('invalid-argument', 'eventoId é obrigatório');
     }
@@ -239,7 +250,8 @@ exports.getEventReport = (0, https_1.onCall)(async (request) => {
         console.error('Error in getEventReport:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro ao gerar relatório');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=financial.js.map

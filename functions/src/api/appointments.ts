@@ -387,7 +387,7 @@ export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<Update
     // Construir UPDATE
     const setClauses: string[] = [];
     const values: (string | number | boolean | Date | null)[] = [];
-    let paramCount = 1;
+    let paramCount = 0;
 
     const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'notes'];
 

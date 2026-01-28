@@ -344,7 +344,7 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     // Construir SET dinâmico
     const setClauses: string[] = [];
     const values: (string | number | boolean | Date | null)[] = [];
-    let paramCount = 1;
+    let paramCount = 0;
 
     const allowedFields = [
       'name',
