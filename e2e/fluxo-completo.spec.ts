@@ -15,8 +15,8 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:8083';
 const CREDENTIALS = {
-  email: 'rafael.minatto@yahoo.com.br',
-  password: 'Yukari30@'
+  email: 'teste.qa@fisioflow.com',
+  password: 'Teste@12345'
 };
 
 // Test patient data
@@ -288,93 +288,143 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
   await page.waitForTimeout(1500);
 
   // Definir Status para "Avaliação" (Crítico para o redirecionamento)
-  // Try multiple selectors to find the status combobox
-  const statusTrigger1 = page.locator('button[role="combobox"]:has-text("Agendado")').first();
-  const statusTrigger2 = page.locator('div:has-text("Status") button[role="combobox"]').first();
-  const statusTrigger3 = page.locator('label:has-text("Status") ~ button[role="combobox"]').first();
+  // NOTE: Status é automaticamente definido para 'avaliacao' quando um novo paciente é selecionado
+  // Verificar se o botão de submit mostra "Iniciar Avaliação"
+  await page.waitForTimeout(1000);
 
-  let statusTrigger = statusTrigger1;
-  if (!(await statusTrigger1.isVisible({ timeout: 2000 }).catch(() => false))) {
-    if (await statusTrigger2.isVisible({ timeout: 1000 }).catch(() => false)) {
-      statusTrigger = statusTrigger2;
-    } else if (await statusTrigger3.isVisible({ timeout: 1000 }).catch(() => false)) {
-      statusTrigger = statusTrigger3;
-    }
-  }
-
-  if (await statusTrigger.isVisible({ timeout: 5000 })) {
-    await statusTrigger.click();
-    await page.waitForTimeout(500);
-    await page.locator('[role="option"]:has-text("Avaliação"), [role="option"]:has-text("avaliação")').first().click();
-    console.log('  ✓ Status definido para Avaliação');
+  // Check if the submit button already shows "Iniciar Avaliação" (status is already 'avaliacao')
+  const submitBtnCheck = page.locator('button:has-text("Iniciar Avaliação")');
+  if (await submitBtnCheck.isVisible({ timeout: 3000 }).catch(() => false)) {
+    console.log('  ✓ Status já está como Avaliação (botão mostra "Iniciar Avaliação")');
   } else {
-    console.log('  ⚠️ Status combobox não encontrado, tentando abordagem alternativa');
-    // Alternative: the status might already be set to "avaliacao" automatically when selecting a new patient
-    // Check if the submit button already shows "Iniciar Avaliação"
-    const submitBtn = page.locator('button[type="submit"]:has-text("Iniciar Avaliação")');
-    if (await submitBtn.isVisible({ timeout: 2000 })) {
-      console.log('  ✓ Status já está como Avaliação (botão mostra "Iniciar Avaliação")');
-    }
-  }
+    // Try to manually set status by finding the third select (usually status after patient and type)
+    console.log('  ℹ️ Status não parece ser "avaliacao", tentando definir manualmente...');
 
-  // Selecionar Horário (obrigatório) - Pega o primeiro disponível na lista
-  // Use a simpler index-based approach
-  const allComboboxes = page.locator('button[role="combobox"]');
-  const comboboxCount = await allComboboxes.count();
+    // Try clicking on select elements to find the status one
+    const selectCount = await page.locator('button[role="combobox"]').count();
+    console.log(`  ℹ️ Encontrados ${selectCount} selects`);
 
-  // Try different indices to find the time combobox (usually 2nd or 3rd after patient)
-  let timeClicked = false;
-  for (let i = 1; i < Math.min(comboboxCount, 4); i++) {
-    try {
-      const cb = allComboboxes.nth(i);
-      if (await cb.isVisible({ timeout: 1000 })) {
-        await cb.click();
+    // Status is usually the 2nd or 3rd select (after patient, then type, then status)
+    for (let i = 1; i < Math.min(selectCount, 4); i++) {
+      try {
+        const select = page.locator('button[role="combobox"]').nth(i);
+        await select.click();
         await page.waitForTimeout(500);
 
-        // Check if any options appeared
-        const optionCount = await page.locator('[role="option"]').count();
-        if (optionCount > 0) {
-          await page.locator('[role="option"]').first().click();
-          console.log(`  ✓ Horário selecionado (combobox ${i})`);
-          timeClicked = true;
+        // Check if any option with "Avaliação" exists
+        const avaliacaoOption = page.locator('[role="option"]:has-text("Avaliação")');
+        if (await avaliacaoOption.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await avaliacaoOption.click();
+          console.log('  ✓ Status definido para Avaliação');
           break;
         } else {
-          // No options, close and try next
+          // Close and try next
           await page.keyboard.press('Escape');
           await page.waitForTimeout(300);
         }
+      } catch (e) {
+        // Continue to next select
       }
-    } catch (e) {
-      // Continue to next combobox
     }
   }
 
-  if (!timeClicked) {
-    console.log('  ⚠️ Não foi possível selecionar horário, tentando continuar');
+  // Selecionar Horário (obrigatório)
+  // Try to find and click the time select
+  // Look for elements related to time selection
+  console.log('  ⏳ Procurando seletor de horário...');
+
+  // Try multiple selectors for time
+  const timeSelectors = [
+    'button[placeholder*="Horário"]',
+    'button[placeholder*="Time"]',
+    'select[name="appointment_time"]',
+    'input[name="appointment_time"]',
+    // The time might be in a Select component
+  ];
+
+  let timeSelected = false;
+  for (const selector of timeSelectors) {
+    try {
+      const timeEl = page.locator(selector).first();
+      if (await timeEl.isVisible({ timeout: 2000 })) {
+        await timeEl.click();
+        await page.waitForTimeout(500);
+
+        // Look for time options
+        const timeOption = page.locator('[role="option"]').first();
+        if (await timeOption.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await timeOption.click();
+          console.log('  ✓ Horário selecionado');
+          timeSelected = true;
+          break;
+        } else {
+          await page.keyboard.press('Escape');
+        }
+      }
+    } catch (e) {
+      // Try next selector
+    }
   }
 
-  // Clicar no botão de submit (tentar diferentes textos)
-  // Simplificar seletor para encontrar qualquer botão de submit
-  const submitBtn1 = page.locator('button[type="submit"]').first();
-  const submitBtn2 = page.locator('button:has-text("Agendar"), button:has-text("Salvar"), button:has-text("Confirmar")').first();
-  const submitBtn3 = page.locator('form button:last-child, dialog button:last-child').first();
+  // Alternative: Try to find time slots displayed as buttons
+  if (!timeSelected) {
+    try {
+      const timeSlotButtons = page.locator('button:has-text(/^\\d{2}:\\d{2}$/)').first();
+      if (await timeSlotButtons.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await timeSlotButtons.click();
+        console.log('  ✓ Horário selecionado (slot button)');
+        timeSelected = true;
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  if (!timeSelected) {
+    console.log('  ⚠️ Não foi possível selecionar horário automaticamente');
+    // Try typing a time value directly
+    try {
+      const timeInput = page.locator('input[name="appointment_time"], input[id*="time"]').first();
+      if (await timeInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await timeInput.fill('09:00');
+        console.log('  ✓ Horário preenchido manualmente: 09:00');
+      }
+    } catch (e) {
+      console.log('  ⚠️ Não foi possível preencher horário, tentando continuar mesmo assim');
+    }
+  }
+
+  // Clicar no botão de submit
+  // Try to find the submit button with various selectors
+  console.log('  ⏳ Procurando botão de submit...');
+
+  // The submit button is usually "Iniciar Avaliação", "Criar", or "Salvar"
+  const submitSelectors = [
+    'button:has-text("Iniciar Avaliação")',
+    'button:has-text("Criar")',
+    'button:has-text("Salvar")',
+    'button:has-text("Agendar")',
+    'button[type="submit"]',
+  ];
 
   let submitClicked = false;
-  for (const btn of [submitBtn1, submitBtn2, submitBtn3]) {
+  for (const selector of submitSelectors) {
     try {
-      if (await btn.isVisible({ timeout: 3000 })) {
+      const btn = page.locator(selector).first();
+      if (await btn.isVisible({ timeout: 3000 }).catch(() => false)) {
         await btn.click();
-        console.log('  ✓ Botão submit clicado');
+        console.log(`  ✓ Botão submit clicado: ${selector}`);
         submitClicked = true;
         break;
       }
     } catch (e) {
-      // Try next button
+      // Try next selector
     }
   }
 
   if (!submitClicked) {
-    console.log('  ⚠️ Botão submit não encontrado, tentando Enter');
+    console.log('  ⚠️ Botão submit não encontrado pelos seletores, tentando Enter');
+    // Try pressing Enter while focusing on a form element
     await page.keyboard.press('Enter');
     console.log('  ✓ Enter pressionado');
   }
