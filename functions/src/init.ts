@@ -23,6 +23,7 @@ export const DB_PASS_SECRET = defineSecret('DB_PASS');
 export const DB_USER_SECRET = defineSecret('DB_USER');
 export const DB_NAME_SECRET = defineSecret('DB_NAME');
 export const CLOUD_SQL_CONNECTION_NAME_SECRET = defineSecret('CLOUD_SQL_CONNECTION_NAME');
+export const DB_HOST_IP_SECRET = defineSecret('DB_HOST_IP');
 
 // ============================================================================
 // SINGLETON INSTANCES
@@ -163,22 +164,29 @@ export function getPool(): Pool {
             connectionTimeoutMillis: 30000,
         };
 
+        // Prefer IP for production (more reliable without VPC)
+        const dbHostIp = process.env.FUNCTIONS_EMULATOR === 'true'
+            ? null
+            : (DB_HOST_IP_SECRET.value() || process.env.DB_HOST_IP);
+
         if (process.env.FUNCTIONS_EMULATOR === 'true') {
             // EMULADOR: Usar configuração local para teste
             config.host = process.env.DB_HOST || 'localhost';
             config.port = parseInt(process.env.DB_PORT || '5432');
             console.log(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
+        } else if (dbHostIp) {
+            // PRODUÇÃO: Usar IP público do Cloud SQL com SSL
+            config.host = dbHostIp;
+            config.port = 5432;
+            config.ssl = {
+                rejectUnauthorized: false, // Cloud SQL usa certificados auto-assinados
+                mode: 'require', // Exigir SSL
+            };
+            console.log(`[Pool] Using Cloud SQL public IP with SSL: ${config.host}:${config.port}`);
         } else if (connectionName && (connectionName.includes(':') || connectionName.startsWith('/'))) {
-            // PRODUÇÃO: Sempre usar Unix socket do Cloud SQL (único método suportado sem VPC)
-            // O connectionName deve ser no formato PROJECT:REGION:INSTANCE
+            // PRODUÇÃO: Fallback para Unix socket do Cloud SQL
             config.host = connectionName.startsWith('/') ? connectionName : `/cloudsql/${connectionName}`;
             console.log(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
-        } else if (process.env.DB_HOST || connectionName) {
-            // Local development ou Fallback: tentar localhost ou host direto
-            config.host = process.env.DB_HOST || connectionName || 'localhost';
-            config.port = parseInt(process.env.DB_PORT || '5432');
-
-            console.log(`[Pool] Using direct host: ${config.host}:${config.port}`);
         } else {
             // Fallback total para localhost
             config.host = 'localhost';

@@ -12,6 +12,8 @@
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ],
+      "vpcConnector": "projects/fisioflow-migration/locations/us-central1/connectors/cloudsql-connector",
+      "vpcConnectorEgressSettings": "PRIVATE_RANGES_ONLY",
       "env": [
         {
           "variables": {
