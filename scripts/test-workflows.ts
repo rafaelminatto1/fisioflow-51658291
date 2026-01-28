@@ -43,7 +43,7 @@ async function runTests() {
         const patientData = {
             name: `Test Patient ${Date.now()}`,
             phone: '11999999999',
-            status: 'active'
+            status: 'Inicial'
         };
         const createPatientRes = await callFunction('createPatient', patientData);
         const patient = createPatientRes.data;
@@ -60,7 +60,7 @@ async function runTests() {
         console.log('\n[Test 3] Creating appointment...');
         const appointmentData = {
             patientId: patient.id,
-            therapistId: 'test-therapist-id', // Needs valid ID in real scenario
+            therapistId: 'fr1wXfgUPPSnui6aUt5oBDKg3x03', // Valid therapist ID
             date: '2026-02-01',
             startTime: '10:00',
             endTime: '11:00',

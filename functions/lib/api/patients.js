@@ -206,7 +206,7 @@ exports.createPatient = (0, https_1.onCall)(async (request) => {
             data.emergency_contact ? JSON.stringify(data.emergency_contact) : null,
             data.medical_history || null,
             data.main_condition || null,
-            data.status || 'active',
+            data.status || 'Inicial',
             auth.organizationId,
             data.incomplete_registration || false
         ]);
@@ -261,7 +261,7 @@ exports.updatePatient = (0, https_1.onCall)(async (request) => {
         // Construir SET dinâmico
         const setClauses = [];
         const values = [];
-        let paramCount = 1;
+        let paramCount = 0;
         const allowedFields = [
             'name',
             'cpf',
