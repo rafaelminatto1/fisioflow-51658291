@@ -8,7 +8,7 @@
  * @version 2.0.0 - Enhanced with proper exports
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.config = exports.adminStorage = exports.adminAuth = exports.adminDb = void 0;
+exports.config = exports.adminStorage = exports.adminAuth = exports.adminDb = exports.CLOUD_SQL_CONNECTION_NAME_SECRET = exports.DB_NAME_SECRET = exports.DB_USER_SECRET = exports.DB_PASS_SECRET = void 0;
 exports.getAdminDb = getAdminDb;
 exports.getAdminAuth = getAdminAuth;
 exports.getAdminStorage = getAdminStorage;
@@ -24,6 +24,14 @@ const auth_1 = require("firebase-admin/auth");
 const storage_1 = require("firebase-admin/storage");
 const messaging_1 = require("firebase-admin/messaging");
 const pg_1 = require("pg");
+const params_1 = require("firebase-functions/params");
+// ============================================================================
+// SECRETS DEFINITIONS
+// ============================================================================
+exports.DB_PASS_SECRET = (0, params_1.defineSecret)('DB_PASS');
+exports.DB_USER_SECRET = (0, params_1.defineSecret)('DB_USER');
+exports.DB_NAME_SECRET = (0, params_1.defineSecret)('DB_NAME');
+exports.CLOUD_SQL_CONNECTION_NAME_SECRET = (0, params_1.defineSecret)('CLOUD_SQL_CONNECTION_NAME');
 // ============================================================================
 // SINGLETON INSTANCES
 // ============================================================================
@@ -117,40 +125,69 @@ function getAdminMessaging() {
  */
 function getPool() {
     if (!poolInstance) {
+        // Retrieve values from secrets or environment variables with safety
+        const dbUser = process.env.FUNCTIONS_EMULATOR === 'true'
+            ? (process.env.DB_USER || 'fisioflow')
+            : (exports.DB_USER_SECRET.value() || process.env.DB_USER);
+        const dbPass = process.env.FUNCTIONS_EMULATOR === 'true'
+            ? (process.env.DB_PASS || 'fisioflow2024')
+            : (exports.DB_PASS_SECRET.value() || process.env.DB_PASS);
+        const dbName = process.env.FUNCTIONS_EMULATOR === 'true'
+            ? (process.env.DB_NAME || 'fisioflow')
+            : (exports.DB_NAME_SECRET.value() || process.env.DB_NAME);
+        if (!process.env.FUNCTIONS_EMULATOR && (!dbUser || !dbPass || !dbName)) {
+            console.error('[Pool] Critical: Missing database credentials in production environment.');
+            console.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
+        }
+        const connectionName = process.env.FUNCTIONS_EMULATOR === 'true'
+            ? process.env.CLOUD_SQL_CONNECTION_NAME
+            : (exports.CLOUD_SQL_CONNECTION_NAME_SECRET.value() || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
         const config = {
-            user: process.env.DB_USER || 'fisioflow',
-            password: process.env.DB_PASS || 'fisioflow2024',
-            database: process.env.DB_NAME || 'fisioflow',
-            port: parseInt(process.env.DB_PORT || '5432'),
+            user: dbUser,
+            password: dbPass,
+            database: dbName,
             max: 20,
             idleTimeoutMillis: 60000,
             connectionTimeoutMillis: 30000,
-            // SSL configuration for Cloud SQL IP connection
-            ssl: {
-                require: true,
-                rejectUnauthorized: false, // Required for Cloud SQL
-            },
         };
-        if (process.env.DB_HOST) {
-            config.host = process.env.DB_HOST;
+        if (process.env.FUNCTIONS_EMULATOR === 'true') {
+            // EMULADOR: Usar configuração local para teste
+            config.host = process.env.DB_HOST || 'localhost';
+            config.port = parseInt(process.env.DB_PORT || '5432');
+            console.log(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
         }
-        else if (process.env.NODE_ENV === 'production' || process.env.FUNCTIONS_EMULATOR !== 'true') {
-            // TEMPORARY: Use direct IP connection instead of Cloud SQL socket
-            // TODO: Configure Cloud SQL Proxy or VPC connector for production
-            config.host = process.env.DB_HOST || '35.192.122.198'; // Cloud SQL instance IP
-            console.log(`[Pool] Using Cloud SQL direct IP: ${config.host}`);
+        else if (connectionName && (connectionName.includes(':') || connectionName.startsWith('/'))) {
+            // PRODUÇÃO: Sempre usar Unix socket do Cloud SQL (único método suportado sem VPC)
+            // O connectionName deve ser no formato PROJECT:REGION:INSTANCE
+            config.host = connectionName.startsWith('/') ? connectionName : `/cloudsql/${connectionName}`;
+            console.log(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
+        }
+        else if (process.env.DB_HOST || connectionName) {
+            // Local development ou Fallback: tentar localhost ou host direto
+            config.host = process.env.DB_HOST || connectionName || 'localhost';
+            config.port = parseInt(process.env.DB_PORT || '5432');
+            console.log(`[Pool] Using direct host: ${config.host}:${config.port}`);
         }
         else {
-            // Local fallback - try localhost or Supabase if configured
-            config.host = process.env.VITE_SUPABASE_URL
-                ? `db.${process.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`
-                : 'localhost';
-            console.log(`[Pool] Using local/fallback host: ${config.host}`);
+            // Fallback total para localhost
+            config.host = 'localhost';
+            config.port = 5432;
+            console.warn('[Pool] Warning: No database host/connection configured. Falling back to localhost.');
         }
         poolInstance = new pg_1.Pool(config);
-        // Handle pool errors
+        // Handle pool errors with better logging
         poolInstance.on('error', (err) => {
-            console.error('[Pool] Unexpected error on idle client', err);
+            console.error('[Pool] Unexpected error on idle client:', err.message);
+            if (err.message.includes('connect')) {
+                console.error('[Pool] This usually means PostgreSQL is not running or not accessible.');
+                console.error('[Pool] Check your database configuration:');
+                console.error('[Pool] - For local development: ensure PostgreSQL is running');
+                console.error('[Pool] - For production: ensure Cloud SQL secrets are configured');
+            }
+        });
+        // Test the connection
+        poolInstance.query('SELECT 1').catch((err) => {
+            console.error('[Pool] Initial connection test failed:', err.message);
         });
     }
     return poolInstance;

@@ -17,10 +17,7 @@ import { patientsApi } from '@/integrations/firebase/functions';
 const quickPatientSchema = z.object({
   name: z.string()
     .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(150, 'Nome deve ter no máximo 150 caracteres')
-    .refine(val => val.trim().includes(' '), {
-      message: 'Por favor, informe o nome completo (nome e sobrenome)'
-    }),
+    .max(150, 'Nome deve ter no máximo 150 caracteres'),
   phone: z.string()
     .optional()
     .refine(val => !val || val.replace(/\D/g, '').length >= 10, {
@@ -230,7 +227,7 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
 
         reset();
         onOpenChange(false);
-        onPatientCreated(newPatient.id, newPatient.name || newPatient.full_name);
+        onPatientCreated(newPatient.id, (newPatient.name || newPatient.full_name || 'Paciente') as string);
       });
     },
     onError: (error: any) => {
