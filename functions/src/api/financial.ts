@@ -1,16 +1,29 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
+import { Transaction } from '../types/models';
+
+/**
+ * Interfaces
+ */
+interface ListTransactionsRequest {
+    limit?: number;
+    offset?: number;
+}
+
+interface ListTransactionsResponse {
+    data: Transaction[];
+}
 
 /**
  * Lista transações financeiras
  */
-export const listTransactions = onCall(async (request) => {
+export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await authorizeRequest(request.auth.token);
-    const { limit = 100, offset = 0 } = request.data || {};
+    const { limit = 100, offset = 0 } = request.data;
 
     const pool = getPool();
 
@@ -23,22 +36,36 @@ export const listTransactions = onCall(async (request) => {
             [auth.organizationId, limit, offset]
         );
 
-        return { data: result.rows };
-    } catch (error: any) {
+        return { data: result.rows as Transaction[] };
+    } catch (error: unknown) {
         console.error('Error in listTransactions:', error);
-        throw new HttpsError('internal', error.message || 'Erro ao listar transações');
+        if (error instanceof HttpsError) throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar transações';
+        throw new HttpsError('internal', errorMessage);
     }
 });
+
+interface CreateTransactionRequest {
+    tipo: 'receita' | 'despesa';
+    descricao?: string;
+    valor: number;
+    status?: string;
+    metadata?: Record<string, any>;
+}
+
+interface CreateTransactionResponse {
+    data: Transaction;
+}
 
 /**
  * Cria uma nova transação
  */
-export const createTransaction = onCall(async (request) => {
+export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await authorizeRequest(request.auth.token);
-    const data = request.data || {};
+    const data = request.data;
 
     if (!data.valor || !data.tipo) {
         throw new HttpsError('invalid-argument', 'Valor e tipo são obrigatórios');
@@ -64,22 +91,38 @@ export const createTransaction = onCall(async (request) => {
             ]
         );
 
-        return { data: result.rows[0] };
-    } catch (error: any) {
+        return { data: result.rows[0] as Transaction };
+    } catch (error: unknown) {
         console.error('Error in createTransaction:', error);
-        throw new HttpsError('internal', error.message || 'Erro ao criar transação');
+        if (error instanceof HttpsError) throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar transação';
+        throw new HttpsError('internal', errorMessage);
     }
 });
+
+interface UpdateTransactionRequest {
+    transactionId: string;
+    tipo?: 'receita' | 'despesa';
+    descricao?: string;
+    valor?: number;
+    status?: string;
+    metadata?: Record<string, any>;
+    [key: string]: any;
+}
+
+interface UpdateTransactionResponse {
+    data: Transaction;
+}
 
 /**
  * Atualiza uma transação
  */
-export const updateTransaction = onCall(async (request) => {
+export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await authorizeRequest(request.auth.token);
-    const { transactionId, ...updates } = request.data || {};
+    const { transactionId, ...updates } = request.data;
 
     if (!transactionId) {
         throw new HttpsError('invalid-argument', 'transactionId é obrigatório');
@@ -99,7 +142,7 @@ export const updateTransaction = onCall(async (request) => {
 
         const setClauses: string[] = [];
         const values: any[] = [];
-        let paramCount = 1;
+        let paramCount = 0;
 
         const allowedFields = ['tipo', 'descricao', 'valor', 'status', 'metadata'];
 
@@ -134,23 +177,28 @@ export const updateTransaction = onCall(async (request) => {
 
         const result = await pool.query(query, values);
 
-        return { data: result.rows[0] };
-    } catch (error: any) {
+        return { data: result.rows[0] as Transaction };
+    } catch (error: unknown) {
         console.error('Error in updateTransaction:', error);
         if (error instanceof HttpsError) throw error;
-        throw new HttpsError('internal', error.message || 'Erro ao atualizar transação');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar transação';
+        throw new HttpsError('internal', errorMessage);
     }
 });
+
+interface DeleteTransactionRequest {
+    transactionId: string;
+}
 
 /**
  * Remove uma transação
  */
-export const deleteTransaction = onCall(async (request) => {
+export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await authorizeRequest(request.auth.token);
-    const { transactionId } = request.data || {};
+    const { transactionId } = request.data;
 
     if (!transactionId) {
         throw new HttpsError('invalid-argument', 'transactionId é obrigatório');
@@ -169,22 +217,31 @@ export const deleteTransaction = onCall(async (request) => {
         }
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error in deleteTransaction:', error);
         if (error instanceof HttpsError) throw error;
-        throw new HttpsError('internal', error.message || 'Erro ao excluir transação');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir transação';
+        throw new HttpsError('internal', errorMessage);
     }
 });
+
+interface FindTransactionByAppointmentIdRequest {
+    appointmentId: string;
+}
+
+interface FindTransactionByAppointmentIdResponse {
+    data: Transaction | null;
+}
 
 /**
  * Busca transação por ID do agendamento (metadados)
  */
-export const findTransactionByAppointmentId = onCall(async (request) => {
+export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await authorizeRequest(request.auth.token);
-    const { appointmentId } = request.data || {};
+    const { appointmentId } = request.data;
 
     if (!appointmentId) {
         throw new HttpsError('invalid-argument', 'appointmentId é obrigatório');
@@ -205,21 +262,43 @@ export const findTransactionByAppointmentId = onCall(async (request) => {
             return { data: null };
         }
 
-        return { data: result.rows[0] };
-    } catch (error: any) {
+        return { data: result.rows[0] as Transaction };
+    } catch (error: unknown) {
         console.error('Error in findTransactionByAppointmentId:', error);
-        throw new HttpsError('internal', error.message || 'Erro ao buscar transação');
+        if (error instanceof HttpsError) throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar transação';
+        throw new HttpsError('internal', errorMessage);
     }
 });
+
+interface GetEventReportRequest {
+    eventoId: string;
+}
+
+interface GetEventReportResponse {
+    data: {
+        eventoId: string;
+        eventoNome: string;
+        receitas: number;
+        custosPrestadores: number;
+        custosInsumos: number;
+        outrosCustos: number;
+        custoTotal: number;
+        saldo: number;
+        margem: number;
+        pagamentosPendentes: number;
+        detalhePagamentos: any[];
+    }
+}
 
 /**
  * Gera relatório financeiro de evento
  */
-export const getEventReport = onCall(async (request) => {
+export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
-    const { eventoId } = request.data || {};
+    const { eventoId } = request.data;
 
     if (!eventoId) {
         throw new HttpsError('invalid-argument', 'eventoId é obrigatório');
@@ -286,9 +365,10 @@ export const getEventReport = onCall(async (request) => {
                 })),
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error in getEventReport:', error);
         if (error instanceof HttpsError) throw error;
-        throw new HttpsError('internal', error.message || 'Erro ao gerar relatório');
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório';
+        throw new HttpsError('internal', errorMessage);
     }
 });
