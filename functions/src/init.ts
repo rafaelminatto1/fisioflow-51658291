@@ -167,7 +167,7 @@ export function getPool(): Pool {
         // Prefer IP for production (more reliable without VPC)
         const dbHostIp = process.env.FUNCTIONS_EMULATOR === 'true'
             ? null
-            : (DB_HOST_IP_SECRET.value() || process.env.DB_HOST_IP);
+            : (DB_HOST_IP_SECRET.value() || process.env.DB_HOST_IP || '35.192.122.198');
 
         if (process.env.FUNCTIONS_EMULATOR === 'true') {
             // EMULADOR: Usar configuração local para teste
