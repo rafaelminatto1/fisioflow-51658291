@@ -4,20 +4,7 @@
  * Substitui a rota /api/upload que usava Vercel Blob
  * Agora usa Firebase Storage para todos os uploads
  *
- * @version 1.0.0 - Firebase Functions v2
- *
- * Usage from client:
- * ```ts
- * import { getFunctions, httpsCallable } from 'firebase/functions';
- *
- * const functions = getFunctions();
- * const uploadFn = httpsCallable(functions, 'generateUploadToken');
- *
- * const result = await uploadFn({
- *   filename: 'video.mp4',
- *   contentType: 'video/mp4'
- * });
- * ```
+ * @version 1.1.0 - Firebase Functions v2 - Refactored for consistency
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
@@ -40,32 +27,49 @@ interface GenerateUploadTokenResponse {
   token: string;
 }
 
+interface ConfirmUploadRequest {
+  storagePath: string;
+  token: string;
+}
+
+interface ConfirmUploadResponse {
+  downloadUrl: string;
+  publicUrl: string;
+}
+
+interface DeleteFileRequest {
+  storagePath: string;
+}
+
+interface DeleteFileResponse {
+  success: boolean;
+}
+
+interface ListFilesRequest {
+  folder?: string;
+}
+
+interface ListFileItem {
+  name: string;
+  path: string;
+  size: number;
+  contentType: string;
+  updatedAt: string;
+}
+
+interface ListFilesResponse {
+  files: ListFileItem[];
+}
+
 // ============================================================================
-// CALLABLE FUNCTION: Generate Upload Token/URL
+// CALLABLE FUNCTIONS
 // ============================================================================
 
 /**
  * Generate a signed URL for direct upload to Firebase Storage
- *
- * This replaces the Vercel Blob upload workflow:
- * 1. Client calls this function to get upload credentials
- * 2. Client uploads directly to Firebase Storage using the signed URL
- * 3. File is stored in Firebase Storage
- *
- * For even better performance, consider using Firebase Storage directly from the client:
- * ```ts
- * import { ref, uploadBytes } from 'firebase/storage';
- * import { storage } from '@/integrations/firebase/app';
- *
- * const storageRef = ref(storage, `uploads/${filename}`);
- * await uploadBytes(storageRef, file);
- * ```
  */
-export const generateUploadToken = onCall(
-  {
-    region: 'southamerica-east1',
-  },
-  async (request): Promise<GenerateUploadTokenResponse> => {
+export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<GenerateUploadTokenResponse>>(
+  async (request) => {
     const { data, auth } = request;
 
     // Auth check
@@ -73,7 +77,7 @@ export const generateUploadToken = onCall(
       throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { filename, contentType, folder = 'uploads' } = data as GenerateUploadTokenRequest;
+    const { filename, contentType, folder = 'uploads' } = data;
 
     // Validate input
     if (!filename || !contentType) {
@@ -82,20 +86,10 @@ export const generateUploadToken = onCall(
 
     // Validate content type
     const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      'video/mp4',
-      'video/webm',
-      'video/quicktime',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/ogg',
-      'application/pdf',
-      'text/plain',
-      'application/json',
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      'video/mp4', 'video/webm', 'video/quicktime',
+      'audio/mpeg', 'audio/wav', 'audio/ogg',
+      'application/pdf', 'text/plain', 'application/json',
     ];
 
     if (!allowedTypes.includes(contentType)) {
@@ -136,48 +130,31 @@ export const generateUploadToken = onCall(
       return {
         uploadUrl,
         storagePath,
-        token: btoa(JSON.stringify({ storagePath, contentType })), // Simple token for client
+        token: Buffer.from(JSON.stringify({ storagePath, contentType })).toString('base64'), // Simple token for client verification
       };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('[generateUploadToken] Error', {
         userId: auth.uid,
         error,
       });
+      if (error instanceof HttpsError) throw error;
       throw new HttpsError('internal', 'Failed to generate upload token');
     }
   }
 );
 
-// ============================================================================
-// CALLABLE FUNCTION: Confirm Upload
-// ============================================================================
-
-interface ConfirmUploadRequest {
-  storagePath: string;
-  token: string;
-}
-
-interface ConfirmUploadResponse {
-  downloadUrl: string;
-  publicUrl: string;
-}
-
 /**
  * Confirm an upload and get the download URL
- * Called after client completes the upload using the signed URL
  */
-export const confirmUpload = onCall(
-  {
-    region: 'southamerica-east1',
-  },
-  async (request): Promise<ConfirmUploadResponse> => {
+export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadResponse>>(
+  async (request) => {
     const { data, auth } = request;
 
     if (!auth) {
       throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { storagePath, token } = data as ConfirmUploadRequest;
+    const { storagePath, token } = data;
 
     if (!storagePath) {
       throw new HttpsError('invalid-argument', 'storagePath is required');
@@ -187,7 +164,7 @@ export const confirmUpload = onCall(
       // Verify token (basic check)
       let tokenData: { storagePath: string; contentType: string };
       try {
-        tokenData = JSON.parse(atob(token));
+        tokenData = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
       } catch {
         throw new HttpsError('permission-denied', 'Invalid token');
       }
@@ -214,8 +191,6 @@ export const confirmUpload = onCall(
         expires: Date.now() + 365 * 24 * 60 * 60 * 1000,
       });
 
-      // For public files, you could also generate a public URL
-      // by making the file publicly readable or using a CDN
       const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(storagePath)}?alt=media`;
 
       logger.info('[confirmUpload] Upload confirmed', {
@@ -227,7 +202,7 @@ export const confirmUpload = onCall(
         downloadUrl,
         publicUrl,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof HttpsError) {
         throw error;
       }
@@ -241,34 +216,18 @@ export const confirmUpload = onCall(
   }
 );
 
-// ============================================================================
-// CALLABLE FUNCTION: Delete File
-// ============================================================================
-
-interface DeleteFileRequest {
-  storagePath: string;
-}
-
-interface DeleteFileResponse {
-  success: boolean;
-}
-
 /**
  * Delete a file from Firebase Storage
- * Verifies user owns the file before deletion
  */
-export const deleteFile = onCall(
-  {
-    region: 'southamerica-east1',
-  },
-  async (request): Promise<DeleteFileResponse> => {
+export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>(
+  async (request) => {
     const { data, auth } = request;
 
     if (!auth) {
       throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { storagePath } = data as DeleteFileRequest;
+    const { storagePath } = data;
 
     if (!storagePath) {
       throw new HttpsError('invalid-argument', 'storagePath is required');
@@ -292,50 +251,30 @@ export const deleteFile = onCall(
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('[deleteFile] Error', {
         userId: auth.uid,
         storagePath,
         error,
       });
+      if (error instanceof HttpsError) throw error;
       throw new HttpsError('internal', 'Failed to delete file');
     }
   }
 );
 
-// ============================================================================
-// CALLABLE FUNCTION: List Files
-// ============================================================================
-
-interface ListFilesRequest {
-  folder?: string;
-}
-
-interface ListFilesResponse {
-  files: Array<{
-    name: string;
-    path: string;
-    size: number;
-    contentType: string;
-    updatedAt: string;
-  }>;
-}
-
 /**
  * List files owned by the user
  */
-export const listUserFiles = onCall(
-  {
-    region: 'southamerica-east1',
-  },
-  async (request): Promise<ListFilesResponse> => {
+export const listUserFiles = onCall<ListFilesRequest, Promise<ListFilesResponse>>(
+  async (request) => {
     const { data, auth } = request;
 
     if (!auth) {
       throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { folder = 'uploads' } = data as ListFilesRequest;
+    const { folder = 'uploads' } = data;
 
     try {
       const adminStorage = getAdminStorage();
@@ -360,11 +299,12 @@ export const listUserFiles = onCall(
       });
 
       return { files: fileList };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('[listUserFiles] Error', {
         userId: auth.uid,
         error,
       });
+      if (error instanceof HttpsError) throw error;
       throw new HttpsError('internal', 'Failed to list files');
     }
   }

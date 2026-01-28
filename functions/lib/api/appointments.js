@@ -304,7 +304,7 @@ exports.updateAppointment = (0, https_1.onCall)(async (request) => {
         // Construir UPDATE
         const setClauses = [];
         const values = [];
-        let paramCount = 1;
+        let paramCount = 0;
         const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'notes'];
         // Mapeamento de campos request camelCase para db snake_case
         const fieldMap = {
