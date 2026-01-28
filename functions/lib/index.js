@@ -38,14 +38,29 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteStorageFile = exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
-exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.createAdminUser = exports.listUserFiles = void 0;
+exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.createAdminUser = exports.listUserFiles = void 0;
 const functions = __importStar(require("firebase-functions/v2"));
+const v2_1 = require("firebase-functions/v2");
+const init_1 = require("./init");
+const whatsapp_1 = require("./communications/whatsapp");
+// Set global options for all functions
+(0, v2_1.setGlobalOptions)({
+    region: 'us-central1',
+    secrets: [
+        init_1.DB_PASS_SECRET,
+        init_1.DB_USER_SECRET,
+        init_1.DB_NAME_SECRET,
+        init_1.CLOUD_SQL_CONNECTION_NAME_SECRET,
+        whatsapp_1.WHATSAPP_PHONE_NUMBER_ID_SECRET,
+        whatsapp_1.WHATSAPP_ACCESS_TOKEN_SECRET
+    ]
+});
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
 // ============================================================================
 // Import init for local usage in Triggers, but DO NOT EXPORT complex objects
 // which confuse the firebase-functions loader.
-const init_1 = require("./init");
+const init_2 = require("./init");
 // ============================================================================
 // API FUNCTIONS (Callable)
 // ============================================================================
@@ -166,7 +181,7 @@ exports.onPatientCreated = functions.firestore.onDocumentCreated('patients/{pati
     if (!snapshot)
         return;
     const patient = snapshot.data();
-    const db = init_1.adminDb;
+    const db = init_2.adminDb;
     // Criar registro financeiro inicial
     await db.collection('patient_financial_summaries').doc(snapshot.id).set({
         patient_id: snapshot.id,
@@ -234,6 +249,10 @@ Object.defineProperty(exports, "onAppointmentUpdatedWorkflow", { enumerable: tru
 // Patient Reactivation Workflow
 var reactivation_1 = require("./workflows/reactivation");
 Object.defineProperty(exports, "patientReactivation", { enumerable: true, get: function () { return reactivation_1.patientReactivation; } });
+// WhatsApp Test Functions
+var whatsapp_2 = require("./communications/whatsapp");
+Object.defineProperty(exports, "testWhatsAppMessage", { enumerable: true, get: function () { return whatsapp_2.testWhatsAppMessage; } });
+Object.defineProperty(exports, "testWhatsAppTemplate", { enumerable: true, get: function () { return whatsapp_2.testWhatsAppTemplate; } });
 // ============================================================================
 // AUTH TRIGGERS
 // ============================================================================

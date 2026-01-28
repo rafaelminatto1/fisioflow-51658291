@@ -1,8 +1,4 @@
 "use strict";
-/**
- * API Functions: Appointments
- * Cloud Functions para gestão de agendamentos
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cancelAppointment = exports.updateAppointment = exports.createAppointment = exports.checkTimeConflict = exports.getAppointment = exports.listAppointments = void 0;
 const https_1 = require("firebase-functions/v2/https");
-const pg_1 = require("pg");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 /**
  * Lista agendamentos com filtros
@@ -49,10 +45,8 @@ exports.listAppointments = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { dateFrom, dateTo, therapistId, status, patientId, limit = 100, offset = 0, } = request.data || {};
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const { dateFrom, dateTo, therapistId, status, patientId, limit = 100, offset = 0, } = request.data;
+    const pool = (0, init_1.getPool)();
     try {
         let query = `
       SELECT
@@ -97,8 +91,12 @@ exports.listAppointments = (0, https_1.onCall)(async (request) => {
         const result = await pool.query(query, params);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listAppointments:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar agendamentos';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -109,13 +107,11 @@ exports.getAppointment = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { appointmentId } = request.data || {};
+    const { appointmentId } = request.data;
     if (!appointmentId) {
         throw new https_1.HttpsError('invalid-argument', 'appointmentId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT
         a.*,
@@ -131,12 +127,41 @@ exports.getAppointment = (0, https_1.onCall)(async (request) => {
         }
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getAppointment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar agendamento';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
- * Verifica conflito de horário
+ * Verifica conflito de horário (Internal helper)
+ */
+async function checkTimeConflictHelper(pool, params) {
+    const { date, startTime, endTime, therapistId, excludeAppointmentId, organizationId } = params;
+    let query = `
+    SELECT id FROM appointments
+    WHERE organization_id = $1
+      AND therapist_id = $2
+      AND date = $3
+      AND status NOT IN ('cancelado', 'remarcado', 'paciente_faltou')
+      AND (
+        (start_time <= $4 AND end_time > $4) OR
+        (start_time < $5 AND end_time >= $5) OR
+        (start_time >= $4 AND end_time <= $5)
+      )
+  `;
+    const sqlParams = [organizationId, therapistId, date, startTime, endTime];
+    if (excludeAppointmentId) {
+        query += ` AND id != $6`;
+        sqlParams.push(excludeAppointmentId);
+    }
+    const result = await pool.query(query, sqlParams);
+    return result.rows.length > 0;
+}
+/**
+ * Verifica conflito de horário (Exposed Function)
  */
 exports.checkTimeConflict = (0, https_1.onCall)(async (request) => {
     if (!request.auth || !request.auth.token) {
@@ -147,36 +172,27 @@ exports.checkTimeConflict = (0, https_1.onCall)(async (request) => {
     if (!therapistId || !date || !startTime || !endTime) {
         throw new https_1.HttpsError('invalid-argument', 'terapeuta, data, horário início e fim são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        let query = `
-      SELECT id, start_time, end_time, patient_id, status
-      FROM appointments
-      WHERE therapist_id = $1
-        AND date = $2
-        AND organization_id = $3
-        AND status NOT IN ('cancelado', 'paciente_faltou')
-        AND (
-          (start_time < $3 AND end_time > $4)  -- Sobrepõe parcialmente
-          OR (start_time >= $3 AND end_time <= $4)  -- Contido no período
-          OR (start_time <= $3 AND end_time >= $4)  -- Contém o período
-        )
-    `;
-        const params = [therapistId, date, endTime, startTime, auth.organizationId];
-        if (excludeAppointmentId) {
-            query += ' AND id != $5';
-            params.push(excludeAppointmentId);
-        }
-        const result = await pool.query(query, params);
+        const hasConflict = await checkTimeConflictHelper(pool, {
+            date,
+            startTime,
+            endTime,
+            therapistId,
+            excludeAppointmentId,
+            organizationId: auth.organizationId,
+        });
         return {
-            hasConflict: result.rows.length > 0,
-            conflictingAppointments: result.rows,
+            hasConflict,
+            conflictingAppointments: [], // Deprecated detailed list for now to simplify
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in checkTimeConflict:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar conflito';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -187,57 +203,68 @@ exports.createAppointment = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const data = request.data || {};
+    const data = request.data;
     // Validar campos obrigatórios
-    if (!data.patient_id || !data.therapist_id || !data.date || !data.start_time || !data.end_time) {
-        throw new https_1.HttpsError('invalid-argument', 'patient_id, therapist_id, date, start_time e end_time são obrigatórios');
+    const requiredFields = ['patientId', 'therapistId', 'date', 'startTime', 'endTime', 'type'];
+    for (const field of requiredFields) {
+        if (!data[field]) {
+            // Fallback check for session_type/type if needed
+            if (field === 'type' && data.session_type)
+                continue;
+            throw new https_1.HttpsError('invalid-argument', `Campo obrigatório faltando: ${field}`);
+        }
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        // Verificar conflito de horário
-        const conflictResult = await pool.query(`SELECT id FROM appointments
-       WHERE therapist_id = $1
-         AND date = $2
-         AND organization_id = $3
-         AND status NOT IN ('cancelado', 'paciente_faltou')
-         AND (
-          (start_time < $4 AND end_time > $3)
-          OR (start_time >= $3 AND end_time <= $4)
-          OR (start_time <= $3 AND end_time >= $4)
-         )`, [data.therapist_id, data.date, data.start_time, data.end_time, auth.organizationId]);
-        if (conflictResult.rows.length > 0) {
-            throw new https_1.HttpsError('already-exists', 'Já existe um agendamento neste horário para este terapeuta');
+        // Verificar conflitos
+        const hasConflict = await checkTimeConflictHelper(pool, {
+            date: data.date,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            therapistId: data.therapistId,
+            organizationId: auth.organizationId,
+        });
+        if (hasConflict) {
+            throw new https_1.HttpsError('failed-precondition', 'Conflito de horário detectado');
         }
         // Inserir agendamento
         const result = await pool.query(`INSERT INTO appointments (
         patient_id, therapist_id, date, start_time, end_time,
-        session_type, notes, status, organization_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        session_type, notes, status, organization_id, created_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`, [
-            data.patient_id,
-            data.therapist_id,
+            data.patientId,
+            data.therapistId,
             data.date,
-            data.start_time,
-            data.end_time,
-            data.session_type || 'individual',
+            data.startTime,
+            data.endTime,
+            data.type || data.session_type || 'individual',
             data.notes || null,
             data.status || 'agendado',
             auth.organizationId,
+            auth.userId,
         ]);
         const appointment = result.rows[0];
-        // Publicar no Ably
-        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-        await realtime.publishAppointmentEvent(auth.organizationId, {
-            event: 'INSERT',
-            new: appointment,
-            old: null,
-        });
+        // Publicar Evento
+        try {
+            const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+            await realtime.publishAppointmentEvent(auth.organizationId, {
+                event: 'INSERT',
+                new: appointment,
+                old: null,
+            });
+        }
+        catch (err) {
+            console.error('Erro Ably:', err);
+        }
         return { data: appointment };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in createAppointment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar agendamento';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -248,91 +275,83 @@ exports.updateAppointment = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { appointmentId, ...updates } = request.data || {};
+    const { appointmentId, ...updates } = request.data;
     if (!appointmentId) {
         throw new https_1.HttpsError('invalid-argument', 'appointmentId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        // Buscar agendamento existente
-        const existing = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, auth.organizationId]);
-        if (existing.rows.length === 0) {
+        // Buscar agendamento atual
+        const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, auth.organizationId]);
+        if (current.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Agendamento não encontrado');
         }
-        const existingAppointment = existing.rows[0];
-        // Se está mudando horário/terapeuta, verificar conflito
-        if ((updates.therapist_id && updates.therapist_id !== existingAppointment.therapist_id) ||
-            (updates.date && updates.date !== existingAppointment.date) ||
-            (updates.start_time && updates.start_time !== existingAppointment.start_time) ||
-            (updates.end_time && updates.end_time !== existingAppointment.end_time)) {
-            const therapistId = updates.therapist_id || existingAppointment.therapist_id;
-            const date = updates.date || existingAppointment.date;
-            const startTime = updates.start_time || existingAppointment.start_time;
-            const endTime = updates.end_time || existingAppointment.end_time;
-            const conflictResult = await pool.query(`SELECT id FROM appointments
-         WHERE therapist_id = $1
-           AND date = $2
-           AND organization_id = $3
-           AND id != $4
-           AND status NOT IN ('cancelado', 'paciente_faltou')
-           AND (
-            (start_time < $5 AND end_time > $4)
-            OR (start_time >= $4 AND end_time <= $5)
-            OR (start_time <= $4 AND end_time >= $5)
-           )`, [therapistId, date, auth.organizationId, appointmentId, endTime, startTime]);
-            if (conflictResult.rows.length > 0) {
-                throw new https_1.HttpsError('already-exists', 'Conflito de horário com outro agendamento');
+        const currentAppt = current.rows[0];
+        // Se houver alteração de horário/terapeuta, verificar conflito
+        if (updates.date || updates.startTime || updates.endTime || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id)) {
+            const hasConflict = await checkTimeConflictHelper(pool, {
+                date: updates.date || currentAppt.date,
+                startTime: updates.startTime || currentAppt.start_time,
+                endTime: updates.endTime || currentAppt.end_time,
+                therapistId: updates.therapistId || currentAppt.therapist_id,
+                excludeAppointmentId: appointmentId,
+                organizationId: auth.organizationId,
+            });
+            if (hasConflict) {
+                throw new https_1.HttpsError('failed-precondition', 'Conflito de horário detectado');
             }
         }
-        // Construir SET dinâmico
+        // Construir UPDATE
         const setClauses = [];
         const values = [];
         let paramCount = 1;
-        const allowedFields = [
-            'patient_id',
-            'therapist_id',
-            'date',
-            'start_time',
-            'end_time',
-            'session_type',
-            'notes',
-            'status',
-        ];
-        for (const field of allowedFields) {
-            if (field in updates) {
+        const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'notes'];
+        // Mapeamento de campos request camelCase para db snake_case
+        const fieldMap = {
+            startTime: 'start_time',
+            endTime: 'end_time',
+            therapistId: 'therapist_id',
+        };
+        for (const key of Object.keys(updates)) {
+            const dbField = fieldMap[key] || key;
+            if (allowedFields.includes(dbField)) {
                 paramCount++;
-                setClauses.push(`${field} = $${paramCount}`);
-                values.push(updates[field]);
+                setClauses.push(`${dbField} = $${paramCount}`);
+                values.push(updates[key]);
             }
         }
         if (setClauses.length === 0) {
-            throw new https_1.HttpsError('invalid-argument', 'Nenhum campo válido para atualizar');
+            throw new https_1.HttpsError('invalid-argument', 'Nenhum campo para atualizar');
         }
         paramCount++;
         setClauses.push(`updated_at = $${paramCount}`);
         values.push(new Date());
         values.push(appointmentId, auth.organizationId);
-        const query = `
-      UPDATE appointments
-      SET ${setClauses.join(', ')}
-      WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
-      RETURNING *
-    `;
-        const result = await pool.query(query, values);
-        const appointment = result.rows[0];
-        // Publicar no Ably
-        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-        await realtime.publishAppointmentEvent(auth.organizationId, {
-            event: 'UPDATE',
-            new: appointment,
-            old: existingAppointment,
-        });
-        return { data: appointment };
+        const result = await pool.query(`UPDATE appointments
+       SET ${setClauses.join(', ')}
+       WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
+       RETURNING *`, values);
+        const updatedAppt = result.rows[0];
+        // Publicar Evento
+        try {
+            const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+            await realtime.publishAppointmentEvent(auth.organizationId, {
+                event: 'UPDATE',
+                new: updatedAppt,
+                old: currentAppt,
+            });
+        }
+        catch (err) {
+            console.error('Erro Ably:', err);
+        }
+        return { data: updatedAppt };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in updateAppointment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -343,36 +362,40 @@ exports.cancelAppointment = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { appointmentId, reason } = request.data || {};
+    const { appointmentId, reason } = request.data;
     if (!appointmentId) {
         throw new https_1.HttpsError('invalid-argument', 'appointmentId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        const result = await pool.query(`UPDATE appointments
-       SET status = 'cancelado',
-           cancellation_reason = $2,
-           cancelled_at = NOW(),
-           cancelled_by = $3,
-           updated_at = NOW()
-       WHERE id = $1 AND organization_id = $4
-       RETURNING *`, [appointmentId, reason || null, auth.userId, auth.organizationId]);
-        if (result.rows.length === 0) {
+        const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, auth.organizationId]);
+        if (current.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Agendamento não encontrado');
         }
-        // Publicar no Ably
-        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-        await realtime.publishAppointmentEvent(auth.organizationId, {
-            event: 'UPDATE',
-            new: result.rows[0],
-            old: null,
-        });
-        return { data: result.rows[0] };
+        const result = await pool.query(`UPDATE appointments
+       SET status = 'cancelado', notes = notes || $1, updated_at = NOW()
+       WHERE id = $2 AND organization_id = $3
+       RETURNING *`, [reason ? `\n[Cancelamento: ${reason}]` : '', appointmentId, auth.organizationId]);
+        // Publicar Evento
+        try {
+            const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+            await realtime.publishAppointmentEvent(auth.organizationId, {
+                event: 'UPDATE',
+                new: result.rows[0],
+                old: current.rows[0],
+            });
+        }
+        catch (err) {
+            console.error('Erro Ably:', err);
+        }
+        return { success: true };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in cancelAppointment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao cancelar agendamento';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=appointments.js.map
