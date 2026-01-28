@@ -363,7 +363,7 @@ export default defineConfig(({ mode }) => {
         'react-draggable',
         'react-resizable',
         // Supabase
-        '@supabase/supabase-js',
+
       ],
       exclude: [
         '@cornerstonejs/dicom-image-loader',

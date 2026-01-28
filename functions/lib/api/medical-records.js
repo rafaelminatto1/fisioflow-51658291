@@ -1,8 +1,4 @@
 "use strict";
-/**
- * API Functions: Medical Records
- * Cloud Functions para gestão de prontuários médicos
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,34 +35,22 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.savePainRecord = exports.getPainRecords = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.getPatientRecords = void 0;
 const https_1 = require("firebase-functions/v2/https");
-const pg_1 = require("pg");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
-/**
- * Helper para verificar auth
- */
-async function getAuth(request) {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
-    }
-    return (0, auth_1.authorizeRequest)(request.auth.token);
-}
-/**
- * Busca prontuários de um paciente
- */
 exports.getPatientRecords = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, type, limit = 50 } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, type, limit = 50 } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se paciente pertence à organização
-        const patient = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
-        if (patient.rows.length === 0) {
+        const patientQuery = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
+        if (patientQuery.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Paciente não encontrado');
         }
         let query = `
@@ -83,32 +67,33 @@ exports.getPatientRecords = (0, https_1.onCall)(async (request) => {
             query += ` AND mr.type = $3`;
             params.push(type);
         }
-        query += ` ORDER BY mr.record_date DESC, mr.created_at DESC LIMIT $4`;
+        query += ` ORDER BY mr.record_date DESC, mr.created_at DESC LIMIT $${params.length + 1}`;
         params.push(limit);
         const result = await pool.query(query, params);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getPatientRecords:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prontuários';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Cria um novo prontuário
- */
 exports.createMedicalRecord = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, type, title, content, recordDate, } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, type, title, content, recordDate, } = request.data;
     if (!patientId || !type || !title) {
         throw new https_1.HttpsError('invalid-argument', 'patientId, type e title são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se paciente existe
-        const patient = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
-        if (patient.rows.length === 0) {
+        const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
+        if (patientCheck.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Paciente não encontrado');
         }
         // Inserir prontuário
@@ -126,33 +111,39 @@ exports.createMedicalRecord = (0, https_1.onCall)(async (request) => {
             recordDate || new Date().toISOString().split('T')[0],
         ]);
         // Publicar no Ably
-        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-        await realtime.publishPatientUpdate(patientId, {
-            type: 'medical_record_created',
-            recordId: result.rows[0].id,
-        });
+        try {
+            const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+            await realtime.publishPatientUpdate(patientId, {
+                type: 'medical_record_created',
+                recordId: result.rows[0].id,
+            });
+        }
+        catch (e) {
+            console.error('Error publishing to Ably:', e);
+        }
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in createMedicalRecord:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar prontuário';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Atualiza um prontuário
- */
 exports.updateMedicalRecord = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { recordId, ...updates } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { recordId, ...updates } = request.data;
     if (!recordId) {
         throw new https_1.HttpsError('invalid-argument', 'recordId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se prontuário existe
-        const existing = await pool.query('SELECT * FROM medical_records WHERE id = $1 AND organization_id = $2', [recordId, auth.organizationId]);
+        const existing = await pool.query('SELECT id FROM medical_records WHERE id = $1 AND organization_id = $2', [recordId, auth.organizationId]);
         if (existing.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Prontuário não encontrado');
         }
@@ -175,32 +166,30 @@ exports.updateMedicalRecord = (0, https_1.onCall)(async (request) => {
         setClauses.push(`updated_at = $${paramCount}`);
         values.push(new Date());
         values.push(recordId, auth.organizationId);
-        const query = `
-      UPDATE medical_records
-      SET ${setClauses.join(', ')}
-      WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
-      RETURNING *
-    `;
-        const result = await pool.query(query, values);
+        const result = await pool.query(`UPDATE medical_records
+       SET ${setClauses.join(', ')}
+       WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
+       RETURNING *`, values);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in updateMedicalRecord:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar prontuário';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Lista sessões de tratamento de um paciente
- */
 exports.listTreatmentSessions = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, limit = 20 } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, limit = 20 } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT
         ts.*,
@@ -217,23 +206,24 @@ exports.listTreatmentSessions = (0, https_1.onCall)(async (request) => {
       LIMIT $3`, [patientId, auth.organizationId, limit]);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listTreatmentSessions:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar sessões';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Cria uma nova sessão de tratamento
- */
 exports.createTreatmentSession = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, appointmentId, painLevelBefore, painLevelAfter, observations, evolution, nextGoals, } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, appointmentId, painLevelBefore, painLevelAfter, observations, evolution, nextGoals, } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Buscar dados do appointment se fornecido
         let appointmentDate = null;
@@ -266,38 +256,44 @@ exports.createTreatmentSession = (0, https_1.onCall)(async (request) => {
         ]);
         // Atualizar progresso se houver mudança na dor
         if (painLevelAfter !== undefined && painLevelBefore !== undefined) {
-            await pool.query(`INSERT INTO patient_progress (
-          patient_id, assessment_date, pain_level,
-          organization_id, recorded_by
-        ) VALUES ($1, CURRENT_DATE, $2, $3, $4)`, [
-                patientId,
-                painLevelAfter,
-                auth.organizationId,
-                auth.userId,
-            ]);
+            try {
+                await pool.query(`INSERT INTO patient_progress (
+            patient_id, assessment_date, pain_level,
+            organization_id, recorded_by
+          ) VALUES ($1, CURRENT_DATE, $2, $3, $4)`, [
+                    patientId,
+                    painLevelAfter,
+                    auth.organizationId,
+                    auth.userId,
+                ]);
+            }
+            catch (e) {
+                console.error('Error recording patient progress:', e);
+            }
         }
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in createTreatmentSession:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar sessão';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Atualiza uma sessão de tratamento
- */
 exports.updateTreatmentSession = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { sessionId, ...updates } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { sessionId, ...updates } = request.data;
     if (!sessionId) {
         throw new https_1.HttpsError('invalid-argument', 'sessionId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se sessão existe
-        const existing = await pool.query('SELECT * FROM treatment_sessions WHERE id = $1 AND organization_id = $2', [sessionId, auth.organizationId]);
+        const existing = await pool.query('SELECT id FROM treatment_sessions WHERE id = $1 AND organization_id = $2', [sessionId, auth.organizationId]);
         if (existing.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Sessão não encontrada');
         }
@@ -306,11 +302,20 @@ exports.updateTreatmentSession = (0, https_1.onCall)(async (request) => {
         const values = [];
         let paramCount = 0;
         const allowedFields = ['pain_level_before', 'pain_level_after', 'observations', 'evolution', 'next_session_goals'];
-        for (const field of allowedFields) {
-            if (field in updates) {
+        // Map camelCase to snake_case if necessary, but here keys match allowedFields logic except for case if mismatched.
+        // However, input keys seem to be camelCase in previous file but allowedFields were snake_case.
+        // Let's standardise on expecting camelCase in request but mapping to snake_case db columns.
+        const fieldMap = {
+            painLevelBefore: 'pain_level_before',
+            painLevelAfter: 'pain_level_after',
+            nextGoals: 'next_session_goals'
+        };
+        for (const key of Object.keys(updates)) {
+            const dbField = fieldMap[key] || key;
+            if (allowedFields.includes(dbField)) {
                 paramCount++;
-                setClauses.push(`${field} = $${paramCount}`);
-                values.push(updates[field]);
+                setClauses.push(`${dbField} = $${paramCount}`);
+                values.push(updates[key]);
             }
         }
         if (setClauses.length === 0) {
@@ -320,32 +325,30 @@ exports.updateTreatmentSession = (0, https_1.onCall)(async (request) => {
         setClauses.push(`updated_at = $${paramCount}`);
         values.push(new Date());
         values.push(sessionId, auth.organizationId);
-        const query = `
-      UPDATE treatment_sessions
-      SET ${setClauses.join(', ')}
-      WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
-      RETURNING *
-    `;
-        const result = await pool.query(query, values);
+        const result = await pool.query(`UPDATE treatment_sessions
+       SET ${setClauses.join(', ')}
+       WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2}
+       RETURNING *`, values);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in updateTreatmentSession:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar sessão';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca registros de dor de um paciente
- */
 exports.getPainRecords = (0, https_1.onCall)(async (request) => {
-    await getAuth(request); // Authorization check
-    const { patientId } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT
         id, patient_id, pain_level, pain_type,
@@ -355,23 +358,24 @@ exports.getPainRecords = (0, https_1.onCall)(async (request) => {
       ORDER BY created_at DESC`, [patientId]);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getPainRecords:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar registros de dor';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Registra um novo evento de dor
- */
 exports.savePainRecord = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, level, type, bodyPart, notes } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, level, type, bodyPart, notes } = request.data;
     if (!patientId || level === undefined || !type || !bodyPart) {
         throw new https_1.HttpsError('invalid-argument', 'patientId, level, type e bodyPart são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`INSERT INTO patient_pain_records (
         patient_id, pain_level, pain_type,
@@ -388,8 +392,12 @@ exports.savePainRecord = (0, https_1.onCall)(async (request) => {
         ]);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in savePainRecord:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar registro de dor';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=medical-records.js.map

@@ -226,7 +226,9 @@
       "Bash(node:*)",
       "Bash(playwright:*)",
       "Bash(gh auth:*)",
-      "Bash(wait:*)"
+      "Bash(wait:*)",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_press_key"
     ],
     "deny": [],
     "ask": [],

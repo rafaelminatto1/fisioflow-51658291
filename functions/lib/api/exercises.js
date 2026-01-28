@@ -1,26 +1,16 @@
 "use strict";
-/**
- * API Functions: Exercises
- * Cloud Functions para gestão de exercícios
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.getPrescribedExercises = exports.logExercise = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = void 0;
 const https_1 = require("firebase-functions/v2/https");
-const pg_1 = require("pg");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
-/**
- * Lista exercícios com filtros
- */
 exports.listExercises = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { category, difficulty, search, limit = 100, offset = 0 } = request.data || {};
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const { category, difficulty, search, limit = 100, offset = 0 } = request.data;
+    const pool = (0, init_1.getPool)();
     try {
         let query = `
       SELECT
@@ -59,26 +49,24 @@ exports.listExercises = (0, https_1.onCall)(async (request) => {
             categories: categoriesResult.rows.map((r) => r.category),
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listExercises:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar exercícios';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca um exercício por ID
- */
 exports.getExercise = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { exerciseId } = request.data || {};
+    const { exerciseId } = request.data;
     if (!exerciseId) {
         throw new https_1.HttpsError('invalid-argument', 'exerciseId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT * FROM exercises WHERE id = $1 AND is_active = true`, [exerciseId]);
         if (result.rows.length === 0) {
@@ -86,31 +74,29 @@ exports.getExercise = (0, https_1.onCall)(async (request) => {
         }
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getExercise:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercício';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca exercícios similares (usando pgvector se disponível)
- */
 exports.searchSimilarExercises = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { exerciseId, query: searchQuery, limit = 10 } = request.data || {};
+    const { exerciseId, query: searchQuery, limit = 10 } = request.data;
     if (!exerciseId && !searchQuery) {
         throw new https_1.HttpsError('invalid-argument', 'exerciseId ou query é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         let result;
         if (exerciseId) {
             // Buscar exercício base para pegar categoria
-            const baseResult = await pool.query('SELECT category, muscles FROM exercises WHERE id = $1', [exerciseId]);
+            const baseResult = await pool.query('SELECT category FROM exercises WHERE id = $1', [exerciseId]);
             if (baseResult.rows.length === 0) {
                 throw new https_1.HttpsError('not-found', 'Exercício não encontrado');
             }
@@ -133,22 +119,20 @@ exports.searchSimilarExercises = (0, https_1.onCall)(async (request) => {
         }
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in searchSimilarExercises:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercícios similares';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Lista categorias de exercícios
- */
 exports.getExerciseCategories = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     await (0, auth_1.authorizeRequest)(request.auth.token);
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT DISTINCT category
        FROM exercises
@@ -161,26 +145,24 @@ exports.getExerciseCategories = (0, https_1.onCall)(async (request) => {
             })),
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getExerciseCategories:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar categorias';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Registra a realização de um exercício por um paciente
- */
 exports.logExercise = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { patientId, prescriptionId, difficulty, notes } = request.data || {};
+    const { patientId, prescriptionId, difficulty, notes } = request.data;
     if (!patientId || !prescriptionId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId e prescriptionId são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se paciente pertence à organização
         const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
@@ -199,26 +181,24 @@ exports.logExercise = (0, https_1.onCall)(async (request) => {
         ]);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in logExercise:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao registrar exercício';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca exercícios prescritos para um paciente
- */
 exports.getPrescribedExercises = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { patientId } = request.data || {};
+    const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se paciente pertence à organização
         const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
@@ -255,26 +235,24 @@ exports.getPrescribedExercises = (0, https_1.onCall)(async (request) => {
         }));
         return { data };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getPrescribedExercises:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prescrições';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Cria um novo exercício
- */
 exports.createExercise = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     if (auth.role !== 'admin' && auth.role !== 'fisioterapeuta') {
         throw new https_1.HttpsError('permission-denied', 'Permissão insuficiente para criar exercícios');
     }
-    const exercise = request.data || {};
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const exercise = request.data;
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`INSERT INTO exercises (
         name, category, difficulty, description, instructions,
@@ -302,29 +280,27 @@ exports.createExercise = (0, https_1.onCall)(async (request) => {
         ]);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in createExercise:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar exercício';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Atualiza um exercício existente
- */
 exports.updateExercise = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     if (auth.role !== 'admin' && auth.role !== 'fisioterapeuta') {
         throw new https_1.HttpsError('permission-denied', 'Permissão insuficiente para atualizar exercícios');
     }
-    const { id, ...updates } = request.data || {};
+    const { id, ...updates } = request.data;
     if (!id) {
         throw new https_1.HttpsError('invalid-argument', 'ID do exercício é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const fields = Object.keys(updates).filter(k => k !== 'id');
         if (fields.length === 0) {
@@ -339,29 +315,27 @@ exports.updateExercise = (0, https_1.onCall)(async (request) => {
         }
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in updateExercise:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar exercício';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Remove (desativa) um exercício
- */
 exports.deleteExercise = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     if (auth.role !== 'admin') {
         throw new https_1.HttpsError('permission-denied', 'Apenas administradores podem excluir exercícios');
     }
-    const { id } = request.data || {};
+    const { id } = request.data;
     if (!id) {
         throw new https_1.HttpsError('invalid-argument', 'ID do exercício é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Soft delete preferencialmente
         const result = await pool.query(`UPDATE exercises SET is_active = false, updated_at = NOW() WHERE id = $1 RETURNING id`, [id]);
@@ -370,29 +344,27 @@ exports.deleteExercise = (0, https_1.onCall)(async (request) => {
         }
         return { success: true };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in deleteExercise:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir exercício';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Une exercícios duplicados
- */
 exports.mergeExercises = (0, https_1.onCall)(async (request) => {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     if (auth.role !== 'admin') {
         throw new https_1.HttpsError('permission-denied', 'Apenas administradores podem unir exercícios');
     }
-    const { keepId, mergeIds } = request.data || {};
+    const { keepId, mergeIds } = request.data;
     if (!keepId || !Array.isArray(mergeIds) || mergeIds.length === 0) {
         throw new https_1.HttpsError('invalid-argument', 'keepId e mergeIds (array) são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         await pool.query('BEGIN');
         // 1. Atualizar todas as prescrições que usam os IDs a serem removidos
@@ -406,14 +378,13 @@ exports.mergeExercises = (0, https_1.onCall)(async (request) => {
         // 3. Remover os exercícios duplicados
         const deleteResult = await pool.query(`DELETE FROM exercises WHERE id = ANY($1) AND id != $2`, [mergeIds, keepId]);
         await pool.query('COMMIT');
-        return { success: true, deletedCount: deleteResult.rowCount };
+        return { success: true, deletedCount: deleteResult.rowCount || 0 };
     }
     catch (err) {
         await pool.query('ROLLBACK');
-        throw err;
-    }
-    finally {
-        await pool.end();
+        console.error('Error in mergeExercises:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Erro ao unir exercícios';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=exercises.js.map

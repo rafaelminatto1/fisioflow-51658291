@@ -40,23 +40,34 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.whatsappWebhookHttp = exports.sendWhatsAppExerciseAssigned = exports.sendWhatsAppCustomMessage = exports.sendWhatsAppWelcome = exports.sendWhatsAppAppointmentReminder = exports.sendWhatsAppAppointmentConfirmation = exports.WhatsAppTemplate = void 0;
+exports.getWhatsAppHistory = exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.whatsappWebhookHttp = exports.sendWhatsAppExerciseAssigned = exports.sendWhatsAppCustomMessage = exports.sendWhatsAppWelcome = exports.sendWhatsAppAppointmentReminder = exports.sendWhatsAppAppointmentConfirmation = exports.WhatsAppTemplate = exports.WHATSAPP_ACCESS_TOKEN_SECRET = exports.WHATSAPP_PHONE_NUMBER_ID_SECRET = void 0;
 exports.isValidWhatsAppPhone = isValidWhatsAppPhone;
 const https_1 = require("firebase-functions/v2/https");
 const firebase_admin_1 = require("firebase-admin");
 const logger = __importStar(require("firebase-functions/logger"));
+const params_1 = require("firebase-functions/params");
+exports.WHATSAPP_PHONE_NUMBER_ID_SECRET = (0, params_1.defineSecret)('WHATSAPP_PHONE_NUMBER_ID');
+exports.WHATSAPP_ACCESS_TOKEN_SECRET = (0, params_1.defineSecret)('WHATSAPP_ACCESS_TOKEN');
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0';
-const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+// Helper to get secrets with environment variable fallback
+const getWhatsAppPhoneNumberId = () => exports.WHATSAPP_PHONE_NUMBER_ID_SECRET.value() || process.env.WHATSAPP_PHONE_NUMBER_ID;
+const getWhatsAppAccessToken = () => exports.WHATSAPP_ACCESS_TOKEN_SECRET.value() || process.env.WHATSAPP_ACCESS_TOKEN;
+const init_1 = require("../init");
+const auth_1 = require("../middleware/auth");
 /**
  * Templates de WhatsApp aprovados
+ * Para adicionar novos templates: https://business.facebook.com/wa/manage/phone-numbers/
  */
 var WhatsAppTemplate;
 (function (WhatsAppTemplate) {
     WhatsAppTemplate["APPOINTMENT_CONFIRMATION"] = "appointment_confirmation";
-    WhatsAppTemplate["APPOINTMENT_REMINDER"] = "appointment_reminder_24h";
-    WhatsAppTemplate["APPOINTMENT_REMINDER_1H"] = "appointment_reminder_1h";
+    WhatsAppTemplate["APPOINTMENT_REMINDER"] = "appointment_reminder";
+    WhatsAppTemplate["APPOINTMENT_REMINDER_24H"] = "appointment_reminder_24h";
     WhatsAppTemplate["WELCOME"] = "welcome_message";
+    WhatsAppTemplate["APPOINTMENT_CANCELLED"] = "appointment_cancelled";
+    WhatsAppTemplate["PRECADASTRO_CONFIRMATION"] = "precadastro_confirmation";
+    WhatsAppTemplate["BIRTHDAY_GREETING"] = "birthday_greeting";
+    WhatsAppTemplate["PATIENT_REACTIVATION"] = "patient_reactivation";
     WhatsAppTemplate["PAYMENT_CONFIRMATION"] = "payment_confirmation";
     WhatsAppTemplate["EXERCISE_ASSIGNED"] = "exercise_assigned";
 })(WhatsAppTemplate || (exports.WhatsAppTemplate = WhatsAppTemplate = {}));
@@ -103,7 +114,7 @@ exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
     // Formatar telefone para o formato do WhatsApp
     const whatsappPhone = formatPhoneForWhatsApp(patient?.phone);
     // Enviar mensagem template
-    await sendWhatsAppTemplateMessage({
+    const result = await sendWhatsAppTemplateMessage({
         to: whatsappPhone,
         template: WhatsAppTemplate.APPOINTMENT_CONFIRMATION,
         language: 'pt_BR',
@@ -117,6 +128,18 @@ exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
                 ],
             },
         ],
+    });
+    // Log message to DB
+    await logWhatsAppMessage({
+        organization_id: (patient.organization_id || (appointment && appointment.organization_id)),
+        patient_id: patientId,
+        from_phone: getWhatsAppPhoneNumberId(),
+        to_phone: whatsappPhone,
+        message: `Confirmação de agendamento: ${formattedDate} às ${appointment?.startTime}`,
+        type: 'template',
+        template_name: WhatsAppTemplate.APPOINTMENT_CONFIRMATION,
+        message_id: result.messages[0].id,
+        status: 'sent',
     });
     return { success: true };
 });
@@ -235,9 +258,22 @@ exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
     }
     // Formatar telefone
     const whatsappPhone = formatPhoneForWhatsApp(to);
-    await sendWhatsAppTextMessage({
+    const result = await sendWhatsAppTextMessage({
         to: whatsappPhone,
         message,
+    });
+    // Buscar dados básicos para o log
+    const adminProfile = await (0, firebase_admin_1.firestore)().collection('profiles').doc(request.auth.uid).get();
+    const organizationId = adminProfile.data()?.organization_id;
+    // Log message to DB
+    await logWhatsAppMessage({
+        organization_id: organizationId,
+        from_phone: getWhatsAppPhoneNumberId(),
+        to_phone: whatsappPhone,
+        message: message,
+        type: 'text',
+        message_id: result.messages[0].id,
+        status: 'sent',
     });
     return { success: true };
 });
@@ -286,7 +322,7 @@ exports.sendWhatsAppExerciseAssigned = (0, https_1.onCall)({
  * Envia mensagem template do WhatsApp
  */
 async function sendWhatsAppTemplateMessage(params) {
-    const url = `${WHATSAPP_API_URL}/${PHONE_NUMBER_ID}/messages`;
+    const url = `${WHATSAPP_API_URL}/${getWhatsAppPhoneNumberId()}/messages`;
     const payload = {
         messaging_product: 'whatsapp',
         to: params.to,
@@ -300,7 +336,7 @@ async function sendWhatsAppTemplateMessage(params) {
     const response = await fetch(url, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${ACCESS_TOKEN}`,
+            'Authorization': `Bearer ${getWhatsAppAccessToken()}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -318,7 +354,7 @@ async function sendWhatsAppTemplateMessage(params) {
  * Envia mensagem de texto personalizada do WhatsApp
  */
 async function sendWhatsAppTextMessage(params) {
-    const url = `${WHATSAPP_API_URL}/${PHONE_NUMBER_ID}/messages`;
+    const url = `${WHATSAPP_API_URL}/${getWhatsAppPhoneNumberId()}/messages`;
     const payload = {
         messaging_product: 'whatsapp',
         to: params.to,
@@ -330,7 +366,7 @@ async function sendWhatsAppTextMessage(params) {
     const response = await fetch(url, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${ACCESS_TOKEN}`,
+            'Authorization': `Bearer ${getWhatsAppAccessToken()}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -446,12 +482,12 @@ async function handleIncomingWhatsAppMessage(message) {
     const patient = patientsSnapshot.docs[0].data();
     if (type === 'text') {
         const text = message.text.body;
-        // Salvar mensagem recebida
+        // Salvar mensagem recebida no Firestore (maintining legacy)
         await (0, firebase_admin_1.firestore)()
             .collection('whatsapp_messages')
             .add({
             from,
-            to: PHONE_NUMBER_ID,
+            to: getWhatsAppPhoneNumberId(),
             messageId,
             type: 'text',
             text,
@@ -460,6 +496,21 @@ async function handleIncomingWhatsAppMessage(message) {
             read: false,
             createdAt: firebase_admin_1.firestore.FieldValue.serverTimestamp(),
         });
+        // Salvar mensagem recebida no Cloud SQL
+        const pool = (0, init_1.getPool)();
+        await pool.query(`INSERT INTO whatsapp_messages (
+        organization_id, patient_id, from_phone, to_phone, message, type, message_id, status, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [
+            patient.organization_id,
+            patientsSnapshot.docs[0].id,
+            from,
+            getWhatsAppPhoneNumberId(),
+            text,
+            'text',
+            messageId,
+            'received',
+            new Date(parseInt(timestamp) * 1000)
+        ]);
         // Responder automaticamente se necessário
         await handleAutoReply(from, text, patient);
     }
@@ -481,6 +532,13 @@ async function handleWhatsAppMessageStatus(status) {
             statusUpdatedAt: firebase_admin_1.firestore.FieldValue.serverTimestamp(),
         });
     }
+    // Atualizar status no Cloud SQL
+    const pool = (0, init_1.getPool)();
+    await pool.query('UPDATE whatsapp_messages SET status = $1, metadata = jsonb_set(COALESCE(metadata, \'{}\'), \'{status_history}\', COALESCE(metadata->\'status_history\', \'[]\'::jsonb) || $2::jsonb) WHERE message_id = $3', [
+        messageStatus,
+        JSON.stringify([{ status: messageStatus, timestamp: new Date().toISOString() }]),
+        id
+    ]);
 }
 /**
  * Resposta automática a mensagens recebidas
@@ -505,6 +563,206 @@ async function handleAutoReply(from, text, patient) {
             to: from,
             message: replyMessage,
         });
+    }
+}
+// ============================================================================================
+// TEST FUNCTIONS
+// ============================================================================================
+/**
+ * Cloud Function: Testar envio de mensagem WhatsApp
+ * Útil para verificar se as credenciais estão configuradas corretamente
+ */
+exports.testWhatsAppMessage = (0, https_1.onCall)({
+    region: 'southamerica-east1',
+    memory: '256MiB',
+    maxInstances: 10,
+}, async (request) => {
+    if (!request.auth && request.data.secret !== 'FISIOFLOW_TEST_SECRET') {
+        throw new https_1.HttpsError('unauthenticated', 'Não autenticado');
+    }
+    const { phone, template = WhatsAppTemplate.WELCOME, name = 'Teste' } = request.data;
+    // Se não fornecer telefone, usar o número do próprio usuário
+    let targetPhone = phone;
+    if (!targetPhone) {
+        if (!request.auth) {
+            throw new https_1.HttpsError('failed-precondition', 'Telefone não fornecido e usuário não autenticado');
+        }
+        const userDoc = await (0, firebase_admin_1.firestore)()
+            .collection('users')
+            .doc(request.auth.uid)
+            .get();
+        if (!userDoc.exists) {
+            throw new https_1.HttpsError('not-found', 'Usuário não encontrado');
+        }
+        const user = userDoc.data();
+        if (!user?.phoneNumber) {
+            throw new https_1.HttpsError('failed-precondition', 'Usuário não tem telefone cadastrado. Forneça um telefone no parâmetro "phone"');
+        }
+        targetPhone = user.phoneNumber;
+    }
+    if (!targetPhone) {
+        throw new https_1.HttpsError('failed-precondition', 'Telefone não fornecido');
+    }
+    const whatsappPhone = formatPhoneForWhatsApp(targetPhone);
+    // Enviar mensagem de teste
+    await sendWhatsAppTextMessage({
+        to: whatsappPhone,
+        message: `🧪 Teste FisioFlow WhatsApp\n\nOlá ${name}!\n\nEsta é uma mensagem de teste do FisioFlow. Se você recebeu esta mensagem, a integração está funcionando corretamente! 🎉\n\nData: ${new Date().toLocaleString('pt-BR')}`,
+    });
+    logger.info(`Test message sent to ${whatsappPhone}`);
+    return {
+        success: true,
+        phone: whatsappPhone,
+        template,
+        message: 'Mensagem de teste enviada com sucesso!',
+    };
+});
+/**
+ * Cloud Function: Testar template do WhatsApp
+ * Envia um template específico para verificar se foi aprovado
+ */
+exports.testWhatsAppTemplate = (0, https_1.onCall)({
+    region: 'southamerica-east1',
+    memory: '256MiB',
+    maxInstances: 10,
+}, async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError('unauthenticated', 'Não autenticado');
+    }
+    const { phone, template = WhatsAppTemplate.APPOINTMENT_CONFIRMATION, params } = request.data;
+    // Se não fornecer telefone, usar o número do próprio usuário
+    let targetPhone = phone;
+    if (!targetPhone) {
+        const userDoc = await (0, firebase_admin_1.firestore)()
+            .collection('users')
+            .doc(request.auth.uid)
+            .get();
+        if (!userDoc.exists) {
+            throw new https_1.HttpsError('not-found', 'Usuário não encontrado');
+        }
+        const user = userDoc.data();
+        if (!user?.phoneNumber) {
+            throw new https_1.HttpsError('failed-precondition', 'Usuário não tem telefone cadastrado. Forneça um telefone no parâmetro "phone"');
+        }
+        targetPhone = user.phoneNumber;
+    }
+    if (!targetPhone) {
+        throw new https_1.HttpsError('failed-precondition', 'Telefone não fornecido');
+    }
+    const whatsappPhone = formatPhoneForWhatsApp(targetPhone);
+    // Parâmetros padrão para teste
+    const defaultParams = {
+        patientName: params?.patientName || 'Paciente Teste',
+        date: params?.date || new Date().toLocaleDateString('pt-BR'),
+        time: params?.time || '14:00',
+        professional: params?.professional || 'Dr. Teste',
+        address: params?.address || 'Rua Teste, 123',
+    };
+    // Montar componentes do template
+    const components = [];
+    switch (template) {
+        case WhatsAppTemplate.APPOINTMENT_CONFIRMATION:
+            components.push({
+                type: 'body',
+                parameters: [
+                    { type: 'text', text: defaultParams.patientName },
+                    { type: 'text', text: defaultParams.date },
+                    { type: 'text', text: defaultParams.time },
+                    { type: 'text', text: defaultParams.professional },
+                    { type: 'text', text: defaultParams.address },
+                ],
+            });
+            break;
+        case WhatsAppTemplate.APPOINTMENT_REMINDER:
+            components.push({
+                type: 'body',
+                parameters: [
+                    { type: 'text', text: defaultParams.patientName },
+                    { type: 'text', text: defaultParams.time },
+                    { type: 'text', text: defaultParams.professional },
+                ],
+            });
+            break;
+        case WhatsAppTemplate.WELCOME:
+            components.push({
+                type: 'body',
+                parameters: [
+                    { type: 'text', text: defaultParams.patientName },
+                ],
+            });
+            break;
+        default:
+            throw new https_1.HttpsError('invalid-argument', `Template não suportado: ${template}`);
+    }
+    // Enviar template
+    await sendWhatsAppTemplateMessage({
+        to: whatsappPhone,
+        template,
+        language: 'pt_BR',
+        components,
+    });
+    logger.info(`Test template "${template}" sent to ${whatsappPhone}`);
+    return {
+        success: true,
+        phone: whatsappPhone,
+        template,
+        message: `Template "${template}" enviado com sucesso!`,
+    };
+});
+/**
+ * Cloud Function: Buscar histórico de mensagens do WhatsApp
+ */
+exports.getWhatsAppHistory = (0, https_1.onCall)({
+    region: 'southamerica-east1',
+    memory: '256MiB',
+}, async (request) => {
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Não autenticado');
+    }
+    const { patientId, limit = 50, offset = 0 } = request.data;
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const pool = (0, init_1.getPool)();
+    try {
+        const result = await pool.query(`SELECT * FROM whatsapp_messages 
+       WHERE organization_id = $1 AND patient_id = $2
+       ORDER BY created_at DESC 
+       LIMIT $3 OFFSET $4`, [auth.organizationId, patientId, limit, offset]);
+        return {
+            data: result.rows,
+            total: result.rowCount
+        };
+    }
+    catch (error) {
+        logger.error('Error fetching WhatsApp history:', error);
+        throw new https_1.HttpsError('internal', 'Erro ao buscar histórico de mensagens');
+    }
+});
+// ============================================================================================
+// DATABASE HELPERS
+// ============================================================================================
+/**
+ * Registra uma mensagem no banco de dados
+ */
+async function logWhatsAppMessage(params) {
+    const pool = (0, init_1.getPool)();
+    try {
+        await pool.query(`INSERT INTO whatsapp_messages (
+        organization_id, patient_id, from_phone, to_phone, message, type, template_name, message_id, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [
+            params.organization_id,
+            params.patient_id || null,
+            params.from_phone,
+            params.to_phone,
+            params.message,
+            params.type,
+            params.template_name || null,
+            params.message_id,
+            params.status
+        ]);
+    }
+    catch (error) {
+        logger.error('Error logging WhatsApp message:', error);
+        // Don't throw, just log the error to avoid breaking the main flow
     }
 }
 //# sourceMappingURL=whatsapp.js.map

@@ -69,29 +69,41 @@ async function verifyToken(token) {
  */
 async function getProfile(userId) {
     const pool = (0, init_1.getPool)();
-    let result = await pool.query(`SELECT id, user_id, organization_id, role, full_name, email, is_active
-     FROM profiles
-     WHERE user_id = $1`, [userId]);
-    if (result.rows.length === 0) {
-        // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
-        console.log(`[Auth Middleware] Creating default profile for user: ${userId}`);
-        const organizationId = 'default-org';
-        // 1. Ensure Organization exists
-        await pool.query(`INSERT INTO organizations (id, name, slug, active)
-       VALUES ($1, 'Clínica Principal', 'default-org', true)
-       ON CONFLICT (id) DO NOTHING`, [organizationId]);
-        // 2. Create Profile
-        // We fetch some basic info from Firebase Auth if possible, but here we use defaults
-        const newProfile = await pool.query(`INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, user_id, organization_id, role, full_name, email, is_active`, [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com', true]);
-        return newProfile.rows[0];
+    try {
+        let result = await pool.query(`SELECT id, user_id, organization_id, role, full_name, email, is_active
+       FROM profiles
+       WHERE user_id = $1`, [userId]);
+        if (result.rows.length === 0) {
+            // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
+            console.log(`[Auth Middleware] Creating default profile for user: ${userId}`);
+            const organizationId = 'default-org';
+            // 1. Ensure Organization exists
+            await pool.query(`INSERT INTO organizations (id, name, slug, active)
+         VALUES ($1, 'Clínica Principal', 'default-org', true)
+         ON CONFLICT (id) DO NOTHING`, [organizationId]);
+            // 2. Create Profile
+            // We fetch some basic info from Firebase Auth if possible, but here we use defaults
+            const newProfile = await pool.query(`INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, user_id, organization_id, role, full_name, email, is_active`, [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com', true]);
+            return newProfile.rows[0];
+        }
+        const profile = result.rows[0];
+        if (!profile.is_active) {
+            throw new https_1.HttpsError('permission-denied', 'Este usuário está desativado');
+        }
+        return profile;
     }
-    const profile = result.rows[0];
-    if (!profile.is_active) {
-        throw new https_1.HttpsError('permission-denied', 'Este usuário está desativado');
+    catch (error) {
+        // If database connection fails, provide a more helpful error
+        if (error instanceof Error) {
+            if (error.message.includes('connect') || error.message.includes('ECONNREFUSED')) {
+                console.error('[Auth Middleware] Database connection error:', error.message);
+                throw new https_1.HttpsError('internal', 'Erro de conexão com o banco de dados. Verifique se o PostgreSQL/Cloud SQL está configurado e acessível.');
+            }
+        }
+        throw error;
     }
-    return profile;
 }
 /**
  * Configura o contexto RLS (Row Level Security) para a conexão atual

@@ -1,12 +1,8 @@
 "use strict";
-/**
- * API Functions: Financial
- * Cloud Functions para gestão financeira
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = void 0;
 const https_1 = require("firebase-functions/v2/https");
-const pg_1 = require("pg");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 /**
  * Lista transações financeiras
@@ -17,9 +13,7 @@ exports.listTransactions = (0, https_1.onCall)(async (request) => {
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     const { limit = 100, offset = 0 } = request.data || {};
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT * FROM transacoes
        WHERE organization_id = $1
@@ -27,8 +21,9 @@ exports.listTransactions = (0, https_1.onCall)(async (request) => {
        LIMIT $2 OFFSET $3`, [auth.organizationId, limit, offset]);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listTransactions:', error);
+        throw new https_1.HttpsError('internal', error.message || 'Erro ao listar transações');
     }
 });
 /**
@@ -40,13 +35,10 @@ exports.createTransaction = (0, https_1.onCall)(async (request) => {
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     const data = request.data || {};
-    // Validar campos obrigatórios
     if (!data.valor || !data.tipo) {
         throw new https_1.HttpsError('invalid-argument', 'Valor e tipo são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`INSERT INTO transacoes (
         tipo, descricao, valor, status, metadata,
@@ -63,8 +55,9 @@ exports.createTransaction = (0, https_1.onCall)(async (request) => {
         ]);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in createTransaction:', error);
+        throw new https_1.HttpsError('internal', error.message || 'Erro ao criar transação');
     }
 });
 /**
@@ -79,11 +72,8 @@ exports.updateTransaction = (0, https_1.onCall)(async (request) => {
     if (!transactionId) {
         throw new https_1.HttpsError('invalid-argument', 'transactionId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        // Validar propriedade
         const existing = await pool.query('SELECT id FROM transacoes WHERE id = $1 AND organization_id = $2', [transactionId, auth.organizationId]);
         if (existing.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Transação não encontrada');
@@ -120,8 +110,11 @@ exports.updateTransaction = (0, https_1.onCall)(async (request) => {
         const result = await pool.query(query, values);
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in updateTransaction:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        throw new https_1.HttpsError('internal', error.message || 'Erro ao atualizar transação');
     }
 });
 /**
@@ -136,9 +129,7 @@ exports.deleteTransaction = (0, https_1.onCall)(async (request) => {
     if (!transactionId) {
         throw new https_1.HttpsError('invalid-argument', 'transactionId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query('DELETE FROM transacoes WHERE id = $1 AND organization_id = $2 RETURNING id', [transactionId, auth.organizationId]);
         if (result.rows.length === 0) {
@@ -146,8 +137,11 @@ exports.deleteTransaction = (0, https_1.onCall)(async (request) => {
         }
         return { success: true };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in deleteTransaction:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        throw new https_1.HttpsError('internal', error.message || 'Erro ao excluir transação');
     }
 });
 /**
@@ -162,12 +156,8 @@ exports.findTransactionByAppointmentId = (0, https_1.onCall)(async (request) => 
     if (!appointmentId) {
         throw new https_1.HttpsError('invalid-argument', 'appointmentId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        // Usar operador ->> para acessar JSONB se metadata for JSONB
-        // Assumindo metadata é JSONB
         const result = await pool.query(`SELECT * FROM transacoes
        WHERE organization_id = $1
          AND metadata->>'appointment_id' = $2
@@ -177,8 +167,9 @@ exports.findTransactionByAppointmentId = (0, https_1.onCall)(async (request) => 
         }
         return { data: result.rows[0] };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in findTransactionByAppointmentId:', error);
+        throw new https_1.HttpsError('internal', error.message || 'Erro ao buscar transação');
     }
 });
 /**
@@ -188,16 +179,12 @@ exports.getEventReport = (0, https_1.onCall)(async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
-    // await authorizeRequest(request.auth.token); // Authorization check
     const { eventoId } = request.data || {};
     if (!eventoId) {
         throw new https_1.HttpsError('invalid-argument', 'eventoId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-    });
+    const pool = (0, init_1.getPool)();
     try {
-        // Buscar dados em paralelo
         const [eventoRes, pagamentosRes, prestadoresRes, checklistRes] = await Promise.all([
             pool.query('SELECT nome FROM eventos WHERE id = $1', [eventoId]),
             pool.query('SELECT tipo, descricao, valor, pago_em FROM pagamentos WHERE evento_id = $1', [eventoId]),
@@ -248,8 +235,11 @@ exports.getEventReport = (0, https_1.onCall)(async (request) => {
             }
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getEventReport:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        throw new https_1.HttpsError('internal', error.message || 'Erro ao gerar relatório');
     }
 });
 //# sourceMappingURL=financial.js.map

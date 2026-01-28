@@ -52,19 +52,9 @@ exports.listPatients = (0, https_1.onCall)(async (request) => {
     }
     console.log('[listPatients] Auth token present, uid:', request.auth.uid);
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { status, search, limit = 50, offset = 0 } = request.data || {};
-    // DEBUG: Log organization_id e query params
-    console.log('[listPatients] auth.organizationId:', auth.organizationId);
-    console.log('[listPatients] auth.userId:', auth.userId);
-    console.log('[listPatients] filters:', { status, search, limit, offset });
+    const { status, search, limit = 50, offset = 0 } = request.data;
     const pool = (0, init_1.getPool)();
-    console.log('[listPatients] Pool obtained');
     try {
-        // DEBUG: Verificar todos os pacientes no banco (sem filtro) para debug
-        console.log('[listPatients] Executing DEBUG query...');
-        const debugResult = await pool.query('SELECT id, name, organization_id, is_active FROM patients ORDER BY created_at DESC LIMIT 10');
-        console.log('[listPatients] DEBUG - All patients in DB:', JSON.stringify(debugResult.rows));
-        console.log('[listPatients] DEBUG - Total patients:', debugResult.rows.length);
         // Construir query dinâmica
         let query = `
       SELECT
@@ -111,14 +101,18 @@ exports.listPatients = (0, https_1.onCall)(async (request) => {
         const countResult = await pool.query(countQuery, countParams);
         return {
             data: result.rows,
-            total: parseInt(countResult.rows[0].total),
+            total: parseInt(countResult.rows[0].total, 10),
             page: Math.floor(offset / limit) + 1,
             perPage: limit,
         };
     }
     catch (error) {
         console.error('Error in listPatients:', error);
-        throw new https_1.HttpsError('internal', error.message || 'Erro interno ao listar pacientes');
+        if (error instanceof https_1.HttpsError) {
+            throw error;
+        }
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao listar pacientes';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -129,7 +123,7 @@ exports.getPatient = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { patientId, profileId } = request.data || {};
+    const { patientId, profileId } = request.data;
     if (!patientId && !profileId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId ou profileId é obrigatório');
     }
@@ -155,7 +149,8 @@ exports.getPatient = (0, https_1.onCall)(async (request) => {
         console.error('Error in getPatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro interno ao buscar paciente');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar paciente';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -169,11 +164,11 @@ exports.createPatient = (0, https_1.onCall)(async (request) => {
     }
     console.log('[createPatient] Auth token present, uid:', request.auth.uid);
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const data = request.data || {};
+    const data = request.data;
     // DEBUG: Log organization_id ao criar paciente
     console.log('[createPatient] auth.organizationId:', auth.organizationId);
     console.log('[createPatient] auth.userId:', auth.userId);
-    console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone, organization_id: data.organization_id }));
+    console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone }));
     // Validar campos obrigatórios
     if (!data.name) {
         throw new https_1.HttpsError('invalid-argument', 'name é obrigatório');
@@ -195,8 +190,8 @@ exports.createPatient = (0, https_1.onCall)(async (request) => {
         const result = await pool.query(`INSERT INTO patients (
         name, cpf, email, phone, birth_date, gender,
         address, emergency_contact, medical_history,
-        main_condition, status, organization_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        main_condition, status, organization_id, incomplete_registration
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *`, [
             data.name,
             data.cpf?.replace(/\D/g, '') || null,
@@ -210,6 +205,7 @@ exports.createPatient = (0, https_1.onCall)(async (request) => {
             data.main_condition || null,
             data.status || 'active',
             auth.organizationId,
+            data.incomplete_registration || false
         ]);
         const patient = result.rows[0];
         console.log('[createPatient] Patient created:', JSON.stringify({
@@ -236,7 +232,8 @@ exports.createPatient = (0, https_1.onCall)(async (request) => {
         console.error('Error in createPatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro interno ao criar paciente');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao criar paciente';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -247,7 +244,7 @@ exports.updatePatient = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { patientId, ...updates } = request.data || {};
+    const { patientId, ...updates } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
@@ -321,7 +318,8 @@ exports.updatePatient = (0, https_1.onCall)(async (request) => {
         console.error('Error in updatePatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro interno ao atualizar paciente');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar paciente';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -332,7 +330,7 @@ exports.deletePatient = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { patientId } = request.data || {};
+    const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
@@ -364,7 +362,8 @@ exports.deletePatient = (0, https_1.onCall)(async (request) => {
         console.error('Error in deletePatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro interno ao excluir paciente');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao excluir paciente';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -375,7 +374,7 @@ exports.getPatientStats = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const { patientId } = request.data || {};
+    const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
@@ -402,11 +401,17 @@ exports.getPatientStats = (0, https_1.onCall)(async (request) => {
         FROM exercise_plans
         WHERE patient_id = $1 AND status = 'ativo'`, [patientId]),
         ]);
+        const apptStats = appointmentsResult.rows[0];
         return {
             data: {
-                appointments: appointmentsResult.rows[0],
-                treatment_sessions: parseInt(sessionsResult.rows[0].total_sessions),
-                active_plans: parseInt(plansResult.rows[0].active_plans),
+                appointments: {
+                    total: parseInt(apptStats.total || '0', 10),
+                    completed: parseInt(apptStats.completed || '0', 10),
+                    scheduled: parseInt(apptStats.scheduled || '0', 10),
+                    upcoming: parseInt(apptStats.upcoming || '0', 10),
+                },
+                treatment_sessions: parseInt(sessionsResult.rows[0].total_sessions || '0', 10),
+                active_plans: parseInt(plansResult.rows[0].active_plans || '0', 10),
             },
         };
     }
@@ -414,7 +419,8 @@ exports.getPatientStats = (0, https_1.onCall)(async (request) => {
         console.error('Error in getPatientStats:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
-        throw new https_1.HttpsError('internal', error.message || 'Erro interno ao buscar estatísticas');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar estatísticas';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=patients.js.map

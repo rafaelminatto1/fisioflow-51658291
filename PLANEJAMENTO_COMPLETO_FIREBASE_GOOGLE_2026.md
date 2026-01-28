@@ -1,5 +1,5 @@
 # FisioFlow - Planejamento Completo 2026
-## Ecossistema 100% Google/Firebase
+## Arquitetura Híbrida: Firebase + Cloud SQL
 
 ---
 
@@ -20,26 +20,26 @@ Desenvolver um ecossistema completo de aplicativos FisioFlow centralizado no Goo
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        GOOGLE CLOUD PLATFORM                                │
-│                                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
-│  │   Firebase       │  │   Firebase       │  │   Firebase       │          │
-│  │   Hosting        │  │   Authentication │  │   Firestore      │          │
-│  │   (Web App)      │  │   (Login)        │  │   (Database)     │          │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
-│                                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
-│  │   Firebase       │  │   Firebase       │  │   Firebase       │          │
-│  │   Storage        │  │   Cloud          │  │   Cloud          │          │
-│  │   (Files)        │  │   Functions      │  │   Messaging      │          │
-│  │                  │  │   (API)          │  │   (Push)         │          │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
-│                                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐          │
-│  │   Firebase       │  │   Firebase       │  │   Expo EAS       │          │
-│  │   Analytics      │  │   Crashlytics    │  │   Build          │          │
-│  │   (Metrics)      │  │   (Crashes)      │  │   (iOS Builds)   │          │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘          │
-│                                                                              │
+│                                                                             │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐           │
+│  │   Firebase       │  │   Firebase       │  │   Firestore      │           │
+│  │   Hosting        │  │   Authentication │  │   (NoSQL DB)     │           │
+│  │   (Web App)      │  │   (Login)        │  │   (Realtime)     │           │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘           │
+│                                                                             │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐           │
+│  │   Firebase       │  │   Firebase       │  │   Cloud SQL      │           │
+│  │   Storage        │  │   Cloud          │  │   (PostgreSQL)   │           │
+│  │   (Files)        │  │   Functions      │  │   (Relational)   │           │
+│  │                  │  │   (API)          │  │                  │           │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘           │
+│                                                                             │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐           │
+│  │   Firebase       │  │   Firebase       │  │   Expo EAS       │           │
+│  │   Analytics      │  │   Crashlytics    │  │   Build          │           │
+│  │   (Metrics)      │  │   (Crashes)      │  │   (iOS Builds)   │           │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘           │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,6 +54,19 @@ Desenvolver um ecossistema completo de aplicativos FisioFlow centralizado no Goo
 | **Escalabilidade** | Cresce automaticamente com usuários |
 | **Segurança** | Rules nativos para Firestore e Storage |
 | **Monitoring** | Analytics e Crashlytics integrados |
+
+| **Power Relacional** | Cloud SQL para dados complexos e estruturados |
+| **Realtime** | Firestore para sincronização em tempo real |
+
+### 1.4 Diretrizes: Cloud SQL vs Firestore
+
+| Critério | Usar Cloud SQL (Postgres) | Usar Firestore (NoSQL) |
+|----------|---------------------------|------------------------|
+| **Tipo de Dado** | Dados estruturados, relacionamentos complexos (Agendamentos, Financeiro) | Dados hierárquicos, documentos flexíveis (Perfis, Chats) |
+| **Queries** | Joins complexos, Agregações, SQL | Queries simples, Filtros básicos |
+| **Escalabilidade** | Vertical (Scale up) | Horizontal (Scale out) |
+| **Realtime** | Não (requer polling/sockets) | Sim (Nativo) |
+| **Custo** | Fixo/Hora + Storage | Por operação (Leitura/Escrita) |
 
 ---
 
@@ -570,7 +583,7 @@ export class PatientFirestore {
 
 ---
 
-## 7. Custos 100% Google/Firebase
+## 7. Custos Híbridos (Google Cloud + Firebase)
 
 ### 7.1 Custos Mensais Estimados
 
@@ -578,6 +591,7 @@ export class PatientFirestore {
 |----------------|-------|--------------|
 | **Firebase Hosting** | Blaze | $0 (incluído no plano) |
 | **Cloud Functions** | Pay-as-you-go | $0-15 |
+| **Cloud SQL** | Postgres (Shared) | $15-50 |
 | **Firestore** | Blaze | $0-25 |
 | **Storage** | Blaze | $0-10 |
 | **Authentication** | Blaze | $0 (incluído) |
@@ -586,7 +600,7 @@ export class PatientFirestore {
 | **Crashlytics** | Gratuito | $0 |
 | **Expo EAS** | Free/Production | $0-29 |
 | **Apple Developer** | Anual | $8.25/mês |
-| **TOTAL** | | **$8-87/mês** |
+| **TOTAL** | | **$23-137/mês** |
 
 ### 7.2 Custos por Usuário
 

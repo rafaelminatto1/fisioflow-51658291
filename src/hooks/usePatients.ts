@@ -58,6 +58,10 @@ export const useActivePatients = () => {
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
 
+  // DEBUG: Log profile and organizationId
+  console.log('📊 [useActivePatients] Profile:', profile);
+  console.log('📊 [useActivePatients] OrganizationId:', organizationId);
+
   // Setup realtime subscription via Ably
   useEffect(() => {
     if (!organizationId) {

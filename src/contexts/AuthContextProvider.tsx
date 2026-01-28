@@ -3,7 +3,7 @@ import { User } from 'firebase/auth';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
 import { getFirebaseDb, doc, getDoc, setDoc } from '@/integrations/firebase/app';
 import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore } from 'firebase/firestore'; // Import these explicitly to match usage pattern
-// import { profileApi } from '@/integrations/firebase/functions'; // Removed unused
+import { profileApi } from '@/integrations/firebase/functions'; // Use Firebase Functions API
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
 import { logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +36,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           email: firebaseUser.email || null,
           avatar_url: firebaseUser.photoURL || null,
           phone: null,
-          organization_id: null,
+          organization_id: 'default-org', // TEMPORÁRIO: Usar 'default-org' para single-clinic mode
           onboarding_completed: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -46,9 +46,15 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return {
           id: profileRef.id,
           user_id: firebaseUser.uid,
-          full_name: firebaseUser.displayName || null,
-          email: firebaseUser.email || null,
-          role: 'paciente' // Default role
+          full_name: firebaseUser.displayName || 'Usuário',
+          email: firebaseUser.email || undefined,
+          role: 'fisioterapeuta', // Default role
+          phone: undefined,
+          organization_id: 'default-org',
+          onboarding_completed: false,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         } as Profile;
       }
       return { id: profileSnap.id, ...profileSnap.data() } as Profile;
@@ -60,19 +66,29 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const fetchProfile = useCallback(async (firebaseUser: User): Promise<Profile | null> => {
     try {
-      // Usar a mesma lógica de "ensure" para garantir criação
+      // TEMPORÁRIO: Usar Firestore para profile (funciona)
+      // TODO: Migrar completamente para Firebase Functions/PostgreSQL quando Cloud SQL estiver configurado
+      console.log('[fetchProfile] Using Firestore (TEMPORARY while Cloud SQL is being configured)...');
       const profile = await ensureProfile(firebaseUser);
 
-      // Se tivermos o perfil, podemos buscar a role extra se necessário, 
-      // mas por enquanto assumimos que o ensure retorna tudo.
-      // NOTE: User roles might be in 'user_roles' collection too? 
-      // Rules suggest 'user_roles' exists. Let's try to merge if needed, 
-      // but 'profiles' usually has 'role'. 
-      // Let's stick to reading 'profiles' first as per existing code structure.
+      // Tentar sincronizar organization_id com PostgreSQL em background
+      if (profile) {
+        profileApi.getCurrent().then(pgProfile => {
+          if (pgProfile?.organization_id && (!profile.organization_id || profile.organization_id === 'default-org')) {
+            console.log('[fetchProfile] Syncing organization_id from PostgreSQL:', pgProfile.organization_id);
+            // Atualizar Firestore com organization_id do PostgreSQL
+            const db = getFirebaseDb();
+            const profileRef = docRef(db, 'profiles', firebaseUser.uid);
+            setDocToFirestore(profileRef, { organization_id: pgProfile.organization_id }, { merge: true });
+          }
+        }).catch(err => {
+          console.warn('[fetchProfile] Could not sync organization_id from PostgreSQL:', err);
+        });
+      }
 
       return profile;
     } catch (err) {
-      logger.error('Erro ao buscar perfil via Firestore', err, 'AuthContextProvider');
+      logger.error('Erro ao buscar perfil', err, 'AuthContextProvider');
       return null;
     }
   }, []);

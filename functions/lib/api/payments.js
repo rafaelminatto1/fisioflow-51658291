@@ -1,8 +1,4 @@
 "use strict";
-/**
- * API Functions: Payments
- * Cloud Functions para gestão de pagamentos
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -39,27 +35,15 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createPayment = exports.getPatientFinancialSummary = exports.listPayments = void 0;
 const https_1 = require("firebase-functions/v2/https");
-const pg_1 = require("pg");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
-/**
- * Helper para verificar auth
- */
-async function getAuth(request) {
-    if (!request.auth?.token) {
-        throw new https_1.HttpsError('unauthenticated', 'Autenticação necessária');
-    }
-    return (0, auth_1.authorizeRequest)(request.auth.token);
-}
-/**
- * Lista pagamentos de um paciente
- */
 exports.listPayments = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, limit = 50, offset = 0 } = request.data || {};
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, limit = 50, offset = 0 } = request.data;
+    const pool = (0, init_1.getPool)();
     try {
         let query = `
       SELECT p.*,
@@ -72,7 +56,7 @@ exports.listPayments = (0, https_1.onCall)(async (request) => {
     `;
         const params = [auth.organizationId];
         if (patientId) {
-            query += ` AND p.patient_id = $2`;
+            query += ` AND p.patient_id = $${params.length + 1}`;
             params.push(patientId);
         }
         query += ` ORDER BY p.payment_date DESC, p.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
@@ -80,23 +64,24 @@ exports.listPayments = (0, https_1.onCall)(async (request) => {
         const result = await pool.query(query, params);
         return { data: result.rows };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in listPayments:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao listar pagamentos';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Busca resumo financeiro do paciente
- */
 exports.getPatientFinancialSummary = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se paciente pertence à organização
         const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
@@ -138,27 +123,28 @@ exports.getPatientFinancialSummary = (0, https_1.onCall)(async (request) => {
             active_packages: packages.rows,
         };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in getPatientFinancialSummary:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar resumo financeiro';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-/**
- * Cria um novo pagamento
- */
 exports.createPayment = (0, https_1.onCall)(async (request) => {
-    const auth = await getAuth(request);
-    const { patientId, appointmentId, amountCents, method, paymentDate, notes } = request.data || {};
+    if (!request.auth || !request.auth.token) {
+        throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
+    }
+    const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
+    const { patientId, appointmentId, amountCents, method, paymentDate, notes } = request.data;
     if (!patientId || !amountCents || !method) {
         throw new https_1.HttpsError('invalid-argument', 'patientId, amountCents e method são obrigatórios');
     }
-    const pool = new pg_1.Pool({
-        connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
-        ssl: { rejectUnauthorized: false },
-    });
+    const pool = (0, init_1.getPool)();
     try {
         // Verificar se paciente existe
-        const patient = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
-        if (patient.rows.length === 0) {
+        const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
+        if (patientCheck.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Paciente não encontrado');
         }
         // Verificar se appointment existe (se fornecido)
@@ -184,15 +170,24 @@ exports.createPayment = (0, https_1.onCall)(async (request) => {
         ]);
         const payment = result.rows[0];
         // Publicar no Ably
-        const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-        await realtime.publishPatientUpdate(patientId, {
-            type: 'payment_created',
-            paymentId: payment.id,
-        });
+        try {
+            const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
+            await realtime.publishPatientUpdate(patientId, {
+                type: 'payment_created',
+                paymentId: payment.id,
+            });
+        }
+        catch (e) {
+            console.error('Error publishing to Ably:', e);
+        }
         return { data: payment };
     }
-    finally {
-        await pool.end();
+    catch (error) {
+        console.error('Error in createPayment:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao criar pagamento';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=payments.js.map

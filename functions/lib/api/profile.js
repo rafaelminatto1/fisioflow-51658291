@@ -36,7 +36,8 @@ exports.getProfile = (0, https_1.onCall)(async (request) => {
         if (error instanceof https_1.HttpsError)
             throw error;
         console.error('Erro ao buscar perfil:', error);
-        throw new https_1.HttpsError('internal', 'Erro interno ao buscar perfil');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar perfil';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 /**
@@ -47,7 +48,7 @@ exports.updateProfile = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const authContext = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const updates = request.data || {};
+    const updates = request.data;
     const pool = (0, init_1.getPool)();
     try {
         // Campos permitidos para atualização via frontend
@@ -94,7 +95,8 @@ exports.updateProfile = (0, https_1.onCall)(async (request) => {
         if (error instanceof https_1.HttpsError)
             throw error;
         console.error('Erro ao atualizar perfil:', error);
-        throw new https_1.HttpsError('internal', 'Erro interno ao atualizar perfil');
+        const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar perfil';
+        throw new https_1.HttpsError('internal', errorMessage);
     }
 });
 //# sourceMappingURL=profile.js.map
