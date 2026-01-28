@@ -234,7 +234,9 @@
       "Bash(/tmp/cloud-sql-proxy:*)",
       "Bash(timeout:*)",
       "Bash(PGPASSWORD=fisioflow2024 psql:*)",
-      "Bash(do)"
+      "Bash(do)",
+      "Bash(git reset:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": [],
