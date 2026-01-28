@@ -183,9 +183,12 @@ exports.createPatient = (0, https_1.onCall)(async (request) => {
             }
         }
         // [AUTO-FIX] Ensure organization exists to satisfy FK constraint
-        await pool.query(`INSERT INTO organizations (id, name, slug, active)
-       VALUES ($1, 'Clínica Principal', 'default-org', true)
-       ON CONFLICT (id) DO NOTHING`, [auth.organizationId]);
+        console.log('[createPatient] Target Org ID:', auth.organizationId);
+        const orgInsertSql = `INSERT INTO organizations (id, name, slug, active, email)
+       VALUES ($1, 'Clínica Principal', 'default-org', true, 'admin@fisioflow.com.br')
+       ON CONFLICT (id) DO NOTHING`;
+        console.log('[createPatient] Org Insert SQL:', orgInsertSql);
+        await pool.query(orgInsertSql, [auth.organizationId]);
         // Inserir paciente
         const result = await pool.query(`INSERT INTO patients (
         name, cpf, email, phone, birth_date, gender,
