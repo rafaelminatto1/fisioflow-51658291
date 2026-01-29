@@ -16,7 +16,6 @@ interface WeeklyChallenge {
     start_date: string;
     end_date: string;
     target: { type: string; count: number };
-    icon: string | null;
 }
 
 interface PatientChallenge {
@@ -37,7 +36,7 @@ export default function WeeklyChallenges({ patientId }: WeeklyChallengesProps) {
             const today = new Date().toISOString().split('T')[0];
             const { data, error } = await supabase
                 .from('weekly_challenges')
-                .select('*')
+                .select('id, title, description, xp_reward, point_reward, start_date, end_date, target')
                 .eq('is_active', true)
                 .lte('start_date', today)
                 .gte('end_date', today)
