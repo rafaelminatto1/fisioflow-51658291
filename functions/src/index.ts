@@ -85,6 +85,10 @@ import * as apiProfile from './api/profile';
 export const getProfile = apiProfile.getProfile;
 export const updateProfile = apiProfile.updateProfile;
 
+// API de Estatísticas de Pacientes
+import { getPatientStats } from './api/patient-stats';
+export { getPatientStats };
+
 // API de Pagamentos
 import * as apiPayments from './api/payments';
 export const listPayments = apiPayments.listPayments;
@@ -129,6 +133,10 @@ import { runMigration } from './runMigration';
 export { runMigration };
 import { runMigrationHttp } from './runMigrationHttp';
 export { runMigrationHttp };
+import { createPerformanceIndexes } from './migrations/create-performance-indexes';
+export { createPerformanceIndexes };
+import { setupMonitoring } from './api/setup-monitoring';
+export { setupMonitoring };
 
 // ============================================================================
 // AI FUNCTIONS

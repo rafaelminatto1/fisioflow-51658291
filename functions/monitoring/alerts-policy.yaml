@@ -1,0 +1,192 @@
+# Cloud Monitoring Alert Policies for FisioFlow
+# Estas políticas podem ser importadas via gcloud ou criadas via console
+
+# Política 1: Error Rate Alto
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-error-rate-alert
+  displayName: "Alta Taxa de Erro - Cloud Functions"
+  description: "Alerta quando a taxa de erro das Cloud Functions excede 5%"
+spec:
+  conditions:
+    - displayName: "High Error Rate"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 300s
+            perSeriesAligner: ALIGN_FRACTION_TRUE
+            crossSeriesReducer: REDUCE_MEAN
+        comparison: COMPARISON_GT
+        duration: 300s
+        filter: |
+          resource.type = "cloud_function"
+          metric.type = "cloudfunctions.googleapis.com/function/execution_count"
+          metric.label."execution_status" = "execution_status"
+        thresholdValue: 0.05
+        trigger:
+          count: 1
+  alertStrategy:
+    notificationRateLimit:
+      period: 300s
+  enabled: true
+  notificationChannels:
+    - projects/fisioflow-migration/notificationChannels/0-email-channel
+  severity: "WARNING"
+---
+# Política 2: Latência Alta
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-high-latency-alert
+  displayName: "Alta Latência - Cloud Functions"
+  description: "Alerta quando o tempo de execução médio excede 10 segundos"
+spec:
+  conditions:
+    - displayName: "High Latency"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 300s
+            perSeriesAligner: ALIGN_PERCENTILE_99
+        comparison: COMPARISON_GT
+        duration: 300s
+        filter: |
+          resource.type = "cloud_function"
+          metric.type = "cloudfunctions.googleapis.com/function/execution_times"
+        thresholdValue: 10000
+        trigger:
+          count: 1
+  alertStrategy:
+    notificationRateLimit:
+      period: 300s
+  enabled: true
+  severity: "WARNING"
+---
+# Política 3: Quota Exceeded
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-quota-exceeded-alert
+  displayName: "Quota Excedida - Cloud Functions"
+  description: "Alerta imediato quando quota é excedida"
+spec:
+  conditions:
+    - displayName: "Quota Exceeded"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 60s
+            perSeriesAligner: ALIGN_COUNT
+        comparison: COMPARISON_GT
+        duration: 60s
+        filter: |
+          resource.type = "cloud_function"
+          metric.type = "cloudfunctions.googleapis.com/function/execution_count"
+          metric.label."response_code" = "429"
+        thresholdValue: 0
+        trigger:
+          count: 1
+  alertStrategy:
+    autoClose: 1800s
+  enabled: true
+  severity: "CRITICAL"
+---
+# Política 4: Database Connection Issues
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-database-connection-alert
+  displayName: "Problemas de Conexão - Cloud SQL"
+  description: "Alerta quando há erros de conexão com o banco de dados"
+spec:
+  conditions:
+    - displayName: "Database Connection Errors"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 300s
+            perSeriesAligner: ALIGN_RATE
+        comparison: COMPARISON_GT
+        duration: 300s
+        filter: |
+          resource.type = "cloudsql_database"
+          metric.type = "cloudsql.googleapis.com/database/network/errors"
+        thresholdValue: 0.01
+        trigger:
+          count: 1
+  enabled: true
+  severity: "CRITICAL"
+---
+# Política 5: High Memory Usage
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-high-memory-alert
+  displayName: "Alto Uso de Memória - Cloud Functions"
+  description: "Alerta quando o uso de memória excede 80%"
+spec:
+  conditions:
+    - displayName: "High Memory Usage"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 300s
+            perSeriesAligner: ALIGN_MEAN
+        comparison: COMPARISON_GT
+        duration: 300s
+        filter: |
+          resource.type = "cloud_function"
+          metric.type = "cloudfunctions.googleapis.com/function/user_memory_bytes"
+        thresholdValue: 134217728  # 80% of 256MB
+        trigger:
+          count: 1
+  enabled: true
+  severity: "WARNING"
+---
+# Política 6: Cold Start Rate
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-cold-start-alert
+  displayName: "Alta Taxa de Cold Starts"
+  description: "Alerta quando mais de 30% das execuções são cold starts"
+spec:
+  conditions:
+    - displayName: "High Cold Start Rate"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 300s
+            perSeriesAligner: ALIGN_FRACTION_TRUE
+        comparison: COMPARISON_GT
+        duration: 600s
+        filter: |
+          resource.type = "cloud_function"
+          metric.type = "cloudfunctions.googleapis.com/function/execution_count"
+          metric.label."execution" = "cold_start"
+        thresholdValue: 0.3
+        trigger:
+          count: 1
+  enabled: true
+  severity: "INFO"
+---
+# Política 7: App Check Failure Rate
+apiVersion: monitoring/v3
+kind: AlertPolicy
+metadata:
+  name: fisioflow-appcheck-failures-alert
+  displayName: "Falhas no App Check"
+  description: "Alerta quando há muitas falhas de verificação do App Check"
+spec:
+  conditions:
+    - displayName: "App Check Failures"
+      conditionThreshold:
+        aggregations:
+          - alignmentPeriod: 300s
+            perSeriesAligner: ALIGN_RATE
+        comparison: COMPARISON_GT
+        duration: 300s
+        filter: |
+          resource.type = "cloud_function"
+          metric.type = "cloudfunctions.googleapis.com/function/execution_count"
+          metric.label."response_code" = "403"
+        thresholdValue: 10
+        trigger:
+          count: 1
+  enabled: true
+  severity: "WARNING"

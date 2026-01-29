@@ -1,0 +1,17 @@
+displayName: Alta Taxa de Erro - Cloud Functions
+conditions:
+  - displayName: High Error Rate
+    conditionThreshold:
+      filter: resource.type="cloud_function" metric.type="cloudfunctions.googleapis.com/function/execution_count" metric.labels."execution_status"="execution_status"
+      comparison: COMPARISON_GT
+      thresholdValue: 0.05
+      duration: 300s
+      aggregations:
+      - alignmentPeriod: 300s
+        perSeriesAligner: ALIGN_FRACTION_TRUE
+        crossSeriesReducer: REDUCE_MEAN
+documentation:
+  content: A taxa de erro das Cloud Functions está acima de 5%. Verifique os logs.
+  mime_type: text/markdown
+severity: WARNING
+enabled: true
