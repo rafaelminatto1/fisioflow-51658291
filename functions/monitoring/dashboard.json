@@ -1,0 +1,264 @@
+{
+  "displayName": "FisioFlow Overview Dashboard",
+  "gridLayout": {
+    "columns": "2",
+    "widgets": [
+      {
+        "title": "Cloud Functions - Request Rate",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_count\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_RATE"
+                  }
+                }
+              },
+              "plotType": "LINE"
+            }
+          ],
+          "yAxis": {
+            "label": "Requests per second",
+            "minValue": 0
+          }
+        }
+      },
+      {
+        "title": "Cloud Functions - Error Rate",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_count\" metric.labels.\"execution_status\"=\"execution_status\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_FRACTION_TRUE",
+                    "crossSeriesReducer": "REDUCE_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE"
+            }
+          ],
+          "yAxis": {
+            "label": "Error rate",
+            "minValue": 0,
+            "maxValue": 1
+          }
+        }
+      },
+      {
+        "title": "Cloud Functions - Latency (p50, p95, p99)",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_times\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_PERCENTILE_50"
+                  }
+                },
+                "plotType": "LINE",
+                "minAlignmentPeriod": "60s"
+              },
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_times\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "perSeriesAligner": "ALIGN_PERCENTILE_95"
+                    }
+                  },
+                  "plotType": "LINE"
+                },
+                {
+                  "timeSeriesQuery": {
+                    "timeSeriesFilter": {
+                      "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_times\"",
+                      "aggregation": {
+                        "alignmentPeriod": "300s",
+                        "perSeriesAligner": "ALIGN_PERCENTILE_99"
+                      }
+                  },
+                  "plotType": "LINE"
+                }
+            ]
+          },
+          "yAxis": {
+            "label": "Latency (ms)",
+            "minValue": 0
+          }
+        }
+      },
+      {
+        "title": "Cloud SQL - Database Connections",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloudsql_database\" metric.type=\"cloudsql.googleapis.com/database/network/connections\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE"
+            }
+          ],
+          "yAxis": {
+            "label": "Active connections",
+            "minValue": 0
+          }
+        }
+      },
+      {
+        "title": "Active Users",
+        "scorecard": {
+          "timeSeriesQuery": {
+            "timeSeriesFilter": {
+              "filter": "resource.type=\"firebase_project\" metric.type=\"firebaseauth.googleapis.com/user/active_total\"",
+              "aggregation": {
+                "alignmentPeriod": "86400s",
+                "perSeriesAligner": "ALIGN_MEAN"
+              }
+            }
+          },
+          "gaugeView": {
+            "lowerBound": 0,
+            "upperBound": 1000
+          },
+          "thresholds": [
+            {
+              "color": "RED",
+              "direction": "ABOVE",
+              "label": "Critical",
+              "value": 900
+            },
+            {
+              "color": "YELLOW",
+              "direction": "ABOVE",
+              "label": "Warning",
+              "value": 700
+            },
+            {
+              "color": "GREEN",
+              "direction": "ABOVE",
+              "label": "Normal"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Cloud Functions - Memory Usage",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/user_memory_bytes\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE"
+            }
+          ],
+          "yAxis": {
+            "label": "Memory (bytes)",
+            "minValue": 0
+          }
+        }
+      },
+      {
+        "title": "Firestore - Read Operations",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"firestore_database\" metric.type=\"firestore.googleapis.com/api/request_count\" metric.labels.\"grpc_method_code\"!=\"OK\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_RATE"
+                  }
+                }
+              },
+              "plotType": "LINE"
+            }
+          ],
+          "yAxis": {
+            "label": "Operations per second",
+            "minValue": 0
+          }
+        }
+      },
+      {
+        "title": "Top 5 Slowest Functions",
+        "table": {
+          "timeSeriesQuery": {
+            "timeSeriesFilter": {
+              "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_times\"",
+              "aggregation": {
+                "alignmentPeriod": "300s",
+                "perSeriesAligner": "ALIGN_PERCENTILE_99",
+                "groupByFields": [
+                  {
+                    "field": "resource.label.function_name"
+                  }
+                ],
+                "crossSeriesReducer": "REDUCE_MEAN"
+              },
+              "ranking": {
+                "method": "METHOD_MEAN",
+                "numBuckets": 5
+              }
+            }
+          }
+        }
+      },
+      {
+        "title": "App Check - Verification Success Rate",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"cloud_function\" metric.type=\"cloudfunctions.googleapis.com/function/execution_count\" metric.labels.\"response_code\"!=\"403\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_FRACTION_TRUE",
+                    "crossSeriesReducer": "REDUCE_MEAN"
+                  }
+                }
+              },
+              "plotType": "LINE"
+            }
+          ],
+          "yAxis": {
+            "label": "Success rate",
+            "minValue": 0,
+            "maxValue": 1
+          }
+        }
+      },
+      {
+        "title": "Error Log Entries",
+        "logsField": {
+          "logFilter": "severity>=ERROR"
+        }
+      }
+    ]
+  }
+}

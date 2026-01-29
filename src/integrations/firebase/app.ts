@@ -5,7 +5,7 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 
@@ -69,10 +69,40 @@ export function getFirebaseAuth(): Auth {
 
 /**
  * Obtém a instância do Firebase Firestore
+ * Configura cache persistente para offline support
  */
-export function getFirebaseDb(): Firestore {
+export async function getFirebaseDb(): Promise<Firestore> {
   if (!dbInstance) {
-    dbInstance = getFirestore(getFirebaseApp());
+    const app = getFirebaseApp();
+    dbInstance = getFirestore(app);
+
+    // Configurar cache do Firestore
+    // Em desenvolvimento, usar cache em memória para evitar problemas
+    // Em produção, usar IndexedDB para persistência
+    if (import.meta.env.PROD) {
+      try {
+        // Habilitar persistência com multi-tab support
+        await enableMultiTabIndexedDbPersistence(dbInstance);
+        console.log('🗄️ Firestore: Multi-tab persistence enabled');
+      } catch (err: any) {
+        if (err.code === 'failed-precondition') {
+          console.warn('⚠️ Firestore: Persistence failed - multiple tabs open');
+        } else if (err.code === 'unimplemented') {
+          console.warn('⚠️ Firestore: Persistence not supported in this browser');
+        } else {
+          console.error('❌ Firestore: Persistence error:', err);
+        }
+      }
+    } else {
+      // Em desenvolvimento, usar cache sem persistência
+      console.log('🔥 Firestore: Running in development mode (no persistence)');
+    }
+
+    // Configurar cache settings otimizados
+    // Aumentar o tamanho do cache em memória (40 MB padrão)
+    dbInstance.settings({
+      cacheSizeBytes: 40 * 1024 * 1024, // 40 MB
+    });
   }
   return dbInstance;
 }
@@ -148,12 +178,19 @@ export function isFirebaseConfigured(): boolean {
 
 /**
  * Exporta as instâncias padrão
+ * Nota: db agora é async devido à configuração de persistência
  */
 export const app = getFirebaseApp();
 export const auth = getFirebaseAuth();
-export const db = getFirebaseDb();
+export const db = getFirebaseDb(); // Promise<Firestore>
 export const storage = getFirebaseStorage();
 export const functions = getFirebaseFunctions();
+
+/**
+ * Versão síncrona para compatibilidade (use com cautela)
+ * A persistência pode não estar inicializada
+ */
+export const dbSync = getFirestore(getFirebaseApp());
 
 /**
  * Re-export Firestore functions for convenience
