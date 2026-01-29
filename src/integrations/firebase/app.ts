@@ -20,6 +20,9 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// Nome único da aplicação para isolarar de outros projetos Firebase locais
+const APP_NAME = 'fisioflow-app';
+
 // Validar configuração
 const requiredKeys: (keyof typeof firebaseConfig)[] = [
   'apiKey',
@@ -49,7 +52,7 @@ let functionsInstance: Functions | null = null;
  */
 export function getFirebaseApp(): FirebaseApp {
   if (!appInstance) {
-    appInstance = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    appInstance = getApps().length === 0 ? initializeApp(firebaseConfig, APP_NAME) : getApps()[0];
   }
   return appInstance;
 }
