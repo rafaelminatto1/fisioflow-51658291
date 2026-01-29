@@ -62,16 +62,22 @@ export const useNotifications = (limitValue = 10) => {
       const user = auth.currentUser;
       if (!user) return [];
 
-      const q = query(
-        collection(db, 'notifications'),
-        where('user_id', '==', user.uid),
-        orderBy('created_at', 'desc'),
-        limit(limitValue)
-      );
+      try {
+        const q = query(
+          collection(db, 'notifications'),
+          where('user_id', '==', user.uid),
+          orderBy('created_at', 'desc'),
+          limit(limitValue)
+        );
 
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(convertDocToNotification);
-      return data;
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(convertDocToNotification);
+        return data;
+      } catch (error) {
+        // Se a coleção não existir ainda, retorna array vazio
+        console.warn('[useNotifications] Collection does not exist yet:', error);
+        return [];
+      }
     },
     staleTime: 30000, // 30 seconds
     refetchInterval: 30000, // Refresh every 30 seconds

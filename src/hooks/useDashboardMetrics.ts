@@ -75,16 +75,28 @@ export const useDashboardMetrics = () => {
 
       // Helper function to get count from snapshot
       const getCount = async (collectionName: string, constraints: any[] = []) => {
-        const q = query(collection(db, collectionName), ...constraints);
-        const snapshot = await getCountFromServer(q);
-        return snapshot.data().count;
+        try {
+          const q = query(collection(db, collectionName), ...constraints);
+          const snapshot = await getCountFromServer(q);
+          return snapshot.data().count;
+        } catch (error: any) {
+          // Se a coleção não existir ou houver permissão negada, retorna 0
+          console.warn(`[useDashboardMetrics] Collection ${collectionName} count failed:`, error?.message || error);
+          return 0;
+        }
       };
 
       // Helper function to get docs with constraints
       const getDocsData = async (collectionName: string, constraints: any[] = []) => {
-        const q = query(collection(db, collectionName), ...constraints);
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+          const q = query(collection(db, collectionName), ...constraints);
+          const snapshot = await getDocs(q);
+          return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error: any) {
+          // Se a coleção não existir ou houver permissão negada, retorna array vazio
+          console.warn(`[useDashboardMetrics] Collection ${collectionName} not found:`, error?.message || error);
+          return [];
+        }
       };
 
       // Paralelizar todas as queries independentes usando Promise.all

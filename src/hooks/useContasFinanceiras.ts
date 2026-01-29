@@ -45,38 +45,44 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
   return useQuery({
     queryKey: ['contas-financeiras', tipo, status],
     queryFn: async () => {
-      let q = query(
-        collection(db, 'contas_financeiras'),
-        orderBy('data_vencimento', 'asc')
-      );
-
-      if (tipo) {
-        q = query(
+      try {
+        let q = query(
           collection(db, 'contas_financeiras'),
-          where('tipo', '==', tipo),
           orderBy('data_vencimento', 'asc')
         );
-      }
 
-      if (status) {
         if (tipo) {
           q = query(
             collection(db, 'contas_financeiras'),
             where('tipo', '==', tipo),
-            where('status', '==', status),
-            orderBy('data_vencimento', 'asc')
-          );
-        } else {
-          q = query(
-            collection(db, 'contas_financeiras'),
-            where('status', '==', status),
             orderBy('data_vencimento', 'asc')
           );
         }
-      }
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
+        if (status) {
+          if (tipo) {
+            q = query(
+              collection(db, 'contas_financeiras'),
+              where('tipo', '==', tipo),
+              where('status', '==', status),
+              orderBy('data_vencimento', 'asc')
+            );
+          } else {
+            q = query(
+              collection(db, 'contas_financeiras'),
+              where('status', '==', status),
+              orderBy('data_vencimento', 'asc')
+            );
+          }
+        }
+
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
+      } catch (error) {
+        // Se a coleção não existir ainda, retorna array vazio
+        console.warn('[useContasFinanceiras] Collection does not exist yet:', error);
+        return [];
+      }
     },
     staleTime: 1000 * 60 * 2, // 2 minutos
     gcTime: 1000 * 60 * 5, // 5 minutos
