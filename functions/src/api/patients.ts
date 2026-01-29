@@ -4,8 +4,10 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET } from '../init';
 import { authorizeRequest } from '../middleware/auth';
+import { verifyAppCheck } from '../middleware/app-check';
+import { enforceRateLimit, RATE_LIMITS } from '../middleware/rate-limit';
 import { Patient } from '../types/models';
 
 /**
@@ -28,7 +30,11 @@ interface ListPatientsResponse {
 /**
  * Lista pacientes com filtros opcionais
  */
-export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>(async (request) => {
+export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>(
+  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
+  vpcConnector: "cloudsql-connector",
+  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  async (request) => {
   console.log('[listPatients] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -37,6 +43,14 @@ export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResp
   }
 
   console.log('[listPatients] Auth token present, uid:', request.auth.uid);
+
+  // Verificar App Check
+  verifyAppCheck(request);
+  console.log('[listPatients] App Check verified');
+
+  // Verificar rate limit
+  await enforceRateLimit(request, RATE_LIMITS.callable);
+  console.log('[listPatients] Rate limit check passed');
 
   const auth = await authorizeRequest(request.auth.token);
   const { status, search, limit = 50, offset = 0 } = request.data;
@@ -128,11 +142,19 @@ interface GetPatientResponse {
 /**
  * Busca um paciente por ID
  */
-export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>(async (request) => {
+export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>(
+  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
+  vpcConnector: "cloudsql-connector",
+  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
+  verifyAppCheck(request);
+  console.log('App Check verified');
+  verifyAppCheck(request);
+  console.log("App Check verified");
   const { patientId, profileId } = request.data;
 
   if (!patientId && !profileId) {
@@ -191,7 +213,11 @@ interface CreatePatientResponse {
 /**
  * Cria um novo paciente
  */
-export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>(async (request) => {
+export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>(
+  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
+  vpcConnector: "cloudsql-connector",
+  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  async (request) => {
   console.log('[createPatient] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -200,6 +226,14 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
   }
 
   console.log('[createPatient] Auth token present, uid:', request.auth.uid);
+
+  // Verificar App Check
+  verifyAppCheck(request);
+  console.log('[createPatient] App Check verified');
+
+  // Verificar rate limit
+  await enforceRateLimit(request, RATE_LIMITS.callable);
+  console.log('[createPatient] Rate limit check passed');
 
   const auth = await authorizeRequest(request.auth.token);
   const data = request.data;
@@ -317,11 +351,19 @@ interface UpdatePatientResponse {
 /**
  * Atualiza um paciente existente
  */
-export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>(async (request) => {
+export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>(
+  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
+  vpcConnector: "cloudsql-connector",
+  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
+  verifyAppCheck(request);
+  console.log('App Check verified');
+  verifyAppCheck(request);
+  console.log("App Check verified");
   const { patientId, ...updates } = request.data;
 
   if (!patientId) {
@@ -425,11 +467,19 @@ interface DeletePatientResponse {
 /**
  * Remove (soft delete) um paciente
  */
-export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>(async (request) => {
+export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>(
+  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
+  vpcConnector: "cloudsql-connector",
+  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
+  verifyAppCheck(request);
+  console.log('App Check verified');
+  verifyAppCheck(request);
+  console.log("App Check verified");
   const { patientId } = request.data;
 
   if (!patientId) {
@@ -493,11 +543,19 @@ interface GetPatientStatsResponse {
 /**
  * Busca estatísticas de um paciente
  */
-export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>(async (request) => {
+export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>(
+  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
+  vpcConnector: "cloudsql-connector",
+  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
+  verifyAppCheck(request);
+  console.log('App Check verified');
+  verifyAppCheck(request);
+  console.log("App Check verified");
   const { patientId } = request.data;
 
   if (!patientId) {
