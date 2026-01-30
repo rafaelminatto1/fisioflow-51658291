@@ -7,6 +7,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { authorizeRequest } from '../middleware/auth';
 import { getPool } from '../init';
 import { Profile } from '../types/models';
+import { logger } from '../lib/logger';
 
 interface GetProfileResponse {
     data: Profile;
@@ -45,7 +46,7 @@ export const getProfile = onCall<{}, Promise<GetProfileResponse>>({ cors: true }
         return { data: result.rows[0] as Profile };
     } catch (error: unknown) {
         if (error instanceof HttpsError) throw error;
-        console.error('Erro ao buscar perfil:', error);
+        logger.error('Erro ao buscar perfil:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar perfil';
         throw new HttpsError('internal', errorMessage);
     }
