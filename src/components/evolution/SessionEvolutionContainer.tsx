@@ -376,7 +376,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             GamificationNotificationService.xpAwarded(xpResult.xpAwarded, description, !!xpResult.newLevel);
           }
         } catch (xpError) {
-          console.warn('Failed to award XP:', xpError);
+          logger.warn('Failed to award XP', xpError, 'SessionEvolutionContainer');
           // Don't fail the save if XP award fails
         }
       }

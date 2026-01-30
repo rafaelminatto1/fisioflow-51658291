@@ -81,6 +81,7 @@ import type {
   SessionEventData,
   TimelineEventType
 } from '@/types/evolution';
+import { logger } from '@/lib/errors/logger';
 
 interface EvolutionTimelineProps {
   patientId: string;
@@ -185,7 +186,7 @@ const SessionDetailsModal: React.FC<{
           .maybeSingle();
 
         if (error) {
-          console.error('Erro ao buscar exercícios:', error);
+          logger.error('Erro ao buscar exercícios', error, 'EvolutionTimeline');
           setSessionExercises([]);
         } else if (data?.exercises_performed) {
           setSessionExercises(data.exercises_performed);
