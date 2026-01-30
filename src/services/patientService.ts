@@ -78,7 +78,7 @@ export const PatientService = {
                 if (result.success) {
                     validPatients.push(result.data);
                 } else {
-                    console.warn(`Patient validation failed for ${dbPatient.id}:`, result.error);
+                    logger.warn(`Patient validation failed for ${dbPatient.id}`, { error: result.error }, 'PatientService');
                     // Fallback: use mapped object even if incomplete, to ensure it appears in UI
                     // We only strictly require ID and Name for the combobox
                     if (mapped.id && mapped.name) {
@@ -105,10 +105,10 @@ export const PatientService = {
             // TEMP: Removendo filtro de status para debug
             const response = await patientsApi.list({ limit: 1000 });
 
-            console.log('📊 [PatientService] Raw response:', response);
-            console.log('📊 [PatientService] response.data:', response.data);
-            console.log('📊 [PatientService] response.data type:', typeof response.data);
-            console.log('📊 [PatientService] Is array?:', Array.isArray(response.data));
+            logger.debug('📊 [PatientService] Raw response', { response }, 'PatientService');
+            logger.debug('📊 [PatientService] response.data', { data: response.data }, 'PatientService');
+            logger.debug('📊 [PatientService] response.data type', { type: typeof response.data }, 'PatientService');
+            logger.debug('📊 [PatientService] Is array?', { isArray: Array.isArray(response.data) }, 'PatientService');
 
             const patients = response.data || [];
             logger.info('PatientService: patients fetched from Firebase Functions', {
