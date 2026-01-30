@@ -26,6 +26,7 @@ import {
 import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';
 import { useDebounce } from '@/hooks/performance/useDebounce';
+import { logger } from '@/lib/errors/logger';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
@@ -127,7 +128,7 @@ export function NewPrescriptionModal({
       setValidityDays('30');
       setSelectedExercises([]);
     } catch (error) {
-      console.error(error);
+      logger.error('Erro ao criar prescrição', error, 'NewPrescriptionModal');
     }
   };
 
