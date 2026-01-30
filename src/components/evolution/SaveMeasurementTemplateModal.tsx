@@ -35,6 +35,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { db, collection, addDoc } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import { collection as collectionRef, addDoc as addDocToFirestore } from 'firebase/firestore';
 
 interface MeasurementField {
@@ -97,7 +98,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
             onOpenChange(false);
             setFormData({ name: '', category: 'Personalizado', target_joint: '', purpose: '' });
         } catch (error: unknown) {
-            console.error('Erro ao salvar modelo:', error);
+            logger.error('Erro ao salvar modelo', error, 'SaveMeasurementTemplateModal');
             const message = error instanceof Error ? error.message : 'Erro desconhecido';
             toast.error('Erro ao salvar modelo', {
                 description: message
