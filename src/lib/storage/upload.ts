@@ -33,6 +33,7 @@ import {
   type UploadResult,
   type StorageStats,
 } from '@/lib/firebase/storage';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // RE-EXPORTS FOR BACKWARD COMPATIBILITY
@@ -67,7 +68,7 @@ export { STORAGE_FOLDERS, SIZE_LIMITS };
  * @deprecated Use uploadFile() with { public: true } instead
  */
 export async function uploadToBlob(file: File, folder: string = 'uploads') {
-  console.warn('[uploadToBlob] Deprecated - use uploadFile() with { public: true }');
+  logger.warn('[uploadToBlob] Deprecated - use uploadFile() with { public: true }', undefined, 'upload');
   return uploadFile(file, { folder, public: true });
 }
 
@@ -75,7 +76,7 @@ export async function uploadToBlob(file: File, folder: string = 'uploads') {
  * @deprecated Use uploadFile() instead
  */
 export async function uploadToFirebase(file: File, folder: string = 'documents') {
-  console.warn('[uploadToFirebase] Deprecated - use uploadFile()');
+  logger.warn('[uploadToFirebase] Deprecated - use uploadFile()', undefined, 'upload');
   return uploadFile(file, { folder });
 }
 

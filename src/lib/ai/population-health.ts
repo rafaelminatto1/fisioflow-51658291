@@ -16,6 +16,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -263,7 +264,7 @@ async function aggregatePopulationData(
       totalRecords: patients.length + mlData.length + appointments.length,
     };
   } catch (error) {
-    console.error('[Population Health] Error aggregating data:', error);
+    logger.error('[Population Health] Error aggregating data', error, 'population-health');
     return {
       patients: [],
       mlData: [],
@@ -573,7 +574,7 @@ export async function analyzeClinicPopulation(
 
     return analysis;
   } catch (error) {
-    console.error('[Population Health] AI analysis error:', error);
+    logger.error('[Population Health] AI analysis error', error, 'population-health');
     throw error;
   }
 }
