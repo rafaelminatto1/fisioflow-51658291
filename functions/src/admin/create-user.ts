@@ -13,7 +13,7 @@ if (!getApps().length) {
   initializeApp();
 }
 
-export const createAdminUser = onCall(async () => {
+export const createAdminUser = onCall({ cors: true }, async () => {
   const auth = getAuth();
 
   try {

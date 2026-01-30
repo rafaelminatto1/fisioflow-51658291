@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 const TelemedicineRoom = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -114,7 +115,7 @@ const TelemedicineRoom = () => {
           // videoRef.current.srcObject = mediaStream;
         }
       } catch (error) {
-        console.error('Error accessing media devices:', error);
+        logger.error('Error accessing media devices', error, 'TelemedicineRoom');
         toast.error('Não foi possível acessar câmera/microfone');
       }
     };
