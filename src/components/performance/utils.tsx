@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Custom hook that returns a memoized callback with debounce
@@ -87,7 +88,7 @@ export function useRenderCount(name: string): number {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log(`[Perf] ${name} rendered ${renderCount.current} times`);
+      logger.debug(`[Perf] ${name} rendered ${renderCount.current} times`, undefined, 'useRenderCount');
     }
   });
 
@@ -123,7 +124,7 @@ export function useRenderPerf(name: string) {
   const end = useCallback(() => {
     if (import.meta.env.DEV && startTimeRef.current) {
       const duration = performance.now() - startTimeRef.current;
-      console.log(`[Perf] ${name} rendered in ${duration.toFixed(2)}ms`);
+      logger.debug(`[Perf] ${name} rendered in ${duration.toFixed(2)}ms`, undefined, 'useRenderTime');
     }
   }, [name]);
 
