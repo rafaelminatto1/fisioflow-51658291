@@ -1,5 +1,6 @@
 import { init as coreInit } from '@cornerstonejs/core';
 import { init as toolsInit } from '@cornerstonejs/tools';
+import { logger } from '@/lib/errors/logger';
 // import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
 
 let initialized = false;
@@ -24,8 +25,8 @@ export default async function initCornerstone() {
         // limiting complexity here as per prompt instructions to focus on architectural intent.
 
         initialized = true;
-        console.log('Cornerstone initialized');
+        logger.info('Cornerstone initialized', undefined, 'initCornerstone');
     } catch (error) {
-        console.error('Cornerstone init failed:', error);
+        logger.error('Cornerstone init failed', error, 'initCornerstone');
     }
 }

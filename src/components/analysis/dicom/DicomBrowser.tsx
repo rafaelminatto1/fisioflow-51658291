@@ -7,6 +7,7 @@ import { dicomWebClient, DicomStudy } from '@/services/dicom/dicomWebClient';
 import { getFirebaseFunctions } from '@/integrations/firebase/app';
 import { httpsCallable } from 'firebase/functions';
 import DicomViewer from './DicomViewer';
+import { logger } from '@/lib/errors/logger';
 
 interface DicomBrowserProps {
     onSelectSeries?: (studyInstanceUid: string, seriesInstanceUid: string) => void;
@@ -36,7 +37,7 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
             const data = await dicomWebClient.searchStudies();
             setStudies(data);
         } catch (e) {
-            console.error("Failed to load studies", e);
+            logger.error("Failed to load studies", e, 'DicomBrowser');
         } finally {
             setLoading(false);
         }
@@ -72,7 +73,7 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
             }
 
         } catch (e) {
-            console.error("Failed to load series", e);
+            logger.error("Failed to load series", e, 'DicomBrowser');
         } finally {
             setLoading(false);
         }
