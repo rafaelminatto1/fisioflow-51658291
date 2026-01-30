@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, TrendingUp, TrendingDown, Target, Zap, Info } from 'lucide-react';
 import { useAI } from '@/integrations/firebase/ai';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/errors/logger';
 
 interface ClinicAIInsightsProps {
   data: {
@@ -42,7 +43,7 @@ export const ClinicAIInsights: React.FC<ClinicAIInsightsProps> = ({ data }) => {
 
       setInsights(result.content);
     } catch (error) {
-      console.error('Erro ao gerar insights da clínica:', error);
+      logger.error('Erro ao gerar insights da clínica', error, 'ClinicAIInsights');
     } finally {
       setLoading(false);
     }

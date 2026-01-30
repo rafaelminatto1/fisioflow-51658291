@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Camera, CameraOff, Activity, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 interface MovementMetrics {
   angleAccuracy: number;
@@ -59,7 +60,7 @@ export const MovementAnalysis = () => {
         description: "Posicione-se na frente da câmera",
       });
     } catch (error) {
-      console.error('Erro ao acessar câmera:', error);
+      logger.error('Erro ao acessar câmera', error, 'MovementAnalysis');
       toast({
         title: "Erro",
         description: "Não foi possível acessar a câmera",

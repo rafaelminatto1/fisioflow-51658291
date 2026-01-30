@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { logger } from '@/lib/errors/logger';
 
 type ReportType = 'appointments' | 'financial' | 'patients' | 'analytics' | 'complete';
 type ExportFormat = 'pdf' | 'csv' | 'json';
@@ -201,7 +202,7 @@ export function AdvancedReportGenerator() {
 
       toast.success('Relatório gerado com sucesso!');
     } catch (error) {
-      console.error('Error generating report:', error);
+      logger.error('Error generating report', error, 'AdvancedReportGenerator');
       toast.error('Erro ao gerar relatório');
     } finally {
       setIsGenerating(false);
