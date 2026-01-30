@@ -17,7 +17,7 @@ import type {
   ExerciseSuggestionResponse,
 } from '@/lib/ai/exercises';
 import { createExerciseAIAssistant } from '@/lib/ai/exercises';
-
+import { logger } from '@/lib/errors/logger';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -181,7 +181,7 @@ export function useAIExercises(
     },
     onError: (err: Error) => {
       setLastError(err);
-      console.error('[useAIExercises] Generation error:', err);
+      logger.error('[useAIExercises] Generation error', err, 'useAIExercises');
     },
   });
 
