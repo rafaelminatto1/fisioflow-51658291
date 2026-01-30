@@ -1,7 +1,7 @@
 /**
- * Firebase Configuration for FisioFlow Patient App
+ * Firebase Configuration for FisioFlow Professional App
  *
- * This file initializes Firebase services for the patient app.
+ * This file initializes Firebase services for the professional app.
  * Uses Expo environment variables for configuration.
  */
 
@@ -9,8 +9,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   initializeAuth,
-  getReactNativePersistence
 } from 'firebase/auth';
+import { getReactNativePersistence } from 'firebase/auth/react-native';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';

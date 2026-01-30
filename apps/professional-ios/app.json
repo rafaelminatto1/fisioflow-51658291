@@ -22,17 +22,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Necessário para registrar avaliações e exercícios",
         "NSPhotoLibraryUsageDescription": "Necessário para acessar fotos de pacientes"
-      },
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "config": {
-        "googleSignIn": {
-          "reservedClientId": "CLIENT_ID_REVERSO_DO_FIREBASE"
-        }
       }
     },
     "android": {
-      "package": "com.fisioflow.professionals",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.fisioflow.professionals"
     },
     "plugins": [
       [
