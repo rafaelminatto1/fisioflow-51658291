@@ -1,6 +1,8 @@
+import { logger } from '@/lib/errors/logger';
+
 export class TherapistAlertService {
   static async sendAlert(therapistId: string, message: string) {
     // Stub implementation
-    console.log('Sending alert to therapist:', therapistId, message);
+    logger.info('Sending alert to therapist', { therapistId, message }, 'TherapistAlertService');
   }
 }
