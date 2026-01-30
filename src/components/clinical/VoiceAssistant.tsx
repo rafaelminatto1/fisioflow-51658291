@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 
 import { VoiceAssistant as VoiceAssistantClass, KeyPoint } from '@/lib/ai/voice-assistant';
+import { logger } from '@/lib/errors/logger';
 import type { LiveSessionCallbacks, LiveSessionState } from '@fisioflow/shared-api/firebase/ai/live-config';
 
 // ============================================================================
@@ -117,7 +118,7 @@ export function VoiceAssistant({
   const callbacks: LiveSessionCallbacks = {
     onAudioReceived: useCallback((audio) => {
       // Audio handled by assistant class
-      console.debug('Audio received:', audio);
+      logger.debug('Audio received', { audio }, 'VoiceAssistant');
     }, []),
 
     onTranscript: useCallback((text, isFinal) => {
@@ -173,7 +174,7 @@ export function VoiceAssistant({
     onError: useCallback((error) => {
       setHasError(true);
       setErrorMessage(error.message);
-      console.error('Voice assistant error:', error);
+      logger.error('Voice assistant error', error, 'VoiceAssistant');
     }, []),
 
     onSpeakingStart: useCallback(() => {
@@ -193,7 +194,7 @@ export function VoiceAssistant({
     }, []),
 
     onEvent: useCallback((event) => {
-      console.debug('Live API event:', event);
+      logger.debug('Live API event', { event }, 'VoiceAssistant');
     }, []),
   };
 
@@ -300,7 +301,7 @@ export function VoiceAssistant({
     try {
       await assistantRef.current.stopSession();
     } catch (error) {
-      console.error('Error stopping session:', error);
+      logger.error('Error stopping session', error, 'VoiceAssistant');
     }
   };
 
