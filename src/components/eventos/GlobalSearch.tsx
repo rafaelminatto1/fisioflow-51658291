@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/command';
 import { Search, Calendar, Users, Briefcase } from 'lucide-react';
 import { useDebounce } from '@/hooks/performance/useDebounce';
+import { logger } from '@/lib/errors/logger';
 
 interface EventoRecord {
   id: string;
@@ -142,7 +143,7 @@ export function GlobalSearch() {
 
         setResults(filteredEventResults.slice(0, 15)); // Limit total results
       } catch (error) {
-        console.error('Erro na busca:', error);
+        logger.error('Erro na busca', error, 'GlobalSearch');
       } finally {
         setIsLoading(false);
       }

@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { logger } from "@/lib/errors/logger";
 
 interface EventoFinancialReportButtonProps {
   eventoId: string;
@@ -31,7 +32,7 @@ export function EventoFinancialReportButton({
 
   const handleExportPDF = () => {
     if (!report) return;
-    console.log("Exportar relatório:", report);
+    logger.info("Exportar relatório", { report }, "EventoFinancialReportButton");
   };
 
   return (

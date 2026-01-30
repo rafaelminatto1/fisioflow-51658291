@@ -18,6 +18,7 @@ import { useCreateEvento } from '@/hooks/useEventos';
 import { eventoCreateSchema, EventoCreate } from '@/lib/validations/evento';
 import { Switch } from '@/components/ui/switch';
 import { useEventoTemplates } from '@/hooks/useEventoTemplates';
+import { logger } from '@/lib/errors/logger';
 
 interface NewEventoModalProps {
   open: boolean;
@@ -67,7 +68,7 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
       setShowTemplates(true);
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao criar evento:', error);
+      logger.error('Erro ao criar evento', error, 'NewEventoModal');
     }
   };
 
