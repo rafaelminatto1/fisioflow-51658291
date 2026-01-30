@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Image as ImageIcon, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
