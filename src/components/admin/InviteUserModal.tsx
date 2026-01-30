@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { httpsCallable, getFirebaseFunctions } from '@/integrations/firebase/app';
 import { httpsCallable as httpsCallableFromFirebase } from 'firebase/functions';
 import { emailSchema } from '@/lib/validations/auth';
+import { logger } from '@/lib/errors/logger';
 
 interface InviteUserModalProps {
   open: boolean;
@@ -64,7 +65,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
         description: `Convite enviado para ${email}`,
       });
     } catch (err: unknown) {
-      console.error('Error creating invitation:', err);
+      logger.error('Error creating invitation', err, 'InviteUserModal');
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar convite. Tente novamente.';
       setError(errorMessage);
     } finally {
