@@ -85,7 +85,8 @@ export const stripeWebhookHttp = onRequest({
 // ============================================================================================
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const { userId, voucherType, patientId, patientName, patientEmail, patientPhone } = session.metadata;
+  const metadata = session.metadata || {};
+  const { userId, voucherType, patientId, patientName, patientEmail, patientPhone } = metadata;
 
   if (!userId) {
     logger.error('No userId in session metadata');
@@ -97,11 +98,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   let currency = 'brl';
 
   if (session.mode === 'payment' && session.payment_intent) {
-    const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+    const paymentIntentId = session.payment_intent as string;
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     amount = paymentIntent.amount;
     currency = paymentIntent.currency;
   } else if (session.mode === 'subscription' && session.subscription) {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    const subscriptionId = session.subscription as string;
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     amount = subscription.items.data[0].price.unit_amount || 0;
     currency = subscription.items.data[0].price.currency;
   }
@@ -124,8 +127,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       patientId: patientId || null,
       stripeCustomerId: session.customer as string,
       stripeSessionId: session.id,
-      stripePaymentIntentId: session.payment_intent,
-      stripeSubscriptionId: session.subscription || null,
+      stripePaymentIntentId: session.payment_intent as string,
+      stripeSubscriptionId: session.subscription as string || null,
       voucherType,
       name: getVoucherName(voucherType),
       sessionsTotal,
