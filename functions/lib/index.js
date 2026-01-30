@@ -56,7 +56,7 @@ const whatsapp_1 = require("./communications/whatsapp");
         whatsapp_1.WHATSAPP_PHONE_NUMBER_ID_SECRET,
         whatsapp_1.WHATSAPP_ACCESS_TOKEN_SECRET
     ],
-    maxInstances: 10,
+    maxInstances: 1,
 });
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
