@@ -17,6 +17,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Area, AreaChart } from 'recharts';
+import { logger } from '@/lib/errors/logger';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
 import { GridWidget } from '@/components/ui/GridWidget';
@@ -36,7 +37,7 @@ export default function SmartDashboard() {
       try {
         setSavedLayout(JSON.parse(saved));
       } catch (e) {
-        console.error('Failed to parse saved layout', e);
+        logger.warn('Failed to parse saved layout', e, 'SmartDashboard');
       }
     }
   }, []);
