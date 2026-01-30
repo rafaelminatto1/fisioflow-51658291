@@ -8,6 +8,7 @@
  */
 
 import { kv } from '@vercel/kv';
+import { logger } from '@/lib/errors/logger';
 
 export interface CacheOptions {
   /**
@@ -117,7 +118,7 @@ export async function getCache<T>(
     stats.misses++;
     return null;
   } catch (error) {
-    console.error('Cache get error:', error);
+    logger.error('Cache get error', error, 'KVCacheService');
     stats.misses++;
     return null;
   }
@@ -137,7 +138,7 @@ export async function setCache<T>(
     stats.sets++;
     return true;
   } catch (error) {
-    console.error('Cache set error:', error);
+    logger.error('Cache set error', error, 'KVCacheService');
     stats.errors++;
     return false;
   }
@@ -156,7 +157,7 @@ export async function deleteCache(
     stats.deletes++;
     return true;
   } catch (error) {
-    console.error('Cache delete error:', error);
+    logger.error('Cache delete error', error, 'KVCacheService');
     stats.errors++;
     return false;
   }
@@ -183,7 +184,7 @@ export async function invalidatePattern(
       await kv.del(...matchingKeys);
     }
   } catch (error) {
-    console.error('Cache invalidate pattern error:', error);
+    logger.error('Cache invalidate pattern error', error, 'KVCacheService');
   }
 }
 
@@ -310,7 +311,7 @@ export async function smartInvalidate(
         break;
     }
   } catch (error) {
-    console.error(`Smart invalidation error for ${entityType}:`, error);
+    logger.error(`Smart invalidation error for ${entityType}`, error, 'KVCacheService');
   }
 }
 
@@ -327,13 +328,13 @@ export async function warmUpCache(
         const data = await loader();
         await setCache(key, data, options);
       } catch (error) {
-        console.error(`Cache warm-up failed for ${key}:`, error);
+        logger.error(`Cache warm-up failed for ${key}`, error, 'KVCacheService');
       }
     })
   );
 
   const failed = results.filter(r => r.status === 'rejected').length;
-  console.log(`Cache warm-up completed: ${results.length - failed}/${results.length} successful`);
+  logger.info(`Cache warm-up completed: ${results.length - failed}/${results.length} successful`, undefined, 'KVCacheService');
 }
 
 /**
