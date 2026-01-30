@@ -12,8 +12,6 @@ require("../init");
 exports.healthCheck = (0, https_1.onRequest)({
     memory: '256MiB',
     maxInstances: 1,
-    vpcConnector: 'cloudsql-connector',
-    vpcConnectorEgressSettings: 'PRIVATE_RANGES_ONLY',
     secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'DB_HOST_IP'],
 }, async (req, res) => {
     // CORS headers
