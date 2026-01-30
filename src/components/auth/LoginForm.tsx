@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Zod schema for login form validation
@@ -109,7 +110,7 @@ export function LoginForm({
       await onSubmit(data);
     } catch (err) {
       // Error is handled by parent component and passed via error prop
-      console.error('Login error:', err);
+      logger.error('Login error', err, 'LoginForm');
     }
   };
 
@@ -163,8 +164,7 @@ export function LoginForm({
                     tabIndex={activeTab === 'login' ? 5 : -1}
                     onClick={(e) => {
                       e.preventDefault();
-                      // TODO: Implement forgot password flow
-                      console.log('Forgot password clicked');
+                      logger.debug('Forgot password clicked', null, 'LoginForm');
                     }}
                   >
                     Esqueceu a senha?

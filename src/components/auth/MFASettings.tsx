@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
 import { mfaService } from '@/lib/auth/mfa';
+import { logger } from '@/lib/errors/logger';
 
 interface MFASettingsProps {
   userId: string;
@@ -35,7 +36,7 @@ export function MFASettings({ userId }: MFASettingsProps) {
       const enabled = await mfaService.hasMFAEnabled(userId);
       setHasMFA(enabled);
     } catch (err) {
-      console.error('Error checking MFA status:', err);
+      logger.error('Error checking MFA status', err, 'MFASettings');
     }
   }
 
@@ -78,7 +79,7 @@ export function MFASettings({ userId }: MFASettingsProps) {
           .eq('id', userId);
 
         if (updateError) {
-          console.error('Error updating MFA status:', updateError);
+          logger.error('Error updating MFA status', updateError, 'MFASettings');
         }
       } else {
         setError('Código inválido. Tente novamente.');
@@ -115,7 +116,7 @@ export function MFASettings({ userId }: MFASettingsProps) {
         .eq('id', userId);
 
       if (updateError) {
-        console.error('Error updating MFA status:', updateError);
+        logger.error('Error updating MFA status', updateError, 'MFASettings');
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao desabilitar MFA');

@@ -37,6 +37,7 @@ import {
   type ExerciseSet,
   type Repetition,
 } from '@/lib/ai/exercise-coach';
+import { logger } from '@/lib/errors/logger';
 import type { LiveSessionCallbacks } from '@fisioflow/shared-api/firebase/ai/live-config';
 
 // ============================================================================
@@ -136,7 +137,7 @@ export function ExerciseCoach({
 
   const callbacks: LiveSessionCallbacks = {
     onAudioReceived: useCallback((audio) => {
-      console.debug('Audio received:', audio);
+      logger.debug('Audio received', { audio }, 'ExerciseCoach');
     }, []),
 
     onTranscript: useCallback((text, isFinal) => {
@@ -176,7 +177,7 @@ export function ExerciseCoach({
     }, [onSessionEnd]),
 
     onError: useCallback((error) => {
-      console.error('Exercise coach error:', error);
+      logger.error('Exercise coach error', error, 'ExerciseCoach');
     }, []),
 
     onSpeakingStart: useCallback(() => {
@@ -196,7 +197,7 @@ export function ExerciseCoach({
     }, []),
 
     onEvent: useCallback((event) => {
-      console.debug('Live API event:', event);
+      logger.debug('Live API event', { event }, 'ExerciseCoach');
     }, []),
   };
 
@@ -294,7 +295,7 @@ export function ExerciseCoach({
 
       await coachRef.current.startRecording();
     } catch (error) {
-      console.error('Error starting session:', error);
+      logger.error('Error starting session', error, 'ExerciseCoach');
     }
   };
 
@@ -304,7 +305,7 @@ export function ExerciseCoach({
     try {
       await coachRef.current.stopSession();
     } catch (error) {
-      console.error('Error stopping session:', error);
+      logger.error('Error stopping session', error, 'ExerciseCoach');
     }
   };
 
