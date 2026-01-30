@@ -1,7 +1,7 @@
 /**
- * Firebase Configuration for FisioFlow Patient App
+ * Firebase Configuration for FisioFlow Professional App
  *
- * This file initializes Firebase services for the patient app.
+ * This file initializes Firebase services for the professional app.
  * Uses Expo environment variables for configuration.
  */
 
@@ -27,7 +27,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once
-const APP_NAME = 'fisioflow-patient';
+const APP_NAME = 'fisioflow-professional';
 
 function getFirebaseApp() {
   const existingApps = getApps();

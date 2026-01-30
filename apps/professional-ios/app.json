@@ -13,34 +13,25 @@
       "backgroundColor": "#1E293B"
     },
     "assetBundlePatterns": ["**/*"],
+    "backgroundColor": "#FFFFFF",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fisioflow.professionals",
       "buildNumber": "1",
+      "userInterfaceStyle": "automatic",
       "infoPlist": {
-        "NSCameraUsageDescription": "Necessário para registrar avaliações e exercícios",
-        "NSPhotoLibraryUsageDescription": "Necessário para acessar fotos de pacientes"
-      },
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "config": {
-        "googleSignIn": {
-          "reservedClientId": "CLIENT_ID_REVERSO_DO_FIREBASE"
-        }
-      },
-      "bundleIdentifier": "com.fisioflow.professionals"
+        "NSCameraUsageDescription": "Necessario para registrar avaliacoes e exercicios",
+        "NSPhotoLibraryUsageDescription": "Necessario para acessar fotos de pacientes"
+      }
     },
     "android": {
       "package": "com.fisioflow.professionals",
-      "googleServicesFile": "./google-services.json"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1E293B"
+      }
     },
     "plugins": [
-      "@expo/config-plugins",
-      [
-        "@expo-google-fonts/inter",
-        {
-          "fonts": ["inter_400", "inter_500", "inter_600", "inter_700"]
-        }
-      ],
       [
         "expo-notifications",
         {
@@ -52,16 +43,19 @@
     "experiments": {
       "typedRoutes": true
     },
+    "web": {
+      "bundler": "metro"
+    },
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
+        "projectId": "fisioflow-professionals"
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/será-adicionado-pelo-eas"
+      "url": "https://u.expo.dev/fisioflow-professionals"
     },
     "runtimeVersion": {
       "policy": "appVersion"
