@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 // Tipos
 export interface MovementRecorderProps {
@@ -196,7 +197,7 @@ export function MovementRecorder({
       setState('preview');
 
     } catch (error) {
-      console.error('Erro ao acessar câmera:', error);
+      logger.error('Erro ao acessar câmera', error, 'MovementRecorder');
       toast.error(labels.cameraUnavailable);
       setState('error');
       onError?.(error as Error);
@@ -266,7 +267,7 @@ export function MovementRecorder({
       }, 1000);
 
     } catch (error) {
-      console.error('Erro ao iniciar gravação:', error);
+      logger.error('Erro ao iniciar gravação', error, 'MovementRecorder');
       toast.error(language === 'pt-BR' ? 'Erro ao iniciar gravação' : 'Error starting recording');
     }
   }, [hasAudio, maxDuration, language]);
@@ -376,7 +377,7 @@ export function MovementRecorder({
       onAnalysisComplete?.(analysisResult!);
 
     } catch (error) {
-      console.error('Erro na análise:', error);
+      logger.error('Erro na análise', error, 'MovementRecorder');
       setState('error');
       toast.error(labels.analysisFailed);
       onError?.(error as Error);
