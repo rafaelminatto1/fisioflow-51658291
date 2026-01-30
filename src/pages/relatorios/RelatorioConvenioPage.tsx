@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Activity } from 'lucide-react';
@@ -807,7 +807,6 @@ export default function RelatorioConvenioPage() {
 
     // Buscar dados do profissional
     if (!user) return;
-    const db = getFirebaseDb();
     const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
     const profile = profileDoc.exists() ? profileDoc.data() : null;
 

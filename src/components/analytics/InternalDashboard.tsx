@@ -23,7 +23,6 @@ export function InternalDashboard() {
   const { data: activePatients, isLoading: loadingActive } = useQuery({
     queryKey: ["active-patients-dashboard"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       const q = query(
@@ -33,7 +32,7 @@ export function InternalDashboard() {
 
       const snapshot = await getDocs(q);
       const patientIds = new Set(
-        snapshot.docs.map(doc => (doc.data() as any).patient_id).filter(Boolean)
+        snapshot.docs.map(doc => (doc.data() as { patient_id?: string }).patient_id).filter(Boolean)
       );
 
       return patientIds.size;
@@ -44,7 +43,6 @@ export function InternalDashboard() {
   const { data: inactivePatients, isLoading: loadingInactive } = useQuery({
     queryKey: ["inactive-patients-list"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       // Buscar todos os pacientes
@@ -63,7 +61,7 @@ export function InternalDashboard() {
       const recentAppointmentsSnapshot = await getDocs(recentAppointmentsQuery);
 
       const activePatientIds = new Set(
-        recentAppointmentsSnapshot.docs.map(doc => (doc.data() as any).patient_id).filter(Boolean)
+        recentAppointmentsSnapshot.docs.map(doc => (doc.data() as { patient_id?: string }).patient_id).filter(Boolean)
       );
 
       // Filtrar inativos
@@ -71,7 +69,7 @@ export function InternalDashboard() {
 
       // Buscar última consulta de cada paciente inativo
       const inactiveWithLastAppointment = await Promise.all(
-        inactive.slice(0, 20).map(async (patient: any) => {
+        inactive.slice(0, 20).map(async (patient: { id: string }) => {
           const lastApptQuery = query(
             collection(db, "appointments"),
             where("patient_id", "==", patient.id),
@@ -100,7 +98,6 @@ export function InternalDashboard() {
   const { data: patientsWithSessions, isLoading: loadingSessions } = useQuery({
     queryKey: ["patients-with-sessions"],
     queryFn: async () => {
-      const db = getFirebaseDb();
 
       const q = query(
         collection(db, "session_packages"),
@@ -112,7 +109,7 @@ export function InternalDashboard() {
 
       const packages = await Promise.all(
         snapshot.docs.map(async (pkgDoc) => {
-          const pkg = { id: pkgDoc.id, ...pkgDoc.data() } as any;
+          const pkg = { id: pkgDoc.id, ...pkgDoc.data() } as { id: string; patient_id?: string; total_sessions?: number; used_sessions?: number; remaining_sessions?: number };
 
           // Get patient data
           let patientName = "N/A";
@@ -147,7 +144,6 @@ export function InternalDashboard() {
   const { data: newPatientsData } = useQuery({
     queryKey: ["new-patients-by-period"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const now = new Date();
       const todayStart = startOfDay(now);
       const weekStart = startOfWeek(now, { locale: ptBR });
@@ -211,7 +207,6 @@ export function InternalDashboard() {
   const { data: totalPatients } = useQuery({
     queryKey: ["total-patients-count"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const snapshot = await getDocs(collection(db, "patients"));
       return snapshot.docs.length;
     },
@@ -430,7 +425,7 @@ export function InternalDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inactivePatients?.list?.map((patient: any) => (
+                  {inactivePatients?.list?.map((patient: { id: string; phone?: string; lastAppointment?: string }) => (
                     <TableRow key={patient.id}>
                       <TableCell className="font-medium">{PatientHelpers.getName(patient)}</TableCell>
                       <TableCell>{patient.phone || "-"}</TableCell>

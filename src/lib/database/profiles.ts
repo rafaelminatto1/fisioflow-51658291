@@ -8,9 +8,8 @@
 
 import { doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 
-const db = getFirebaseDb();
 
 /**
  * Ensures a profile and default role exist for a user.

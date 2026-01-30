@@ -1,4 +1,4 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import type { Surgery, SurgeryFormData } from '@/types/evolution';
 import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
@@ -6,7 +6,6 @@ import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fn
 export class SurgeryService {
   // Optimized: Select only required columns instead of *
   static async getSurgeriesByPatientId(patientId: string): Promise<Surgery[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'patient_surgeries'),
       where('patient_id', '==', patientId),
@@ -33,7 +32,6 @@ export class SurgeryService {
 
   // Optimized: Select only required columns
   static async addSurgery(data: SurgeryFormData): Promise<Surgery> {
-    const db = getFirebaseDb();
     const now = new Date().toISOString();
     const dataToSave = {
       ...data,
@@ -61,7 +59,6 @@ export class SurgeryService {
 
   // Optimized: Select only required columns
   static async updateSurgery(surgeryId: string, data: Partial<SurgeryFormData>): Promise<Surgery> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_surgeries', surgeryId);
 
     await updateDoc(docRef, {
@@ -87,7 +84,6 @@ export class SurgeryService {
   }
 
   static async deleteSurgery(surgeryId: string): Promise<void> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_surgeries', surgeryId);
     await deleteDoc(docRef);
   }

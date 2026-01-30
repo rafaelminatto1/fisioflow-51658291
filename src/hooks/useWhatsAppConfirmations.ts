@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -21,7 +21,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface WhatsAppMessage {
   id: string;
@@ -77,8 +76,19 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
       const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Fetch patient data for each appointment
-      const patientIds = appointments.map((a: any) => a.patient_id).filter(Boolean);
-      const patientMap = new Map<string, any>();
+      interface AppointmentFirestore {
+        patient_id?: string;
+        [key: string]: unknown;
+      }
+
+      interface PatientBasicInfo {
+        id: string;
+        name?: string;
+        phone?: string;
+      }
+
+      const patientIds = appointments.map((a: AppointmentFirestore) => a.patient_id).filter((id): id is string => id !== null);
+      const patientMap = new Map<string, PatientBasicInfo>();
 
       await Promise.all([...new Set(patientIds)].map(async (patientId) => {
         const patientDoc = await getDoc(doc(db, 'patients', patientId));
@@ -91,9 +101,9 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
         }
       }));
 
-      return appointments.map((a: any) => ({
+      return appointments.map((a: AppointmentFirestore) => ({
         ...a,
-        patients: patientMap.get(a.patient_id),
+        patients: patientMap.get(a.patient_id as string),
       }));
     },
   });

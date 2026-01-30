@@ -175,11 +175,20 @@ function getGoogleAI() {
 /**
  * Fetch anonymized similar cases from Firestore
  */
+interface SimilarCase {
+  id: string;
+  primary_pathology: string;
+  age_group: string;
+  sessions_to_discharge?: number;
+  outcome_category?: string;
+  pain_reduction_percentage?: number;
+}
+
 async function fetchSimilarCases(
   condition: string,
   ageRange: { min: number; max: number },
   limit: number = 50
-): Promise<any[]> {
+): Promise<SimilarCase[]> {
   const db = getAdminDb();
 
   try {
@@ -219,7 +228,7 @@ async function fetchSimilarCases(
 /**
  * Calculate statistics from similar cases
  */
-function calculateSimilarCaseStats(cases: any[]) {
+function calculateSimilarCaseStats(cases: SimilarCase[]) {
   if (cases.length === 0) {
     return {
       totalAnalyzed: 0,
@@ -398,7 +407,16 @@ export async function predictRecoveryTimeline(
 // PROMPT BUILDER
 // ============================================================================
 
-function buildPredictionPrompt(context: any): string {
+// Type for prediction context
+interface PredictionContext {
+  patient: PredictionInput['patientProfile'] & { ageGroup: string };
+  condition: PredictionInput['currentCondition'];
+  treatment: PredictionInput['treatmentContext'];
+  progress: PredictionInput['progressData'] & { painLevelHistory: Array<{ date: string; level: number }>; functionalScores: Array<{ date: string; score: number }>; attendanceRate: number };
+  similarCasesData: ReturnType<typeof calculateSimilarCaseStats>;
+}
+
+function buildPredictionPrompt(context: PredictionContext): string {
   return `Você é um sistema especializado em prever tempo de recuperação para fisioterapia.
 
 ANÁLISE ESTE CASO CLÍNICO E FORNEÇA PREVISÕES BASEADAS EM EVIDÊNCIAS:
@@ -481,8 +499,8 @@ Retorne APENAS o JSON válido com a estrutura especificada.`;
 
 function generateFallbackPrediction(
   patientId: string,
-  condition: any,
-  similarStats: any
+  condition: PredictionInput['currentCondition'],
+  similarStats: ReturnType<typeof calculateSimilarCaseStats>
 ): RecoveryPrediction {
   const now = new Date();
 

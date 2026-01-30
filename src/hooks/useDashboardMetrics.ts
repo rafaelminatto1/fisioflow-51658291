@@ -15,10 +15,33 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
-import { collection, getDocs, query, where, orderBy, limit, getCountFromServer } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, limit, getCountFromServer, QueryConstraint } from 'firebase/firestore';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
+import type { UnknownError } from '@/types/common';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface UserRole {
+  user_id: string;
+  [key: string]: unknown;
+}
+
+interface ReceitaRecord {
+  valor?: string | number;
+  [key: string]: unknown;
+}
+
+interface Appointment {
+  therapist_id?: string;
+  patient_id?: string;
+  status?: string;
+  appointment_date?: string;
+  [key: string]: unknown;
+}
 
 export interface TherapistPerformance {
   id: string;
@@ -64,7 +87,6 @@ export const useDashboardMetrics = () => {
   return useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: async (): Promise<DashboardMetrics> => {
-      const db = getFirebaseDb();
       const today = formatDateToLocalISO(new Date());
       const startOfCurrentMonth = formatDateToLocalISO(startOfMonth(new Date()));
       const startOfLastMonth = formatDateToLocalISO(startOfMonth(subMonths(new Date(), 1)));
@@ -74,30 +96,44 @@ export const useDashboardMetrics = () => {
       const weekEnd = formatDateToLocalISO(endOfWeek(new Date(), { weekStartsOn: 1 }));
 
       // Helper function to get count from snapshot
-      const getCount = async (collectionName: string, constraints: any[] = []) => {
+      const getCount = async (collectionName: string, constraints: QueryConstraint[] = []) => {
         try {
+          if (!db) {
+            throw new Error('Firestore instance "db" is not available');
+          }
           const q = query(collection(db, collectionName), ...constraints);
           const snapshot = await getCountFromServer(q);
           return snapshot.data().count;
-        } catch (error: any) {
+        } catch (error: UnknownError) {
           // Se a coleção não existir ou houver permissão negada, retorna 0
-          console.warn(`[useDashboardMetrics] Collection ${collectionName} count failed:`, error?.message || error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.warn(`[useDashboardMetrics] Collection ${collectionName} count failed:`, errorMessage);
           return 0;
         }
       };
 
       // Helper function to get docs with constraints
-      const getDocsData = async (collectionName: string, constraints: any[] = []) => {
+      const getDocsData = async (collectionName: string, constraints: QueryConstraint[] = []) => {
         try {
+          if (!db) {
+            throw new Error('Firestore instance "db" is not available');
+          }
           const q = query(collection(db, collectionName), ...constraints);
           const snapshot = await getDocs(q);
           return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error: any) {
+        } catch (error: UnknownError) {
           // Se a coleção não existir ou houver permissão negada, retorna array vazio
-          console.warn(`[useDashboardMetrics] Collection ${collectionName} not found:`, error?.message || error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.warn(`[useDashboardMetrics] Collection ${collectionName} not found:`, errorMessage);
           return [];
         }
       };
+
+      // Ensure db is ready before proceeding with parallel queries
+      if (!db) {
+        console.error('[useDashboardMetrics] Critical: Firestore db instance is null');
+        throw new Error('Firestore db is not initialized');
+      }
 
       // Paralelizar todas as queries independentes usando Promise.all
       const [
@@ -211,8 +247,8 @@ export const useDashboardMetrics = () => {
 
       // Contar fisioterapeutas únicos no Firestore
       const uniqueTherapistUserIds = [...new Set((userRolesData || [])
-        .map((ur: any) => ur.user_id)
-        .filter(Boolean)
+        .map((ur: UserRole) => ur.user_id as string)
+        .filter((id): id is string => id !== null)
       )];
       let fisioterapeutasAtivos = 0;
 
@@ -227,8 +263,8 @@ export const useDashboardMetrics = () => {
       }
 
       // Calcular métricas financeiras
-      const receitaMensal = receitaAtualData?.reduce((sum: number, r: any) => sum + Number(r.valor || 0), 0) || 0;
-      const receitaMesAnterior = receitaAnteriorData?.reduce((sum: number, r: any) => sum + Number(r.valor || 0), 0) || 0;
+      const receitaMensal = receitaAtualData?.reduce((sum: number, r: ReceitaRecord) => sum + Number(r.valor || 0), 0) || 0;
+      const receitaMesAnterior = receitaAnteriorData?.reduce((sum: number, r: ReceitaRecord) => sum + Number(r.valor || 0), 0) || 0;
       const crescimentoMensal = receitaMesAnterior > 0
         ? ((receitaMensal - receitaMesAnterior) / receitaMesAnterior) * 100
         : 0;
@@ -254,8 +290,8 @@ export const useDashboardMetrics = () => {
 
       const fisioStats = new Map<string, TherapistPerformance>();
       const therapistIds = [...new Set((receitaPorFisioData || [])
-        .map((apt: any) => apt.therapist_id)
-        .filter(Boolean))];
+        .map((apt: Appointment) => apt.therapist_id as string | undefined)
+        .filter((id): id is string => id !== null))];
       const therapistProfiles = new Map<string, { full_name?: string }>();
 
       if (therapistIds.length > 0) {
@@ -272,7 +308,7 @@ export const useDashboardMetrics = () => {
         });
       }
 
-      (receitaPorFisioData || []).forEach((apt: any) => {
+      (receitaPorFisioData || []).forEach((apt: Appointment & { payment_amount?: string | number }) => {
         const tId = apt.therapist_id;
         if (!tId) return;
 
@@ -301,12 +337,12 @@ export const useDashboardMetrics = () => {
       for (let i = 0; i < 7; i++) {
         const day = subDays(new Date(weekEnd), 6 - i);
         const dayStr = formatDateToLocalISO(day);
-        const dayAppointments = (weeklyData || []).filter((a: any) => a.appointment_date === dayStr);
+        const dayAppointments = (weeklyData || []).filter((a: Appointment) => a.appointment_date === dayStr);
 
         tendenciaSemanal.push({
           dia: weekDays[i] ?? 'Dia',
           agendamentos: dayAppointments.length,
-          concluidos: dayAppointments.filter((a: any) => a.status === 'concluido').length,
+          concluidos: dayAppointments.filter((a: Appointment) => a.status === 'concluido').length,
         });
       }
 

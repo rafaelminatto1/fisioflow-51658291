@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb, getFirebaseStorage } from '@/integrations/firebase/app';
+import { db, getFirebaseStorage } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -25,10 +25,8 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
-const db = getFirebaseDb();
-
 // Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export interface MedicalRequestFile {
   id: string;

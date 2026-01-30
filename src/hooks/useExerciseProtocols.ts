@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { protocolsCacheService } from '@/lib/offline/ProtocolsCacheService';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -23,7 +23,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface ProtocolMilestone {
   week: number;
@@ -66,7 +65,7 @@ interface ProtocolsQueryResult {
 }
 
 // Helper to convert Firestore doc to ExerciseProtocol
-const convertDocToExerciseProtocol = (doc: any): ExerciseProtocol => {
+const convertDocToExerciseProtocol = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseProtocol => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -127,7 +126,7 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
     return {
       data: cacheResult.data,
       isFromCache: true,
-      source: cacheResult.source as any
+      source: cacheResult.source as 'firestore' | 'indexeddb' | 'localstorage' | 'memory'
     };
   }
 
@@ -164,7 +163,7 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
     return {
       data: cacheResult.data,
       isFromCache: true,
-      source: cacheResult.source as any
+      source: cacheResult.source as 'firestore' | 'indexeddb' | 'localstorage' | 'memory'
     };
   }
 }

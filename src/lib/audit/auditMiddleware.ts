@@ -1,4 +1,4 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, addDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
 
@@ -53,7 +53,6 @@ export function calculateDiff(
  */
 export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
   try {
-    const db = getFirebaseDb();
     await addDoc(collection(db, 'audit_log'), {
       action: entry.action,
       table_name: entry.table_name,

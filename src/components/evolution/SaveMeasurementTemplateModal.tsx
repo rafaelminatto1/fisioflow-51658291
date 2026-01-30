@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { getFirebaseDb, collection, addDoc } from '@/integrations/firebase/app';
+import { db, collection, addDoc } from '@/integrations/firebase/app';
 import { collection as collectionRef, addDoc as addDocToFirestore } from 'firebase/firestore';
 
 interface SaveMeasurementTemplateModalProps {
@@ -51,7 +51,6 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
     onSaved,
 }) => {
     const { user } = useAuth();
-    const db = getFirebaseDb();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',

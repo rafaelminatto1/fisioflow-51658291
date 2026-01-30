@@ -37,8 +37,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteStorageFile = exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
-exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = void 0;
+exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.getPatientStats = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
+exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = void 0;
 const functions = __importStar(require("firebase-functions/v2"));
 const v2_1 = require("firebase-functions/v2");
 const init_1 = require("./init");
@@ -61,6 +61,8 @@ const whatsapp_1 = require("./communications/whatsapp");
 // Import init for local usage in Triggers, but DO NOT EXPORT complex objects
 // which confuse the firebase-functions loader.
 const init_2 = require("./init");
+// Initialize Sentry for error tracking (side effect import)
+require("./lib/sentry");
 // ============================================================================
 // API FUNCTIONS (Callable)
 // ============================================================================
@@ -103,6 +105,9 @@ exports.getAssessmentTemplate = apiAssessments.getAssessmentTemplate;
 const apiProfile = __importStar(require("./api/profile"));
 exports.getProfile = apiProfile.getProfile;
 exports.updateProfile = apiProfile.updateProfile;
+// API de Estatísticas de Pacientes
+const patient_stats_1 = require("./api/patient-stats");
+Object.defineProperty(exports, "getPatientStats", { enumerable: true, get: function () { return patient_stats_1.getPatientStats; } });
 // API de Pagamentos
 const apiPayments = __importStar(require("./api/payments"));
 exports.listPayments = apiPayments.listPayments;
@@ -145,6 +150,10 @@ const runMigration_1 = require("./runMigration");
 Object.defineProperty(exports, "runMigration", { enumerable: true, get: function () { return runMigration_1.runMigration; } });
 const runMigrationHttp_1 = require("./runMigrationHttp");
 Object.defineProperty(exports, "runMigrationHttp", { enumerable: true, get: function () { return runMigrationHttp_1.runMigrationHttp; } });
+const create_performance_indexes_1 = require("./migrations/create-performance-indexes");
+Object.defineProperty(exports, "createPerformanceIndexes", { enumerable: true, get: function () { return create_performance_indexes_1.createPerformanceIndexes; } });
+const setup_monitoring_1 = require("./api/setup-monitoring");
+Object.defineProperty(exports, "setupMonitoring", { enumerable: true, get: function () { return setup_monitoring_1.setupMonitoring; } });
 // ============================================================================
 // AI FUNCTIONS
 // ============================================================================

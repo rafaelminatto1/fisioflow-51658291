@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { getFirebaseDb, getFirebaseAuth } from "@/integrations/firebase/app";
 import { collection, query, where, getDocs, orderBy, addDoc } from "firebase/firestore";
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 export interface StandardizedTestResult {
@@ -33,10 +32,15 @@ export const useStandardizedTests = (patientId: string) => {
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+      interface TestItem {
+        test_type?: 'oswestry' | 'lysholm' | 'dash';
+        answers?: Record<string, number>;
+      }
+
       return data.map(item => ({
         ...item,
-        test_type: (item as any).test_type as 'oswestry' | 'lysholm' | 'dash',
-        answers: (item as any).answers as Record<string, number>,
+        test_type: (item as TestItem).test_type as 'oswestry' | 'lysholm' | 'dash',
+        answers: (item as TestItem).answers as Record<string, number>,
       })) as StandardizedTestResult[];
     },
     enabled: !!patientId,

@@ -1,4 +1,4 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, QueryDocumentSnapshot } from 'firebase/firestore';
 import type {
   PainMapRecord,
@@ -11,7 +11,6 @@ import type {
 export class PainMapService {
   // Optimized: Select only required columns instead of *
   static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'pain_maps'),
       where('patient_id', '==', patientId),
@@ -35,7 +34,6 @@ export class PainMapService {
 
   // Optimized: Select only required columns instead of *
   static async getPainMapById(id: string): Promise<PainMapRecord> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'pain_maps', id);
     const docSnap = await getDoc(docRef);
 
@@ -56,7 +54,6 @@ export class PainMapService {
   }
 
   static async createPainMap(painMap: PainMapFormData): Promise<PainMapRecord> {
-    const db = getFirebaseDb();
     const now = new Date().toISOString();
     const dataToSave = {
       ...painMap,
@@ -81,7 +78,6 @@ export class PainMapService {
   }
 
   static async updatePainMap(id: string, painMap: Partial<PainMapFormData>): Promise<PainMapRecord> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'pain_maps', id);
 
     await updateDoc(docRef, {
@@ -93,14 +89,12 @@ export class PainMapService {
   }
 
   static async deletePainMap(id: string): Promise<void> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'pain_maps', id);
     await deleteDoc(docRef);
   }
 
   // Optimized: Select only required columns instead of *
   static async getPainEvolution(patientId: string, startDate?: string, endDate?: string): Promise<PainEvolutionData[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'pain_maps'),
       where('patient_id', '==', patientId),

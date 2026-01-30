@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { getStorage, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import {
   collection,
@@ -24,7 +24,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const storage = getStorage();
 
 export interface ExamFile {

@@ -8,7 +8,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -23,7 +23,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Lead {
   id: string;
@@ -52,7 +51,7 @@ export interface LeadHistorico {
 }
 
 // Helper
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
 
 export function useLeads(estagio?: string) {
   return useQuery({

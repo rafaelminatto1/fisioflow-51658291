@@ -1,18 +1,62 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
+import type { Timestamp } from 'firebase/firestore';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
+// Types for analytics data
+interface TransactionRecord {
+  id: string;
+  tipo: 'receita' | 'despesa';
+  valor: number;
+  created_at: Timestamp | Date;
+}
+
+interface AppointmentRecord {
+  id: string;
+  created_at: Timestamp | Date;
+  status: string;
+}
+
+interface AnalyticsMetrics {
+  totalPatients: number;
+  totalAppointments: number;
+  totalEvents: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  appointmentsThisMonth: number;
+  completedAppointments: number;
+}
+
+interface MonthlyAppointments {
+  month: string;
+  total: number;
+  completed: number;
+  cancelled: number;
+}
+
+interface StatusDistribution {
+  name: string;
+  value: number;
+}
+
+interface MonthlyFinancial {
+  month: string;
+  receita: number;
+  despesa: number;
+  lucro: number;
+}
+
 export default function AdvancedAnalytics() {
-  const { data: metrics } = useQuery({
+  const { data: metrics } = useQuery<AnalyticsMetrics>({
     queryKey: ['analytics-metrics'],
     queryFn: async () => {
-      const db = getFirebaseDb();
 
       const [patientsSnapshot, appointmentsSnapshot, eventsSnapshot, transactionsSnapshot] = await Promise.all([
         getDocs(query(collection(db, 'patients'))),
@@ -21,8 +65,8 @@ export default function AdvancedAnalytics() {
         getDocs(query(collection(db, 'transacoes')))
       ]);
 
-      const transactions: any[] = [];
-      transactionsSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() }));
+      const transactions: TransactionRecord[] = [];
+      transactionsSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() } as TransactionRecord));
 
       const totalRevenue = transactions.reduce((sum, t) =>
         t.tipo === 'receita' ? sum + (t.valor || 0) : sum, 0
@@ -32,13 +76,13 @@ export default function AdvancedAnalytics() {
         t.tipo === 'despesa' ? sum + (t.valor || 0) : sum, 0
       ) || 0;
 
-      const appointments: any[] = [];
-      appointmentsSnapshot.forEach((doc) => appointments.push({ id: doc.id, ...doc.data() }));
+      const appointments: AppointmentRecord[] = [];
+      appointmentsSnapshot.forEach((doc) => appointments.push({ id: doc.id, ...doc.data() } as AppointmentRecord));
 
       const thisMonth = new Date();
       thisMonth.setDate(1);
       const appointmentsThisMonth = appointments.filter(a =>
-        new Date(a.created_at?.toDate ? a.created_at.toDate() : a.created_at) >= thisMonth
+        new Date(a.created_at instanceof Date ? a.created_at : a.created_at.toDate()) >= thisMonth
       ).length || 0;
 
       return {
@@ -54,10 +98,9 @@ export default function AdvancedAnalytics() {
     },
   });
 
-  const { data: appointmentsByMonth } = useQuery({
+  const { data: appointmentsByMonth } = useQuery<MonthlyAppointments[]>({
     queryKey: ['appointments-by-month'],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
 
       const q = query(
@@ -67,13 +110,13 @@ export default function AdvancedAnalytics() {
       );
 
       const snapshot = await getDocs(q);
-      const data: any[] = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
+      const data: AppointmentRecord[] = [];
+      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() } as AppointmentRecord));
 
       const monthlyData: Record<string, { total: number; completed: number; cancelled: number }> = {};
 
       data.forEach(apt => {
-        const date = apt.created_at?.toDate ? apt.created_at.toDate() : new Date(apt.created_at);
+        const date = apt.created_at instanceof Date ? apt.created_at : apt.created_at.toDate();
         const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         if (!monthlyData[month]) monthlyData[month] = { total: 0, completed: 0, cancelled: 0 };
         monthlyData[month].total++;
@@ -85,10 +128,9 @@ export default function AdvancedAnalytics() {
     },
   });
 
-  const { data: appointmentStatus } = useQuery({
+  const { data: appointmentStatus } = useQuery<StatusDistribution[]>({
     queryKey: ['appointment-status'],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const snapshot = await getDocs(query(collection(db, 'appointments')));
 
       const statusCount: Record<string, number> = {};
@@ -102,10 +144,9 @@ export default function AdvancedAnalytics() {
     },
   });
 
-  const { data: financialByMonth } = useQuery({
+  const { data: financialByMonth } = useQuery<MonthlyFinancial[]>({
     queryKey: ['financial-by-month'],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
 
       const q = query(
@@ -115,13 +156,13 @@ export default function AdvancedAnalytics() {
       );
 
       const snapshot = await getDocs(q);
-      const data: any[] = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
+      const data: TransactionRecord[] = [];
+      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() } as TransactionRecord));
 
       const monthlyData: Record<string, { receita: number; despesa: number }> = {};
 
       data.forEach(t => {
-        const date = t.created_at?.toDate ? t.created_at.toDate() : new Date(t.created_at);
+        const date = t.created_at instanceof Date ? t.created_at : t.created_at.toDate();
         const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         if (!monthlyData[month]) monthlyData[month] = { receita: 0, despesa: 0 };
         if (t.tipo === 'receita') monthlyData[month].receita += t.valor || 0;

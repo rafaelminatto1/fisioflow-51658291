@@ -8,7 +8,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -18,7 +18,6 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface AuditLog {
   id: string;
@@ -49,7 +48,7 @@ export interface AuditFilters {
 }
 
 // Helper to convert Firestore doc to AuditLog
-const convertDocToAuditLog = (doc: any): AuditLog => {
+const convertDocToAuditLog = (doc: { id: string; data: () => Record<string, unknown> }): AuditLog => {
   const data = doc.data();
   return {
     id: doc.id,

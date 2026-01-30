@@ -3,6 +3,19 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventos } from '../useEventos';
 
+// Type for Supabase query mock
+type SupabaseQueryMock = {
+  select: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+  order: ReturnType<typeof vi.fn>;
+  single: ReturnType<typeof vi.fn>;
+  maybeSingle: ReturnType<typeof vi.fn>;
+  is: ReturnType<typeof vi.fn>;
+};
+
 // Mock do Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -58,7 +71,7 @@ describe('useEventos', () => {
         data: null,
         error: { message: 'Erro ao buscar eventos' },
       }),
-    } as any);
+    } as SupabaseQueryMock);
 
     const { result } = renderHook(() => useEventos(), { wrapper: createWrapper() });
 

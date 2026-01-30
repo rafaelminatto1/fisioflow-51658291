@@ -105,7 +105,7 @@ export function useOptimisticMutation<
         updateQueries.forEach((queryKey) => {
           const previousData = queryClient.getQueryData(queryKey);
           if (previousData) {
-            (context as any).previousData = previousData;
+            (context as TContext & { previousData?: unknown }).previousData = previousData;
           }
         });
       }

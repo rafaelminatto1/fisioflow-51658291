@@ -8,7 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { ParticipanteCreate, ParticipanteUpdate } from '@/lib/validations/participante';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -21,15 +21,19 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
+interface Participante {
+  id: string;
+  evento_id: string;
+  [key: string]: unknown;
+}
 
 // Helper to convert Firestore doc to Participante
-const convertDocToParticipante = (doc: any): any => {
+const convertDocToParticipante = (doc: { id: string; data: () => Record<string, unknown> }): Participante => {
   const data = doc.data();
   return {
     id: doc.id,
     ...data,
-  };
+  } as Participante;
 };
 
 export function useParticipantes(eventoId: string) {
@@ -83,8 +87,8 @@ export function useCreateParticipante() {
         updated_at: new Date().toISOString(),
       };
 
-      queryClient.setQueryData(['participantes', newParticipante.evento_id], (old: any[]) => [
-        optimisticParticipante,
+      queryClient.setQueryData(['participantes', newParticipante.evento_id], (old: Participante[] | undefined) => [
+        optimisticParticipante as unknown as Participante,
         ...(old || []),
       ]);
 
@@ -131,7 +135,7 @@ export function useUpdateParticipante() {
 
       const previousParticipantes = queryClient.getQueryData(['participantes', eventoId]);
 
-      queryClient.setQueryData(['participantes', eventoId], (old: any[]) =>
+      queryClient.setQueryData(['participantes', eventoId], (old: Participante[] | undefined) =>
         (old || []).map((p) =>
           p.id === id
             ? { ...p, ...data, updated_at: new Date().toISOString() }
@@ -173,7 +177,7 @@ export function useDeleteParticipante() {
 
       const previousParticipantes = queryClient.getQueryData(['participantes', eventoId]);
 
-      queryClient.setQueryData(['participantes', eventoId], (old: any[]) =>
+      queryClient.setQueryData(['participantes', eventoId], (old: { id: string }[]) =>
         (old || []).filter((p) => p.id !== id)
       );
 

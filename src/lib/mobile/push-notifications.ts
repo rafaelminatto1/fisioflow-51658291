@@ -1,7 +1,7 @@
 import { PushNotifications, PushNotificationSchema, Token, ActionPerformed } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
-import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
 
 /**
@@ -84,7 +84,6 @@ async function savePushTokenToDatabase(token: string): Promise<void> {
     const currentUser = auth.currentUser;
 
     if (currentUser) {
-      const db = getFirebaseDb();
       // Use device ID or platform as key if possible, but for now we settle for user_id + token
       // Better schema: user_push_tokens/{userId}/devices/{deviceId}
       // Or simply a collection of tokens with user_id field.

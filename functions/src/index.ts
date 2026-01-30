@@ -37,6 +37,9 @@ setGlobalOptions({
 // which confuse the firebase-functions loader.
 import { adminDb } from './init';
 
+// Initialize Sentry for error tracking (side effect import)
+import './lib/sentry';
+
 // ============================================================================
 // API FUNCTIONS (Callable)
 // ============================================================================

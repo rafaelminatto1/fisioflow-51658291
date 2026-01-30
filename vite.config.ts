@@ -134,7 +134,7 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: 'prompt',
-        disable: !isProduction,
+        disable: true, // Temporarily disabled to fix cache issues
         includeAssets: ['icons/*.svg', 'icons/*.avif', 'favicon.ico'],
         manifest: {
           name: 'FisioFlow - Sistema de Gestão',
