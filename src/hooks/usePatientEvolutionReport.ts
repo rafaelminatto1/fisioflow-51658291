@@ -11,7 +11,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -21,8 +21,6 @@ import {
   doc,
   getDoc,
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 export interface PatientEvolutionData {
   sessions: {
@@ -46,7 +44,7 @@ export interface PatientEvolutionData {
     current: { value: number | string; unit: string; date: string };
     improvement: number | string;
     isVitalSign?: boolean;
-    vitalSigns?: Record<string, any>;
+    vitalSigns?: Record<string, unknown>;
   }[];
 }
 
@@ -95,7 +93,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
       }
 
       // Processar medições para pegar inicial vs atual
-      const evolutionMap = new Map<string, any[]>();
+      const evolutionMap = new Map<string, Array<{ value: number | string; unit?: string; measured_at: string; measurement_type?: string; measurement_name?: string; custom_data?: Record<string, unknown> }>>();
       measurements?.forEach(m => {
         const key = `${m.measurement_type}-${m.measurement_name}`;
         if (!evolutionMap.has(key)) evolutionMap.set(key, []);
@@ -122,7 +120,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
           current: { value: last.value, unit: last.unit, date: last.measured_at },
           improvement: typeof improvement === 'number' ? improvement.toFixed(1) : improvement,
           isVitalSign: last.measurement_type === 'Sinais Vitais',
-          vitalSigns: last.measurement_type === 'Sinais Vitais' ? last.custom_data : undefined,
+          vitalSigns: last.measurement_type === 'Sinais Vitais' ? (last.custom_data as Record<string, unknown>) : undefined,
         };
       });
 
@@ -167,7 +165,15 @@ export const usePatientEvolutionReport = (patientId: string) => {
       }
 
       // Processar sessões
-      const sessions = soapRecords.map((record: any) => {
+      interface SoapRecord {
+        id: string;
+        record_date?: string;
+        created_at?: string;
+        plan?: string;
+        created_by: string;
+      }
+
+      const sessions = soapRecords.map((record: SoapRecord) => {
         const painLevel = painMapsBySession.get(record.id) || 0;
 
         // Estimativa de mobilidade baseada no nível de dor (inverso)

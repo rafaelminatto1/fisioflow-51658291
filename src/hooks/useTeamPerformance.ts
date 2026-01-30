@@ -12,7 +12,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -23,7 +23,7 @@ import {
 } from 'firebase/firestore';
 
 // Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export type PerformancePeriod = 'month' | '3months' | '6months' | 'year' | 'custom';
 export type PerformanceMetric = 'revenue' | 'sessions' | 'retention' | 'satisfaction';
@@ -106,7 +106,6 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
     queryKey: ['team-performance', filters.period, filters.startDate?.toISOString(), filters.endDate?.toISOString()],
     queryFn: async (): Promise<TeamPerformanceMetrics> => {
       const { start, end } = getDateRange(filters.period, filters.startDate, filters.endDate);
-      const db = getFirebaseDb();
 
       // Get therapists (users with role admin or fisioterapeuta)
       // In Firestore, roles might be in 'user_roles' collection or on 'profiles'.
@@ -150,9 +149,20 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
           where('appointment_date', '<=', format(end, 'yyyy-MM-dd'))
         );
         const aptSnap = await getDocs(aptQ);
+
+        interface AppointmentData {
+          id: string;
+          therapist_id?: string;
+          patient_id?: string;
+          appointment_date?: string;
+          status?: string;
+          payment_status?: string;
+          payment_amount?: number;
+        }
+
         appointments = aptSnap.docs
-          .map(d => ({ id: d.id, ...d.data() } as any))
-          .filter(a => therapistIds.includes(a.therapist_id));
+          .map(d => ({ id: d.id, ...d.data() } as AppointmentData))
+          .filter(a => a.therapist_id && therapistIds.includes(a.therapist_id));
       }
 
       // Get NPS data
@@ -180,7 +190,12 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
       // For now, let's fetch 'appointments' where status=concluido for these therapists.
       // If therapist list is small, we can do it.
 
-      let allCompletedAppointments: any[] = [];
+      interface CompletedAppointment {
+        patient_id: string;
+        therapist_id?: string;
+      }
+
+      let allCompletedAppointments: CompletedAppointment[] = [];
       if (therapistIds.length > 0) {
         // Warning: uncapped query.
         const completedApptQ = query(
@@ -190,7 +205,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
         );
         // If > 10 therapists, we have a problem. Assuming small team.
         const completedSnap = await getDocs(completedApptQ);
-        allCompletedAppointments = completedSnap.docs.map(d => d.data());
+        allCompletedAppointments = completedSnap.docs.map(d => d.data() as CompletedAppointment);
 
         if (therapistIds.length > 10) {
           // Fallback or multiple queries needed for larger teams.
@@ -236,9 +251,9 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
           : 0;
 
         const therapistNps = npsData.length > 0
-          ? Math.round(npsData.reduce((sum, n: any) => sum + n.nota, 0) / npsData.length * 10)
-          : 0; // Simplified as NPS data doesn't link to therapist directly in schema shown? 
-        // Original code: used all npsData for everyone? 
+          ? Math.round(npsData.reduce((sum, n: { nota?: number }) => sum + (n.nota || 0), 0) / npsData.length * 10)
+          : 0; // Simplified as NPS data doesn't link to therapist directly in schema shown?
+        // Original code: used all npsData for everyone?
         // (npsData || []).reduce... It seems generic nps data was used for everyone or I missed a filter.
         // Re-reading original: `const { data: npsData } = ...` no filter by therapist.
         // So yes, it seems it was shared or missing relation.

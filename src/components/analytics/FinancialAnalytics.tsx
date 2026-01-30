@@ -10,7 +10,6 @@ export function FinancialAnalytics() {
   const { data: monthlyRevenue } = useQuery({
     queryKey: ["financial-monthly-revenue"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const last6Months = eachMonthOfInterval({
         start: subMonths(new Date(), 5),
         end: new Date(),
@@ -45,7 +44,6 @@ export function FinancialAnalytics() {
   const { data: paymentMethods } = useQuery({
     queryKey: ["financial-payment-methods"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const oneMonthAgo = subMonths(new Date(), 1);
 
       const q = query(

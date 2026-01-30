@@ -8,7 +8,7 @@
  */
 
 import { collection, doc, setDoc, getDoc, getDocs, query, where, sum, orderBy, limit } from 'firebase/firestore';
-import { db } from '@fisioflow/shared-api/firebase';
+import { db } from '@/integrations/firebase/app';
 import { AIModelType, AIFeatureCategory, AIUsageRecord } from '@fisioflow/shared-api/firebase/ai/config';
 
 /**
@@ -94,7 +94,7 @@ export interface BudgetStatus {
  */
 class AIUsageMonitor {
   private collectionName = 'ai_usage_records';
-  private cache = new Map<string, any>();
+  private cache = new Map<string, Record<AIFeatureCategory, UsageStats>>();
   private cacheExpiry = 60000; // 1 minute
 
   /**
@@ -315,7 +315,7 @@ class AIUsageMonitor {
       byFeature.get(feature)!.push(record);
     }
 
-    const result: Record<AIFeatureCategory, UsageStats> = {} as any;
+    const result: Record<AIFeatureCategory, UsageStats> = {} as Record<AIFeatureCategory, UsageStats>;
 
     for (const [feature, featureRecords] of byFeature) {
       result[feature] = this.calculateStats(featureRecords);
@@ -344,7 +344,7 @@ class AIUsageMonitor {
       byModel.get(model)!.push(record);
     }
 
-    const result: Record<AIModelType, UsageStats> = {} as any;
+    const result: Record<AIModelType, UsageStats> = {} as Record<AIModelType, UsageStats>;
 
     for (const [model, modelRecords] of byModel) {
       result[model] = this.calculateStats(modelRecords);
@@ -389,9 +389,9 @@ class AIUsageMonitor {
       totalTokens: 0,
       totalCost: 0,
       averageDuration: 0,
-      requestsByFeature: {} as any,
-      requestsByModel: {} as any,
-      costByFeature: {} as any,
+      requestsByFeature: {} as Record<AIFeatureCategory, number>,
+      requestsByModel: {} as Record<AIModelType, number>,
+      costByFeature: {} as Record<AIFeatureCategory, number>,
     };
 
     // Initialize counters
@@ -533,9 +533,9 @@ class AIUsageMonitor {
       totalTokens: 0,
       totalCost: 0,
       averageDuration: 0,
-      requestsByFeature: {} as any,
-      requestsByModel: {} as any,
-      costByFeature: {} as any,
+      requestsByFeature: {} as Record<AIFeatureCategory, number>,
+      requestsByModel: {} as Record<AIModelType, number>,
+      costByFeature: {} as Record<AIFeatureCategory, number>,
     };
 
     for (const feature of Object.values(AIFeatureCategory)) {

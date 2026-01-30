@@ -12,7 +12,6 @@ export function PredictiveAnalytics() {
   const { data: predictions } = useQuery({
     queryKey: ["predictive-analytics"],
     queryFn: async () => {
-      const db = getFirebaseDb();
 
       // Buscar dados dos últimos 30 dias
       const last30Days = eachDayOfInterval({
@@ -64,7 +63,6 @@ export function PredictiveAnalytics() {
   const { data: insights } = useQuery({
     queryKey: ["predictive-insights"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       // Taxa de cancelamento

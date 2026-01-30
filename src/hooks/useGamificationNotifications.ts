@@ -22,9 +22,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
-
-const db = getFirebaseDb();
+import { db } from '@/integrations/firebase/app';
 
 export type NotificationType = 'achievement' | 'level_up' | 'quest_complete' | 'streak_milestone' | 'reward_unlocked';
 
@@ -34,7 +32,7 @@ export interface GamificationNotification {
   type: NotificationType;
   title: string;
   message: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   read_at: string | null;
   created_at: string;
   expires_at: string;

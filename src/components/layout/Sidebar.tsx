@@ -174,7 +174,7 @@ export function Sidebar() {
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
 
   // Função auxiliar para renderizar item do menu
-  const renderMenuItem = (item: { icon: any; label: string; href: string }, collapsed: boolean, location: { pathname: string }) => {
+  const renderMenuItem = (item: { icon: React.ComponentType<{ className?: string }>; label: string; href: string }, collapsed: boolean, location: { pathname: string }) => {
     const Icon = item.icon;
     const isActive = location.pathname === item.href;
 
@@ -223,9 +223,9 @@ export function Sidebar() {
     collapsed,
     location
   }: {
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     label: string;
-    items: Array<{ icon?: any; label: string; href: string }>;
+    items: Array<{ icon?: React.ComponentType<{ className?: string }>; label: string; href: string }>;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     isActive: boolean;

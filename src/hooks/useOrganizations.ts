@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -23,14 +23,13 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 export interface Organization {
   id: string;
   name: string;
   slug: string;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -101,7 +100,7 @@ export const useOrganizations = () => {
 
   // Mutation para criar organização
   const createOrganization = useMutation({
-    mutationFn: async (orgData: { name: string; slug: string; settings?: Record<string, any> }) => {
+    mutationFn: async (orgData: { name: string; slug: string; settings?: Record<string, unknown> }) => {
       const now = new Date().toISOString();
       const orgDataToInsert = {
         name: orgData.name,

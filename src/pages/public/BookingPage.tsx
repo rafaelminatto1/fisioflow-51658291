@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -25,7 +25,6 @@ import { Loader2, Calendar as CalendarIcon, Clock, CheckCircle2, User } from 'lu
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const db = getFirebaseDb();
 
 interface PublicProfile {
     id: string;
@@ -63,7 +62,6 @@ export const BookingPage = () => {
         async function loadProfile() {
             if (!slug) return;
             try {
-                const db = getFirebaseDb();
                 const q = query(collection(db, 'profiles'), where('slug', '==', slug));
                 const querySnapshot = await getDocs(q);
 

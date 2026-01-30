@@ -12,7 +12,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -39,7 +39,6 @@ const BUSINESS_HOURS = {
   slotDuration: 30,
 } as const;
 
-const db = getFirebaseDb();
 
 const QUERY_KEYS = {
   all: ['analytics'] as const,
@@ -47,8 +46,60 @@ const QUERY_KEYS = {
   trends: (period: string, metric: string) => [...QUERY_KEYS.all, 'trends', period, metric] as const,
 };
 
-// Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface FirestoreDoc {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface Appointment {
+  id: string;
+  patient_id?: string;
+  therapist_id?: string;
+  date: string;
+  time?: string;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface Patient {
+  id: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  created_at?: string;
+  last_appointment?: string;
+  [key: string]: unknown;
+}
+
+interface Payment {
+  id: string;
+  date: string;
+  amount: number;
+  status: string;
+  [key: string]: unknown;
+}
+
+interface Profile {
+  id: string;
+  full_name?: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
+interface LastAppointmentInfo {
+  patientId: string;
+  lastAppointment: string | null;
+}
+
+// Helper to convert doc with generic type
+const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => ({
+  id: doc.id,
+  ...doc.data()
+});
 
 // =====================================================================
 // HOOK: DASHBOARD METRICS
@@ -123,7 +174,7 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
       const payments = paymentsSnap.docs.map(convertDoc);
 
       // Get last appointment date for each patient
-      const patientIds = patients.map((p: any) => p.id);
+      const patientIds = (patients as Patient[]).map((p) => p.id);
       const lastAppointments = await Promise.all(
         patientIds.map(async (patientId: string) => {
           const aptSnap = await getDocs(query(
@@ -141,9 +192,9 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
         })
       );
 
-      const patientsWithLastAppointment = patients.map((p: any) => ({
+      const patientsWithLastAppointment = (patients as Patient[]).map((p) => ({
         ...p,
-        last_appointment: lastAppointments.find((la: any) => la.patientId === p.id)?.lastAppointment || undefined,
+        last_appointment: lastAppointments.find((la) => la.patientId === p.id)?.lastAppointment || undefined,
       }));
 
       return generateDashboardMetrics(
@@ -210,8 +261,8 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
 
       const appointments = snap.docs.map(convertDoc) || [];
       const completedAppointments = appointments
-        .filter((a: any) => a.status === 'completed')
-        .map((a: any) => ({ date: a.date, value: 1 }));
+        .filter((a) => a.status === 'completed')
+        .map((a) => ({ date: a.date, value: 1 }));
 
       return generateTrendData(completedAppointments, start, end, groupBy);
     },
@@ -263,7 +314,7 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
       ));
 
       const payments = snap.docs.map(convertDoc) || [];
-      const paymentData = payments.map((p: any) => ({ date: p.date, value: p.amount }));
+      const paymentData = payments.map((p) => ({ date: p.date, value: p.amount }));
 
       return generateTrendData(paymentData, start, end, groupBy);
     },
@@ -448,20 +499,19 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         const appointments = snap.docs.map(convertDoc);
 
         // Fetch profile names from Firestore
-        const therapistIds = [...new Set(appointments.map((apt: any) => apt.therapist_id).filter(Boolean))];
+        const therapistIds = [...new Set(appointments.map((apt) => apt.therapist_id as string | undefined).filter((id): id is string => id !== undefined))];
         const profileNames = new Map<string, string>();
 
-        await Promise.all(therapistIds.map(async (id: any) => {
-          if (!id) return;
+        await Promise.all(therapistIds.map(async (id) => {
           const profSnap = await getDoc(doc(db, 'profiles', id));
           if (profSnap.exists()) {
-            profileNames.set(id, profSnap.data().full_name);
+            profileNames.set(id, profSnap.data().full_name as string);
           }
         }));
 
         const counts = new Map<string, { name: string; count: number }>();
-        appointments.forEach((apt: any) => {
-          const therapistId = apt.therapist_id;
+        appointments.forEach((apt) => {
+          const therapistId = apt.therapist_id as string | undefined;
           if (!therapistId) return;
 
           const name = profileNames.get(therapistId) || 'Unknown';

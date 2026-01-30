@@ -241,7 +241,7 @@ export function useCoreWebVitals() {
 /**
  * Cria um debounce de performance
  */
-export function performanceDebounce<T extends (...args: any[]) => any>(
+export function performanceDebounce<T extends ...args: unknown[]>(
   fn: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -272,7 +272,7 @@ export function performanceDebounce<T extends (...args: any[]) => any>(
 /**
  * Cria um throttle de performance
  */
-export function performanceThrottle<T extends (...args: any[]) => any>(
+export function performanceThrottle<T extends ...args: unknown[]>(
   fn: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -322,7 +322,7 @@ export function getResourceTimingStats(): {
   let totalSize = 0;
   const slowResources: Array<{ name: string; duration: number; size: number }> = [];
 
-  resources.forEach((resource: any) => {
+  resources.forEach((resource: PerformanceResourceTiming) => {
     const duration = resource.responseEnd - resource.requestStart;
     const size = resource.transferSize || 0;
 
@@ -351,6 +351,6 @@ export function isLowPerformanceMode(): boolean {
   return (
     !navigator.onLine ||
     ('hardwareConcurrency' in navigator && navigator.hardwareConcurrency < 4) ||
-    ('deviceMemory' in navigator && (navigator as any).deviceMemory < 4)
+    ('deviceMemory' in navigator && (navigator as Navigator & { deviceMemory?: number }).deviceMemory < 4)
   );
 }

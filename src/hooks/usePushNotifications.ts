@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 /**
  * usePushNotifications - Migrated to Firebase
  *
@@ -23,7 +23,6 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface PushSubscription {
   id: string;

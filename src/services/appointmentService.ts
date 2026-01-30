@@ -7,6 +7,31 @@ import { AppError } from '@/lib/errors/AppError';
 import { logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
+import type { UnknownError } from '@/types/common';
+
+// Type for appointment item from API
+interface AppointmentApiItem {
+  id: string;
+  patient_id?: string;
+  patient_name?: string;
+  patient_phone?: string;
+  therapist_id?: string;
+  therapist_name?: string;
+  date?: string;
+  start_time?: string;
+  appointment_time?: string;
+  duration?: number;
+  type?: string;
+  status?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  room?: string;
+  payment_status?: string;
+  payment_method?: string;
+  payment_amount?: number;
+  session_package_id?: string;
+}
 
 // Helper for time calculation
 function calculateEndTime(startTime: string, durationMinutes: number): string {
@@ -30,7 +55,7 @@ export class AppointmentService {
             const validAppointments: AppointmentBase[] = [];
             const validationErrors: { id: string; error: unknown }[] = [];
 
-            (data || []).forEach((item: any) => {
+            (data || []).forEach((item: AppointmentApiItem) => {
                 const itemToValidate = {
                     ...item,
                     patient: {
@@ -64,9 +89,9 @@ export class AppointmentService {
 
                         room: validData.room,
                         payment_status: validData.payment_status || 'pending',
-                        payment_method: (item as any).payment_method,
-                        payment_amount: (item as any).payment_amount,
-                        session_package_id: (item as any).session_package_id,
+                        payment_method: item.payment_method,
+                        payment_amount: item.payment_amount,
+                        session_package_id: item.session_package_id,
                     });
                 } else {
                     validationErrors.push({ id: item.id, error: validation.error });
@@ -78,7 +103,7 @@ export class AppointmentService {
             }
 
             return validAppointments;
-        } catch (error) {
+        } catch (error: UnknownError) {
             throw AppError.from(error, 'AppointmentService.fetchAppointments');
         }
     }

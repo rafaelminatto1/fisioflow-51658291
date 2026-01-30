@@ -1,4 +1,4 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, addDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
 
@@ -137,7 +137,6 @@ export class WhatsAppService {
     retryCount: number;
   }) {
     try {
-      const db = getFirebaseDb();
       await addDoc(collection(db, 'whatsapp_metrics'), {
         phone_number: params.phoneNumber,
         patient_id: params.patientId || null,
@@ -160,7 +159,6 @@ export class WhatsAppService {
    * Get templates from database
    */
   static async getTemplates(): Promise<WhatsAppTemplate[]> {
-    const db = getFirebaseDb();
     // NOTE: This needs proper implementation with Firestore query
     // For now, return empty array
     logger.warn('WhatsAppService.getTemplates: Needs Firestore query implementation', {}, 'WhatsAppService');
@@ -377,7 +375,6 @@ Dúvidas? Entre em contato conosco! 💙`;
 
     // Log the offer to track response
     try {
-      const db = getFirebaseDb();
       await addDoc(collection(db, 'waitlist_slot_offers'), {
         waitlist_entry_id: waitlistEntryId,
         patient_id: patientId,

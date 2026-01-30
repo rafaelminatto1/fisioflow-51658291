@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy, limit, getDoc, doc } from 'firebase/firestore';
 import {
   CommandDialog,
@@ -51,7 +51,6 @@ export function GlobalSearch() {
       setIsLoading(true);
       try {
         const searchResults: SearchResult[] = [];
-        const db = getFirebaseDb();
         const queryLower = debouncedQuery.toLowerCase();
 
         // Buscar eventos - Firebase doesn't have ilike, so we fetch all and filter client-side

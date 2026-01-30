@@ -10,7 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -54,6 +54,21 @@ export interface ChartDataPoint {
   value: number;
   predicted?: boolean;
   label?: string;
+}
+
+// Firestore milestone record structure
+interface FirestoreMilestone {
+  name: string;
+  description?: string;
+  expectedDate: string;
+  achieved: boolean;
+  criteria?: string[];
+}
+
+// Risk factor entry structure
+interface RiskFactorEntry {
+  factor: string;
+  impact: string;
 }
 
 // ============================================================================
@@ -107,7 +122,6 @@ export function useRecoveryPrediction(
  * Hook to fetch previously stored prediction from Firestore
  */
 export function useStoredPrediction(patientId: string) {
-  const db = getFirebaseDb();
 
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.prediction(patientId),
@@ -178,7 +192,6 @@ export function useStoredPrediction(patientId: string) {
  * Hook to get risk factors for delayed recovery
  */
 export function useRiskFactors(patientId: string) {
-  const db = getFirebaseDb();
 
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.riskFactors(patientId),
@@ -200,9 +213,9 @@ export function useRiskFactors(patientId: string) {
       return {
         dropoutRisk: data.dropout_risk_score || 0,
         riskLevel: data.risk_level || 'low',
-        factors: Object.entries(data.risk_factors || {}).map(([key, value]) => ({
+        factors: Object.entries(data.risk_factors || {}).map(([key, value]): RiskFactorEntry => ({
           factor: key,
-          impact: value as string,
+          impact: String(value),
         })),
         recommendations: data.recommended_actions || [],
       };
@@ -220,7 +233,6 @@ export function useRiskFactors(patientId: string) {
  * Hook to track milestones progress
  */
 export function useMilestonesProgress(patientId: string) {
-  const db = getFirebaseDb();
 
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.milestones(patientId),
@@ -246,12 +258,12 @@ export function useMilestonesProgress(patientId: string) {
       }
 
       const prediction = snapshot.docs[0].data();
-      const milestones = prediction.milestones || [];
+      const milestones = (prediction.milestones || []) as FirestoreMilestone[];
 
-      const achievedCount = milestones.filter((m: any) => m.achieved).length;
+      const achievedCount = milestones.filter((m) => m.achieved).length;
 
       return {
-        milestones: milestones.map((m: any) => ({
+        milestones: milestones.map((m): FirestoreMilestone => ({
           name: m.name,
           description: m.description,
           expectedDate: m.expectedDate,

@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 
 interface ActivityEvent {
@@ -38,7 +38,6 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
   useEffect(() => {
     if (authLoading || !user) return;
 
-    const db = getFirebaseDb();
     const unsubscribers: Array<() => void> = [];
 
     const loadRecentActivities = async () => {

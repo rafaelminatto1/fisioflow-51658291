@@ -2,7 +2,7 @@
  * Helpers para operações relacionadas ao usuário e organização
  */
 
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
 
 /**
@@ -12,7 +12,6 @@ import { doc, getDoc } from 'firebase/firestore';
  */
 export async function getUserOrganizationId(): Promise<string | null> {
   const auth = getFirebaseAuth();
-  const db = getFirebaseDb();
   const user = auth.currentUser;
 
   if (!user) {

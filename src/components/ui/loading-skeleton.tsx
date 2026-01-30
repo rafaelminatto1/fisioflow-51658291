@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from './card';
 import { Skeleton } from './skeleton';
 
 interface LoadingSkeletonProps {
-  type?: 'table' | 'card' | 'list' | 'form' | 'stats';
+  type?: 'table' | 'card' | 'list' | 'form' | 'stats' | 'calendar' | 'calendar-day' | 'calendar-week';
   rows?: number;
   className?: string;
 }
@@ -87,6 +87,68 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
             <Skeleton className="h-10 w-full" />
           </div>
         ))}
+      </div>
+    );
+  }
+
+  // Calendar-specific loading skeleton
+  if (type === 'calendar-week') {
+    return (
+      <div className={`h-full flex flex-col ${className}`}>
+        {/* Header with days */}
+        <div className="grid grid-cols-8 gap-px border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+          <Skeleton className="h-10 w-full" />
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+        {/* Time slots */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-8 gap-px min-h-[600px]">
+            <Skeleton className="h-full" />
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-full bg-slate-50 dark:bg-slate-900/50" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'calendar-day') {
+    return (
+      <div className={`h-full flex flex-col ${className}`}>
+        {/* Header */}
+        <Skeleton className="h-10 w-full mb-2" />
+        {/* Time slots */}
+        <div className="flex-1 overflow-y-auto space-y-1">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Skeleton className="h-12 w-16 flex-shrink-0" />
+              <Skeleton className="h-12 flex-1" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'calendar') {
+    return (
+      <div className={`h-full flex flex-col ${className}`}>
+        {/* Calendar header */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+          <Skeleton className="h-6 w-48" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+        {/* Calendar grid */}
+        <div className="flex-1 p-4">
+          <Skeleton className="h-full w-full rounded-lg" />
+        </div>
       </div>
     );
   }
