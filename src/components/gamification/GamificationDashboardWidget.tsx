@@ -130,7 +130,6 @@ export function GamificationDashboardWidget({
           levelCalculation,
         });
       } catch (err) {
-        console.error('Error loading gamification data:', err);
         logger.error('Error loading gamification data', err, 'GamificationDashboardWidget');
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
       } finally {
