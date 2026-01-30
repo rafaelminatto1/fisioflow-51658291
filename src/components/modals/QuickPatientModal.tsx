@@ -69,7 +69,7 @@ const getErrorMessage = (error: { code?: string; message?: string; functionName?
   const functionName = error?.functionName || 'createPatient';
 
   // Log detalhado para debug
-  console.error('[QuickPatientModal] Erro ao criar paciente:', { code, message, functionName, error });
+  logger.error('[QuickPatientModal] Erro ao criar paciente', { code, message, functionName, error }, 'QuickPatientModal');
 
   // Erros específicos do Firebase/Postgres
   const errorMessages: Record<string, string> = {

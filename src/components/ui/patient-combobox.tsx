@@ -89,7 +89,7 @@ export function PatientCombobox({
       .sort((a, b) => (a.score || 0) - (b.score || 0))
       .map(result => result.item);
 
-    console.log('PatientCombobox filtering:', { searchTerm, direct: directMatches.length, fuzzy: mapped.length });
+    logger.debug('PatientCombobox filtering', { searchTerm, direct: directMatches.length, fuzzy: mapped.length }, 'PatientCombobox');
     return mapped;
   }, [fuse, inputValue, patients]);
 

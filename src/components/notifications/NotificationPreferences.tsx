@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export function NotificationPreferences() {
   const { preferences, isLoading, error, updatePreferences, isUpdating } = useNotificationPreferences();
@@ -46,7 +47,7 @@ export function NotificationPreferences() {
       toast.success('Preferências salvas com sucesso!');
     } catch (err) {
       toast.error('Erro ao salvar preferências');
-      console.error(err);
+      logger.error('Erro ao salvar preferências', err, 'NotificationPreferences');
     }
   };
 
