@@ -24,6 +24,7 @@ import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import type { UnknownError } from '@/types/common';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -110,12 +111,12 @@ export const useDashboardMetrics = () => {
     );
 
     const unsubscribeAppointments = onSnapshot(appointmentsQuery, () => {
-      console.log('[Realtime] Appointments changed, invalidating dashboard metrics...');
+      logger.info('[Realtime] Appointments changed, invalidating dashboard metrics', undefined, 'useDashboardMetrics');
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
     });
 
     const unsubscribePatients = onSnapshot(patientsQuery, () => {
-      console.log('[Realtime] Patients changed, invalidating dashboard metrics...');
+      logger.info('[Realtime] Patients changed, invalidating dashboard metrics', undefined, 'useDashboardMetrics');
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
     });
 
