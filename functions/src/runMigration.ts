@@ -8,7 +8,7 @@ import { getPool } from './init';
  * Usage from Firebase Functions shell:
  * const data = await runMigration({ data: null });
  */
-export const runMigration = onCall(async (request) => {
+export const runMigration = onCall({ cors: true }, async (request) => {
   const pool = getPool();
   const client = await pool.connect();
 
