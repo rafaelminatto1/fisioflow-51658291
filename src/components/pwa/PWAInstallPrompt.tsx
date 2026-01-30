@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, X } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -38,7 +39,7 @@ export function PWAInstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      console.log('PWA instalado com sucesso');
+      logger.info('PWA instalado com sucesso', undefined, 'PWAInstallPrompt');
     }
     
     setDeferredPrompt(null);
