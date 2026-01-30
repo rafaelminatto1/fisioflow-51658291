@@ -24,6 +24,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 
+import { logger } from '@/lib/errors/logger';
 
 export type QuestCategory = 'daily' | 'weekly' | 'special';
 export type QuestStatus = 'pending' | 'in_progress' | 'completed' | 'expired';
@@ -115,7 +116,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
 
         return questsWithDefinitions;
       } catch (err) {
-        console.error('Failed to fetch quests:', err);
+        logger.error('Failed to fetch quests', err, 'useQuests');
         throw err;
       }
     },
@@ -138,7 +139,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as QuestDefinition[];
       } catch (err) {
-        console.error('Failed to fetch available quests:', err);
+        logger.error('Failed to fetch available quests', err, 'useQuests');
         return [];
       }
     },
@@ -270,7 +271,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
         description: "Novas quests diárias disponíveis!",
       });
     } catch (error) {
-      console.error('Failed to refresh quests:', error);
+      logger.error('Failed to refresh quests', error, 'useQuests');
       toast({
         title: "Erro ao atualizar quests",
         description: "Tente novamente mais tarde",
