@@ -8,6 +8,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { Appointment } from '@/types/appointment';
 import { calculateEndTime } from './utils';
 import { STATUS_COLORS } from './constants';
+import { logger } from '@/lib/errors/logger';
 
 // =====================================================================
 // TYPES
@@ -171,7 +172,7 @@ export class GoogleCalendarSync {
         return { success: true, eventId: response.data.id };
       }
     } catch (error) {
-      console.error('Erro ao sincronizar com Google Calendar:', error);
+      logger.error('Erro ao sincronizar com Google Calendar', error, 'google-sync');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -197,7 +198,7 @@ export class GoogleCalendarSync {
 
       return response.data.items || [];
     } catch (error) {
-      console.error('Erro ao buscar do Google Calendar:', error);
+      logger.error('Erro ao buscar do Google Calendar', error, 'google-sync');
       return [];
     }
   }
@@ -216,7 +217,7 @@ export class GoogleCalendarSync {
 
       return { success: true };
     } catch (error) {
-      console.error('Erro ao deletar do Google Calendar:', error);
+      logger.error('Erro ao deletar do Google Calendar', error, 'google-sync');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao deletar',
@@ -242,7 +243,7 @@ export class GoogleCalendarSync {
 
       return response.data.resourceId;
     } catch (error) {
-      console.error('Erro ao configurar watch:', error);
+      logger.error('Erro ao configurar watch', error, 'google-sync');
       return null;
     }
   }
@@ -263,7 +264,7 @@ export class GoogleCalendarSync {
 
       return true;
     } catch (error) {
-      console.error('Erro ao parar watch:', error);
+      logger.error('Erro ao parar watch', error, 'google-sync');
       return false;
     }
   }

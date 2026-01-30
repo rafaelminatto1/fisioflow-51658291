@@ -22,6 +22,7 @@ import { functions } from '@/lib/firebase';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 interface WhatsAppIntegrationProps {
   patientId: string;
@@ -44,7 +45,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
       const result = await getHistory({ patientId: _patientId });
       setHistory((result.data as { data?: Array<{ id: string; message: string; sent_at: string; status?: string }> }).data || []);
     } catch (error) {
-      console.error('Error fetching WhatsApp history:', error);
+      logger.error('Error fetching WhatsApp history', error, 'WhatsAppIntegration');
     } finally {
       setLoadingHistory(false);
     }
@@ -105,7 +106,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
       setMessage('');
       fetchHistory(); // Refresh history
     } catch (error) {
-      console.error('Error sending WhatsApp message:', error);
+      logger.error('Error sending WhatsApp message', error, 'WhatsAppIntegration');
       toast({
         title: 'Erro ao enviar mensagem',
         description: error instanceof Error ? error.message : 'Tente novamente',
