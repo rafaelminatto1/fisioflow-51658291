@@ -12,6 +12,7 @@ import { usePainEvolution, usePainStatistics } from '@/hooks/usePainMaps';
 import { usePatientSurgeries, usePatientPathologies, usePatientGoals } from '@/hooks/usePatientEvolution';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { logger } from '@/lib/errors/logger';
 
 interface ReportGeneratorDialogProps {
   patientId: string;
@@ -179,7 +180,7 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
 
       setIsOpen(false);
     } catch (error) {
-      console.error('Erro ao gerar relatório:', error);
+      logger.error('Erro ao gerar relatório', error, 'ReportGeneratorDialog');
     } finally {
       setIsGenerating(false);
     }

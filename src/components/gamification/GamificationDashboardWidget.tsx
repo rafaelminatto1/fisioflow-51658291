@@ -6,6 +6,7 @@ import { LevelProgressWidget } from './widgets/LevelProgressWidget';
 import { RecentAchievementsWidget } from './widgets/RecentAchievementsWidget';
 import { DailyQuestsWidget } from './widgets/DailyQuestsWidget';
 import { GamificationTriggerService, type LevelCalculationResult } from '@/lib/services/gamificationTriggers';
+import { logger } from '@/lib/errors/logger';
 
 interface GamificationDashboardWidgetProps {
   patientId: string;
@@ -130,6 +131,7 @@ export function GamificationDashboardWidget({
         });
       } catch (err) {
         console.error('Error loading gamification data:', err);
+        logger.error('Error loading gamification data', err, 'GamificationDashboardWidget');
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
       } finally {
         setIsLoading(false);
