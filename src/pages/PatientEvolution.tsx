@@ -36,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/components/ui/CommandPalette';
+import { logger } from '@/lib/errors/logger';
 
 // Hooks
 import {
@@ -563,7 +564,7 @@ const PatientEvolution = () => {
               });
             }
           } catch (e) {
-            console.error("Failed to award XP", e);
+            logger.error("Failed to award XP", e, 'PatientEvolution');
           }
 
           toast({

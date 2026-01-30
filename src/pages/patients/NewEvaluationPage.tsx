@@ -34,6 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 import { doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from 'firebase/firestore';
 import { PatientHelpers } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
 
@@ -158,7 +159,7 @@ export default function NewEvaluationPage() {
 
             navigate('/schedule');
         } catch (error) {
-            console.error(error);
+            logger.error('Erro ao salvar avaliação', error, 'NewEvaluationPage');
             toast({
                 title: "Erro ao salvar",
                 description: "Ocorreu um erro ao salvar a avaliação.",

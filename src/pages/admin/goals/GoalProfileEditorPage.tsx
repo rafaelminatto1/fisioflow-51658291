@@ -30,6 +30,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { goalsAdminService, ProfileDetail } from '@/services/goals/goalsAdminService';
 import { metricRegistry } from '@/lib/metrics/metricRegistry';
 import { GoalTarget, TargetMode } from '@/lib/goals/goalProfiles.seed';
+import { logger } from '@/lib/errors/logger';
 
 // Pre-compute metric options based on registry
 // Filter out those without keys or labels just in case
@@ -90,7 +91,7 @@ export default function GoalProfileEditorPage() {
             toast({ title: "Salvo com sucesso", description: "As alterações foram salvas." });
         },
         onError: (error: unknown) => {
-            console.error("Failed to save profile:", error);
+            logger.error("Failed to save profile", error, 'GoalProfileEditorPage');
             toast({ title: "Erro ao salvar", description: error.message || "Erro desconhecido", variant: "destructive" });
         }
     });
