@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
-import { auth, db } from '@fisioflow/shared-api/src/firebase/config';
+import { auth, db } from '@fisioflow/shared-api/firebase';
 import { COLLECTIONS } from '@fisioflow/shared-constants';
 import type { User as FirebaseUser } from 'firebase/auth';
 

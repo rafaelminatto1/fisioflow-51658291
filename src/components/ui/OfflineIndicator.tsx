@@ -17,7 +17,6 @@
  * />
  * ```
  */
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { WifiOff, RefreshCw, AlertCircle, CloudOff } from 'lucide-react';
