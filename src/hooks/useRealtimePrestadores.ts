@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 /**
  * Hook para inscrições Realtime na tabela prestadores (Firestore)

@@ -105,7 +105,7 @@ describe.skip('useStandardForms', () => {
         error: null,
       });
 
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'evaluation_forms') {
           return { insert: mockInsert };
         }
@@ -143,7 +143,7 @@ describe.skip('useStandardForms', () => {
         error: null,
       });
 
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'evaluation_forms') {
           return { insert: mockInsert };
         }
@@ -178,7 +178,7 @@ describe.skip('useStandardForms', () => {
         error: null,
       });
 
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'evaluation_forms') {
           return { insert: mockInsert };
         }
@@ -210,7 +210,7 @@ describe.skip('useStandardForms', () => {
         }),
       });
 
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         insert: mockInsert,
       });
 
@@ -235,7 +235,7 @@ describe.skip('useStandardForms', () => {
         error: null,
       });
 
-      (supabase.from as any).mockImplementation((table: string) => {
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === 'evaluation_forms') {
           return { insert: mockInsert };
         }

@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -21,8 +21,6 @@ import {
   updateDoc,
   orderBy,
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 export interface Annotation {
   id: string;

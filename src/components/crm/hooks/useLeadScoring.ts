@@ -9,10 +9,9 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 interface ScoreFactor {
   type: string;

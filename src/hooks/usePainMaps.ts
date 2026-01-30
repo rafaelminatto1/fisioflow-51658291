@@ -12,7 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
 import type { PainPoint } from '@/components/pain-map';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -29,7 +29,6 @@ import {
   documentId
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 interface PainMap {
   id: string;
@@ -66,7 +65,7 @@ interface CreatePainMapInput {
 }
 
 // Helper: Convert Firestore doc to PainMap
-const convertDocToPainMap = (doc: any): PainMap => {
+const convertDocToPainMap = (doc: { id: string; data: () => Record<string, unknown> }): PainMap => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -75,7 +74,7 @@ const convertDocToPainMap = (doc: any): PainMap => {
 };
 
 // Helper: Convert Firestore doc to PainMapPoint
-const convertDocToPainMapPoint = (doc: any): PainMapPoint => {
+const convertDocToPainMapPoint = (doc: { id: string; data: () => Record<string, unknown> }): PainMapPoint => {
   const data = doc.data();
   return {
     id: doc.id,

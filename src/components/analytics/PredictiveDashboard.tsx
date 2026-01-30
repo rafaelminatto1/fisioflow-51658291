@@ -53,18 +53,68 @@ import {
   getRiskLevelColor,
   getRiskLevelLabel,
 } from '@/hooks/usePredictiveAnalytics';
+import { RecoveryPrediction } from '@/lib/ai/predictive-analytics';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
+interface PatientProfile {
+  dateOfBirth?: string;
+  gender?: string;
+  [key: string]: unknown;
+}
+
+interface CurrentCondition {
+  condition?: string;
+  severity?: string;
+  [key: string]: unknown;
+}
+
+interface TreatmentContext {
+  startDate?: string;
+  frequency?: string;
+  [key: string]: unknown;
+}
+
+interface ProgressData {
+  sessionsCompleted?: number;
+  improvementPercentage?: number;
+  [key: string]: unknown;
+}
+
 interface PredictiveDashboardProps {
   patientId: string;
-  patientProfile?: any;
-  currentCondition?: any;
-  treatmentContext?: any;
-  progressData?: any;
+  patientProfile?: PatientProfile;
+  currentCondition?: CurrentCondition;
+  treatmentContext?: TreatmentContext;
+  progressData?: ProgressData;
+}
+
+interface RiskData {
+  dropoutRisk: number;
+  riskLevel: 'low' | 'medium' | 'high';
+  factors: Array<{
+    factor: string;
+    impact: string;
+  }>;
+  recommendations?: string[];
+}
+
+interface Milestone {
+  name: string;
+  description?: string;
+  expectedDate: string;
+  achieved: boolean;
+  criteria?: string[];
+}
+
+interface MilestonesData {
+  milestones: Milestone[];
+  achievedCount: number;
+  totalCount: number;
+  progressPercentage: number;
 }
 
 // ============================================================================
@@ -75,7 +125,7 @@ function RecoveryTimelineCard({
   prediction,
   isLoading,
 }: {
-  prediction?: any;
+  prediction?: RecoveryPrediction;
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -178,7 +228,7 @@ function RiskFactorsCard({
   riskData,
   isLoading,
 }: {
-  riskData?: any;
+  riskData?: RiskData;
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -227,7 +277,7 @@ function RiskFactorsCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {riskData.factors.map((factor: any, index: number) => (
+        {riskData.factors.map((factor, index: number) => (
           <Alert key={index} variant={factor.impact === 'high' ? 'destructive' : 'default'}>
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle className="text-sm">{factor.factor}</AlertTitle>
@@ -245,7 +295,7 @@ function MilestonesCard({
   milestonesData,
   isLoading,
 }: {
-  milestonesData?: any;
+  milestonesData?: MilestonesData;
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -305,7 +355,7 @@ function MilestonesCard({
 
         {/* Milestones list */}
         <div className="space-y-3">
-          {milestonesData.milestones.map((milestone: any, index: number) => (
+          {milestonesData.milestones.map((milestone, index: number) => (
             <div key={index} className="flex items-start gap-3">
               <div className={`mt-0.5 ${milestone.achieved ? 'text-green-500' : 'text-muted-foreground'}`}>
                 {milestone.achieved ? (
@@ -336,7 +386,7 @@ function TreatmentRecommendationsCard({
   prediction,
   isLoading,
 }: {
-  prediction?: any;
+  prediction?: RecoveryPrediction;
   isLoading?: boolean;
 }) {
   if (isLoading) {

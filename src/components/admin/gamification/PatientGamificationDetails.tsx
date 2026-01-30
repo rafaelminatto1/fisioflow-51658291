@@ -108,7 +108,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
       );
       const querySnapshot = await getDocs(q);
 
-      const transactions: any[] = [];
+      const transactions: Record<string, unknown>[] = [];
       querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
         transactions.push({
           id: doc.id,
@@ -134,7 +134,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
       );
       const querySnapshot = await getDocs(q);
 
-      const achievements: any[] = [];
+      const achievements: Record<string, unknown>[] = [];
       for (const docSnapshot of querySnapshot.docs) {
         const logData = {
           id: docSnapshot.id,
@@ -231,7 +231,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
           </div>
         ) : (
           <>
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="px-6">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as string)} className="px-6">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="history">Histórico</TabsTrigger>
@@ -400,10 +400,10 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
                             <TableCell>
                               <Badge variant="outline" className="capitalize">
                                 {tx.reason === 'manual_adjustment' ? 'Ajuste Manual' :
-                                 tx.reason === 'session_completed' ? 'Sessão' :
-                                 tx.reason === 'daily_quest' ? 'Missão' :
-                                 tx.reason === 'achievement_unlocked' ? 'Conquista' :
-                                 tx.reason}
+                                  tx.reason === 'session_completed' ? 'Sessão' :
+                                    tx.reason === 'daily_quest' ? 'Missão' :
+                                      tx.reason === 'achievement_unlocked' ? 'Conquista' :
+                                        tx.reason}
                               </Badge>
                             </TableCell>
                             <TableCell className={tx.amount > 0 ? 'text-green-600' : tx.amount < 0 ? 'text-red-600' : ''}>

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthContext } from '@/contexts/AuthContext';
+import { AuthContext, type AuthContextType } from '@/contexts/AuthContext';
 import { useAuth } from '../useAuth';
 import React from 'react';
 
@@ -57,7 +57,7 @@ const createWrapper = () => {
     logger: { log: console.log, warn: console.warn, error: () => {} },
   });
   return ({ children }: { children: React.ReactNode }) => (
-    <AuthContext.Provider value={mockAuthContextValue as any}>
+    <AuthContext.Provider value={mockAuthContextValue as AuthContextType}>
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
@@ -88,7 +88,7 @@ describe('useAuth', () => {
     };
 
     // Update mock value
-    mockAuthContextValue.user = mockUser as any;
+    mockAuthContextValue.user = mockUser as AuthContextType['user'];
 
     const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 

@@ -284,7 +284,7 @@ export function useAppointments() {
     const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
 
     channel.subscribe(ABLY_EVENTS.update, (message) => {
-      const payload = message.data as any;
+      const payload = message.data as { eventType: string; data: Record<string, unknown> };
       logger.info(`Realtime event (Ably): appointments ${payload.eventType}`, {}, 'useAppointments');
 
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });

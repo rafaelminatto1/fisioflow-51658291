@@ -12,7 +12,8 @@ import {
   Activity,
   FileText,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Target
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,11 +35,13 @@ interface PatientDashboard360Props {
     address?: string;
     city?: string;
     state?: string;
+    gender?: string;
+    status?: string;
   };
   upcomingAppointments?: Array<{
     id: string;
-    date: Date | string;
-    time: string;
+    appointment_date: string;
+    appointment_time: string;
     type: string;
     status: string;
   }>;

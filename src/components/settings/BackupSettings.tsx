@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Database, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
 import { collection as collectionRef, getDocs as getDocsFromCollection } from 'firebase/firestore';
 
 export function BackupSettings() {
@@ -31,7 +31,6 @@ export function BackupSettings() {
                 'patient_packages'
             ];
 
-            const db = getFirebaseDb();
 
             await Promise.all(collections.map(async (colName) => {
                 const colRef = collectionRef(db, colName);
