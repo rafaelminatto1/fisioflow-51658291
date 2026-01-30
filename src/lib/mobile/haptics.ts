@@ -1,5 +1,6 @@
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Serviço para feedback tátil (vibrações hápticas)
@@ -23,7 +24,7 @@ export async function hapticLight(): Promise<void> {
   try {
     await Haptics.impact({ style: ImpactStyle.Light });
   } catch (error) {
-    console.error('Erro no haptic light:', error);
+    logger.error('Erro no haptic light', error, 'haptics');
   }
 }
 
@@ -37,7 +38,7 @@ export async function hapticMedium(): Promise<void> {
   try {
     await Haptics.impact({ style: ImpactStyle.Medium });
   } catch (error) {
-    console.error('Erro no haptic medium:', error);
+    logger.error('Erro no haptic medium', error, 'haptics');
   }
 }
 
@@ -51,7 +52,7 @@ export async function hapticHeavy(): Promise<void> {
   try {
     await Haptics.impact({ style: ImpactStyle.Heavy });
   } catch (error) {
-    console.error('Erro no haptic heavy:', error);
+    logger.error('Erro no haptic heavy', error, 'haptics');
   }
 }
 
@@ -65,7 +66,7 @@ export async function hapticSuccess(): Promise<void> {
   try {
     await Haptics.notification({ type: NotificationType.Success });
   } catch (error) {
-    console.error('Erro no haptic success:', error);
+    logger.error('Erro no haptic success', error, 'haptics');
   }
 }
 
@@ -79,7 +80,7 @@ export async function hapticWarning(): Promise<void> {
   try {
     await Haptics.notification({ type: NotificationType.Warning });
   } catch (error) {
-    console.error('Erro no haptic warning:', error);
+    logger.error('Erro no haptic warning', error, 'haptics');
   }
 }
 
@@ -93,7 +94,7 @@ export async function hapticError(): Promise<void> {
   try {
     await Haptics.notification({ type: NotificationType.Error });
   } catch (error) {
-    console.error('Erro no haptic error:', error);
+    logger.error('Erro no haptic error', error, 'haptics');
   }
 }
 
@@ -108,7 +109,7 @@ export async function hapticSelection(): Promise<void> {
     await Haptics.selectionStart();
     await Haptics.selectionEnd();
   } catch (error) {
-    console.error('Erro no haptic selection:', error);
+    logger.error('Erro no haptic selection', error, 'haptics');
   }
 }
 
@@ -122,7 +123,7 @@ export async function hapticVibrate(duration: number): Promise<void> {
   try {
     await Haptics.vibrate({ duration });
   } catch (error) {
-    console.error('Erro no haptic vibrate:', error);
+    logger.error('Erro no haptic vibrate', error, 'haptics');
   }
 }
 

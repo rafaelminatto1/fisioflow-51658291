@@ -1,5 +1,6 @@
 import type { PainPoint } from '@/components/pain-map/BodyMap';
 import { jsPDF } from 'jspdf';
+import { logger } from '@/lib/errors/logger';
 
 export interface PainMapExportData {
   patientName: string;
@@ -139,7 +140,7 @@ export async function generatePDFReport(data: PainMapExportData): Promise<Blob> 
       doc.addImage(data.mapImage, 'PNG', (pageWidth - imgWidth) / 2, y, imgWidth, imgHeight);
       y += imgHeight + 10;
     } catch (error) {
-      console.error('Error adding image to PDF:', error);
+      logger.error('Error adding image to PDF', error, 'painMapExport');
     }
   }
 
@@ -308,7 +309,7 @@ export async function copyToClipboard(content: string): Promise<boolean> {
     await navigator.clipboard.writeText(content);
     return true;
   } catch (err) {
-    console.error('Erro ao copiar para área de transferência:', err);
+    logger.error('Erro ao copiar para área de transferência', err, 'painMapExport');
     return false;
   }
 }

@@ -45,6 +45,7 @@ export enum WhatsAppTemplate {
  */
 export const sendWhatsAppAppointmentConfirmation = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -134,6 +135,7 @@ export const sendWhatsAppAppointmentConfirmation = onCall({
  */
 export const sendWhatsAppAppointmentReminder = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -202,6 +204,7 @@ export const sendWhatsAppAppointmentReminder = onCall({
  */
 export const sendWhatsAppWelcome = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -246,6 +249,7 @@ export const sendWhatsAppWelcome = onCall({
  */
 export const sendWhatsAppCustomMessage = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -305,6 +309,7 @@ export const sendWhatsAppCustomMessage = onCall({
  */
 export const sendWhatsAppExerciseAssigned = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -667,6 +672,7 @@ async function handleAutoReply(from: string, text: string, patient: any) {
  */
 export const testWhatsAppMessage = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -732,6 +738,7 @@ export const testWhatsAppMessage = onCall({
  */
 export const testWhatsAppTemplate = onCall({
   cors: true,
+  region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -850,6 +857,7 @@ export const testWhatsAppTemplate = onCall({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 export const getWhatsAppHistory = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
 }, async (request) => {

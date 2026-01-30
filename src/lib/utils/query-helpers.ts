@@ -11,6 +11,7 @@
 
 import { db } from '@/integrations/firebase/app';
 import { query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 
 // ==============================================================================
@@ -211,7 +212,7 @@ export async function safeQuery<T>(
   try {
     return await queryFn();
   } catch (error) {
-    console.error(`[Query Error] ${context}:`, error);
+    logger.error(`[Query Error] ${context}`, error, 'query-helpers');
     return fallback;
   }
 }
