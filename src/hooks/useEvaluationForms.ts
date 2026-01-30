@@ -10,7 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -24,7 +24,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -37,7 +36,7 @@ export type EvaluationFormFormData = {
 export type EvaluationFormFieldFormData = Omit<EvaluationFormField, 'id' | 'created_at' | 'form_id'>;
 
 // Helper to convert Firestore doc to EvaluationForm
-const convertDocToEvaluationForm = (doc: any): EvaluationForm => {
+const convertDocToEvaluationForm = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationForm => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -46,7 +45,7 @@ const convertDocToEvaluationForm = (doc: any): EvaluationForm => {
 };
 
 // Helper to convert Firestore doc to EvaluationFormField
-const convertDocToEvaluationFormField = (doc: any): EvaluationFormField => {
+const convertDocToEvaluationFormField = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationFormField => {
   const data = doc.data();
   return {
     id: doc.id,

@@ -1,11 +1,10 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import type { PatientGoal, PatientGoalFormData } from '@/types/evolution';
 import { differenceInDays } from 'date-fns';
 
 export class PatientGoalsService {
   static async getGoalsByPatientId(patientId: string): Promise<PatientGoal[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'patient_goals'),
       where('patient_id', '==', patientId),
@@ -25,7 +24,6 @@ export class PatientGoalsService {
   }
 
   static async addGoal(data: PatientGoalFormData): Promise<PatientGoal> {
-    const db = getFirebaseDb();
     const now = new Date().toISOString();
     const dataToSave = {
       ...data,
@@ -52,7 +50,6 @@ export class PatientGoalsService {
     progress: number,
     currentValue?: string
   ): Promise<PatientGoal> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_goals', goalId);
 
     const updates: { current_progress: number; current_value?: string; updated_at: string } = {
@@ -77,7 +74,6 @@ export class PatientGoalsService {
   }
 
   static async updateGoal(goalId: string, data: Partial<PatientGoalFormData>): Promise<PatientGoal> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_goals', goalId);
 
     await updateDoc(docRef, {
@@ -97,7 +93,6 @@ export class PatientGoalsService {
   }
 
   static async deleteGoal(goalId: string): Promise<void> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_goals', goalId);
     await deleteDoc(docRef);
   }
@@ -125,7 +120,6 @@ export class PatientGoalsService {
   }
 
   static async markGoalCompleted(goalId: string): Promise<PatientGoal> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_goals', goalId);
 
     await updateDoc(docRef, {

@@ -18,7 +18,7 @@ import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { getAuth } from 'firebase/auth';
 import {
   collection,
@@ -34,7 +34,6 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getAuth();
 
 // Types (mantidos iguais)
@@ -92,7 +91,7 @@ export interface EvolutionMeasurement {
   value: number;
   unit?: string;
   notes?: string;
-  custom_data?: any;
+  custom_data?: Record<string, unknown>;
   measured_at: string;
   created_by: string;
   created_at: string;
@@ -221,7 +220,7 @@ export const useCreateMeasurement = () => {
       return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as any).patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as { patient_id?: string }).patient_id] });
       toast({
         title: 'Medição registrada',
         description: 'A medição foi registrada com sucesso.'
@@ -308,7 +307,7 @@ export const useCreateGoal = () => {
       return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as any).patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
       toast({
         title: 'Objetivo criado',
         description: 'O objetivo foi criado com sucesso.'
@@ -332,14 +331,11 @@ export const useUpdateGoalStatus = () => {
   return useMutation({
     mutationFn: async ({ goalId, status }: { goalId: string; status: 'em_andamento' | 'concluido' | 'cancelado' }) => {
       const docRef = doc(db, 'patient_goals', goalId);
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         status,
         updated_at: new Date().toISOString(),
+        completed_at: status === 'concluido' ? new Date().toISOString() : undefined,
       };
-
-      if (status === 'concluido') {
-        updates.completed_at = new Date().toISOString();
-      }
 
       await updateDoc(docRef, updates);
 
@@ -347,7 +343,7 @@ export const useUpdateGoalStatus = () => {
       return { id: docSnap.id, ...docSnap.data() };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as any).patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
       toast({
         title: 'Objetivo atualizado',
         description: 'O status do objetivo foi atualizado.'
@@ -357,15 +353,42 @@ export const useUpdateGoalStatus = () => {
 };
 
 // Consolidated hook for patient evolution page
+export interface Appointment {
+  id: string;
+  patient_id?: string;
+  therapist_id?: string;
+  date?: string;
+  time?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+export interface Patient {
+  id: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  [key: string]: unknown;
+}
+
+export interface SoapRecord {
+  id: string;
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+  [key: string]: unknown;
+}
+
 export interface PatientEvolutionData {
-  appointment: any;
-  patient: any;
+  appointment: Appointment | null;
+  patient: Patient | null;
   patientId: string | null;
   surgeries: PatientSurgery[];
   goals: PatientGoal[];
   pathologies: PatientPathology[];
   measurements: EvolutionMeasurement[];
-  previousEvolutions: any[];
+  previousEvolutions: SoapRecord[];
   evolutionStats: {
     totalEvolutions: number;
     completedGoals: number;
@@ -427,7 +450,7 @@ export function usePatientEvolutionData() {
   }, [previousEvolutions, goals, pathologies, measurements]);
 
   // Handlers
-  const handleSave = useCallback(async (soapData: any) => {
+  const handleSave = useCallback(async (soapData: Partial<SoapRecord>) => {
     if (!patientId) return;
     if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
       return { error: 'Campos vazios' };
@@ -483,7 +506,7 @@ export function usePatientEvolutionData() {
     }
   }, [patientId, appointmentId, createSoapRecord]);
 
-  const handleCompleteSession = useCallback(async (soapData: any) => {
+  const handleCompleteSession = useCallback(async (soapData: Partial<SoapRecord>) => {
     if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
       return { error: 'Campos vazios' };
     }

@@ -9,7 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getUserOrganizationId } from '@/utils/userHelpers';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -25,7 +25,6 @@ import {
   documentId
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 export interface Tarefa {
@@ -81,7 +80,7 @@ export const PRIORIDADE_COLORS: Record<TarefaPrioridade, string> = {
 };
 
 // Helper: Convert Firestore doc to Tarefa
-const convertDocToTarefa = (doc: any): Tarefa => {
+const convertDocToTarefa = (doc: { id: string; data: () => Record<string, unknown> }): Tarefa => {
   const data = doc.data();
   return {
     id: doc.id,

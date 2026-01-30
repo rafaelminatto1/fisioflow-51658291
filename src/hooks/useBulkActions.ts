@@ -11,7 +11,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
@@ -54,7 +54,6 @@ export function useBulkActions() {
     if (selectedIds.size === 0) return;
 
     try {
-      const db = getFirebaseDb();
       const batch = writeBatch(db);
 
       // Firestore batch operations are limited to 500 operations
@@ -95,7 +94,6 @@ export function useBulkActions() {
     if (selectedIds.size === 0) return;
 
     try {
-      const db = getFirebaseDb();
 
       // Firestore batch operations are limited to 500 operations
       const ids = Array.from(selectedIds);

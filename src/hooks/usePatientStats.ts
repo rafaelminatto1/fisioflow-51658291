@@ -8,7 +8,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { differenceInDays } from 'date-fns';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -18,7 +18,6 @@ import {
   documentId
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -183,28 +182,28 @@ function calculateDaysSince(dateString: string): number {
  * Checks if an appointment has a completed status
  */
 function isAppointmentCompleted(appointment: Appointment): boolean {
-  return COMPLETED_STATUSES.includes(appointment.status as any);
+  return COMPLETED_STATUSES.includes(appointment.status as typeof COMPLETED_STATUSES[number]);
 }
 
 /**
  * Checks if an appointment is scheduled/upcoming
  */
 function isAppointmentScheduled(appointment: Appointment): boolean {
-  return SCHEDULED_STATUSES.includes(appointment.status as any);
+  return SCHEDULED_STATUSES.includes(appointment.status as typeof SCHEDULED_STATUSES[number]);
 }
 
 /**
  * Checks if an appointment was missed
  */
 function isAppointmentMissed(appointment: Appointment): boolean {
-  return MISSED_STATUSES.includes(appointment.status as any);
+  return MISSED_STATUSES.includes(appointment.status as typeof MISSED_STATUSES[number]);
 }
 
 /**
  * Checks if an appointment was a no-show
  */
 function isAppointmentNoShow(appointment: Appointment): boolean {
-  return NO_SHOW_STATUSES.includes(appointment.status as any);
+  return NO_SHOW_STATUSES.includes(appointment.status as typeof NO_SHOW_STATUSES[number]);
 }
 
 /**
@@ -333,7 +332,7 @@ function classifyPatient(stats: ClassificationStats): PatientClassification {
 }
 
 // Helper to convert Firestore doc to Appointment
-const convertDocToAppointment = (doc: any): Appointment => {
+const convertDocToAppointment = (doc: { id: string; data: () => Record<string, unknown> }): Appointment => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -342,7 +341,7 @@ const convertDocToAppointment = (doc: any): Appointment => {
 };
 
 // Helper to convert Firestore doc to SOAPRecord
-const convertDocToSOAPRecord = (doc: any): SOAPRecord => {
+const convertDocToSOAPRecord = (doc: { id: string; data: () => Record<string, unknown> }): SOAPRecord => {
   const data = doc.data();
   return {
     id: doc.id,

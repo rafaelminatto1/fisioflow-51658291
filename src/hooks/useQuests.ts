@@ -10,7 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -24,7 +24,6 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export type QuestCategory = 'daily' | 'weekly' | 'special';
 export type QuestStatus = 'pending' | 'in_progress' | 'completed' | 'expired';
@@ -38,7 +37,7 @@ export interface QuestDefinition {
   category: QuestCategory;
   xp_reward: number;
   points_reward: number;
-  requirements: Record<string, any>;
+  requirements: Record<string, unknown>;
   icon?: string;
   difficulty: QuestDifficulty;
   is_active: boolean;
@@ -50,7 +49,7 @@ export interface PatientQuest {
   patient_id: string;
   quest_id: string;
   status: QuestStatus;
-  progress: Record<string, any>;
+  progress: Record<string, unknown>;
   started_at: string | null;
   completed_at: string | null;
   expires_at: string | null;

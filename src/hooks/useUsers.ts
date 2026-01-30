@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -23,9 +23,23 @@ import {
   writeBatch
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 type AppRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
+
+interface ProfileFirestore {
+  user_id?: string;
+  id: string;
+  email?: string;
+  full_name: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
+interface UserRoleFirestore {
+  user_id: string;
+  role: AppRole;
+  [key: string]: unknown;
+}
 
 interface UserWithRoles {
   id: string;
@@ -59,14 +73,14 @@ export function useUsers() {
         ...doc.data(),
       }));
 
-      const usersWithRoles: UserWithRoles[] = profiles.map((profile: any) => ({
+      const usersWithRoles: UserWithRoles[] = profiles.map((profile: ProfileFirestore) => ({
         id: profile.user_id || profile.id,
         email: profile.email || '',
         full_name: profile.full_name,
         created_at: profile.created_at || '',
         roles: userRoles
-          .filter((ur: any) => ur.user_id === (profile.user_id || profile.id))
-          .map((ur: any) => ur.role as AppRole),
+          .filter((ur: UserRoleFirestore) => ur.user_id === (profile.user_id || profile.id))
+          .map((ur: UserRoleFirestore) => ur.role as AppRole),
       }));
 
       return usersWithRoles;
@@ -96,7 +110,7 @@ export function useUsers() {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
       toast({ title: 'Função adicionada com sucesso' });
     },
-    onError: (error: any) => {
+    onError: (error: { code?: string; message?: string }) => {
       // If error is about duplicate, show a more friendly message
       if (error?.code === 'already_exists') {
         toast({

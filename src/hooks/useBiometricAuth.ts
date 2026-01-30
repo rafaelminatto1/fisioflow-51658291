@@ -34,7 +34,7 @@ export function useBiometricAuth(): BiometricAuthState {
             reason: 'Verificar tipo de biometria',
             title: 'Configuração Biométrica',
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Se falhar, ainda pode estar disponível, só não autenticou ainda
         }
       } else {
@@ -70,7 +70,7 @@ export function useBiometricAuth(): BiometricAuthState {
       }
 
       return false;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro na autenticação biométrica:', error);
 
       // Tratamento de erros específicos

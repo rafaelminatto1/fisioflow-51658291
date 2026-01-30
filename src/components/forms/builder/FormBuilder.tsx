@@ -25,7 +25,7 @@ import { ClinicalFieldType, EvaluationForm } from '@/types/clinical-forms';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, getFirebaseDb, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from '@/integrations/firebase/app';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, deleteDoc as deleteDocFromFirestore } from 'firebase/firestore';
 
@@ -54,7 +54,6 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
     const auth = getFirebaseAuth();
-    const db = getFirebaseDb();
 
     useEffect(() => {
         if (initialData) {
