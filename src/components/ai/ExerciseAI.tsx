@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Exercise, Patient, SOAPRecord } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -183,7 +184,7 @@ export function ExerciseAI({
         description: `${data.exercises.length} exercícios sugeridos para ${patient.name}`,
       });
     } catch (err) {
-      console.error('[ExerciseAI] Error:', err);
+      logger.error('[ExerciseAI] Error', err, 'ExerciseAI');
       const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar recomendações';
       setError(errorMessage);
       setOptimisticResult(null);
