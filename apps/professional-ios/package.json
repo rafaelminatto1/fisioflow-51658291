@@ -35,6 +35,8 @@
     "expo-router": "~6.0.22",
     "@expo/metro-runtime": "~3.0.0",
     "abort-controller": "^3.0.0",
+    "event-target-shim": "^6.0.2",
+    "whatwg-fetch": "^3.6.20",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
