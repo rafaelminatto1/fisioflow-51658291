@@ -28,6 +28,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
+import { logger } from '@/lib/errors/logger';
 
 const storage = getFirebaseStorage();
 const auth = getFirebaseAuth();
@@ -197,7 +198,7 @@ export const exerciseVideosService = {
 
       return videos;
     } catch (error) {
-      console.error('[exerciseVideosService] getVideos error:', error);
+      logger.error('[exerciseVideosService] getVideos error', error, 'exerciseVideos');
       throw error;
     }
   },
@@ -216,7 +217,7 @@ export const exerciseVideosService = {
 
       return { id: docSnap.id, ...docSnap.data() } as ExerciseVideo;
     } catch (error) {
-      console.error('[exerciseVideosService] getVideoById error:', error);
+      logger.error('[exerciseVideosService] getVideoById error', error, 'exerciseVideos');
       throw error;
     }
   },
@@ -235,7 +236,7 @@ export const exerciseVideosService = {
 
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ExerciseVideo[];
     } catch (error) {
-      console.error('[exerciseVideosService] getVideosByExerciseId error:', error);
+      logger.error('[exerciseVideosService] getVideosByExerciseId error', error, 'exerciseVideos');
       throw error;
     }
   },
@@ -410,7 +411,7 @@ export const exerciseVideosService = {
           const thumbnailBlob = await this.generateThumbnail(data.file);
           thumbnailFile = new File([thumbnailBlob], 'thumbnail.avif', { type: 'image/avif' });
         } catch (error) {
-          console.warn('[exerciseVideosService] Failed to generate thumbnail:', error);
+          logger.warn('[exerciseVideosService] Failed to generate thumbnail', error, 'exerciseVideos');
         }
       }
 
@@ -452,7 +453,7 @@ export const exerciseVideosService = {
           });
           thumbnailUrl = await getDownloadURL(thumbnailRef);
         } catch (thumbError) {
-          console.warn('[exerciseVideosService] Thumbnail upload error:', thumbError);
+          logger.warn('[exerciseVideosService] Thumbnail upload error', thumbError, 'exerciseVideos');
         }
       }
 
@@ -478,7 +479,7 @@ export const exerciseVideosService = {
 
       return { id: docRef.id, ...videoData } as ExerciseVideo;
     } catch (error) {
-      console.error('[exerciseVideosService] uploadVideo error:', error);
+      logger.error('[exerciseVideosService] uploadVideo error', error, 'exerciseVideos');
       throw error;
     }
   },
@@ -507,7 +508,7 @@ export const exerciseVideosService = {
       const updatedDoc = await getDoc(docRef);
       return { id: updatedDoc.id, ...updatedDoc.data() } as ExerciseVideo;
     } catch (error) {
-      console.error('[exerciseVideosService] updateVideo error:', error);
+      logger.error('[exerciseVideosService] updateVideo error', error, 'exerciseVideos');
       throw error;
     }
   },
@@ -551,13 +552,13 @@ export const exerciseVideosService = {
             return deleteObject(fileRef);
           })
         ).catch((err) => {
-          console.warn('[exerciseVideosService] Failed to delete storage files:', err);
+          logger.warn('[exerciseVideosService] Failed to delete storage files', err, 'exerciseVideos');
         });
       }
 
       return video;
     } catch (error) {
-      console.error('[exerciseVideosService] deleteVideo error:', error);
+      logger.error('[exerciseVideosService] deleteVideo error', error, 'exerciseVideos');
       throw error;
     }
   },
