@@ -4,7 +4,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET } from '../init';
+import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
 import { enforceRateLimit, RATE_LIMITS } from '../middleware/rate-limit';
@@ -30,11 +30,7 @@ interface ListPatientsResponse {
 /**
  * Lista pacientes com filtros opcionais
  */
-export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-  vpcConnector: "cloudsql-connector",
-  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
-  async (request) => {
+export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>({ cors: true }, async (request) => {
   console.log('[listPatients] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -142,11 +138,7 @@ interface GetPatientResponse {
 /**
  * Busca um paciente por ID
  */
-export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-  vpcConnector: "cloudsql-connector",
-  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
-  async (request) => {
+export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -213,11 +205,7 @@ interface CreatePatientResponse {
 /**
  * Cria um novo paciente
  */
-export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-  vpcConnector: "cloudsql-connector",
-  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
-  async (request) => {
+export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>({ cors: true }, async (request) => {
   console.log('[createPatient] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -351,11 +339,7 @@ interface UpdatePatientResponse {
 /**
  * Atualiza um paciente existente
  */
-export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-  vpcConnector: "cloudsql-connector",
-  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
-  async (request) => {
+export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -467,11 +451,7 @@ interface DeletePatientResponse {
 /**
  * Remove (soft delete) um paciente
  */
-export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-  vpcConnector: "cloudsql-connector",
-  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
-  async (request) => {
+export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -543,11 +523,7 @@ interface GetPatientStatsResponse {
 /**
  * Busca estatísticas de um paciente
  */
-export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-  vpcConnector: "cloudsql-connector",
-  vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
-  async (request) => {
+export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
