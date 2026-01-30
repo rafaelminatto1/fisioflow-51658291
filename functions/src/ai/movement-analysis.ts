@@ -105,6 +105,7 @@ export const movementAnalysis = onCall({
   cors: true,
   region: 'southamerica-east1',
   memory: '2GiB',
+  cpu: 1,
   maxInstances: 5,
 }, async (request): Promise<MovementAnalysisResponse> => {
   const startTime = Date.now();

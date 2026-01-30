@@ -91,6 +91,7 @@ export const soapGeneration = onCall({
   cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
+  cpu: 1,
   maxInstances: 10,
 }, async (request): Promise<SOAPGenerationResponse> => {
   const startTime = Date.now();

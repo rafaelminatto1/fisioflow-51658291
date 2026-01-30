@@ -57,6 +57,7 @@ const whatsapp_1 = require("./communications/whatsapp");
         whatsapp_1.WHATSAPP_ACCESS_TOKEN_SECRET
     ],
     maxInstances: 1,
+    cpu: 0.5
 });
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
