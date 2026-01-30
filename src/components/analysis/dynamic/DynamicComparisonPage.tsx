@@ -18,6 +18,7 @@ import { processVideo, VideoAnalysisFrame } from '@/services/ai/videoPoseService
 import { analyzeDynamicComparison } from '@/utils/dynamicMetricsEngine';
 import { generateClinicalReport, AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';
 import { DynamicCompareMetrics } from '@/types/analysis/dynamic_compare';
+import { logger } from '@/lib/errors/logger';
 
 const DynamicComparisonPage = () => {
     const { toast } = useToast();
@@ -97,7 +98,7 @@ const DynamicComparisonPage = () => {
 
             setStep('results');
         } catch (error) {
-            console.error("Analysis failed", error);
+            logger.error("Analysis failed", error, 'DynamicComparisonPage');
             setStatus('Erro na análise: ' + (error as Error).message);
             toast({
                 title: 'Erro na análise',

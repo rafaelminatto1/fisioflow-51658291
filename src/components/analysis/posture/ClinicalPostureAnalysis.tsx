@@ -9,6 +9,7 @@ import { detectPoseInImage } from '@/services/ai/poseDetectionService';
 import { UnifiedLandmark } from '@/utils/geometry';
 import { calculatePostureMetrics, PostureReport } from '@/utils/postureMetrics';
 import LandmarkEditor from './LandmarkEditor';
+import { logger } from '@/lib/errors/logger';
 
 type Step = 'upload' | 'analysis' | 'report';
 type ViewType = 'front' | 'side' | 'back';
@@ -56,7 +57,7 @@ const ClinicalPostureAnalysis = () => {
                 toast({ title: 'Análise concluída', description: 'Verifique os pontos e métricas.' });
             }
         } catch (error) {
-            console.error(error);
+            logger.error('Error in posture analysis', error, 'ClinicalPostureAnalysis');
             toast({ variant: 'destructive', title: 'Erro na análise AI', description: String(error) });
         } finally {
             setIsProcessing(false);

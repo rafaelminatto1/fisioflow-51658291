@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Brain, AlertTriangle } from 'lucide-react';
 import { analyzeWithGeminiVision, VisionAnalysisResult } from '@/services/ai/geminiVisionService';
+import { logger } from '@/lib/errors/logger';
 
 interface GeneralImageAnalyzerProps {
     file: File;
@@ -35,7 +36,7 @@ const GeneralImageAnalyzer: React.FC<GeneralImageAnalyzerProps> = ({ file }) => 
             };
             reader.readAsDataURL(file);
         } catch (error) {
-            console.error("Analysis failed", error);
+            logger.error("Analysis failed", error, 'GeneralImageAnalyzer');
             setIsAnalyzing(false);
         }
     };
