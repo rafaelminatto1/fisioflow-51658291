@@ -262,7 +262,13 @@ class OfflineSyncService {
     }
 
     try {
-      await (this.swRegistration as any).sync.register('offline-actions-sync');
+      // Service Worker Background Sync API is experimental
+      const swReg = this.swRegistration as ServiceWorkerRegistration & {
+        sync?: { register: (tag: string) => Promise<void> };
+      };
+      if (swReg.sync) {
+        await swReg.sync.register('offline-actions-sync');
+      }
       return true;
     } catch (error) {
       console.warn('[OfflineSyncService] Background sync registration failed:', error);
@@ -511,8 +517,8 @@ class OfflineSyncService {
         );
         const appointmentsSnapshot = await getDocs(appointmentsQ);
         appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (error: any) {
-        if (error?.code === 'permission-denied') {
+      } catch (error) {
+        if ((error as { code?: string })?.code === 'permission-denied') {
           console.log('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.');
           appointments = [];
         } else {
@@ -546,8 +552,8 @@ class OfflineSyncService {
         );
         const exercisesSnapshot = await getDocs(exercisesQ);
         exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (error: any) {
-        if (error?.code === 'permission-denied') {
+      } catch (error) {
+        if ((error as { code?: string })?.code === 'permission-denied') {
           console.log('[OfflineSyncService] Permission denied for exercises. Skipping.');
           exercises = [];
         } else {

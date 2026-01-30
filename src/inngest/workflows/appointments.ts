@@ -31,6 +31,15 @@ type AppointmentWithRelations = {
   };
 };
 
+type AppointmentDocument = {
+  id: string;
+  date: string;
+  time: string;
+  patient_id: string;
+  organization_id: string;
+  therapist_id?: string;
+};
+
 /**
  * Helper para buscar appointments com relações no Firestore
  */
@@ -59,7 +68,7 @@ async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Pro
   const appointments: AppointmentWithRelations[] = [];
 
   for (const docSnap of snapshot.docs) {
-    const appointment = { id: docSnap.id, ...docSnap.data() } as any;
+    const appointment = { id: docSnap.id, ...docSnap.data() } as AppointmentDocument;
 
     appointments.push({
       id: appointment.id,
@@ -196,7 +205,7 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
         throw new Error('Appointment not found');
       }
 
-      const appointmentData = { id: appointmentSnap.id, ...appointmentSnap.data() } as any;
+      const appointmentData = { id: appointmentSnap.id, ...appointmentSnap.data() } as AppointmentDocument;
 
       // Buscar relações em lote
       const [patientSnap, orgSnap, therapistSnap] = await Promise.all([

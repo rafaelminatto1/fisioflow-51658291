@@ -19,6 +19,40 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 
+// Types for birthday workflow
+interface Patient {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  date_of_birth?: string;
+  organization_id: string;
+  settings?: {
+    notification_channel?: string;
+  };
+  notification_preferences?: {
+    preferred_channel?: string;
+    whatsapp?: boolean;
+    email?: boolean;
+  };
+}
+
+interface Therapist {
+  id: string;
+  full_name?: string;
+  name?: string;
+  organization_id: string;
+}
+
+interface Organization {
+  id: string;
+  name?: string;
+  settings?: {
+    whatsapp_enabled?: boolean;
+    email_enabled?: boolean;
+  };
+}
+
 export const birthdayMessagesWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-birthday-messages',
@@ -35,7 +69,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     const db = getAdminDb();
 
     // Step 1: Find all patients with birthdays today
-    const patients = await step.run('find-birthdays-today', async (): Promise<any[]> => {
+    const patients = await step.run('find-birthdays-today', async (): Promise<Patient[]> => {
       const today = new Date();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
@@ -48,7 +82,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
         .limit(1)
         .get();
 
-      let birthdayPatients: any[] = [];
+      let birthdayPatients: Patient[] = [];
 
       if (!optimizedSnapshot.empty) {
         // Field exists, use it for all patients
@@ -68,7 +102,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
 
         birthdayPatients = snapshot.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter((patient: any) => {
+          .filter((patient: Patient) => {
             const dob = patient.date_of_birth;
             return dob && dob.includes(`-${todayMMDD}`);
           });
@@ -87,14 +121,17 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     }
 
     // Step 2: Get organization settings (batch fetch for efficiency)
-    const { patientsWithOrg, therapistMap } = await step.run('get-related-data', async () => {
+    const { patientsWithOrg, therapistMap } = await step.run('get-related-data', async (): Promise<{
+      patientsWithOrg: Array<Patient & { organization?: Organization }>;
+      therapistMap: Map<string, Therapist>;
+    }> => {
       const orgIds = [...new Set(patients.map((p: { organization_id: string }) => p.organization_id))];
 
       // Batch fetch organizations
       const orgPromises = orgIds.map(orgId => db.collection('organizations').doc(orgId).get());
       const orgSnapshots = await Promise.all(orgPromises);
 
-      const orgMap = new Map(
+      const orgMap = new Map<string, Organization>(
         orgSnapshots
           .filter(snap => snap.exists)
           .map(snap => [snap.id, { id: snap.id, ...snap.data() }])
@@ -108,13 +145,13 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
         .get();
 
       // Create a map: organizationId -> therapist
-      const therapistByOrg = new Map<string, any>();
+      const therapistByOrg = new Map<string, Therapist>();
       therapistsSnapshot.docs.forEach(doc => {
         const therapist = { id: doc.id, ...doc.data() };
         therapistByOrg.set(therapist.organization_id, therapist);
       });
 
-      const patientsWithOrgData = patients.map((patient: any) => ({
+      const patientsWithOrgData = patients.map((patient: Patient) => ({
         ...patient,
         organization: orgMap.get(patient.organization_id),
       }));

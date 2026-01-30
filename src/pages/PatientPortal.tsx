@@ -17,7 +17,9 @@ import {
   Dumbbell,
   MessageCircle,
   Bell,
-  Plus
+  Plus,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
@@ -25,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/lib/services/PatientService';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useAI } from '@/integrations/firebase/ai';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PainMapRegistration } from '@/components/patient/PainMapRegistration';
@@ -36,6 +39,16 @@ interface PrescriptionExercise {
   exercise: { name: string };
   sets: number;
   reps: number;
+}
+
+interface PainRecord {
+  id: string;
+  patient_id: string;
+  pain_level: number;
+  body_part?: string;
+  intensity?: number;
+  location?: string;
+  created_at: string;
 }
 
 const PatientPortal = () => {
@@ -72,12 +85,47 @@ const PatientPortal = () => {
 
   const nextAppointment = patientAppointments.find(apt => apt.date >= new Date());
 
-  // Fetch pain records
-  const { data: painRecords } = useQuery({
-    queryKey: ['pain-records', patient?.id],
-    queryFn: () => PatientService.getPainRecords(patient!.id),
-    enabled: !!patient?.id
-  });
+  const { generate } = useAI();
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+  // TODO: Fetch pain records from API
+  const painRecords: PainRecord[] = [];
+
+  const generateHealthSummary = async () => {
+    if (!patient || !painRecords) return;
+
+    setIsGeneratingSummary(true);
+    try {
+      const painLevels = painRecords.slice(0, 5).map((r) => `${r.intensity ?? r.pain_level}/10 (${r.location ?? r.body_part ?? 'geral'})`).join(', ');
+      const prompt = `
+        Aja como um fisioterapeuta motivador. Analise os dados do paciente ${patient.full_name}:
+        - Níveis de dor recentes: ${painLevels || 'Nenhum registro'}
+        - Exercícios prescritos: ${prescriptions?.length || 0}
+
+        Forneça um resumo de saúde curto (máximo 3 frases) encorajando o paciente e dando uma dica prática baseada nos dados.
+        Responda em português brasileiro.
+      `;
+
+      const result = await generate(prompt, {
+        userId: user!.id,
+        feature: 'patient_chat',
+      });
+
+      setAiSummary(result.content);
+    } catch (error) {
+      console.error('Erro ao gerar resumo de IA:', error);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  // Generate summary once when records are loaded
+  useEffect(() => {
+    if (painRecords && !aiSummary && !isGeneratingSummary) {
+      generateHealthSummary();
+    }
+  }, [painRecords]);
 
   if (isLoadingPatient) {
     return (

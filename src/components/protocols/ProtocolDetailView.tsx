@@ -43,6 +43,13 @@ interface Restriction {
     description: string;
 }
 
+interface LinkedClinicalTest {
+    id: string;
+    name: string;
+    target_joint: string;
+    category: string;
+}
+
 export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDetailViewProps) {
     const details = PROTOCOL_DETAILS[protocol.condition_name];
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
@@ -395,7 +402,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {linkedTests.map((test: any) => (
+                        {linkedTests.map((test: LinkedClinicalTest) => (
                             <div key={test.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between group">
                                 <div className="flex flex-col">
                                     <span className="text-sm font-semibold text-slate-700">{test.name}</span>

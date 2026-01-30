@@ -183,8 +183,8 @@ export class AppointmentService {
                 await AppointmentService.syncFinancialTransaction({
                     ...appointment,
                     payment_status: newAppointment.payment_status,
-                    payment_amount: (data as any).payment_amount,
-                    payment_method: (data as any).payment_method
+                    payment_amount: (data as AppointmentFormData & { payment_amount?: number }).payment_amount,
+                    payment_method: (data as AppointmentFormData & { payment_method?: string }).payment_method
                 });
             }
 
@@ -203,7 +203,7 @@ export class AppointmentService {
         organizationId: string
     ): Promise<AppointmentBase> {
         try {
-            const updateData: any = {};
+            const updateData: Record<string, string | number | null | undefined> = {};
 
             if (updates.patient_id) updateData.patient_id = updates.patient_id;
             if (updates.duration) updateData.duration = updates.duration;

@@ -8,6 +8,8 @@ import {
     HeartPulse,
     Plus,
 } from 'lucide-react';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, getDocs, orderBy as firestoreOrderBy, deleteDoc, doc } from 'firebase/firestore';
 
 // Extracted Components
 import { ClinicalTestFormModal } from '@/components/clinical/ClinicalTestFormModal';
@@ -56,23 +58,18 @@ export default function ClinicalTestsLibrary() {
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-library'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('clinical_test_templates')
-                .select('*')
-                .order('name');
-
-            if (error) throw error;
-            return data as ClinicalTest[];
+            const q = query(
+                collection(db, 'clinical_test_templates'),
+                firestoreOrderBy('name')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as ClinicalTest[];
         }
     });
 
     const deleteMutation = useMutation({
         mutationFn: async (testId: string) => {
-            const { error } = await supabase
-                .from('clinical_test_templates')
-                .delete()
-                .eq('id', testId);
-            if (error) throw error;
+            await deleteDoc(doc(db, 'clinical_test_templates', testId));
         },
         onSuccess: () => {
             toast.success('Teste excluído com sucesso!');

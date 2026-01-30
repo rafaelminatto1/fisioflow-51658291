@@ -19,6 +19,14 @@ interface ActivityEvent {
   variant: 'default' | 'success' | 'warning' | 'destructive';
 }
 
+interface AppointmentDocument {
+  id: string;
+  patient_id?: string;
+  appointment_date: { toDate: () => Date } | Date | string;
+  created_at: { toDate: () => Date } | Date | string;
+  patients?: { name: string };
+}
+
 const MAX_ACTIVITIES = 20; // Limitar para evitar crescimento infinito
 
 /**
@@ -52,7 +60,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         );
 
         const appointmentsSnapshot = await getDocs(appointmentsQuery);
-        const appointments: any[] = [];
+        const appointments: AppointmentDocument[] = [];
 
         // Manually fetch patient names to avoid relationship errors
         const patientIds = new Set<string>();
