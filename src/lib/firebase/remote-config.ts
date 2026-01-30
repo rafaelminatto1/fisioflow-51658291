@@ -19,6 +19,7 @@ import {
   type RemoteConfig,
 } from 'firebase/remote-config';
 import { app } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -254,9 +255,9 @@ class RemoteConfigManager {
       await fetchAndActivate(this.remoteConfig);
 
       this.initialized = true;
-      console.log('✅ Firebase Remote Config initialized successfully');
+      logger.info('Firebase Remote Config initialized successfully', undefined, 'remote-config');
     } catch (error) {
-      console.error('❌ Failed to initialize Remote Config:', error);
+      logger.error('Failed to initialize Remote Config', error, 'remote-config');
       // Don't throw - allow app to continue with defaults
       this.initialized = true;
     }
@@ -418,7 +419,7 @@ class RemoteConfigManager {
     try {
       return await fetchAndActivate(this.remoteConfig);
     } catch (error) {
-      console.error('❌ Failed to refresh Remote Config:', error);
+      logger.error('Failed to refresh Remote Config', error, 'remote-config');
       return false;
     }
   }
