@@ -602,7 +602,7 @@ export async function rateLimit(
       reset: now + window * 1000,
     };
   } catch (error) {
-    console.error('Rate limit error:', error);
+    logger.error('Rate limit error:', error, 'KVCacheService');
     // Fail open - allow request if rate limiting fails
     return {
       success: true,
