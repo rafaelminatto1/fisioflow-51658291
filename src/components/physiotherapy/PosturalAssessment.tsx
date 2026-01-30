@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Save, Camera } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 interface PosturalData {
   headPosition: string;
@@ -29,7 +30,7 @@ export const PosturalAssessment = () => {
   });
 
   const handleSave = () => {
-    console.log('Salvando avaliação postural:', posturalData);
+    logger.info('Salvando avaliação postural', { posturalData }, 'PosturalAssessment');
     toast({
       title: "Avaliação salva",
       description: "Avaliação postural registrada com sucesso.",

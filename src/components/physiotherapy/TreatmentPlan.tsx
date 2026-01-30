@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardList, Plus, Trash2, Save } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 interface TreatmentGoal {
   id: string;
@@ -62,7 +63,7 @@ export const TreatmentPlan = () => {
   };
 
   const handleSave = () => {
-    console.log('Salvando plano:', { diagnosis, goals, sessions, generalObservations });
+    logger.info('Salvando plano', { diagnosis, goals, sessions, generalObservations }, 'TreatmentPlan');
     toast({
       title: "Plano salvo",
       description: "Plano de tratamento registrado com sucesso.",
