@@ -6,6 +6,7 @@
  */
 
 import { get } from '@vercel/edge-config';
+import { logger } from '@/lib/errors/logger';
 
 export interface FeatureFlagConfig {
   enabled: boolean;
@@ -51,7 +52,7 @@ export async function getFeatureFlags(): Promise<Partial<FeatureFlags>> {
     const flags = await get('features');
     return (flags as Partial<FeatureFlags>) || {};
   } catch (error) {
-    console.error('Failed to fetch feature flags:', error);
+    logger.error('Failed to fetch feature flags', error, 'edgeConfig');
     // Return default flags if Edge Config is not available
     return {
       new_dashboard: false,
@@ -129,7 +130,7 @@ export async function isFeatureEnabled(
 
     return false;
   } catch (error) {
-    console.error(`Failed to check feature flag ${feature}:`, error);
+    logger.error(`Failed to check feature flag ${feature}`, error, 'edgeConfig');
     return false;
   }
 }
@@ -254,7 +255,7 @@ export async function getABTestVariant(
       return 'B';
     }
   } catch (error) {
-    console.error(`Failed to get A/B test variant for ${testName}:`, error);
+    logger.error(`Failed to get A/B test variant for ${testName}`, error, 'edgeConfig');
     return null;
   }
 }
