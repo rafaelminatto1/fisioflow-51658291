@@ -1,4 +1,4 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import type { ConductTemplate } from '@/types/evolution';
 
@@ -14,7 +14,6 @@ export class ConductReplicationService {
   // Optimized: Select only required columns instead of *
   static async getSavedConducts(patientId: string): Promise<ConductTemplate[]> {
     // For now, we'll get recent SOAP records as conduct templates
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'soap_records'),
       where('patient_id', '==', patientId),
@@ -62,7 +61,6 @@ export class ConductReplicationService {
   }
 
   static async replicateConduct(conductId: string): Promise<{ plan: string | null; assessment: string | null; techniques: unknown[]; exercises: unknown[] }> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'soap_records', conductId);
     const docSnap = await getDoc(docRef);
 

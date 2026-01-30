@@ -72,19 +72,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// Tipos de eventos na timeline
-type TimelineEventType = 'session' | 'surgery' | 'goal' | 'pathology' | 'measurement' | 'attachment';
-
-interface TimelineEvent {
-  id: string;
-  type: TimelineEventType;
-  date: Date;
-  title: string;
-  description?: string;
-  data?: any;
-  expanded?: boolean;
-}
+import type {
+  TimelineEvent,
+  TimelineEventData,
+  SessionExerciseData,
+  MeasurementData,
+  AttachmentData,
+  SessionEventData,
+  TimelineEventType
+} from '@/types/evolution';
 
 interface EvolutionTimelineProps {
   patientId: string;
@@ -159,12 +155,12 @@ const SessionDetailsSkeleton: React.FC = () => (
 // Componente para visualização detalhada da sessão
 const SessionDetailsModal: React.FC<{
   session: SoapRecord;
-  measurements: any[];
-  attachments: any[];
+  measurements: MeasurementData[];
+  attachments: AttachmentData[];
   isOpen: boolean;
   onClose: () => void;
 }> = ({ session, measurements, attachments, isOpen, onClose }) => {
-  const [sessionExercises, setSessionExercises] = React.useState<any[]>([]);
+  const [sessionExercises, setSessionExercises] = React.useState<SessionExerciseData[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'overview' | 'soap' | 'exercises' | 'measurements' | 'attachments'>('overview');
 

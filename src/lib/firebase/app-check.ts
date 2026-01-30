@@ -19,11 +19,13 @@ export const initAppCheck = () => {
       console.log('🛡️ Firebase App Check: Debug mode enabled for development');
     }
 
-    const recaptchaKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_KEY;
+    // Use the actual reCAPTCHA Enterprise key from Firebase Console
+    // For fisioflow-migration project
+    const recaptchaKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_KEY || '6LcJIDQpAAAAAG0tJ2V6wO_XXX-XXX-XXX';
 
     // Only initialize App Check if we have a valid key (not the placeholder)
     // In production, a valid key is required
-    if (recaptchaKey && !recaptchaKey.includes('v-v-v-v-v-v')) {
+    if (recaptchaKey && !recaptchaKey.includes('XXX-XXX')) {
       initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
         isTokenAutoRefreshEnabled: true,
@@ -36,5 +38,21 @@ export const initAppCheck = () => {
     }
   } catch (error) {
     console.error('❌ Failed to initialize Firebase App Check:', error);
+  }
+};
+
+/**
+ * Get current App Check token for use in custom requests
+ */
+export const getAppCheckToken = async (): Promise<string | undefined> => {
+  if (typeof window === 'undefined') return undefined;
+
+  try {
+    const { getToken } = await import('firebase/app-check');
+    const appCheck = await import('firebase/app-check').then(m => m.getAppCheck(getApp()));
+    return await getToken();
+  } catch (error) {
+    console.warn('[AppCheck] Could not get token:', error);
+    return undefined;
   }
 };

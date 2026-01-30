@@ -1,10 +1,9 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import type { TestEvolutionData, TestResult, TestStatistics, AssessmentTestConfig } from '@/types/evolution';
 
 export class TestEvolutionService {
   static async getTestEvolutionData(patientId: string, testName: string): Promise<TestEvolutionData[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'evolution_measurements'),
       where('patient_id', '==', patientId),
@@ -29,7 +28,6 @@ export class TestEvolutionService {
   }
 
   static async getTestHistory(patientId: string): Promise<Map<string, TestEvolutionData[]>> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'evolution_measurements'),
       where('patient_id', '==', patientId),
@@ -66,7 +64,6 @@ export class TestEvolutionService {
   }
 
   static async addTestResult(patientId: string, sessionId: string, result: Omit<TestResult, 'id' | 'created_at'>): Promise<void> {
-    const db = getFirebaseDb();
     await addDoc(collection(db, 'evolution_measurements'), {
       patient_id: patientId,
       soap_record_id: sessionId,
@@ -83,7 +80,6 @@ export class TestEvolutionService {
 
   static async getMandatoryTests(patientId: string, sessionNumber: number): Promise<AssessmentTestConfig[]> {
     // Get patient pathologies
-    const db = getFirebaseDb();
     const pathQ = query(
       collection(db, 'patient_pathologies'),
       where('patient_id', '==', patientId),
@@ -129,7 +125,6 @@ export class TestEvolutionService {
   }
 
   static async checkMandatoryTestsCompleted(patientId: string, sessionId: string): Promise<boolean> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'evolution_measurements'),
       where('patient_id', '==', patientId),

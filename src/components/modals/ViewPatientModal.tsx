@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -35,7 +35,6 @@ export const ViewPatientModal: React.FC<{
     queryFn: async () => {
       if (!patientId) return null;
 
-      const db = getFirebaseDb();
       const docRef = doc(db, 'patients', patientId);
       const docSnap = await getDoc(docRef);
 

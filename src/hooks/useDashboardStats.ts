@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getCountFromServer,
@@ -19,8 +19,6 @@ import {
   where,
   onSnapshot
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 interface DashboardStats {
   totalPatients: number;

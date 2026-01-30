@@ -25,7 +25,7 @@ const functions = getFunctions(getFirebaseApp());
 const db = getFirebaseApp().firestore() || null;
 
 // Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
 
 export function useIntelligentReports(patientId?: string) {
   const { user } = useAuth();

@@ -10,7 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -25,9 +25,16 @@ import {
   limit,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 type CommunicationType = 'email' | 'whatsapp' | 'sms' | 'push';
+
+interface PatientBasicInfo {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  [key: string]: unknown;
+}
 type CommunicationStatus = 'pendente' | 'enviado' | 'entregue' | 'lido' | 'falha';
 
 export interface Communication {
@@ -54,7 +61,10 @@ export interface Communication {
 }
 
 // Helper to convert Firestore doc to Communication
-const convertDocToCommunication = (doc: any, patientData?: any): Communication => {
+const convertDocToCommunication = (
+  doc: { id: string; data: () => Record<string, unknown> },
+  patientData?: { id: string; full_name: string; email: string | null; phone: string | null } | null
+): Communication => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -92,7 +102,7 @@ export function useCommunications(filters?: { channel?: string; status?: string 
         .map(c => c.patient_id)
         .filter((id): id is string => id !== null);
 
-      const patientMap = new Map<string, any>();
+      const patientMap = new Map<string, PatientBasicInfo>();
       for (const patientId of patientIds) {
         const patientDoc = await getDoc(doc(db, 'patients', patientId));
         if (patientDoc.exists()) {
@@ -117,18 +127,22 @@ export function useCommunicationStats() {
     queryKey: ['communication-stats'],
     queryFn: async () => {
       const snapshot = await getDocs(collection(db, 'communication_logs'));
-      const data = snapshot.docs.map(doc => doc.data());
+      const data = snapshot.docs.map(doc => doc.data()) as Array<{
+        status?: CommunicationStatus;
+        type?: CommunicationType;
+        [key: string]: unknown;
+      }>;
 
       const stats = {
         total: data.length || 0,
-        sent: data.filter((c: any) => c.status === 'enviado').length || 0,
-        delivered: data.filter((c: any) => c.status === 'entregue').length || 0,
-        failed: data.filter((c: any) => c.status === 'falha').length || 0,
-        pending: data.filter((c: any) => c.status === 'pendente').length || 0,
+        sent: data.filter((c) => c.status === 'enviado').length || 0,
+        delivered: data.filter((c) => c.status === 'entregue').length || 0,
+        failed: data.filter((c) => c.status === 'falha').length || 0,
+        pending: data.filter((c) => c.status === 'pendente').length || 0,
         byChannel: {
-          email: data.filter((c: any) => c.type === 'email').length || 0,
-          whatsapp: data.filter((c: any) => c.type === 'whatsapp').length || 0,
-          sms: data.filter((c: any) => c.type === 'sms').length || 0,
+          email: data.filter((c) => c.type === 'email').length || 0,
+          whatsapp: data.filter((c) => c.type === 'whatsapp').length || 0,
+          sms: data.filter((c) => c.type === 'sms').length || 0,
         },
       };
 

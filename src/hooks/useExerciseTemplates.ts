@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -23,7 +23,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface ExerciseTemplate {
   id: string;
@@ -70,7 +69,7 @@ export interface ExerciseTemplateItem {
 }
 
 // Helper to convert Firestore doc to ExerciseTemplate
-const convertDocToExerciseTemplate = (doc: any): ExerciseTemplate => {
+const convertDocToExerciseTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseTemplate => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -79,7 +78,7 @@ const convertDocToExerciseTemplate = (doc: any): ExerciseTemplate => {
 };
 
 // Helper to convert Firestore doc to ExerciseTemplateItem
-const convertDocToExerciseTemplateItem = (doc: any): ExerciseTemplateItem => {
+const convertDocToExerciseTemplateItem = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseTemplateItem => {
   const data = doc.data();
   return {
     id: doc.id,

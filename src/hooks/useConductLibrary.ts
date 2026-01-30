@@ -9,7 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -21,7 +21,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface ConductTemplate {
   id: string;
@@ -44,7 +43,7 @@ export interface CreateConductData {
 }
 
 // Helper to convert Firestore doc to ConductTemplate
-const convertDocToConductTemplate = (doc: any): ConductTemplate => {
+const convertDocToConductTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ConductTemplate => {
   const data = doc.data();
   return {
     id: doc.id,

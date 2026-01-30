@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { EventoCreate, EventoUpdate } from '@/lib/validations/evento';
 import { mockEventos } from '@/lib/mockData';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -24,7 +24,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Evento {
   id: string;
@@ -43,7 +42,7 @@ export interface Evento {
 }
 
 // Helper: Convert Firestore doc to Evento
-const convertDocToEvento = (doc: any): Evento => {
+const convertDocToEvento = (doc: { id: string; data: () => Record<string, unknown> }): Evento => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -158,7 +157,7 @@ export function useUpdateEvento() {
       const docRef = doc(db, 'eventos', id);
 
       // Converter datas se existirem
-      const updateData: Record<string, any> = { ...data };
+      const updateData: Record<string, string | Date | null | undefined> = { ...data };
       if (updateData.data_inicio instanceof Date) {
         updateData.data_inicio = updateData.data_inicio.toISOString().split('T')[0];
       }

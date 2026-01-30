@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -20,7 +20,6 @@ import {
   getDocs
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface ContaFinanceira {
   id: string;

@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -6,10 +7,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog';
 import {
   Drawer,
   DrawerContent,
@@ -33,8 +30,7 @@ import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
-import type { Appointment, AppointmentStatus } from '@/types/appointment';
-import { cn } from '@/lib/utils';
+import type { Appointment } from '@/types/appointment';
 
 import { STATUS_CONFIG } from '@/lib/config/agenda';
 
@@ -126,16 +122,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const Content = (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-3.5 border-b border-border bg-gradient-to-r from-muted/50 to-muted/30">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-primary/10 rounded-lg">
-            <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-muted/50 to-muted/30">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <span className="font-semibold text-sm">
+            <span className="font-semibold text-base">
               {appointment.time} - {endTime}
             </span>
-            <p className="text-xs text-muted-foreground">({appointment.duration || 60} min)</p>
+            <p className="text-sm text-muted-foreground font-medium">({appointment.duration || 60} min)</p>
           </div>
         </div>
         {!isMobile && (
@@ -161,7 +157,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           aria-label={`${interestCount} paciente${interestCount !== 1 ? 's' : ''} interessado${interestCount !== 1 ? 's' : ''} neste horário. Clique para ver detalhes.`}
         >
           <Users className="h-4 w-4 text-amber-600" aria-hidden="true" />
-          <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+          <span className="text-sm text-amber-700 dark:text-amber-400 font-medium">
             {interestCount} paciente{interestCount !== 1 ? 's' : ''} interessado{interestCount !== 1 ? 's' : ''}
           </span>
           <Bell className="h-3 w-3 text-amber-600 ml-auto" aria-hidden="true" />
@@ -169,45 +165,45 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       )}
 
       {/* Content */}
-      <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+      <div className="p-5 space-y-4 flex-1 overflow-y-auto">
         {/* Fisioterapeuta - placeholder */}
         <div className="flex items-start gap-3">
-          <span className="text-sm text-muted-foreground min-w-[100px]">Fisioterapeuta:</span>
-          <span className="text-sm font-medium text-foreground">Activity Fisioterapia</span>
+          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Fisioterapeuta:</span>
+          <span className="text-base font-semibold text-foreground">Activity Fisioterapia</span>
         </div>
 
         {/* Paciente */}
         <div className="flex items-start gap-3">
-          <span className="text-sm text-muted-foreground min-w-[100px]">Paciente:</span>
-          <span className="text-sm font-semibold text-primary">{appointment.patientName}</span>
+          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Paciente:</span>
+          <span className="text-base font-bold text-primary">{appointment.patientName}</span>
         </div>
 
         {/* Celular */}
         <div className="flex items-start gap-3">
-          <span className="text-sm text-muted-foreground min-w-[100px]">Celular:</span>
-          <span className="text-sm text-foreground">{appointment.phone || 'Não informado'}</span>
+          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Celular:</span>
+          <span className="text-base font-medium text-foreground">{appointment.phone || 'Não informado'}</span>
         </div>
 
         {/* Convênio */}
         <div className="flex items-start gap-3">
-          <span className="text-sm text-muted-foreground min-w-[100px]">Convênio:</span>
-          <span className="text-sm text-foreground">{appointment.type || 'Particular'}</span>
+          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Convênio:</span>
+          <span className="text-base font-medium text-foreground">{appointment.type || 'Particular'}</span>
         </div>
 
         {/* Status */}
         <div className="flex items-center gap-3 pt-1">
-          <span className="text-sm text-muted-foreground min-w-[100px]">Status:</span>
+          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Status:</span>
           <Select
             value={appointment.status}
             onValueChange={handleStatusChange}
             disabled={isUpdatingStatus}
             aria-label="Mudar status do agendamento"
           >
-            <SelectTrigger className="h-9 w-[155px]" aria-label={`Status atual: ${STATUS_CONFIG[appointment.status]?.label}`}>
+            <SelectTrigger className="h-10 w-[180px]" aria-label={`Status atual: ${STATUS_CONFIG[appointment.status]?.label}`}>
               <SelectValue>
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[appointment.status]?.color }} aria-hidden="true" />
-                  <span className="text-xs">{STATUS_CONFIG[appointment.status]?.label}</span>
+                  <span className="text-sm">{STATUS_CONFIG[appointment.status]?.label}</span>
                 </div>
               </SelectValue>
             </SelectTrigger>
@@ -290,14 +286,14 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 touch-target"
+          className="w-full h-9 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 touch-target font-medium"
           onClick={() => {
             setShowWaitlistQuickAdd(true);
             onOpenChange?.(false);
           }}
           aria-label="Adicionar outro paciente à lista de espera para este horário"
         >
-          <UserPlus className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+          <UserPlus className="h-4 w-4 mr-2" aria-hidden="true" />
           Outro paciente quer este horário?
         </Button>
       </div>
@@ -332,7 +328,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               <DrawerDescription>Visualizar e editar detalhes do agendamento</DrawerDescription>
             </DrawerHeader>
             {/* Wrap Content in a div that handles the layout structure for Drawer */}
-            <div className="pb-6">
+            <div className="pb-6 animate-in slide-in-from-bottom-4 duration-300">
               {Content}
             </div>
           </DrawerContent>
@@ -344,7 +340,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             {children}
           </PopoverTrigger>
           <PopoverContent
-            className="w-80 p-0 bg-card border border-border shadow-xl z-50 animate-fade-in"
+            className="w-80 p-0 bg-card border border-border shadow-xl z-50"
             align="start"
             side="right"
             sideOffset={8}
@@ -353,7 +349,20 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             aria-modal="false"
             aria-label={`Detalhes do agendamento de ${appointment.patientName}`}
           >
-            {Content}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={open ? 'open' : 'closed'}
+                initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                transition={{
+                  duration: 0.2,
+                  ease: [0.4, 0, 0.2, 1]
+                }}
+              >
+                {Content}
+              </motion.div>
+            </AnimatePresence>
           </PopoverContent>
         </Popover>
       )}

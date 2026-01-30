@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -17,7 +17,6 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface MovimentacaoCaixa {
   id: string;
@@ -39,7 +38,7 @@ export interface FluxoCaixaResumo {
 }
 
 // Helper to convert Firestore doc to MovimentacaoCaixa
-const convertDocToMovimentacaoCaixa = (doc: any): MovimentacaoCaixa => {
+const convertDocToMovimentacaoCaixa = (doc: { id: string; data: () => Record<string, unknown> }): MovimentacaoCaixa => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -48,7 +47,7 @@ const convertDocToMovimentacaoCaixa = (doc: any): MovimentacaoCaixa => {
 };
 
 // Helper to convert Firestore doc to FluxoCaixaResumo
-const convertDocToFluxoCaixaResumo = (doc: any): FluxoCaixaResumo => {
+const convertDocToFluxoCaixaResumo = (doc: { id: string; data: () => Record<string, unknown> }): FluxoCaixaResumo => {
   const data = doc.data();
   return {
     id: doc.id,

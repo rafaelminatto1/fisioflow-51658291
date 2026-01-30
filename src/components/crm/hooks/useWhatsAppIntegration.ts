@@ -8,10 +8,9 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDoc, doc, addDoc, updateDoc, query } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export function useWhatsAppIntegration() {
   const sendMessage = useMutation({

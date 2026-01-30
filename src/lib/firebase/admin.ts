@@ -74,7 +74,8 @@ export function getAdminDb(): admin.firestore.Firestore {
   dbInstance = admin.firestore(app);
 
   // Configure settings for production
-  if (process.env.NODE_ENV === 'production') {
+  // Only apply if we are in a Node environment (server-side)
+  if (process.env.NODE_ENV === 'production' && typeof process !== 'undefined' && process.release?.name === 'node') {
     dbInstance.settings({
       ignoreUndefinedProperties: true,
     });

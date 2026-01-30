@@ -13,7 +13,7 @@ import {
   CheckCircle2, Clock, Phone, Mail, Calendar
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb, collection, getDocs, query as queryFn, orderBy, doc, getDoc } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query as queryFn, orderBy, doc, getDoc } from '@/integrations/firebase/app';
 import { collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, orderBy as orderByFn, doc as docRef, getDoc as getDocFromFirestore } from 'firebase/firestore';
 import { useLeadScoring } from './hooks/useLeadScoring';
 
@@ -30,7 +30,6 @@ interface LeadScoringProps {
 
 export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'rules' | 'settings'>('overview');
-  const db = getFirebaseDb();
 
   // Buscar scores calculados
   const { data: scores = [], isLoading } = useQuery({

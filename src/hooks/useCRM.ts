@@ -10,7 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -26,7 +26,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // Types
 export interface CRMTarefa {
@@ -99,7 +98,7 @@ export interface NPSPesquisa {
 }
 
 // Helper to convert doc to type with id
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
 
 // ========== TAREFAS ==========
 export function useCRMTarefas(leadId?: string) {
@@ -456,7 +455,7 @@ export function useCRMAnalytics() {
       // Get all leads
       const q = query(collection(db, 'leads'));
       const snapshot = await getDocs(q);
-      const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+      const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Array<{ id: string; origem?: string; estagio?: string }>[];
 
       // Conversion by source
       const conversionBySource = Object.entries(

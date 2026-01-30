@@ -13,7 +13,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { storage, db } from '@fisioflow/shared-api/firebase';
+import { storage, db } from '@/integrations/firebase/app';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 

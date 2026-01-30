@@ -2,20 +2,42 @@ import { lazy } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-// Lazy load pages for better performance with webpack chunk names for better debugging
+// =============================================================================
+// LAZY LOADED PAGES WITH OPTIMIZED CHUNKS
+// =============================================================================
+
+// Auth pages - Eager load for faster authentication
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
 const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));
 
-// Core pages - High priority chunks
-const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "./pages/Index"));
-const Patients = lazy(() => import(/* webpackChunkName: "patients" */ "./pages/Patients"));
-const Schedule = lazy(() => import(/* webpackChunkName: "schedule" */ "./pages/Schedule"));
+// =============================================================================
+// CORE PAGES - High priority with prefetch for immediate user access
+// =============================================================================
+
+const Index = lazy(() => import(
+  /* webpackChunkName: "dashboard" */
+  /* webpackPrefetch: true */
+  "./pages/Index"
+));
+const Patients = lazy(() => import(
+  /* webpackChunkName: "patients" */
+  /* webpackPrefetch: true */
+  "./pages/Patients"
+));
+const Schedule = lazy(() => import(
+  /* webpackChunkName: "schedule" */
+  /* webpackPrefetch: true */
+  "./pages/Schedule"
+));
 const Exercises = lazy(() => import(/* webpackChunkName: "exercises" */ "./pages/Exercises"));
 const Financial = lazy(() => import(/* webpackChunkName: "financial" */ "./pages/Financial"));
 const Reports = lazy(() => import(/* webpackChunkName: "reports" */ "./pages/Reports"));
 const Settings = lazy(() => import(/* webpackChunkName: "settings" */ "./pages/Settings"));
-const Profile = lazy(() => import(/* webpackChunkName: "profile" */ "./pages/Profile").then(module => ({ default: module.Profile })));
+const Profile = lazy(() => import(
+  /* webpackChunkName: "profile" */
+  "./pages/Profile"
+).then(module => ({ default: module.Profile })));
 const MedicalRecord = lazy(() => import(/* webpackChunkName: "medical-record" */ "./pages/MedicalRecord"));
 
 // Feature pages - Medium priority chunks
@@ -26,12 +48,28 @@ const Telemedicine = lazy(() => import(/* webpackChunkName: "telemedicine" */ ".
 const TelemedicineRoom = lazy(() => import(/* webpackChunkName: "telemedicine-room" */ "./pages/TelemedicineRoom"));
 const ExerciseLibraryExpanded = lazy(() => import(/* webpackChunkName: "exercises-library" */ "./pages/ExerciseLibraryExpanded"));
 const Biofeedback = lazy(() => import(/* webpackChunkName: "biofeedback" */ "./pages/Biofeedback"));
-const PatientEvolution = lazy(() => import(/* webpackChunkName: "patient-evolution" */ "./pages/PatientEvolution"));
+const PatientEvolution = lazy(() => import(
+  /* webpackChunkName: "patient-evolution" */
+  /* webpackPrefetch: true */
+  "./pages/PatientEvolution"
+));
 const PatientEvolutionReport = lazy(() => import(/* webpackChunkName: "patient-evolution-report" */ "./pages/PatientEvolutionReport"));
-const SessionEvolutionPage = lazy(() => import(/* webpackChunkName: "session-evolution" */ "./pages/SessionEvolutionPage"));
+const SessionEvolutionPage = lazy(() => import(
+  /* webpackChunkName: "session-evolution" */
+  /* webpackPrefetch: true */
+  "./pages/SessionEvolutionPage"
+));
 const PainMapHistoryPage = lazy(() => import(/* webpackChunkName: "pain-maps" */ "./pages/patients/PainMapHistoryPage"));
-const NewEvaluationPage = lazy(() => import(/* webpackChunkName: "evaluation-new" */ "./pages/patients/NewEvaluationPage"));
-const PatientProfilePage = lazy(() => import(/* webpackChunkName: "patient-profile" */ "./pages/patients/PatientProfilePage"));
+const NewEvaluationPage = lazy(() => import(
+  /* webpackChunkName: "evaluation-new" */
+  /* webpackPrefetch: true */
+  "./pages/patients/NewEvaluationPage"
+));
+const PatientProfilePage = lazy(() => import(
+  /* webpackChunkName: "patient-profile" */
+  /* webpackPrefetch: true */
+  "./pages/patients/PatientProfilePage"
+));
 const Communications = lazy(() => import(/* webpackChunkName: "communications" */ "./pages/Communications"));
 
 // Settings & configuration pages
@@ -240,10 +278,10 @@ export function AppRoutes() {
             <Route path="/gamification/quests" element={<ProtectedRoute><GamificationQuestsPage /></ProtectedRoute>} />
             <Route path="/gamification/shop" element={<ProtectedRoute><GamificationShopPage /></ProtectedRoute>} />
             <Route path="/gamification/leaderboard" element={<ProtectedRoute><GamificationLeaderboardPage /></ProtectedRoute>} />
-            <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
-            <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
-            <Route path="/intelligent-reports" element={<ProtectedRoute><IntelligentReports patientId="demo-patient" patientName="Paciente Demo" /></ProtectedRoute>} />
-            <Route path="/augmented-reality" element={<ProtectedRoute><AugmentedRealityExercise patientId="current-patient" /></ProtectedRoute>} />
+            <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot /></ProtectedRoute>} />
+            <Route path="/computer-vision/:patientId?" element={<ProtectedRoute><ComputerVisionExercise /></ProtectedRoute>} />
+            <Route path="/intelligent-reports/:patientId" element={<ProtectedRoute><IntelligentReports /></ProtectedRoute>} />
+            <Route path="/augmented-reality/:patientId?" element={<ProtectedRoute><AugmentedRealityExercise /></ProtectedRoute>} />
             <Route path="/admin/gamification" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminGamificationPage /></ProtectedRoute>} />
 
             {/* Image Analysis Module (NeuroPose) */}

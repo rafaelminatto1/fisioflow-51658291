@@ -8,7 +8,7 @@
 import { lazy, ComponentType } from 'react';
 
 // Cache for prefetched components
-const prefetchedCache = new Map<string, ComponentType<any>>();
+const prefetchedCache = new Map<string, ComponentType<unknown>>();
 
 // Track prefetch attempts to avoid duplicate calls
 const prefetchAttempts = new Set<string>();
@@ -19,7 +19,7 @@ const prefetchAttempts = new Set<string>();
  * @param key Unique key for caching
  */
 export async function prefetchRoute(
-  componentLoader: () => Promise<{ default: ComponentType<any> }>,
+  componentLoader: () => Promise<{ default: ComponentType<unknown> }>,
   key: string
 ): Promise<void> {
   // Check if already prefetched
@@ -108,11 +108,11 @@ export const PrefetchStrategy = {
   /**
    * Prefetch on hover (for navigation links)
    */
-  onHover: (routeKey: string, loader: () => Promise<{ default: ComponentType<any> }>) => ({
+  onHover: (routeKey: string, loader: () => Promise<{ default: ComponentType<unknown> }>) => ({
     onMouseEnter: () => {
       // Use requestIdleCallback if available, otherwise setTimeout
       if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(() => prefetchRoute(loader, routeKey));
+        (window as Window & { requestIdleCallback?: (callback: () => void) => void }).requestIdleCallback(() => prefetchRoute(loader, routeKey));
       } else {
         setTimeout(() => prefetchRoute(loader, routeKey), 100);
       }
@@ -122,10 +122,10 @@ export const PrefetchStrategy = {
   /**
    * Prefetch on mount (for likely next routes)
    */
-  onMount: (routeKey: string, loader: () => Promise<{ default: ComponentType<any> }>) => {
+  onMount: (routeKey: string, loader: () => Promise<{ default: ComponentType<unknown> }>) => {
     // Delay prefetch to avoid blocking initial render
     if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => prefetchRoute(loader, routeKey));
+      (window as Window & { requestIdleCallback?: (callback: () => void) => void }).requestIdleCallback(() => prefetchRoute(loader, routeKey));
     } else {
       setTimeout(() => prefetchRoute(loader, routeKey), 2000);
     }
@@ -134,7 +134,7 @@ export const PrefetchStrategy = {
   /**
    * Prefetch immediately (for critical routes)
    */
-  immediate: (routeKey: string, loader: () => Promise<{ default: ComponentType<any> }>) => {
+  immediate: (routeKey: string, loader: () => Promise<{ default: ComponentType<unknown> }>) => {
     prefetchRoute(loader, routeKey);
   },
 };
@@ -167,7 +167,7 @@ export function prefetchRelatedRoutes(currentRoute: string): void {
  * Hook to prefetch routes on component mount
  */
 export function usePrefetchRoutes(
-  routes: Array<{ key: string; loader: () => Promise<{ default: ComponentType<any> }> }>,
+  routes: Array<{ key: string; loader: () => Promise<{ default: ComponentType<unknown> }> }>,
   strategy: 'immediate' | 'idle' | 'delayed' = 'idle'
 ) {
   // This would be used in React components
