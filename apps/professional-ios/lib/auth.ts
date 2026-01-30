@@ -1,7 +1,7 @@
 /**
- * FisioFlow Patient App - Authentication Service
+ * FisioFlow Professional App - Authentication Service
  *
- * Firebase Authentication integration for patient app.
+ * Firebase Authentication integration for professional app.
  * Handles login, registration, logout, and password reset.
  */
 
@@ -114,7 +114,7 @@ export async function register(data: RegisterData): Promise<User> {
     const userData: Omit<UserData, 'id'> = {
       email: data.email,
       name: data.name,
-      role: data.role || 'patient',
+      role: data.role || 'professional',
       phone: data.phone || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

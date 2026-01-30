@@ -136,7 +136,7 @@ export async function savePushToken(
     };
 
     // Use subcollection 'push_tokens' for better scalability and consistency with backend
-    const tokenRef = doc(db, COLLECTIONS.users, userId, 'push_tokens', token);
+    const tokenRef = doc(db, COLLECTIONS.USERS, userId, 'push_tokens', token);
 
     await setDoc(tokenRef, tokenData, { merge: true });
     console.log(`Token saved/updated in users/${userId}/push_tokens/${token}`);
@@ -152,7 +152,7 @@ export async function savePushToken(
 export async function removePushToken(userId: string, token: string): Promise<void> {
   try {
     // Remove from subcollection
-    const tokenRef = doc(db, COLLECTIONS.users, userId, 'push_tokens', token);
+    const tokenRef = doc(db, COLLECTIONS.USERS, userId, 'push_tokens', token);
     await deleteDoc(tokenRef);
     console.log(`Token removed from users/${userId}/push_tokens/${token}`);
   } catch (error) {
