@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, ArrowLeft, Bug, Copy, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
+import { logger } from '@/lib/errors/logger';
 
 declare global {
   interface Performance {
@@ -137,7 +138,7 @@ export class PatientEvolutionErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log do erro para debugging
-    console.error('[PatientEvolutionErrorBoundary]', error, errorInfo);
+    logger.error('[PatientEvolutionErrorBoundary]', { error, errorInfo }, 'PatientEvolutionErrorBoundary');
 
     // Salvar no sessionStorage para análise posterior
     this.saveErrorReport(error, errorInfo);
@@ -159,7 +160,7 @@ export class PatientEvolutionErrorBoundary extends Component<Props, State> {
       const report = this.buildErrorReport(error, errorInfo);
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(report, null, 2));
     } catch (storageError) {
-      console.error('[PatientEvolutionErrorBoundary] Falha ao salvar erro:', storageError);
+      logger.error('[PatientEvolutionErrorBoundary] Falha ao salvar erro', storageError, 'PatientEvolutionErrorBoundary');
     }
   }
 
@@ -303,7 +304,7 @@ ${errorInfo?.componentStack || 'No component stack'}
         this.setState({ copied: false });
       }, COPY_FEEDBACK_DURATION);
     } catch (err) {
-      console.error('[PatientEvolutionErrorBoundary] Falha ao copiar:', err);
+      logger.error('[PatientEvolutionErrorBoundary] Falha ao copiar', err, 'PatientEvolutionErrorBoundary');
     }
   };
 
