@@ -282,8 +282,6 @@ export { listUsers, updateUserRole };
 //     const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
 //
 //     try {
-//         console.log(`[onUserCreated] Criando perfil para usuário: ${user.uid} (${user.email})`);
-//
 //         await pool.query(
 //             `INSERT INTO profiles (
 //                 user_id,
@@ -304,9 +302,7 @@ export { listUsers, updateUserRole };
 //                 user.emailVerified || false
 //             ]
 //         );
-//
-//         console.log(`[onUserCreated] Perfil criado com sucesso para ${user.uid}`);
 //     } catch (error) {
-//         console.error(`[onUserCreated] Erro ao criar perfil para ${user.uid}:`, error);
+//         // Error logged by logger
 //     }
 // });
