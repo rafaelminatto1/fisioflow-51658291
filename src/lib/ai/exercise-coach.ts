@@ -40,6 +40,7 @@ import {
   base64ToAudioChunk,
   formatSessionDuration,
 } from '@fisioflow/shared-api/firebase/ai/live-config';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -581,7 +582,7 @@ export class ExerciseCoach {
 
       this.session.ws.send(JSON.stringify(message));
     } catch (error) {
-      console.error('Error capturing video frame:', error);
+      logger.error('Error capturing video frame', error, 'ExerciseCoach');
     }
   }
 
@@ -668,7 +669,7 @@ export class ExerciseCoach {
 
       this.session.ws.send(JSON.stringify(message));
     } catch (error) {
-      console.error('Error sending audio chunk:', error);
+      logger.error('Error sending audio chunk', error, 'ExerciseCoach');
     }
   }
 
@@ -700,7 +701,7 @@ export class ExerciseCoach {
         }
       };
     } catch (error) {
-      console.error('Error playing audio:', error);
+      logger.error('Error playing audio', error, 'ExerciseCoach');
       this.isPlaying = false;
       this.callbacks.onSpeakingEnd();
     }
@@ -730,7 +731,7 @@ export class ExerciseCoach {
         }
       };
     } catch (error) {
-      console.error('Error playing queued audio:', error);
+      logger.error('Error playing queued audio', error, 'ExerciseCoach');
     }
   }
 
@@ -882,7 +883,7 @@ export class ExerciseCoach {
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          logger.error('WebSocket connection error', error, 'ExerciseCoach');
           this.session!.state.hasError = true;
           this.callbacks.onError(new Error('WebSocket connection failed'));
           reject(error);
@@ -963,7 +964,7 @@ export class ExerciseCoach {
           }
       }
     } catch (error) {
-      console.error('Error handling Live API message:', error);
+      logger.error('Error handling Live API message', error, 'ExerciseCoach');
     }
   }
 

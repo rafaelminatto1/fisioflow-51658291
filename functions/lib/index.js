@@ -55,9 +55,7 @@ const whatsapp_1 = require("./communications/whatsapp");
         init_1.DB_HOST_IP_PUBLIC_SECRET,
         whatsapp_1.WHATSAPP_PHONE_NUMBER_ID_SECRET,
         whatsapp_1.WHATSAPP_ACCESS_TOKEN_SECRET
-    ],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY"
+    ]
 });
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
