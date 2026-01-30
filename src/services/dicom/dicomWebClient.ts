@@ -7,6 +7,7 @@
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
+import { logger } from '@/lib/errors/logger';
 
 const PROXY_FUNCTION = 'dicom-proxy';
 
@@ -47,7 +48,7 @@ export const dicomWebClient = {
 
             return data as DicomStudy[];
         } catch (error) {
-            console.error('[dicomWebClient] searchStudies error:', error);
+            logger.error('[dicomWebClient] searchStudies error', error, 'dicomWebClient');
             throw error;
         }
     },
@@ -81,7 +82,7 @@ export const dicomWebClient = {
             return `${hostingUrl}/${PROXY_FUNCTION}`;
         }
 
-        console.warn('[dicomWebClient] Unable to construct proxy URL - missing Firebase configuration');
+        logger.warn('[dicomWebClient] Unable to construct proxy URL - missing Firebase configuration', undefined, 'dicomWebClient');
         return '/dicom-proxy'; // Fallback to relative path
     },
 
@@ -139,7 +140,7 @@ export const dicomWebClient = {
             }
             return results;
         } catch (error) {
-            console.error('[dicomWebClient] storeInstances error:', error);
+            logger.error('[dicomWebClient] storeInstances error', error, 'dicomWebClient');
             throw error;
         }
     }
