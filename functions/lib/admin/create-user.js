@@ -13,7 +13,7 @@ const app_2 = require("firebase-admin/app");
 if (!(0, app_2.getApps)().length) {
     (0, app_1.initializeApp)();
 }
-exports.createAdminUser = (0, https_1.onCall)(async () => {
+exports.createAdminUser = (0, https_1.onCall)({ cors: true }, async () => {
     const auth = (0, auth_1.getAuth)();
     try {
         // Verificar se usuário já existe

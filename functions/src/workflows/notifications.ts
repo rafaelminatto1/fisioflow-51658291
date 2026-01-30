@@ -83,6 +83,7 @@ function getNotificationsCollection() {
  */
 export const sendNotification = onCall(
   {
+    cors: true,
     region: 'southamerica-east1',
   },
   async (request): Promise<{ success: boolean; notificationId?: string; result?: NotificationResult }> => {
@@ -182,6 +183,7 @@ interface SendBatchNotificationsData {
 
 export const sendNotificationBatch = onCall(
   {
+    cors: true,
     region: 'southamerica-east1',
   },
   async (request): Promise<{ success: boolean; queued: number; timestamp: string }> => {
@@ -388,6 +390,7 @@ export const processNotificationQueue = onMessagePublished(
  */
 export const emailWebhook = onCall(
   {
+    cors: true,
     region: 'southamerica-east1',
   },
   async (request) => {
