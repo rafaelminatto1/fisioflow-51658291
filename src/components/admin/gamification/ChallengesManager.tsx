@@ -307,12 +307,12 @@ export default function ChallengesManager() {
                                                 onCheckedChange={() => toggleActive.mutate({ id: challenge.id, currentState: !!challenge.is_active })}
                                             />
                                         </div>
-                                        <Button variant="ghost" size="icon" onClick={() => openEdit(challenge)}>
+                                        <Button variant="ghost" size="icon" onClick={() => openEdit(challenge)} aria-label={`Editar ${challenge.title}`}>
                                             <Pencil className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => {
                                             if (confirm('Excluir desafio?')) deleteChallenge.mutate(challenge.id);
-                                        }}>
+                                        }} aria-label={`Excluir ${challenge.title}`}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
