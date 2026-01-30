@@ -1,5 +1,6 @@
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
 import { useCallback, useState } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 export interface CameraOptions {
   quality?: number;
@@ -44,7 +45,7 @@ export function useCamera(options: CameraOptions = {}) {
 
       return image.webPath ?? null;
     } catch (error) {
-      console.error('Erro ao tirar foto:', error);
+      logger.error('Erro ao tirar foto', error, 'useCamera');
       setIsLoading(false);
       return null;
     }
@@ -70,7 +71,7 @@ export function useCamera(options: CameraOptions = {}) {
 
       return image.webPath ?? null;
     } catch (error) {
-      console.error('Erro ao selecionar foto da galeria:', error);
+      logger.error('Erro ao selecionar foto da galeria', error, 'useCamera');
       setIsLoading(false);
       return null;
     }
