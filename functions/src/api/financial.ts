@@ -18,7 +18,7 @@ interface ListTransactionsResponse {
 /**
  * Lista transações financeiras
  */
-export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>(async (request) => {
+export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -60,7 +60,7 @@ interface CreateTransactionResponse {
 /**
  * Cria uma nova transação
  */
-export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>(async (request) => {
+export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -117,7 +117,7 @@ interface UpdateTransactionResponse {
 /**
  * Atualiza uma transação
  */
-export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>(async (request) => {
+export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -193,7 +193,7 @@ interface DeleteTransactionRequest {
 /**
  * Remove uma transação
  */
-export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>(async (request) => {
+export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -236,7 +236,7 @@ interface FindTransactionByAppointmentIdResponse {
 /**
  * Busca transação por ID do agendamento (metadados)
  */
-export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>(async (request) => {
+export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -294,7 +294,7 @@ interface GetEventReportResponse {
 /**
  * Gera relatório financeiro de evento
  */
-export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>(async (request) => {
+export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
