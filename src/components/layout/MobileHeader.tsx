@@ -76,7 +76,7 @@ export function MobileHeader() {
         {/* Menu Hambúrguer */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="hover:bg-accent/80 touch-target h-9 w-9 sm:h-10 sm:w-10">
+            <Button variant="ghost" size="icon" className="hover:bg-accent/80 touch-target h-9 w-9 sm:h-10 sm:w-10" aria-label="Abrir menu">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>

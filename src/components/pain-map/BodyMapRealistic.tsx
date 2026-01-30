@@ -437,7 +437,7 @@ export function BodyMapRealistic({
                     <Card className="bg-background/90 backdrop-blur-md p-1 border-border/50 flex flex-col gap-1 shadow-lg">
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset} aria-label="Resetar vista">
                                     <Maximize2 className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
@@ -446,7 +446,7 @@ export function BodyMapRealistic({
                         <Separator />
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomIn}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomIn} aria-label="Aumentar zoom">
                                     <ZoomIn className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
@@ -454,7 +454,7 @@ export function BodyMapRealistic({
                         </Tooltip>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomOut}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomOut} aria-label="Diminuir zoom">
                                     <ZoomOut className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
