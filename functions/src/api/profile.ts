@@ -8,6 +8,7 @@ import { authorizeRequest } from '../middleware/auth';
 import { getPool } from '../init';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
+import { logger } from '../lib/logger';
 
 interface GetProfileResponse {
     data: Profile;
@@ -131,7 +132,7 @@ export const updateProfile = onCall<UpdateProfileRequest, Promise<UpdateProfileR
         return { data: result.rows[0] as Profile };
     } catch (error: unknown) {
         if (error instanceof HttpsError) throw error;
-        console.error('Erro ao atualizar perfil:', error);
+        logger.error('Erro ao atualizar perfil:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar perfil';
         throw new HttpsError('internal', errorMessage);
     }

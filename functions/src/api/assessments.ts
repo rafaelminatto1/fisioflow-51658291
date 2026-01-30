@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { AssessmentTemplate, AssessmentSection, PatientAssessment } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Lista templates de avaliação
@@ -33,7 +34,7 @@ export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplate
 
     return { data: result.rows as AssessmentTemplate[] };
   } catch (error: unknown) {
-    console.error('Error in listAssessmentTemplates:', error);
+    logger.error('Error in listAssessmentTemplates:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar templates';
     throw new HttpsError('internal', errorMessage);
@@ -111,7 +112,7 @@ export const getAssessmentTemplate = onCall<GetAssessmentTemplateRequest, Promis
       },
     } as GetAssessmentTemplateResponse;
   } catch (error: unknown) {
-    console.error('Error in getAssessmentTemplate:', error);
+    logger.error('Error in getAssessmentTemplate:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar template';
     throw new HttpsError('internal', errorMessage);
@@ -167,7 +168,7 @@ export const listAssessments = onCall<ListAssessmentsRequest, Promise<ListAssess
 
     return { data: result.rows as any[] };
   } catch (error: unknown) {
-    console.error('Error in listAssessments:', error);
+    logger.error('Error in listAssessments:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar avaliações';
     throw new HttpsError('internal', errorMessage);
@@ -230,7 +231,7 @@ export const getAssessment = onCall<GetAssessmentRequest, Promise<GetAssessmentR
       },
     } as GetAssessmentResponse;
   } catch (error: unknown) {
-    console.error('Error in getAssessment:', error);
+    logger.error('Error in getAssessment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar avaliação';
     throw new HttpsError('internal', errorMessage);
@@ -338,7 +339,7 @@ export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAs
           assessmentId: assessment.id,
         });
       } catch (e) {
-        console.error('Error publishing to Ably:', e);
+        logger.error('Error publishing to Ably:', e);
       }
 
       return { data: assessment as PatientAssessment };
@@ -347,7 +348,7 @@ export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAs
       throw e;
     }
   } catch (error: unknown) {
-    console.error('Error in createAssessment:', error);
+    logger.error('Error in createAssessment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar avaliação';
     throw new HttpsError('internal', errorMessage);
@@ -456,7 +457,7 @@ export const updateAssessment = onCall<UpdateAssessmentRequest, Promise<{ data: 
       throw e;
     }
   } catch (error: unknown) {
-    console.error('Error in updateAssessment:', error);
+    logger.error('Error in updateAssessment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar avaliação';
     throw new HttpsError('internal', errorMessage);
