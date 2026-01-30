@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { db, getFirebaseAuth } from "@/integrations/firebase/app";
 import { collection, query, where, getDocs, orderBy, addDoc } from "firebase/firestore";
+import { logger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
 
@@ -83,7 +84,7 @@ export const useSaveStandardizedTest = () => {
       toast.success("Teste salvo com sucesso!");
     },
     onError: (error) => {
-      console.error("Erro ao salvar teste:", error);
+      logger.error("Erro ao salvar teste", error, 'useStandardizedTests');
       toast.error("Não foi possível salvar o teste");
     },
   });

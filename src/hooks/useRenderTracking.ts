@@ -3,6 +3,7 @@
  * Útil para debugging de erros que ocorrem durante a renderização
  */
 import { useEffect, useRef } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 export function useRenderTracking(componentName: string, extraData?: Record<string, unknown>) {
   const renderCount = useRef(0);
@@ -10,35 +11,35 @@ export function useRenderTracking(componentName: string, extraData?: Record<stri
 
   useEffect(() => {
     renderCount.current++;
-    console.log(`[RenderTracking] ${componentName} render #${renderCount.current}`, {
+    logger.debug(`[RenderTracking] ${componentName} render #${renderCount.current}`, {
       timestamp: new Date().toISOString(),
       ...extraData
-    });
+    }, 'useRenderTracking');
 
     return () => {
       isMounted.current = false;
-      console.log(`[RenderTracking] ${componentName} unmounted`);
+      logger.debug(`[RenderTracking] ${componentName} unmounted`, undefined, 'useRenderTracking');
     };
   });
 
   useEffect(() => {
     // Capturar erros não tratados
     const handleError = (event: ErrorEvent) => {
-      console.error(`[RenderTracking] Unhandled error in ${componentName}:`, {
+      logger.error(`[RenderTracking] Unhandled error in ${componentName}`, {
         message: event.message,
         filename: event.filename,
         lineno: event.lineno,
         colno: event.colno,
         error: event.error?.stack,
         ...extraData
-      });
+      }, 'useRenderTracking');
     };
 
     const handleRejection = (event: PromiseRejectionEvent) => {
-      console.error(`[RenderTracking] Unhandled promise rejection in ${componentName}:`, {
+      logger.error(`[RenderTracking] Unhandled promise rejection in ${componentName}`, {
         reason: event.reason,
         ...extraData
-      });
+      }, 'useRenderTracking');
     };
 
     window.addEventListener('error', handleError);
