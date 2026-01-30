@@ -3,6 +3,7 @@ import { trackError } from '../../lib/analytics';
 import { AlertTriangle, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Hook para configurar listener global de erros de preload do Vite
@@ -11,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 function useVitePreloadErrorHandler() {
   useEffect(() => {
     const handleVitePreloadError = (event: Event) => {
-      console.error('[Vite] Erro de preload detectado:', event);
+      logger.error('[Vite] Erro de preload detectado', event, 'ErrorBoundary');
 
       const storageKey = 'vite_preload_error_reload';
       const reloadCountKey = 'vite_reload_count';
@@ -22,13 +23,13 @@ function useVitePreloadErrorHandler() {
         sessionStorage.setItem(storageKey, Date.now().toString());
         sessionStorage.setItem(reloadCountKey, (reloadCount + 1).toString());
 
-        console.log(`[Vite] Recarregando página automaticamente (tentativa ${reloadCount + 1}/3)...`);
+        logger.info(`[Vite] Recarregando página automaticamente (tentativa ${reloadCount + 1}/3)...`, undefined, 'ErrorBoundary');
 
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       } else {
-        console.error('[Vite] Limite de recargas automáticas atingido.');
+        logger.error('[Vite] Limite de recargas automáticas atingido.', undefined, 'ErrorBoundary');
         // Limpar contador para permitir futuras tentativas manuais
         sessionStorage.removeItem(reloadCountKey);
       }

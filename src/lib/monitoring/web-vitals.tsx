@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Metric } from 'web-vitals';
+import { logger } from '@/lib/errors/logger';
 
 // Extend Window interface for analytics globals
 declare global {
@@ -97,7 +98,7 @@ export function sendToAnalytics(metrics: WebVitalsMetrics) {
         });
       } catch (e) {
         // Silenciosamente ignorar erros do Vercel Analytics
-        console.debug('[WebVitals] Vercel Analytics error:', e);
+        logger.debug('[WebVitals] Vercel Analytics error', e, 'web-vitals');
       }
     }
 
@@ -119,7 +120,7 @@ export function sendToAnalytics(metrics: WebVitalsMetrics) {
           },
         });
       } catch (e) {
-        console.debug('[WebVitals] GA4 error:', e);
+        logger.debug('[WebVitals] GA4 error', e, 'web-vitals');
       }
     }
 
@@ -136,7 +137,7 @@ export function sendToAnalytics(metrics: WebVitalsMetrics) {
     }
   } catch (error) {
     // Nunca lançar erro de analytics para não quebrar a aplicação
-    console.debug('[WebVitals] Analytics send failed:', error);
+    logger.debug('[WebVitals] Analytics send failed', error, 'web-vitals');
   }
 }
 
@@ -210,7 +211,7 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
         (metrics as Record<string, Metric>)[metricName.toLowerCase()] = metric;
         sendToAnalytics(metrics);
       } catch (e) {
-        console.debug(`[WebVitals] Error in ${metricName} callback:`, e);
+        logger.debug(`[WebVitals] Error in ${metricName} callback`, e, 'web-vitals');
       }
     };
 
@@ -219,7 +220,7 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
       try {
         onCLS(safeCallback('CLS'));
       } catch (e) {
-        console.debug('[WebVitals] Error setting up CLS:', e);
+        logger.debug('[WebVitals] Error setting up CLS', e, 'web-vitals');
       }
     }
 
@@ -228,7 +229,7 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
       try {
         onFID(safeCallback('FID'));
       } catch (e) {
-        console.debug('[WebVitals] Error setting up FID:', e);
+        logger.debug('[WebVitals] Error setting up FID', e, 'web-vitals');
       }
     }
 
@@ -237,7 +238,7 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
       try {
         onINP(safeCallback('INP'));
       } catch (e) {
-        console.debug('[WebVitals] Error setting up INP:', e);
+        logger.debug('[WebVitals] Error setting up INP', e, 'web-vitals');
       }
     }
 
@@ -246,7 +247,7 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
       try {
         onFCP(safeCallback('FCP'));
       } catch (e) {
-        console.debug('[WebVitals] Error setting up FCP:', e);
+        logger.debug('[WebVitals] Error setting up FCP', e, 'web-vitals');
       }
     }
 
@@ -259,11 +260,11 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
             sendToAnalytics(metrics);
             reportWebVitalsToSentry(metrics);
           } catch (e) {
-            console.debug('[WebVitals] Error in LCP callback:', e);
+            logger.debug('[WebVitals] Error in LCP callback', e, 'web-vitals');
           }
         });
       } catch (e) {
-        console.debug('[WebVitals] Error setting up LCP:', e);
+        logger.debug('[WebVitals] Error setting up LCP', e, 'web-vitals');
       }
     }
 
@@ -272,13 +273,13 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
       try {
         onTTFB(safeCallback('TTFB'));
       } catch (e) {
-        console.debug('[WebVitals] Error setting up TTFB:', e);
+        logger.debug('[WebVitals] Error setting up TTFB', e, 'web-vitals');
       }
     }
 
     return metrics;
   } catch (error) {
-    console.error('[WebVitals] Failed to initialize monitoring:', error);
+    logger.error('[WebVitals] Failed to initialize monitoring', error, 'web-vitals');
     return null;
   }
 }

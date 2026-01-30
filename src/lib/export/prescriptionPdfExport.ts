@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import QRCode from 'qrcode';
+import { logger } from '@/lib/errors/logger';
 
 interface PrescriptionExercise {
   id: string;
@@ -199,7 +200,7 @@ export const generatePrescriptionPDF = async (prescription: PrescriptionData): P
     doc.text(publicUrl, 120, qrY + 35);
 
   } catch (error) {
-    console.error('Erro ao gerar QR Code:', error);
+    logger.error('Erro ao gerar QR Code', error, 'prescriptionPdfExport');
   }
 
   // Retornar como Blob

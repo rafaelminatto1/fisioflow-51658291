@@ -10,6 +10,7 @@
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { multiFactor } from 'firebase/auth';
 import { doc, getDoc, updateDoc, query, where, getDocs, collection } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
 
@@ -62,7 +63,7 @@ export class MFAService {
 
       return { qrCode, secret: totpSecret, factorId };
     } catch (error) {
-      console.error('MFA enrollment error:', error);
+      logger.error('MFA enrollment error', error, 'mfa');
       throw error;
     }
   }
@@ -109,7 +110,7 @@ export class MFAService {
 
       return true;
     } catch (error) {
-      console.error('MFA verification error:', error);
+      logger.error('MFA verification error', error, 'mfa');
       throw error;
     }
   }
@@ -139,7 +140,7 @@ export class MFAService {
         }],
       }];
     } catch (error) {
-      console.error('Error getting enrolled factors:', error);
+      logger.error('Error getting enrolled factors', error, 'mfa');
       return [];
     }
   }
@@ -170,7 +171,7 @@ export class MFAService {
       }
       return true;
     } catch (error) {
-      console.error('Error unenrolling MFA:', error);
+      logger.error('Error unenrolling MFA', error, 'mfa');
       throw error;
     }
   }
@@ -233,7 +234,7 @@ export class MFAAdminService {
         });
       }
     } catch (error) {
-      console.error('Error updating MFA status:', error);
+      logger.error('Error updating MFA status', error, 'mfa');
       throw error;
     }
   }
