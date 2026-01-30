@@ -32,6 +32,7 @@ import {
   base64ToAudioChunk,
   formatSessionDuration,
 } from '@fisioflow/shared-api/firebase/ai/live-config';
+import { logger } from '@/lib/errors/logger';
 
 declare global {
   interface Window {
@@ -342,7 +343,7 @@ export class VoiceAssistant {
       this.session.state.isListening = false;
       this.callbacks.onListeningEnd();
     } catch (error) {
-      console.error('Error stopping recording:', error);
+      logger.error('Error stopping recording', error, 'VoiceAssistant');
     }
   }
 
@@ -379,7 +380,7 @@ export class VoiceAssistant {
 
       this.session.ws.send(JSON.stringify(message));
     } catch (error) {
-      console.error('Error sending audio chunk:', error);
+      logger.error('Error sending audio chunk', error, 'VoiceAssistant');
     }
   }
 
@@ -422,7 +423,7 @@ export class VoiceAssistant {
         }
       };
     } catch (error) {
-      console.error('Error playing audio:', error);
+      logger.error('Error playing audio', error, 'VoiceAssistant');
       this.isPlaying = false;
       this.callbacks.onSpeakingEnd();
     }
@@ -452,7 +453,7 @@ export class VoiceAssistant {
         }
       };
     } catch (error) {
-      console.error('Error playing queued audio:', error);
+      logger.error('Error playing queued audio', error, 'VoiceAssistant');
     }
   }
 
@@ -494,7 +495,7 @@ export class VoiceAssistant {
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          logger.error('WebSocket connection error', error, 'VoiceAssistant');
           this.session!.state.hasError = true;
           this.session!.state.errorMessage = 'Connection error';
           this.callbacks.onError(new Error('WebSocket connection failed'));
@@ -560,7 +561,7 @@ export class VoiceAssistant {
           break;
 
         case 'warning':
-          console.warn('Live API warning:', message.warning);
+          logger.warn('Live API warning', message.warning, 'VoiceAssistant');
           break;
 
         default:
@@ -570,7 +571,7 @@ export class VoiceAssistant {
           }
       }
     } catch (error) {
-      console.error('Error handling Live API message:', error);
+      logger.error('Error handling Live API message', error, 'VoiceAssistant');
     }
   }
 

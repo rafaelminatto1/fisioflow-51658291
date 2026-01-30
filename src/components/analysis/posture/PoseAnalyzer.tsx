@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Camera, Upload } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 // Type definitions for @mediapipe/pose (UMD module)
 interface PoseOptions {
@@ -150,7 +151,7 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
             const PoseClass = (window as Window & { Pose?: PoseConstructor }).Pose;
 
             if (!PoseClass) {
-                console.error('MediaPipe Pose not found on window object');
+                logger.error('MediaPipe Pose not found on window object', undefined, 'PoseAnalyzer');
                 return;
             }
 

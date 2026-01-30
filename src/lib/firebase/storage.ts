@@ -20,6 +20,7 @@ import {
 } from 'firebase/storage';
 import { storage } from '@/integrations/firebase/app';
 import { getAuth } from 'firebase/auth';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -267,7 +268,7 @@ export async function uploadFile(
       createdAt: new Date(),
     };
   } catch (error) {
-    console.error('[Storage] Upload error:', error);
+    logger.error('Upload error', error, 'Storage');
     throw error;
   }
 }
@@ -297,7 +298,7 @@ export async function uploadFiles(
       });
       results.push(result);
     } catch (error) {
-      console.error(`[Storage] Failed to upload file ${i + 1}:`, error);
+      logger.error(`Failed to upload file ${i + 1}`, error, 'Storage');
       // Continue with other files
     }
   }
@@ -374,7 +375,7 @@ export async function uploadFromUrl(
 
     return uploadFile(file, options);
   } catch (error) {
-    console.error('[Storage] Upload from URL error:', error);
+    logger.error('Upload from URL error', error, 'Storage');
     throw error;
   }
 }

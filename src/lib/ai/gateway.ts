@@ -17,6 +17,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText, streamText, generateObject } from 'ai';
 import { z } from 'zod';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -235,11 +236,11 @@ export async function generateAIResponse(
     };
 
   } catch (error) {
-    console.warn(`Primary provider ${primaryProvider} failed:`, error);
+    logger.warn(`Primary provider ${primaryProvider} failed`, error, 'AIGateway');
 
     // Try fallback provider
     if (fallbackProvider && fallbackProvider !== primaryProvider) {
-      console.log(`Attempting fallback to ${fallbackProvider}...`);
+      logger.info(`Attempting fallback to ${fallbackProvider}`, undefined, 'AIGateway');
 
       try {
         const fallbackClient = getClient(fallbackProvider);
@@ -266,7 +267,7 @@ export async function generateAIResponse(
           },
         };
       } catch (fallbackError) {
-        console.error(`Fallback provider ${fallbackProvider} also failed:`, fallbackError);
+        logger.error(`Fallback provider ${fallbackProvider} also failed`, fallbackError, 'AIGateway');
       }
     }
 

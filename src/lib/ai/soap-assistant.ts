@@ -11,6 +11,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import type { SOAPRecord, Patient } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -323,7 +324,7 @@ export class SOAPAssistant {
         const parsed = SOAPGenerationSchema.parse(JSON.parse(cleanedJson));
         soapData = parsed as SOAPGenerationResult;
       } catch (parseError) {
-        console.error('[SOAPAssistant] JSON parse error:', parseError);
+        logger.error('JSON parse error', parseError, 'SOAPAssistant');
         return {
           success: false,
           error: 'Failed to parse AI response as valid SOAP note',
@@ -345,7 +346,7 @@ export class SOAPAssistant {
         },
       };
     } catch (error) {
-      console.error('[SOAPAssistant] Generation error:', error);
+      logger.error('Generation error', error, 'SOAPAssistant');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -400,7 +401,7 @@ export class SOAPAssistant {
 
       return soapResult;
     } catch (error) {
-      console.error('[SOAPAssistant] Audio processing error:', error);
+      logger.error('Audio processing error', error, 'SOAPAssistant');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Audio processing failed',
@@ -460,7 +461,7 @@ export class SOAPAssistant {
         },
       };
     } catch (error) {
-      console.error('[SOAPAssistant] Transcription error:', error);
+      logger.error('Transcription error', error, 'SOAPAssistant');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Transcription failed',
