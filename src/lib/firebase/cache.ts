@@ -15,6 +15,7 @@
 
 import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, writeBatch } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -151,10 +152,10 @@ async function cleanupExpired(): Promise<void> {
         await batch.commit();
       }
 
-      console.log(`[Cache] Cleaned up ${snapshot.docs.length} expired entries`);
+      logger.debug(`Cleaned up ${snapshot.docs.length} expired entries`, null, 'cache');
     }
   } catch (error) {
-    console.error('[Cache] Error cleaning up expired entries:', error);
+    logger.error('Error cleaning up expired entries', error, 'cache');
   }
 }
 
@@ -220,7 +221,7 @@ export async function getCache<T>(
     stats.hits++;
     return entry.value;
   } catch (error) {
-    console.error('[Cache] Get error:', error);
+    logger.error('Get error', error, 'cache');
     stats.misses++;
     return null;
   }
@@ -250,7 +251,7 @@ export async function setCache<T>(
     stats.sets++;
     return true;
   } catch (error) {
-    console.error('[Cache] Set error:', error);
+    logger.error('Set error', error, 'cache');
     stats.errors++;
     return false;
   }
@@ -269,7 +270,7 @@ export async function deleteCache(
     stats.deletes++;
     return true;
   } catch (error) {
-    console.error('[Cache] Delete error:', error);
+    logger.error('Delete error', error, 'cache');
     stats.errors++;
     return false;
   }
@@ -318,7 +319,7 @@ export async function invalidatePattern(
       }
     }
   } catch (error) {
-    console.error('[Cache] Invalidate pattern error:', error);
+    logger.error('Invalidate pattern error', error, 'cache');
   }
 }
 
@@ -445,7 +446,7 @@ export async function smartInvalidate(
         break;
     }
   } catch (error) {
-    console.error(`[Cache] Smart invalidation error for ${entityType}:`, error);
+    logger.error(`Smart invalidation error for ${entityType}`, error, 'cache');
   }
 }
 
@@ -462,13 +463,13 @@ export async function warmUpCache(
         const data = await loader();
         await setCache(key, data, options);
       } catch (error) {
-        console.error(`[Cache] Warm-up failed for ${key}:`, error);
+        logger.error(`Warm-up failed for ${key}`, error, 'cache');
       }
     })
   );
 
   const failed = results.filter((r) => r.status === 'rejected').length;
-  console.log(`[Cache] Warm-up completed: ${results.length - failed}/${results.length} successful`);
+  logger.debug(`Warm-up completed: ${results.length - failed}/${results.length} successful`, null, 'cache');
 }
 
 /**
@@ -749,7 +750,7 @@ export async function rateLimit(
       reset: now + window * 1000,
     };
   } catch (error) {
-    console.error('[Cache] Rate limit error:', error);
+    logger.error('Rate limit error', error, 'cache');
     // Fail open - allow request if rate limiting fails
     return {
       success: true,

@@ -1,5 +1,6 @@
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 // Extend global self type for Firebase App Check debug token
 declare global {
@@ -18,7 +19,7 @@ declare global {
 export const initAppCheck = () => {
   // TEMPORARILY DISABLED: App Check is causing network issues with Firebase Auth
   // TODO: Re-enable after fixing the configuration
-  console.log('🛡️ Firebase App Check: DISABLED temporarily to fix login issues');
+  logger.debug('Firebase App Check: DISABLED temporarily to fix login issues', null, 'app-check');
   return;
 };
 
@@ -33,7 +34,7 @@ export const getAppCheckToken = async (): Promise<string | undefined> => {
     const appCheck = await import('firebase/app-check').then(m => m.getAppCheck(getApp()));
     return await getToken();
   } catch (error) {
-    console.warn('[AppCheck] Could not get token:', error);
+    logger.warn('Could not get App Check token', error, 'app-check');
     return undefined;
   }
 };
