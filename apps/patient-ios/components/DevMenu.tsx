@@ -18,8 +18,8 @@ export function DevMenu({ children }: { children: React.ReactNode }) {
             <TouchableOpacity
                 style={styles.trigger}
                 onLongPress={() => setVisible(true)}
-                delayLongPress(1000)
-      />
+                delayLongPress={1000}
+            />
 
             <Modal visible={visible} transparent animationType="slide">
                 <View style={styles.overlay}>
