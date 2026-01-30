@@ -35,7 +35,6 @@
       "googleServicesFile": "./google-services.json"
     },
     "plugins": [
-      "@expo/config-plugins",
       [
         "@expo-google-fonts/inter",
         {
