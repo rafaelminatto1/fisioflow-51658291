@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Appointment } from '@/types/appointment';
+import { logger } from '@/lib/errors/logger';
 import {
   GoogleCalendarSync,
   GoogleOAuthToken,
@@ -145,7 +146,7 @@ export function useGoogleCalendarOAuth() {
 
         return { success: true, email: token.email };
       } catch (error) {
-        console.error('Erro ao conectar Google Calendar:', error);
+        logger.error('Erro ao conectar Google Calendar', error, 'useGoogleCalendarSync');
 
         toast({
           title: '❌ Erro ao conectar',
@@ -236,7 +237,7 @@ export function useSyncToGoogle() {
       }
     },
     onError: (error) => {
-      console.error('Erro ao sincronizar:', error);
+      logger.error('Erro ao sincronizar', error, 'useGoogleCalendarSync');
       toast({
         title: '❌ Erro de sincronização',
         description: error instanceof Error ? error.message : 'Tente novamente',
