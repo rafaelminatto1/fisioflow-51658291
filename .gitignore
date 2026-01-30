@@ -174,3 +174,23 @@ iOSInjectionProject/
 *-firebase-admin.json
 firebase-admin*.json
 functions/service-account-key.json
+.env.yaml
+
+# Virtual Environment
+venv/
+
+# Local test scripts and temporary verification outputs
+.agent/*.txt
+get-firebase-token.js
+test-crud-production.sh
+test-crud-with-auth.cjs
+test-with-admin-sdk.cjs
+users.json
+functions/seed-clinical.js
+functions/test-cf-direct.js
+functions/test-token-trim.js
+functions/test-token-verify.js
+functions/check_clinical_schema.js
+functions/check_token.js
+functions/decode-token.js
+functions/lib/

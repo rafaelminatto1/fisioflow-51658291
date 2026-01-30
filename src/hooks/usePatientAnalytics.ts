@@ -16,7 +16,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -30,7 +30,6 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 import {

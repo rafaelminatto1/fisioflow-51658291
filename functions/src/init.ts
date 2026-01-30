@@ -24,6 +24,7 @@ export const DB_USER_SECRET = defineSecret('DB_USER');
 export const DB_NAME_SECRET = defineSecret('DB_NAME');
 export const CLOUD_SQL_CONNECTION_NAME_SECRET = defineSecret('CLOUD_SQL_CONNECTION_NAME');
 export const DB_HOST_IP_SECRET = defineSecret('DB_HOST_IP');
+export const DB_HOST_IP_PUBLIC_SECRET = defineSecret('DB_HOST_IP_PUBLIC');
 
 // ============================================================================
 // SINGLETON INSTANCES

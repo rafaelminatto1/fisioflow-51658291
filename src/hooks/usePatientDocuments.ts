@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth, getFirebaseDb, getFirebaseStorage } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, getFirebaseStorage } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -28,7 +28,6 @@ import {
   deleteObject
 } from 'firebase/storage';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 const storage = getFirebaseStorage();
 

@@ -271,21 +271,62 @@ async function aggregatePopulationData(
 /**
  * Calculate population statistics from raw data
  */
-function calculatePopulationStats(data: any): {
-  overview: any;
-  conditions: Map<string, any[]>;
-  treatments: Map<string, any[]>;
-  retention: any;
-} {
+interface PatientRecord {
+  id: string;
+  status?: string;
+  date_of_birth?: string;
+  gender?: string;
+  main_condition?: string;
+}
+
+interface MLDataRecord {
+  primary_pathology?: string;
+  treatment_type?: string;
+  outcome_category?: string;
+  total_sessions?: number;
+  functional_improvement_percentage?: number;
+  patient_satisfaction_score?: number;
+}
+
+interface PopulationStatsInput {
+  patients: PatientRecord[];
+  mlData: MLDataRecord[];
+  appointments: unknown[];
+}
+
+interface GenderDistribution {
+  male: number;
+  female: number;
+  other: number;
+  unknown: number;
+}
+
+interface PopulationStatsResult {
+  overview: {
+    totalPatients: number;
+    activePatients: number;
+    newPatients: number;
+    averageAge: number;
+    genderDistribution: GenderDistribution;
+  };
+  conditions: Map<string, MLDataRecord[]>;
+  treatments: Map<string, MLDataRecord[]>;
+  retention: {
+    completedCases: number;
+    averageSessions: number;
+  };
+}
+
+function calculatePopulationStats(data: PopulationStatsInput): PopulationStatsResult {
   const { patients, mlData, appointments } = data;
 
   // Population overview
   const totalPatients = patients.length;
-  const activePatients = patients.filter((p: any) => p.status === 'active').length;
+  const activePatients = patients.filter((p: PatientRecord) => p.status === 'active').length;
   const newPatients = patients.length;
 
   const ages = patients
-    .map((p: any) => {
+    .map((p: PatientRecord) => {
       if (p.date_of_birth) {
         const age = new Date().getFullYear() - new Date(p.date_of_birth).getFullYear();
         return age >= 0 && age <= 120 ? age : null;
@@ -298,7 +339,7 @@ function calculatePopulationStats(data: any): {
     ? ages.reduce((sum, a) => sum + a, 0) / ages.length
     : 0;
 
-  const genderDistribution = patients.reduce((acc: any, p: any) => {
+  const genderDistribution = patients.reduce((acc: GenderDistribution, p: PatientRecord) => {
     const gender = p.gender?.toLowerCase() || 'unknown';
     if (gender.includes('m') || gender === 'masculino') {
       acc.male++;
@@ -319,9 +360,9 @@ function calculatePopulationStats(data: any): {
   };
 
   // Group by condition
-  const conditions = new Map<string, any[]>();
+  const conditions = new Map<string, MLDataRecord[]>();
 
-  mlData.forEach((record: any) => {
+  mlData.forEach((record: MLDataRecord) => {
     const condition = record.primary_pathology || 'Não especificado';
     if (!conditions.has(condition)) {
       conditions.set(condition, []);
@@ -330,9 +371,9 @@ function calculatePopulationStats(data: any): {
   });
 
   // Group by treatment type
-  const treatments = new Map<string, any[]>();
+  const treatments = new Map<string, MLDataRecord[]>();
 
-  mlData.forEach((record: any) => {
+  mlData.forEach((record: MLDataRecord) => {
     const treatment = record.treatment_type || 'Não especificado';
     if (!treatments.has(treatment)) {
       treatments.set(treatment, []);
@@ -341,9 +382,9 @@ function calculatePopulationStats(data: any): {
   });
 
   // Calculate retention metrics
-  const completedCases = mlData.filter((r: any) => r.outcome_category === 'success');
+  const completedCases = mlData.filter((r: MLDataRecord) => r.outcome_category === 'success');
   const avgSessions = mlData.length > 0
-    ? mlData.reduce((sum: number, r: any) => sum + (r.total_sessions || 0), 0) / mlData.length
+    ? mlData.reduce((sum: number, r: MLDataRecord) => sum + (r.total_sessions || 0), 0) / mlData.length
     : 0;
 
   const retention = {
@@ -364,8 +405,8 @@ function calculatePopulationStats(data: any): {
  * Generate chart data structures
  */
 function generateChartData(
-  conditions: Map<string, any[]>,
-  stats: any
+  conditions: Map<string, MLDataRecord[]>,
+  stats: PopulationStatsResult
 ): PopulationHealthAnalysis['chartData'] {
   // Condition distribution
   const totalCases = Array.from(conditions.values()).reduce((sum, arr) => sum + arr.length, 0);
@@ -467,14 +508,14 @@ export async function analyzeClinicPopulation(
     }),
     treatmentsData: Array.from(stats.treatments.entries()).map(([treatment, cases]) => {
       const successfulCases = cases.filter(c => c.outcome_category === 'success').length;
-      const avgOutcome = cases.reduce((sum: number, c: any) => sum + (c.functional_improvement_percentage || 0), 0) / cases.length;
+      const avgOutcome = cases.reduce((sum: number, c: MLDataRecord) => sum + (c.functional_improvement_percentage || 0), 0) / cases.length;
 
       return {
         treatment,
         count: cases.length,
         successRate: (successfulCases / cases.length) * 100,
         averageOutcomeScore: avgOutcome,
-        patientSatisfaction: cases.reduce((sum: number, c: any) => sum + (c.patient_satisfaction_score || 70), 0) / cases.length,
+        patientSatisfaction: cases.reduce((sum: number, c: MLDataRecord) => sum + (c.patient_satisfaction_score || 70), 0) / cases.length,
       };
     }),
     retention: stats.retention,
@@ -520,8 +561,8 @@ export async function analyzeClinicPopulation(
       dataQuality: {
         completenessScore: calculateDataQuality(rawData),
         totalRecords: rawData.totalRecords,
-        completeRecords: rawData.mlData.filter((d: any) => d.outcome_category).length,
-        hasFollowUpData: rawData.mlData.some((d: any) => d.outcome_category),
+        completeRecords: rawData.mlData.filter((d: MLDataRecord) => d.outcome_category).length,
+        hasFollowUpData: rawData.mlData.some((d: MLDataRecord) => d.outcome_category),
       },
     };
 
@@ -536,7 +577,10 @@ export async function analyzeClinicPopulation(
 // PROMPT BUILDER
 // ============================================================================
 
-function buildPopulationAnalysisPrompt(context: any): string {
+function buildPopulationAnalysisPrompt(context: {
+  conditionsData: Array<{ condition: string; count: number; percentage: number; averageSessions: number }>;
+  treatmentsData: Array<{ treatment: string; count: number; successRate: number }>;
+}): string {
   return `Você é um analista de saúde populacional especializado em fisioterapia.
 
 ANALISE OS SEGUINTES DADOS DE UMA CLÍNICA DE FISIOTERAPIA:
@@ -549,14 +593,14 @@ ANALISE OS SEGUINTES DADOS DE UMA CLÍNICA DE FISIOTERAPIA:
 - Distribuição de gênero: M(${context.overview.genderDistribution.male}), F(${context.overview.genderDistribution.female})
 
 ## CONDIÇÕES MAIS COMUNS
-${context.conditionsData.map((c: any) => `
+${context.conditionsData.map((c) => `
 - ${c.condition}: ${c.count} casos (${c.percentage.toFixed(1)}%)
   * Média de sessões: ${c.averageSessions.toFixed(1)}
   * Taxa de sucesso: ${c.successRate.toFixed(1)}%
 `).join('')}
 
 ## EFICÁCIA POR TIPO DE TRATAMENTO
-${context.treatmentsData.map((t: any) => `
+${context.treatmentsData.map((t) => `
 - ${t.treatment}: ${t.count} casos
   * Taxa de sucesso: ${t.successRate.toFixed(1)}%
   * Score médio de melhora: ${t.averageOutcomeScore.toFixed(1)}
@@ -694,7 +738,7 @@ function generateBenchmarks(
   };
 }
 
-function calculateDataQuality(data: any): number {
+function calculateDataQuality(data: { mlData: MLDataRecord[] }): number {
   const { mlData } = data;
 
   if (mlData.length === 0) {
@@ -704,7 +748,7 @@ function calculateDataQuality(data: any): number {
   let completeFields = 0;
   let totalFields = 0;
 
-  mlData.forEach((record: any) => {
+  mlData.forEach((record: MLDataRecord) => {
     const fields = [
       'primary_pathology',
       'baseline_pain_level',

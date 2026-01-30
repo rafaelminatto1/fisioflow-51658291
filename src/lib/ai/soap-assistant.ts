@@ -258,8 +258,8 @@ Return the transcription as plain text (not JSON).`;
  */
 export class SOAPAssistant {
   private genAI: GoogleGenerativeAI;
-  private model: any;
-  private transcriptionModel: any;
+  private model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
+  private transcriptionModel: ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
 
   constructor(apiKey?: string) {
     const key = apiKey || SOAP_AI_CONFIG.apiKey;

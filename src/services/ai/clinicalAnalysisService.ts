@@ -39,8 +39,8 @@ export const generateClinicalReport = async (metrics: Record<string, unknown>, h
             history
         });
 
-        if ((data as any)?.error) {
-            console.warn("AI Service Error, falling back to mock:", (data as any)?.error);
+        if ((data as { error?: string } | null)?.error) {
+            console.warn("AI Service Error, falling back to mock:", (data as { error?: string } | null)?.error);
             return mockClinicalReport(metrics);
         }
 
@@ -67,12 +67,12 @@ export const generateFormSuggestions = async (formData: Record<string, unknown>,
             context
         });
 
-        if ((data as any)?.error) {
-            console.warn("AI Service Error, falling back to mock:", (data as any)?.error);
+        if ((data as { error?: string } | null)?.error) {
+            console.warn("AI Service Error, falling back to mock:", (data as { error?: string } | null)?.error);
             return mockFormSuggestions(formData, formFields);
         }
 
-        return (data as any)?.suggestions || mockFormSuggestions(formData, formFields);
+        return (data as { suggestions?: string[] } | null)?.suggestions || mockFormSuggestions(formData, formFields);
     } catch (e) {
         console.error("AI Service Exception:", e);
         return mockFormSuggestions(formData, formFields);

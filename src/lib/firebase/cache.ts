@@ -13,7 +13,7 @@
  * - No list operations for rate limiting
  */
 
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, writeBatch } from 'firebase/firestore';
 
 // ============================================================================
@@ -50,7 +50,7 @@ export interface CacheStats {
   lastReset: Date;
 }
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   key: string;
   value: T;
   expires_at: string;
@@ -109,7 +109,6 @@ function getKey(key: string, prefix: string = 'fisioflow'): string {
  * Get the Firestore collection reference for cache
  */
 function getCacheCollection() {
-  const db = getFirebaseDb();
   return collection(db, '_cache');
 }
 
@@ -117,7 +116,6 @@ function getCacheCollection() {
  * Get the document reference for a cache key
  */
 function getCacheDocRef(key: string, prefix: string = 'fisioflow') {
-  const db = getFirebaseDb();
   const fullKey = getKey(key, prefix);
   // Use base64 encoding to avoid invalid characters in document IDs
   const docId = btoa(fullKey).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
@@ -130,7 +128,6 @@ function getCacheDocRef(key: string, prefix: string = 'fisioflow') {
  */
 async function cleanupExpired(): Promise<void> {
   try {
-    const db = getFirebaseDb();
     const now = new Date().toISOString();
 
     const q = query(
@@ -287,7 +284,6 @@ export async function invalidatePattern(
   options?: CacheOptions
 ): Promise<void> {
   try {
-    const db = getFirebaseDb();
     const prefix = options?.prefix || 'fisioflow';
 
     // Query all cache entries with this prefix
@@ -533,7 +529,7 @@ export class PatientCache {
     });
   }
 
-  static async set(patientId: string, data: any) {
+  static async set(patientId: string, data: unknown) {
     return setCache(`${this.prefix}:${patientId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -562,7 +558,7 @@ export class AppointmentCache {
     });
   }
 
-  static async set(appointmentId: string, data: any) {
+  static async set(appointmentId: string, data: unknown) {
     return setCache(`${this.prefix}:${appointmentId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -576,7 +572,7 @@ export class AppointmentCache {
     });
   }
 
-  static async setByPatient(patientId: string, data: any[]) {
+  static async setByPatient(patientId: string, data: unknown[]) {
     return setCache(`${this.prefix}:patient:${patientId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -611,7 +607,7 @@ export class ExerciseCache {
     });
   }
 
-  static async set(exerciseId: string, data: any) {
+  static async set(exerciseId: string, data: unknown) {
     return setCache(`${this.prefix}:${exerciseId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -625,7 +621,7 @@ export class ExerciseCache {
     });
   }
 
-  static async setAll(data: any[]) {
+  static async setAll(data: unknown[]) {
     return setCache(`${this.prefix}:all`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -654,7 +650,7 @@ export class ProtocolCache {
     });
   }
 
-  static async set(protocolId: string, data: any) {
+  static async set(protocolId: string, data: unknown) {
     return setCache(`${this.prefix}:${protocolId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -668,7 +664,7 @@ export class ProtocolCache {
     });
   }
 
-  static async setAll(data: any[]) {
+  static async setAll(data: unknown[]) {
     return setCache(`${this.prefix}:all`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -778,7 +774,7 @@ export class SessionCache {
     });
   }
 
-  static async set(sessionId: string, data: any) {
+  static async set(sessionId: string, data: unknown) {
     return setCache(`${this.prefix}:${sessionId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,

@@ -129,7 +129,7 @@ describe('useAnalyticsExport', () => {
         result.current.exportData({
           patientId: 'patient-1',
           patientName: 'João Silva',
-          analyticsData: mockData as any,
+          analyticsData: mockData as Record<string, unknown>,
           options: { format: 'json' }
         });
       });
@@ -162,7 +162,7 @@ describe('useAnalyticsExport', () => {
         result.current.exportData({
           patientId: 'patient-1',
           patientName: 'João Silva',
-          analyticsData: mockData as any,
+          analyticsData: mockData as Record<string, unknown>,
           options: { format: 'csv' }
         });
       });
@@ -202,7 +202,7 @@ describe('useAnalyticsExport', () => {
         result.current.exportData({
           patientId: 'patient-1',
           patientName: 'João Silva',
-          analyticsData: mockData as any,
+          analyticsData: mockData as Record<string, unknown>,
           options: { format: 'json' }
         });
       });

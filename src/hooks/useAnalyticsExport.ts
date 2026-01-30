@@ -15,7 +15,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -237,7 +237,8 @@ function generatePDF(data: AnalyticsExportData, patientName: string, options: Ex
     columnStyles: { 0: { cellWidth: contentWidth * 0.6 }, 1: { cellWidth: contentWidth * 0.4 } },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 12;
+  const finalY = (doc as jsPDF).lastAutoTable.finalY + 12;
+  yPos = finalY;
 
   // Check if we need a new page
   if (yPos > pageHeight - 60) {
@@ -268,7 +269,8 @@ function generatePDF(data: AnalyticsExportData, patientName: string, options: Ex
       styles: { fontSize: 9, cellPadding: 3 },
     });
 
-    yPos = (doc as any).lastAutoTable.finalY + 12;
+    const finalY = (doc as jsPDF).lastAutoTable.finalY + 12;
+    yPos = finalY;
 
     if (yPos > pageHeight - 60) {
       doc.addPage();
@@ -311,7 +313,8 @@ function generatePDF(data: AnalyticsExportData, patientName: string, options: Ex
       columnStyles: { 2: { cellWidth: 25 } },
     });
 
-    yPos = (doc as any).lastAutoTable.finalY + 12;
+    const finalY = (doc as jsPDF).lastAutoTable.finalY + 12;
+    yPos = finalY;
 
     if (yPos > pageHeight - 60) {
       doc.addPage();
@@ -805,7 +808,6 @@ export function useBatchAnalyticsExport() {
       setIsExporting(true);
       setProgress(0);
 
-      const db = getFirebaseDb();
       const results: AnalyticsExportData[] = [];
       const total = patientIds.length;
 

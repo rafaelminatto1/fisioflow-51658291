@@ -5,10 +5,9 @@
  * - supabase.from('audit_logs').insert() → Firestore addDoc()
  */
 
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, addDoc } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface ExportOptions {
     format: 'pdf' | 'text' | 'whatsapp';

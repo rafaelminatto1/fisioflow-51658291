@@ -22,10 +22,9 @@ import {
   WaitlistRecommendation,
   WaitlistAnalytics,
 } from '@/lib/waitlist/smart-waitlist';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, updateDoc } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // =====================================================================
 // HOOK: SMART WAITLIST RECOMMENDATIONS

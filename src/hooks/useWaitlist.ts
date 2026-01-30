@@ -10,7 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -27,7 +27,6 @@ import {
   getDocsFromServer
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface WaitlistEntry {
   id: string;
@@ -196,7 +195,7 @@ export function useWaitlistCounts() {
         high: 0,
       };
 
-      data.forEach((item: any) => {
+      data.forEach((item: { status: string; priority?: string }) => {
         if (item.status === 'waiting') counts.waiting++;
         if (item.status === 'offered') counts.offered++;
         if (item.status === 'scheduled') counts.scheduled++;

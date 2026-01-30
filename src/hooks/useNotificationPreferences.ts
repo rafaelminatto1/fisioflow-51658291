@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -20,7 +20,6 @@ import {
   setDoc
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 export interface NotificationPreferences {

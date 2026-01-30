@@ -11,10 +11,9 @@ import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 const auth = getFirebaseAuth();
-const db = getFirebaseDb();
 
 export interface PresenceUser {
   userId: string;
@@ -32,7 +31,7 @@ export interface PresenceState {
 // Firebase Presence class implementation
 class FirebasePresence {
   private channelName: string;
-  private presenceRef: any;
+  private presenceRef: { set: (data: unknown) => Promise<void>; onDisconnect: () => { set: (data: null) => Promise<void> } } | null;
 
   constructor(channelName: string) {
     this.channelName = channelName;
@@ -41,7 +40,6 @@ class FirebasePresence {
   async track(user: PresenceUser) {
     // Implement presence tracking using Firestore
     const { getFirebaseDb } = await import('@/integrations/firebase/app');
-    const db = getFirebaseDb();
     const { doc, setDoc } = await import('firebase/firestore');
 
     this.presenceRef = doc(db, 'presence', this.channelName, 'users', user.userId);

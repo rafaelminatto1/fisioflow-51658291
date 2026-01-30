@@ -10,7 +10,6 @@ export function PatientAnalytics() {
   const { data: genderData } = useQuery({
     queryKey: ["patient-status-analytics"],
     queryFn: async () => {
-      const db = getFirebaseDb();
 
       // Usar status dos pacientes ao invés de gender
       const activeQuery = query(
@@ -37,7 +36,6 @@ export function PatientAnalytics() {
   const { data: ageData } = useQuery({
     queryKey: ["patient-age-analytics"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const patientsQuery = query(
         collection(db, "patients"),
         orderBy("full_name")

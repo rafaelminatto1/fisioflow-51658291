@@ -11,7 +11,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -24,7 +24,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface EmpresaParceira {
   id: string;
@@ -40,7 +39,7 @@ export interface EmpresaParceira {
 }
 
 // Helper to convert Firestore doc to EmpresaParceira
-const convertDocToEmpresaParceira = (doc: any): EmpresaParceira => {
+const convertDocToEmpresaParceira = (doc: { id: string; data: () => Record<string, unknown> }): EmpresaParceira => {
   const data = doc.data();
   return {
     id: doc.id,

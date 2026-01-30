@@ -474,14 +474,39 @@ IMPORTANTE: Sempre priorize a segurança do paciente. Se houver risco de lesão 
 // GROUNDED RESEARCH
 // ============================================================================
 
+// Type for condition input
+interface ConditionInput {
+  primaryDiagnosis: string;
+  secondaryDiagnoses?: string[];
+  icdCode?: string;
+  onset: string;
+  chronicity: 'acute' | 'subacute' | 'chronic';
+  severity: 'mild' | 'moderate' | 'severe';
+  bodyRegion: string;
+  symptoms: string[];
+}
+
+// Type for treatment plan input
+interface TreatmentPlanInput {
+  goals: string[];
+  techniques: string[];
+  modalities: string[];
+  frequency: string;
+  sessionDuration: number;
+  intensity: string;
+  focusAreas: string[];
+  startDate: string;
+  expectedDuration: string;
+}
+
 /**
  * Perform grounded research using Google Search
  * Note: This is a simplified implementation. In production, would use Vertex AI Search
  * or Firebase AI Logic with Google Search integration.
  */
 async function performGroundedResearch(
-  condition: any,
-  currentPlan: any
+  condition: ConditionInput,
+  currentPlan: TreatmentPlanInput
 ): Promise<{
   topicsResearched: string[];
   recentFindings: string[];
@@ -530,8 +555,8 @@ async function performGroundedResearch(
 // ============================================================================
 
 function buildProgressionPlan(
-  optimizedPlan: any,
-  condition: any
+  optimizedPlan: z.infer<typeof optimizationSchema>['optimizedPlan'],
+  condition: ConditionInput
 ): Array<{
   phase: string;
   duration: string;
@@ -563,8 +588,8 @@ function buildProgressionPlan(
 }
 
 function calculateResourceImplications(
-  newTechniques: any[],
-  constraints?: any
+  newTechniques: z.infer<typeof optimizationSchema>['newTechniques'],
+  constraints?: OptimizationInput['constraints']
 ): TreatmentOptimization['resourceImplications'] {
   const additionalEquipment: string[] = [];
   const additionalTraining: string[] = [];
@@ -593,9 +618,9 @@ function calculateResourceImplications(
 }
 
 function calculateConfidenceScore(
-  recommendations: any[],
-  progress: any,
-  researchQuality: string
+  recommendations: z.infer<typeof optimizationSchema>['recommendations'],
+  progress: OptimizationInput['progressSoFar'],
+  researchQuality: 'strong' | 'moderate' | 'limited'
 ): number {
   let score = 0.5; // Base score
 

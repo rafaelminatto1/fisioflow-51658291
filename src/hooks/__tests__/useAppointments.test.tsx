@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthContext } from '@/contexts/AuthContext';
+import { AuthContext, type AuthContextType } from '@/contexts/AuthContext';
 import { useCreateAppointment, useUpdateAppointment } from '../useAppointments';
 import { supabase } from '@/integrations/supabase/client';
 import { requireUserOrganizationId } from '@/utils/userHelpers';
@@ -52,8 +52,8 @@ vi.mock('@/utils/appointmentValidation', () => ({
 
 // Mock do AuthContext
 const mockAuthContextValue = {
-  user: { id: 'user-123', email: 'test@example.com' } as any,
-  profile: { id: 'profile-123', organization_id: 'org-123' } as any,
+  user: { id: 'user-123', email: 'test@example.com' } as AuthContextType['user'],
+  profile: { id: 'profile-123', organization_id: 'org-123' } as AuthContextType['profile'],
   session: null,
   loading: false,
   initialized: true,
@@ -89,7 +89,7 @@ const createWrapper = () => {
   });
 
   return ({ children }: { children: React.ReactNode }) => (
-    <AuthContext.Provider value={mockAuthContextValue as any}>
+    <AuthContext.Provider value={mockAuthContextValue as AuthContextType}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </AuthContext.Provider>
   );
@@ -98,7 +98,7 @@ const createWrapper = () => {
 describe('useAppointments', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (requireUserOrganizationId as any).mockResolvedValue('org-123');
+    (requireUserOrganizationId as unknown as ReturnType<typeof vi.fn>).mockResolvedValue('org-123');
   });
 
   afterEach(() => {
@@ -137,7 +137,7 @@ describe('useAppointments', () => {
         error: null,
       });
 
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         insert: mockInsert,
       });
       mockInsert.mockReturnValue({
@@ -162,7 +162,7 @@ describe('useAppointments', () => {
     });
 
     it('deve lançar erro quando organização não é encontrada', async () => {
-      (requireUserOrganizationId as any).mockRejectedValue(
+      (requireUserOrganizationId as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
         new Error('Organização não encontrada. Você precisa estar vinculado a uma organização.')
       );
 
@@ -196,7 +196,7 @@ describe('useAppointments', () => {
         error: mockError,
       });
 
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         insert: mockInsert,
       });
       mockInsert.mockReturnValue({
@@ -258,7 +258,7 @@ describe('useAppointments', () => {
         error: null,
       });
 
-      (supabase.from as any).mockReturnValue({
+      (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
         update: mockUpdate,
       });
       mockUpdate.mockReturnValue({
@@ -292,7 +292,7 @@ describe('useAppointments', () => {
     });
 
     it('deve lançar erro quando organização não é encontrada', async () => {
-      (requireUserOrganizationId as any).mockRejectedValue(
+      (requireUserOrganizationId as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
         new Error('Organização não encontrada. Você precisa estar vinculado a uma organização.')
       );
 

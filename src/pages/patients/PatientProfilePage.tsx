@@ -10,7 +10,10 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useQuery } from '@tanstack/react-query';
-import { PatientHelpers } from '@/types';
+import { PatientHelpers, Patient } from '@/types';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, getDoc, doc, orderBy, limit } from 'firebase/firestore';
+import { PatientDashboard360 } from '@/components/patients/PatientDashboard360';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -70,22 +73,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEvaluationForms } from '@/hooks/useEvaluationForms';
 
-const PersonalDataTab = ({ patient }: {
-    patient: {
-        phone?: string;
-        email?: string;
-        emergency_contact?: string;
-        emergency_phone?: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        zip_code?: string;
-        health_insurance?: string;
-        insurance_number?: string;
-        cpf?: string;
-        observations?: string;
-    }
-}) => (
+const PersonalDataTab = ({ patient }: { patient: Patient }) => (
     <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -180,115 +168,61 @@ const PersonalDataTab = ({ patient }: {
     </div>
 );
 
-const OverviewTab = ({ patient }: {
-    patient: {
-        id: string;
-        full_name?: string;
-        name?: string;
-        email?: string;
-        phone?: string;
-        status?: string;
-        created_at?: string;
-    }
-}) => {
+const OverviewTab = ({ patient }: { patient: Patient }) => {
     const { data: evolutionData } = usePatientEvolutionReport(patient.id);
 
-    // Fetch next appointment
-    const { data: nextAppointment } = useQuery({
-        queryKey: ['next-appointment', patient.id],
+    // Fetch upcoming appointments
+    const { data: upcomingAppointments } = useQuery({
+        queryKey: ['upcoming-appointments', patient.id],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('appointments')
-                .select('id, appointment_date, appointment_time, type, status')
-                .eq('patient_id', patient.id)
-                .in('status', ['agendado', 'confirmado'])
-                .gte('appointment_date', new Date().toISOString().split('T')[0])
-                .order('appointment_date', { ascending: true })
-                .order('appointment_time', { ascending: true })
-                .limit(1)
-                .single();
-            if (error) throw error;
-            return data;
+            const q = query(
+                collection(db, 'appointments'),
+                where('patient_id', '==', patient.id),
+                where('status', 'in', ['agendado', 'confirmado']),
+                where('appointment_date', '>=', new Date().toISOString().split('T')[0]),
+                orderBy('appointment_date', 'asc'),
+                orderBy('appointment_time', 'asc'),
+                limit(5)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         },
         enabled: !!patient.id,
     });
 
-    if (!evolutionData || evolutionData.sessions.length === 0) {
-        return (
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 border rounded-lg bg-card shadow-sm">
-                        <h3 className="font-semibold text-sm text-muted-foreground mb-2">Próxima Consulta</h3>
-                        <p className="font-medium">Nenhuma consulta agendada</p>
-                        <Button variant="link" className="p-0 h-auto text-primary">Agendar agora</Button>
-                    </div>
-                    <div className="p-4 border rounded-lg bg-card shadow-sm">
-                        <h3 className="font-semibold text-sm text-muted-foreground mb-2">Status do Tratamento</h3>
-                        <Badge variant={patient.status === 'Em Tratamento' ? 'default' : 'secondary'}>
-                            {patient.status || 'Não iniciado'}
-                        </Badge>
-                    </div>
-                    <div className="p-4 border rounded-lg bg-card shadow-sm">
-                        <h3 className="font-semibold text-sm text-muted-foreground mb-2">Última Atividade</h3>
-                        <p className="text-sm">Cadastro realizado em {format(new Date(patient.created_at), 'dd/MM/yyyy')}</p>
-                    </div>
-                </div>
-
-                <div className="p-8 text-center border rounded-lg bg-muted/10 border-dashed">
-                    <Activity className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground font-medium">Sem dados de evolução suficientes</p>
-                    <p className="text-sm text-muted-foreground mt-1">Realize atendimentos e evoluções para visualizar o dashboard.</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 border rounded-lg bg-card shadow-sm">
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">Próxima Consulta</h3>
-                    {nextAppointment ? (
-                        <>
-                            <p className="font-medium">
-                                {format(new Date(nextAppointment.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                às {nextAppointment.appointment_time} • {nextAppointment.type}
-                            </p>
-                        </>
-                    ) : (
-                        <p className="font-medium text-muted-foreground">Nenhuma consulta agendada</p>
-                    )}
-                    <Button variant="link" className="p-0 h-auto text-primary">Ver Agenda</Button>
-                </div>
-                <div className="p-4 border rounded-lg bg-card shadow-sm">
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">Status do Tratamento</h3>
-                    <Badge variant={patient.status === 'Em Tratamento' ? 'default' : 'secondary'}>
-                        {patient.status || 'Não iniciado'}
-                    </Badge>
-                </div>
-                <div className="p-4 border rounded-lg bg-card shadow-sm">
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">Última Evolução</h3>
-                    <p className="text-sm">
-                        {evolutionData.sessions.length > 0
-                            ? format(new Date(evolutionData.sessions[evolutionData.sessions.length - 1].date), 'dd/MM/yyyy')
-                            : 'Nenhuma'}
-                    </p>
-                </div>
-            </div>
-
-            <ProgressAnalysisCard sessions={evolutionData.sessions} />
-
-            <PatientEvolutionDashboard
-                patientId={patient.id}
-                patientName={patient.name}
-                sessions={evolutionData.sessions}
-                currentPainLevel={evolutionData.currentPainLevel}
-                initialPainLevel={evolutionData.initialPainLevel}
-                totalSessions={evolutionData.totalSessions}
-                averageImprovement={evolutionData.averageImprovement}
+            <PatientDashboard360
+                patient={{
+                    id: patient.id,
+                    full_name: patient.full_name || patient.name,
+                    email: patient.email || undefined,
+                    phone: patient.phone || undefined,
+                    birth_date: patient.birth_date || patient.birthDate,
+                    address: patient.address || undefined,
+                    city: patient.city || undefined,
+                    state: patient.state || undefined,
+                    gender: patient.gender,
+                    status: patient.status
+                }}
+                upcomingAppointments={Array.isArray(upcomingAppointments) ? upcomingAppointments : []}
             />
+
+            {/* Evolution charts below */}
+            {evolutionData && evolutionData.sessions.length > 0 && (
+                <>
+                    <ProgressAnalysisCard sessions={evolutionData.sessions} />
+                    <PatientEvolutionDashboard
+                        patientId={patient.id}
+                        patientName={patient.full_name || patient.name}
+                        sessions={evolutionData.sessions}
+                        currentPainLevel={evolutionData.currentPainLevel}
+                        initialPainLevel={evolutionData.initialPainLevel}
+                        totalSessions={evolutionData.totalSessions}
+                        averageImprovement={evolutionData.averageImprovement}
+                    />
+                </>
+            )}
         </div>
     );
 };
@@ -323,14 +257,13 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
     const { data: transactions = [], isLoading } = useQuery({
         queryKey: ['patient-transactions', patientId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('appointments')
-                .select('id, appointment_date, payment_amount, payment_status, payment_method, installments, type')
-                .eq('patient_id', patientId)
-                .order('appointment_date', { ascending: false });
-
-            if (error) throw error;
-            return data;
+            const q = query(
+                collection(db, 'appointments'),
+                where('patient_id', '==', patientId),
+                orderBy('appointment_date', 'desc')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         },
         enabled: !!patientId
     });
@@ -763,14 +696,13 @@ export const PatientProfilePage = () => {
         queryKey: ['patient', id],
         queryFn: async () => {
             if (!id) return null;
-            const { data, error } = await supabase
-                .from('patients')
-                .select('*')
-                .eq('id', id)
-                .single();
+            const docRef = doc(db, 'patients', id);
+            const docSnap = await getDoc(docRef);
 
-            if (error) throw error;
-            return data;
+            if (!docSnap.exists()) {
+                throw new Error('Paciente não encontrado');
+            }
+            return { id: docSnap.id, ...docSnap.data() };
         },
         enabled: !!id
     });
@@ -817,37 +749,42 @@ export const PatientProfilePage = () => {
 
     return (
         <MainLayout>
-            <div className="space-y-6 pb-20 fade-in">
+            <div className="space-y-6 pb-20 fade-in relative">
                 {/* Header Navigation */}
-                <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/patients')} className="-ml-2">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/patients')} className="-ml-2 hover:bg-transparent hover:text-primary">
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <span className="text-sm">Voltar para Pacientes</span>
+                    <span className="text-sm font-medium hover:text-primary cursor-pointer" onClick={() => navigate('/patients')}>Voltar para Pacientes</span>
                 </div>
 
-                {/* Patient Header Card */}
-                <div className="bg-card rounded-xl p-6 shadow-sm border space-y-6">
-                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-20 w-20 border-4 border-background shadow-sm">
-                                <AvatarImage src={patient.photo_url} />
-                                <AvatarFallback className="text-xl bg-primary/10 text-primary font-bold">
-                                    {initials}
-                                </AvatarFallback>
-                            </Avatar>
+                {/* Patient Header Card - Enhanced */}
+                <div className="bg-gradient-to-r from-card to-card/50 rounded-xl p-6 shadow-sm border space-y-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                    
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between relative z-10">
+                        <div className="flex items-center gap-5">
+                            <div className="relative">
+                                <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+                                    <AvatarImage src={patient.photo_url} className="object-cover" />
+                                    <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">
+                                        {initials}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${patient.status === 'active' || patient.status === 'Em Tratamento' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                            </div>
 
-                            <div>
-                                <h1 className="text-2xl font-bold">{patientName}</h1>
-                                <div className="flex flex-wrap items-center gap-2 mt-2">
-                                    <Badge variant={patient.status === 'Em Tratamento' ? 'default' : 'secondary'}>
+                            <div className="space-y-1">
+                                <h1 className="text-3xl font-bold tracking-tight text-foreground">{patientName}</h1>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <Badge variant={patient.status === 'Em Tratamento' || patient.status === 'active' ? 'default' : 'secondary'} className="px-3 py-1">
                                         {patient.status || 'Status desconhecido'}
                                     </Badge>
                                     {patient.birth_date && (
-                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <CalendarIcon className="h-3 w-3" />
+                                        <span className="text-sm text-muted-foreground flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
+                                            <CalendarIcon className="h-3.5 w-3.5" />
                                             {format(new Date(patient.birth_date), 'dd/MM/yyyy')}
-                                            <span className="mx-1">•</span>
+                                            <span className="text-muted-foreground/50">|</span>
                                             {Math.floor((new Date().getTime() - new Date(patient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos
                                         </span>
                                     )}
@@ -855,115 +792,119 @@ export const PatientProfilePage = () => {
                             </div>
                         </div>
 
-                        <div className="flex gap-2 w-full md:w-auto">
-                            <Button onClick={() => navigate(`/patients/${id}/evolution/report`)} variant="outline" className="flex-1 md:flex-none gap-2 border-primary/20 hover:bg-primary/5">
-                                <FileText className="h-4 w-4 text-primary" />
+                        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                            <Button onClick={() => navigate(`/patients/${id}/evolution/report`)} variant="outline" className="flex-1 md:flex-none gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors">
+                                <FileText className="h-4 w-4" />
                                 Relatório
                             </Button>
-                            <Button onClick={() => setEditingPatient(true)} variant="outline" className="flex-1 md:flex-none gap-2">
+                            <Button onClick={() => setEditingPatient(true)} variant="outline" className="flex-1 md:flex-none gap-2 hover:bg-muted/80">
                                 <Edit className="h-4 w-4" />
                                 Editar
                             </Button>
-                            <Button onClick={handleStartEvaluation} className="flex-1 md:flex-none gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                            <Button onClick={handleStartEvaluation} className="flex-1 md:flex-none gap-2 bg-primary shadow-sm hover:shadow-md transition-all">
                                 <ClipboardList className="h-4 w-4" />
-                                Iniciar Avaliação
+                                Avaliar
                             </Button>
-                            <Button onClick={() => navigate('/schedule')} className="flex-1 md:flex-none gap-2">
+                            <Button onClick={() => navigate('/schedule')} className="flex-1 md:flex-none gap-2 bg-primary/90 hover:bg-primary shadow-sm">
                                 <CalendarIcon className="h-4 w-4" />
                                 Agendar
                             </Button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
-                        <div className="flex items-center gap-3 text-sm">
-                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-border/50">
+                        <div className="flex items-center gap-3 text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="p-2.5 bg-primary/10 rounded-full text-primary shrink-0">
                                 <Phone className="h-4 w-4" />
                             </div>
-                            <div>
-                                <p className="text-muted-foreground text-xs">Telefone</p>
-                                <p className="font-medium">{patient.phone || 'Não informado'}</p>
+                            <div className="overflow-hidden">
+                                <p className="text-muted-foreground text-xs font-medium mb-0.5">Telefone</p>
+                                <p className="font-medium truncate">{patient.phone || 'Não informado'}</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 text-sm">
-                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                        <div className="flex items-center gap-3 text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="p-2.5 bg-primary/10 rounded-full text-primary shrink-0">
                                 <Mail className="h-4 w-4" />
                             </div>
-                            <div>
-                                <p className="text-muted-foreground text-xs">Email</p>
-                                <p className="font-medium truncate max-w-[200px]" title={patient.email}>
+                            <div className="overflow-hidden">
+                                <p className="text-muted-foreground text-xs font-medium mb-0.5">Email</p>
+                                <p className="font-medium truncate" title={patient.email}>
                                     {patient.email || 'Não informado'}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-3 text-sm">
-                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                        <div className="flex items-center gap-3 text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="p-2.5 bg-primary/10 rounded-full text-primary shrink-0">
                                 <MapPin className="h-4 w-4" />
                             </div>
-                            <div>
-                                <p className="text-muted-foreground text-xs">Cidade</p>
-                                <p className="font-medium">{patient.city ? `${patient.city}/${patient.state || ''}` : 'Não informado'}</p>
+                            <div className="overflow-hidden">
+                                <p className="text-muted-foreground text-xs font-medium mb-0.5">Localização</p>
+                                <p className="font-medium truncate">{patient.city ? `${patient.city}/${patient.state || ''}` : 'Não informado'}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Content Tabs */}
+                {/* Content Tabs - Sticky */}
                 <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="w-full justify-start h-auto p-1 bg-transparent border-b rounded-none mb-6 overflow-x-auto flex-nowrap">
-                        <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
-                            Visão Geral
-                        </TabsTrigger>
-                        <TabsTrigger value="analytics" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2 gap-1.5">
-                            <Brain className="h-4 w-4" />
-                            Analytics & IA
-                        </TabsTrigger>
-                        <TabsTrigger value="personal" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
-                            Dados Pessoais
-                        </TabsTrigger>
-                        <TabsTrigger value="clinical" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
-                            Histórico Clínico
-                        </TabsTrigger>
-                        <TabsTrigger value="financial" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
-                            Financeiro
-                        </TabsTrigger>
-                        <TabsTrigger value="gamification" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
-                            Gamificação
-                        </TabsTrigger>
-                        <TabsTrigger value="documents" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
-                            Arquivos
-                        </TabsTrigger>
-                    </TabsList>
+                    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-2 pt-2 -mx-4 px-4 border-b">
+                        <TabsList className="w-full justify-start h-auto p-1 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-2">
+                            <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                                Visão Geral
+                            </TabsTrigger>
+                            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium gap-2 transition-all">
+                                <Brain className="h-3.5 w-3.5" />
+                                Analytics & IA
+                            </TabsTrigger>
+                            <TabsTrigger value="personal" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                                Dados Pessoais
+                            </TabsTrigger>
+                            <TabsTrigger value="clinical" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                                Histórico Clínico
+                            </TabsTrigger>
+                            <TabsTrigger value="financial" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                                Financeiro
+                            </TabsTrigger>
+                            <TabsTrigger value="gamification" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                                Gamificação
+                            </TabsTrigger>
+                            <TabsTrigger value="documents" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                                Arquivos
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
 
-                    <TabsContent value="overview" className="mt-0">
-                        <OverviewTab patient={patient} />
-                    </TabsContent>
+                    <div className="mt-6 min-h-[500px]">
+                        <TabsContent value="overview" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <OverviewTab patient={patient} />
+                        </TabsContent>
 
-                    <TabsContent value="analytics" className="mt-0">
-                        <AnalyticsTab patientId={id || ''} patientName={patientName} />
-                    </TabsContent>
+                        <TabsContent value="analytics" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <AnalyticsTab patientId={id || ''} patientName={patientName} />
+                        </TabsContent>
 
-                    <TabsContent value="personal" className="mt-0">
-                        <PersonalDataTab patient={patient} />
-                    </TabsContent>
+                        <TabsContent value="personal" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <PersonalDataTab patient={patient} />
+                        </TabsContent>
 
-                    <TabsContent value="clinical" className="mt-0">
-                        <ClinicalHistoryTab patientId={id || ''} />
-                    </TabsContent>
+                        <TabsContent value="clinical" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <ClinicalHistoryTab patientId={id || ''} />
+                        </TabsContent>
 
-                    <TabsContent value="financial" className="mt-0">
-                        <FinancialTab patientId={id || ''} />
-                    </TabsContent>
+                        <TabsContent value="financial" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <FinancialTab patientId={id || ''} />
+                        </TabsContent>
 
-                    <TabsContent value="gamification" className="mt-0">
-                        <GamificationTab patientId={id || ''} />
-                    </TabsContent>
+                        <TabsContent value="gamification" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <GamificationTab patientId={id || ''} />
+                        </TabsContent>
 
-                    <TabsContent value="documents" className="mt-0">
-                        <DocumentsTab patientId={id || ''} />
-                    </TabsContent>
+                        <TabsContent value="documents" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <DocumentsTab patientId={id || ''} />
+                        </TabsContent>
+                    </div>
                 </Tabs>
 
                 <EditPatientModal

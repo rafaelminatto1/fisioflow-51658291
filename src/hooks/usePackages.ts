@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
 import { FinancialService } from '@/services/financialService';
-import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -25,8 +25,11 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
+
+// Helper to convert doc
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T =>
+  ({ id: doc.id, ...doc.data() } as T);
 
 export interface SessionPackage {
   id: string;
@@ -70,9 +73,6 @@ interface PurchasePackageInput {
   patient_id: string;
   package_id: string;
 }
-
-// Helper to convert doc
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
 
 // Hook para listar templates de pacotes
 export function useSessionPackages() {
@@ -128,7 +128,7 @@ export function usePatientPackages(patientId?: string) {
       }
 
       const snapshot = await getDocs(q);
-      const patientPackages = snapshot.docs.map(convertDoc) as any[];
+      const patientPackages = snapshot.docs.map(convertDoc<PatientPackage>);
 
       // Enriched data with manual joins
       const enrichedData = await Promise.all(patientPackages.map(async (pp) => {
@@ -290,7 +290,7 @@ export function usePurchasePackage() {
 
       const docRef = await addDoc(collection(db, 'patient_packages'), purchaseData);
       const newDoc = await getDoc(docRef);
-      const createdPkg = convertDoc(newDoc) as any;
+      const createdPkg = convertDoc<PatientPackage>(newDoc);
 
       // Criar transação financeira
       try {

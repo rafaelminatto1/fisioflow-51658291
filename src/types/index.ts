@@ -4,6 +4,15 @@
 export * from './agenda';
 export type { EnhancedAppointment } from './appointment';
 
+// Common type definitions (replaces `any` usages)
+export * from './common';
+
+// API type definitions
+export * from './api';
+
+// Component type definitions
+export * from './components';
+
 // Unified Appointment type that consolidates both camelCase and snake_case
 // This provides compatibility between database schema (snake_case) and app code (camelCase)
 export interface AppointmentUnified {
@@ -83,28 +92,53 @@ export interface Patient {
   cpf?: string;
   rg?: string;
   birthDate: string;
-  gender: 'masculino' | 'feminino' | 'outro';
+  birth_date?: string; // Database compatibility
+  gender: 'masculino' | 'feminino' | 'outro' | string;
   address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  
+  // Contact & Emergency
   emergencyContact?: string;
+  emergency_contact?: string; // Database compatibility
   emergencyContactRelationship?: string;
+  emergency_phone?: string;
+  
+  // Clinical
   medicalHistory?: string;
   mainCondition: string;
-  status: 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído';
+  status: 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído' | string;
   progress: number;
+  observations?: string;
+  
+  // Insurance
   insurancePlan?: string;
+  health_insurance?: string; // Database compatibility
   insuranceNumber?: string;
+  insurance_number?: string; // Database compatibility
   insuranceValidity?: string;
+  
+  // Demographics
   maritalStatus?: string;
   profession?: string;
   educationLevel?: string;
+  
+  // Medical Details
   bloodType?: string;
   allergies?: string;
   medications?: string;
   weight?: number;
   height?: number;
+  
+  photo_url?: string;
+  
   incomplete_registration?: boolean;
+  
   createdAt: string;
+  created_at?: string; // Database compatibility
   updatedAt: string;
+  updated_at?: string; // Database compatibility
 }
 
 export interface PatientDocument {
@@ -377,29 +411,32 @@ export const PatientHelpers = {
   }
 };
 
-export const AppointmentHelpers = {
-  getPatientName(appointment: AppointmentUnified | { patient?: { name?: string; full_name?: string }; patientName?: string } | null | undefined): string {
-    if (!appointment) return 'Paciente';
-    return appointment.patientName || appointment.patient?.full_name || appointment.patient?.name || 'Paciente';
-  },
+// Error handling utility exports (from common.ts)
+export { getErrorMessage, asError };
+export type { UnknownError };
 
-  getPatientId(appointment: AppointmentUnified | { patientId?: string; patient_id?: string } | null | undefined): string {
-    if (!appointment) return '';
-    return appointment.patientId || appointment.patient_id || '';
-  },
+// Appointment utility functions
+export function getPatientName(appointment: AppointmentUnified | { patient?: { name?: string; full_name?: string }; patientName?: string } | null | undefined): string {
+  if (!appointment) return 'Paciente';
+  return appointment.patientName || appointment.patient?.full_name || appointment.patient?.name || 'Paciente';
+}
 
-  getDate(appointment: AppointmentUnified | { date?: string; appointment_date?: string } | null | undefined): string {
-    if (!appointment) return '';
-    return appointment.appointment_date || appointment.date || '';
-  },
+export function getPatientId(appointment: AppointmentUnified | { patientId?: string; patient_id?: string } | null | undefined): string {
+  if (!appointment) return '';
+  return appointment.patientId || appointment.patient_id || '';
+}
 
-  getTime(appointment: AppointmentUnified | { time?: string; appointment_time?: string; start_time?: string } | null | undefined): string {
-    if (!appointment) return '';
-    return appointment.appointment_time || appointment.start_time || appointment.time || '';
-  },
+export function getDate(appointment: AppointmentUnified | { date?: string; appointment_date?: string } | null | undefined): string {
+  if (!appointment) return '';
+  return appointment.appointment_date || appointment.date || '';
+}
 
-  getStatus(appointment: AppointmentUnified | { status?: string } | null | undefined): string {
-    if (!appointment) return 'scheduled';
-    return appointment.status || 'scheduled';
-  }
-};
+export function getTime(appointment: AppointmentUnified | { time?: string; appointment_time?: string; start_time?: string } | null | undefined): string {
+  if (!appointment) return '';
+  return appointment.appointment_time || appointment.start_time || appointment.time || '';
+}
+
+export function getStatus(appointment: AppointmentUnified | { status?: string } | null | undefined): string {
+  if (!appointment) return 'scheduled';
+  return appointment.status || 'scheduled';
+}

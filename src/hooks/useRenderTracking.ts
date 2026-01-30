@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef } from 'react';
 
-export function useRenderTracking(componentName: string, extraData?: Record<string, any>) {
+export function useRenderTracking(componentName: string, extraData?: Record<string, unknown>) {
   const renderCount = useRef(0);
   const isMounted = useRef(true);
 

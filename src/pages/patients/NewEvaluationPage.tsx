@@ -31,11 +31,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from 'firebase/firestore';
 import { PatientHelpers } from '@/types';
 
-const db = getFirebaseDb();
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production

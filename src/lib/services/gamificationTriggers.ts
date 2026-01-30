@@ -1,4 +1,4 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from 'firebase/firestore';
 
 /**
@@ -100,7 +100,6 @@ export class GamificationTriggerService {
     }
 
     try {
-      const db = getFirebaseDb();
       const settingsRef = collection(db, 'gamification_settings');
       const q = query(settingsRef, where('key', 'in', ['base_xp', 'multiplier']));
       const snapshot = await getDocs(q);
@@ -217,7 +216,6 @@ export class GamificationTriggerService {
 
       const finalXP = totalXP + bonusXP;
 
-      const db = getFirebaseDb();
       const gamificationRef = doc(db, 'patient_gamification', patientId);
       const profileSnap = await getDoc(gamificationRef);
 
@@ -296,7 +294,6 @@ export class GamificationTriggerService {
 
       const xp = XP_REWARDS.EXERCISE_COMPLETED;
 
-      const db = getFirebaseDb();
       const gamificationRef = doc(db, 'patient_gamification', patientId);
       const profileSnap = await getDoc(gamificationRef);
 
@@ -369,7 +366,6 @@ export class GamificationTriggerService {
       }
 
       if (xp > 0) {
-        const db = getFirebaseDb();
         const gamificationRef = doc(db, 'patient_gamification', patientId);
         const profileSnap = await getDoc(gamificationRef);
 
@@ -429,7 +425,6 @@ export class GamificationTriggerService {
         xp += XP_REWARDS.APPOINTMENT_ON_TIME;
       }
 
-      const db = getFirebaseDb();
       const gamificationRef = doc(db, 'patient_gamification', patientId);
       const profileSnap = await getDoc(gamificationRef);
 
@@ -499,7 +494,6 @@ export class GamificationTriggerService {
       }
 
       if (xp > 0 && bonusType) {
-        const db = getFirebaseDb();
         const gamificationRef = doc(db, 'patient_gamification', patientId);
         const profileSnap = await getDoc(gamificationRef);
 
@@ -544,7 +538,6 @@ export class GamificationTriggerService {
    */
   static async getNextLevelInfo(patientId: string): Promise<LevelCalculationResult | null> {
     try {
-      const db = getFirebaseDb();
       const gamificationRef = doc(db, 'patient_gamification', patientId);
       const profileSnap = await getDoc(gamificationRef);
 

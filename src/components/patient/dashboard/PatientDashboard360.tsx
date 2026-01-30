@@ -55,8 +55,11 @@ interface PatientDashboardProps {
         sessions_available?: number;
     };
     appointments: Array<{
-        date: Date | string;
+        id?: string;
+        date?: Date | string;
+        appointment_date?: Date | string;
         type?: string;
+        status?: string;
         notes?: string;
     }>;
     activeGoals: Array<{
@@ -101,29 +104,29 @@ export const PatientDashboard360 = ({
     // Memoized data processing
     const { nextAppointment, currentSession, calculatedAge, patientName } = useMemo(() => {
         const name = PatientHelpers.getName(patient);
-        const birthDate = (patient as any).birth_date || (patient as any).birthDate;
+        const birthDate = patient.birth_date || patient.birthDate;
 
         const age = patient.age || (birthDate ?
             Math.floor((new Date().getTime() - new Date(birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
             : undefined);
 
-        const current = appointments?.find(a => (a as any).id === currentAppointmentId);
+        const current = appointments?.find(a => a.id === currentAppointmentId);
 
         const next = appointments
             ? [...appointments]
                 .filter(a => {
-                    const date = a.date || (a as any).appointment_date;
-                    const status = (a as any).status;
+                    const date = a.date || a.appointment_date;
+                    const status = a.status;
                     return (
                         new Date(date) > new Date() &&
-                        (a as any).id !== currentAppointmentId &&
+                        a.id !== currentAppointmentId &&
                         status !== 'cancelado' &&
                         status !== 'falta'
                     );
                 })
                 .sort((a, b) => {
-                    const dateA = new Date(a.date || (a as any).appointment_date).getTime();
-                    const dateB = new Date(b.date || (b as any).appointment_date).getTime();
+                    const dateA = new Date(a.date || a.appointment_date as string).getTime();
+                    const dateB = new Date(b.date || b.appointment_date as string).getTime();
                     return dateA - dateB;
                 })[0]
             : null;
@@ -186,11 +189,11 @@ export const PatientDashboard360 = ({
                                         <h2 className="text-2xl font-bold tracking-tight text-foreground">{patientName}</h2>
                                         <p className="text-muted-foreground flex items-center gap-2 mt-1 font-medium">
                                             <User className="w-4 h-4 text-primary" />
-                                            {calculatedAge || 'Idade não inf.'} anos • {patient.profession || (patient as any).occupation || 'Profissão não informada'}
+                                            {calculatedAge || 'Idade não inf.'} anos • {patient.profession || patient.occupation || 'Profissão não informada'}
                                         </p>
                                     </div>
-                                    <Badge variant={(patient.isActive || patient.status === 'active' || (patient as any).status === 'active') ? "default" : "secondary"} className="h-6">
-                                        {(patient.isActive || patient.status === 'active' || (patient as any).status === 'active') ? 'Ativo' : 'Inativo'}
+                                    <Badge variant={(patient.isActive || patient.status === 'active' || patient.status === 'active') ? "default" : "secondary"} className="h-6">
+                                        {(patient.isActive || patient.status === 'active' || patient.status === 'active') ? 'Ativo' : 'Inativo'}
                                     </Badge>
                                 </div>
 
@@ -213,12 +216,12 @@ export const PatientDashboard360 = ({
                                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Localização</span>
                                         <div className="flex items-center gap-2 text-sm">
                                             <MapPin className="w-3.5 h-3.5 text-primary" />
-                                            {patient.address?.city || (patient as any).city || 'Cidade não inf.'}
+                                            {patient.address?.city || patient.city || 'Cidade não inf.'}
                                         </div>
                                     </div>
                                 </div>
 
-                                {(patient.allergies || (patient as any).allergies || patient.mainCondition) && (
+                                {(patient.allergies  || patient.mainCondition) && (
                                     <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-primary/5">
                                         {patient.mainCondition && (
                                             <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary gap-1.5 py-1">
@@ -226,10 +229,10 @@ export const PatientDashboard360 = ({
                                                 {patient.mainCondition}
                                             </Badge>
                                         )}
-                                        {(patient.allergies || (patient as any).allergies) && (
+                                        {(patient.allergies ) && (
                                             <Badge variant="outline" className="bg-rose-500/5 border-rose-500/20 text-rose-600 gap-1.5 py-1">
                                                 <AlertTriangle className="w-3.5 h-3.5" />
-                                                Alergia: {patient.allergies || (patient as any).allergies}
+                                                Alergia: {patient.allergies }
                                             </Badge>
                                         )}
                                     </div>
@@ -270,7 +273,7 @@ export const PatientDashboard360 = ({
                                 </div>
                                 <div className="text-white/80 text-sm mt-1 flex items-center gap-2">
                                     <Clock className="w-3.5 h-3.5" />
-                                    {format(new Date(currentSession.date || (currentSession as any).appointment_date), "HH:mm", { locale: ptBR })}
+                                    {format(new Date(currentSession.date || currentSession.appointment_date), "HH:mm", { locale: ptBR })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -289,11 +292,11 @@ export const PatientDashboard360 = ({
                                     </h3>
                                 </div>
                                 <div className="text-xl font-bold">
-                                    {format(new Date(nextAppointment.date || (nextAppointment as any).appointment_date), "dd 'de' MMMM", { locale: ptBR })}
+                                    {format(new Date(nextAppointment.date || nextAppointment.appointment_date), "dd 'de' MMMM", { locale: ptBR })}
                                 </div>
                                 <div className="text-primary-foreground/80 text-sm mt-1 flex items-center gap-2">
                                     <Clock className="w-3.5 h-3.5" />
-                                    {format(new Date(nextAppointment.date || (nextAppointment as any).appointment_date), "HH:mm", { locale: ptBR })} • {nextAppointment.type || 'Sessão'}
+                                    {format(new Date(nextAppointment.date || nextAppointment.appointment_date), "HH:mm", { locale: ptBR })} • {nextAppointment.type || 'Sessão'}
                                 </div>
                             </CardContent>
                         </Card>
@@ -303,13 +306,13 @@ export const PatientDashboard360 = ({
                         <CardContent className="p-5 flex items-center justify-between">
                             <div>
                                 <p className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Saldo de Sessões</p>
-                                <div className={`text-3xl font-bold mt-1 ${(patient.balance ?? (patient as any).sessions_available ?? 0) <= 1 ? 'text-rose-500' : 'text-primary'}`}>
-                                    {patient.balance ?? (patient as any).sessions_available ?? 0}
+                                <div className={`text-3xl font-bold mt-1 ${(patient.balance ?? patient.sessions_available ?? 0) <= 1 ? 'text-rose-500' : 'text-primary'}`}>
+                                    {patient.balance ?? patient.sessions_available ?? 0}
                                     <span className="text-xs text-muted-foreground font-normal ml-2">disponíveis</span>
                                 </div>
                             </div>
-                            <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${(patient.balance ?? (patient as any).sessions_available ?? 0) <= 1 ? 'bg-rose-50' : 'bg-primary/10'}`}>
-                                <DollarSign className={`w-6 h-6 ${(patient.balance ?? (patient as any).sessions_available ?? 0) <= 1 ? 'text-rose-500' : 'text-primary'}`} />
+                            <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${(patient.balance ?? patient.sessions_available ?? 0) <= 1 ? 'bg-rose-50' : 'bg-primary/10'}`}>
+                                <DollarSign className={`w-6 h-6 ${(patient.balance ?? patient.sessions_available ?? 0) <= 1 ? 'text-rose-500' : 'text-primary'}`} />
                             </div>
                         </CardContent>
                     </Card>

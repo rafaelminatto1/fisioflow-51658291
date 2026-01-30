@@ -8,10 +8,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, updateDoc, doc, query, where, orderBy } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 /**
  * Hook para gerenciar favoritos de templates
@@ -31,9 +30,9 @@ export function useToggleFavorite() {
 
       const previousForms = queryClient.getQueryData(['evaluation-forms']);
 
-      queryClient.setQueryData(['evaluation-forms'], (old: any) => {
+      queryClient.setQueryData(['evaluation-forms'], (old: { id: string; is_favorite: boolean }[] | undefined) => {
         if (!old) return old;
-        return old.map((form: any) =>
+        return old.map((form) =>
           form.id === templateId
             ? { ...form, is_favorite: !isFavorite }
             : form

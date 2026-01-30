@@ -10,7 +10,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore';
 
 export interface TherapistOccupancyData {
@@ -70,8 +70,6 @@ const getDateRange = (period: PeriodFilter, startDate?: Date, endDate?: Date) =>
   }
 };
 
-const db = getFirebaseDb();
-
 export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { period: 'today' }) => {
   return useQuery({
     queryKey: ['therapist-occupancy', options.period, options.startDate?.toISOString(), options.endDate?.toISOString()],
@@ -100,7 +98,14 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       }
 
       // Buscar profiles dos fisioterapeutas no Firestore
-      const therapists: any[] = [];
+      interface TherapistBasic {
+        id: string;
+        user_id?: string;
+        full_name?: string;
+        avatar_url?: string;
+      }
+
+      const therapists: TherapistBasic[] = [];
       await Promise.all(therapistUserIds.map(async (userId) => {
         const profileQ = query(collection(db, 'profiles'), where('user_id', '==', userId));
         const profileSnap = await getDocs(profileQ);
@@ -119,8 +124,16 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       const therapistIds = therapists.map(t => t.id);
 
       // Se não há therapists, retornar arrays vazios
-      let appointments: any[] = [];
-      let todayAppointments: any[] = [];
+      interface Appointment {
+        id: string;
+        therapist_id?: string;
+        appointment_date?: string;
+        status?: string;
+        duration?: number;
+      }
+
+      let appointments: Appointment[] = [];
+      let todayAppointments: Appointment[] = [];
 
       if (therapistIds.length > 0) {
         // Firestore has a limit of 10 items per 'in' query, so we need to chunk

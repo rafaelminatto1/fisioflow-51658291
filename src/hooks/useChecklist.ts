@@ -8,7 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { ChecklistItemCreate, ChecklistItemUpdate } from '@/lib/validations/checklist';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -22,7 +22,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export function useChecklist(eventoId: string) {
   return useQuery({
@@ -107,7 +106,7 @@ export function useToggleChecklistItem() {
       const docRef = doc(db, 'checklist_items', id);
       const docSnap = await getDoc(docRef);
 
-      const item = { id: docSnap.id, ...docSnap.data() } as any;
+      const item = { id: docSnap.id, ...docSnap.data() } as { id: string; status: string };
       const novoStatus = item.status === 'OK' ? 'ABERTO' : 'OK';
 
       await updateDoc(docRef, { status: novoStatus });

@@ -23,6 +23,8 @@ import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { format, startOfDay, endOfDay, parseISO, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { db } from '@/integrations/firebase/app';
+import { deleteDoc, doc } from 'firebase/firestore';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
@@ -297,12 +299,7 @@ const ScheduleRefactored = () => {
 
   const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
     try {
-      const { deleteDoc } = await import('firebase/firestore');
-      const { getFirebaseDb } = await import('@/integrations/firebase/app');
-      const { doc: docFn } = await import('firebase/firestore');
-
-      const db = getFirebaseDb();
-      await deleteDoc(docFn(db, 'appointments', appointment.id));
+      await deleteDoc(doc(db, 'appointments', appointment.id));
 
       toast({
         title: '✅ Agendamento excluído',
@@ -412,7 +409,6 @@ const ScheduleRefactored = () => {
     isModalOpen,
     showKeyboardShortcuts,
     showWaitlistModal,
-    quickEditAppointment,
     handleCreateAppointment
   ]);
 
@@ -469,18 +465,18 @@ const ScheduleRefactored = () => {
 
                 {/* Quick Stats Pills */}
                 <div className="hidden lg:flex items-center gap-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-100">
-                    <Clock className="w-4 h-4 text-blue-600" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                    <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-blue-900">{enhancedStats.total}</span>
-                      <span className="text-[10px] text-blue-600">Hoje</span>
+                      <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">{enhancedStats.total}</span>
+                      <span className="text-xs text-blue-600 dark:text-blue-400">Hoje</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
-                    <Users className="w-4 h-4 text-emerald-600" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-100 dark:border-emerald-900/50">
+                    <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-emerald-900">{enhancedStats.weekTotal}</span>
-                      <span className="text-[10px] text-emerald-600">Semana</span>
+                      <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">{enhancedStats.weekTotal}</span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400">Semana</span>
                     </div>
                   </div>
                 </div>
@@ -505,9 +501,9 @@ const ScheduleRefactored = () => {
             </div>
 
             {/* Date Navigation & View Selector */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+            <div className="flex items-center justify-between mt-5">
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="default" onClick={() => setCurrentDate(new Date())} className="font-medium">
                   Hoje
                 </Button>
                 <div className="flex items-center gap-1">
@@ -515,27 +511,27 @@ const ScheduleRefactored = () => {
                     const newDate = new Date(date);
                     newDate.setDate(newDate.getDate() - 7);
                     return newDate;
-                  })} className="h-8 w-8">
-                    <ChevronLeft className="h-4 w-4" />
+                  })} className="h-9 w-9" aria-label="Semana anterior">
+                    <ChevronLeft className="h-5 w-5" />
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => {
                     const newDate = new Date(date);
                     newDate.setDate(newDate.getDate() + 7);
                     return newDate;
-                  })} className="h-8 w-8">
-                    <ChevronRight className="h-4 w-4" />
+                  })} className="h-9 w-9" aria-label="Próxima semana">
+                    <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
 
                 {/* View Toggle */}
-                <div className="flex bg-slate-100 p-1 rounded-lg">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                   {(['day', 'week', 'month'] as CalendarViewType[]).map((view) => (
                     <Button
                       key={view}
                       size="sm"
                       variant={viewType === view ? 'default' : 'ghost'}
                       onClick={() => setViewType(view)}
-                      className="h-7 text-xs capitalize"
+                      className="h-9 min-w-[80px] text-sm font-medium capitalize transition-all"
                     >
                       {view === 'day' ? 'Dia' : view === 'week' ? 'Semana' : 'Mês'}
                     </Button>
@@ -555,7 +551,7 @@ const ScheduleRefactored = () => {
         {/* Main Calendar Area */}
         <div className="flex-1 overflow-hidden bg-white">
           <div className="h-full max-w-[1920px] mx-auto">
-            <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
+            <Suspense fallback={<LoadingSkeleton type={viewType === 'day' ? 'calendar-day' : viewType === 'week' ? 'calendar-week' : 'calendar'} className="h-full w-full" />}>
               <CalendarView
                 appointments={filteredAppointments}
                 currentDate={currentDate}

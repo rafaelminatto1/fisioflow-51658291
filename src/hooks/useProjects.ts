@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export interface Project {
@@ -28,11 +28,15 @@ export interface Project {
     };
 }
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
+interface Profile {
+  full_name: string;
+  avatar_url?: string;
+}
+
 // Helper to convert doc
-const convertDoc = (doc: any): Project => ({ id: doc.id, ...doc.data() } as Project);
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): Project => ({ id: doc.id, ...doc.data() } as Project);
 
 export function useProjects() {
     return useQuery({
@@ -44,7 +48,7 @@ export function useProjects() {
 
             // Fetch manager profiles from Firestore
             const managerIds = [...new Set(data.map(p => p.manager_id).filter(Boolean))];
-            const profiles = new Map<string, any>();
+            const profiles = new Map<string, Profile>();
 
             await Promise.all(managerIds.map(async (id) => {
                 if (!id) return;

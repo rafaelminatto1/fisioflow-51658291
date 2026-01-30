@@ -8,7 +8,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -19,7 +19,42 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface SurveyData {
+  nps_score?: number | null;
+  responded_at?: string | null;
+  [key: string]: unknown;
+}
+
+interface PaymentData {
+  amount?: number;
+  date?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+interface AppointmentData {
+  status?: string;
+  date?: string;
+  time?: string;
+  [key: string]: unknown;
+}
+
+interface SessionData {
+  pain_level?: number;
+  functional_score?: number;
+  notes?: string;
+  [key: string]: unknown;
+}
+
+interface EvolutionSessionData {
+  eva_score?: number | null;
+  session_date?: string;
+  [key: string]: unknown;
+}
 
 export interface DashboardKPIs {
   activePatients: number;
@@ -63,7 +98,7 @@ export interface OccupancyReport {
 }
 
 // Helper function to convert Firestore doc
-const convertDoc = (doc: any): any => {
+const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => {
   return { id: doc.id, ...doc.data() };
 };
 
@@ -81,8 +116,8 @@ async function calculateNPS(): Promise<number> {
     }
 
     const total = surveys.length;
-    const promotores = surveys.filter((s: any) => s.nps_score && s.nps_score >= 9).length;
-    const detratores = surveys.filter((s: any) => s.nps_score && s.nps_score <= 6).length;
+    const promotores = surveys.filter((s: SurveyData) => s.nps_score !== null && s.nps_score !== undefined && s.nps_score >= 9).length;
+    const detratores = surveys.filter((s: SurveyData) => s.nps_score !== null && s.nps_score !== undefined && s.nps_score <= 6).length;
 
     const nps = total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0;
     return nps;
@@ -150,7 +185,7 @@ export function useDashboardKPIs(period: string = 'month') {
       const paymentsSnap = await getDocs(paymentsQ);
       const payments = paymentsSnap.docs.map(doc => doc.data());
 
-      const monthlyRevenue = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const monthlyRevenue = payments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
 
       // Agendamentos do período
       const appointmentsQ = query(
@@ -162,9 +197,9 @@ export function useDashboardKPIs(period: string = 'month') {
       const appointments = appointmentsSnap.docs.map(doc => doc.data());
 
       const totalAppointments = appointments.length;
-      const completedAppointments = appointments.filter((a: any) => a.status === 'atendido').length;
-      const noShowAppointments = appointments.filter((a: any) => a.status === 'faltou').length;
-      const confirmedAppointments = appointments.filter((a: any) => ['confirmado', 'atendido'].includes(a.status)).length;
+      const completedAppointments = appointments.filter((a: AppointmentData) => a.status === 'atendido').length;
+      const noShowAppointments = appointments.filter((a: AppointmentData) => a.status === 'faltou').length;
+      const confirmedAppointments = appointments.filter((a: AppointmentData) => a.status ? ['confirmado', 'atendido'].includes(a.status) : false).length;
 
       const occupancyRate = totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
       const noShowRate = totalAppointments > 0 ? (noShowAppointments / totalAppointments) * 100 : 0;
@@ -213,12 +248,12 @@ export function useFinancialReport(startDate: string, endDate: string) {
       const paymentsSnap = await getDocs(paymentsQ);
       const payments = paymentsSnap.docs.map(doc => doc.data());
 
-      const totalRevenue = payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const totalRevenue = payments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
 
       // Por método
       const revenueByMethod: Record<string, number> = {};
-      payments.forEach((p: any) => {
-        const method = p.method || 'outros';
+      payments.forEach((p: PaymentData) => {
+        const method = (p.method as string | undefined) || 'outros';
         revenueByMethod[method] = (revenueByMethod[method] || 0) + (p.amount || 0);
       });
 
@@ -233,9 +268,9 @@ export function useFinancialReport(startDate: string, endDate: string) {
       const sessions = sessionsSnap.docs.map(doc => doc.data());
 
       const therapistMap: Record<string, { name: string; revenue: number; sessions: number }> = {};
-      sessions.forEach((s: any) => {
-        const id = s.therapist_id || 'unassigned';
-        const name = s.therapist_name || 'Não atribuído';
+      sessions.forEach((s: SessionData) => {
+        const id = (s.therapist_id as string | undefined) || 'unassigned';
+        const name = (s.therapist_name as string | undefined) || 'Não atribuído';
         if (!therapistMap[id]) {
           therapistMap[id] = { name, revenue: 0, sessions: 0 };
         }
@@ -267,7 +302,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
       const pendingSnap = await getDocs(pendingQ);
       const pendingPayments = pendingSnap.docs.map(doc => doc.data());
 
-      const totalPending = pendingPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const totalPending = pendingPayments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
       const delinquencyRate = (totalRevenue + totalPending) > 0
         ? (totalPending / (totalRevenue + totalPending)) * 100
         : 0;
@@ -318,9 +353,9 @@ export function usePatientEvolution(patientId: string | undefined) {
 
       // Evolução da dor
       const painEvolution = sessions
-        .filter((s: any) => s.eva_score !== null)
-        .map((s: any) => ({
-          date: s.started_at?.split('T')[0] || '',
+        .filter((s: EvolutionSessionData) => s.eva_score !== null)
+        .map((s: EvolutionSessionData) => ({
+          date: (s.session_date as string | undefined)?.split('T')[0] || '',
           averageEva: s.eva_score || 0,
         }));
 
@@ -393,8 +428,8 @@ export function useOccupancyReport(startDate: string, endDate: string) {
 
       const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-      appointments.forEach((apt: any) => {
-        const date = new Date(apt.start_time);
+      appointments.forEach((apt: AppointmentData) => {
+        const date = new Date(apt.start_time || '');
         const dayName = dayNames[date.getDay()];
 
         if (dayOccupancy[dayName]) {
@@ -474,8 +509,8 @@ async function getRevenueChart(
   const data = snapshot.docs.map(doc => doc.data());
 
   const revenueByDate: Record<string, number> = {};
-  data.forEach((p: any) => {
-    const date = p.paid_at?.split('T')[0];
+  data.forEach((p: PaymentData) => {
+    const date = (p.paid_at as string | undefined)?.split('T')[0];
     if (date) {
       revenueByDate[date] = (revenueByDate[date] || 0) + (p.amount || 0);
     }

@@ -11,7 +11,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -25,7 +25,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // Types
 export interface BusinessHour {
@@ -88,7 +87,7 @@ const DAYS_OF_WEEK = [
 ];
 
 // Helper to convert doc
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
 
 export function useScheduleSettings() {
   const { toast } = useToast();

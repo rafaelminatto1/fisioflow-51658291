@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -20,7 +20,6 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 /**
  * Hook para inscrições Realtime na tabela eventos

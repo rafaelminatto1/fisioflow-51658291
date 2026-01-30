@@ -3,7 +3,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, orderBy, addDoc, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
@@ -11,7 +11,6 @@ import { PreCadastroStats } from '@/components/precadastro/PreCadastroStats';
 import { PreCadastroList } from '@/components/precadastro/PreCadastroList';
 import { LinkManagement } from '@/components/precadastro/LinkManagement';
 
-const db = getFirebaseDb();
 
 const PreCadastroAdmin = () => {
   const { user } = useAuth();

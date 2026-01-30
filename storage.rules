@@ -58,8 +58,8 @@ service firebase.storage {
     // ============================================================================================
 
     match /users/{userId}/avatars/{filename} {
-      // Leitura: público (para exibição em perfil)
-      allow read: if true;
+      // Leitura: apenas usuários autenticados
+      allow read: if isAuthenticated();
 
       // Escrita: apenas o próprio usuário ou admin
       allow write: if (isAuthenticated() && request.auth.uid == userId) ||
@@ -153,8 +153,8 @@ service firebase.storage {
     // ============================================================================================
 
     match /public/{filename} {
-      // Leitura: público
-      allow read: if true;
+      // Leitura: apenas usuários autenticados
+      allow read: if isAuthenticated();
 
       // Escrita: apenas admin
       allow write: if isAdmin();

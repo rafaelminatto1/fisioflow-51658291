@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Checkbox } from '@/components/ui/checkbox';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { FileText, Download, Loader2 } from 'lucide-react';
@@ -46,7 +46,6 @@ export function AdvancedReportGenerator() {
   };
 
   const fetchReportData = async () => {
-    const db = getFirebaseDb();
     const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
     const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null;
 

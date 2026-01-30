@@ -12,6 +12,31 @@ vi.unmock('@/hooks/usePatientAnalytics');
 import * as hooks from '../usePatientAnalytics';
 import { supabase } from '@/integrations/supabase/client';
 
+// Type for Supabase query mock
+type SupabaseQueryMock = {
+  select: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+  order: ReturnType<typeof vi.fn>;
+  limit: ReturnType<typeof vi.fn>;
+  single: ReturnType<typeof vi.fn>;
+  maybeSingle: ReturnType<typeof vi.fn>;
+  is: ReturnType<typeof vi.fn>;
+};
+
+// Type for Supabase auth response
+type SupabaseAuthResponse = {
+  data: { user: { id: string } } | null;
+  error: null;
+};
+
+// Type for Supabase RPC response
+type SupabaseRpcResponse = {
+  data: Record<string, unknown> | null;
+  error: null;
+};
+
 // Mock Supabase with auto-mocking
 vi.mock('@/integrations/supabase/client');
 
@@ -52,7 +77,7 @@ const mockQuery = {
   single: vi.fn(),
   maybeSingle: vi.fn(),
   is: vi.fn().mockReturnThis(),
-} as any;
+} as SupabaseQueryMock;
 
 // Recursive mocks
 mockQuery.select.mockReturnValue(mockQuery);
@@ -67,7 +92,7 @@ mockQuery.is.mockReturnValue(mockQuery);
 beforeEach(() => {
   vi.mocked(supabase.from).mockReturnValue(mockQuery);
   vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: null });
-  vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null } as any);
+  vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null } as SupabaseAuthResponse);
 });
 
 describe('usePatientAnalytics - Query Keys', () => {
@@ -105,7 +130,7 @@ describe.skip('usePatientProgressSummary', () => {
     vi.mocked(supabase.rpc).mockReturnValue({
       data: null,
       error: null,
-    } as any);
+    } as SupabaseRpcResponse);
 
     const { result } = renderHook(() => hooks.usePatientProgressSummary(''), { wrapper });
 
@@ -124,7 +149,7 @@ describe.skip('usePatientProgressSummary', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: mockData,
       error: null,
-    } as any);
+    } as SupabaseRpcResponse);
 
     const { result } = renderHook(() => hooks.usePatientProgressSummary('patient-1'), { wrapper });
 
@@ -332,7 +357,7 @@ describe.skip('usePatientAnalyticsDashboard', () => {
         overall_progress_percentage: 75,
       },
       error: null,
-    } as any);
+    } as SupabaseRpcResponse);
 
     mockQuery.maybeSingle.mockResolvedValue({
       data: {
@@ -363,7 +388,7 @@ describe.skip('usePatientAnalyticsDashboard', () => {
     vi.mocked(supabase.rpc).mockResolvedValue({
       data: null,
       error: null,
-    } as any);
+    } as SupabaseRpcResponse);
 
     mockQuery.maybeSingle.mockResolvedValue({
       data: null,

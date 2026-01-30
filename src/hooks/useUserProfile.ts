@@ -12,10 +12,9 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 const auth = getFirebaseAuth();
-const db = getFirebaseDb();
 
 export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 

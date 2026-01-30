@@ -297,8 +297,8 @@ Include search queries used in the response.`;
  */
 export class ClinicalDecisionSupport {
   private genAI: GoogleGenerativeAI;
-  private model: any;
-  private groundingModel: any;
+  private model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
+  private groundingModel: ReturnType<GoogleGenerativeAI['getGenerativeModel']> | null;
   private groundingEnabled: boolean;
 
   constructor(

@@ -11,7 +11,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -24,7 +24,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Fornecedor {
   id: string;
@@ -51,7 +50,7 @@ export interface Fornecedor {
 export type FornecedorFormData = Omit<Fornecedor, 'id' | 'created_at' | 'updated_at'>;
 
 // Helper to convert Firestore doc to Fornecedor
-const convertDocToFornecedor = (doc: any): Fornecedor => {
+const convertDocToFornecedor = (doc: { id: string; data: () => Record<string, unknown> }): Fornecedor => {
   const data = doc.data();
   return {
     id: doc.id,

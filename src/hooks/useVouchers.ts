@@ -10,7 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   collection,
@@ -25,7 +25,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Voucher {
   id: string;
@@ -88,19 +87,25 @@ export function useUserVouchers() {
       const userVouchers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Fetch voucher data for each user voucher
-      const voucherIds = userVouchers.map((uv: any) => uv.voucher_id).filter(Boolean);
-      const voucherMap = new Map<string, any>();
+      interface UserVoucherRaw {
+        id: string;
+        voucher_id?: string;
+        [key: string]: unknown;
+      }
+
+      const voucherIds = userVouchers.map((uv: UserVoucherRaw) => uv.voucher_id).filter((id): id is string => id !== null);
+      const voucherMap = new Map<string, Voucher>();
 
       await Promise.all([...new Set(voucherIds)].map(async (voucherId) => {
         const voucherDoc = await getDoc(doc(db, 'vouchers', voucherId));
         if (voucherDoc.exists()) {
-          voucherMap.set(voucherId, { id: voucherId, ...voucherDoc.data() });
+          voucherMap.set(voucherId, { id: voucherId, ...voucherDoc.data() } as Voucher);
         }
       }));
 
-      return userVouchers.map((uv: any) => ({
+      return userVouchers.map((uv: UserVoucherRaw) => ({
         ...uv,
-        voucher: voucherMap.get(uv.voucher_id),
+        voucher: voucherMap.get(uv.voucher_id as string),
       })) as UserVoucher[];
     },
     enabled: !!user,

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { WhatsAppService } from '@/lib/services/WhatsAppService';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -14,7 +14,6 @@ import {
   doc
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface WhatsAppMetric {
   id: string;

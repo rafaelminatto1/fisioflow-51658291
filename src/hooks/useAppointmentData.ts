@@ -17,10 +17,9 @@ import {
     devValidateAppointment,
     type AppointmentDBStandard
 } from '@/lib/constants/appointment-queries';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export const useAppointmentData = (appointmentId: string | undefined) => {
     // Buscar dados do agendamento do Firebase com retry e timeout

@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -22,10 +22,9 @@ import {
 } from 'firebase/firestore';
 import { useSoapRecords } from './useSoapRecords';
 
-const db = getFirebaseDb();
 
 // Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export interface ConductSuggestion {
   id: string;
@@ -76,15 +75,29 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
       const conducts = conductsSnap.docs.map(convertDoc);
 
       // Calcular relevância para cada conduta
+      interface ConductFirestore {
+        id: string;
+        title: string;
+        description?: string;
+        conduct_text: string;
+        category: string;
+        [key: string]: unknown;
+      }
+
+      interface PathologyFirestore {
+        pathology_name: string;
+        [key: string]: unknown;
+      }
+
       const suggestions: ConductSuggestion[] = conducts
-        .map((conduct: any) => {
+        .map((conduct: ConductFirestore) => {
           let score = 0;
           const reasons: string[] = [];
 
           const conductText = `${conduct.title} ${conduct.description || ''} ${conduct.conduct_text}`.toLowerCase();
 
           // Pontuação por patologia correspondente
-          const pathologyNames = pathologies.map((p: any) => p.pathology_name.toLowerCase());
+          const pathologyNames = pathologies.map((p: PathologyFirestore) => p.pathology_name.toLowerCase());
           pathologyNames.forEach(pathology => {
             if (conductText.includes(pathology) || conduct.category.toLowerCase().includes(pathology)) {
               score += 50;

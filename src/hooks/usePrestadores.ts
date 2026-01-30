@@ -8,7 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { PrestadorCreate, PrestadorUpdate } from '@/lib/validations/prestador';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -22,10 +22,17 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
+
+interface Prestador {
+  id: string;
+  evento_id: string;
+  status_pagamento: string;
+  [key: string]: unknown;
+}
 
 // Helper to convert doc
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T =>
+  ({ id: doc.id, ...doc.data() } as T);
 
 export function usePrestadores(eventoId: string) {
   return useQuery({
@@ -40,7 +47,7 @@ export function usePrestadores(eventoId: string) {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as any[];
+      return snapshot.docs.map(convertDoc<Prestador>);
     },
     enabled: !!eventoId,
   });
@@ -57,7 +64,7 @@ export function useCreatePrestador() {
         created_at: new Date().toISOString()
       });
       const newDoc = await getDoc(docRef);
-      return convertDoc(newDoc) as any;
+      return convertDoc<Prestador>(newDoc);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.evento_id] });
@@ -83,10 +90,10 @@ export function useUpdatePrestador() {
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: PrestadorUpdate; eventoId: string }) => {
       const docRef = doc(db, 'prestadores', id);
-      await updateDoc(docRef, data as any);
+      await updateDoc(docRef, data);
 
       const updated = await getDoc(docRef);
-      return { ...convertDoc(updated), evento_id: eventoId } as any;
+      return { ...convertDoc<Prestador>(updated), evento_id: eventoId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.evento_id] });
@@ -148,7 +155,7 @@ export function useMarcarPagamento() {
       await updateDoc(docRef, { status_pagamento: novoStatus });
       const updated = await getDoc(docRef);
 
-      return { ...convertDoc(updated), eventoId } as any;
+      return { ...convertDoc<Prestador>(updated), eventoId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.eventoId] });

@@ -10,9 +10,8 @@
  */
 
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 
-const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES

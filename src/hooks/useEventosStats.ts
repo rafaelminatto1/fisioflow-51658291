@@ -11,7 +11,18 @@ import { useQuery } from "@tanstack/react-query";
 import { getFirebaseDb } from "@/integrations/firebase/app";
 import { collection, getDocs, getCountFromServer, query, where } from "firebase/firestore";
 
-const db = getFirebaseDb();
+
+interface Evento {
+  id: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+interface Pagamento {
+  tipo?: string;
+  valor?: string | number;
+  [key: string]: unknown;
+}
 
 interface EventosStats {
   totalEventos: number;
@@ -36,10 +47,10 @@ export function useEventosStats() {
 
       const totalEventos = eventos.length;
       const eventosAtivos = eventos.filter(
-        (e: any) => e.status === "AGENDADO" || e.status === "EM_ANDAMENTO"
+        (e: Evento) => e.status === "AGENDADO" || e.status === "EM_ANDAMENTO"
       ).length;
       const eventosConcluidos = eventos.filter(
-        (e: any) => e.status === "CONCLUIDO"
+        (e: Evento) => e.status === "CONCLUIDO"
       ).length;
 
       // Fetch pagamentos
@@ -48,12 +59,12 @@ export function useEventosStats() {
       const pagamentos = pagamentosSnap.docs.map(doc => doc.data());
 
       const receitaTotal = pagamentos
-        .filter((p: any) => p.tipo === "receita")
-        .reduce((sum, p: any) => sum + Number(p.valor || 0), 0);
+        .filter((p: Pagamento) => p.tipo === "receita")
+        .reduce((sum, p: Pagamento) => sum + Number(p.valor || 0), 0);
 
       const custoTotal = pagamentos
-        .filter((p: any) => p.tipo !== "receita")
-        .reduce((sum, p: any) => sum + Number(p.valor || 0), 0);
+        .filter((p: Pagamento) => p.tipo !== "receita")
+        .reduce((sum, p: Pagamento) => sum + Number(p.valor || 0), 0);
 
       const margemMedia = receitaTotal > 0
         ? Math.round(((receitaTotal - custoTotal) / receitaTotal) * 100)

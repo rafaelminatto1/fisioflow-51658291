@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import {
     collection,
     addDoc,
@@ -20,7 +20,6 @@ import {
 } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 
-const db = getFirebaseDb();
 
 export interface WearableDataPoint {
     id: string;
@@ -35,7 +34,7 @@ export interface WearableDataPoint {
 }
 
 // Helper to convert doc
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
 
 export const useWearables = (patientId?: string) => {
     const queryClient = useQueryClient();

@@ -7,10 +7,8 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 export function useExportPrestadores() {
   const { toast } = useToast();

@@ -19,7 +19,7 @@ import {
   CreateSeriesResult,
 } from '@/types/recurring-appointment';
 import { addDays, addWeeks, addMonths, addYears, startOfDay, isSameDay } from 'date-fns';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -32,7 +32,25 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
+
+interface FirestoreSeriesData {
+  id: string;
+  patient_id?: string;
+  therapist_id?: string;
+  [key: string]: unknown;
+}
+
+interface PatientBasicInfo {
+  id: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
+}
+
+interface TherapistBasicInfo {
+  id: string;
+  full_name: string;
+}
 
 // =====================================================================
 // QUERY KEYS
@@ -58,10 +76,10 @@ async function fetchRecurringSeries(params?: {
   patient_id?: string;
   is_active?: boolean;
 }): Promise<RecurringAppointmentSeries[]> {
-  const constraints = [
+  const constraints: Array<typeof collection | typeof where | typeof orderBy> = [
     collection(db, 'recurring_appointment_series'),
     orderBy('created_at', 'desc')
-  ] as any[];
+  ];
 
   if (params?.organization_id) {
     constraints.push(where('organization_id', '==', params.organization_id));
@@ -81,8 +99,8 @@ async function fetchRecurringSeries(params?: {
   const series = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   // Fetch patient data for each series
-  const patientIds = series.map((s: any) => s.patient_id).filter(Boolean);
-  const patientMap = new Map<string, any>();
+  const patientIds = series.map((s: FirestoreSeriesData) => s.patient_id).filter((id): id is string => id !== null);
+  const patientMap = new Map<string, PatientBasicInfo>();
 
   await Promise.all([...new Set(patientIds)].map(async (patientId) => {
     const patientDoc = await getDoc(doc(db, 'patients', patientId));
@@ -97,8 +115,8 @@ async function fetchRecurringSeries(params?: {
   }));
 
   // Fetch therapist data for each series
-  const therapistIds = series.map((s: any) => s.therapist_id).filter(Boolean);
-  const therapistMap = new Map<string, any>();
+  const therapistIds = series.map((s: FirestoreSeriesData) => s.therapist_id).filter((id): id is string => id !== null);
+  const therapistMap = new Map<string, TherapistBasicInfo>();
 
   await Promise.all([...new Set(therapistIds)].map(async (therapistId) => {
     const profileDoc = await getDoc(doc(db, 'profiles', therapistId));
@@ -110,7 +128,7 @@ async function fetchRecurringSeries(params?: {
     }
   }));
 
-  return series.map((s: any) => ({
+  return series.map((s: FirestoreSeriesData) => ({
     ...s,
     patient: patientMap.get(s.patient_id),
     therapist: therapistMap.get(s.therapist_id),
@@ -243,7 +261,7 @@ export function generateOccurrencesPreview(
 function shouldIncludeDate(date: Date, recurrence: RecurringAppointmentFormData['recurrence']): boolean {
   // Para recorrência semanal, verificar dia da semana
   if (recurrence.type === 'weekly' && recurrence.daysOfWeek) {
-    return recurrence.daysOfWeek.includes(date.getDay() as any);
+    return recurrence.daysOfWeek.includes(date.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6);
   }
 
   // Para recorrência mensal por dia do mês

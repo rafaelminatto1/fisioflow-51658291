@@ -11,7 +11,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -25,7 +25,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Feriado {
   id: string;
@@ -42,7 +41,7 @@ export interface Feriado {
 export type FeriadoFormData = Omit<Feriado, 'id' | 'created_at' | 'updated_at'>;
 
 // Helper to convert Firestore doc to Feriado
-const convertDocToFeriado = (doc: any): Feriado => {
+const convertDocToFeriado = (doc: { id: string; data: () => Record<string, unknown> }): Feriado => {
   const data = doc.data();
   return {
     id: doc.id,

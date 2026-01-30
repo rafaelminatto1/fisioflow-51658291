@@ -76,15 +76,71 @@ interface PopulationHealthViewProps {
   defaultPeriod?: '30d' | '90d' | '180d' | '365d';
 }
 
+// Type for top conditions
+interface ConditionData {
+  condition: string;
+  count: number;
+  percentage: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+}
+
+// Type for treatment effectiveness
+interface TreatmentData {
+  treatment: string;
+  successRate: number;
+  sampleSize: number;
+  [key: string]: unknown;
+}
+
+interface TreatmentEffectivenessData {
+  treatments: TreatmentData[];
+  averageSuccessRate: number;
+  totalSamples: number;
+}
+
+// Type for retention data
+interface RetentionData {
+  overallRate: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+  byCondition: Record<string, number>;
+  riskFactors: Array<{
+    factor: string;
+    impact: number;
+  }>;
+}
+
+// Type for insights
+interface PopulationInsight {
+  type: 'opportunity' | 'risk' | 'trend';
+  category: string;
+  message: string;
+  severity?: 'low' | 'medium' | 'high';
+  actionable?: boolean;
+}
+
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
+
+// Type for population overview
+interface PopulationOverview {
+  totalPatients: number;
+  activePatients: number;
+  averageProgress: number;
+  riskDistribution: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+  topConditions: Array<{ name: string; count: number }>;
+  retentionRate: number;
+}
 
 function PopulationOverviewCard({
   overview,
   isLoading,
 }: {
-  overview?: any;
+  overview?: PopulationOverview;
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -144,7 +200,7 @@ function TopConditionsCard({
   conditions,
   isLoading,
 }: {
-  conditions?: any[];
+  conditions?: ConditionData[];
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -229,7 +285,7 @@ function TreatmentEffectivenessCard({
   effectiveness,
   isLoading,
 }: {
-  effectiveness?: any;
+  effectiveness?: TreatmentEffectivenessData;
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -288,10 +344,10 @@ function TreatmentEffectivenessCard({
             <p className="text-sm font-medium mb-3">Por Tipo de Tratamento</p>
             <div className="space-y-3">
               {byTreatmentType
-                .filter((t: any) => t.sampleSize >= 5)
-                .sort((a: any, b: any) => b.successRate - a.successRate)
+                .filter((t: TreatmentData) => t.sampleSize >= 5)
+                .sort((a: TreatmentData, b: TreatmentData) => b.successRate - a.successRate)
                 .slice(0, 5)
-                .map((treatment: any, index: number) => (
+                .map((treatment, index: number) => (
                   <div key={index} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span>{treatment.treatment}</span>
@@ -330,7 +386,7 @@ function RetentionAnalysisCard({
   retention,
   isLoading,
 }: {
-  retention?: any;
+  retention?: RetentionData;
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -429,7 +485,7 @@ function InsightsCard({
   insights,
   isLoading,
 }: {
-  insights?: any;
+  insights?: PopulationInsight[];
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -474,7 +530,7 @@ function InsightsCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {insights.slice(0, 10).map((insight: any, index: number) => (
+          {insights.slice(0, 10).map((insight, index: number) => (
             <Alert key={index} variant={insight.impact === 'high' ? 'default' : 'secondary'}>
               {getCategoryIcon(insight.category)}
               <AlertTitle className="text-sm font-medium">{insight.title}</AlertTitle>
@@ -551,7 +607,7 @@ export function PopulationHealthView({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
+          <Select value={period} onValueChange={(value: '30d' | '90d' | '180d' | '365d') => setPeriod(value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue />
             </SelectTrigger>

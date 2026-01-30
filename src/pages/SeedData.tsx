@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { addDays, subDays, startOfWeek, isWeekend, format } from 'date-fns';
 import { addDoc, collection } from 'firebase/firestore';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 
 export default function SeedData() {
     const { user, profile } = useAuth();
@@ -57,7 +57,6 @@ export default function SeedData() {
         addLog(`Iniciando o processo de seeding (Org: ${orgId})...`);
 
         try {
-            const db = getFirebaseDb();
 
             for (let i = 1; i <= 10; i++) {
                 const patientName = `Paciente Teste ${String(i).padStart(2, '0')}`;

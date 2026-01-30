@@ -9,10 +9,9 @@
  * @module lib/utils/query-helpers
  */
 
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // ==============================================================================
 // TIMEOUT & RETRY HELPERS

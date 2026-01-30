@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -26,7 +26,6 @@ import {
 } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup, linkWithPopup, unlink } from 'firebase/auth';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 export interface CalendarIntegration {
@@ -64,7 +63,7 @@ export interface CalendarSettings {
 }
 
 // Helper: Convert Firestore doc to CalendarIntegration
-const convertDocToCalendarIntegration = (doc: any): CalendarIntegration => {
+const convertDocToCalendarIntegration = (doc: { id: string; data: () => Record<string, unknown> }): CalendarIntegration => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -73,7 +72,7 @@ const convertDocToCalendarIntegration = (doc: any): CalendarIntegration => {
 };
 
 // Helper: Convert Firestore doc to SyncLog
-const convertDocToSyncLog = (doc: any): SyncLog => {
+const convertDocToSyncLog = (doc: { id: string; data: () => Record<string, unknown> }): SyncLog => {
   const data = doc.data();
   return {
     id: doc.id,

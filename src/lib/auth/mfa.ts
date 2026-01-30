@@ -7,12 +7,11 @@
  * - MFA enrollment and verification using Firebase TOTP
  */
 
-import { getFirebaseAuth, getFirebaseDb } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { multiFactor } from 'firebase/auth';
 import { doc, getDoc, updateDoc, query, where, getDocs, collection } from 'firebase/firestore';
 
 const auth = getFirebaseAuth();
-const db = getFirebaseDb();
 
 export interface MFAEnrollment {
   id: string;

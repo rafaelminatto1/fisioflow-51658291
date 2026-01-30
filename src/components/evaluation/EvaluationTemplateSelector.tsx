@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 import { Check, ChevronsUpDown, FileText, Search, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -87,7 +87,6 @@ export function EvaluationTemplateSelector({
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ['evaluation-templates-with-fields', category],
         queryFn: async () => {
-            const db = getFirebaseDb();
             let q = query(
                 collection(db, 'evaluation_forms'),
                 where('ativo', '==', true),

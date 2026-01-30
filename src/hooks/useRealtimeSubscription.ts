@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
     collection,
     query,
@@ -12,7 +12,6 @@ import {
     limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 interface UseRealtimeSubscriptionProps {
     table: string;

@@ -5,7 +5,7 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 
@@ -82,7 +82,7 @@ export async function getFirebaseDb(): Promise<Firestore> {
     // Configurar cache do Firestore
     // Em desenvolvimento, usar cache em memória para evitar problemas
     // Em produção, usar IndexedDB para persistência
-    if (import.meta.env.PROD) {
+    if (import.meta.env.PROD && typeof window !== 'undefined') {
       try {
         // Habilitar persistência com multi-tab support
         await enableMultiTabIndexedDbPersistence(dbInstance);
@@ -100,12 +100,6 @@ export async function getFirebaseDb(): Promise<Firestore> {
       // Em desenvolvimento, usar cache sem persistência
       console.log('🔥 Firestore: Running in development mode (no persistence)');
     }
-
-    // Configurar cache settings otimizados
-    // Aumentar o tamanho do cache em memória (40 MB padrão)
-    dbInstance.settings({
-      cacheSizeBytes: 40 * 1024 * 1024, // 40 MB
-    });
   }
   return dbInstance;
 }
@@ -162,7 +156,7 @@ export function useAuth(): Auth {
  * Hook React para usar o Firestore
  */
 export function useFirestore(): Firestore {
-  return getFirebaseDb();
+  return getFirestore(getFirebaseApp());
 }
 
 /**
@@ -180,25 +174,37 @@ export function isFirebaseConfigured(): boolean {
 }
 
 /**
- * Exporta as instâncias padrão
- * Nota: db agora é async devido à configuração de persistência
+ * Exportas instâncias de app e auth como singletons
  */
 export const app = getFirebaseApp();
 export const auth = getFirebaseAuth();
-export const db = getFirebaseDb(); // Promise<Firestore>
+
+/**
+ * Instância exportada do Firestore
+ * IMPORTANTE: Para garantir que a persistência seja configurada, 
+ * use preferencialmente getFirebaseDb() ou useFirestore() hook.
+ * Mas para compatibilidade com código existente que importa 'db', 
+ * exportamos a instância básica aqui.
+ */
+export const db = getFirestore(app);
+
 export const storage = getFirebaseStorage();
 export const functions = getFirebaseFunctions();
 
 /**
- * Versão síncrona para compatibilidade (use com cautela)
- * A persistência pode não estar inicializada
+ * Inicializa a persistência do Firestore em background
+ * Não bloqueia a inicialização da aplicação
  */
-export const dbSync = getFirestore(getFirebaseApp());
+if (typeof window !== 'undefined' && import.meta.env.PROD) {
+  getFirebaseDb().catch((err) => {
+    console.warn('Firestore persistence initialization deferred:', err);
+  });
+}
 
 /**
  * Re-export Firestore functions for convenience
  */
-export { doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc };
+export { doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc };
 
 /**
  * Re-export Functions helper for convenience

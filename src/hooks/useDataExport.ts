@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   doc,
   getDoc,
@@ -18,8 +18,6 @@ import {
   query,
   where
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 export function useDataExport() {
   const [isExporting, setIsExporting] = useState(false);

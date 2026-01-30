@@ -15,7 +15,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -32,10 +32,30 @@ import {
 import crypto from 'crypto';
 import type { MLTrainingData } from '@/types/patientAnalytics';
 
-const db = getFirebaseDb();
 
 // Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) =>
+  ({ id: doc.id, ...doc.data() });
+
+interface AppointmentFirestore {
+  status?: string;
+  [key: string]: unknown;
+}
+
+interface SessionFirestore {
+  patient_satisfaction?: number;
+  session_date?: string;
+  pain_level_before?: number;
+  pain_level_after?: number;
+  functional_score_before?: number;
+  functional_score_after?: number;
+  [key: string]: unknown;
+}
+
+interface PathologyFirestore {
+  status?: string;
+  [key: string]: unknown;
+}
 
 // Hash function for anonymization
 function hashPatientId(patientId: string): string {
@@ -122,7 +142,7 @@ export async function collectPatientTrainingData(patientId: string) {
 
   // Calculate metrics
   const totalSessions = sessions.length;
-  const completedAppointments = appointments.filter((a: any) => a.status === 'concluido');
+  const completedAppointments = appointments.filter((a: AppointmentFirestore) => a.status === 'concluido');
   const totalAppointments = appointments.length;
   const attendanceRate = totalAppointments > 0 ? completedAppointments.length / totalAppointments : 0;
 
@@ -139,7 +159,7 @@ export async function collectPatientTrainingData(patientId: string) {
     ? ((finalFunction - initialFunction) / (100 - (initialFunction || 0))) * 100
     : 0;
 
-  const avgSatisfaction = sessions.reduce((sum: number, s: any) => sum + (s.patient_satisfaction || 0), 0) / (sessions.length || 1);
+  const avgSatisfaction = sessions.reduce((sum: number, s: SessionFirestore) => sum + (s.patient_satisfaction || 0), 0) / (sessions.length || 1);
 
   // Calculate session frequency (sessions per week)
   const firstDate = sessions[0]?.session_date ? new Date(sessions[0].session_date) : new Date();
@@ -155,7 +175,7 @@ export async function collectPatientTrainingData(patientId: string) {
     age_group: getAgeGroup(patient.birth_date),
     gender: patient.gender || 'unknown',
     primary_pathology: pathologies[0]?.pathology_name || 'unknown',
-    chronic_condition: pathologies.some((p: any) => p.status === 'cronica'),
+    chronic_condition: pathologies.some((p: PathologyFirestore) => p.status === 'cronica'),
     baseline_pain_level: initialPain || 0,
     baseline_functional_score: initialFunction || 0,
     treatment_type: 'physical_therapy', // Default

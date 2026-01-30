@@ -12,7 +12,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDoc,
@@ -24,7 +24,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 interface ApplyTemplateParams {
   templateId: string;
@@ -77,8 +76,19 @@ export const useApplyExerciseTemplate = () => {
 
       // 4. Filtrar exercícios pela fase atual (se aplicável)
       let filteredItems = templateItems;
+
+      interface ExerciseTemplateItem {
+        exercise_id: string;
+        sets: number;
+        repetitions: number;
+        duration: number;
+        notes?: string;
+        week_start: number | null;
+        week_end: number | null;
+      }
+
       if (adjustWeeks && template.category === 'pos_operatorio' && surgeryDate) {
-        filteredItems = templateItems.filter((item: any) => {
+        filteredItems = templateItems.filter((item: ExerciseTemplateItem) => {
           if (item.week_start === null && item.week_end === null) return true;
           if (item.week_start !== null && currentWeek < item.week_start) return false;
           if (item.week_end !== null && currentWeek > item.week_end) return false;
@@ -113,7 +123,7 @@ export const useApplyExerciseTemplate = () => {
 
       // 6. Adicionar exercícios ao plano
       if (filteredItems.length > 0) {
-        const planItems = filteredItems.map((item: any, index: number) => ({
+        const planItems = filteredItems.map((item: ExerciseTemplateItem, index: number) => ({
           plan_id: planRef.id,
           exercise_id: item.exercise_id,
           order_index: index,

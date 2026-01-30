@@ -220,7 +220,7 @@ export const useCreatePatient = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (patient: any) => {
+    mutationFn: async (patient: Record<string, unknown>) => {
       const { data, error } = await PatientService.createPatient(patient);
 
       if (error) throw error;
@@ -247,7 +247,7 @@ export const useUpdatePatient = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: any & { id: string }) => {
+    mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
       const { data, error } = await PatientService.updatePatient(id, updates);
 
       if (error) throw error;

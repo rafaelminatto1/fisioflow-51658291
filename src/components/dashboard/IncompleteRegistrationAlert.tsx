@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, limit, onSnapshot } from 'firebase/firestore';
 import { PatientHelpers } from '@/types';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,6 @@ export const IncompleteRegistrationAlert: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const db = getFirebaseDb();
 
     const q = query(
       collection(db, 'patients'),

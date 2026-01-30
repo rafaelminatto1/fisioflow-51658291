@@ -2,6 +2,15 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, differenceInYears, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+
+// Type for Supabase query chain
+type SupabaseQuery = {
+  select: (columns: string) => SupabaseQuery;
+  update: (data: Record<string, unknown>) => SupabaseQuery;
+  eq: (column: string, value: unknown) => SupabaseQuery;
+  neq: (column: string, value: unknown) => SupabaseQuery;
+  single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
+};
 import {
   Dialog,
   DialogContent,
@@ -55,11 +64,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
 import { PatientService } from '@/services/patientService';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
 
-const db = getFirebaseDb();
 
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
@@ -140,7 +148,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     queryKey: ['appointments-for-conflict'],
     queryFn: async () => {
       const { data, error } = await (supabase
-        .from('appointments') as any)
+        .from('appointments') as unknown as SupabaseQuery)
         .select('id, patient_id, appointment_date, appointment_time, duration, status')
         .neq('status', 'cancelado');
 
@@ -184,7 +192,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       };
     }) => {
       const { data, error } = await (supabase
-        .from('appointments') as any)
+        .from('appointments') as unknown as SupabaseQuery)
         .update(updates)
         .eq('id', appointmentId)
         .select()
@@ -274,8 +282,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         .then(({ data }) => {
           if (data) {
             setPatientDetails({
-              phone: (data as any).phone || undefined,
-              birthDate: (data as any).birth_date || undefined,
+              phone: (data as { phone?: string | null }).phone || undefined,
+              birthDate: (data as { birth_date?: string | null }).birth_date || undefined,
             });
           }
         })
@@ -299,7 +307,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         const snap = await getDocs(q);
         const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (data) {
-          setTherapists(data.map((p: any) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
+          setTherapists(data.map((p: { id: string; full_name?: string }) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
         }
         therapistsLoadedRef.current = true;
       } catch {

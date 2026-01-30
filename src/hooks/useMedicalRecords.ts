@@ -34,7 +34,7 @@ export function useCreateMedicalRecord() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (record: any) => {
+    mutationFn: async (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at'>) => {
       const response = await clinicalApi.createMedicalRecord({
         patientId: record.patient_id,
         type: 'evolution',
@@ -44,7 +44,7 @@ export function useCreateMedicalRecord() {
       });
       return response.data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: { id: string; patient_id?: string }) => {
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
       if (data?.patient_id) {
         queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
@@ -73,7 +73,7 @@ export function useUpdateMedicalRecord() {
       const response = await clinicalApi.updateMedicalRecord(id, data);
       return { ...response.data, patient_id: patientId };
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: { id: string; patient_id: string }) => {
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
       queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
       toast({

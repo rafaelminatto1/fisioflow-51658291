@@ -19,7 +19,7 @@ import {
   refreshAccessToken,
   SyncResult,
 } from '@/lib/calendar/google-sync';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   doc,
   getDoc,
@@ -28,7 +28,6 @@ import {
   updateDoc
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // =====================================================================
 // QUERY KEYS

@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -16,7 +16,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Recibo {
   id: string;
@@ -33,7 +32,7 @@ export interface Recibo {
 }
 
 // Helper to convert Firestore doc to Recibo
-const convertDocToRecibo = (doc: any): Recibo => {
+const convertDocToRecibo = (doc: { id: string; data: () => Record<string, unknown> }): Recibo => {
   const data = doc.data();
   return {
     id: doc.id,

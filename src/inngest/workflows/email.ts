@@ -9,6 +9,16 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, EmailSendPayload, InngestStep } from '../../lib/inngest/types.js';
 import { ResendService } from '../../lib/email/index.js';
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface EmailResult {
+  success: boolean;
+  messageId?: string;
+  error?: Error | { message: string; code?: string | number };
+}
+
 export const sendEmailWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-send-email',
@@ -21,7 +31,7 @@ export const sendEmailWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: EmailSendPayload }; step: InngestStep }) => {
     const { to, subject, html, text, from, replyTo, tags } = event.data;
 
-    const result = (await step.run('send-email', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+    const result = (await step.run('send-email', async (): Promise<EmailResult> => {
       return await ResendService.sendEmail({
         to,
         subject,
@@ -31,7 +41,7 @@ export const sendEmailWorkflow = inngest.createFunction(
         replyTo,
         tags,
       });
-    })) as { success: boolean; messageId?: string; error?: any };
+    })) as EmailResult;
 
     return {
       success: result.success,
@@ -58,7 +68,7 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, therapistName, date, time, location, onlineMeetingUrl, organizationName } = event.data;
 
-    const result = (await step.run('send-confirmation', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+    const result = (await step.run('send-confirmation', async (): Promise<EmailResult> => {
       return await ResendService.sendAppointmentConfirmation(
         to as string,
         {
@@ -72,7 +82,7 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
         },
         organizationName as string
       );
-    })) as { success: boolean; messageId?: string; error?: any };
+    })) as EmailResult;
 
     return {
       success: result.success,
@@ -99,7 +109,7 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
-    const result = (await step.run('send-reminder', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+    const result = (await step.run('send-reminder', async (): Promise<EmailResult> => {
       return await ResendService.sendAppointmentReminder(
         to as string,
         {
@@ -112,7 +122,7 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
         },
         organizationName as string
       );
-    })) as { success: boolean; messageId?: string; error?: any };
+    })) as EmailResult;
 
     return {
       success: result.success,
@@ -139,7 +149,7 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, organizationName, therapistName } = event.data;
 
-    const result = (await step.run('send-birthday-greeting', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+    const result = (await step.run('send-birthday-greeting', async (): Promise<EmailResult> => {
       return await ResendService.sendBirthdayGreeting(
         to as string,
         {
@@ -149,7 +159,7 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
         },
         organizationName as string
       );
-    })) as { success: boolean; messageId?: string; error?: any };
+    })) as EmailResult;
 
     return {
       success: result.success,
@@ -176,7 +186,7 @@ export const sendReactivationEmailWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, organizationName } = event.data;
 
-    const result = (await step.run('send-reactivation', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+    const result = (await step.run('send-reactivation', async (): Promise<EmailResult> => {
       return await ResendService.sendReactivationEmail(
         to as string,
         {
@@ -184,7 +194,7 @@ export const sendReactivationEmailWorkflow = inngest.createFunction(
           organizationName: organizationName as string,
         }
       );
-    })) as { success: boolean; messageId?: string; error?: any };
+    })) as EmailResult;
 
     return {
       success: result.success,
@@ -220,7 +230,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
       newPatients,
     } = event.data;
 
-    const result = (await step.run('send-daily-report', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+    const result = (await step.run('send-daily-report', async (): Promise<EmailResult> => {
       return await ResendService.sendDailyReport(
         to as string,
         {
@@ -234,7 +244,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
         },
         organizationName as string
       );
-    })) as { success: boolean; messageId?: string; error?: any };
+    })) as EmailResult;
 
     return {
       success: result.success,

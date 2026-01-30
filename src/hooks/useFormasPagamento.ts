@@ -11,7 +11,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -24,7 +24,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface FormaPagamento {
   id: string;
@@ -41,7 +40,7 @@ export interface FormaPagamento {
 export type FormaPagamentoFormData = Pick<FormaPagamento, 'nome' | 'tipo' | 'taxa_percentual' | 'dias_recebimento' | 'ativo'>;
 
 // Helper to convert Firestore doc to FormaPagamento
-const convertDocToFormaPagamento = (doc: any): FormaPagamento => {
+const convertDocToFormaPagamento = (doc: { id: string; data: () => Record<string, unknown> }): FormaPagamento => {
   const data = doc.data();
   return {
     id: doc.id,

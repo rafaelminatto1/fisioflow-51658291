@@ -12,7 +12,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -34,7 +34,41 @@ import {
   TreatmentInsight,
 } from '@/lib/ai/recommendations';
 
-const db = getFirebaseDb();
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface Appointment {
+  id: string;
+  patient_id?: string;
+  date?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+interface Evolution {
+  id: string;
+  patient_id?: string;
+  date?: string;
+  pain_level?: number | null;
+  evolution_score?: number | null;
+  [key: string]: unknown;
+}
+
+interface Patient {
+  id: string;
+  full_name?: string;
+  [key: string]: unknown;
+}
+
+interface Goal {
+  id: string;
+  title?: string;
+  target_date?: string;
+  status?: string;
+  [key: string]: unknown;
+}
 
 // =====================================================================
 // QUERY KEYS
@@ -44,13 +78,15 @@ const AI_KEYS = {
   all: ['ai'] as const,
   patientRecommendations: (patientId: string) => [...AI_KEYS.all, 'patient', patientId] as const,
   allRecommendations: () => [...AI_KEYS.all, 'recommendations'] as const,
-  scheduleRecommendations: (request: any) => [...AI_KEYS.all, 'schedule', request] as const,
+  scheduleRecommendations: (request: ScheduleRecommendation) => [...AI_KEYS.all, 'schedule', request] as const,
   treatmentInsights: (patientId: string) => [...AI_KEYS.all, 'insights', patientId] as const,
   nextAppointment: (patientId: string) => [...AI_KEYS.all, 'next', patientId] as const,
 };
 
 // Helper to convert doc to data
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => {
+  return { id: doc.id, ...doc.data() };
+};
 
 // =====================================================================
 // PATIENT RECOMMENDATIONS
@@ -92,16 +128,16 @@ export function usePatientRecommendations(patientId: string) {
       const patientData = {
         id: patient.id,
         name: patient.full_name,
-        lastAppointment: appointments?.find((a: any) => a.status === 'completed')?.date,
-        appointmentCount: appointments?.filter((a: any) => a.status === 'completed').length || 0,
-        missedAppointments: appointments?.filter((a: any) => a.status === 'no_show' || a.status === 'cancelled').length || 0,
-        completedAppointments: appointments?.filter((a: any) => a.status === 'completed').length || 0,
+        lastAppointment: appointments?.find((a) => a.status === 'completed')?.date,
+        appointmentCount: appointments?.filter((a) => a.status === 'completed').length || 0,
+        missedAppointments: appointments?.filter((a) => a.status === 'no_show' || a.status === 'cancelled').length || 0,
+        completedAppointments: appointments?.filter((a) => a.status === 'completed').length || 0,
         painLevelHistory: evolutions
-          ?.filter((e: any) => e.pain_level !== null)
-          .map((e: any) => ({ date: e.date, level: e.pain_level || 0 })) || [],
+          ?.filter((e) => e.pain_level !== null)
+          .map((e) => ({ date: e.date || '', level: e.pain_level || 0 })) || [],
         evolutionScores: evolutions
-          ?.filter((e: any) => e.evolution_score !== null)
-          .map((e: any) => ({ date: e.date, score: e.evolution_score || 0 })) || [],
+          ?.filter((e) => e.evolution_score !== null)
+          .map((e) => ({ date: e.date || '', score: e.evolution_score || 0 })) || [],
       };
 
       return generatePatientRecommendations(patientData);
@@ -133,7 +169,7 @@ export function useAllPatientRecommendations(options?: {
 
       // Fetch all relevant data in parallel
       const patientsWithData = await Promise.all(
-        patients.map(async (patient: any) => {
+        patients.map(async (patient: Patient) => {
           const [appointmentsSnap, evolutionsSnap] = await Promise.all([
             getDocs(query(
               collection(db, 'appointments'),
@@ -155,16 +191,16 @@ export function useAllPatientRecommendations(options?: {
           return {
             id: patient.id,
             name: patient.full_name,
-            lastAppointment: appointments?.find((a: any) => a.status === 'completed')?.date,
-            appointmentCount: appointments?.filter((a: any) => a.status === 'completed').length || 0,
-            missedAppointments: appointments?.filter((a: any) => a.status === 'no_show' || a.status === 'cancelled').length || 0,
-            completedAppointments: appointments?.filter((a: any) => a.status === 'completed').length || 0,
+            lastAppointment: appointments?.find((a: Appointment) => a.status === 'completed')?.date,
+            appointmentCount: appointments?.filter((a: Appointment) => a.status === 'completed').length || 0,
+            missedAppointments: appointments?.filter((a: Appointment) => a.status === 'no_show' || a.status === 'cancelled').length || 0,
+            completedAppointments: appointments?.filter((a: Appointment) => a.status === 'completed').length || 0,
             painLevelHistory: evolutions
-              ?.filter((e: any) => e.pain_level !== null)
-              .map((e: any) => ({ date: e.date, level: e.pain_level || 0 })) || [],
+              ?.filter((e: Evolution) => e.pain_level !== null)
+              .map((e: Evolution) => ({ date: e.date || '', level: e.pain_level || 0 })) || [],
             evolutionScores: evolutions
-              ?.filter((e: any) => e.evolution_score !== null)
-              .map((e: any) => ({ date: e.date, score: e.evolution_score || 0 })) || [],
+              ?.filter((e: Evolution) => e.evolution_score !== null)
+              .map((e: Evolution) => ({ date: e.date || '', score: e.evolution_score || 0 })) || [],
           };
         })
       );
@@ -265,11 +301,11 @@ export function useTreatmentInsights(patientId: string) {
       const evolutionData = {
         patientId: patient.id,
         patientName: patient.full_name,
-        scores: evolutions?.map((e: any) => ({
-          date: e.date,
+        scores: evolutions?.map((e: Evolution) => ({
+          date: e.date || '',
           score: e.evolution_score || 0,
         })) || [],
-        goals: goals?.map((g: any) => ({
+        goals: goals?.map((g: Goal) => ({
           id: g.id,
           title: g.title,
           target: g.target_value,

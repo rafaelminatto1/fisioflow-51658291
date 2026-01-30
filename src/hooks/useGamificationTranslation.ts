@@ -31,11 +31,11 @@ export function useGamificationTranslation(locale?: SupportedLocale) {
     const fullKey = `gamification.${key}` as const;
 
     // Tentar usar a tradução do sistema principal
-    let text = translate(fullKey as any, params);
+    let text = translate(fullKey as `gamification.${string}`, params);
 
     // Se não encontrou (retornou a chave), tentar sem prefixo
     if (text === fullKey) {
-      text = translate(key as any, params);
+      text = translate(key as `gamification.${string}`, params);
     }
 
     return text;

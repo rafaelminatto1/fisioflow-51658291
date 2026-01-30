@@ -8,7 +8,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -20,7 +20,6 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // Definição das fichas padrão
 export const STANDARD_FORMS = {
@@ -627,7 +626,20 @@ export function useCreateStandardForm() {
       });
 
       // Criar os campos
-      const fieldsToAdd = formConfig.campos.map(campo => ({
+      interface FormFieldConfig {
+        rotulo: string;
+        pergunta: string;
+        tipo_campo: string;
+        secao: string;
+        ordem: number;
+        obrigatorio: boolean;
+        descricao?: string;
+        opcoes?: string[];
+        minimo?: number;
+        maximo?: number;
+      }
+
+      const fieldsToAdd = formConfig.campos.map((campo: FormFieldConfig) => ({
         form_id: formRef.id,
         rotulo: campo.rotulo,
         pergunta: campo.pergunta,
@@ -635,10 +647,10 @@ export function useCreateStandardForm() {
         secao: campo.secao,
         ordem: campo.ordem,
         obrigatorio: campo.obrigatorio,
-        descricao: (campo as any).descricao || null,
-        opcoes: (campo as any).opcoes ? JSON.stringify((campo as any).opcoes) : null,
-        minimo: (campo as any).minimo || null,
-        maximo: (campo as any).maximo || null,
+        descricao: campo.descricao || null,
+        opcoes: campo.opcoes ? JSON.stringify(campo.opcoes) : null,
+        minimo: campo.minimo || null,
+        maximo: campo.maximo || null,
       }));
 
       // Firestore doesn't support batch insert, so we insert each field

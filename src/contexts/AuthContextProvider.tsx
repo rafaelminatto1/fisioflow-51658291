@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
-import { getFirebaseDb, doc, getDoc, setDoc } from '@/integrations/firebase/app';
-import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore } from 'firebase/firestore'; // Import these explicitly to match usage pattern
+import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
 import { profileApi } from '@/integrations/firebase/functions'; // Use Firebase Functions API
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
 import { logger } from '@/lib/errors/logger';
@@ -20,15 +19,63 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { toast } = useToast();
 
   /**
+   * Obtém ou cria a organização padrão para o usuário
+   * Busca por uma organização ativa existente ou cria uma nova
+   */
+  const getOrCreateDefaultOrganization = async (): Promise<string | null> => {
+    try {
+      // Buscar a primeira organização ativa disponível
+      const orgQuery = query(
+        collection(db, 'organizations'),
+        where('active', '==', true),
+        limit(1)
+      );
+      const orgSnapshot = await getDocs(orgQuery);
+
+      if (!orgSnapshot.empty) {
+        // Retornar a primeira organização encontrada
+        return orgSnapshot.docs[0].id;
+      }
+
+      // Se não existir, criar a organização padrão
+      const now = new Date().toISOString();
+      const orgRef = await addDoc(collection(db, 'organizations'), {
+        name: 'Clínica Padrão',
+        slug: 'clinica-padrao',
+        active: true,
+        settings: {
+          timezone: 'America/Sao_Paulo',
+          language: 'pt-BR',
+        },
+        created_at: now,
+        updated_at: now,
+      });
+
+      logger.info('Default organization created:', orgRef.id, 'AuthContextProvider');
+      return orgRef.id;
+    } catch (err) {
+      logger.error('Erro ao obter ou criar organização padrão', err, 'AuthContextProvider');
+      return null;
+    }
+  };
+
+  /**
    * Garante que o perfil exista no Firestore (defensivo)
    */
   const ensureProfile = async (firebaseUser: User) => {
     try {
-      const db = getFirebaseDb();
-      const profileRef = docRef(db, 'profiles', firebaseUser.uid);
-      const profileSnap = await getDocFromFirestore(profileRef);
+      const profileRef = doc(db, 'profiles', firebaseUser.uid);
+      const profileSnap = await getDoc(profileRef);
 
       if (!profileSnap.exists()) {
+        // Obter ou criar organização padrão
+        const organizationId = await getOrCreateDefaultOrganization();
+
+        if (!organizationId) {
+          logger.error('Não foi possível obter ou criar organização para o usuário', null, 'AuthContextProvider');
+          return null;
+        }
+
         // Criar perfil se não existir
         await setDocToFirestore(profileRef, {
           user_id: firebaseUser.uid,
@@ -36,7 +83,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           email: firebaseUser.email || null,
           avatar_url: firebaseUser.photoURL || null,
           phone: null,
-          organization_id: 'default-org', // TEMPORÁRIO: Usar 'default-org' para single-clinic mode
+          organization_id: organizationId,
           onboarding_completed: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -50,7 +97,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           email: firebaseUser.email || undefined,
           role: 'fisioterapeuta', // Default role
           phone: undefined,
-          organization_id: 'default-org',
+          organization_id: organizationId,
           onboarding_completed: false,
           is_active: true,
           created_at: new Date().toISOString(),
@@ -74,12 +121,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Tentar sincronizar organization_id com PostgreSQL em background
       if (profile) {
         profileApi.getCurrent().then(pgProfile => {
-          if (pgProfile?.organization_id && (!profile.organization_id || profile.organization_id === 'default-org')) {
+          if (pgProfile?.organization_id && (!profile.organization_id || profile.organization_id !== pgProfile.organization_id)) {
             console.log('[fetchProfile] Syncing organization_id from PostgreSQL:', pgProfile.organization_id);
             // Atualizar Firestore com organization_id do PostgreSQL
-            const db = getFirebaseDb();
-            const profileRef = docRef(db, 'profiles', firebaseUser.uid);
-            setDocToFirestore(profileRef, { organization_id: pgProfile.organization_id }, { merge: true });
+            const profileRef = doc(db, 'profiles', firebaseUser.uid);
+            setDoc(profileRef, { organization_id: pgProfile.organization_id }, { merge: true });
           }
         }).catch(err => {
           console.warn('[fetchProfile] Could not sync organization_id from PostgreSQL:', err);
@@ -206,11 +252,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return { error: { message: 'Usuário não autenticado' } };
       }
 
-      const db = getFirebaseDb();
-      const profileRef = docRef(db, 'profiles', user.uid);
-
-      // Import updateDoc usage if needed, or use specific import
-      const { updateDoc } = await import('firebase/firestore');
+      const profileRef = doc(db, 'profiles', user.uid);
       await updateDoc(profileRef, {
         ...updates,
         updated_at: new Date().toISOString()

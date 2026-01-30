@@ -6,12 +6,11 @@
  * - supabase.from('marketing_exports').insert() → Firestore addDoc()
  */
 
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const db = getFirebaseDb();
 const storage = getFirebaseStorage();
 
 export interface MarketingExportParams {

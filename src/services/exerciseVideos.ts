@@ -7,7 +7,7 @@
  * - supabase.auth.getUser() → Firebase Auth
  */
 
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
 import {
   collection,
@@ -29,7 +29,6 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 
-const db = getFirebaseDb();
 const storage = getFirebaseStorage();
 const auth = getFirebaseAuth();
 

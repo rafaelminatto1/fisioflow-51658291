@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import type { Dictionary } from './common';
 
 // ============================================================================
 // COMMON TYPES
@@ -214,7 +215,7 @@ export interface PatientChallengeProgress {
 export interface GamificationSetting {
   id?: string;
   key: string;
-  value: any;
+  value: Dictionary;
   description?: string;
 }
 
@@ -240,7 +241,7 @@ export interface ShopItem {
   cost: number;
   type: ShopItemType;
   icon?: string;
-  metadata?: Record<string, any>;
+  metadata?: Dictionary;
   is_active: boolean;
 }
 

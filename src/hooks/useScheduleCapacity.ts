@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   addDoc,
@@ -23,7 +23,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 const capacitySchema = z.object({
   day_of_week: z.number().min(0).max(6),
@@ -46,7 +45,7 @@ export interface ScheduleCapacity {
 }
 
 // Helper to convert doc
-const convertDoc = (doc: any): ScheduleCapacity => ({ id: doc.id, ...doc.data() } as ScheduleCapacity);
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): ScheduleCapacity => ({ id: doc.id, ...doc.data() } as ScheduleCapacity);
 
 export function useScheduleCapacity() {
   const { toast } = useToast();

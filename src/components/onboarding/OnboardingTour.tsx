@@ -8,7 +8,7 @@ import {
   MessageSquare, CheckCircle, ArrowRight, X, Heart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseAuth, getFirebaseDb, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore } from 'firebase/firestore';
 
@@ -82,7 +82,6 @@ export const OnboardingTour = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const auth = getFirebaseAuth();
-  const db = getFirebaseDb();
 
   // Check onboarding status
   const { data: onboardingData } = useQuery({

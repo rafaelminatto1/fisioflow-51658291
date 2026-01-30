@@ -10,7 +10,7 @@
  * - Joins replaced with separate queries and manual merging
  */
 
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import {
     collection,
@@ -29,7 +29,6 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';
 
-const db = getFirebaseDb();
 
 // Types matching the DB schema manually for now (until types.ts is regenerated)
 export type GoalProfileStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';

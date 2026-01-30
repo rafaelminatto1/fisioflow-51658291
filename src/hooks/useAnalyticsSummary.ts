@@ -12,7 +12,7 @@ import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { queryConfigs } from "@/lib/queryConfig";
 import { logger } from "@/lib/errors/logger";
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -20,7 +20,6 @@ import {
   where,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 interface AnalyticsSummary {
   totalAppointments: number;

@@ -67,7 +67,6 @@ export function ClinicalTestCombobox({
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-combobox'],
         queryFn: async () => {
-            const db = getFirebaseDb();
             const q = query(
                 collection(db, 'clinical_test_templates'),
                 orderBy('name')

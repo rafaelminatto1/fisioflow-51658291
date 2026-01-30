@@ -10,7 +10,6 @@ export function AppointmentAnalytics() {
   const { data: dailyData } = useQuery({
     queryKey: ["appointment-daily-analytics"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const last30Days = eachDayOfInterval({
         start: subDays(new Date(), 29),
         end: new Date(),
@@ -42,7 +41,6 @@ export function AppointmentAnalytics() {
   const { data: statusData } = useQuery({
     queryKey: ["appointment-status-analytics"],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const thirtyDaysAgo = subDays(new Date(), 30);
       const statuses = ["agendado", "confirmado", "concluido", "cancelado"];
 

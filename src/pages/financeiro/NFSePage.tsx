@@ -31,11 +31,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 
-const db = getFirebaseDb();
 
 interface NFSe {
   id: string;
@@ -505,7 +504,6 @@ export default function NFSePage() {
     mutationFn: async (data: typeof formData) => {
       // Buscar dados do prestador
       if (!user) throw new Error('Not authenticated');
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profile = profileDoc.exists() ? profileDoc.data() : null;
 

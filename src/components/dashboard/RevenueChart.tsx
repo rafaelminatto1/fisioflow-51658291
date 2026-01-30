@@ -1,6 +1,6 @@
 // Gráfico de receita em tempo real
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -25,7 +25,6 @@ export function RevenueChart() {
 
   const loadRevenueData = useCallback(async () => {
     try {
-      const db = getFirebaseDb();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7); // Últimos 7 dias
 

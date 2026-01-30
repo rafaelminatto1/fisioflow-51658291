@@ -114,11 +114,11 @@ All colors MUST be HSL.
     --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary - Slightly brighter in dark mode */
-    --primary: 210 90% 55%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --primary-hover: 210 90% 60%;
-    --primary-glow: 210 95% 65%;
+    /* Primary - Slightly brighter in dark mode (WCAG AA compliant - 4.5:1 contrast) */
+    --primary: 210 95% 38%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 95% 33%;
+    --primary-glow: 210 95% 43%;
 
     /* Secondary - Dark grays */
     --secondary: 217.2 32.6% 17.5%;

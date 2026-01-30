@@ -10,7 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -23,7 +23,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface PrecadastroToken {
   id: string;
@@ -53,7 +52,7 @@ export interface Precadastro {
   status: string;
   converted_at: string | null;
   patient_id: string | null;
-  dados_adicionais: Record<string, any> | null;
+  dados_adicionais: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
   token_nome?: string; // Joined field
@@ -106,18 +105,18 @@ export function usePrecadastros() {
       const precadastros = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Fetch token names for each precadastro
-      const tokenIds = precadastros.map((p: any) => p.token_id).filter(Boolean);
+      const tokenIds = precadastros.map((p: Precadastro) => p.token_id).filter((id): id is string => id !== null);
       const tokenMap = new Map<string, string>();
 
       await Promise.all([...new Set(tokenIds)].map(async (tokenId) => {
         const tokenDoc = await getDoc(doc(db, 'precadastro_tokens', tokenId));
         if (tokenDoc.exists()) {
-          tokenMap.set(tokenId, tokenDoc.data().nome);
+          tokenMap.set(tokenId, tokenDoc.data().nome as string);
         }
       }));
 
       // Attach token names
-      return precadastros.map((p: any) => ({
+      return precadastros.map((p: Precadastro) => ({
         ...p,
         token_nome: tokenMap.get(p.token_id),
       })) as Precadastro[];
@@ -159,8 +158,8 @@ export function useCreatePrecadastroToken() {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
       toast.success('Link de pré-cadastro criado!');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao criar link: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao criar link: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   });
 }
@@ -177,8 +176,8 @@ export function useUpdatePrecadastroToken() {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
       toast.success('Link atualizado!');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao atualizar: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   });
 }
@@ -199,8 +198,8 @@ export function useUpdatePrecadastro() {
       queryClient.invalidateQueries({ queryKey: ['precadastros'] });
       toast.success('Pré-cadastro atualizado!');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao atualizar: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   });
 }

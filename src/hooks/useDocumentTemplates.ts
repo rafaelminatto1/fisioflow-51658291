@@ -8,7 +8,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -21,7 +21,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // Atestado Templates
 export interface AtestadoTemplate {
@@ -57,7 +56,7 @@ export interface ContratoTemplate {
 export type ContratoTemplateFormData = Partial<Pick<ContratoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>> & Pick<ContratoTemplate, 'nome' | 'descricao' | 'conteudo' | 'tipo' | 'ativo'>;
 
 // Helper to convert Firestore doc to AtestadoTemplate
-const convertDocToAtestadoTemplate = (doc: any): AtestadoTemplate => {
+const convertDocToAtestadoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): AtestadoTemplate => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -66,7 +65,7 @@ const convertDocToAtestadoTemplate = (doc: any): AtestadoTemplate => {
 };
 
 // Helper to convert Firestore doc to ContratoTemplate
-const convertDocToContratoTemplate = (doc: any): ContratoTemplate => {
+const convertDocToContratoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ContratoTemplate => {
   const data = doc.data();
   return {
     id: doc.id,

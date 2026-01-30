@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth, getFirebaseDb, doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, addDoc } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, addDoc } from '@/integrations/firebase/app';
 import { doc as docRef, getDoc as getDocFromFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, addDoc as addDocToFirestore } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
@@ -44,7 +44,6 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const { toast } = useToast();
   const { currentOrganization } = useOrganizations();
   const auth = getFirebaseAuth();
-  const db = getFirebaseDb();
 
   const appointmentId = propAppointmentId || params.appointmentId;
   const [patientId, setPatientId] = useState(propPatientId || '');
@@ -52,16 +51,16 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [patient, setPatient] = useState<any | null>(null);
+  const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
 
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [activeTab, setActiveTab] = useState('evolution');
 
   // Patient data
   // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
-  const [surgeries, setSurgeries] = useState<any[]>([]);
-  const [pathologies, setPathologies] = useState<any[]>([]);
-  const [goals, setGoals] = useState<any[]>([]);
+  const [surgeries, setSurgeries] = useState<Record<string, unknown>[]>([]);
+  const [pathologies, setPathologies] = useState<Record<string, unknown>[]>([]);
+  const [goals, setGoals] = useState<Record<string, unknown>[]>([]);
 
   // SOAP Form State
   const [soapData, setSoapData] = useState({

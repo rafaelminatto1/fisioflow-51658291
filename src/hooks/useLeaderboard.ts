@@ -17,7 +17,7 @@ import {
   EngagementData,
 } from '@/types/gamification';
 import { downloadCSV } from '@/utils/csvExport';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -26,8 +26,6 @@ import {
   orderBy,
   limit,
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES
@@ -101,13 +99,13 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       // Apply period filter (client-side for date range + sort combo)
       if (filters.period === 'week') {
         const weekAgo = subDays(new Date(), 7);
-        gamificationData = gamificationData.filter((p: any) => {
+        gamificationData = gamificationData.filter((p) => {
           const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
           return lastActivity && lastActivity >= weekAgo;
         });
       } else if (filters.period === 'month') {
         const monthAgo = subDays(new Date(), 30);
-        gamificationData = gamificationData.filter((p: any) => {
+        gamificationData = gamificationData.filter((p) => {
           const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
           return lastActivity && lastActivity >= monthAgo;
         });
@@ -117,8 +115,8 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       const totalCount = gamificationData.length;
 
       // Fetch patient names for search filter and display
-      const patientIds = gamificationData.map((p: any) => p.id);
-      const patientsMap: Record<string, any> = {};
+      const patientIds = gamificationData.map((p) => p.id);
+      const patientsMap: Record<string, unknown> = {};
 
       // Fetch patient data in batches (Firestore limitation)
       for (const patientId of patientIds) {
@@ -136,17 +134,17 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       // Apply search filter
       if (filters.search && filters.search.trim()) {
         const searchLower = filters.search.trim().toLowerCase();
-        gamificationData = gamificationData.filter((p: any) => {
-          const patientName = patientsMap[p.id]?.full_name || '';
+        gamificationData = gamificationData.filter((p: { id: string; [key: string]: unknown }) => {
+          const patientName = (patientsMap[p.id]?.full_name as string) || '';
           return patientName.toLowerCase().includes(searchLower);
         });
       }
 
       // Re-sort after filtering (since we fetched all sorted data initially)
       const descOrder = filters.order === 'desc';
-      gamificationData.sort((a: any, b: any) => {
-        const aVal = a[sortColumn] || 0;
-        const bVal = b[sortColumn] || 0;
+      gamificationData.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        const aVal = (a[sortColumn] as number) || 0;
+        const bVal = (b[sortColumn] as number) || 0;
         return descOrder ? bVal - aVal : aVal - bVal;
       });
 
@@ -158,8 +156,17 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
         return { leaderboard: [], totalCount };
       }
 
+      interface GamificationData {
+        id: string;
+        level: number;
+        total_points?: number;
+        current_streak?: number;
+        longest_streak?: number;
+        last_activity_date?: string;
+      }
+
       // Get achievement counts for paginated patients
-      const paginatedPatientIds = paginatedData.map((p: any) => p.id);
+      const paginatedPatientIds = paginatedData.map((p: GamificationData) => p.id);
       const achievementMap: Record<string, number> = {};
 
       for (const patientId of paginatedPatientIds) {
@@ -172,7 +179,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       }
 
       // Transform data to leaderboard entries
-      const leaderboard: LeaderboardEntry[] = paginatedData.map((p: any, index) => {
+      const leaderboard: LeaderboardEntry[] = paginatedData.map((p: GamificationData, index) => {
         const patientInfo = patientsMap[p.id] || {};
         const entry: LeaderboardEntry = {
           patient_id: p.id,

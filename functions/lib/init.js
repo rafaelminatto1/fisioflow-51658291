@@ -8,7 +8,7 @@
  * @version 2.0.0 - Enhanced with proper exports
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.config = exports.adminStorage = exports.adminAuth = exports.adminDb = exports.DB_HOST_IP_SECRET = exports.CLOUD_SQL_CONNECTION_NAME_SECRET = exports.DB_NAME_SECRET = exports.DB_USER_SECRET = exports.DB_PASS_SECRET = void 0;
+exports.config = exports.adminStorage = exports.adminAuth = exports.adminDb = exports.DB_HOST_IP_PUBLIC_SECRET = exports.DB_HOST_IP_SECRET = exports.CLOUD_SQL_CONNECTION_NAME_SECRET = exports.DB_NAME_SECRET = exports.DB_USER_SECRET = exports.DB_PASS_SECRET = void 0;
 exports.getAdminDb = getAdminDb;
 exports.getAdminAuth = getAdminAuth;
 exports.getAdminStorage = getAdminStorage;
@@ -33,6 +33,7 @@ exports.DB_USER_SECRET = (0, params_1.defineSecret)('DB_USER');
 exports.DB_NAME_SECRET = (0, params_1.defineSecret)('DB_NAME');
 exports.CLOUD_SQL_CONNECTION_NAME_SECRET = (0, params_1.defineSecret)('CLOUD_SQL_CONNECTION_NAME');
 exports.DB_HOST_IP_SECRET = (0, params_1.defineSecret)('DB_HOST_IP');
+exports.DB_HOST_IP_PUBLIC_SECRET = (0, params_1.defineSecret)('DB_HOST_IP_PUBLIC');
 // ============================================================================
 // SINGLETON INSTANCES
 // ============================================================================

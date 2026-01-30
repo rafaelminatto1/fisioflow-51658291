@@ -12,6 +12,18 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const functions = getFunctions();
 
+interface VoucherCheckoutData {
+  url?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+interface VoucherPaymentVerifyData {
+  success?: boolean;
+  error?: string;
+  [key: string]: unknown;
+}
+
 export function usePurchaseVoucher() {
   const { toast } = useToast();
 
@@ -21,18 +33,18 @@ export function usePurchaseVoucher() {
 
       try {
         const result = await createCheckout({ voucherId });
-        const data = result.data as any;
+        const data = result.data as VoucherCheckoutData;
 
         if (data.error) {
           throw new Error(data.error);
         }
 
         return data;
-      } catch (error: any) {
+      } catch (error: unknown) {
         throw error;
       }
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: VoucherCheckoutData) => {
       if (data.url) {
         // Abrir checkout em nova aba
         window.open(data.url, '_blank');
@@ -64,18 +76,18 @@ export function useVerifyVoucherPayment() {
 
       try {
         const result = await verifyPayment({ sessionId });
-        const data = result.data as any;
+        const data = result.data as VoucherPaymentVerifyData;
 
         if (data.error) {
           throw new Error(data.error);
         }
 
         return data;
-      } catch (error: any) {
+      } catch (error: unknown) {
         throw error;
       }
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: VoucherPaymentVerifyData) => {
       queryClient.invalidateQueries({ queryKey: ['user-vouchers'] });
 
       if (data.success) {

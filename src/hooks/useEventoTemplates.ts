@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -22,8 +22,6 @@ import {
   where,
   orderBy
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 export type EventoTemplate = {
   id: string;
@@ -38,7 +36,7 @@ export type EventoTemplate = {
 };
 
 // Helper to convert Firestore doc to EventoTemplate
-const convertDocToEventoTemplate = (doc: any): EventoTemplate => {
+const convertDocToEventoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): EventoTemplate => {
   const data = doc.data();
   return {
     id: doc.id,

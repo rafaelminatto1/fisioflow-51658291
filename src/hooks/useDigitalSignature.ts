@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -20,7 +20,6 @@ import {
   limit
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface DocumentSignature {
   id: string;
@@ -38,7 +37,7 @@ export interface DocumentSignature {
 }
 
 // Helper to convert Firestore doc to DocumentSignature
-const convertDocToDocumentSignature = (doc: any): DocumentSignature => {
+const convertDocToDocumentSignature = (doc: { id: string; data: () => Record<string, unknown> }): DocumentSignature => {
   const data = doc.data();
   return {
     id: doc.id,

@@ -1,10 +1,9 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import type { SessionEvolution, SessionEvolutionFormData } from '@/types/evolution';
 
 export class SessionEvolutionService {
   static async calculateSessionNumber(patientId: string, recordDate: string): Promise<number> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'soap_records'),
       where('patient_id', '==', patientId),
@@ -18,7 +17,6 @@ export class SessionEvolutionService {
 
   // Optimized: Select only required columns instead of *
   static async getSessionEvolution(sessionId: string): Promise<SessionEvolution | null> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'soap_records', sessionId);
     const docSnap = await getDoc(docRef);
 
@@ -74,7 +72,6 @@ export class SessionEvolutionService {
   }
 
   static async saveSessionEvolution(data: SessionEvolutionFormData): Promise<SessionEvolution> {
-    const db = getFirebaseDb();
     const now = new Date().toISOString();
 
     const soapRecordData = {
@@ -116,7 +113,6 @@ export class SessionEvolutionService {
   }
 
   static async updateSessionEvolution(sessionId: string, data: Partial<SessionEvolutionFormData>): Promise<SessionEvolution> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'soap_records', sessionId);
 
     const updates: Partial<SessionEvolutionFormData & { updated_at: string }> = {};
@@ -133,7 +129,6 @@ export class SessionEvolutionService {
   }
 
   static async deleteSessionEvolution(sessionId: string): Promise<void> {
-    const db = getFirebaseDb();
 
     // Delete measurements first (cascade)
     const measurementsQ = query(
@@ -152,7 +147,6 @@ export class SessionEvolutionService {
   }
 
   static async getEvolutionsByPatientId(patientId: string): Promise<SessionEvolution[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'soap_records'),
       where('patient_id', '==', patientId),

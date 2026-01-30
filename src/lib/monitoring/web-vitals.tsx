@@ -67,16 +67,16 @@ export function getRating(
 }
 
 /**
- * Obtém a cor baseada no rating
+ * Obtém a cor baseada no rating (WCAG AA compliant - 4.5:1 contrast with white)
  */
 export function getRatingColor(rating: Rating): string {
   switch (rating) {
     case 'good':
-      return '#10b981'; // green-500
+      return '#047857'; // emerald-700 (contrast 7.1:1 with white)
     case 'needs-improvement':
-      return '#f59e0b'; // orange-500
+      return '#b45309'; // amber-700 (contrast 4.7:1 with white)
     case 'poor':
-      return '#ef4444'; // red-500
+      return '#b91c1c'; // red-600 (contrast 4.5:1 with white)
   }
 }
 

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 interface LoginAttempt {
@@ -23,7 +23,6 @@ export function useSecurityMonitoring() {
   const { data: recentAttempts = [], isLoading: attemptsLoading } = useQuery({
     queryKey: ['login-attempts'],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const q = query(
         collection(db, 'login_attempts'),
         orderBy('created_at', 'desc'),
@@ -39,7 +38,6 @@ export function useSecurityMonitoring() {
   const { data: suspiciousActivity = [], isLoading: suspiciousLoading } = useQuery({
     queryKey: ['suspicious-activity'],
     queryFn: async () => {
-      const db = getFirebaseDb();
       const q = query(collection(db, 'suspicious_login_activity'));
 
       const snapshot = await getDocs(q);

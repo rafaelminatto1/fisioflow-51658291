@@ -20,10 +20,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 const TelemedicineRoom = () => {
   const { roomId } = useParams<{ roomId: string }>();

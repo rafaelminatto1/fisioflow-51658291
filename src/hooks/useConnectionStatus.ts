@@ -16,10 +16,9 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export type ConnectionState = 'online' | 'offline' | 'checking' | 'reconnecting';
 

@@ -8,7 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { PagamentoCreate, PagamentoUpdate } from '@/lib/validations/pagamento';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -22,7 +22,6 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface Pagamento {
   id: string;
@@ -36,7 +35,7 @@ export interface Pagamento {
 }
 
 // Helper: Convert Firestore doc to Pagamento
-const convertDocToPagamento = (doc: any): Pagamento => {
+const convertDocToPagamento = (doc: { id: string; data: () => Record<string, unknown> }): Pagamento => {
   const data = doc.data();
   return {
     id: doc.id,

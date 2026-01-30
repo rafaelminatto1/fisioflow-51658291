@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -23,7 +23,6 @@ import {
 } from 'firebase/firestore';
 import { logger } from '@/lib/errors/logger';
 
-const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES
@@ -225,7 +224,8 @@ export function useOptimizedQuery<T = unknown>(
       // Apply filter
       if (filter) {
         // Map Supabase operators to Firestore
-        let op: any = '==';
+        type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
+        let op: WhereOperator = '==';
         if (filter.operator === 'eq') op = '==';
         else if (filter.operator === 'neq') op = '!=';
         else if (filter.operator === 'gt') op = '>';
@@ -355,7 +355,8 @@ export function usePaginatedQuery<T = unknown>(
       const constraints: QueryConstraint[] = [];
       if (baseOptions.filter) {
         // ... (same filter mapping as above)
-        let op: any = '==';
+        type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
+        let op: WhereOperator = '==';
         if (baseOptions.filter.operator === 'eq') op = '==';
         else if (baseOptions.filter.operator === 'neq') op = '!=';
         else if (baseOptions.filter.operator === 'gt') op = '>';
@@ -393,7 +394,7 @@ export function usePaginatedQuery<T = unknown>(
         data: pageDocs,
         count: allDocs.length
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw error;
     }
 
@@ -479,7 +480,8 @@ export function useInfiniteQuery<T = unknown>(
 
       if (baseOptions.filter) {
         // ... filter mapping
-        let op: any = '==';
+        type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
+        let op: WhereOperator = '==';
         if (baseOptions.filter.operator === 'eq') op = '==';
         else if (baseOptions.filter.operator === 'neq') op = '!=';
         else if (baseOptions.filter.operator === 'gt') op = '>';
