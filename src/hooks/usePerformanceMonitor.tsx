@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 interface PerformanceMetrics {
   renderTime: number;
@@ -37,9 +38,10 @@ export function usePerformanceMonitor(componentName: string, enabled = process.e
 
       // Log se renderização for lenta (> 16ms = 60fps)
       if (renderTime > 16) {
-        console.warn(
+        logger.warn(
           `[Performance] ${componentName} levou ${renderTime.toFixed(2)}ms para renderizar`,
-          metric
+          metric,
+          'usePerformanceMonitor'
         );
       }
 
@@ -92,14 +94,14 @@ export function useAsyncPerformance() {
       const duration = endTime - startTime;
 
       if (duration > 100) {
-        console.warn(`[Async Performance] ${name} levou ${duration.toFixed(2)}ms`);
+        logger.warn(`[Async Performance] ${name} levou ${duration.toFixed(2)}ms`, undefined, 'usePerformanceMonitor');
       }
 
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      console.error(`[Async Performance] ${name} falhou após ${duration.toFixed(2)}ms:`, error);
+      logger.error(`[Async Performance] ${name} falhou após ${duration.toFixed(2)}ms`, error, 'usePerformanceMonitor');
       throw error;
     }
   }, []);
@@ -129,9 +131,11 @@ export function useRenderDetect(componentName: string) {
       const timeSpan = recentRenders[4] - recentRenders[0];
 
       if (timeSpan < 100) {
-        console.warn(
+        logger.warn(
           `[Render Detect] ${componentName} renderizou ${renderCount.current} vezes recentemente. ` +
-          `Possível loop de re-render! Últimos 5 renders em ${timeSpan.toFixed(2)}ms`
+          `Possível loop de re-render! Últimos 5 renders em ${timeSpan.toFixed(2)}ms`,
+          undefined,
+          'usePerformanceMonitor'
         );
       }
     }
@@ -159,8 +163,10 @@ export function useMemoryMonitor(enabled = process.env.NODE_ENV === 'development
       const percentage = ((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(2);
 
       if (parseFloat(percentage) > 80) {
-        console.warn(
-          `[Memory] Alto uso de memória detectado: ${usedMB}MB / ${limitMB}MB (${percentage}%)`
+        logger.warn(
+          `[Memory] Alto uso de memória detectado: ${usedMB}MB / ${limitMB}MB (${percentage}%)`,
+          undefined,
+          'usePerformanceMonitor'
         );
       }
     };
@@ -186,7 +192,7 @@ export class PerformanceTimer {
   end(): number {
     const endTime = performance.now();
     const duration = endTime - this.startTime;
-    console.log(`[Timer] ${this.name}: ${duration.toFixed(2)}ms`);
+    logger.debug(`[Timer] ${this.name}: ${duration.toFixed(2)}ms`, undefined, 'usePerformanceMonitor');
     return duration;
   }
 
@@ -233,7 +239,7 @@ export function useInteractionTiming() {
         const duration = entry.duration;
 
         if (duration > 100) {
-          console.warn(`[Interaction] ${name} levou ${duration.toFixed(2)}ms (acima de 100ms)`);
+          logger.warn(`[Interaction] ${name} levou ${duration.toFixed(2)}ms (acima de 100ms)`, undefined, 'usePerformanceMonitor');
         }
 
         // Limpar marcas
