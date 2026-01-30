@@ -98,7 +98,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
             updateDoc(profileRef, {
               organization_id: pgProfile.organization_id,
               updated_at: new Date().toISOString()
-            }).catch(err => console.error(err));
+            }).catch(err => logger.error('Failed to update profile organization_id', err, 'AuthContextProvider'));
           }
         }).catch(err => logger.warn('PG Sync failed', err));
 
