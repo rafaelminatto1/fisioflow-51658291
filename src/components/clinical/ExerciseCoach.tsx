@@ -332,7 +332,7 @@ export function ExerciseCoach({
         return newRep;
       });
     } catch (error) {
-      console.error('Error counting rep:', error);
+      logger.error('Error counting rep', error, 'ExerciseCoach');
     }
   };
 
