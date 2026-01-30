@@ -12,8 +12,6 @@
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ],
-      "vpcConnector": "projects/fisioflow-migration/locations/us-central1/connectors/cloudsql-connector",
-      "vpcConnectorEgressSettings": "PRIVATE_RANGES_ONLY",
       "env": [
         {
           "variables": {
@@ -61,7 +59,7 @@
           },
           {
             "key": "Permissions-Policy",
-            "value": "camera=(), microphone=(), geolocation=()"
+            "value": "camera=self, microphone=self, geolocation=self"
           }
         ]
       },
@@ -90,11 +88,21 @@
     "indexes": "firestore.indexes.json"
   },
   "emulators": {
-    "auth": { "port": 9099 },
-    "functions": { "port": 5001 },
-    "firestore": { "port": 8080 },
-    "storage": { "port": 9199 },
-    "ui": { "enabled": true },
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true
+    },
     "singleProjectMode": true
   }
 }
