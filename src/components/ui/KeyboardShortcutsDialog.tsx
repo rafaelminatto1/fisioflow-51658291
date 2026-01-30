@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Keyboard, Search, Navigation, Calendar, Users, FileText, Zap } from 'lucide-react';
 import { useKeyboardShortcuts, formatShortcut, groupShortcutsByCategory, DEFAULT_SHORTCUTS } from '@/lib/keyboard/shortcuts-manager';
+import type { KeyboardShortcut } from '@/lib/keyboard/shortcuts-manager';
 
 // =====================================================================
 // TYPES
@@ -111,7 +112,7 @@ function CategoryTab({ name, shortcuts }: CategoryTabProps) {
         {shortcuts.map((shortcut, index) => (
           <ShortcutItem
             key={`${shortcut.key}-${index}`}
-            keys={formatShortcut(shortcut as any)}
+            keys={formatShortcut(shortcut as KeyboardShortcut)}
             description={shortcut.description}
           />
         ))}

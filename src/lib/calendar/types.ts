@@ -245,11 +245,11 @@ export interface CalendarViewSettings {
 /**
  * Item renderizado no grid virtualizado
  */
-export interface VirtualGridItem {
+export interface VirtualGridItem<T = unknown> {
   /** Índice do item */
   index: number;
   /** Dados do item */
-  data: any;
+  data: T;
   /** Estilo do item */
   style: React.CSSProperties;
 }
@@ -257,7 +257,7 @@ export interface VirtualGridItem {
 /**
  * Propriedades do grid virtualizado
  */
-export interface VirtualGridProps {
+export interface VirtualGridProps<T = unknown> {
   /** Altura do container */
   height: number;
   /** Largura do container */
@@ -267,7 +267,7 @@ export interface VirtualGridProps {
   /** Altura de cada item */
   itemSize: number;
   /** Função de renderização */
-  renderItem: (props: VirtualGridItem) => ReactNode;
+  renderItem: (props: VirtualGridItem<T>) => ReactNode;
   /** Overscan em pixels */
   overscanCount?: number;
 }
@@ -299,7 +299,7 @@ export interface KeyboardAction {
     | 'DELETE'
     | 'CANCEL';
   /** Dados da ação */
-  payload?: any;
+  payload?: Record<string, unknown>;
 }
 
 // =====================================================================

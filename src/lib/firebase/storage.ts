@@ -256,8 +256,7 @@ export async function uploadFile(
       uploadResult = await uploadBytes(storageRef, file, metadata);
     }
 
-    const ref = uploadResult as any;
-    const url = await getDownloadURL(ref);
+    const url = await getDownloadURL((uploadResult as { ref: StorageReference }).ref);
 
     return {
       url,

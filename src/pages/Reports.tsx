@@ -1,3 +1,4 @@
+import AdvancedAnalytics from "@/components/analytics/AdvancedAnalytics";
 import React, { useState, useCallback, useMemo } from 'react';
 import { logger } from '@/lib/errors/logger';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -41,6 +42,7 @@ import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useFinancial } from '@/hooks/useFinancial';
+import { ClinicAIInsights } from '@/components/reports/ClinicAIInsights';
 
 const Reports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
@@ -188,6 +190,11 @@ const Reports = () => {
             </Button>
           </div>
         </div>
+
+        {/* AI Strategic Insights */}
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <ClinicAIInsights data={reportsData} />
+        </section>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -408,112 +415,7 @@ const Reports = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
-                    Agendamentos por Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[
-                      { name: 'Concluídos', value: reportsData.appointments.completed },
-                      { name: 'Cancelados', value: reportsData.appointments.cancelled },
-                      { name: 'Faltas', value: reportsData.appointments.noShow },
-                      { name: 'Agendados', value: reportsData.appointments.total - (reportsData.appointments.completed + reportsData.appointments.cancelled + reportsData.appointments.noShow) }
-                    ]}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" fontSize={12} />
-                      <YAxis allowDecimals={false} fontSize={12} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }}
-                        cursor={{ fill: 'transparent' }}
-                      />
-                      <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]}>
-                        {
-                          [
-                            { name: 'Concluídos', color: '#10B981' },
-                            { name: 'Cancelados', color: '#F59E0B' },
-                            { name: 'Faltas', color: '#EF4444' },
-                            { name: 'Agendados', color: '#3B82F6' }
-                          ].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))
-                        }
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChart className="w-5 h-5" />
-                    Status dos Pacientes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Em Tratamento', value: reportsData.patients.active },
-                          { name: 'Alta', value: reportsData.patients.completed },
-                          { name: 'Inativos', value: reportsData.patients.total - (reportsData.patients.active + reportsData.patients.completed) }
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {[
-                          { color: '#3B82F6' },
-                          { color: '#10B981' },
-                          { color: '#94A3B8' }
-                        ].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <LineChart className="w-5 h-5" />
-                    Receita Recente (Últimas Transações)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={activeTransactions
-                      ?.filter(t => t.tipo === 'receita')
-                      .slice(0, 10)
-                      .map(t => ({
-                        date: format(new Date(t.data_create), 'dd/MM'),
-                        amount: Number(t.valor)
-                      }))
-                      .reverse() || []
-                    }>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" fontSize={12} />
-                      <YAxis fontSize={12} />
-                      <Tooltip formatter={(value) => `R$ ${Number(value).toFixed(2)}`} />
-                      <Line type="monotone" dataKey="amount" stroke="#10B981" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+            <AdvancedAnalytics />
           </TabsContent>
         </Tabs>
       </div>

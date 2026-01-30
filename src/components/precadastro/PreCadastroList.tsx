@@ -10,8 +10,18 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
+interface PreCadastro {
+  id: string;
+  nome: string;
+  email: string;
+  telefone?: string;
+  status: string;
+  created_at: string;
+  data_agendamento?: string;
+}
+
 interface PreCadastroListProps {
-    precadastros: any[];
+    precadastros: PreCadastro[];
     isLoading: boolean;
     onUpdateStatus: (id: string, status: string) => void;
 }
@@ -19,7 +29,7 @@ interface PreCadastroListProps {
 export const PreCadastroList = ({ precadastros, isLoading, onUpdateStatus }: PreCadastroListProps) => {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('todos');
-    const [selectedPreCadastro, setSelectedPreCadastro] = useState<any>(null);
+    const [selectedPreCadastro, setSelectedPreCadastro] = useState<PreCadastro | null>(null);
 
     const filteredPrecadastros = precadastros?.filter(p => {
         const matchesSearch =

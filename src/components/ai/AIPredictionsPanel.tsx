@@ -21,6 +21,11 @@ interface AIPredictionsPanelProps {
   patientId: string;
 }
 
+interface PredictionResponse {
+  error?: string;
+  suggestion?: string;
+}
+
 export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
   const [loading, setLoading] = useState(false);
   const [predictions, setPredictions] = useState<{
@@ -42,13 +47,13 @@ export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
         action: 'predict_adherence'
       });
 
-      const data = result.data as any;
+      const data = result.data as PredictionResponse;
 
       if (data?.error) {
         throw new Error(data.error);
       }
 
-      const suggestion = data.suggestion;
+      const suggestion = data.suggestion ?? 'Sem sugestão disponível';
 
       const riskMatch = suggestion.match(/Risco.*?(Baixo|Médio|Alto)/i);
       const risk = riskMatch ? riskMatch[1] : 'Médio';

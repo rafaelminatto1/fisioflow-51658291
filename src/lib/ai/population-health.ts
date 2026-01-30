@@ -217,7 +217,12 @@ async function aggregatePopulationData(
   clinicId: string,
   startDate: Date,
   endDate: Date
-): Promise<any> {
+): Promise<{
+  patients: PatientRecord[];
+  mlData: MLDataRecord[];
+  appointments: Record<string, unknown>[];
+  totalRecords: number;
+}> {
   const db = getAdminDb();
 
   try {
@@ -649,7 +654,7 @@ Retorne APENAS o JSON válido com a estrutura especificada.`;
 // ============================================================================
 
 function calculateRecoveryMetrics(
-  conditions: Map<string, any[]>
+  conditions: Map<string, MLDataRecord[]>
 ): PopulationHealthAnalysis['recoveryMetrics'] {
   return Array.from(conditions.entries())
     .map(([condition, cases]) => {
@@ -686,7 +691,7 @@ function calculateRecoveryMetrics(
 }
 
 function calculateRetentionByCondition(
-  conditions: Map<string, any[]>
+  conditions: Map<string, MLDataRecord[]>
 ): Array<{ condition: string; retentionRate: number; averageSessions: number }> {
   return Array.from(conditions.entries())
     .map(([condition, cases]) => {

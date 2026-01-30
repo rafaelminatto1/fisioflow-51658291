@@ -146,7 +146,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
     setMeasurements(measurements.filter((_, i) => i !== index));
   };
 
-  const handleUpdateMeasurement = (index: number, field: keyof MeasurementInput, value: any) => {
+  const handleUpdateMeasurement = (index: number, field: keyof MeasurementInput, value: string | number | boolean | object) => {
     const updated = [...measurements];
     updated[index] = { ...updated[index], [field]: value };
     setMeasurements(updated);
@@ -227,7 +227,17 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
       if (measurement.measurement_name && (measurement.value || measurement.measurement_type === 'Personalizado' || measurement.measurement_type === 'Sinais Vitais')) {
         try {
           // Prepare payload
-          const payload: any = {
+          const payload: {
+            patient_id: string;
+            soap_record_id: string;
+            measurement_type: string;
+            measurement_name: string;
+            value: number;
+            unit?: string;
+            notes?: string;
+            measured_at: string;
+            custom_data?: Record<string, unknown>;
+          } = {
             patient_id: patientId,
             soap_record_id: soapRecordId,
             measurement_type: measurement.measurement_type,

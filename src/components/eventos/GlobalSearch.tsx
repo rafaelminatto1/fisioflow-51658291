@@ -13,6 +13,23 @@ import {
 import { Search, Calendar, Users, Briefcase } from 'lucide-react';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 
+interface EventoRecord {
+  id: string;
+  nome: string;
+  local: string;
+  categoria: string;
+}
+
+interface ParticipanteRecord {
+  id: string;
+  nome: string;
+}
+
+interface PrestadorRecord {
+  id: string;
+  nome: string;
+}
+
 interface SearchResult {
   id: string;
   type: 'evento' | 'participante' | 'prestador';
@@ -63,7 +80,7 @@ export function GlobalSearch() {
         const eventosSnapshot = await getDocs(eventosQuery);
 
         eventosSnapshot.forEach((doc) => {
-          const evento = { id: doc.id, ...doc.data() } as any;
+          const evento = { id: doc.id, ...doc.data() } as EventoRecord;
           if (
             evento.nome?.toLowerCase().includes(queryLower) ||
             evento.local?.toLowerCase().includes(queryLower)
@@ -90,7 +107,7 @@ export function GlobalSearch() {
         const participantesSnapshot = await getDocs(participantesQuery);
 
         participantesSnapshot.forEach((doc) => {
-          const participante = { id: doc.id, ...doc.data() } as any;
+          const participante = { id: doc.id, ...doc.data() } as ParticipanteRecord;
           if (participante.nome?.toLowerCase().includes(queryLower)) {
             filteredEventResults.push({
               id: participante.id,
@@ -111,7 +128,7 @@ export function GlobalSearch() {
         const prestadoresSnapshot = await getDocs(prestadoresQuery);
 
         prestadoresSnapshot.forEach((doc) => {
-          const prestador = { id: doc.id, ...doc.data() } as any;
+          const prestador = { id: doc.id, ...doc.data() } as PrestadorRecord;
           if (prestador.nome?.toLowerCase().includes(queryLower)) {
             filteredEventResults.push({
               id: prestador.id,

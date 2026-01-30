@@ -31,7 +31,7 @@ interface RecurringAppointmentModalProps {
   /** Dados iniciais para edição */
   initialData?: Partial<RecurringAppointmentFormData>;
   /** Callback após criar com sucesso */
-  onSuccess?: (result: any) => void;
+  onSuccess?: (result: { id: string; recurrence: { type: string; interval?: number; daysOfWeek?: number[]; endDate?: string } }) => void;
 }
 
 // =====================================================================
@@ -134,7 +134,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
 
       // Verificar dia da semana para weekly
       if (type === 'weekly' && recurrence.daysOfWeek) {
-        if (!recurrence.daysOfWeek.includes(currentDate.getDay() as any)) {
+        if (!recurrence.daysOfWeek.includes(currentDate.getDay() as number)) {
           // Avançar até o próximo dia válido
           currentDate = addDays(currentDate, 1);
           continue;
@@ -202,7 +202,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
     }
   }, [formData, previewDates, onSuccess, onOpenChange]);
 
-  const updateRecurrence = useCallback((field: string, value: any) => {
+  const updateRecurrence = useCallback((field: string, value: string | number | boolean | number[]) => {
     setFormData((prev) => ({
       ...prev,
       recurrence: {

@@ -15,6 +15,22 @@ import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types
 import { logger } from '../../lib/errors/logger.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 
+// Types for organizations and sessions
+interface Organization {
+  id: string;
+  name?: string;
+  active: boolean;
+  settings?: Record<string, unknown>;
+}
+
+interface SessionRecord {
+  id: string;
+  therapist_id?: string;
+  organization_id?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
 export const dailyReportsWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-daily-reports',
@@ -39,7 +55,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
     today.setHours(0, 0, 0, 0);
 
     // Step 1: Get all active organizations
-    const organizations = await step.run('get-organizations', async (): Promise<any[]> => {
+    const organizations = await step.run('get-organizations', async (): Promise<Organization[]> => {
       const snapshot = await db.collection('organizations')
         .where('active', '==', true)
         .get();
@@ -69,7 +85,12 @@ export const dailyReportsWorkflow = inngest.createFunction(
         emailsSent: number;
         skipped?: boolean;
         error?: string;
-        reportData?: any;
+        reportData?: {
+          organization?: string;
+          date: string;
+          totalSessions: number;
+          sessionsByTherapist: Record<string, number>;
+        };
       }[]> => {
         return await Promise.all(
           organizations.map(async (org: { id: string; name?: string; settings?: Record<string, unknown> }) => {
@@ -108,7 +129,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
                 organization: org.name,
                 date: yesterday.toISOString().split('T')[0],
                 totalSessions: sessions.length,
-                sessionsByTherapist: sessions.reduce((acc: Record<string, number>, session: any) => {
+                sessionsByTherapist: sessions.reduce((acc: Record<string, number>, session: SessionRecord) => {
                   const therapistId = session.therapist_id || 'unassigned';
                   acc[therapistId] = (acc[therapistId] || 0) + 1;
                   return acc;

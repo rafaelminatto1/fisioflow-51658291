@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getFirebaseDb, getFirebaseAuth } from "@/integrations/firebase/app";
+import { db, getFirebaseAuth } from "@/integrations/firebase/app";
 import { collection, query, where, getDocs, orderBy, addDoc } from "firebase/firestore";
 
 const auth = getFirebaseAuth();

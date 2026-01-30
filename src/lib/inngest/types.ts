@@ -185,7 +185,7 @@ export interface WorkflowOptions {
 
 export type InngestStep = {
   run: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
-  send: (payload: { name: string; data: any; user?: any }) => Promise<void>; // Simplified send type, can be expanded
-  waitForEvent: (event: string, opts?: { timeout: string; match?: string }) => Promise<any>;
+  send: (payload: { name: string; data: Record<string, unknown>; user?: Record<string, unknown> }) => Promise<void>; // Simplified send type, can be expanded
+  waitForEvent: (event: string, opts?: { timeout: string; match?: string }) => Promise<Record<string, unknown>>;
   sleep: (duration: string) => Promise<void>;
 };

@@ -17,6 +17,19 @@ import { db, collection, getDocs, query as queryFn, orderBy, doc, getDoc } from 
 import { collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, orderBy as orderByFn, doc as docRef, getDoc as getDocFromFirestore } from 'firebase/firestore';
 import { useLeadScoring } from './hooks/useLeadScoring';
 
+// Type for lead score data
+interface LeadScoreData {
+  id: string;
+  lead_id: string;
+  total_score: number;
+  engagement_score: number;
+  demographic_score: number;
+  behavioral_score: number;
+  tier: string;
+  factors: Array<{ name: string; points: number; description?: string }>;
+  leads: { name: string } | null;
+}
+
 const TIERS = {
   hot: { label: 'Quente', color: 'bg-red-500', textColor: 'text-red-600', minScore: 70 },
   warm: { label: 'Morno', color: 'bg-yellow-500', textColor: 'text-yellow-600', minScore: 40 },
@@ -54,20 +67,10 @@ export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps)
 
       // Filter by lead_id if provided
       if (_leadId) {
-        return results.filter((r: any) => r.lead_id === _leadId);
+        return results.filter((r) => r.lead_id === _leadId);
       }
 
-      return results as unknown as Array<{
-        id: string;
-        lead_id: string;
-        total_score: number;
-        engagement_score: number;
-        demographic_score: number;
-        behavioral_score: number;
-        tier: string;
-        factors: any[];
-        leads: { name: string } | null;
-      }>;
+      return results as LeadScoreData[];
     },
   });
 
@@ -90,7 +93,7 @@ export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps)
   const stats = useMemo(() => {
     if (!scores.length) return null;
 
-    const typedScores = scores as any[];
+    const typedScores = scores as LeadScoreData[];
 
     return {
       total: scores.length,

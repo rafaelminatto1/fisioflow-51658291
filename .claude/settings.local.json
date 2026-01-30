@@ -266,7 +266,13 @@
       "Bash(then sed -i 's/import \\\\\\(.*\\\\\\)getFirebaseDb\\\\\\(.*\\\\\\) from ''''@\\\\/integrations\\\\/firebase\\\\/app''''/import \\\\1db\\\\2 from ''''@\\\\/integrations\\\\/firebase\\\\/app''''/g' \"$file\" sed -i '/^const db = getFirebaseDb\\(\\);$/d' \"$file\" echo \"Fixed: $file\" fi done)",
       "Bash(while:*)",
       "Bash(then sed -i \"s/import \\\\\\(.*\\\\\\)getFirebaseDb\\\\\\(.*\\\\\\) from ''''@/integrations\\\\/firebase\\\\/app''''/import \\\\1db\\\\2 from ''''@/integrations\\\\/firebase\\\\/app''''/g\" \"$file\" sed -i '/^const db = getFirebaseDb\\(\\);$/d' \"$file\" echo \"Fixed: $file\" fi done)",
-      "Bash(SENTRY_DSN=https://49e42dcf09c352e2576de850a6806676@o4510069182955520.ingest.us.sentry.io/4510796159451136 sentry-cli:*)"
+      "Bash(SENTRY_DSN=https://49e42dcf09c352e2576de850a6806676@o4510069182955520.ingest.us.sentry.io/4510796159451136 sentry-cli:*)",
+      "mcp__playwright__browser_resize",
+      "Bash(dig:*)",
+      "mcp__zread__read_file",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 120 npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 60 npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc:*)"
     ],
     "deny": [],
     "ask": [],

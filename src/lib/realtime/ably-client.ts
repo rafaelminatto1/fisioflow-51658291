@@ -22,7 +22,7 @@ export type RealtimeEventType = 'INSERT' | 'UPDATE' | 'DELETE';
 /**
  * Mensagem de atualização em tempo real
  */
-export interface RealtimeMessage<T = any> {
+export interface RealtimeMessage<T = unknown> {
   event: RealtimeEventType;
   new: T | null;
   old: T | null;
@@ -36,7 +36,7 @@ export interface NotificationMessage {
   body: string;
   type: 'info' | 'success' | 'warning' | 'error';
   link?: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 /**

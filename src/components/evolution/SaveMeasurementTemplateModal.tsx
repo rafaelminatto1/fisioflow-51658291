@@ -37,10 +37,17 @@ import { cn } from '@/lib/utils';
 import { db, collection, addDoc } from '@/integrations/firebase/app';
 import { collection as collectionRef, addDoc as addDocToFirestore } from 'firebase/firestore';
 
+interface MeasurementField {
+  label: string;
+  value: string | number;
+  unit?: string;
+  enabled: boolean;
+}
+
 interface SaveMeasurementTemplateModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    fields: any[];
+    fields: MeasurementField[];
     onSaved?: () => void;
 }
 
@@ -76,7 +83,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                 purpose: formData.purpose,
                 fields_definition: enabledFields,
                 created_by: user?.id,
-                organization_id: (user as any)?.organization_id,
+                organization_id: (user as { organization_id?: string } | null)?.organization_id,
                 is_custom: true,
                 created_at: new Date().toISOString(),
             });
@@ -89,10 +96,11 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
             onSaved?.();
             onOpenChange(false);
             setFormData({ name: '', category: 'Personalizado', target_joint: '', purpose: '' });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Erro ao salvar modelo:', error);
+            const message = error instanceof Error ? error.message : 'Erro desconhecido';
             toast.error('Erro ao salvar modelo', {
-                description: error.message
+                description: message
             });
         } finally {
             setLoading(false);

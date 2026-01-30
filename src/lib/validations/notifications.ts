@@ -43,7 +43,7 @@ export const notificationPayloadSchema = z.object({
   icon: z.string().url().optional(),
   badge: z.string().url().optional(),
   image: z.string().url().optional(),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.unknown()).optional(),
   actions: z.array(notificationActionSchema).max(2, 'Maximum 2 actions allowed').optional(),
   requireInteraction: z.boolean().optional(),
   silent: z.boolean().optional(),
@@ -56,7 +56,7 @@ export const sendNotificationSchema = z.object({
   type: z.nativeEnum(NotificationType),
   title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
   body: z.string().min(1, 'Body is required').max(300, 'Body too long'),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.unknown()).optional(),
   actions: z.array(notificationActionSchema).max(2, 'Maximum 2 actions allowed').optional(),
   scheduleAt: z.date().optional()
 })
@@ -68,14 +68,14 @@ export const notificationTemplateSchema = z.object({
   iconUrl: z.string().url().optional(),
   badgeUrl: z.string().url().optional(),
   actions: z.array(notificationActionSchema).optional(),
-  defaultData: z.record(z.any()).optional(),
+  defaultData: z.record(z.unknown()).optional(),
   active: z.boolean().default(true)
 })
 
 export const notificationTriggerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   eventType: z.string().min(1, 'Event type is required'),
-  conditions: z.record(z.any()).optional(),
+  conditions: z.record(z.unknown()).optional(),
   templateType: z.nativeEnum(NotificationType),
   scheduleDelayMinutes: z.number().min(0, 'Delay must be non-negative').default(0),
   isRecurring: z.boolean().default(false),
@@ -115,7 +115,7 @@ export const notificationHistorySchema = z.object({
   type: z.nativeEnum(NotificationType),
   title: z.string().min(1),
   body: z.string().min(1),
-  data: z.record(z.any()).default({}),
+  data: z.record(z.unknown()).default({}),
   sentAt: z.date(),
   deliveredAt: z.date().optional(),
   clickedAt: z.date().optional(),
@@ -126,7 +126,7 @@ export const notificationHistorySchema = z.object({
 
 export const serviceWorkerMessageSchema = z.object({
   type: z.enum(['NOTIFICATION_CLICKED', 'NOTIFICATION_CLOSED', 'SUBSCRIPTION_CHANGED']),
-  payload: z.any().optional()
+  payload: z.unknown().optional()
 })
 
 export const pushEventDataSchema = z.object({
