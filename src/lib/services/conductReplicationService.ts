@@ -1,6 +1,7 @@
 import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import type { ConductTemplate } from '@/types/evolution';
+import { logger } from '@/lib/errors/logger';
 
 export interface ConductData {
   plan?: string;
@@ -81,6 +82,6 @@ export class ConductReplicationService {
   static async deleteConduct(conductId: string): Promise<void> {
     // For now, this is a no-op since we're using SOAP records
     // In a full implementation, this would delete from a templates table
-    console.log('Delete conduct template:', conductId);
+    logger.debug('Delete conduct template', { conductId }, 'conductReplicationService');
   }
 }
