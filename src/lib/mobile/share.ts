@@ -1,5 +1,6 @@
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Serviço para compartilhamento nativo (Share Sheet)
@@ -29,7 +30,7 @@ export async function shareContent(options: ShareOptions): Promise<void> {
       return;
     }
 
-    console.warn('Share não disponível neste dispositivo');
+    logger.warn('Share não disponível neste dispositivo', undefined, 'share');
     return;
   }
 
@@ -45,7 +46,7 @@ export async function shareContent(options: ShareOptions): Promise<void> {
       // Usuário cancelou, não é um erro
       return;
     }
-    console.error('Erro ao compartilhar:', error);
+    logger.error('Erro ao compartilhar', error, 'share');
   }
 }
 
