@@ -4,6 +4,7 @@
  */
 
 import { HttpsError } from 'firebase-functions/v2/https';
+import { logger } from '../lib/logger';
 
 /**
  * Verifica se a requisição possui um token do App Check válido
@@ -38,14 +39,14 @@ export function verifyAppCheck(request: { app?: any; rawRequest?: any }): void {
     // Log warnings em desenvolvimento (não bloqueia)
     const appCheckToken = request.rawRequest?.headers?.['x-firebase-appcheck'];
     if (appCheckToken) {
-      console.warn('[App Check] Token presente mas inválido:', appCheckToken.substring(0, 30) + '...');
+      logger.warn('[App Check] Token presente mas inválido:', appCheckToken.substring(0, 30) + '...');
     } else {
-      console.warn('[App Check] Token não encontrado (modo desenvolvimento). Configure App Check no frontend.');
+      logger.warn('[App Check] Token não encontrado (modo desenvolvimento). Configure App Check no frontend.');
     }
     return;
   }
 
-  console.log('[App Check] Token verificado com sucesso');
+  logger.info('[App Check] Token verificado com sucesso');
 }
 
 /**
