@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export const saveSurgeries = async (
     supabase: SupabaseClient,
@@ -13,7 +14,7 @@ export const saveSurgeries = async (
         .eq('medical_record_id', recordId);
 
     if (deleteError) {
-        console.error("Error deleting existing surgeries:", deleteError);
+        logger.error("Error deleting existing surgeries", deleteError, 'medicalRecordHelpers');
         toast.error("Erro ao atualizar cirurgias");
         throw new Error("Failed to update surgeries");
     }
@@ -33,7 +34,7 @@ export const saveSurgeries = async (
     );
 
     if (error) {
-        console.error("Error saving surgeries:", error);
+        logger.error("Error saving surgeries", error, 'medicalRecordHelpers');
         toast.error("Erro ao salvar cirurgias");
         throw new Error("Failed to save surgeries");
     }
@@ -51,7 +52,7 @@ export const saveGoals = async (
         .eq('medical_record_id', recordId);
 
     if (deleteError) {
-        console.error("Error deleting existing goals:", deleteError);
+        logger.error("Error deleting existing goals", deleteError, 'medicalRecordHelpers');
         toast.error("Erro ao atualizar objetivos");
         throw new Error("Failed to update goals");
     }
@@ -69,7 +70,7 @@ export const saveGoals = async (
     );
 
     if (error) {
-        console.error("Error saving goals:", error);
+        logger.error("Error saving goals", error, 'medicalRecordHelpers');
         toast.error("Erro ao salvar objetivos");
         throw new Error("Failed to save goals");
     }
@@ -87,7 +88,7 @@ export const savePathologies = async (
         .eq('medical_record_id', recordId);
 
     if (deleteError) {
-        console.error("Error deleting existing pathologies:", deleteError);
+        logger.error("Error deleting existing pathologies", deleteError, 'medicalRecordHelpers');
         toast.error("Erro ao atualizar patologias");
         throw new Error("Failed to update pathologies");
     }
@@ -105,7 +106,7 @@ export const savePathologies = async (
     );
 
     if (error) {
-        console.error("Error saving pathologies:", error);
+        logger.error("Error saving pathologies", error, 'medicalRecordHelpers');
         toast.error("Erro ao salvar patologias");
         throw new Error("Failed to save pathologies");
     }
