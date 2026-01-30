@@ -18,6 +18,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -366,7 +367,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         });
         await loadCacheStats();
       } catch (error) {
-        console.error('[OfflineStorage] Error caching patient analytics:', error);
+        logger.error('Error caching patient analytics', error, 'useOfflineStorage');
         throw error;
       }
     },
@@ -395,7 +396,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 
         return cached.data;
       } catch (error) {
-        console.error('[OfflineStorage] Error getting cached analytics:', error);
+        logger.error('Error getting cached analytics', error, 'useOfflineStorage');
         return null;
       }
     },
@@ -417,7 +418,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         }
         await loadCacheStats();
       } catch (error) {
-        console.error('[OfflineStorage] Error clearing cache:', error);
+        logger.error('Error clearing cache', error, 'useOfflineStorage');
         throw error;
       }
     },
@@ -437,7 +438,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       }
       return cachedIds;
     } catch (error) {
-      console.error('[OfflineStorage] Error getting cached patients:', error);
+      logger.error('Error getting cached patients', error, 'useOfflineStorage');
       return [];
     }
   }, []);
@@ -472,7 +473,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 
         return actionId;
       } catch (error) {
-        console.error('[OfflineStorage] Error queuing offline action:', error);
+        logger.error('Error queuing offline action', error, 'useOfflineStorage');
         throw error;
       }
     },

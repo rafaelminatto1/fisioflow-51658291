@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
 import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy, limit as limitClause } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 // const db = getFirebaseDb(); // Moved inside functions
 
@@ -224,7 +225,7 @@ class OfflineSyncService {
 
       this.emit({ type: 'sync_start', timestamp: Date.now() });
     } catch (error) {
-      console.warn('[OfflineSyncService] Background sync not available, using polling fallback:', error);
+      logger.warn('Background sync not available, using polling fallback', error, 'offlineSync');
       this.startPeriodicSync();
     }
   }
@@ -271,7 +272,7 @@ class OfflineSyncService {
       }
       return true;
     } catch (error) {
-      console.warn('[OfflineSyncService] Background sync registration failed:', error);
+      logger.warn('Background sync registration failed', error, 'offlineSync');
       return false;
     }
   }
@@ -351,7 +352,7 @@ class OfflineSyncService {
 
       return this.lastSyncStats;
     } catch (error) {
-      console.error('[OfflineSyncService] Sync error:', error);
+      logger.error('Sync error', error, 'offlineSync');
       this.emit({
         type: 'sync_error',
         timestamp: Date.now(),
@@ -446,7 +447,7 @@ class OfflineSyncService {
         await this.apiDelete(`/api/appointments/${String((payload as PayloadWithId).id)}`);
         break;
       default:
-        console.warn('[OfflineSyncService] Unknown action type:', actionType);
+        logger.warn('Unknown action type', { actionType }, 'offlineSync');
     }
 
     // Simulate API call delay (remove in production)

@@ -48,7 +48,7 @@ interface GetAssessmentTemplateResponse {
   data: AssessmentTemplate & { sections: (AssessmentSection & { questions: any[] })[] };
 }
 
-export const getAssessmentTemplate = onCall<GetAssessmentTemplateRequest, Promise<GetAssessmentTemplateResponse>>(async (request) => {
+export const getAssessmentTemplate = onCall<GetAssessmentTemplateRequest, Promise<GetAssessmentTemplateResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -127,7 +127,7 @@ interface ListAssessmentsResponse {
   data: (PatientAssessment & { template_name: string; performer_name: string })[];
 }
 
-export const listAssessments = onCall<ListAssessmentsRequest, Promise<ListAssessmentsResponse>>(async (request) => {
+export const listAssessments = onCall<ListAssessmentsRequest, Promise<ListAssessmentsResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -182,7 +182,7 @@ interface GetAssessmentResponse {
   data: PatientAssessment & { responses: any[] };
 }
 
-export const getAssessment = onCall<GetAssessmentRequest, Promise<GetAssessmentResponse>>(async (request) => {
+export const getAssessment = onCall<GetAssessmentRequest, Promise<GetAssessmentResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -254,7 +254,7 @@ interface CreateAssessmentResponse {
   data: PatientAssessment;
 }
 
-export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAssessmentResponse>>(async (request) => {
+export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAssessmentResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
