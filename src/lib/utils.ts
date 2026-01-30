@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { logger } from '@/lib/errors/logger';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -48,7 +49,7 @@ export const exportToCSV = (data: Record<string, unknown>[], filename: string, h
     }
     return true;
   } catch (error) {
-    console.error('Export error:', error);
+    logger.error('Export error', error, 'utils');
     return false;
   }
 };
