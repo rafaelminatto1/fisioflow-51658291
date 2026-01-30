@@ -7,6 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { logger } from '@/lib/errors/logger';
 
 const getEnv = (key: string): string | undefined => {
   // @ts-expect-error - import.meta is not fully typed in all environments
@@ -25,7 +26,7 @@ const apiKey = getEnv('GOOGLE_GENERATIVE_AI_API_KEY') ||
   getEnv('VITE_GOOGLE_GENERATIVE_AI_API_KEY');
 
 if (!apiKey) {
-  console.warn('⚠️ Google Gemini API Key is missing. AI features will not work.');
+  logger.warn('⚠️ Google Gemini API Key is missing. AI features will not work.', undefined, 'embeddings');
 }
 
 const genAI = new GoogleGenerativeAI(apiKey || '');
@@ -58,7 +59,7 @@ export async function generateEmbeddingsBatch(
     }
     return embeddings;
   } catch (error) {
-    console.error('Error generating batch embeddings:', error);
+    logger.error('Error generating batch embeddings', error, 'embeddings');
     throw error;
   }
 }
@@ -74,7 +75,7 @@ export async function generateEmbedding(
     const result = await embeddingModel.embedContent(text);
     return result.embedding.values;
   } catch (error) {
-    console.error('Error generating embedding:', error);
+    logger.error('Error generating embedding', error, 'embeddings');
     throw error;
   }
 }
@@ -151,7 +152,7 @@ export class ExerciseEmbeddingService {
         throw updateError;
       }
     } catch (error) {
-      console.error('Error updating exercise embedding:', error);
+      logger.error('Error updating exercise embedding', error, 'embeddings');
       throw error;
     }
   }
@@ -196,7 +197,7 @@ export class ExerciseEmbeddingService {
         },
       }));
     } catch (error) {
-      console.error('Error searching exercises:', error);
+      logger.error('Error searching exercises', error, 'embeddings');
       throw error;
     }
   }
@@ -215,7 +216,7 @@ export class ExerciseEmbeddingService {
         throw error;
       }
 
-      console.log(`Updating embeddings for ${exercises?.length || 0} exercises...`);
+      logger.info(`Updating embeddings for ${exercises?.length || 0} exercises...`, undefined, 'embeddings');
 
       for (const exercise of exercises || []) {
         try {
@@ -238,13 +239,13 @@ export class ExerciseEmbeddingService {
           // Rate limiting - avoid hitting OpenAI rate limits
           await new Promise(resolve => setTimeout(resolve, 200));
         } catch (error) {
-          console.error(`Error updating embedding for exercise ${exercise.id}:`, error);
+          logger.error(`Error updating embedding for exercise ${exercise.id}`, error, 'embeddings');
         }
       }
 
-      console.log('Finished updating exercise embeddings');
+      logger.info('Finished updating exercise embeddings', undefined, 'embeddings');
     } catch (error) {
-      console.error('Error in batch update:', error);
+      logger.error('Error in batch update', error, 'embeddings');
       throw error;
     }
   }
@@ -294,7 +295,7 @@ export class ProtocolEmbeddingService {
         throw updateError;
       }
     } catch (error) {
-      console.error('Error updating protocol embedding:', error);
+      logger.error('Error updating protocol embedding', error, 'embeddings');
       throw error;
     }
   }
@@ -337,7 +338,7 @@ export class ProtocolEmbeddingService {
         },
       }));
     } catch (error) {
-      console.error('Error searching protocols:', error);
+      logger.error('Error searching protocols', error, 'embeddings');
       throw error;
     }
   }
@@ -387,7 +388,7 @@ export class PatientSimilarityService {
         throw updateError;
       }
     } catch (error) {
-      console.error('Error updating patient embedding:', error);
+      logger.error('Error updating patient embedding', error, 'embeddings');
       throw error;
     }
   }
@@ -438,7 +439,7 @@ export class PatientSimilarityService {
         },
       }));
     } catch (error) {
-      console.error('Error finding similar patients:', error);
+      logger.error('Error finding similar patients', error, 'embeddings');
       throw error;
     }
   }
