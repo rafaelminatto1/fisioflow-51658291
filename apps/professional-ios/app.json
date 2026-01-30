@@ -36,17 +36,6 @@
     },
     "plugins": [
       [
-        "@expo-google-fonts/inter",
-        {
-          "fonts": [
-            "inter_400",
-            "inter_500",
-            "inter_600",
-            "inter_700"
-          ]
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
