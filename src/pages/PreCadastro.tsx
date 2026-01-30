@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { CheckCircle2, Loader2, AlertCircle, Heart, Calendar, Phone, Mail, User } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
 
@@ -87,7 +88,7 @@ const PreCadastro = () => {
           campos_opcionais: data.campos_opcionais as string[] || []
         });
       } catch (err) {
-        console.error('Error validating token:', err);
+        logger.error('Error validating token', err, 'PreCadastro');
         setError('Erro ao validar link');
       } finally {
         setLoading(false);
@@ -144,7 +145,7 @@ const PreCadastro = () => {
       setSubmitted(true);
       toast.success('Pré-cadastro realizado com sucesso!');
     } catch (err) {
-      console.error('Error submitting:', err);
+      logger.error('Error submitting', err, 'PreCadastro');
       toast.error('Erro ao enviar pré-cadastro');
     } finally {
       setSubmitting(false);

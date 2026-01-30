@@ -22,6 +22,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/errors/logger';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -114,7 +115,7 @@ const PatientPortal = () => {
 
       setAiSummary(result.content);
     } catch (error) {
-      console.error('Erro ao gerar resumo de IA:', error);
+      logger.error('Erro ao gerar resumo de IA', error, 'PatientPortal');
     } finally {
       setIsGeneratingSummary(false);
     }

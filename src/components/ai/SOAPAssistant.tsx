@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Patient, SOAPRecord } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -177,7 +178,7 @@ export function SOAPAssistant({
         description: 'Fale agora. A gravação será processada automaticamente.',
       });
     } catch (err) {
-      console.error('[SOAPAssistant] Error starting recording:', err);
+      logger.error('Error starting recording', err, 'SOAPAssistant');
       toast({
         title: 'Erro ao acessar microfone',
         description: 'Verifique as permissões do microfone',
@@ -251,7 +252,7 @@ export function SOAPAssistant({
       // Generate SOAP from transcription
       await generateSOAP(transcription);
     } catch (err) {
-      console.error('[SOAPAssistant] Error:', err);
+      logger.error('Error processing audio', err, 'SOAPAssistant');
       const errorMessage = err instanceof Error ? err.message : 'Erro ao processar áudio';
       setError(errorMessage);
       setOptimisticResult(null);
@@ -334,7 +335,7 @@ export function SOAPAssistant({
         description: 'A nota foi gerada com sucesso',
       });
     } catch (err) {
-      console.error('[SOAPAssistant] Error:', err);
+      logger.error('Error generating SOAP note', err, 'SOAPAssistant');
       const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar nota SOAP';
       setError(errorMessage);
       setOptimisticResult(null);
