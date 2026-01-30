@@ -119,7 +119,7 @@ export function getFirebaseStorage(): FirebaseStorage {
  * Obtém a instância do Firebase Functions
  * Configurada para usar a região correta
  */
-export function getFirebaseFunctions(region: string = 'us-central1'): Functions {
+export function getFirebaseFunctions(region: string = 'southamerica-east1'): Functions {
   if (!functionsInstance) {
     functionsInstance = getFunctions(getFirebaseApp(), region);
   }
