@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { logger } from '@/lib/errors/logger';
 
 // Memoized Template Card Component
 const TemplateCard = memo(({
@@ -203,7 +204,7 @@ export function TemplateManager() {
       }
       setShowImportModal(false);
     } catch (error) {
-      console.error('Erro ao importar templates:', error);
+      logger.error('Erro ao importar templates', error, 'TemplateManager');
       toast.error('Erro ao importar templates.');
     } finally {
       setImporting(false);
