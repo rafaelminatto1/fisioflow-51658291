@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 interface UseLazyLibraryOptions<T> {
   /** Função de importação dinâmica */
@@ -85,14 +86,14 @@ export function useLazyLibrary<T>({
           setIsLoaded(true);
           setIsLoading(false);
           resolve(mod);
-          console.log(`[useLazyLibrary] ${moduleName} carregado com sucesso`);
+          logger.info(`[useLazyLibrary] ${moduleName} carregado com sucesso`, undefined, 'useLazyLibrary');
         })
         .catch((err) => {
           clearTimeout(timer);
           const error = err instanceof Error ? err : new Error(String(err));
           setError(error);
           setIsLoading(false);
-          console.error(`[useLazyLibrary] Erro ao carregar ${moduleName}:`, error);
+          logger.error(`[useLazyLibrary] Erro ao carregar ${moduleName}`, error, 'useLazyLibrary');
           reject(error);
         })
         .finally(() => {

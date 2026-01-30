@@ -263,8 +263,13 @@ export { patientReactivation } from './workflows/reactivation';
 export { testWhatsAppMessage, testWhatsAppTemplate } from './communications/whatsapp';
 
 // ============================================================================
-// AUTH TRIGGERS
-// ============================================================================
+// Auth Triggers
+import { onUserCreated } from './auth/user-created';
+export { onUserCreated }; // v1 trigger exported directly
+
+// User Management API
+import { listUsers, updateUserRole } from './api/users';
+export { listUsers, updateUserRole };
 
 /**
  * Trigger disparado quando um novo usuário é criado no Firebase Auth.

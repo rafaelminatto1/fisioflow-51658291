@@ -23,6 +23,7 @@ import {
   where,
   orderBy,
 } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 const storage = getStorage();
 
@@ -144,7 +145,7 @@ export const usePatientExams = (patientId?: string | null) => {
       fetchExams();
       return true;
     } catch (error) {
-      console.error('Error adding exam:', error);
+      logger.error('Error adding exam', error, 'usePatientExams');
       toast.error('Erro ao salvar exame');
       return false;
     }
@@ -183,7 +184,7 @@ export const usePatientExams = (patientId?: string | null) => {
       toast.success('Exame removido');
       fetchExams();
     } catch (error) {
-      console.error('Error deleting exam:', error);
+      logger.error('Error deleting exam', error, 'usePatientExams');
       toast.error('Erro ao remover exame');
     }
   }
