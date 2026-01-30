@@ -25,6 +25,7 @@ import {
 import { Calendar, Loader2, CheckCircle2, XCircle, LogOut, Settings, RefreshCw } from 'lucide-react';
 import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/errors/logger';
 
 // =====================================================================
 // TYPES
@@ -69,7 +70,7 @@ export function GoogleCalendarButton({
       await connect();
       onConnected?.();
     } catch (error) {
-      console.error('Erro ao conectar Google Calendar:', error);
+      logger.error('Erro ao conectar Google Calendar', error, 'GoogleCalendarButton');
     }
   };
 
@@ -79,7 +80,7 @@ export function GoogleCalendarButton({
       setShowDisconnectDialog(false);
       onDisconnected?.();
     } catch (error) {
-      console.error('Erro ao desconectar Google Calendar:', error);
+      logger.error('Erro ao desconectar Google Calendar', error, 'GoogleCalendarButton');
     }
   };
 
