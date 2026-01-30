@@ -1,4 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Tipos de sons de gamificação
@@ -115,12 +116,12 @@ export function useGamificationSound() {
         if (playPromise !== undefined) {
           playPromise.catch(err => {
             // Browsers bloqueiam autoplay sem interação do usuário
-            console.debug(`Som bloqueado ou falhou: ${type}`, err);
+            logger.debug(`Som bloqueado ou falhou: ${type}`, err, 'useGamificationSound');
           });
         }
       }
     } catch (e) {
-      console.error(`Erro ao tocar som ${type}:`, e);
+      logger.error(`Erro ao tocar som ${type}`, e, 'useGamificationSound');
     }
   }, []);
 
