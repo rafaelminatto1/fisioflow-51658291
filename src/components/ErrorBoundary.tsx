@@ -46,8 +46,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
-    // Log do erro
-    console.error('ErrorBoundary capturou um erro:', error, errorInfo);
+    // Import logger dynamically to avoid circular dependency in class component
+    import('@/lib/errors/logger').then(({ logger }) => {
+      logger.error('ErrorBoundary capturou um erro', error, 'ErrorBoundary', { errorInfo });
+    });
 
     // Salvar estado do erro
     this.setState({

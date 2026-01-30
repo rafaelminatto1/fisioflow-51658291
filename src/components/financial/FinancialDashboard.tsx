@@ -10,6 +10,7 @@ import { generateTransactionsCSV, downloadCSV } from '@/utils/csvExport';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export const FinancialDashboard: React.FC = () => {
   const { stats, loading, period, setPeriod, transactions } = useFinancial();
@@ -25,7 +26,7 @@ export const FinancialDashboard: React.FC = () => {
       downloadCSV(csv, filename);
       toast.success('Relatório exportado com sucesso!');
     } catch (error) {
-      console.error(error);
+      logger.error('Erro ao exportar relatório', error, 'FinancialDashboard');
       toast.error('Erro ao exportar relatório.');
     }
   };

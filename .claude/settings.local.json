@@ -272,7 +272,8 @@
       "mcp__zread__read_file",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 120 npx tsc:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" timeout 60 npx tsc:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc:*)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc:*)",
+      "Bash(DEBUG=vite:*)"
     ],
     "deny": [],
     "ask": [],

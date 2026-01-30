@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { generateSmartQuests, GeneratedQuest } from '@/lib/gamification/quest-generator';
+import { logger } from '@/lib/errors/logger';
 import {
   DailyQuestItem,
   GamificationProfile,
@@ -218,7 +219,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
             const updatedSnap = await getDoc(docRef);
             if (updatedSnap.exists()) {
-              console.log("Streak Saved by Freeze!");
+              logger.info('Streak Saved by Freeze', null, 'useGamification');
               return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
             }
           }

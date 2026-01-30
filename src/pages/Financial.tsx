@@ -44,6 +44,7 @@ import { exportFinancialReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAI } from "@/integrations/firebase/ai";
+import { logger } from '@/lib/errors/logger';
 
 const Financial = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
@@ -90,7 +91,7 @@ const Financial = () => {
       });
       setAiSummary(result.content);
     } catch (error) {
-      console.error('Erro ao gerar insights:', error);
+      logger.error('Erro ao gerar insights', error, 'Financial');
       setAiSummary("Foco na redução de pendências para otimizar seu caixa!");
     } finally {
       setIsGenerating(false);

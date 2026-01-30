@@ -119,7 +119,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       // TEMPORÁRIO: Usar Firestore para profile como fonte primária
       // TODO: Migrar completamente para Firebase Functions/PostgreSQL quando Cloud SQL estiver 100% estável
-      console.log('[AuthContextProvider] Fetching profile from Firestore...');
+      logger.debug('Fetching profile from Firestore', null, 'AuthContextProvider');
       const profile = await ensureProfile(firebaseUser);
 
       if (profile) {
@@ -127,7 +127,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         // Importante: PostgreSQL é a autoridade para organization_id em multi-tenancy
         profileApi.getCurrent().then(pgProfile => {
           if (!pgProfile) {
-            console.warn('[AuthContextProvider] PostgreSQL profile not found during sync');
+            logger.warn('PostgreSQL profile not found during sync', null, 'AuthContextProvider');
             return;
           }
 
@@ -135,7 +135,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
             (!profile.organization_id || profile.organization_id !== pgProfile.organization_id);
 
           if (hasOrgChanged) {
-            console.info('[AuthContextProvider] Syncing organization_id from PostgreSQL:', pgProfile.organization_id);
+            logger.info('Syncing organization_id from PostgreSQL', { organization_id: pgProfile.organization_id }, 'AuthContextProvider');
 
             // Atualizar Firestore para manter consistência e permitir cache offline
             const profileRef = doc(db, 'profiles', firebaseUser.uid);

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, MessageSquare, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 interface VideoConsultationProps {
   patientName?: string;
@@ -46,7 +47,7 @@ export const VideoConsultation: React.FC<VideoConsultationProps> = ({
         description: "Conectando com o paciente...",
       });
     } catch (error) {
-      console.error('Erro ao acessar mídia:', error);
+      logger.error('Erro ao acessar mídia', error, 'VideoConsultation');
       toast({
         title: "Erro",
         description: "Não foi possível acessar câmera/microfone",

@@ -10,6 +10,7 @@ import {
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export type VideoProvider = 'builtin' | 'whereby' | 'twilio' | 'agora' | 'daily';
 
@@ -102,7 +103,7 @@ export function VideoCall({
           videoRef.current.srcObject = stream;
         }
       } catch (err) {
-        console.error('Erro ao acessar mídia:', err);
+        logger.error('Erro ao acessar mídia', err, 'VideoIntegrationProvider');
         toast.error('Não foi possível acessar câmera e microfone');
         onError?.(err as Error);
       }
