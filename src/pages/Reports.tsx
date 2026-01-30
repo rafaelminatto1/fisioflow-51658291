@@ -399,7 +399,7 @@ const Reports = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            console.log('Downloading report:', report.name);
+                            logger.info('Downloading report', { name: report.name }, 'Reports');
                             alert(`Baixando: ${report.name}`);
                           }}
                         >

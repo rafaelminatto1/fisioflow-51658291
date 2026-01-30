@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
 import { collection as collectionRef, getDocs as getDocsFromCollection } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 export function BackupSettings() {
     const [isExporting, setIsExporting] = useState(false);
@@ -57,7 +58,7 @@ export function BackupSettings() {
             });
 
         } catch (error) {
-            console.error('Backup failed:', error);
+            logger.error('Backup failed', error, 'BackupSettings');
             toast({
                 title: "Erro no backup",
                 description: "Falha ao exportar dados. Tente novamente.",
