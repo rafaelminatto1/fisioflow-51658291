@@ -37,6 +37,7 @@ import {
 import { Activity, Database, Zap, AlertTriangle, RefreshCw, Trash2, Search, TrendingUp } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -383,7 +384,7 @@ function PerformanceDashboardContent({ isOpen }: { isOpen: boolean }) {
         duration: 2000,
       });
     } catch (error) {
-      console.error("Failed to load metrics", error);
+      logger.error("Failed to load metrics", error, 'PerformanceDashboard');
       toast({
         title: "Error",
         description: "Failed to load performance metrics.",
