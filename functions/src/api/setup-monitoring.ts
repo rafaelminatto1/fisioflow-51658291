@@ -4,6 +4,7 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https';
+import { logger } from '../lib/logger';
 
 interface AlertPolicy {
   displayName: string;
@@ -79,7 +80,7 @@ export const setupMonitoring = onCall({ cors: true },
         },
       };
     } catch (error: any) {
-      console.error('[setupMonitoring] Error:', error);
+      logger.error('[setupMonitoring] Error:', error);
       throw new Error(`Failed to setup monitoring: ${error.message}`);
     }
   }
