@@ -4,6 +4,7 @@
  */
 
 import { getPool } from '../init';
+import { logger } from '../lib/logger';
 
 /**
  * Tipos de ações auditadas
@@ -159,10 +160,10 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
       entry.metadata ? JSON.stringify(entry.metadata) : null,
     ]);
 
-    console.log(`[AuditLog] ${entry.action}: ${entry.user_id} - ${entry.resource_type || 'N/A'}:${entry.resource_id || 'N/A'}`);
+    logger.info(`[AuditLog] ${entry.action}: ${entry.user_id} - ${entry.resource_type || 'N/A'}:${entry.resource_id || 'N/A'}`);
   } catch (error) {
     // Não falhar a operação se o audit log falhar
-    console.error('[AuditLog] Error logging audit entry:', error);
+    logger.error('[AuditLog] Error logging audit entry:', error);
   }
 }
 
@@ -374,7 +375,7 @@ export async function getAuditLogs(filters: {
       total,
     };
   } catch (error) {
-    console.error('[AuditLog] Error getting audit logs:', error);
+    logger.error('[AuditLog] Error getting audit logs:', error);
     return { logs: [], total: 0 };
   }
 }
@@ -392,10 +393,10 @@ export async function cleanupAuditLogs(olderThanDays: number = 90): Promise<numb
       RETURNING id
     `);
 
-    console.log(`[AuditLog] Cleaned up ${result.rows.length} old audit log entries`);
+    logger.info(`[AuditLog] Cleaned up ${result.rows.length} old audit log entries`);
     return result.rows.length;
   } catch (error) {
-    console.error('[AuditLog] Error cleaning up audit logs:', error);
+    logger.error('[AuditLog] Error cleaning up audit logs:', error);
     return 0;
   }
 }

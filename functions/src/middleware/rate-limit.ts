@@ -5,6 +5,7 @@
 
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
+import { logger } from '../lib/logger';
 
 interface RateLimitConfig {
   /** Número máximo de requisições permitidas */
@@ -103,7 +104,7 @@ async function checkRateLimit(
       reset: new Date(row.window_end).getTime(),
     };
   } catch (error) {
-    console.error('[RateLimit] Error checking rate limit:', error);
+    logger.error('[RateLimit] Error checking rate limit:', error);
     // Fail open - permitir requisição se houver erro
     return {
       success: true,
@@ -203,7 +204,7 @@ export async function enforceRateLimit(
     );
   }
 
-  console.log(`[RateLimit] ${identifier}: ${result.limit - result.remaining}/${result.limit} requests`);
+  logger.info(`[RateLimit] ${identifier}: ${result.limit - result.remaining}/${result.limit} requests`);
 }
 
 /**
@@ -253,7 +254,7 @@ export async function getRateLimitStats(
       reset: new Date(row.window_end).getTime(),
     };
   } catch (error) {
-    console.error('[RateLimit] Error getting stats:', error);
+    logger.error('[RateLimit] Error getting stats:', error);
     return null;
   }
 }
@@ -273,10 +274,10 @@ export async function resetRateLimit(
       WHERE identifier = $1 AND key = $2
     `, [identifier, key]);
 
-    console.log(`[RateLimit] Reset rate limit for ${identifier}:${key}`);
+    logger.info(`[RateLimit] Reset rate limit for ${identifier}:${key}`);
     return true;
   } catch (error) {
-    console.error('[RateLimit] Error resetting rate limit:', error);
+    logger.error('[RateLimit] Error resetting rate limit:', error);
     return false;
   }
 }
@@ -294,10 +295,10 @@ export async function cleanupRateLimits(): Promise<number> {
       RETURNING id
     `);
 
-    console.log(`[RateLimit] Cleaned up ${result.rows.length} old rate limit records`);
+    logger.info(`[RateLimit] Cleaned up ${result.rows.length} old rate limit records`);
     return result.rows.length;
   } catch (error) {
-    console.error('[RateLimit] Error cleaning up rate limits:', error);
+    logger.error('[RateLimit] Error cleaning up rate limits:', error);
     return 0;
   }
 }

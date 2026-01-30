@@ -14,6 +14,7 @@ import { getStorage, Storage } from 'firebase-admin/storage';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { Pool } from 'pg';
 import { defineSecret } from 'firebase-functions/params';
+import { logger } from './lib/logger';
 
 // ============================================================================
 // SECRETS DEFINITIONS
@@ -148,8 +149,8 @@ export function getPool(): Pool {
             : (DB_NAME_SECRET.value() || process.env.DB_NAME);
 
         if (!process.env.FUNCTIONS_EMULATOR && (!dbUser || !dbPass || !dbName)) {
-            console.error('[Pool] Critical: Missing database credentials in production environment.');
-            console.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
+            logger.error('[Pool] Critical: Missing database credentials in production environment.');
+            logger.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
         }
 
         const connectionName = process.env.FUNCTIONS_EMULATOR === 'true'
@@ -174,7 +175,7 @@ export function getPool(): Pool {
             // EMULADOR: Usar configuração local para teste
             config.host = process.env.DB_HOST || 'localhost';
             config.port = parseInt(process.env.DB_PORT || '5432');
-            console.log(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
+            logger.info(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
         } else if (dbHostIp) {
             // PRODUÇÃO: Usar IP público do Cloud SQL com SSL
             config.host = dbHostIp;
@@ -183,34 +184,34 @@ export function getPool(): Pool {
                 rejectUnauthorized: false, // Cloud SQL usa certificados auto-assinados
                 mode: 'require', // Exigir SSL
             };
-            console.log(`[Pool] Using Cloud SQL public IP with SSL: ${config.host}:${config.port}`);
+            logger.info(`[Pool] Using Cloud SQL public IP with SSL: ${config.host}:${config.port}`);
         } else if (connectionName && (connectionName.includes(':') || connectionName.startsWith('/'))) {
             // PRODUÇÃO: Fallback para Unix socket do Cloud SQL
             config.host = connectionName.startsWith('/') ? connectionName : `/cloudsql/${connectionName}`;
-            console.log(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
+            logger.info(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
         } else {
             // Fallback total para localhost
             config.host = 'localhost';
             config.port = 5432;
-            console.warn('[Pool] Warning: No database host/connection configured. Falling back to localhost.');
+            logger.warn('[Pool] Warning: No database host/connection configured. Falling back to localhost.');
         }
 
         poolInstance = new Pool(config);
 
         // Handle pool errors with better logging
         poolInstance.on('error', (err) => {
-            console.error('[Pool] Unexpected error on idle client:', err.message);
+            logger.error('[Pool] Unexpected error on idle client:', err.message);
             if (err.message.includes('connect')) {
-                console.error('[Pool] This usually means PostgreSQL is not running or not accessible.');
-                console.error('[Pool] Check your database configuration:');
-                console.error('[Pool] - For local development: ensure PostgreSQL is running');
-                console.error('[Pool] - For production: ensure Cloud SQL secrets are configured');
+                logger.error('[Pool] This usually means PostgreSQL is not running or not accessible.');
+                logger.error('[Pool] Check your database configuration:');
+                logger.error('[Pool] - For local development: ensure PostgreSQL is running');
+                logger.error('[Pool] - For production: ensure Cloud SQL secrets are configured');
             }
         });
 
         // Test the connection
         poolInstance.query('SELECT 1').catch((err) => {
-            console.error('[Pool] Initial connection test failed:', err.message);
+            logger.error('[Pool] Initial connection test failed:', err.message);
         });
     }
     return poolInstance;

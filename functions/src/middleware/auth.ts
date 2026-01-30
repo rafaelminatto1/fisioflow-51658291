@@ -12,6 +12,7 @@ import { HttpsError } from 'firebase-functions/v2/https';
 
 // Re-exportar getPool do index
 import { getPool } from '../init';
+import { logger } from '../lib/logger';
 
 /**
  * Contexto de autenticação
@@ -121,7 +122,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
 
     if (result.rows.length === 0) {
       // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
-      console.log(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
+      logger.info(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
 
       // Generate a deterministic UUID based on user ID for the organization
       // This ensures the same user always gets the same organization
@@ -138,7 +139,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
              ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug`,
           [organizationId, orgSlug, 'admin@fisioflow.com.br']
         );
-        console.log(`[Auth Middleware] Created/updated organization: ${organizationId} with slug: ${orgSlug}`);
+        logger.info(`[Auth Middleware] Created/updated organization: ${organizationId} with slug: ${orgSlug}`);
       } catch (orgError: any) {
         // If organization already exists but slug conflicts, generate a unique one
         if (orgError.code === '23505') { // unique_violation
@@ -147,7 +148,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
             `UPDATE organizations SET slug = $1 WHERE id = $2`,
             [uniqueSlug, organizationId]
           );
-          console.log(`[Auth Middleware] Updated organization slug to: ${uniqueSlug}`);
+          logger.info(`[Auth Middleware] Updated organization slug to: ${uniqueSlug}`);
         } else {
           throw orgError;
         }
@@ -161,7 +162,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
         [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com.br', true]
       );
 
-      console.log(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);
+      logger.info(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);
       return newProfile.rows[0];
     }
 
@@ -176,7 +177,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
     // If database connection fails, provide a more helpful error
     if (error instanceof Error) {
       if (error.message.includes('connect') || error.message.includes('ECONNREFUSED')) {
-        console.error('[Auth Middleware] Database connection error:', error.message);
+        logger.error('[Auth Middleware] Database connection error:', error.message);
         throw new HttpsError(
           'internal',
           'Erro de conexão com o banco de dados. Verifique se o PostgreSQL/Cloud SQL está configurado e acessível.'
