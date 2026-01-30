@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useOfflineSync } from '@/services/offlineSync';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 export function SyncManager() {
     const { stats, syncNow, isOnline, cacheCriticalData } = useOfflineSync({
@@ -11,7 +12,7 @@ export function SyncManager() {
     // Cache critical data when coming online
     useEffect(() => {
         if (isOnline) {
-            cacheCriticalData().catch(console.error);
+            cacheCriticalData().catch(err => logger.error('Error caching critical data', err, 'SyncManager'));
         }
     }, [isOnline, cacheCriticalData]);
 
