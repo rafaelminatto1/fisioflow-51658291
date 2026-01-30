@@ -1,4 +1,5 @@
 import { UnifiedLandmark } from '@/utils/geometry';
+import { logger } from '@/lib/errors/logger';
 
 // Extend Window interface for MediaPipe Pose
 declare global {
@@ -54,7 +55,7 @@ export const initPoseEstimator = async () => {
         if (typeof window !== 'undefined' && window.Pose) {
             PoseClass = window.Pose;
         } else {
-            console.error('Pose constructor not found on window object');
+            logger.error('Pose constructor not found on window object', undefined, 'poseDetectionService');
             throw new Error('Failed to load MediaPipe Pose');
         }
     }
