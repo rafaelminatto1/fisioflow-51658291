@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { addDays, subDays, startOfWeek, isWeekend, format } from 'date-fns';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 export default function SeedData() {
     const { user, profile } = useAuth();
@@ -221,7 +222,7 @@ export default function SeedData() {
             addLog('PROCESS COMPLETED SUCCESSFULLY.');
 
         } catch (error) {
-            console.error(error);
+            logger.error('Erro ao processar seeding', error, 'SeedData');
             addLog(`❌ ERRO FATAL: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
             toast.error('Erro ao processar seeding.');
         } finally {
