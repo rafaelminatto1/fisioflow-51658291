@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Calendar as CalendarIcon, Clock, CheckCircle2, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { logger } from '@/lib/errors/logger';
 
 
 interface PublicProfile {
@@ -77,7 +78,7 @@ export const BookingPage = () => {
                 const data = querySnapshot.docs[0].data();
                 setProfile(data as PublicProfile);
             } catch (error: unknown) {
-                console.error('Error loading profile:', error);
+                logger.error('Error loading profile', error, 'BookingPage');
                 toast({
                     title: 'Perfil não encontrado',
                     description: error instanceof Error ? error.message : 'Não foi possível encontrar o profissional solicitado.',
@@ -118,7 +119,7 @@ export const BookingPage = () => {
 
             setStep(3);
         } catch (error: unknown) {
-            console.error('Error booking:', error);
+            logger.error('Error booking', error, 'BookingPage');
             toast({
                 title: 'Erro ao agendar',
                 description: error instanceof Error ? error.message : 'Não foi possível realizar o agendamento. Tente novamente ou entre em contato.',

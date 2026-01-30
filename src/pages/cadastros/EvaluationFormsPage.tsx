@@ -36,6 +36,7 @@ import { TemplateGrid } from '@/components/evaluation/TemplateGrid';
 import { TemplateFilters as TemplateFiltersComponent } from '@/components/evaluation/TemplateFilters';
 import { useToggleFavorite } from '@/hooks/useTemplateFavorites';
 import { useTemplateStats } from '@/hooks/useTemplateStats';
+import { logger } from '@/lib/errors/logger';
 
 interface EvaluationFormField {
   tipo_campo: string;
@@ -260,7 +261,7 @@ export default function EvaluationFormsPage() {
         const json = JSON.parse(event.target?.result as string);
         await importMutation.mutateAsync(json);
       } catch (error) {
-        console.error(error);
+        logger.error('Erro ao ler arquivo JSON', error, 'EvaluationFormsPage');
         toast.error('Erro ao ler arquivo JSON. Verifique o formato.');
       }
     };
