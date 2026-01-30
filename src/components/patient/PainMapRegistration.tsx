@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { PatientService } from '@/lib/services/PatientService';
 import { Activity } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 interface PainMapRegistrationProps {
     patientId: string;
@@ -56,7 +57,7 @@ export const PainMapRegistration: React.FC<PainMapRegistrationProps> = ({ patien
             setNotes('');
             if (onSuccess) onSuccess();
         } catch (error) {
-            console.error('Error saving pain record:', error);
+            logger.error('Error saving pain record', error, 'PainMapRegistration');
             toast({
                 title: "Erro ao salvar",
                 description: "Não foi possível salvar seu registro. Tente novamente.",
