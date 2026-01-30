@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, Loader2, BookOpen, Settings, BarChart3 } from 'lucide-react';
 import { ClinicalTestMetricsBuilder, MetricField } from './ClinicalTestMetricsBuilder';
+import { logger } from '@/lib/errors/logger';
 
 interface ClinicalTest {
     id?: string;
@@ -140,7 +141,7 @@ export function ClinicalTestFormModal({
             onOpenChange(false);
         },
         onError: (error) => {
-            console.error('Error creating test:', error);
+            logger.error('Error creating test', error, 'ClinicalTestFormModal');
             toast.error('Erro ao criar teste clínico');
         },
     });
@@ -173,7 +174,7 @@ export function ClinicalTestFormModal({
             onOpenChange(false);
         },
         onError: (error) => {
-            console.error('Error updating test:', error);
+            logger.error('Error updating test', error, 'ClinicalTestFormModal');
             toast.error('Erro ao atualizar teste clínico');
         },
     });
