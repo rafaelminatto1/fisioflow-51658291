@@ -26,6 +26,7 @@ import initCornerstone from './initCornerstone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Ruler, MousePointer2, ZoomIn, Move } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 interface DicomViewerProps {
     file?: File;
@@ -130,7 +131,7 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 
             if (file) {
                 // Local File Mode - placeholder for implementation
-                console.warn("DICOM Loader disabled for build verification");
+                logger.warn("DICOM Loader disabled for build verification", undefined, 'DicomViewerInner');
             } else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
                 try {
                     const functions = getFirebaseFunctions();
@@ -155,7 +156,7 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
                         });
                     }
                 } catch (e) {
-                    console.error("WADO Init Error", e);
+                    logger.error("WADO Init Error", e, 'DicomViewerInner');
                 }
             }
 
