@@ -8,6 +8,7 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
+import { logger } from '@/lib/errors/logger';
 
 // Configuração do Firebase (carregada das variáveis de ambiente)
 const firebaseConfig = {
@@ -35,8 +36,10 @@ const requiredKeys: (keyof typeof firebaseConfig)[] = [
 const missingKeys = requiredKeys.filter((key) => !firebaseConfig[key]);
 
 if (missingKeys.length > 0) {
-  console.error(
-    `Firebase config: Missing required keys: ${missingKeys.join(', ')}`
+  logger.error(
+    `Firebase config: Missing required keys: ${missingKeys.join(', ')}`,
+    undefined,
+    'firebase-app'
   );
 }
 
@@ -86,20 +89,20 @@ export async function getFirebaseDb(): Promise<Firestore> {
       try {
         // Habilitar persistência com multi-tab support
         await enableMultiTabIndexedDbPersistence(dbInstance);
-        console.log('🗄️ Firestore: Multi-tab persistence enabled');
+        logger.info('Firestore: Multi-tab persistence enabled', undefined, 'firebase-app');
       } catch (err: unknown) {
         const error = err as { code?: string };
         if (error.code === 'failed-precondition') {
-          console.warn('⚠️ Firestore: Persistence failed - multiple tabs open');
+          logger.warn('Firestore: Persistence failed - multiple tabs open', error, 'firebase-app');
         } else if (error.code === 'unimplemented') {
-          console.warn('⚠️ Firestore: Persistence not supported in this browser');
+          logger.warn('Firestore: Persistence not supported in this browser', error, 'firebase-app');
         } else {
-          console.error('❌ Firestore: Persistence error:', err);
+          logger.error('Firestore: Persistence error', err, 'firebase-app');
         }
       }
     } else {
       // Em desenvolvimento, usar cache sem persistência
-      console.log('🔥 Firestore: Running in development mode (no persistence)');
+      logger.info('Firestore: Running in development mode (no persistence)', undefined, 'firebase-app');
     }
   }
   return dbInstance;
@@ -198,7 +201,7 @@ export const functions = getFirebaseFunctions();
  */
 if (typeof window !== 'undefined' && import.meta.env.PROD) {
   getFirebaseDb().catch((err) => {
-    console.warn('Firestore persistence initialization deferred:', err);
+    logger.warn('Firestore persistence initialization deferred', err, 'firebase-app');
   });
 }
 
