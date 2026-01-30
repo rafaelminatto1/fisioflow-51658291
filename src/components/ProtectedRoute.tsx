@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/auth';
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
@@ -14,9 +14,9 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export function ProtectedRoute({ 
-  children, 
-  allowedRoles = [], 
+export function ProtectedRoute({
+  children,
+  allowedRoles = [],
   requireProfile = false,
   redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
@@ -30,9 +30,9 @@ export function ProtectedRoute({
   useEffect(() => {
     // Only redirect if auth is fully initialized
     if (initialized && !loading && !user && !sessionCheckFailed) {
-      navigate(redirectTo, { 
+      navigate(redirectTo, {
         state: { from: location.pathname },
-        replace: true 
+        replace: true
       });
     }
   }, [user, loading, initialized, sessionCheckFailed, navigate, redirectTo, location.pathname]);
@@ -44,11 +44,11 @@ export function ProtectedRoute({
         setProfileLoadTimeout(true);
       }, 2000);
     }
-    
+
     if (profile && profileTimeoutRef.current) {
       clearTimeout(profileTimeoutRef.current);
     }
-    
+
     return () => {
       if (profileTimeoutRef.current) {
         clearTimeout(profileTimeoutRef.current);
@@ -113,6 +113,16 @@ export function ProtectedRoute({
         </div>
       </div>
     );
+  }
+
+  // Handle PENDING users
+  if (profile?.role === 'pending' && location.pathname !== '/pending-approval') {
+    return <Navigate to="/pending-approval" replace />;
+  }
+
+  // Allow access to /pending-approval regardless of other role checks (as long as logged in)
+  if (location.pathname === '/pending-approval') {
+    return <>{children}</>;
   }
 
   // Check role-based access (only if profile exists and roles are specified)

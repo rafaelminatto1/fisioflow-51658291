@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { exerciseVideosService, ExerciseVideo, UploadVideoData, VideoFilterOptions } from '@/services/exerciseVideos';
+import { logger } from '@/lib/errors/logger';
 
 // Query key factory for better cache management
 export const exerciseVideoKeys = {
@@ -66,7 +67,7 @@ export const useUploadExerciseVideo = () => {
       queryClient.invalidateQueries({ queryKey: exerciseVideoKeys.lists() });
     },
     onError: (error) => {
-      console.error('[useUploadExerciseVideo] Upload failed:', error);
+      logger.error('[useUploadExerciseVideo] Upload failed', error, 'useExerciseVideos');
     },
   });
 };
@@ -107,7 +108,7 @@ export const useUpdateExerciseVideo = () => {
           context.previousVideo
         );
       }
-      console.error('[useUpdateExerciseVideo] Update failed:', error);
+      logger.error('[useUpdateExerciseVideo] Update failed', error, 'useExerciseVideos');
     },
     onSettled: (data) => {
       // Refetch after error or success
@@ -151,7 +152,7 @@ export const useDeleteExerciseVideo = () => {
       if (context?.previousVideos) {
         queryClient.setQueryData(exerciseVideoKeys.list({}), context.previousVideos);
       }
-      console.error('[useDeleteExerciseVideo] Delete failed:', error);
+      logger.error('[useDeleteExerciseVideo] Delete failed', error, 'useExerciseVideos');
     },
     onSettled: () => {
       // Refetch after error or success to ensure consistency
@@ -169,7 +170,7 @@ export const useVideoMetadata = () => {
     mutationFn: (file: File) => exerciseVideosService.extractVideoMetadata(file),
     retry: 1,
     onError: (error) => {
-      console.error('[useVideoMetadata] Failed to extract metadata:', error);
+      logger.error('[useVideoMetadata] Failed to extract metadata', error, 'useExerciseVideos');
     },
   });
 };
@@ -184,7 +185,7 @@ export const useGenerateThumbnail = () => {
       exerciseVideosService.generateThumbnail(file, time),
     retry: 1,
     onError: (error) => {
-      console.error('[useGenerateThumbnail] Failed to generate thumbnail:', error);
+      logger.error('[useGenerateThumbnail] Failed to generate thumbnail', error, 'useExerciseVideos');
     },
   });
 };
