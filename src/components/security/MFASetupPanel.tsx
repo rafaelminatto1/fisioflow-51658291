@@ -11,6 +11,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { logger } from "@/lib/errors/logger";
 
 export function MFASetupPanel() {
   const {
@@ -36,7 +37,7 @@ export function MFASetupPanel() {
       await sendOTP();
       setShowOTPInput(true);
     } catch (error) {
-      console.error("Erro ao enviar OTP:", error);
+      logger.error("Erro ao enviar OTP", error, "MFASetupPanel");
     }
   };
 
@@ -55,7 +56,7 @@ export function MFASetupPanel() {
       setShowOTPInput(false);
       setOtpCode("");
     } catch (error) {
-      console.error("Erro ao verificar OTP:", error);
+      logger.error("Erro ao verificar OTP", error, "MFASetupPanel");
     }
   };
 
