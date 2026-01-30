@@ -7,6 +7,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
 import { getPool } from '../init';
+import { logger } from '../lib/logger';
 
 interface GetPatientStatsRequest {
   patientId?: string;
@@ -67,7 +68,7 @@ export const getPatientStats = onCall<GetPatientStatsRequest, Promise<PatientSta
         },
       };
     } catch (error: unknown) {
-      console.error('[getPatientStats] Error:', error);
+      logger.error('[getPatientStats] Error:', error);
       if (error instanceof HttpsError) throw error;
       const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar estatísticas';
       throw new HttpsError('internal', errorMessage);

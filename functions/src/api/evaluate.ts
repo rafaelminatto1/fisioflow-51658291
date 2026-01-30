@@ -4,6 +4,7 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
+import { logger } from '../lib/logger';
 
 /**
  * Endpoint HTTP para avaliações
@@ -89,7 +90,7 @@ export const apiEvaluate = onRequest((req, res) => {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   } catch (error: any) {
-    console.error('Erro em apiEvaluate:', error);
+    logger.error('Erro em apiEvaluate:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error?.message || 'Unknown error',
