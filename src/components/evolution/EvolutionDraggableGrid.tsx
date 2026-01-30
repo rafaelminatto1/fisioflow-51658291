@@ -16,6 +16,7 @@ import { ExerciseBlockWidget } from '@/components/evolution/ExerciseBlockWidget'
 import { HomeCareWidget } from '@/components/evolution/HomeCareWidget';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -318,7 +319,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     return { lg: parsed };
                 }
             } catch (e) {
-                console.error('Failed to parse saved layout', e);
+                logger.error('Failed to parse saved layout', e, 'EvolutionDraggableGrid');
             }
         }
 
@@ -414,7 +415,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 
                     if (error) throw error;
                 } catch (err) {
-                    console.error('Failed to save preferences to database:', err);
+                    logger.error('Failed to save preferences to database', err, 'EvolutionDraggableGrid');
                 }
             }
         } else {
@@ -444,7 +445,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     })
                     .eq('id', user.id);
             } catch (err) {
-                console.error('Failed to reset preferences in database:', err);
+                logger.error('Failed to reset preferences in database', err, 'EvolutionDraggableGrid');
             }
         }
     };
