@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Appointment } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Lista agendamentos com filtros
@@ -93,7 +94,7 @@ export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppo
 
     return { data: result.rows as Appointment[] };
   } catch (error: unknown) {
-    console.error('Error in listAppointments:', error);
+    logger.error('Error in listAppointments:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar agendamentos';
     throw new HttpsError('internal', errorMessage);
@@ -144,7 +145,7 @@ export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointme
 
     return { data: result.rows[0] as Appointment };
   } catch (error: unknown) {
-    console.error('Error in getAppointment:', error);
+    logger.error('Error in getAppointment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar agendamento';
     throw new HttpsError('internal', errorMessage);
@@ -220,7 +221,7 @@ export const checkTimeConflict = onCall({ cors: true }, async (request) => {
       conflictingAppointments: [], // Deprecated detailed list for now to simplify
     };
   } catch (error: unknown) {
-    console.error('Error in checkTimeConflict:', error);
+    logger.error('Error in checkTimeConflict:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar conflito';
     throw new HttpsError('internal', errorMessage);
@@ -311,12 +312,12 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
         old: null,
       });
     } catch (err) {
-      console.error('Erro Ably:', err);
+      logger.error('Erro Ably:', err);
     }
 
     return { data: appointment as Appointment };
   } catch (error: unknown) {
-    console.error('Error in createAppointment:', error);
+    logger.error('Error in createAppointment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar agendamento';
     throw new HttpsError('internal', errorMessage);
@@ -436,12 +437,12 @@ export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<Update
         old: currentAppt,
       });
     } catch (err) {
-      console.error('Erro Ably:', err);
+      logger.error('Erro Ably:', err);
     }
 
     return { data: updatedAppt as Appointment };
   } catch (error: unknown) {
-    console.error('Error in updateAppointment:', error);
+    logger.error('Error in updateAppointment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
     throw new HttpsError('internal', errorMessage);
@@ -500,12 +501,12 @@ export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<Cancel
         old: current.rows[0],
       });
     } catch (err) {
-      console.error('Erro Ably:', err);
+      logger.error('Erro Ably:', err);
     }
 
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in cancelAppointment:', error);
+    logger.error('Error in cancelAppointment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao cancelar agendamento';
     throw new HttpsError('internal', errorMessage);
