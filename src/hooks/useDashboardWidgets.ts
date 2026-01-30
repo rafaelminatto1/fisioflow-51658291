@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/errors/logger';
 
 export type WidgetType =
   | 'appointments-today'
@@ -90,14 +91,14 @@ export function useDashboardWidgets() {
           )) {
             setWidgets(parsed);
           } else {
-            console.warn('Invalid widget structure, using defaults');
+            logger.warn('Invalid widget structure, using defaults', undefined, 'useDashboardWidgets');
           }
         } catch (parseError) {
-          console.error('Failed to parse widgets, using defaults', parseError);
+          logger.error('Failed to parse widgets, using defaults', parseError, 'useDashboardWidgets');
         }
       }
     } catch (error) {
-      console.error('Error loading widgets:', error);
+      logger.error('Error loading widgets', error, 'useDashboardWidgets');
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +111,7 @@ export function useDashboardWidgets() {
       localStorage.setItem(`dashboard-widgets-${user.uid}`, JSON.stringify(newWidgets));
       setWidgets(newWidgets);
     } catch (error) {
-      console.error('Error saving widgets:', error);
+      logger.error('Error saving widgets', error, 'useDashboardWidgets');
     }
   };
 
