@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/data/protocols';
+import { logger } from '@/lib/errors/logger';
 
 import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
 import { useOrganizations } from '@/hooks/useOrganizations';
@@ -100,7 +101,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
             generateProtocolPdf(protocol, currentOrganization);
             toast.success('PDF do protocolo gerado com sucesso!');
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            logger.error('Error generating PDF', error, 'ProtocolDetailView');
             toast.error('Erro ao gerar PDF do protocolo');
         }
     };
