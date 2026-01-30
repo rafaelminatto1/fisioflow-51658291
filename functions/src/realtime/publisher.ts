@@ -4,6 +4,7 @@
  */
 
 import * as Ably from 'ably';
+import { logger } from '../lib/logger';
 
 // Cliente Ably REST (para publicação do servidor)
 let ablyRest: Ably.Rest | null = null;
@@ -156,7 +157,7 @@ export const realtimePublish = onRequest(
 
       res.json({ success: true });
     } catch (error: unknown) {
-      console.error('Erro ao publicar no Ably:', error);
+      logger.error('Erro ao publicar no Ably:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ error: errorMessage });
     }

@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Payment, PatientSessionPackage } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Lista pagamentos de um paciente
@@ -49,7 +50,7 @@ export const listPayments = onCall<ListPaymentsRequest, Promise<ListPaymentsResp
 
     return { data: result.rows as Payment[] };
   } catch (error: unknown) {
-    console.error('Error in listPayments:', error);
+    logger.error('Error in listPayments:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar pagamentos';
     throw new HttpsError('internal', errorMessage);
@@ -141,7 +142,7 @@ export const getPatientFinancialSummary = onCall<GetPatientFinancialSummaryReque
       active_packages: packages.rows as PatientSessionPackage[],
     };
   } catch (error: unknown) {
-    console.error('Error in getPatientFinancialSummary:', error);
+    logger.error('Error in getPatientFinancialSummary:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar resumo financeiro';
     throw new HttpsError('internal', errorMessage);
@@ -228,12 +229,12 @@ export const createPayment = onCall<CreatePaymentRequest, Promise<CreatePaymentR
         paymentId: payment.id,
       });
     } catch (e) {
-      console.error('Error publishing to Ably:', e);
+      logger.error('Error publishing to Ably:', e);
     }
 
     return { data: payment as Payment };
   } catch (error: unknown) {
-    console.error('Error in createPayment:', error);
+    logger.error('Error in createPayment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar pagamento';
     throw new HttpsError('internal', errorMessage);
