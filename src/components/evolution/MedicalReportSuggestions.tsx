@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { useAI } from '@/integrations/firebase/ai';
+import { logger } from '@/lib/errors/logger';
 
 interface MedicalReportSuggestionsProps {
   patientId: string;
@@ -83,7 +84,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
         }]);
       }
     } catch (error) {
-      console.error('Erro ao gerar insights clínicos:', error);
+      logger.error('Erro ao gerar insights clínicos', error, 'MedicalReportSuggestions');
       toast({ title: "Erro na IA", description: "Não foi possível analisar o histórico agora.", variant: "destructive" });
     } finally {
       setIsLoading(false);
