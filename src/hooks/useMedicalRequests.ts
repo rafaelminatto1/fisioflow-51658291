@@ -24,6 +24,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { logger } from '@/lib/errors/logger';
 
 // Helper to convert doc
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
@@ -149,7 +150,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
       fetchRequests();
       return true;
     } catch (error) {
-      console.error('Error adding medical request:', error);
+      logger.error('Error adding medical request', error, 'useMedicalRequests');
       toast.error('Erro ao salvar pedido médico');
       return false;
     }
@@ -192,7 +193,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
       toast.success('Pedido removido');
       fetchRequests();
     } catch (error) {
-      console.error('Error deleting request:', error);
+      logger.error('Error deleting request', error, 'useMedicalRequests');
       toast.error('Erro ao remover pedido');
     }
   };
