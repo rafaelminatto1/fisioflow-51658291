@@ -52,6 +52,7 @@ import {
   File
 } from 'lucide-react';
 import { useUploadSessionAttachment, useDeleteSessionAttachment, useSessionAttachments, type SessionAttachmentCategory, type SessionAttachment } from '@/hooks/useSoapRecords';
+import { logger } from '@/lib/errors/logger';
 
 interface SessionImageUploadProps {
   patientId: string;
@@ -169,7 +170,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
         setUploadProgress(100);
         successCount++;
       } catch (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error', error, 'SessionImageUpload');
         errorCount++;
         toast({
           title: 'Erro no upload',
@@ -214,7 +215,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
         soapRecordId
       });
     } catch (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error', error, 'SessionImageUpload');
     } finally {
       setDeleteConfirm(null);
     }

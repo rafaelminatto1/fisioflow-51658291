@@ -17,6 +17,7 @@ import type { PainPoint } from '@/components/pain-map/BodyMap';
 import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { logger } from '@/lib/errors/logger';
 
 interface PainMapManagerProps {
   patientId: string;
@@ -81,7 +82,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       // Reset to idle after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
-      console.error('Erro ao salvar mapa de dor:', error);
+      logger.error('Erro ao salvar mapa de dor', error, 'PainMapManager');
       setSaveStatus('error');
     }
   }, [user, painPoints, sessionId, createPainMap, readOnly]);
