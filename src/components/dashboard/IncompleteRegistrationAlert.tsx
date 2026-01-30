@@ -8,6 +8,7 @@ import { collection, query, where, limit, onSnapshot } from 'firebase/firestore'
 import { PatientHelpers } from '@/types';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import { logger } from '@/lib/errors/logger';
 
 interface Patient {
   id: string;
@@ -39,7 +40,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
       });
       setIncompletePatients(patients);
     }, (error) => {
-      console.error('Error fetching incomplete patients:', error);
+      logger.error('Error fetching incomplete patients', error, 'IncompleteRegistrationAlert');
     });
 
     return () => unsubscribe();

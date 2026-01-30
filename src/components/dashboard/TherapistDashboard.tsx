@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format, isSameDay, differenceInDays } from 'date-fns';
 import { useAppointments } from '@/hooks/useAppointments';
+import { logger } from '@/lib/errors/logger';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;
@@ -152,7 +153,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       setProgressData(progressChartData);
 
     } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
+      logger.error('Erro ao carregar dados do dashboard', error, 'TherapistDashboard');
       toast({
         title: "Erro",
         description: "Não foi possível carregar os dados do dashboard.",
