@@ -10,7 +10,7 @@ const init_1 = require("./init");
  * Usage from Firebase Functions shell:
  * const data = await runMigration({ data: null });
  */
-exports.runMigration = (0, https_1.onCall)(async (request) => {
+exports.runMigration = (0, https_1.onCall)({ cors: true }, async (request) => {
     const pool = (0, init_1.getPool)();
     const client = await pool.connect();
     try {

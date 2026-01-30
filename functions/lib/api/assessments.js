@@ -37,7 +37,7 @@ exports.updateAssessment = exports.createAssessment = exports.getAssessment = ex
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
-exports.listAssessmentTemplates = (0, https_1.onCall)(async (request) => {
+exports.listAssessmentTemplates = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -62,7 +62,7 @@ exports.listAssessmentTemplates = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getAssessmentTemplate = (0, https_1.onCall)(async (request) => {
+exports.getAssessmentTemplate = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -115,7 +115,7 @@ exports.getAssessmentTemplate = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.listAssessments = (0, https_1.onCall)(async (request) => {
+exports.listAssessments = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -156,7 +156,7 @@ exports.listAssessments = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getAssessment = (0, https_1.onCall)(async (request) => {
+exports.getAssessment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -199,7 +199,7 @@ exports.getAssessment = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.createAssessment = (0, https_1.onCall)(async (request) => {
+exports.createAssessment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -276,7 +276,7 @@ exports.createAssessment = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.updateAssessment = (0, https_1.onCall)(async (request) => {
+exports.updateAssessment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

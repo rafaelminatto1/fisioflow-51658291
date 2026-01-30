@@ -13,7 +13,7 @@ import * as logger from 'firebase-functions/logger';
 
 // Configuração do Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-02-24.acacia',
   typescript: true,
 });
 
@@ -56,6 +56,7 @@ const VOUCHER_SESSIONS: Record<VoucherType, number> = {
  * Cria uma sessão de checkout no Stripe para pagamento de voucher
  */
 export const createVoucherCheckout = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -226,6 +227,7 @@ export const stripeWebhook = onCall({
  * Cloud Function: Listar vouchers disponíveis
  */
 export const listAvailableVouchers = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -246,6 +248,7 @@ export const listAvailableVouchers = onCall({
  * Cloud Function: Obter vouchers do usuário
  */
 export const getUserVouchers = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -305,7 +308,8 @@ function getVoucherDescription(type: VoucherType): string {
  * Processa checkout completado
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const { userId, voucherType, patientId, patientName, patientEmail, patientPhone } = session.metadata;
+  const metadata = session.metadata || {};
+  const { userId, voucherType, patientId, patientName, patientEmail, patientPhone } = metadata;
 
   if (!userId) {
     logger.error('No userId in session metadata');
@@ -317,11 +321,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   let currency = 'brl';
 
   if (session.mode === 'payment' && session.payment_intent) {
-    const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+    const paymentIntentId = session.payment_intent as string;
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     amount = paymentIntent.amount;
     currency = paymentIntent.currency;
   } else if (session.mode === 'subscription' && session.subscription) {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    const subscriptionId = session.subscription as string;
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     amount = subscription.items.data[0].price.unit_amount || 0;
     currency = subscription.items.data[0].price.currency;
   }
@@ -334,8 +340,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       patientId: patientId || null,
       stripeCustomerId: session.customer as string,
       stripeSessionId: session.id,
-      stripePaymentIntentId: session.payment_intent,
-      stripeSubscriptionId: session.subscription || null,
+      stripePaymentIntentId: session.payment_intent as string,
+      stripeSubscriptionId: session.subscription as string || null,
       voucherType,
       name: getVoucherName(voucherType as VoucherType),
       sessionsTotal: VOUCHER_SESSIONS[voucherType as VoucherType],

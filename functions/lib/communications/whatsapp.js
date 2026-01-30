@@ -75,7 +75,7 @@ var WhatsAppTemplate;
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -147,7 +147,7 @@ exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -200,7 +200,7 @@ exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 exports.sendWhatsAppWelcome = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -236,7 +236,7 @@ exports.sendWhatsAppWelcome = (0, https_1.onCall)({
  * Cloud Function: Enviar mensagem personalizada
  */
 exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -281,7 +281,7 @@ exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 exports.sendWhatsAppExerciseAssigned = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -573,7 +573,7 @@ async function handleAutoReply(from, text, patient) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 exports.testWhatsAppMessage = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -622,7 +622,7 @@ exports.testWhatsAppMessage = (0, https_1.onCall)({
  * Envia um template específico para verificar se foi aprovado
  */
 exports.testWhatsAppTemplate = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {

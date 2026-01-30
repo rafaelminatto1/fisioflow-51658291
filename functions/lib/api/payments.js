@@ -37,7 +37,7 @@ exports.createPayment = exports.getPatientFinancialSummary = exports.listPayment
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
-exports.listPayments = (0, https_1.onCall)(async (request) => {
+exports.listPayments = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -72,7 +72,7 @@ exports.listPayments = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getPatientFinancialSummary = (0, https_1.onCall)(async (request) => {
+exports.getPatientFinancialSummary = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -131,7 +131,7 @@ exports.getPatientFinancialSummary = (0, https_1.onCall)(async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.createPayment = (0, https_1.onCall)(async (request) => {
+exports.createPayment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

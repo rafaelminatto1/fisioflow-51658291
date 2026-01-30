@@ -14,7 +14,7 @@ interface AlertPolicy {
   severity: string;
 }
 
-export const setupMonitoring = onCall(
+export const setupMonitoring = onCall({ cors: true },
   async (request) => {
     // Verificar se é admin
     if (!request.auth?.token?.admin) {

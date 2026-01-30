@@ -23,7 +23,7 @@ export interface ConsentRecord {
   userId: string;
   consentType: ConsentType;
   granted: boolean;
-  timestamp: FirestoreTimestamp;
+  timestamp: firestore.Timestamp;
   ipAddress?: string;
   userAgent?: string;
   version: string; // Versão do documento de política
@@ -38,7 +38,7 @@ export interface PrivacyPreferences {
   marketingOptIn: boolean;
   analyticsOptIn: boolean;
   shareWithPartners: boolean;
-  updatedAt: FirestoreTimestamp;
+  updatedAt: firestore.Timestamp;
 }
 
 /**
@@ -82,7 +82,7 @@ export const recordConsent = onCall({
     userId,
     consentType,
     granted,
-    timestamp: firestore.FieldValue.serverTimestamp(),
+    timestamp: firestore.Timestamp.now(),
     version: policyVersion,
     purposes: purposes || [],
   };

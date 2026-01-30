@@ -45,15 +45,19 @@ const init_1 = require("./init");
 const whatsapp_1 = require("./communications/whatsapp");
 // Set global options for all functions
 (0, v2_1.setGlobalOptions)({
-    region: 'us-central1',
+    region: 'southamerica-east1',
     secrets: [
         init_1.DB_PASS_SECRET,
         init_1.DB_USER_SECRET,
         init_1.DB_NAME_SECRET,
         init_1.CLOUD_SQL_CONNECTION_NAME_SECRET,
+        init_1.DB_HOST_IP_SECRET,
+        init_1.DB_HOST_IP_PUBLIC_SECRET,
         whatsapp_1.WHATSAPP_PHONE_NUMBER_ID_SECRET,
         whatsapp_1.WHATSAPP_ACCESS_TOKEN_SECRET
-    ]
+    ],
+    vpcConnector: "cloudsql-connector",
+    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY"
 });
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS

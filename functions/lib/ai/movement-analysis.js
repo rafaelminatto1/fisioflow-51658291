@@ -59,6 +59,7 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.movementAnalysis = (0, https_1.onCall)({
+    cors: true,
     region: 'southamerica-east1',
     memory: '2GiB',
     maxInstances: 5,

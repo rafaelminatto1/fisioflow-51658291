@@ -45,6 +45,7 @@ function getNotificationsCollection() {
  * ```
  */
 exports.sendNotification = (0, https_1.onCall)({
+    cors: true,
     region: 'southamerica-east1',
 }, async (request) => {
     const { data, auth } = request;
@@ -106,6 +107,7 @@ exports.sendNotification = (0, https_1.onCall)({
     }
 });
 exports.sendNotificationBatch = (0, https_1.onCall)({
+    cors: true,
     region: 'southamerica-east1',
 }, async (request) => {
     const { data, auth } = request;
@@ -264,6 +266,7 @@ exports.processNotificationQueue = (0, pubsub_1.onMessagePublished)({
  * Integrates with SendGrid/Mailgun webhooks
  */
 exports.emailWebhook = (0, https_1.onCall)({
+    cors: true,
     region: 'southamerica-east1',
 }, async (request) => {
     const { data } = request;

@@ -11,6 +11,7 @@ import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SEC
  */
 export const createPerformanceIndexes = onCall(
   {
+    cors: true,
     secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
     vpcConnector: "cloudsql-connector",
     vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY"
@@ -116,7 +117,7 @@ export const createPerformanceIndexes = onCall(
       // Analisar tabelas para atualizar estatísticas
       console.log('[Migration] Analyzing tables...');
       const tables = ['patients', 'appointments', 'exercises', 'patient_exercises', 'patient_assessments',
-                      'assessment_responses', 'medical_records', 'treatment_sessions', 'transacoes', 'pagamentos', 'profiles'];
+        'assessment_responses', 'medical_records', 'treatment_sessions', 'transacoes', 'pagamentos', 'profiles'];
 
       for (const table of tables) {
         try {

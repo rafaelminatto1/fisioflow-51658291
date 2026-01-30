@@ -82,6 +82,7 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const exerciseSuggestion = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
   maxInstances: 10,
@@ -318,7 +319,7 @@ Return ONLY valid JSON matching this structure:
 
     // Estimate cost (Flash-Lite: $0.075/M input, $0.15/M output)
     const estimatedCost = (promptTokens / 1_000_000) * 0.075 +
-                         (completionTokens / 1_000_000) * 0.15;
+      (completionTokens / 1_000_000) * 0.15;
 
     return {
       success: true,

@@ -40,7 +40,7 @@ const auth_1 = require("../middleware/auth");
 /**
  * Lista agendamentos com filtros
  */
-exports.listAppointments = (0, https_1.onCall)(async (request) => {
+exports.listAppointments = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -102,7 +102,7 @@ exports.listAppointments = (0, https_1.onCall)(async (request) => {
 /**
  * Busca um agendamento por ID
  */
-exports.getAppointment = (0, https_1.onCall)(async (request) => {
+exports.getAppointment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -163,7 +163,7 @@ async function checkTimeConflictHelper(pool, params) {
 /**
  * Verifica conflito de horário (Exposed Function)
  */
-exports.checkTimeConflict = (0, https_1.onCall)(async (request) => {
+exports.checkTimeConflict = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -198,7 +198,7 @@ exports.checkTimeConflict = (0, https_1.onCall)(async (request) => {
 /**
  * Cria um novo agendamento
  */
-exports.createAppointment = (0, https_1.onCall)(async (request) => {
+exports.createAppointment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -270,7 +270,7 @@ exports.createAppointment = (0, https_1.onCall)(async (request) => {
 /**
  * Atualiza um agendamento
  */
-exports.updateAppointment = (0, https_1.onCall)(async (request) => {
+exports.updateAppointment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -357,7 +357,7 @@ exports.updateAppointment = (0, https_1.onCall)(async (request) => {
 /**
  * Cancela um agendamento
  */
-exports.cancelAppointment = (0, https_1.onCall)(async (request) => {
+exports.cancelAppointment = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

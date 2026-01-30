@@ -46,9 +46,7 @@ const rate_limit_1 = require("../middleware/rate-limit");
 /**
  * Lista pacientes com filtros opcionais
  */
-exports.listPatients = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init_1.DB_USER_SECRET, init_1.DB_NAME_SECRET, init_1.DB_HOST_IP_SECRET, init_1.DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" }, async (request) => {
+exports.listPatients = (0, https_1.onCall)({ cors: true }, async (request) => {
     console.log('[listPatients] ===== START =====');
     if (!request.auth || !request.auth.token) {
         console.error('[listPatients] Unauthenticated request');
@@ -128,9 +126,7 @@ exports.listPatients = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, in
 /**
  * Busca um paciente por ID
  */
-exports.getPatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init_1.DB_USER_SECRET, init_1.DB_NAME_SECRET, init_1.DB_HOST_IP_SECRET, init_1.DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" }, async (request) => {
+exports.getPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -172,9 +168,7 @@ exports.getPatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init
 /**
  * Cria um novo paciente
  */
-exports.createPatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init_1.DB_USER_SECRET, init_1.DB_NAME_SECRET, init_1.DB_HOST_IP_SECRET, init_1.DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" }, async (request) => {
+exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     console.log('[createPatient] ===== START =====');
     if (!request.auth || !request.auth.token) {
         console.error('[createPatient] Unauthenticated request');
@@ -266,9 +260,7 @@ exports.createPatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, i
 /**
  * Atualiza um paciente existente
  */
-exports.updatePatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init_1.DB_USER_SECRET, init_1.DB_NAME_SECRET, init_1.DB_HOST_IP_SECRET, init_1.DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" }, async (request) => {
+exports.updatePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -358,9 +350,7 @@ exports.updatePatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, i
 /**
  * Remove (soft delete) um paciente
  */
-exports.deletePatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init_1.DB_USER_SECRET, init_1.DB_NAME_SECRET, init_1.DB_HOST_IP_SECRET, init_1.DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" }, async (request) => {
+exports.deletePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -408,9 +398,7 @@ exports.deletePatient = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, i
 /**
  * Busca estatísticas de um paciente
  */
-exports.getPatientStats = (0, https_1.onCall)({ secrets: [init_1.DB_PASS_SECRET, init_1.DB_USER_SECRET, init_1.DB_NAME_SECRET, init_1.DB_HOST_IP_SECRET, init_1.DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" }, async (request) => {
+exports.getPatientStats = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

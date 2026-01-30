@@ -102,6 +102,7 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const movementAnalysis = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '2GiB',
   maxInstances: 5,
@@ -253,14 +254,14 @@ async function analyzeMovement(options: MovementAnalysisRequest & { demoVideoUrl
     const { VertexAI } = await import('@google-cloud/vertexai');
 
     const vertexAI = new VertexAI({
-    project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
-  });
+      project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
+    });
 
-  const generativeModel = vertexAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
-  });
+    const generativeModel = vertexAI.getGenerativeModel({
+      model: 'gemini-2.5-pro',
+    });
 
-  const language = options.language || 'pt-BR';
+    const language = options.language || 'pt-BR';
     const labels = language === 'pt-BR' ? {
       posture: 'Postura',
       rom: 'Amplitude de Movimento',
@@ -382,7 +383,7 @@ Return ONLY valid JSON matching the provided structure.`,
 
     // Estimate cost (Pro: $1.25/M input, $5.00/M output)
     const estimatedCost = (promptTokens / 1_000_000) * 1.25 +
-                         (completionTokens / 1_000_000) * 5.00;
+      (completionTokens / 1_000_000) * 5.00;
 
     return {
       success: true,

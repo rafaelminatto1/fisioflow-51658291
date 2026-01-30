@@ -324,8 +324,11 @@ export const getTelemedicineHistory = onCall({
     .get();
 
   const rooms = await Promise.all(
-    snapshot.docs.map(async doc => {
+    snapshot.docs.map(async (doc: any) => {
       const room = doc.data();
+      if (!room) {
+        return null;
+      }
 
       // Buscar dados do paciente
       const patientDoc = await firestore()
@@ -346,7 +349,7 @@ export const getTelemedicineHistory = onCall({
 
   return {
     success: true,
-    rooms,
+    rooms: rooms.filter(Boolean),
   };
 });
 
@@ -383,6 +386,9 @@ async function isRoomActive(roomId: string): Promise<boolean> {
   }
 
   const room = roomDoc.data();
+  if (!room) {
+    return false;
+  }
   const now = new Date();
   const scheduledTime = new Date(room.scheduledFor);
   const expiryTime = new Date(scheduledTime.getTime() + 30 * 60 * 1000);

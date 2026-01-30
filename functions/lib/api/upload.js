@@ -18,7 +18,7 @@ const init_1 = require("../init");
 /**
  * Generate a signed URL for direct upload to Firebase Storage
  */
-exports.generateUploadToken = (0, https_1.onCall)(async (request) => {
+exports.generateUploadToken = (0, https_1.onCall)({ cors: true }, async (request) => {
     const { data, auth } = request;
     // Auth check
     if (!auth) {
@@ -84,7 +84,7 @@ exports.generateUploadToken = (0, https_1.onCall)(async (request) => {
 /**
  * Confirm an upload and get the download URL
  */
-exports.confirmUpload = (0, https_1.onCall)(async (request) => {
+exports.confirmUpload = (0, https_1.onCall)({ cors: true }, async (request) => {
     const { data, auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -145,7 +145,7 @@ exports.confirmUpload = (0, https_1.onCall)(async (request) => {
 /**
  * Delete a file from Firebase Storage
  */
-exports.deleteFile = (0, https_1.onCall)(async (request) => {
+exports.deleteFile = (0, https_1.onCall)({ cors: true }, async (request) => {
     const { data, auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
@@ -183,7 +183,7 @@ exports.deleteFile = (0, https_1.onCall)(async (request) => {
 /**
  * List files owned by the user
  */
-exports.listUserFiles = (0, https_1.onCall)(async (request) => {
+exports.listUserFiles = (0, https_1.onCall)({ cors: true }, async (request) => {
     const { data, auth } = request;
     if (!auth) {
         throw new https_1.HttpsError('unauthenticated', 'User must be authenticated');
