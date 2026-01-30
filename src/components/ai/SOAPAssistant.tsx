@@ -65,7 +65,7 @@ export interface SOAPAssistantProps {
   /** Callback when SOAP section is generated */
   onApplySection?: (
     section: 'subjective' | 'objective' | 'assessment' | 'plan',
-    content: string | Record<string, any>
+    content: string | Record<string, unknown>
   ) => void;
 }
 

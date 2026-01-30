@@ -43,7 +43,7 @@ export const exerciseService = {
         return response.data as Exercise;
     },
 
-    async createExercise(exercise: any) {
+    async createExercise(exercise: Omit<Exercise, 'id'>) {
         const response = await exercisesApi.create(exercise);
         return response.data;
     },

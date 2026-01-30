@@ -68,7 +68,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
       hora_vencimento: formData.hora_vencimento || null,
       status: 'pendente',
       responsavel_id: null,
-    } as any);
+    });
     setIsDialogOpen(false);
     setFormData({
       titulo: '',

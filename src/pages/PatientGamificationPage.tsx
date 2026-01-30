@@ -9,12 +9,15 @@ import {
   TrendingUp,
   Star, Crown, Medal, Award, CheckCircle2,
   Flame,
-  Search
+  Search,
+  Sparkles
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { db } from '@/integrations/firebase/app';
+import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 
 // Gamification Components
 import GamificationHeader from '@/components/gamification/GamificationHeader';
@@ -22,7 +25,7 @@ import StreakCalendar from '@/components/gamification/StreakCalendar';
 import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
 import RewardsShop from '@/components/gamification/RewardsShop';
 import WeeklyChallenges from '@/components/gamification/WeeklyChallenges';
-import LevelUpModal from '@/components/gamification/LevelUpModal';
+import { LevelUpModal } from '@/components/gamification/LevelUpModal';
 import AchievementModal from '@/components/gamification/AchievementModal';
 import StreakFreezeModal from '@/components/gamification/StreakFreezeModal';
 
@@ -54,7 +57,7 @@ const item = {
 };
 
 export default function PatientGamificationPage() {
-  const { user } = useAuth();
+  const { user, profile: userProfile } = useAuth();
   const {
     profile,
     dailyQuests,
@@ -81,45 +84,42 @@ export default function PatientGamificationPage() {
       setIsLevelUpModalOpen(true);
       setLastViewedLevel(profile.level);
     }
-  }, [profile?.level]);
+  }, [profile?.level, lastViewedLevel]);
 
-  // Handle Achievement Click (newly unlocked)
-  const handleAchievementClick = (achievement: Achievement) => {
-    setSelectedAchievement(achievement);
-  };
-
-  // Fetch Leaderboard (optimized)
+  // Fetch Leaderboard (optimized for Firestore)
   const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useQuery({
     queryKey: ['gamification-leaderboard'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patient_levels')
-        .select(`
-          patient_id,
-          current_level,
-          total_xp,
-          current_streak,
-          title
-        `)
-        .order('total_xp', { ascending: false })
-        .limit(20);
+      const q = query(
+        collection(db, 'patient_gamification'),
+        orderBy('total_points', 'desc'),
+        limit(20)
+      );
 
-      if (error) throw error;
+      const snapshot = await getDocs(q);
+      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
 
-      const patientIds = (data || []).map(d => d.patient_id);
-      if (patientIds.length === 0) return [];
+      if (entries.length === 0) return [];
 
-      // Corrigir: usar full_name em vez de name
-      const { data: patients } = await supabase
-        .from('patients')
-        .select('id, full_name')
-        .in('id', patientIds);
+      // Get patient names from profiles
+      const profileIds = entries.map(e => e.patient_id);
+      const profilesRef = collection(db, 'profiles');
+      const profilesQuery = query(profilesRef, where('user_id', 'in', profileIds.slice(0, 10)));
+      const profilesSnap = await getDocs(profilesQuery);
+      
+      const patientMap = new Map();
+      profilesSnap.forEach(d => {
+        const p = d.data();
+        patientMap.set(p.user_id, p.full_name);
+      });
 
-      const patientMap = new Map((patients || []).map(p => [p.id, p.full_name]));
-
-      return (data || []).map(entry => ({
-        ...entry,
-        patient_name: patientMap.get(entry.patient_id) || 'Paciente'
+      return entries.map(entry => ({
+        patient_id: entry.patient_id,
+        patient_name: patientMap.get(entry.patient_id) || 'Paciente',
+        current_level: entry.level || 1,
+        total_xp: entry.total_points || 0,
+        current_streak: entry.current_streak || 0,
+        title: entry.title || 'Iniciante'
       })) as LeaderboardEntry[];
     },
   });
@@ -136,7 +136,7 @@ export default function PatientGamificationPage() {
           {/* 1. Hero / Header Section */}
           <GamificationHeader
             level={profile?.level || 1}
-            currentXp={profile?.current_xp || 0}
+            currentXp={profile?.total_points ? (profile.total_points % 1000) : 0}
             xpPerLevel={xpPerLevel}
             streak={profile?.current_streak || 0}
           />
@@ -198,7 +198,6 @@ export default function PatientGamificationPage() {
                             `}
                       onClick={() => !quest.completed && completeQuest.mutate({ questId: quest.id })}
                     >
-                      {/* Quest Completion Animation BG */}
                       {quest.completed && (
                         <motion.div
                           initial={{ scaleX: 0 }}
@@ -257,7 +256,7 @@ export default function PatientGamificationPage() {
               />
 
               {/* 5. Achievements Preview */}
-              <Card className="overflow-hidden border-none shadow-sm bg-gradient-to-br from-slate-50 to-white border">
+              <Card className="overflow-hidden border border-border/50 shadow-sm bg-gradient-to-br from-slate-50 to-white">
                 <div className="p-4 border-b flex justify-between items-center bg-white/50 backdrop-blur-sm">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Award className="w-5 h-5 text-purple-500" />
@@ -281,7 +280,6 @@ export default function PatientGamificationPage() {
                                 `}>
                           <Award className="w-6 h-6" />
                         </div>
-                        {/* Tooltip-ish */}
                         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity">
                           {achievement.title}
                         </div>
@@ -301,14 +299,14 @@ export default function PatientGamificationPage() {
               />
 
               {/* 6. Leaderboard */}
-              <Card className="border-none shadow-sm h-fit">
+              <Card className="border-border/50 shadow-sm h-fit">
                 <div className="p-4 border-b space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-blue-500" />
                       Ranking
                     </h3>
-                    <Tabs value={rankingPeriod} onValueChange={(v: any) => setRankingPeriod(v)} className="w-auto">
+                    <Tabs value={rankingPeriod} onValueChange={(v) => setRankingPeriod(v as 'weekly' | 'monthly' | 'all')} className="w-auto">
                       <TabsList className="grid grid-cols-3 h-8 text-[10px]">
                         <TabsTrigger value="weekly">Semana</TabsTrigger>
                         <TabsTrigger value="monthly">Mês</TabsTrigger>
@@ -376,7 +374,7 @@ export default function PatientGamificationPage() {
         <LevelUpModal
           isOpen={isLevelUpModalOpen}
           onClose={() => setIsLevelUpModalOpen(false)}
-          newLevel={profile?.level || 1}
+          level={profile?.level || 1}
         />
 
         <AchievementModal

@@ -171,7 +171,7 @@ export const sendNotificationBatchWorkflow = inngest.createFunction(
 
     const results = await step.run('process-batch', async () => {
       // Send individual notification events
-      const events = notifications.map((notification: any) => ({
+      const events = notifications.map((notification: Omit<NotificationSendPayload, 'organizationId'>) => ({
         name: Events.NOTIFICATION_SEND,
         data: {
           ...notification,

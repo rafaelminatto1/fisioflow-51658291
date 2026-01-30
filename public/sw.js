@@ -267,8 +267,8 @@ self.addEventListener('install', (event) => {
       }
 
       // Forçar ativação imediata
-      await self.clients.claim();
-      console.log('[SW] Service worker activated');
+      self.skipWaiting();
+      console.log('[SW] Service worker installed');
     })()
   );
 });
@@ -311,8 +311,9 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Ignorar requisições para outros origins
+  // Ignorar requisições para outros origins (incluindo Firebase APIs se necessário, mas geralmente queremos cachear assets locais)
   if (url.origin !== self.location.origin) {
+    // Permitir cache de Google Fonts e outros CDNs se necessário no futuro
     return;
   }
 

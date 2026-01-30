@@ -61,7 +61,7 @@ export function MobileHeader() {
         description: 'Até breve!',
       });
       navigate('/auth');
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao sair',
         description: error?.message || 'Ocorreu um erro',

@@ -12,6 +12,15 @@ interface RewardsShopProps {
   patientId: string;
 }
 
+interface ShopItem {
+  id: string;
+  name: string;
+  description?: string;
+  cost: number;
+  icon?: string;
+  category?: string;
+}
+
 export function RewardsShop({ patientId }: RewardsShopProps) {
   const { 
     shopItems, 
@@ -21,7 +30,7 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
     isLoading 
   } = useGamification(patientId);
 
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   // Helper to dynamically get icon component
@@ -32,7 +41,7 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
     return IconComponent;
   };
 
-  const handleBuyClick = (item: any) => {
+  const handleBuyClick = (item: ShopItem) => {
     setSelectedItem(item);
     setIsConfirmOpen(true);
   };

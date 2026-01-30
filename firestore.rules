@@ -27,7 +27,14 @@ service cloud.firestore {
 
     // Verificar se o usuário é admin
     function isAdmin() {
-      return hasRole('admin');
+      return hasRole('admin') || isBootstrapAdmin();
+    }
+
+    // Acesso emergencial para o email do proprietário
+    function isBootstrapAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == 'rafael.minatto@yahoo.com.br' || 
+         request.auth.token.email == 'rafael.minatto@yahoo.cpm.br');
     }
 
     // Verificar se o usuário é fisioterapeuta

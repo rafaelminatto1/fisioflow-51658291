@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
  */
 function useVitePreloadErrorHandler() {
   useEffect(() => {
-    const handleVitePreloadError = (event: any) => {
+    const handleVitePreloadError = (event: Event) => {
       console.error('[Vite] Erro de preload detectado:', event);
 
       const storageKey = 'vite_preload_error_reload';

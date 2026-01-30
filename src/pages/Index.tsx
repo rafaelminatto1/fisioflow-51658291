@@ -51,9 +51,9 @@ const Index = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">Bem-vindo de volta,</p>
-              <h2 className="text-base sm:text-sm md:text-base font-bold text-foreground leading-tight truncate">
+              <h1 className="text-base sm:text-sm md:text-base font-bold text-foreground leading-tight truncate">
                 {profileLoading ? 'Carregando...' : displayName}
-              </h2>
+              </h1>
             </div>
           </div>
         </div>

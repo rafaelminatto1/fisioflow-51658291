@@ -3,6 +3,11 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Type extension for jsPDF with getNumberOfPages method
+interface jsPDFWithPageCount extends jsPDF {
+  getNumberOfPages(): number;
+}
+
 interface ClinicalTest {
     id: string;
     name: string;
@@ -144,7 +149,7 @@ export const generateClinicalTestPdf = (test: ClinicalTest) => {
     }
 
     // Footer
-    const pageCount = (doc as any).getNumberOfPages();
+    const pageCount = (doc as jsPDFWithPageCount).getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(8);

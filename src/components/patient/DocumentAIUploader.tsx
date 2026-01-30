@@ -193,7 +193,7 @@ export function DocumentAIUploader({
   // DROPZONE
   // ============================================================================
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
     // Validar tamanho
     const validFiles = acceptedFiles.filter(file => file.size <= maxFileSize);
 
@@ -225,7 +225,7 @@ export function DocumentAIUploader({
     setFiles(prev => [...prev, ...filesWithPreview]);
 
     // Mostrar erros de rejeição
-    rejectedFiles.forEach(({ file, errors }: any) => {
+    rejectedFiles.forEach(({ file, errors }: { file: File; errors: { code: string; message: string }[] }) => {
       const error = errors[0];
       if (error.code === 'file-too-large') {
         toast.error(

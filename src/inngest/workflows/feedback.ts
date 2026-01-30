@@ -12,6 +12,20 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 
+interface AppointmentRecord {
+  id: string;
+  status: string;
+  patient_id?: string;
+  organization_id?: string;
+}
+
+interface AppointmentUpdatedEvent {
+  data: {
+    old_record?: Partial<AppointmentRecord>;
+    record: AppointmentRecord;
+  };
+}
+
 export const appointmentCompletedWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-feedback-request',
@@ -19,7 +33,7 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
     retries: retryConfig.whatsapp.maxAttempts,
   },
   { event: Events.APPOINTMENT_UPDATED },
-  async ({ event, step }: { event: any; step: InngestStep }) => {
+  async ({ event, step }: { event: AppointmentUpdatedEvent; step: InngestStep }) => {
     const { old_record, record } = event.data;
 
     // Only trigger if status changed to 'concluido' (or 'completed', 'attended')
@@ -46,7 +60,7 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
         throw new Error('Appointment not found');
       }
 
-      const appointment = { id: appointmentSnap.id, ...appointmentSnap.data() } as any;
+      const appointment = { id: appointmentSnap.id, ...appointmentSnap.data() } as { id: string; patient_id: string; organization_id: string; status: string };
 
       // Fetch patient
       const patientSnap = await db.collection('patients').doc(appointment.patient_id).get();

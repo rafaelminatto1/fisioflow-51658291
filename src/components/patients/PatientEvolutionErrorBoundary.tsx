@@ -3,6 +3,16 @@ import { AlertTriangle, RefreshCw, ArrowLeft, Bug, Copy, AlertCircle } from 'luc
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 
+declare global {
+  interface Performance {
+    memory?: {
+      usedJSHeapSize: number;
+      totalJSHeapSize: number;
+      jsHeapSizeLimit: number;
+    };
+  }
+}
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -184,7 +194,7 @@ export class PatientEvolutionErrorBoundary extends Component<Props, State> {
 
   private getMemoryUsage(): string | undefined {
     try {
-      const memory = (performance as any).memory;
+      const memory = performance.memory;
       return memory?.usedJSHeapSize
         ? `${Math.round(memory.usedJSHeapSize / 1048576)}MB`
         : undefined;

@@ -99,7 +99,7 @@ export function EvaluationTemplateSelector({
 
             const templatesWithFields = await Promise.all(
                 snapshot.docs.map(async (formDoc) => {
-                    const form = { id: formDoc.id, ...formDoc.data() } as any;
+                    const form = { id: formDoc.id, ...formDoc.data() } as { id: string; nome: string; descricao?: string; tipo: string; referencias?: string[] };
 
                     // Skip if category is specified and doesn't match
                     if (category && form.tipo !== category) {

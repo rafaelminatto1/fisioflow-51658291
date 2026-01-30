@@ -74,7 +74,7 @@ export default function RewardsManager() {
 
     const upsertReward = useMutation({
         mutationFn: async (values: Partial<Reward>) => {
-            const rewardData = {
+            const rewardData: Omit<Reward, 'id'> & { created_at?: string } = {
                 title: values.title!,
                 description: values.description || null,
                 point_cost: values.point_cost!,

@@ -142,7 +142,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
     if (!video) return;
 
     // Check if PiP is supported
-    if (!document.pictureInPictureEnabled || !(video as any).requestPictureInPicture) {
+    if (!document.pictureInPictureEnabled || !(video as HTMLVideoElement & { requestPictureInPicture?: () => Promise<void> }).requestPictureInPicture) {
       console.warn('Picture-in-Picture is not supported in this browser');
       return;
     }

@@ -274,7 +274,7 @@ Retorne APENAS JSON válido sem blocos de código markdown.`;
  */
 export class ExerciseAIAssistant {
   private genAI: GoogleGenerativeAI;
-  private model: any;
+  private model: GenerativeModel;
 
   constructor(apiKey?: string) {
     const key = apiKey || AI_CONFIG.apiKey;
