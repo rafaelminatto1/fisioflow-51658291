@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 interface CreateTemplateFromSelectionModalProps {
     open: boolean;
@@ -82,7 +83,7 @@ export function CreateTemplateFromSelectionModal({
             }
 
         } catch (error) {
-            console.error(error);
+            logger.error('Erro ao criar template', error, 'CreateTemplateFromSelectionModal');
             toast.error('Erro ao criar template');
         } finally {
             setIsSubmitting(false);

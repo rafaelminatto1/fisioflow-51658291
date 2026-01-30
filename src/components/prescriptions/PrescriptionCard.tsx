@@ -27,6 +27,7 @@ import { Prescription } from '@/hooks/usePrescriptions';
 import { downloadPrescriptionPDF } from '@/lib/export/prescriptionPdfExport';
 import { toast } from 'sonner';
 import { PatientHelpers } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 interface PrescriptionCardProps {
   prescription: Prescription;
@@ -64,9 +65,9 @@ export function PrescriptionCard({ prescription, onDelete, onView }: Prescriptio
         notes: prescription.notes,
       });
       toast.success('PDF gerado com sucesso');
-    } catch {
+    } catch (error) {
       toast.error('Erro ao gerar PDF');
-      console.error(error);
+      logger.error('Erro ao gerar PDF de prescrição', error, 'PrescriptionCard');
     } finally {
       setIsGeneratingPdf(false);
     }
