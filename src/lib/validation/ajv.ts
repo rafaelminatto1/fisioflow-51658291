@@ -1,6 +1,7 @@
 import Ajv from "ajv/dist/2020";
 import dynamicCompareSchema from "../../../schemas/dynamic_compare_metrics.schema.json";
 import addFormats from "ajv-formats";
+import { logger } from '@/lib/errors/logger';
 
 const ajv = new Ajv({
     allErrors: true,
@@ -9,7 +10,7 @@ const ajv = new Ajv({
 });
 
 // @ts-expect-error - ajv-formats might not be installed, handle gracefully
-try { addFormats(ajv); } catch { console.warn("ajv-formats not installed"); }
+try { addFormats(ajv); } catch { logger.warn("ajv-formats not installed", undefined, 'ajv'); }
 
 const validate = ajv.compile(dynamicCompareSchema);
 

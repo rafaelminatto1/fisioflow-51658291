@@ -11,6 +11,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import type { Patient, SOAPRecord } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -382,7 +383,7 @@ export class ClinicalDecisionSupport {
         const parsed = ClinicalAnalysisSchema.parse(JSON.parse(cleanedJson));
         analysisData = parsed as ClinicalAnalysisResult;
       } catch (parseError) {
-        console.error('[ClinicalSupport] JSON parse error:', parseError);
+        logger.error('[ClinicalSupport] JSON parse error', parseError, 'clinical-support');
         return {
           success: false,
           error: 'Failed to parse AI response as valid clinical analysis',
@@ -405,7 +406,7 @@ export class ClinicalDecisionSupport {
         },
       };
     } catch (error) {
-      console.error('[ClinicalSupport] Analysis error:', error);
+      logger.error('[ClinicalSupport] Analysis error', error, 'clinical-support');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Analysis failed',
