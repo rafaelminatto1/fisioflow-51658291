@@ -22,6 +22,7 @@ import {
 import { Save, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TemplateField } from './EvaluationTemplateSelector';
+import { logger } from '@/lib/errors/logger';
 
 interface SaveAsTemplateDialogProps {
     open: boolean;
@@ -107,7 +108,7 @@ export function SaveAsTemplateDialog({
             }
         },
         onError: (error) => {
-            console.error('Error saving template:', error);
+            logger.error('Error saving template', error, 'SaveAsTemplateDialog');
             toast.error('Erro ao salvar template. Tente novamente.');
         },
     });
