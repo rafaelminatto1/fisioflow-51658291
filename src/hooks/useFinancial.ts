@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { FinancialService, Transaction, FinancialStats } from '@/services/financialService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/errors/logger';
 
 export type { Transaction, FinancialStats };
 
@@ -24,7 +25,7 @@ export const useFinancial = () => {
     );
 
     const unsubscribe = onSnapshot(q, () => {
-      console.log('[Realtime] Financial data changed, invalidating queries...');
+      logger.debug('Financial data changed, invalidating queries', null, 'useFinancial');
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     });
 
