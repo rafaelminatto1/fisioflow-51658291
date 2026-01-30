@@ -1,5 +1,6 @@
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { useCallback, useEffect, useState } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 export interface BiometricAuthState {
   isAvailable: boolean;
@@ -41,7 +42,7 @@ export function useBiometricAuth(): BiometricAuthState {
         setIsAvailable(false);
       }
     } catch (error) {
-      console.error('Erro ao verificar disponibilidade biométrica:', error);
+      logger.error('Erro ao verificar disponibilidade biométrica', error, 'useBiometricAuth');
       setIsAvailable(false);
     }
   }, []);
@@ -52,7 +53,7 @@ export function useBiometricAuth(): BiometricAuthState {
    */
   const authenticate = useCallback(async (): Promise<boolean> => {
     if (!isAvailable) {
-      console.warn('Biometria não disponível');
+      logger.warn('Biometria não disponível', undefined, 'useBiometricAuth');
       return false;
     }
 
@@ -71,15 +72,15 @@ export function useBiometricAuth(): BiometricAuthState {
 
       return false;
     } catch (error: unknown) {
-      console.error('Erro na autenticação biométrica:', error);
+      logger.error('Erro na autenticação biométrica', error, 'useBiometricAuth');
 
       // Tratamento de erros específicos
       if (error.code === 'USER_CANCELATION') {
-        console.log('Usuário cancelou autenticação');
+        logger.info('Usuário cancelou autenticação', undefined, 'useBiometricAuth');
       } else if (error.code === 'BIOMETRIC_NOT_ENROLLED') {
-        console.log('Nenhuma biometria configurada no dispositivo');
+        logger.info('Nenhuma biometria configurada no dispositivo', undefined, 'useBiometricAuth');
       } else if (error.code === 'APP_CANCELATION') {
-        console.log('App foi colocado em background');
+        logger.info('App foi colocado em background', undefined, 'useBiometricAuth');
       }
 
       return false;
@@ -112,7 +113,7 @@ export async function setBiometricCredentials(email: string, password: string): 
       server: 'com.fisioflow.app',
     });
   } catch (error) {
-    console.error('Erro ao salvar credenciais biométricas:', error);
+    logger.error('Erro ao salvar credenciais biométricas', error, 'useBiometricAuth');
     throw error;
   }
 }
@@ -127,7 +128,7 @@ export async function deleteBiometricCredentials(): Promise<void> {
       server: 'com.fisioflow.app',
     });
   } catch (error) {
-    console.error('Erro ao remover credenciais biométricas:', error);
+    logger.error('Erro ao remover credenciais biométricas', error, 'useBiometricAuth');
   }
 }
 
@@ -143,7 +144,7 @@ export async function getBiometricCredentials(): Promise<{ username: string; pas
 
     return credentials;
   } catch (error) {
-    console.error('Erro ao obter credenciais biométricas:', error);
+    logger.error('Erro ao obter credenciais biométricas', error, 'useBiometricAuth');
     return null;
   }
 }
