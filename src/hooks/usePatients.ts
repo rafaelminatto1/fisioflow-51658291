@@ -59,13 +59,13 @@ export const useActivePatients = () => {
   const queryClient = useQueryClient();
 
   // DEBUG: Log profile and organizationId
-  console.log('📊 [useActivePatients] Profile:', profile);
-  console.log('📊 [useActivePatients] OrganizationId:', organizationId);
+  logger.debug('[useActivePatients] Profile', { profile }, 'usePatients');
+  logger.debug('[useActivePatients] OrganizationId', { organizationId }, 'usePatients');
 
   // Setup realtime subscription via Ably
   useEffect(() => {
     if (!organizationId) {
-      console.warn('useActivePatients: Missing organizationId');
+      logger.warn('useActivePatients: Missing organizationId', undefined, 'usePatients');
       return;
     }
 
@@ -117,11 +117,11 @@ export const useActivePatients = () => {
 
         // Transform data
         const validPatients = PatientService.mapPatientsFromDB(data);
-        console.log('useActivePatients: fetched patients', {
+        logger.debug('useActivePatients: fetched patients', {
           count: validPatients.length,
           patientIds: validPatients.map(p => p.id).slice(0, 5), // Log first 5 IDs for debugging
           organizationId,
-        });
+        }, 'usePatients');
         logger.info('useActivePatients: successfully fetched patients', { count: validPatients.length }, 'usePatients');
 
         // Save to cache for offline use
