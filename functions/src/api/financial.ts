@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Transaction } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Interfaces
@@ -38,7 +39,7 @@ export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTran
 
         return { data: result.rows as Transaction[] };
     } catch (error: unknown) {
-        console.error('Error in listTransactions:', error);
+        logger.error('Error in listTransactions:', error);
         if (error instanceof HttpsError) throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar transações';
         throw new HttpsError('internal', errorMessage);
@@ -93,7 +94,7 @@ export const createTransaction = onCall<CreateTransactionRequest, Promise<Create
 
         return { data: result.rows[0] as Transaction };
     } catch (error: unknown) {
-        console.error('Error in createTransaction:', error);
+        logger.error('Error in createTransaction:', error);
         if (error instanceof HttpsError) throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar transação';
         throw new HttpsError('internal', errorMessage);
@@ -179,7 +180,7 @@ export const updateTransaction = onCall<UpdateTransactionRequest, Promise<Update
 
         return { data: result.rows[0] as Transaction };
     } catch (error: unknown) {
-        console.error('Error in updateTransaction:', error);
+        logger.error('Error in updateTransaction:', error);
         if (error instanceof HttpsError) throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar transação';
         throw new HttpsError('internal', errorMessage);
@@ -218,7 +219,7 @@ export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ succ
 
         return { success: true };
     } catch (error: unknown) {
-        console.error('Error in deleteTransaction:', error);
+        logger.error('Error in deleteTransaction:', error);
         if (error instanceof HttpsError) throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir transação';
         throw new HttpsError('internal', errorMessage);
@@ -264,7 +265,7 @@ export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmen
 
         return { data: result.rows[0] as Transaction };
     } catch (error: unknown) {
-        console.error('Error in findTransactionByAppointmentId:', error);
+        logger.error('Error in findTransactionByAppointmentId:', error);
         if (error instanceof HttpsError) throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar transação';
         throw new HttpsError('internal', errorMessage);
@@ -366,7 +367,7 @@ export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventRepo
             }
         };
     } catch (error: unknown) {
-        console.error('Error in getEventReport:', error);
+        logger.error('Error in getEventReport:', error);
         if (error instanceof HttpsError) throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório';
         throw new HttpsError('internal', errorMessage);
