@@ -10,7 +10,7 @@ interface ListAssessmentTemplatesResponse {
   data: AssessmentTemplate[];
 }
 
-export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplatesResponse>>(async (request) => {
+export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplatesResponse>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -365,7 +365,7 @@ interface UpdateAssessmentRequest {
   [key: string]: any;
 }
 
-export const updateAssessment = onCall<UpdateAssessmentRequest, Promise<{ data: { success: boolean } }>>(async (request) => {
+export const updateAssessment = onCall<UpdateAssessmentRequest, Promise<{ data: { success: boolean } }>>({ cors: true }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
