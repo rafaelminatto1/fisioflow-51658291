@@ -1,5 +1,6 @@
 import { Geolocation, Position, PositionOptions } from '@capacitor/geolocation';
 import { useCallback, useState } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 export interface LocationData {
   latitude: number;
@@ -65,7 +66,7 @@ export function useGeolocation() {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao obter localização';
       setError(errorMessage);
       setIsLoading(false);
-      console.error('Erro ao obter localização:', err);
+      logger.error('Erro ao obter localização', err, 'useGeolocation');
       return null;
     }
   }, [defaultOptions]);
@@ -81,7 +82,7 @@ export function useGeolocation() {
         { ...defaultOptions },
         (position, err) => {
           if (err) {
-            console.error('Erro no monitoramento de localização:', err);
+            logger.error('Erro no monitoramento de localização', err, 'useGeolocation');
             setError(err.message || 'Erro no monitoramento');
             return;
           }
@@ -117,7 +118,7 @@ export function useGeolocation() {
     try {
       await Geolocation.clearWatch({ id: watchId });
     } catch (error) {
-      console.error('Erro ao parar monitoramento:', error);
+      logger.error('Erro ao parar monitoramento', error, 'useGeolocation');
     }
   }, []);
 

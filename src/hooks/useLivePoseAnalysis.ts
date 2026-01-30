@@ -7,6 +7,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { UnifiedLandmark, POSE_LANDMARKS, calculateAngle } from '@/utils/geometry';
 import { useMediaPipeVision } from '@/hooks/performance';
+import { logger } from '@/lib/errors/logger';
 
 export interface BiofeedbackMetrics {
     kneeValgusL: number;
@@ -62,7 +63,7 @@ export const useLivePoseAnalysis = () => {
                     });
                     landmarkerRef.current = landmarker;
                 } catch (err) {
-                    console.error("Failed to init landmarker", err);
+                    logger.error('Failed to init landmarker', err, 'useLivePoseAnalysis');
                     setError("Falha ao carregar modelo de IA.");
                 }
             }
@@ -108,7 +109,7 @@ export const useLivePoseAnalysis = () => {
                 };
             }
         } catch (err) {
-            console.error("Camera access denied", err);
+            logger.error('Camera access denied', err, 'useLivePoseAnalysis');
             setError("Acesso à câmera negado ou indisponível.");
             setIsLoading(false);
         }
