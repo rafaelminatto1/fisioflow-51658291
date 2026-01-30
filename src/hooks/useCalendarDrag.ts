@@ -116,11 +116,11 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
                 if (data) {
                     const parsed = JSON.parse(data);
                     // Apenas logar aviso se precisarmos usar o fallback
-                    console.debug('[useCalendarDrag] Using dataTransfer fallback', parsed);
+                    logger.debug('[useCalendarDrag] Using dataTransfer fallback', { parsed }, 'useCalendarDrag');
                 }
             } catch (err) {
                 // Silently fail or minimal log
-                console.warn('[useCalendarDrag] Failed to parse dataTransfer');
+                logger.warn('[useCalendarDrag] Failed to parse dataTransfer', err, 'useCalendarDrag');
             }
         }
 
