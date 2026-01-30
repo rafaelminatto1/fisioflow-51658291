@@ -14,6 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from '@/components/ui/dialog';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { logger } from '@/lib/errors/logger';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
 } from '@/components/ui/sheet';
@@ -210,7 +211,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       setCurrentMode(appointment ? 'edit' : initialMode);
       setActiveTab('info');
     } catch (err) {
-      console.error('Error resetting form:', err);
+      logger.error('Error resetting form', err, 'AppointmentModalRefactored');
       // Fail-safe reset
       reset({
         appointment_date: format(new Date(), 'yyyy-MM-dd'),
@@ -372,7 +373,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             });
           }
         } catch (err) {
-          console.error("Error consuming session:", err);
+          logger.error("Error consuming session", err, 'AppointmentModalRefactored');
           toast.error("Erro ao debitar sessão do pacote. Verifique o saldo.");
         }
       }
@@ -531,7 +532,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               <form id="appointment-form" onSubmit={(e) => {
                 e.preventDefault();
                 handleSubmit(handleSave, (errors) => {
-                  console.error('Form validation errors:', errors);
+                  logger.error('Form validation errors', { errors }, 'AppointmentModalRefactored');
                   toast.error('Verifique os campos obrigatórios do formulário');
                 })(e);
               }} className="px-4 sm:px-6 py-3">
