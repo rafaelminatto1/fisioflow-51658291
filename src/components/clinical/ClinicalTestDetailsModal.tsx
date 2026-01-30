@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { generateClinicalTestPdf } from '@/utils/generateClinicalTestPdf';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 interface ClinicalTest {
     id: string;
@@ -71,7 +72,7 @@ export function ClinicalTestDetailsModal({
             generateClinicalTestPdf(test);
             toast.success('PDF gerado com sucesso!');
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            logger.error('Error generating PDF', error, 'ClinicalTestDetailsModal');
             toast.error('Erro ao gerar PDF');
         }
     };
