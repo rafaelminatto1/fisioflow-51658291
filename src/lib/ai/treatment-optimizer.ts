@@ -16,6 +16,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -358,7 +359,7 @@ export async function optimizeTreatmentPlan(
 
     return optimization;
   } catch (error) {
-    console.error('[Treatment Optimizer] AI optimization error:', error);
+    logger.error('[Treatment Optimizer] AI optimization error', error, 'treatment-optimizer');
     throw error;
   }
 }
@@ -664,9 +665,9 @@ async function storeOptimization(
       created_at: new Date().toISOString(),
     });
 
-    console.log(`[Treatment Optimizer] Optimization stored for patient ${patientId}`);
+    logger.info(`[Treatment Optimizer] Optimization stored for patient ${patientId}`, undefined, 'treatment-optimizer');
   } catch (error) {
-    console.error('[Treatment Optimizer] Error storing optimization:', error);
+    logger.error('[Treatment Optimizer] Error storing optimization', error, 'treatment-optimizer');
   }
 }
 
