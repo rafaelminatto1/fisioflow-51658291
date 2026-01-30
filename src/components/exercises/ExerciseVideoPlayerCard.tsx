@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { exerciseVideosService, type ExerciseVideo } from '@/services/exerciseVideos';
+import { logger } from '@/lib/errors/logger';
 
 export interface ExerciseVideoPlayerProps {
   src: string;
@@ -102,7 +103,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
     if (!video) return;
 
     if (autoPlay) {
-      video.play().then(() => setIsPlaying(true)).catch(console.error);
+      video.play().then(() => setIsPlaying(true)).catch((err) => logger.warn('Video autoplay failed', err, 'ExerciseVideoPlayer'));
     }
   }, [autoPlay]);
 
@@ -131,9 +132,9 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
     if (!container) return;
 
     if (!isFullscreen) {
-      container.requestFullscreen().catch(console.error);
+      container.requestFullscreen().catch((err) => logger.warn('Fullscreen request failed', err, 'ExerciseVideoPlayer'));
     } else {
-      document.exitFullscreen().catch(console.error);
+      document.exitFullscreen().catch((err) => logger.warn('Exit fullscreen failed', err, 'ExerciseVideoPlayer'));
     }
   }, [isFullscreen]);
 
@@ -143,7 +144,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
 
     // Check if PiP is supported
     if (!document.pictureInPictureEnabled || !(video as HTMLVideoElement & { requestPictureInPicture?: () => Promise<void> }).requestPictureInPicture) {
-      console.warn('Picture-in-Picture is not supported in this browser');
+      logger.warn('Picture-in-Picture is not supported in this browser', undefined, 'ExerciseVideoPlayer');
       return;
     }
 
@@ -155,7 +156,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.warn('PiP failed:', error.message);
+        logger.warn('PiP failed', { message: error.message }, 'ExerciseVideoPlayer');
       }
     }
   }, []);
