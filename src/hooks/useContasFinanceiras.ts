@@ -8,6 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   collection,
   doc,
@@ -79,7 +80,7 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
       } catch (error) {
         // Se a coleção não existir ainda, retorna array vazio
-        console.warn('[useContasFinanceiras] Collection does not exist yet:', error);
+        logger.warn('[useContasFinanceiras] Collection does not exist yet', error, 'useContasFinanceiras');
         return [];
       }
     },
