@@ -10,6 +10,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { logger } from '@/lib/errors/logger';
 
 export const EventPlannerAI: React.FC = () => {
   const { generate } = useAI();
@@ -40,7 +41,7 @@ export const EventPlannerAI: React.FC = () => {
 
       setPlan(result.content);
     } catch (error) {
-      console.error('Erro ao planejar evento:', error);
+      logger.error('Erro ao planejar evento', error, 'EventPlannerAI');
     } finally {
       setLoading(false);
     }
