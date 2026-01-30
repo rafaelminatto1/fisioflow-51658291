@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useCallback, useMemo, useRef } from 'react';
+import { triggerGamificationFeedback } from "@/lib/gamification/feedback-utils";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -369,15 +370,17 @@ export const useGamification = (patientId: string): UseGamificationResult => {
         leveledUp: updatedProfile.level > profile.level
       };
     },
+
+
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
 
-      toast({
-        title: `+${data.newXp - (profile?.total_points || 0)} XP Ganho!`,
-        description: data.leveledUp ? "Parabéns! Você subiu de nível!" : "Continue assim!",
-        variant: "default"
-      });
+      if (data.leveledUp) {
+        triggerGamificationFeedback('level_up', { level: data.newLevel });
+      } else {
+        triggerGamificationFeedback('xp', { amount: data.newXp - (profile?.total_points || 0) });
+      }
     }
   });
 

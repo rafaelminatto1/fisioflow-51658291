@@ -1,10 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getFirebaseDb } from "@/integrations/firebase/app";
+import { db } from "@/integrations/firebase/app";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+interface AppointmentData {
+  payment_amount?: number;
+}
+
+interface PaymentData {
+  payment_method?: string;
+  amount?: string | number;
+}
 
 export function FinancialAnalytics() {
   const { data: monthlyRevenue } = useQuery({
@@ -29,7 +38,7 @@ export function FinancialAnalytics() {
         const snapshot = await getDocs(q);
         const appointments = snapshot.docs.map(doc => doc.data());
 
-        const receita = appointments.reduce((sum, appt: any) => sum + (appt.payment_amount || 0), 0);
+        const receita = appointments.reduce((sum, appt: AppointmentData) => sum + (appt.payment_amount || 0), 0);
 
         return {
           mes: format(month, "MMM/yy", { locale: ptBR }),
@@ -56,7 +65,7 @@ export function FinancialAnalytics() {
 
       const paymentMap = new Map<string, number>();
 
-      payments.forEach((payment: any) => {
+      payments.forEach((payment: PaymentData) => {
         const method = payment.payment_method || "Outros";
         const amount = Number(payment.amount) || 0;
         paymentMap.set(method, (paymentMap.get(method) || 0) + amount);

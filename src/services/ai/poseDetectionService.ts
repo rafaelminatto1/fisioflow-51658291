@@ -1,5 +1,12 @@
 import { UnifiedLandmark } from '@/utils/geometry';
 
+// Extend Window interface for MediaPipe Pose
+declare global {
+  interface Window {
+    Pose?: PoseConstructor;
+  }
+}
+
 // Type definitions for @mediapipe/pose (UMD module)
 interface PoseOptions {
     locateFile?: (file: string) => string;
@@ -44,8 +51,8 @@ export const initPoseEstimator = async () => {
     if (!PoseClass) {
         await import('@mediapipe/pose');
         // The module attaches Pose to the global window object
-        if (typeof window !== 'undefined' && (window as any).Pose) {
-            PoseClass = (window as any).Pose as PoseConstructor;
+        if (typeof window !== 'undefined' && window.Pose) {
+            PoseClass = window.Pose;
         } else {
             console.error('Pose constructor not found on window object');
             throw new Error('Failed to load MediaPipe Pose');

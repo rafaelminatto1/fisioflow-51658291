@@ -64,9 +64,9 @@ export const LeaderboardTable: React.FC = () => {
         className="cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={() => {
           if (isSorted) {
-            setFilters({ sortBy: column as any, order: direction === 'asc' ? 'desc' : 'asc' });
+            setFilters({ sortBy: column as string, order: direction === 'asc' ? 'desc' : 'asc' });
           } else {
-            setFilters({ sortBy: column as any, order: 'desc' });
+            setFilters({ sortBy: column as string, order: 'desc' });
           }
         }}
       >
@@ -135,7 +135,7 @@ export const LeaderboardTable: React.FC = () => {
             {/* Period Filter */}
             <Select
               value={filters.period}
-              onValueChange={(value) => setFilters({ period: value as any })}
+              onValueChange={(value) => setFilters({ period: value as string })}
             >
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Período" />
@@ -150,7 +150,7 @@ export const LeaderboardTable: React.FC = () => {
             {/* Category Filter */}
             <Select
               value={filters.category}
-              onValueChange={(value) => setFilters({ category: value as any, sortBy: value as any })}
+              onValueChange={(value) => setFilters({ category: value as string, sortBy: value as string })}
             >
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Ordenar por" />

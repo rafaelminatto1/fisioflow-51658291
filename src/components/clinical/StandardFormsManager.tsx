@@ -20,6 +20,19 @@ interface StandardFormCardProps {
   onDuplicate: (type: keyof typeof STANDARD_FORMS) => void;
 }
 
+interface StandardFormField {
+  tipo_campo: string;
+  rotulo: string;
+  pergunta?: string;
+  opcoes?: string[] | undefined;
+  ordem: number;
+  obrigatorio: boolean;
+  secao?: string;
+  descricao?: string;
+  minimo?: number;
+  maximo?: number;
+}
+
 function StandardFormCard({ type, onCreate, onDuplicate }: StandardFormCardProps) {
   const { data: exists } = useStandardFormExists(type);
   const config = STANDARD_FORMS[type];
@@ -150,7 +163,7 @@ export function StandardFormsManager() {
     const config = STANDARD_FORMS[type];
 
     // Map standard fields to form fields
-    const fields: EvaluationFormFieldFormData[] = config.campos.map((c: any) => ({
+    const fields: EvaluationFormFieldFormData[] = config.campos.map((c: StandardFormField) => ({
       tipo_campo: c.tipo_campo,
       label: c.rotulo,
       placeholder: c.pergunta,

@@ -8,6 +8,21 @@
 import { logger } from '@/lib/errors/logger';
 import { useEffect, useRef, useCallback } from 'react';
 
+// Types for Performance API entries
+interface PerformanceEntryLCP extends PerformanceEntry {
+  startTime: number;
+}
+
+interface PerformanceEntryFID extends PerformanceEntry {
+  startTime: number;
+  processingStart: number;
+}
+
+interface PerformanceEntryCLS extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
+}
+
 /**
  * Métricas de performance coletadas
  */
@@ -167,7 +182,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
     try {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as any;
+        const lastEntry = entries[entries.length - 1] as PerformanceEntryLCP;
         if (lastEntry) {
           metrics.lcp = lastEntry.startTime;
         }
@@ -181,7 +196,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
     try {
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
+        entries.forEach((entry: PerformanceEntryFID) => {
           metrics.fid = entry.processingStart - entry.startTime;
         });
       });
@@ -195,7 +210,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
+        entries.forEach((entry: PerformanceEntryCLS) => {
           if (!entry.hadRecentInput) {
             clsValue += entry.value;
             metrics.cls = clsValue;
@@ -241,7 +256,7 @@ export function useCoreWebVitals() {
 /**
  * Cria um debounce de performance
  */
-export function performanceDebounce<T extends ...args: unknown[]>(
+export function performanceDebounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -272,7 +287,7 @@ export function performanceDebounce<T extends ...args: unknown[]>(
 /**
  * Cria um throttle de performance
  */
-export function performanceThrottle<T extends ...args: unknown[]>(
+export function performanceThrottle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   limit: number
 ): (...args: Parameters<T>) => void {

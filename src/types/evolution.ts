@@ -361,4 +361,4 @@ export interface EvolutionAlertData {
 }
 
 // Re-export existing types with aliases for common usage
-export { Surgery as SurgeryData, PatientGoal as GoalData, Pathology as PathologyData };
+export type { Surgery as SurgeryData, PatientGoal as GoalData, Pathology as PathologyData };

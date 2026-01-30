@@ -172,7 +172,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
               <Label className="text-xs">Unidade</Label>
               <Select
                 value={customReminder.timeUnit}
-                onValueChange={(value) => setCustomReminder(prev => ({ ...prev, timeUnit: value as any }))}
+                onValueChange={(value) => setCustomReminder(prev => ({ ...prev, timeUnit: value as 'minutes' | 'hours' | 'days' }))}
               >
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
@@ -188,7 +188,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
               <Label className="text-xs">Quando</Label>
               <Select
                 value={customReminder.type}
-                onValueChange={(value) => setCustomReminder(prev => ({ ...prev, type: value as any }))}
+                onValueChange={(value) => setCustomReminder(prev => ({ ...prev, type: value as 'before' | 'after' }))}
               >
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />

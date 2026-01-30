@@ -23,7 +23,19 @@ import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  setDoc,
+  doc,
+  getDoc,
+  limit,
+  orderBy as firestoreOrderBy
+} from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Download, Info } from 'lucide-react';
 
@@ -552,7 +564,7 @@ function RelatorioMedicoEditor({
                 <Label>Tipo *</Label>
                 <Select
                   value={data.tipo_relatorio}
-                  onValueChange={(v) => onChange({ ...data, tipo_relatorio: v as any })}
+                  onValueChange={(v) => onChange({ ...data, tipo_relatorio: v as 'inicial' | 'evolucao' | 'alta' | 'interconsulta' | 'cirurgico' })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -570,7 +582,7 @@ function RelatorioMedicoEditor({
                 <Label>Urgência</Label>
                 <Select
                   value={data.urgencia || 'baixa'}
-                  onValueChange={(v) => onChange({ ...data, urgencia: v as any })}
+                  onValueChange={(v) => onChange({ ...data, urgencia: v as 'baixa' | 'media' | 'alta' })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1097,12 +1109,12 @@ export default function RelatorioMedicoPage() {
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ['relatorios-medicos'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('relatorios_medicos')
-        .select('*')
-        .order('data_emissao', { ascending: false });
-      if (error) throw error;
-      return data;
+      const q = query(
+        collection(db, 'relatorios_medicos'),
+        firestoreOrderBy('data_emissao', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioMedicoData[];
     },
   });
 
@@ -1110,25 +1122,24 @@ export default function RelatorioMedicoPage() {
   const { data: pacientes = [] } = useQuery({
     queryKey: ['pacientes-select-relatorio'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('patients')
-        .select('id, full_name, cpf, phone, email, birth_date')
-        .order('full_name');
-      return data || [];
+      const q = query(collection(db, 'patients'), firestoreOrderBy('full_name'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; full_name: string }>;
     },
   });
 
   // Salvar relatório
   const saveRelatorio = useMutation({
     mutationFn: async (data: RelatorioMedicoData) => {
-      const { data: result, error } = await supabase
-        .from('relatorios_medicos')
-        .upsert(data)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return result;
+      if (data.id) {
+        const docRef = doc(db, 'relatorios_medicos', data.id);
+        await setDoc(docRef, data, { merge: true });
+        return data;
+      } else {
+        const { id, ...rest } = data;
+        const docRef = await addDoc(collection(db, 'relatorios_medicos'), rest);
+        return { id: docRef.id, ...rest };
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['relatorios-medicos'] });
@@ -1156,11 +1167,13 @@ export default function RelatorioMedicoPage() {
     const { profile, org } = await carregarDadosProfissional();
 
     // Buscar evoluções do paciente
-    const { data: evolucoes } = await supabase
-      .from('evolucoes')
-      .select('*')
-      .eq('patient_id', pacienteId)
-      .order('data', { ascending: true });
+    const qEvolucoes = query(
+      collection(db, 'evolucoes'),
+      where('patient_id', '==', pacienteId),
+      firestoreOrderBy('data', 'asc')
+    );
+    const snapshotEvolucoes = await getDocs(qEvolucoes);
+    const evolucoes = snapshotEvolucoes.docs.map(d => d.data());
 
     const relatorio: RelatorioMedicoData = {
       id: '',
@@ -1285,7 +1298,7 @@ export default function RelatorioMedicoPage() {
           </AlertDescription>
         </Alert>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'criar' | 'lista' | 'modelos')}>
           <TabsList>
             <TabsTrigger value="criar">Criar Relatório</TabsTrigger>
             <TabsTrigger value="lista">Relatórios Salvos</TabsTrigger>
