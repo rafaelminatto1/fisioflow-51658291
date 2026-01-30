@@ -22,6 +22,7 @@ import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { Skeleton } from '@/components/ui/skeleton';
+import { logger } from '@/lib/errors/logger';
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
@@ -350,7 +351,7 @@ export default function Exercises() {
               <ExerciseAI
                 exercises={exercises}
                 onExerciseSelect={(selectedExercises) => {
-                  console.log('Exercises selected:', selectedExercises);
+                  logger.debug('Exercises selected', { selectedExercises }, 'Exercises');
                 }}
               />
             </TabsContent>
