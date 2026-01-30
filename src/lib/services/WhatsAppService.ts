@@ -83,7 +83,7 @@ export class WhatsAppService {
       logger.warn('WhatsAppService.testConnection: Needs Firebase Cloud Function implementation', {}, 'WhatsAppService');
 
       // Placeholder: Log to console
-      console.log('[WhatsAppService] Test connection - needs Cloud Function');
+      logger.debug('[WhatsAppService] Test connection - needs Cloud Function', undefined, 'WhatsAppService');
 
       return { connected: true };
     } catch (error) {
@@ -100,7 +100,7 @@ export class WhatsAppService {
     let lastError: string | undefined;
 
     // Placeholder: Log to console instead of sending via Cloud Function
-    console.log('[WhatsAppService] sendMessage:', { to, message: message.substring(0, 100), templateKey });
+    logger.debug('[WhatsAppService] sendMessage', { to, message: message.substring(0, 100), templateKey }, 'WhatsAppService');
 
     // TODO: Implement Firebase Cloud Function call
     // const cloudFunction = getFunctions();
