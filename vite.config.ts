@@ -65,6 +65,60 @@ function htmlPlugin(appVersion: string, buildTime: string, isProduction: boolean
   };
 }
 
+// Plugin para mockar módulos mobile-only (expo-notifications, etc)
+function mockMobileModules() {
+  const mobileModules = [
+    'expo-notifications',
+    'expo-device',
+    'expo-constants',
+    'expo-application',
+    'react-native',
+    '@react-native-async-storage/async-storage',
+    '@react-native-community/netinfo',
+    'react-native-toast-message',
+  ];
+
+  return {
+    name: 'mock-mobile-modules',
+    resolveId(id: string) {
+      if (mobileModules.some(m => id === m || id.includes(m))) {
+        return { id: '/virtual-mobile-stub', external: false };
+      }
+    },
+    load(id: string) {
+      if (id === '/virtual-mobile-stub') {
+        return `
+// Mobile modules stubs for web build
+export const requestPermissionsAsync = async () => ({ granted: true, canAskAgain: true });
+export const getExpoPushTokenAsync = async () => ({ data: 'mock-token' });
+export const setNotificationHandler = () => {};
+export const addNotificationReceivedListener = () => ({ remove: () => {} });
+export const addNotificationResponseReceivedListener = () => ({ remove: () => {} });
+export const removeNotificationSubscription = () => {};
+export const scheduleNotificationAsync = async () => ({});
+export const cancelScheduledNotificationAsync = async () => {};
+export const getAllScheduledNotificationsAsync = async () => [];
+export const getDevicePushTokenAsync = async () => ({ type: 'web', data: 'mock' });
+export const getPermissionsAsync = async () => ({ granted: true, canAskAgain: true });
+export const Constants = { executionEnvironment: 'WEB' };
+export const Platform = { OS: 'web' };
+export const AsyncStorage = {
+  getItem: async () => null,
+  setItem: async () => {},
+  removeItem: async () => {},
+  clear: async () => {},
+};
+export const NetInfo = {
+  fetch: async () => ({ isConnected: true, isInternetReachable: true }),
+  addEventListener: () => ({ remove: () => {} }),
+};
+export default {};
+`;
+      }
+    }
+  };
+}
+
 // Plugin para excluir MSW do bundle de produção para evitar conflitos de dependência
 function excludeMswPlugin() {
   return {
@@ -119,6 +173,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      mockMobileModules(),
       mode === 'development' && componentTagger(),
       // htmlPlugin(appVersion, buildTime, isProduction),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
