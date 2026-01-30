@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
     Sheet,
     SheetContent,
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Users, Calendar, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/errors/logger';
 
 interface ScheduleConfig {
     businessHours: {
@@ -117,7 +118,7 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
 
     const handleSave = () => {
         // TODO: Save to backend/supabase
-        console.log('Saving config:', config);
+        logger.info('Saving config', { config }, 'QuickSettingsSheet');
         setHasChanges(false);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
