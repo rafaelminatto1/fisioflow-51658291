@@ -44,7 +44,7 @@ export enum WhatsAppTemplate {
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 export const sendWhatsAppAppointmentConfirmation = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -133,7 +133,7 @@ export const sendWhatsAppAppointmentConfirmation = onCall({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 export const sendWhatsAppAppointmentReminder = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -201,7 +201,7 @@ export const sendWhatsAppAppointmentReminder = onCall({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 export const sendWhatsAppWelcome = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -245,7 +245,7 @@ export const sendWhatsAppWelcome = onCall({
  * Cloud Function: Enviar mensagem personalizada
  */
 export const sendWhatsAppCustomMessage = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -304,7 +304,7 @@ export const sendWhatsAppCustomMessage = onCall({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 export const sendWhatsAppExerciseAssigned = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -666,7 +666,7 @@ async function handleAutoReply(from: string, text: string, patient: any) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 export const testWhatsAppMessage = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -731,7 +731,7 @@ export const testWhatsAppMessage = onCall({
  * Envia um template específico para verificar se foi aprovado
  */
 export const testWhatsAppTemplate = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {

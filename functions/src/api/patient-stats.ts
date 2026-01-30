@@ -6,7 +6,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
-import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET } from '../init';
+import { getPool } from '../init';
 
 interface GetPatientStatsRequest {
   patientId?: string;
@@ -26,9 +26,7 @@ interface PatientStatsResponse {
  * Obtém estatísticas de um paciente
  */
 export const getPatientStats = onCall<GetPatientStatsRequest, Promise<PatientStatsResponse>>(
-  { secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY" },
+  { cors: true },
   async (request) => {
     if (!request.auth || !request.auth.token) {
       throw new HttpsError('unauthenticated', 'Requisita autenticação.');
