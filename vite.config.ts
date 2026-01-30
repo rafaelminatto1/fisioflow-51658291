@@ -7,60 +7,18 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 
-// Plugin para substituir placeholders no HTML e garantir ordem de carregamento do React
+// Plugin para substituir placeholders no HTML
+// Note: Let Vite handle automatic script injection, we just replace version placeholders
 function htmlPlugin(appVersion: string, buildTime: string, isProduction: boolean): any {
   return {
     name: 'html-transform',
     apply: 'build',
     transformIndexHtml(html: string) {
-      // Primeiro substitui os placeholders
-      let transformed = html
+      // Substitui os placeholders de versão e build time
+      // Vite will handle the main script tag injection
+      return html
         .replace(/%APP_VERSION%/g, appVersion)
         .replace(/%BUILD_TIME%/g, buildTime);
-
-      // Em produção, move react-vendor para ser o primeiro script carregado
-      // Isso garante que o scheduler e outras dependências críticas do React estejam disponíveis
-      // antes de outros vendors que dependem deles (como @radix-ui, framer-motion, etc)
-      if (isProduction) {
-        // Prioridade 1: React + scheduler (DEVE ser sempre o primeiro)
-        const reactVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/react-vendor-[^"]*"[^>]*><\/script>/);
-        // Prioridade 2: React Router (depende de React)
-        const routerVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/router-vendor-[^"]*"[^>]*><\/script>/);
-        // Prioridade 3: Query library (React Query depende de React)
-        const queryVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/query-vendor-[^"]*"[^>]*><\/script>/);
-        // Prioridade 4: Supabase client (necessário para inicialização)
-        const supabaseVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/supabase-vendor-[^"]*"[^>]*><\/script>/);
-
-        const priorityScripts: string[] = [];
-
-        if (reactVendorMatch) {
-          priorityScripts.push(reactVendorMatch[0]);
-          transformed = transformed.replace(reactVendorMatch[0], '');
-        }
-
-        if (routerVendorMatch) {
-          priorityScripts.push(routerVendorMatch[0]);
-          transformed = transformed.replace(routerVendorMatch[0], '');
-        }
-
-        if (queryVendorMatch) {
-          priorityScripts.push(queryVendorMatch[0]);
-          transformed = transformed.replace(queryVendorMatch[0], '');
-        }
-
-        if (supabaseVendorMatch) {
-          priorityScripts.push(supabaseVendorMatch[0]);
-          transformed = transformed.replace(supabaseVendorMatch[0], '');
-        }
-
-        // Insere os scripts prioritários logo após o <head>, em ordem de dependência
-        if (priorityScripts.length > 0) {
-          const scriptsHtml = priorityScripts.join('\n    ');
-          transformed = transformed.replace('<head>', `<head>\n    ${scriptsHtml}`);
-        }
-      }
-
-      return transformed;
     }
   };
 }
@@ -175,7 +133,7 @@ export default defineConfig(({ mode }) => {
       react(),
       mockMobileModules(),
       mode === 'development' && componentTagger(),
-      // htmlPlugin(appVersion, buildTime, isProduction),
+      htmlPlugin(appVersion, buildTime, isProduction),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
         org: "fisioflow",
         project: "fisioflow-web",
@@ -187,77 +145,78 @@ export default defineConfig(({ mode }) => {
         gzipSize: true,
         brotliSize: true,
       }),
-      VitePWA({
-        registerType: 'prompt',
-        disable: true, // Temporarily disabled to fix cache issues
-        includeAssets: ['icons/*.svg', 'icons/*.avif', 'favicon.ico'],
-        manifest: {
-          name: 'FisioFlow - Sistema de Gestão',
-          short_name: 'FisioFlow',
-          description: 'Sistema completo de gestão para clínica de fisioterapia e eventos',
-          theme_color: '#0EA5E9',
-          background_color: '#ffffff',
-          display: 'standalone',
-          orientation: 'portrait',
-          scope: '/',
-          start_url: '/',
-          icons: [
-            {
-              src: '/icons/icon-192x192.svg',
-              sizes: '192x192',
-              type: 'image/svg+xml',
-              purpose: 'any maskable'
-            },
-            {
-              src: '/icons/icon-512x512.svg',
-              sizes: '512x512',
-              type: 'image/svg+xml',
-              purpose: 'any maskable'
-            }
-          ],
-          categories: ['health', 'medical', 'productivity'],
-        },
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,avif,svg,json,woff2}'],
-          globIgnores: ['**/node_modules/**/*'],
-          navigateFallback: null,
-          skipWaiting: true,
-          clientsClaim: true,
-          cleanupOutdatedCaches: true,
-          cacheId: `fisioflow-v${appVersion}`,
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'supabase-cache',
-                expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
-                cacheableResponse: { statuses: [0, 200] }
-              }
-            },
-            {
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-cache',
-                expiration: { maxEntries: 10, maxAgeSeconds: 31536000 },
-                cacheableResponse: { statuses: [0, 200] }
-              }
-            },
-            {
-              urlPattern: /\.(?:avif|svg|gif)$/,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'images-cache',
-                expiration: { maxEntries: 100, maxAgeSeconds: 2592000 }
-              }
-            }
-          ],
-          navigationPreload: false,
-          maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
-        },
-        strategies: 'generateSW',
-      }),
+      // Temporarily disabled VitePWA - it's interfering with script injection
+      // VitePWA({
+      //   registerType: 'prompt',
+      //   disable: true, // Temporarily disabled to fix cache issues
+      //   includeAssets: ['icons/*.svg', 'icons/*.avif', 'favicon.ico'],
+      //   manifest: {
+      //     name: 'FisioFlow - Sistema de Gestão',
+      //     short_name: 'FisioFlow',
+      //     description: 'Sistema completo de gestão para clínica de fisioterapia e eventos',
+      //     theme_color: '#0EA5E9',
+      //     background_color: '#ffffff',
+      //     display: 'standalone',
+      //     orientation: 'portrait',
+      //     scope: '/',
+      //     start_url: '/',
+      //     icons: [
+      //       {
+      //         src: '/icons/icon-192x192.svg',
+      //         sizes: '192x192',
+      //         type: 'image/svg+xml',
+      //         purpose: 'any maskable'
+      //       },
+      //       {
+      //         src: '/icons/icon-512x512.svg',
+      //         sizes: '512x512',
+      //         type: 'image/svg+xml',
+      //         purpose: 'any maskable'
+      //       }
+      //     ],
+      //     categories: ['health', 'medical', 'productivity'],
+      //   },
+      //   workbox: {
+      //     globPatterns: ['**/*.{js,css,html,ico,avif,svg,json,woff2}'],
+      //     globIgnores: ['**/node_modules/**/*'],
+      //     navigateFallback: null,
+      //     skipWaiting: true,
+      //     clientsClaim: true,
+      //     cleanupOutdatedCaches: true,
+      //     cacheId: `fisioflow-v${appVersion}`,
+      //     runtimeCaching: [
+      //       {
+      //         urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+      //         handler: 'NetworkFirst',
+      //         options: {
+      //           cacheName: 'supabase-cache',
+      //           expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+      //           cacheableResponse: { statuses: [0, 200] }
+      //         }
+      //       },
+      //       {
+      //         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      //         handler: 'CacheFirst',
+      //         options: {
+      //           cacheName: 'google-fonts-cache',
+      //           expiration: { maxEntries: 10, maxAgeSeconds: 31536000 },
+      //           cacheableResponse: { statuses: [0, 200] }
+      //         }
+      //       },
+      //       {
+      //         urlPattern: /\.(?:avif|svg|gif)$/,
+      //         handler: 'CacheFirst',
+      //         options: {
+      //           cacheName: 'images-cache',
+      //           expiration: { maxEntries: 100, maxAgeSeconds: 2592000 }
+      //         }
+      //       }
+      //     ],
+      //     navigationPreload: false,
+      //     maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+      //   },
+      //   strategies: 'generateSW',
+      // }),
       viteCompression({
         algorithm: 'gzip',
         ext: '.gz',
@@ -302,6 +261,9 @@ export default defineConfig(({ mode }) => {
         transformMixedEsModules: true,
       },
       rollupOptions: {
+        input: {
+          main: './index.html',
+        },
         output: {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
