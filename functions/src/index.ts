@@ -31,7 +31,7 @@ setGlobalOptions({
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
         WHATSAPP_ACCESS_TOKEN_SECRET
     ],
-    maxInstances: 10,
+    maxInstances: 1,
 });
 
 // ============================================================================
