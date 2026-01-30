@@ -12,6 +12,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
 const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));
+const PendingApproval = lazy(() => import(/* webpackChunkName: "auth-pending" */ "./pages/PendingApproval"));
 
 // =============================================================================
 // CORE PAGES - Lazy loaded without prefetch to reduce initial bundle
@@ -25,8 +26,8 @@ const Financial = lazy(() => import(/* webpackChunkName: "financial" */ "./pages
 const Reports = lazy(() => import(/* webpackChunkName: "reports" */ "./pages/Reports"));
 const Settings = lazy(() => import(/* webpackChunkName: "settings" */ "./pages/Settings"));
 const Profile = lazy(() => import(
-  /* webpackChunkName: "profile" */
-  "./pages/Profile"
+    /* webpackChunkName: "profile" */
+    "./pages/Profile"
 ).then(module => ({ default: module.Profile })));
 const MedicalRecord = lazy(() => import(/* webpackChunkName: "medical-record" */ "./pages/MedicalRecord"));
 
@@ -151,6 +152,7 @@ export function AppRoutes() {
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/login" element={<Auth />} />
+            <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
 
             <Route path="/pre-cadastro" element={<PreCadastro />} />
             <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
@@ -253,8 +255,8 @@ export function AppRoutes() {
             <Route path="/gamification/shop" element={<ProtectedRoute><GamificationShopPage /></ProtectedRoute>} />
             <Route path="/gamification/leaderboard" element={<ProtectedRoute><GamificationLeaderboardPage /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot /></ProtectedRoute>} />
-            <Route path="/computer-vision/:patientId?" element={<ProtectedRoute><ComputerVisionExercise /></ProtectedRoute>} />
-            <Route path="/intelligent-reports/:patientId" element={<ProtectedRoute><IntelligentReports /></ProtectedRoute>} />
+            <Route path="/computer-vision/:patientId?" element={<ProtectedRoute><ComputerVisionExercise userId="" /></ProtectedRoute>} />
+            <Route path="/intelligent-reports/:patientId" element={<ProtectedRoute><IntelligentReports patientId="" patientName="" /></ProtectedRoute>} />
             <Route path="/augmented-reality/:patientId?" element={<ProtectedRoute><AugmentedRealityExercise /></ProtectedRoute>} />
             <Route path="/admin/gamification" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminGamificationPage /></ProtectedRoute>} />
 
