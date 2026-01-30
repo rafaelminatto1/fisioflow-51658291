@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 // =====================================================================
 // TYPES
@@ -458,7 +459,7 @@ class KeyboardShortcutManager {
    */
   private log(message: string): void {
     if (this.debug) {
-      console.log(`[KeyboardShortcuts] ${message}`);
+      logger.debug(`[KeyboardShortcuts] ${message}`, undefined, 'shortcuts-manager');
     }
   }
 }

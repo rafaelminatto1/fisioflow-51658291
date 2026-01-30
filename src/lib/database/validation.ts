@@ -19,6 +19,8 @@ import {
   isValidPathologyStatus,
   isValidPaymentStatus,
 } from './constants';
+import { logger } from '@/lib/errors/logger';
+} from './constants';
 
 // ============================================================================
 // ERROR TYPES
@@ -199,7 +201,7 @@ export function validateBatch(validations: Array<{
         break;
       default:
         // Unknown table, skip validation
-        console.warn(`Unknown table for validation: ${table}`);
+        logger.warn(`Unknown table for validation: ${table}`, undefined, 'database-validation');
     }
   }
 
