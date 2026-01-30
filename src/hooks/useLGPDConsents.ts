@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   collection,
   doc,
@@ -121,7 +122,7 @@ export function useLGPDConsents() {
       );
     },
     onError: (error) => {
-      console.error("Erro ao gerenciar consentimento:", error);
+      logger.error("Erro ao gerenciar consentimento", error, 'useLGPDConsents');
       toast.error("Erro ao atualizar consentimento");
     },
   });

@@ -8,6 +8,7 @@
 import { useCompletion, useChat } from '@ai-sdk/react';
 import { useState, useMemo } from 'react';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -177,11 +178,11 @@ export function useAIInsights(options: AIInsightOptions) {
     },
     onFinish: (_prompt, completion) => {
       setIsGenerating(false);
-      console.log('[AI Insights] Generation complete', { completionLength: completion.length });
+      logger.info('[AI Insights] Generation complete', { completionLength: completion.length }, 'useAIInsights');
     },
     onError: (error) => {
       setIsGenerating(false);
-      console.error('[AI Insights] Generation error', error);
+      logger.error('[AI Insights] Generation error', error, 'useAIInsights');
     },
   });
 
@@ -221,11 +222,11 @@ export function useAITreatmentRecommendations(
     },
     onFinish: (_prompt, completion) => {
       setIsGenerating(false);
-      console.log('[AI Recommendations] Generation complete', { completionLength: completion.length });
+      logger.info('[AI Recommendations] Generation complete', { completionLength: completion.length }, 'useAIInsights');
     },
     onError: (error) => {
       setIsGenerating(false);
-      console.error('[AI Recommendations] Generation error', error);
+      logger.error('[AI Recommendations] Generation error', error, 'useAIInsights');
     },
   });
 
@@ -264,7 +265,7 @@ export function useAIPatientAssistant(patientId: string, patientName: string) {
       },
     ],
     onError: (error) => {
-      console.error('[AI Chat] Error:', error);
+      logger.error('[AI Chat] Error', error, 'useAIInsights');
     },
   });
 

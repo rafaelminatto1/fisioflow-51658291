@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 // Interfaces para Analytics
 interface MetricData {
@@ -320,7 +321,7 @@ export const useAdvancedAnalytics = () => {
       setError(null);
     } catch {
       setError('Erro ao atualizar métricas');
-      console.error('Erro ao atualizar métricas de analytics', _err);
+      logger.error('Erro ao atualizar métricas de analytics', undefined, 'useAdvancedAnalytics');
     } finally {
       setLoading(false);
     }

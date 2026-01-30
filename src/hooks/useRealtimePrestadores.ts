@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 
 /**
@@ -27,7 +28,7 @@ export function useRealtimePrestadores(eventoId: string) {
         queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
       }
     }, (error) => {
-      console.error("Error in useRealtimePrestadores subscription:", error);
+      logger.error("Error in useRealtimePrestadores subscription", error, 'useRealtimePrestadores');
     });
 
     return () => {

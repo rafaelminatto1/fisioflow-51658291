@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Workbox } from 'workbox-window';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Hook para gerenciar atualizações do Service Worker
@@ -51,7 +52,7 @@ export function useServiceWorkerUpdate() {
 
         // Listener para quando o SW encontrar uma atualização e entrar em waiting
         wb.addEventListener('waiting', (event) => {
-          console.log('[SW] Nova versão disponível (waiting)!');
+          logger.info('[SW] Nova versão disponível (waiting)', undefined, 'useServiceWorkerUpdate');
 
           if (!mounted) return;
 
@@ -66,14 +67,14 @@ export function useServiceWorkerUpdate() {
             action: {
               label: 'Atualizar agora',
               onClick: () => {
-                console.log('[SW] Usuário clicou em atualizar');
+                logger.info('[SW] Usuário clicou em atualizar', undefined, 'useServiceWorkerUpdate');
                 setState(prev => ({ ...prev, isUpdating: true }));
 
                 // Enviar mensagem para o SW pular a espera
                 if (wbRef.current) {
                   // Listener para quando o novo SW assumir o controle
                   wbRef.current.addEventListener('controlling', () => {
-                    console.log('[SW] Novo controller ativado, recarregando...');
+                    logger.info('[SW] Novo controller ativado, recarregando', undefined, 'useServiceWorkerUpdate');
                     window.location.reload();
                   }, { once: true });
 
@@ -85,7 +86,7 @@ export function useServiceWorkerUpdate() {
             cancel: {
               label: 'Depois',
               onClick: () => {
-                console.log('[SW] Usuário optou por atualizar depois');
+                logger.info('[SW] Usuário optou por atualizar depois', undefined, 'useServiceWorkerUpdate');
                 toast.dismiss('sw-update');
               }
             }
@@ -97,15 +98,15 @@ export function useServiceWorkerUpdate() {
 
         // Listener para quando o SW estiver ativo e controlando a página
         wb.addEventListener('activated', (event) => {
-          console.log('[SW] Service Worker ativado:', event);
+          logger.info('[SW] Service Worker ativado', { event }, 'useServiceWorkerUpdate');
 
           if (!mounted) return;
 
           // Verificar se é primeira instalação ou atualização
           if (event.isUpdate) {
-            console.log('[SW] Atualização aplicada com sucesso');
+            logger.info('[SW] Atualização aplicada com sucesso', undefined, 'useServiceWorkerUpdate');
           } else {
-            console.log('[SW] Service Worker instalado pela primeira vez');
+            logger.info('[SW] Service Worker instalado pela primeira vez', undefined, 'useServiceWorkerUpdate');
             setState(prev => ({ ...prev, offlineReady: true }));
 
             toast.success('Aplicativo pronto para uso offline', {
@@ -118,26 +119,26 @@ export function useServiceWorkerUpdate() {
 
         // Listener para quando o SW começar a controlar a página
         wb.addEventListener('controlling', () => {
-          console.log('[SW] Service Worker agora está controlando a página');
+          logger.info('[SW] Service Worker agora está controlando a página', undefined, 'useServiceWorkerUpdate');
         });
 
         // Registrar o SW
         await wb.register();
 
-        console.log('[SW] Service Worker registrado com sucesso');
+        logger.info('[SW] Service Worker registrado com sucesso', undefined, 'useServiceWorkerUpdate');
 
         // Verificar atualizações periodicamente (a cada 2 minutos)
         updateCheckIntervalRef.current = setInterval(() => {
           if (wbRef.current) {
-            console.log('[SW] Verificando atualizações...');
+            logger.info('[SW] Verificando atualizações', undefined, 'useServiceWorkerUpdate');
             wbRef.current.update().catch(err => {
-              console.debug('[SW] Nenhuma atualização disponível');
+              logger.debug('[SW] Nenhuma atualização disponível', undefined, 'useServiceWorkerUpdate');
             });
           }
         }, 2 * 60 * 1000);
 
       } catch (error) {
-        console.error('[SW] Falha ao registrar Service Worker:', error);
+        logger.error('[SW] Falha ao registrar Service Worker', error, 'useServiceWorkerUpdate');
         if (mounted) {
           toast.error('Erro ao registrar service worker', {
             description: 'O app pode não funcionar offline.',
@@ -160,7 +161,7 @@ export function useServiceWorkerUpdate() {
 
   // Função para atualização manual (pode ser chamada de outros componentes)
   const forceUpdate = () => {
-    console.log('[SW] Forçando atualização manual');
+    logger.info('[SW] Forçando atualização manual', undefined, 'useServiceWorkerUpdate');
     setState(prev => ({ ...prev, isUpdating: true }));
     window.location.reload();
   };

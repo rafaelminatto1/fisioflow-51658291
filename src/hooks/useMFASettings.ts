@@ -62,7 +62,7 @@ const logSecurityEvent = async (
       created_at: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Failed to log security event:', error);
+    logger.error('Failed to log security event', error, 'useMFASettings');
   }
 };
 

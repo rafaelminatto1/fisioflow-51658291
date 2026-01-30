@@ -14,6 +14,7 @@ import {
   getFirebaseAuth,
   getFirebaseStorage
 } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   collection,
   doc,
@@ -544,7 +545,7 @@ export const useDeleteSessionAttachment = () => {
         const storageRef = ref(storage, `session-attachments/${attachment.file_name}`);
         await deleteObject(storageRef);
       } catch (storageError) {
-        console.warn('Storage delete error:', storageError);
+        logger.warn('Storage delete error', storageError, 'useSoapRecords');
       }
 
       // Delete from database
@@ -776,7 +777,7 @@ export const useAutoSaveSoapRecord = () => {
     },
     onError: (error: unknown) => {
       // Silent error for autosave
-      console.error('Autosave error:', error instanceof SoapOperationError ? error.message : error);
+      logger.error('Autosave error', error instanceof SoapOperationError ? error.message : error, 'useSoapRecords');
     }
   });
 };

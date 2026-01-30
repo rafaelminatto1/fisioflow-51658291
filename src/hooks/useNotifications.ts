@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   collection,
   doc,
@@ -74,7 +75,7 @@ export const useNotifications = (limitValue = 10) => {
         return data;
       } catch (error) {
         // Se a coleção não existir ainda, retorna array vazio
-        console.warn('[useNotifications] Collection does not exist yet:', error);
+        logger.warn('[useNotifications] Collection does not exist yet', error, 'useNotifications');
         return [];
       }
     },
@@ -172,7 +173,7 @@ export const useNotifications = (limitValue = 10) => {
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
       },
       (error) => {
-        console.error('Real-time notifications error:', error);
+        logger.error('Real-time notifications error', error, 'useNotifications');
       }
     );
 

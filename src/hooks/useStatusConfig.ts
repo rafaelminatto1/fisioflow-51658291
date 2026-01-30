@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
 import type { StatusConfig, SessionStatus } from '@/types/agenda';
 import { getTextColorClass, getOptimalTextColor } from '@/utils/colorContrast';
+import { logger } from '@/lib/errors/logger';
 
 const STORAGE_KEY = 'fisioflow_status_config';
 
@@ -27,7 +28,7 @@ const getStoredConfig = (): StoredStatusConfig => {
             return JSON.parse(stored);
         }
     } catch (e) {
-        console.error('Error reading status config from localStorage:', e);
+        logger.error('Error reading status config from localStorage', e, 'useStatusConfig');
     }
     return { customColors: {}, customStatuses: [] };
 };
@@ -36,7 +37,7 @@ const saveStoredConfig = (config: StoredStatusConfig) => {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     } catch (e) {
-        console.error('Error saving status config to localStorage:', e);
+        logger.error('Error saving status config to localStorage', e, 'useStatusConfig');
     }
 };
 

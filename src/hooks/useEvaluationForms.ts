@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 import { db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   collection,
   getDocs,
@@ -237,7 +238,7 @@ export function useDuplicateEvaluationForm() {
       toast.success('Ficha duplicada com sucesso.');
     },
     onError: (error) => {
-      console.error(error);
+      logger.error('Erro ao duplicar ficha', error, 'useEvaluationForms');
       toast.error('Erro ao duplicar ficha.');
     },
   });
@@ -376,7 +377,7 @@ export function useImportEvaluationForm() {
       toast.success('Ficha importada com sucesso.');
     },
     onError: (error) => {
-      console.error(error);
+      logger.error('Erro ao importar ficha', error, 'useEvaluationForms');
       toast.error('Erro ao importar ficha.');
     },
   });

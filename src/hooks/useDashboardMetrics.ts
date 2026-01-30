@@ -16,13 +16,14 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { 
-  collection, getDocs, query, where, orderBy, limit, 
-  getCountFromServer, QueryConstraint, onSnapshot 
+import {
+  collection, getDocs, query, where, orderBy, limit,
+  getCountFromServer, QueryConstraint, onSnapshot
 } from 'firebase/firestore';
 import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
+import { logger } from '@/lib/errors/logger';
 import type { UnknownError } from '@/types/common';
 import { logger } from '@/lib/errors/logger';
 
@@ -149,7 +150,7 @@ export const useDashboardMetrics = () => {
         } catch (error: UnknownError) {
           // Se a coleção não existir ou houver permissão negada, retorna 0
           const errorMessage = error instanceof Error ? error.message : String(error);
-          console.warn(`[useDashboardMetrics] Collection ${collectionName} count failed:`, errorMessage);
+          logger.warn(`[useDashboardMetrics] Collection ${collectionName} count failed`, { errorMessage }, 'useDashboardMetrics');
           return 0;
         }
       };
@@ -166,14 +167,14 @@ export const useDashboardMetrics = () => {
         } catch (error: UnknownError) {
           // Se a coleção não existir ou houver permissão negada, retorna array vazio
           const errorMessage = error instanceof Error ? error.message : String(error);
-          console.warn(`[useDashboardMetrics] Collection ${collectionName} not found:`, errorMessage);
+          logger.warn(`[useDashboardMetrics] Collection ${collectionName} not found`, { errorMessage }, 'useDashboardMetrics');
           return [];
         }
       };
 
       // Ensure db is ready before proceeding with parallel queries
       if (!db) {
-        console.error('[useDashboardMetrics] Critical: Firestore db instance is null');
+        logger.error('[useDashboardMetrics] Critical: Firestore db instance is null', undefined, 'useDashboardMetrics');
         throw new Error('Firestore db is not initialized');
       }
 
