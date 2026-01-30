@@ -15,7 +15,7 @@ interface GetProfileResponse {
 /**
  * Retorna o perfil completo do usuário autenticado
  */
-export const getProfile = onCall<{}, Promise<GetProfileResponse>>(async (request) => {
+export const getProfile = onCall<{}, Promise<GetProfileResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -70,7 +70,7 @@ interface UpdateProfileResponse {
 /**
  * Atualiza o perfil do usuário autenticado
  */
-export const updateProfile = onCall<UpdateProfileRequest, Promise<UpdateProfileResponse>>(async (request) => {
+export const updateProfile = onCall<UpdateProfileRequest, Promise<UpdateProfileResponse>>({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
