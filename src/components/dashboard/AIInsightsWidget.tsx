@@ -6,6 +6,7 @@ import { useAI } from '@/integrations/firebase/ai';
 import { DashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIFeatureCategory } from '@fisioflow/shared-api/firebase/ai/config';
+import { logger } from '@/lib/errors/logger';
 
 interface AIInsightsWidgetProps {
   metrics: DashboardMetrics | undefined;
@@ -45,7 +46,7 @@ export const AIInsightsWidget: React.FC<AIInsightsWidgetProps> = ({ metrics }) =
 
       setInsight(result.content);
     } catch (error) {
-      console.error('Erro ao gerar insights:', error);
+      logger.error('Erro ao gerar insights', error, 'AIInsightsWidget');
       setInsight("Não foi possível gerar insights no momento. Verifique sua conexão.");
     } finally {
       setLoading(false);

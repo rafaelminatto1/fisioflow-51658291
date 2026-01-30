@@ -19,6 +19,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { logger } from '@/lib/errors/logger';
 
 interface PatientDashboardProps {
   _lastUpdate: Date;
@@ -73,7 +74,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
       }
 
     } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
+      logger.error('Erro ao carregar dados do dashboard', error, 'PatientDashboard');
       toast({
         variant: 'destructive',
         title: 'Erro',
