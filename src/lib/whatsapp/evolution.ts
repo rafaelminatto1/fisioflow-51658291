@@ -5,6 +5,8 @@
  * Supports text messages, media, templates, and batch sending
  */
 
+import { logger } from '@/lib/errors/logger';
+
 interface EvolutionApiConfig {
   apiUrl: string;
   apiKey: string;
@@ -52,7 +54,7 @@ class EvolutionApiClient {
     };
 
     if (!this.config.apiUrl || !this.config.apiKey) {
-      console.warn('Evolution API not configured. Set WHATSAPP_API_URL and WHATSAPP_API_KEY.');
+      logger.warn('Evolution API not configured. Set WHATSAPP_API_URL and WHATSAPP_API_KEY.', undefined, 'whatsapp-evolution');
     }
   }
 
@@ -108,7 +110,7 @@ class EvolutionApiClient {
         messageId: data.key?.id,
       };
     } catch (error) {
-      console.error('WhatsApp send error:', error);
+      logger.error('WhatsApp send error', error, 'whatsapp-evolution');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -168,7 +170,7 @@ class EvolutionApiClient {
         messageId: data.key?.id,
       };
     } catch (error) {
-      console.error('WhatsApp media send error:', error);
+      logger.error('WhatsApp media send error', error, 'whatsapp-evolution');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -226,7 +228,7 @@ class EvolutionApiClient {
         messageId: data.key?.id,
       };
     } catch (error) {
-      console.error('WhatsApp template send error:', error);
+      logger.error('WhatsApp template send error', error, 'whatsapp-evolution');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -264,7 +266,7 @@ class EvolutionApiClient {
         jid: data.jid,
       };
     } catch (error) {
-      console.error('WhatsApp check number error:', error);
+      logger.error('WhatsApp check number error', error, 'whatsapp-evolution');
       return {
         exists: false,
         error: error instanceof Error ? error.message : 'Unknown error',

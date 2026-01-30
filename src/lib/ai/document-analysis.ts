@@ -16,6 +16,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { doc, setDoc, collection, serverTimestamp, updateDoc, arrayUnion } from 'firebase/firestore';
 import { storage, db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -221,7 +222,7 @@ export async function analyzeMedicalDocument(
     return result;
 
   } catch (error) {
-    console.error('Erro ao analisar documento:', error);
+    logger.error('Erro ao analisar documento', error, 'document-analysis');
     throw error;
   }
 }
@@ -260,14 +261,14 @@ export async function analyzeDocumentBatch(
         documentType: 'other',
         language,
         onProgress: (progress, stage) => {
-          console.log(`Documento ${i + 1}/${filesToProcess.length}: ${stage} (${progress}%)`);
+          logger.info(`Documento ${i + 1}/${filesToProcess.length}: ${stage} (${progress}%)`, { index: i + 1, total: filesToProcess.length, progress, stage }, 'document-analysis');
         }
       });
 
       individualResults.push(result);
 
     } catch (error) {
-      console.error(`Erro ao processar arquivo ${file.name}:`, error);
+      logger.error(`Erro ao processar arquivo ${file.name}`, error, 'document-analysis');
       // Continuar com próximos arquivos
     }
   }

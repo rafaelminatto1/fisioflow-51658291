@@ -1,9 +1,11 @@
 /**
  * WhatsApp Cloud API Service
- * 
+ *
  * Direct integration with Meta's WhatsApp Cloud API.
  * Replaces Evolution API for users with direct Cloud API credentials.
  */
+
+import { logger } from '@/lib/errors/logger';
 
 const WHATSAPP_API_VERSION = 'v18.0';
 
@@ -24,7 +26,7 @@ class WhatsAppCloudClient {
         this.baseUrl = `https://graph.facebook.com/${WHATSAPP_API_VERSION}/${this.config.phoneNumberId}`;
 
         if (!this.config.accessToken || !this.config.phoneNumberId) {
-            console.warn('WhatsApp Cloud API not configured. Set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID.');
+            logger.warn('WhatsApp Cloud API not configured. Set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID.', undefined, 'whatsapp-cloud');
         }
     }
 

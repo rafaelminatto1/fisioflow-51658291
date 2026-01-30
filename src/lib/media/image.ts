@@ -1,4 +1,5 @@
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { logger } from '@/lib/errors/logger';
 
 type TransformOptions = {
     width?: number;
@@ -45,7 +46,7 @@ export const getOptimizedImageUrl = async (
         const storageRef = ref(storage, path.startsWith(bucket) ? path : `${bucket}/${path}`);
         return await getDownloadURL(storageRef);
     } catch (error) {
-        console.error('Error getting image URL:', error);
+        logger.error('Error getting image URL', error, 'image');
         return '';
     }
 };
