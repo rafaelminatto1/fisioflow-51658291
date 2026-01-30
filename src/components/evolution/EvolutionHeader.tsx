@@ -13,8 +13,8 @@ import { SessionTimer } from '@/components/evolution/SessionTimer';
 import type { Patient, Appointment } from '@/types';
 
 interface EvolutionHeaderProps {
-    patient: any; // Using any for now to avoid strict type issues with Supabase types, refine later
-    appointment: any;
+    patient: Patient;
+    appointment: Appointment;
     treatmentDuration: string;
     evolutionStats: {
         totalEvolutions: number;

@@ -235,15 +235,15 @@ const CalendarAppointmentCardBase = ({
             onDragStart={(e) => {
                 if (draggable) {
                     onOpenPopover(null);
-                    onDragStart(e as any, appointment);
+                    onDragStart(e, appointment);
                 }
             }}
             onDragEnd={onDragEnd}
             onDragOver={(e) => {
-                if (onDragOver && !selectionMode) onDragOver(e as any);
+                if (onDragOver && !selectionMode) onDragOver(e);
             }}
             onDrop={(e) => {
-                if (onDrop && !selectionMode) onDrop(e as any);
+                if (onDrop && !selectionMode) onDrop(e);
             }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}

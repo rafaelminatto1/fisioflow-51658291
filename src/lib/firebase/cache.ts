@@ -453,7 +453,7 @@ export async function smartInvalidate(
  * Warm up cache with frequently accessed data
  */
 export async function warmUpCache(
-  dataLoaders: Record<string, () => Promise<any>>,
+  dataLoaders: Record<string, () => Promise<unknown>>,
   options?: CacheOptions
 ): Promise<void> {
   const results = await Promise.allSettled(

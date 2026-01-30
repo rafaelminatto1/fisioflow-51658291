@@ -198,7 +198,7 @@ function useAdminAnalytics() {
         // Only keep the most recent risk score per patient
         const existing = riskMap.get(r.patient_id);
         if (!existing || new Date(r.calculated_at) > new Date(existing.calculated_at)) {
-          riskMap.set(r.patient_id, r as any);
+          riskMap.set(r.patient_id, r);
         }
       });
 

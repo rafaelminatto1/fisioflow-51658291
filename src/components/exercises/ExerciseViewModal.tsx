@@ -324,7 +324,7 @@ export function ExerciseViewModal({
   );
 }
 
-function MetricCard({ icon: Icon, label, value, subLabel }: { icon: any, label: string, value?: string | number | null, subLabel?: string }) {
+function MetricCard({ icon: Icon, label, value, subLabel }: { icon: React.ComponentType<{ className?: string }>, label: string, value?: string | number | null, subLabel?: string }) {
   return (
     <div className="bg-muted/30 rounded-xl p-3 border border-border/50 flex flex-col items-center justify-center text-center gap-1 hover:bg-muted/50 transition-colors group">
       <div className="p-2 rounded-full bg-background shadow-sm mb-1 group-hover:scale-110 transition-transform duration-300">

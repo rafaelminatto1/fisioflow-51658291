@@ -5,31 +5,31 @@
  * Reduz significativamente o tamanho inicial do bundle
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, ComponentType } from 'react';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load dos componentes do Recharts
-const LineChart = lazy(() => import('recharts').then(m => ({ default: m.LineChart as any })));
-const BarChart = lazy(() => import('recharts').then(m => ({ default: m.BarChart as any })));
-const AreaChart = lazy(() => import('recharts').then(m => ({ default: m.AreaChart as any })));
-const PieChart = lazy(() => import('recharts').then(m => ({ default: m.PieChart as any })));
-const RadarChart = lazy(() => import('recharts').then(m => ({ default: m.RadarChart as any })));
+const LineChart = lazy(() => import('recharts').then(m => ({ default: m.LineChart as ComponentType<unknown> })));
+const BarChart = lazy(() => import('recharts').then(m => ({ default: m.BarChart as ComponentType<unknown> })));
+const AreaChart = lazy(() => import('recharts').then(m => ({ default: m.AreaChart as ComponentType<unknown> })));
+const PieChart = lazy(() => import('recharts').then(m => ({ default: m.PieChart as ComponentType<unknown> })));
+const RadarChart = lazy(() => import('recharts').then(m => ({ default: m.RadarChart as ComponentType<unknown> })));
 
 // Lazy load dos componentes de renderização
-const Line = lazy(() => import('recharts').then(m => ({ default: m.Line as any })));
-const Bar = lazy(() => import('recharts').then(m => ({ default: m.Bar as any })));
-const Area = lazy(() => import('recharts').then(m => ({ default: m.Area as any })));
-const Pie = lazy(() => import('recharts').then(m => ({ default: m.Pie as any })));
-const Radar = lazy(() => import('recharts').then(m => ({ default: m.Radar as any })));
-const Cell = lazy(() => import('recharts').then(m => ({ default: m.Cell as any })));
+const Line = lazy(() => import('recharts').then(m => ({ default: m.Line as ComponentType<unknown> })));
+const Bar = lazy(() => import('recharts').then(m => ({ default: m.Bar as ComponentType<unknown> })));
+const Area = lazy(() => import('recharts').then(m => ({ default: m.Area as ComponentType<unknown> })));
+const Pie = lazy(() => import('recharts').then(m => ({ default: m.Pie as ComponentType<unknown> })));
+const Radar = lazy(() => import('recharts').then(m => ({ default: m.Radar as ComponentType<unknown> })));
+const Cell = lazy(() => import('recharts').then(m => ({ default: m.Cell as ComponentType<unknown> })));
 
 // Lazy load dos componentes de eixos e tooltips
-const XAxis = lazy(() => import('recharts').then(m => ({ default: m.XAxis as any })));
-const YAxis = lazy(() => import('recharts').then(m => ({ default: m.YAxis as any })));
-const CartesianGrid = lazy(() => import('recharts').then(m => ({ default: m.CartesianGrid as any })));
-const Tooltip = lazy(() => import('recharts').then(m => ({ default: m.Tooltip as any })));
-const Legend = lazy(() => import('recharts').then(m => ({ default: m.Legend as any })));
-const ResponsiveContainer = lazy(() => import('recharts').then(m => ({ default: m.ResponsiveContainer as any })));
+const XAxis = lazy(() => import('recharts').then(m => ({ default: m.XAxis as ComponentType<unknown> })));
+const YAxis = lazy(() => import('recharts').then(m => ({ default: m.YAxis as ComponentType<unknown> })));
+const CartesianGrid = lazy(() => import('recharts').then(m => ({ default: m.CartesianGrid as ComponentType<unknown> })));
+const Tooltip = lazy(() => import('recharts').then(m => ({ default: m.Tooltip as ComponentType<unknown> })));
+const Legend = lazy(() => import('recharts').then(m => ({ default: m.Legend as ComponentType<unknown> })));
+const ResponsiveContainer = lazy(() => import('recharts').then(m => ({ default: m.ResponsiveContainer as ComponentType<unknown> })));
 
 // Loading fallback para charts
 function ChartLoader({ height = 200 }: { height?: number }) {

@@ -108,7 +108,7 @@ export function PackageUsageReport() {
                         <TableBody>
                             {packages.slice(0, 10).map((pkg) => (
                                 <TableRow key={pkg.id}>
-                                    <TableCell className="font-medium">{(pkg as any).patient_name || 'Paciente'}</TableCell>
+                                    <TableCell className="font-medium">{(pkg as { patient_name?: string }).patient_name || 'Paciente'}</TableCell>
                                     <TableCell>{pkg.package?.name}</TableCell>
                                     <TableCell>{new Date(pkg.purchased_at).toLocaleDateString('pt-BR')}</TableCell>
                                     <TableCell>

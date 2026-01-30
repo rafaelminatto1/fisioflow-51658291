@@ -284,14 +284,14 @@ export function useQueryPerformance(queryKey: string, enabled = IS_DEV) {
 /**
  * Decorador para medir performance de funções
  */
-export function measurePerformance<T extends (...args: any[]) => any>(
+export function measurePerformance<T extends (...args: unknown[]) => unknown>(
   name: string,
   fn: T,
   enabled = IS_DEV
 ): T {
   if (!enabled) return fn;
 
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     getPerformanceMonitor().markStart(name);
     try {
       const result = fn(...args);
@@ -313,8 +313,15 @@ export function measurePerformance<T extends (...args: any[]) => any>(
 /**
  * Expor monitor globalmente em desenvolvimento
  */
+// Extend Window interface globally
+declare global {
+  interface Window {
+    __perfMonitor?: PerformanceMonitor;
+  }
+}
+
 if (IS_DEV && typeof window !== 'undefined') {
-  (window as any).__perfMonitor = getPerformanceMonitor();
+  window.__perfMonitor = getPerformanceMonitor();
   console.log('💡 Performance Monitor disponível em window.__perfMonitor');
   console.log('   - __perfMonitor.markStart(name)');
   console.log('   - __perfMonitor.markEnd(name)');

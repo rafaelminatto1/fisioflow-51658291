@@ -115,7 +115,7 @@ export function TemplateModal({
         contraindications: template.contraindications || '',
         precautions: template.precautions || '',
         progression_notes: template.progression_notes || '',
-        evidence_level: (template.evidence_level as any) || '',
+        evidence_level: (template.evidence_level as string | null | undefined) || '',
       });
     } else {
       form.reset({

@@ -102,6 +102,8 @@ export const INVALID_APPOINTMENT_COLUMNS = new Set([
     'appointmentTime'
 ] as const);
 
+type InvalidAppointmentColumn = 'patientId' | 'therapistId' | 'appointmentDate' | 'appointmentTime';
+
 /**
  * Validate a select query string for invalid columns
  */
@@ -113,7 +115,7 @@ export function validateAppointmentSelectQuery(query: string): void {
     for (const column of columns) {
         const baseColumn = column.split(':')[0].trim();
 
-        if (INVALID_APPOINTMENT_COLUMNS.has(baseColumn as any)) {
+        if (INVALID_APPOINTMENT_COLUMNS.has(baseColumn as InvalidAppointmentColumn)) {
             throw new Error(
                 `❌ Invalid appointment column: '${column}'.\n` +
                 `Column '${baseColumn}' does not exist in the appointments table (use snake_case).\n` +

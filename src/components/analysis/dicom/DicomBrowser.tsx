@@ -13,10 +13,10 @@ interface DicomBrowserProps {
 }
 
 // Helper to safely extract DICOM tag values
-const getTagValue = (obj: any, tag: string): string => {
+const getTagValue = (obj: Record<string, { Value?: unknown[] }>, tag: string): string => {
     const val = obj?.[tag]?.Value?.[0];
     if (typeof val === 'object' && val !== null) {
-        return val.Alphabetic || '';
+        return (val as { Alphabetic?: string }).Alphabetic || '';
     }
     return String(val || '');
 };

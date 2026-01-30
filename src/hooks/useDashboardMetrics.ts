@@ -14,9 +14,13 @@
  * Usa Promise.all para paralelizar queries independentes
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, query, where, orderBy, limit, getCountFromServer, QueryConstraint } from 'firebase/firestore';
+import { 
+  collection, getDocs, query, where, orderBy, limit, 
+  getCountFromServer, QueryConstraint, onSnapshot 
+} from 'firebase/firestore';
+import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import type { UnknownError } from '@/types/common';
@@ -84,6 +88,43 @@ export interface DashboardMetrics {
  * Usa Promise.all para paralelizar queries independentes
  */
 export const useDashboardMetrics = () => {
+  const queryClient = useQueryClient();
+
+  // Registrar listeners para atualizações em tempo real
+  useEffect(() => {
+    if (!db) return;
+
+    const today = formatDateToLocalISO(new Date());
+    
+    // Listener para agendamentos de hoje
+    const appointmentsQuery = query(
+      collection(db, 'appointments'),
+      where('appointment_date', '==', today)
+    );
+
+    // Listener para novos pacientes (últimos 30 dias)
+    const thirtyDaysAgo = formatDateToLocalISO(subMonths(new Date(), 1));
+    const patientsQuery = query(
+      collection(db, 'patients'),
+      where('created_at', '>=', thirtyDaysAgo)
+    );
+
+    const unsubscribeAppointments = onSnapshot(appointmentsQuery, () => {
+      console.log('[Realtime] Appointments changed, invalidating dashboard metrics...');
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    });
+
+    const unsubscribePatients = onSnapshot(patientsQuery, () => {
+      console.log('[Realtime] Patients changed, invalidating dashboard metrics...');
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    });
+
+    return () => {
+      unsubscribeAppointments();
+      unsubscribePatients();
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: async (): Promise<DashboardMetrics> => {
