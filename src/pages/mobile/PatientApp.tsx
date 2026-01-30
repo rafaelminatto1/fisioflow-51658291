@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 // Define interface for appointment data
 interface Appointment {
@@ -83,7 +84,7 @@ export default function PatientApp() {
         setAppointments([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar agendamentos:', error);
+      logger.error('Erro ao carregar agendamentos', error, 'PatientApp');
       setAppointments([]);
     } finally {
       setLoading(false);
