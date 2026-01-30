@@ -10,6 +10,7 @@
 import { collection, doc, setDoc, getDoc, getDocs, query, where, sum, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
 import { AIModelType, AIFeatureCategory, AIUsageRecord } from '@fisioflow/shared-api/firebase/ai/config';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Usage statistics for a period
@@ -121,7 +122,7 @@ class AIUsageMonitorService {
 
       return id;
     } catch (error) {
-      console.error('Failed to record AI usage:', error);
+      logger.error('Failed to record AI usage', error, 'usage-tracker');
       throw error;
     }
   }
@@ -153,7 +154,7 @@ class AIUsageMonitorService {
 
       return stats;
     } catch (error) {
-      console.error('Failed to get usage stats:', error);
+      logger.error('Failed to get usage stats', error, 'usage-tracker');
       return this.getEmptyStats();
     }
   }
@@ -199,7 +200,7 @@ class AIUsageMonitorService {
 
       return status;
     } catch (error) {
-      console.error('Failed to check rate limit:', error);
+      logger.error('Failed to check rate limit', error, 'usage-tracker');
       // Allow request on error
       return {
         isLimited: false,
@@ -257,7 +258,7 @@ class AIUsageMonitorService {
 
       return status;
     } catch (error) {
-      console.error('Failed to check budget limit:', error);
+      logger.error('Failed to check budget limit', error, 'usage-tracker');
       // Allow request on error
       return {
         isExceeded: false,
@@ -290,7 +291,7 @@ class AIUsageMonitorService {
         timestamp: new Date(doc.data().timestamp as string),
       })) as AIUsageRecord[];
     } catch (error) {
-      console.error('Failed to get recent records:', error);
+      logger.error('Failed to get recent records', error, 'usage-tracker');
       return [];
     }
   }
@@ -460,7 +461,7 @@ class AIUsageMonitorService {
 
       return records;
     } catch (error) {
-      console.error('Failed to get records:', error);
+      logger.error('Failed to get records', error, 'usage-tracker');
       return [];
     }
   }
