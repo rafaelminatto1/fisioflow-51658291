@@ -12,12 +12,13 @@
  *   return <div>My Component</div>;
  * }, {
  *   fallback: <div>Something went wrong</div>,
- *   onError: (error) => console.error(error),
+ *   onError: (error) => logger.error(error),
  * });
  * ```
  */
 
 import React, { ComponentType, ReactNode } from 'react';
+import { logger } from '@/lib/errors/logger';
 import ErrorBoundary, { ErrorBoundaryProps } from './ErrorBoundary';
 
 interface WithErrorBoundaryOptions {

@@ -7,6 +7,7 @@
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
+import { logger } from '@/lib/errors/logger';
 
 export interface AIAnalysisResult {
   summary: string;
@@ -40,13 +41,13 @@ export const generateClinicalReport = async (metrics: Record<string, unknown>, h
         });
 
         if ((data as { error?: string } | null)?.error) {
-            console.warn("AI Service Error, falling back to mock:", (data as { error?: string } | null)?.error);
+            logger.warn("AI Service Error, falling back to mock", { error: (data as { error?: string } | null)?.error }, 'clinicalAnalysisService');
             return mockClinicalReport(metrics);
         }
 
         return data as AIAnalysisResult;
     } catch (e) {
-        console.error("AI Service Exception:", e);
+        logger.error("AI Service Exception", e, 'clinicalAnalysisService');
         return mockClinicalReport(metrics);
     }
 };
@@ -68,13 +69,13 @@ export const generateFormSuggestions = async (formData: Record<string, unknown>,
         });
 
         if ((data as { error?: string } | null)?.error) {
-            console.warn("AI Service Error, falling back to mock:", (data as { error?: string } | null)?.error);
+            logger.warn("AI Service Error, falling back to mock", { error: (data as { error?: string } | null)?.error }, 'clinicalAnalysisService');
             return mockFormSuggestions(formData, formFields);
         }
 
         return (data as { suggestions?: string[] } | null)?.suggestions || mockFormSuggestions(formData, formFields);
     } catch (e) {
-        console.error("AI Service Exception:", e);
+        logger.error("AI Service Exception", e, 'clinicalAnalysisService');
         return mockFormSuggestions(formData, formFields);
     }
 };
