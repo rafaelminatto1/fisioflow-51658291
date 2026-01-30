@@ -23,6 +23,7 @@ import {
 } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 export type NotificationType = 'achievement' | 'level_up' | 'quest_complete' | 'streak_milestone' | 'reward_unlocked';
 
@@ -100,7 +101,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
           ...doc.data(),
         })) as GamificationNotification[];
       } catch (err) {
-        console.error('Failed to fetch notifications:', err);
+        logger.error('Failed to fetch notifications', err, 'useGamificationNotifications');
         toast({
           title: "Erro ao carregar notificações",
           description: "Tente novamente mais tarde",
@@ -252,7 +253,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
         queryClient.invalidateQueries({ queryKey: ['gamification-notifications', patientId] });
       },
       (error) => {
-        console.error('Realtime subscription error:', error);
+        logger.error('Realtime subscription error', error, 'useGamificationNotifications');
       }
     );
 
