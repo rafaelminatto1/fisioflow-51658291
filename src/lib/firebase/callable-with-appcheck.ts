@@ -1,6 +1,7 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAppCheck } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Wrapper para httpsCallable que inclui token do App Check
@@ -23,7 +24,7 @@ export async function callableWithAppCheck<T = any, R = any>(
     const appCheck = getAppCheck(app);
     appCheckToken = await appCheck.getToken();
   } catch (error) {
-    console.warn('[AppCheck] Could not get token:', error);
+    logger.warn('Could not get AppCheck token', error, 'callableWithAppCheck');
   }
 
   // Obter token de autenticação
