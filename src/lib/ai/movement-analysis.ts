@@ -16,6 +16,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { storage, db } from '@/integrations/firebase/app';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -182,7 +183,7 @@ export async function analyzeExerciseForm(
     return result;
 
   } catch (error) {
-    console.error('Erro na análise de movimento:', error);
+    logger.error('Erro na análise de movimento', error, 'movement-analysis');
     onProgress?.({
       stage: 'error',
       progress: 0,
@@ -509,7 +510,7 @@ async function getDefaultDemoVideo(exerciseId: string): Promise<string> {
     return await getDownloadURL(demoRef);
   } catch {
     // Se não encontrar, retorna URL de placeholder
-    console.warn(`Demo video not found for exercise ${exerciseId}`);
+    logger.warn(`Demo video not found for exercise ${exerciseId}`, undefined, 'movement-analysis');
     return '';
   }
 }
