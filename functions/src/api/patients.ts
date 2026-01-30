@@ -9,6 +9,7 @@ import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
 import { enforceRateLimit, RATE_LIMITS } from '../middleware/rate-limit';
 import { Patient } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Lista pacientes com filtros opcionais
@@ -34,7 +35,7 @@ export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResp
   console.log('[listPatients] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
-    console.error('[listPatients] Unauthenticated request');
+    logger.error('[listPatients] Unauthenticated request');
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
 
@@ -114,7 +115,7 @@ export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResp
       perPage: limit,
     };
   } catch (error: unknown) {
-    console.error('Error in listPatients:', error);
+    logger.error('Error in listPatients:', error);
     if (error instanceof HttpsError) {
       throw error;
     }
@@ -146,7 +147,7 @@ export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>
   verifyAppCheck(request);
   console.log('App Check verified');
   verifyAppCheck(request);
-  console.log("App Check verified");
+  // App Check verified");
   const { patientId, profileId } = request.data;
 
   if (!patientId && !profileId) {
@@ -175,7 +176,7 @@ export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>
 
     return { data: result.rows[0] as Patient };
   } catch (error: unknown) {
-    console.error('Error in getPatient:', error);
+    logger.error('Error in getPatient:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar paciente';
     throw new HttpsError('internal', errorMessage);
@@ -206,30 +207,30 @@ interface CreatePatientResponse {
  * Cria um novo paciente
  */
 export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>({ cors: true }, async (request) => {
-  console.log('[createPatient] ===== START =====');
+  logger.debug('[createPatient] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
-    console.error('[createPatient] Unauthenticated request');
+    logger.error('[createPatient] Unauthenticated request');
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
 
-  console.log('[createPatient] Auth token present, uid:', request.auth.uid);
+  logger.debug('[createPatient] Auth token present, uid:', request.auth.uid);
 
   // Verificar App Check
   verifyAppCheck(request);
-  console.log('[createPatient] App Check verified');
+  logger.debug('[createPatient] App Check verified');
 
   // Verificar rate limit
   await enforceRateLimit(request, RATE_LIMITS.callable);
-  console.log('[createPatient] Rate limit check passed');
+  logger.debug('[createPatient] Rate limit check passed');
 
   const auth = await authorizeRequest(request.auth.token);
   const data = request.data;
 
   // DEBUG: Log organization_id ao criar paciente
-  console.log('[createPatient] auth.organizationId:', auth.organizationId);
-  console.log('[createPatient] auth.userId:', auth.userId);
-  console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone }));
+  logger.debug('[createPatient] auth.organizationId:', auth.organizationId);
+  logger.debug('[createPatient] auth.userId:', auth.userId);
+  logger.debug('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone }));
 
   // Validar campos obrigatórios
   if (!data.name) {
@@ -252,11 +253,11 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
     }
 
     // [AUTO-FIX] Ensure organization exists to satisfy FK constraint
-    console.log('[createPatient] Target Org ID:', auth.organizationId);
+    logger.debug('[createPatient] Target Org ID:', auth.organizationId);
     const orgInsertSql = `INSERT INTO organizations (id, name, slug, active, email)
        VALUES ($1, 'Clínica Principal', 'default-org', true, 'admin@fisioflow.com.br')
        ON CONFLICT (id) DO NOTHING`;
-    console.log('[createPatient] Org Insert SQL:', orgInsertSql);
+    logger.debug('[createPatient] Org Insert SQL:', orgInsertSql);
     await pool.query(orgInsertSql, [auth.organizationId]);
 
     // Inserir paciente
@@ -286,7 +287,7 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
 
     const patient = result.rows[0];
 
-    console.log('[createPatient] Patient created:', JSON.stringify({
+    logger.debug('[createPatient] Patient created:', JSON.stringify({
       id: patient.id,
       name: patient.name,
       organization_id: patient.organization_id,
@@ -302,12 +303,12 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
         old: null,
       });
     } catch (err) {
-      console.error('Erro ao publicar evento no Ably:', err);
+      logger.error('Erro ao publicar evento no Ably:', err);
     }
 
     return { data: patient as Patient };
   } catch (error: unknown) {
-    console.error('Error in createPatient:', error);
+    logger.error('Error in createPatient:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao criar paciente';
     throw new HttpsError('internal', errorMessage);
@@ -347,7 +348,7 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
   verifyAppCheck(request);
   console.log('App Check verified');
   verifyAppCheck(request);
-  console.log("App Check verified");
+  // App Check verified");
   const { patientId, ...updates } = request.data;
 
   if (!patientId) {
@@ -428,12 +429,12 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
         old: existing.rows[0],
       });
     } catch (err) {
-      console.error('Erro ao publicar evento no Ably:', err);
+      logger.error('Erro ao publicar evento no Ably:', err);
     }
 
     return { data: patient as Patient };
   } catch (error: unknown) {
-    console.error('Error in updatePatient:', error);
+    logger.error('Error in updatePatient:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar paciente';
     throw new HttpsError('internal', errorMessage);
@@ -459,7 +460,7 @@ export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientR
   verifyAppCheck(request);
   console.log('App Check verified');
   verifyAppCheck(request);
-  console.log("App Check verified");
+  // App Check verified");
   const { patientId } = request.data;
 
   if (!patientId) {
@@ -491,12 +492,12 @@ export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientR
         old: result.rows[0],
       });
     } catch (err) {
-      console.error('Erro ao publicar evento no Ably:', err);
+      logger.error('Erro ao publicar evento no Ably:', err);
     }
 
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in deletePatient:', error);
+    logger.error('Error in deletePatient:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao excluir paciente';
     throw new HttpsError('internal', errorMessage);
@@ -531,7 +532,7 @@ export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatient
   verifyAppCheck(request);
   console.log('App Check verified');
   verifyAppCheck(request);
-  console.log("App Check verified");
+  // App Check verified");
   const { patientId } = request.data;
 
   if (!patientId) {
@@ -596,7 +597,7 @@ export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatient
       },
     };
   } catch (error: unknown) {
-    console.error('Error in getPatientStats:', error);
+    logger.error('Error in getPatientStats:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar estatísticas';
     throw new HttpsError('internal', errorMessage);
