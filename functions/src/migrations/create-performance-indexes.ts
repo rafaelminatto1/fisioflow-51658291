@@ -13,8 +13,6 @@ export const createPerformanceIndexes = onCall(
   {
     cors: true,
     secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
-    vpcConnector: "cloudsql-connector",
-    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY"
   },
   async (request) => {
     if (!request.auth || !request.auth.token) {
