@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 interface PatientInsightResponse {
     insight: string;
@@ -24,7 +25,7 @@ export function usePatientInsight() {
             return (await response.json()) as PatientInsightResponse;
         },
         onError: (error) => {
-            console.error('AI Insight Error:', error);
+            logger.error('AI Insight Error', error, 'usePatientInsight');
             toast.error('Erro ao gerar análise inteligente. Tente novamente.');
         },
     });
