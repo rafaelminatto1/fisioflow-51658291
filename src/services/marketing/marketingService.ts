@@ -10,6 +10,7 @@ import { db } from '@/integrations/firebase/app';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { logger } from '@/lib/errors/logger';
 
 const storage = getFirebaseStorage();
 
@@ -26,7 +27,7 @@ export interface MarketingExportParams {
 export const checkMarketingConsent = async (patientId: string): Promise<boolean> => {
     // In real app, query Firestore collection 'conssent_records'
     // For now, we use a mock implementation:
-    console.log(`[MarketingService] Checking consent for patient ${patientId}`);
+    logger.info(`[MarketingService] Checking consent for patient ${patientId}`, { patientId }, 'marketingService');
 
     // TODO: Implement actual Firestore query
     // const consentRef = doc(db, 'consent_records', patientId);
@@ -38,7 +39,7 @@ export const checkMarketingConsent = async (patientId: string): Promise<boolean>
 
 // 2. Log Export
 export const createMarketingExportRecord = async (params: MarketingExportParams, blob: Blob) => {
-    console.log('[MarketingService] Creating export record...', params);
+    logger.info('[MarketingService] Creating export record', { params }, 'marketingService');
 
     try {
         // 1. Upload Blob to Firebase Storage
@@ -71,7 +72,7 @@ export const createMarketingExportRecord = async (params: MarketingExportParams,
 
         const docRef = await addDoc(collection(db, 'marketing_exports'), exportData);
 
-        console.log('[MarketingService] Export record created with ID:', docRef.id);
+        logger.info('[MarketingService] Export record created', { id: docRef.id }, 'marketingService');
 
         return {
             success: true,
@@ -79,7 +80,7 @@ export const createMarketingExportRecord = async (params: MarketingExportParams,
             id: docRef.id
         };
     } catch (error) {
-        console.error('[MarketingService] Error creating export record:', error);
+        logger.error('[MarketingService] Error creating export record', error, 'marketingService');
         // Fallback to local blob URL if storage fails
         return {
             success: false,

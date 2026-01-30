@@ -28,6 +28,7 @@ import {
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';
+import { logger } from '@/lib/errors/logger';
 
 
 // Types matching the DB schema manually for now (until types.ts is regenerated)
@@ -75,7 +76,7 @@ export const setAuthInstance = (auth: Auth) => {
 
 const getCurrentUserId = async (): Promise<string | null> => {
     if (!authInstance) {
-        console.warn('Auth instance not set in goals service');
+        logger.warn('Auth instance not set in goals service', undefined, 'goals');
         return null;
     }
     const user = authInstance.currentUser;
