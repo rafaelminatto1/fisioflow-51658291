@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { MedicalRecord, TreatmentSession, PainRecord } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Busca prontuários de um paciente
@@ -63,7 +64,7 @@ export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPat
 
     return { data: result.rows as MedicalRecord[] };
   } catch (error: unknown) {
-    console.error('Error in getPatientRecords:', error);
+    logger.error('Error in getPatientRecords:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prontuários';
     throw new HttpsError('internal', errorMessage);
@@ -141,12 +142,12 @@ export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<Cr
         recordId: result.rows[0].id,
       });
     } catch (e) {
-      console.error('Error publishing to Ably:', e);
+      logger.error('Error publishing to Ably:', e);
     }
 
     return { data: result.rows[0] as MedicalRecord };
   } catch (error: unknown) {
-    console.error('Error in createMedicalRecord:', error);
+    logger.error('Error in createMedicalRecord:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar prontuário';
     throw new HttpsError('internal', errorMessage);
@@ -226,7 +227,7 @@ export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<Up
 
     return { data: result.rows[0] as MedicalRecord };
   } catch (error: unknown) {
-    console.error('Error in updateMedicalRecord:', error);
+    logger.error('Error in updateMedicalRecord:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar prontuário';
     throw new HttpsError('internal', errorMessage);
@@ -278,7 +279,7 @@ export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promis
 
     return { data: result.rows as TreatmentSession[] };
   } catch (error: unknown) {
-    console.error('Error in listTreatmentSessions:', error);
+    logger.error('Error in listTreatmentSessions:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar sessões';
     throw new HttpsError('internal', errorMessage);
@@ -379,13 +380,13 @@ export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Prom
           ]
         );
       } catch (e) {
-        console.error('Error recording patient progress:', e);
+        logger.error('Error recording patient progress:', e);
       }
     }
 
     return { data: result.rows[0] as TreatmentSession };
   } catch (error: unknown) {
-    console.error('Error in createTreatmentSession:', error);
+    logger.error('Error in createTreatmentSession:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar sessão';
     throw new HttpsError('internal', errorMessage);
@@ -479,7 +480,7 @@ export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Prom
 
     return { data: result.rows[0] as TreatmentSession };
   } catch (error: unknown) {
-    console.error('Error in updateTreatmentSession:', error);
+    logger.error('Error in updateTreatmentSession:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar sessão';
     throw new HttpsError('internal', errorMessage);
@@ -523,7 +524,7 @@ export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecor
 
     return { data: result.rows as PainRecord[] };
   } catch (error: unknown) {
-    console.error('Error in getPainRecords:', error);
+    logger.error('Error in getPainRecords:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar registros de dor';
     throw new HttpsError('internal', errorMessage);
@@ -578,7 +579,7 @@ export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainReco
 
     return { data: result.rows[0] as PainRecord };
   } catch (error: unknown) {
-    console.error('Error in savePainRecord:', error);
+    logger.error('Error in savePainRecord:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar registro de dor';
     throw new HttpsError('internal', errorMessage);
