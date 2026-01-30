@@ -249,7 +249,7 @@ class OfflineSyncService {
 
     this.syncTimer = setInterval(() => {
       if (this.config.enabled && navigator.onLine && !this.isSyncing) {
-        this.syncNow().catch(console.error);
+        this.syncNow().catch((err) => logger.error('Periodic sync failed', err, 'offlineSync'));
       }
     }, interval);
   }
@@ -459,7 +459,7 @@ class OfflineSyncService {
    */
   private async apiPost(endpoint: string, payload: unknown): Promise<void> {
     // Placeholder for actual API call
-    console.log('[OfflineSyncService] POST', endpoint, payload);
+    logger.debug('[OfflineSyncService] API POST', { endpoint, payload }, 'offlineSync');
   }
 
   /**
@@ -467,7 +467,7 @@ class OfflineSyncService {
    */
   private async apiPatch(endpoint: string, payload: unknown): Promise<void> {
     // Placeholder for actual API call
-    console.log('[OfflineSyncService] PATCH', endpoint, payload);
+    logger.debug('[OfflineSyncService] API PATCH', { endpoint, payload }, 'offlineSync');
   }
 
   /**
@@ -475,7 +475,7 @@ class OfflineSyncService {
    */
   private async apiDelete(endpoint: string): Promise<void> {
     // Placeholder for actual API call
-    console.log('[OfflineSyncService] DELETE', endpoint);
+    logger.debug('[OfflineSyncService] API DELETE', { endpoint }, 'offlineSync');
   }
 
   // ========================================================================
@@ -488,12 +488,12 @@ class OfflineSyncService {
    */
   public async cacheCriticalData(): Promise<void> {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      console.log('[OfflineSyncService] Cannot cache data while offline');
+      logger.warn('[OfflineSyncService] Cannot cache data while offline', undefined, 'offlineSync');
       return;
     }
 
     try {
-      console.log('[OfflineSyncService] Starting critical data caching...');
+      logger.info('[OfflineSyncService] Starting critical data caching', undefined, 'offlineSync');
       // Initialize both databases correctly
       const localDb = await getDB();
 
@@ -520,11 +520,11 @@ class OfflineSyncService {
         appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
-          console.log('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.');
+          logger.info('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.', undefined, 'offlineSync');
           appointments = [];
         } else {
           apptError = error as Error;
-          console.warn('[OfflineSyncService] Error fetching appointments:', apptError.message);
+          logger.warn('[OfflineSyncService] Error fetching appointments', { error: apptError.message }, 'offlineSync');
           appointments = [];
         }
       }
@@ -539,9 +539,9 @@ class OfflineSyncService {
           // For now, we just store the appointment data
         }
         await tx.done;
-        console.log(`[OfflineSyncService] Cached ${appointments.length} appointments`);
+        logger.info(`[OfflineSyncService] Cached ${appointments.length} appointments`, { count: appointments.length }, 'offlineSync');
       } else {
-        console.log('[OfflineSyncService] No appointments to cache for today');
+        logger.info('[OfflineSyncService] No appointments to cache for today', undefined, 'offlineSync');
       }
 
       // 2. Cache common exercises (first 100)
@@ -555,10 +555,10 @@ class OfflineSyncService {
         exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
-          console.log('[OfflineSyncService] Permission denied for exercises. Skipping.');
+          logger.info('[OfflineSyncService] Permission denied for exercises. Skipping.', undefined, 'offlineSync');
           exercises = [];
         } else {
-          console.warn('[OfflineSyncService] Error fetching exercises:', error);
+          logger.warn('[OfflineSyncService] Error fetching exercises', { error }, 'offlineSync');
           exercises = [];
         }
       }
@@ -570,12 +570,12 @@ class OfflineSyncService {
           await store.put(ex);
         }
         await tx.done;
-        console.log(`[OfflineSyncService] Cached ${exercises.length} exercises`);
+        logger.info(`[OfflineSyncService] Cached ${exercises.length} exercises`, { count: exercises.length }, 'offlineSync');
       }
 
-      console.log('[OfflineSyncService] Critical data caching complete');
+      logger.info('[OfflineSyncService] Critical data caching complete', undefined, 'offlineSync');
     } catch (error) {
-      console.error('[OfflineSyncService] Error caching critical data:', error);
+      logger.error('[OfflineSyncService] Error caching critical data', error, 'offlineSync');
     }
   }
 
@@ -617,7 +617,7 @@ class OfflineSyncService {
         lastSyncSuccess: this.lastSyncStats?.lastSyncSuccess,
       };
     } catch (error) {
-      console.error('[OfflineSyncService] Error getting sync stats:', error);
+      logger.error('[OfflineSyncService] Error getting sync stats', error, 'offlineSync');
       return {
         totalActions: 0,
         pendingActions: 0,
@@ -649,7 +649,7 @@ class OfflineSyncService {
       try {
         callback(event);
       } catch (error) {
-        console.error('[OfflineSyncService] Listener error:', error);
+        logger.error('[OfflineSyncService] Listener error', error, 'offlineSync');
       }
     });
   }
@@ -667,7 +667,7 @@ class OfflineSyncService {
           data: { stats },
         });
       } catch (error) {
-        console.error('[OfflineSyncService] Listener error:', error);
+        logger.error('[OfflineSyncService] Listener error', error, 'offlineSync');
       }
     });
   }
