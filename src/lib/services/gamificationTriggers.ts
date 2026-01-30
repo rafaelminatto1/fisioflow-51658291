@@ -1,5 +1,6 @@
 import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * XP Rewards Configuration
@@ -119,7 +120,7 @@ export class GamificationTriggerService {
 
       return settings;
     } catch (error) {
-      console.warn('Failed to fetch gamification settings, using defaults:', error);
+      logger.warn('Failed to fetch gamification settings, using defaults', error, 'gamificationTriggers');
       return {
         base_xp: 1000,
         multiplier: 1.2,
@@ -267,7 +268,7 @@ export class GamificationTriggerService {
         message: calc.level > oldLevel ? `Subiu para o nível ${calc.level}!` : undefined,
       };
     } catch (error) {
-      console.error('Error awarding session completion XP:', error);
+      logger.error('Error awarding session completion XP', error, 'gamificationTriggers');
       return {
         success: false,
         xpAwarded: 0,
@@ -321,7 +322,7 @@ export class GamificationTriggerService {
 
       return { success: true, xpAwarded: xp };
     } catch (error) {
-      console.error('Error awarding exercise completion XP:', error);
+      logger.error('Error awarding exercise completion XP', error, 'gamificationTriggers');
       return {
         success: false,
         xpAwarded: 0,
@@ -396,7 +397,7 @@ export class GamificationTriggerService {
 
       return { success: true, xpAwarded: 0 };
     } catch (error) {
-      console.error('Error awarding goal achievement XP:', error);
+      logger.error('Error awarding goal achievement XP', error, 'gamificationTriggers');
       return {
         success: false,
         xpAwarded: 0,
@@ -454,7 +455,7 @@ export class GamificationTriggerService {
 
       return { success: true, xpAwarded: xp };
     } catch (error) {
-      console.error('Error awarding appointment attendance XP:', error);
+      logger.error('Error awarding appointment attendance XP', error, 'gamificationTriggers');
       return {
         success: false,
         xpAwarded: 0,
@@ -524,7 +525,7 @@ export class GamificationTriggerService {
 
       return { success: true, xpAwarded: 0 };
     } catch (error) {
-      console.error('Error awarding streak bonus XP:', error);
+      logger.error('Error awarding streak bonus XP', error, 'gamificationTriggers');
       return {
         success: false,
         xpAwarded: 0,
@@ -547,7 +548,7 @@ export class GamificationTriggerService {
 
       return await this.calculateLevelAsync(profileSnap.data()?.total_points || 0);
     } catch (error) {
-      console.error('Error getting next level info:', error);
+      logger.error('Error getting next level info', error, 'gamificationTriggers');
       return null;
     }
   }
