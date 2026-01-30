@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -28,11 +28,24 @@ import {
   RefreshCw, History, Award, Zap, User
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { collection, doc, getDocs, query, where, orderBy, limit, getDoc, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, orderBy, limit, getDoc } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { GamificationProfile, XpTransaction, Achievement } from '@/types/gamification';
+
+/**
+ * Achievement log entry with joined achievement details
+ */
+interface AchievementLogEntry {
+  id: string;
+  patient_id: string;
+  achievement_id: string;
+  unlocked_at: string;
+  xp_reward: number;
+  achievements?: Achievement;
+}
 
 interface PatientGamificationDetailsProps {
   patientId: string;
@@ -61,7 +74,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   // Fetch patient profile
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['gamification-patient-detail', patientId],
-    queryFn: async () => {
+    queryFn: async (): Promise<GamificationProfile | null> => {
       const profileRef = doc(db, 'patient_gamification', patientId);
       const docSnapshot = await getDoc(profileRef);
 
@@ -69,7 +82,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
         return {
           id: docSnapshot.id,
           ...docSnapshot.data()
-        };
+        } as GamificationProfile;
       }
       return null;
     },
@@ -96,7 +109,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   });
 
   // Fetch transactions
-  const { data: transactions } = useQuery({
+  const { data: transactions } = useQuery<XpTransaction[]>({
     queryKey: ['gamification-transactions', patientId],
     queryFn: async () => {
       const transactionsRef = collection(db, 'xp_transactions');
@@ -108,12 +121,12 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
       );
       const querySnapshot = await getDocs(q);
 
-      const transactions: Record<string, unknown>[] = [];
-      querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
+      const transactions: XpTransaction[] = [];
+      querySnapshot.forEach((doc) => {
         transactions.push({
           id: doc.id,
           ...doc.data()
-        });
+        } as XpTransaction);
       });
 
       return transactions;
@@ -122,7 +135,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
   });
 
   // Fetch achievements
-  const { data: achievements } = useQuery({
+  const { data: achievements } = useQuery<AchievementLogEntry[]>({
     queryKey: ['gamification-achievements', patientId],
     queryFn: async () => {
       const achievementsLogRef = collection(db, 'achievements_log');
@@ -134,19 +147,19 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
       );
       const querySnapshot = await getDocs(q);
 
-      const achievements: Record<string, unknown>[] = [];
+      const achievements: AchievementLogEntry[] = [];
       for (const docSnapshot of querySnapshot.docs) {
         const logData = {
           id: docSnapshot.id,
           ...docSnapshot.data()
-        };
+        } as AchievementLogEntry;
 
         // Fetch achievement details
         if (logData.achievement_id) {
           const achievementRef = doc(db, 'achievements', logData.achievement_id);
           const achievementSnap = await getDoc(achievementRef);
           if (achievementSnap.exists()) {
-            logData.achievements = achievementSnap.data();
+            logData.achievements = achievementSnap.data() as Achievement;
           }
         }
 
@@ -442,10 +455,10 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-sm text-yellow-900">
-                                  {(entry.achievements as any)?.title || 'Conquista'}
+                                  {(entry.achievements as { title?: string; description?: string })?.title || 'Conquista'}
                                 </p>
                                 <p className="text-xs text-yellow-700 mt-1 line-clamp-2">
-                                  {(entry.achievements as any)?.description || ''}
+                                  {(entry.achievements as { title?: string; description?: string })?.description || ''}
                                 </p>
                                 <div className="flex items-center gap-2 mt-2">
                                   <Badge className="bg-yellow-500 text-white text-xs">

@@ -15,6 +15,7 @@ import {
   confirmPasswordReset,
   verifyPasswordResetCode,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   User,
   UserCredential,
   Auth,
@@ -216,8 +217,7 @@ export async function reauthenticate(password: string): Promise<void> {
   if (!user.email) throw new Error('Email não disponível');
 
   const credential = EmailAuthProvider.credential(user.email, password);
-  // Usar o método do usuário diretamente
-  await (user as any).reauthenticateWithCredential(credential);
+  await reauthenticateWithCredential(user, credential);
 }
 
 /**

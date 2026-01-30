@@ -73,11 +73,12 @@ export default function ChallengesManager() {
 
     const upsertChallenge = useMutation({
         mutationFn: async (values: Partial<WeeklyChallenge>) => {
-            const challengeData = {
+            type ChallengeData = Omit<WeeklyChallenge, 'id'> & { created_at?: string; point_reward?: number };
+            const challengeData: ChallengeData = {
                 title: values.title!,
                 description: values.description || null,
                 xp_reward: values.xp_reward || 200,
-                point_reward: values.point_reward || 50,
+                point_reward: (values as any).point_reward || 50,
                 start_date: values.start_date!,
                 end_date: values.end_date!,
                 target: values.target!,

@@ -40,8 +40,8 @@ export async function shareContent(options: ShareOptions): Promise<void> {
       url: options.url,
       dialogTitle: options.dialogTitle ?? 'Compartilhar',
     });
-  } catch (error: any) {
-    if (error.message?.includes('User canceled')) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message?.includes('User canceled')) {
       // Usuário cancelou, não é um erro
       return;
     }

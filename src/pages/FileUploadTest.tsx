@@ -62,15 +62,16 @@ const FileUploadTest = () => {
       );
 
       toast({ title: 'Upload concluído com sucesso', description: file.name });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setFiles(prev =>
         prev.map(f =>
           f.id === fileId
-            ? { ...f, status: 'error', error: error.message }
+            ? { ...f, status: 'error', error: errorMessage }
             : f
         )
       );
-      toast({ title: 'Erro no upload', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erro no upload', description: errorMessage, variant: 'destructive' });
     }
   };
 

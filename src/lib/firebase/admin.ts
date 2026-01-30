@@ -129,7 +129,7 @@ export async function documentExists(
 /**
  * Helper to get a document or throw error
  */
-export async function getDocumentOrThrow<T = any>(
+export async function getDocumentOrThrow<T = Record<string, unknown>>(
   collectionPath: string,
   docId: string,
   errorMessage?: string
@@ -147,7 +147,7 @@ export async function getDocumentOrThrow<T = any>(
 /**
  * Helper to batch fetch documents
  */
-export async function batchFetchDocuments<T = any>(
+export async function batchFetchDocuments<T = Record<string, unknown>>(
   collectionPath: string,
   docIds: string[]
 ): Promise<Map<string, T>> {
@@ -190,7 +190,7 @@ export async function deleteByQuery(
   collectionPath: string,
   fieldName: string,
   operator: '<' | '<=' | '==' | '!=' | '>' | '>=',
-  value: any,
+  value: unknown,
   options?: { batchSize?: number; maxDeletes?: number }
 ): Promise<number> {
   const db = getAdminDb();
@@ -198,7 +198,7 @@ export async function deleteByQuery(
   const maxDeletes = options?.maxDeletes;
 
   let totalDeleted = 0;
-  let lastDoc: any = null;
+  let lastDoc: admin.firestore.QueryDocumentSnapshot<admin.firestore.DocumentData> | null = null;
 
   while (true) {
     let query = db.collection(collectionPath)

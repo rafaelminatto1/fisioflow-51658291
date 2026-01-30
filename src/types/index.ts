@@ -5,7 +5,45 @@ export * from './agenda';
 export type { EnhancedAppointment } from './appointment';
 
 // Common type definitions (replaces `any` usages)
-export * from './common';
+// Note: PaymentStatus and UserRole are also exported from agenda.ts with different values
+// We're using the common.ts versions as the canonical types
+export type {
+  ErrorHandler,
+  AsyncErrorHandler,
+  UnknownError,
+  getErrorMessage,
+  asError,
+  IconComponent,
+  LucideIconType,
+  ValueChangeHandler,
+  AsyncValueChangeHandler,
+  ChangeEventHandler,
+  AsyncFunction,
+  PromiseResult,
+  TimerId,
+  EntityId,
+  UserId,
+  PatientId,
+  AppointmentId,
+  OrganizationId,
+  ExerciseId,
+  SessionId,
+  TreatmentId,
+  PaymentStatus,
+  UserRole,
+  QueryParams,
+  PaginationParams,
+  PaginatedMeta,
+  SelectionState,
+  SortDirection,
+  FilterOperator,
+  Filter,
+  DateRange,
+  FileUpload,
+  ServiceResult,
+  Dictionary,
+  ErrorMap,
+} from './common';
 
 // API type definitions
 export * from './api';

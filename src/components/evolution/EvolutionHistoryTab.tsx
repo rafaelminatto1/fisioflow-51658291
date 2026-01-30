@@ -10,11 +10,29 @@ import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
 import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
 import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';
 
+interface Surgery {
+  id: string;
+  name: string;
+  date: string;
+  description?: string;
+}
+
+interface Evolution {
+  id: string;
+  patient_id: string;
+  date: string;
+  created_at: string;
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+}
+
 interface EvolutionHistoryTabProps {
     patientId: string;
-    surgeries: any[];
-    previousEvolutions: any[];
-    onCopyEvolution: (evolution: any) => void;
+    surgeries: Surgery[];
+    previousEvolutions: Evolution[];
+    onCopyEvolution: (evolution: Evolution) => void;
     showComparison: boolean;
     onToggleComparison: () => void;
 }

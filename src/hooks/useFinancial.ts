@@ -1,14 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { db } from '@/integrations/firebase/app';
+import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { FinancialService, Transaction, FinancialStats } from '@/services/financialService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type { Transaction, FinancialStats };
 
 export const useFinancial = () => {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
   const [period, setPeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'all'>('monthly');
+
+  // Registrar listener para atualizações em tempo real
+  useEffect(() => {
+    if (!db || !profile?.organization_id) return;
+
+    const q = query(
+      collection(db, 'contas_financeiras'),
+      where('organization_id', '==', profile.organization_id)
+    );
+
+    const unsubscribe = onSnapshot(q, () => {
+      console.log('[Realtime] Financial data changed, invalidating queries...');
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    });
+
+    return () => unsubscribe();
+  }, [profile?.organization_id, queryClient]);
 
   // Buscar todas as transações
   const { data: transactions = [], isLoading, error } = useQuery({

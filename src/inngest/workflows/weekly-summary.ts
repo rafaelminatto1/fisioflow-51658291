@@ -60,7 +60,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
       const organizations = orgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       return await Promise.all(
-        organizations.map(async (org: any) => {
+        organizations.map(async (org: Organization) => {
           try {
             // Get sessions for the week
             const sessionsSnapshot = await db.collection('soap_records')

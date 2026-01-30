@@ -49,7 +49,7 @@ export interface Profile {
   timezone?: string;
   is_active: boolean;
   emergency_contact?: EmergencyContact;
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

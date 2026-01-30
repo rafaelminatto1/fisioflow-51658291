@@ -175,8 +175,8 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
         updates: {
           title: editTitle.trim(),
           description: editDescription.trim() || null,
-          category: editCategory as any,
-          difficulty: editDifficulty as any,
+          category: editCategory as string,
+          difficulty: editDifficulty as string,
           body_parts: editBodyParts,
           equipment: editEquipment,
         },
@@ -195,8 +195,8 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
           ...selectedVideo,
           title: editTitle.trim(),
           description: editDescription.trim() || null,
-          category: editCategory as any,
-          difficulty: editDifficulty as any,
+          category: editCategory as string,
+          difficulty: editDifficulty as string,
           body_parts: editBodyParts,
           equipment: editEquipment,
         });

@@ -33,6 +33,11 @@ export interface ProfileDetail extends ProfileListItem {
     targets: GoalTarget[];
 }
 
+interface FunctionsResponse<T> {
+    data?: T;
+    error?: string;
+}
+
 /**
  * Helper to get auth token for Firebase Functions
  */
@@ -59,7 +64,7 @@ export const goalsAdminService = {
             }
         });
 
-        return (data as any)?.data as ProfileListItem[];
+        return (data as FunctionsResponse<ProfileListItem>)?.data as ProfileListItem[];
     },
 
     /**
@@ -77,7 +82,7 @@ export const goalsAdminService = {
             }
         });
 
-        return (data as any)?.data as ProfileDetail;
+        return (data as FunctionsResponse<ProfileDetail>)?.data as ProfileDetail;
     },
 
     /**
@@ -95,7 +100,7 @@ export const goalsAdminService = {
             }
         });
 
-        return (data as any)?.data as GoalProfile;
+        return (data as FunctionsResponse<GoalProfile>)?.data as GoalProfile;
     },
 
     /**
@@ -114,7 +119,7 @@ export const goalsAdminService = {
             }
         });
 
-        return (data as any)?.data as GoalProfile;
+        return (data as FunctionsResponse<GoalProfile>)?.data as GoalProfile;
     },
 
     /**
@@ -131,6 +136,6 @@ export const goalsAdminService = {
             }
         });
 
-        return (data as any)?.data as GoalProfile;
+        return (data as FunctionsResponse<GoalProfile>)?.data as GoalProfile;
     },
 };

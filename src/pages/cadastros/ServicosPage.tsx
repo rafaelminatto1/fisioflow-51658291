@@ -278,9 +278,9 @@ export default function ServicosPage() {
 
                 <div className="space-y-2">
                   <Label>Tipo de Cobrança</Label>
-                  <Select 
-                    value={watch('tipo_cobranca')} 
-                    onValueChange={(v) => setValue('tipo_cobranca', v as any)}
+                  <Select
+                    value={watch('tipo_cobranca')}
+                    onValueChange={(v) => setValue('tipo_cobranca', v as 'unitario' | 'mensal' | 'pacote')}
                   >
                     <SelectTrigger>
                       <SelectValue />

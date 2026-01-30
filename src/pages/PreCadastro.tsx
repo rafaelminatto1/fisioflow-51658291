@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { CheckCircle2, Loader2, AlertCircle, Heart, Calendar, Phone, Mail, User } from 'lucide-react';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
 
 interface TokenData {
   id: string;
@@ -15,6 +17,9 @@ interface TokenData {
   descricao: string;
   campos_obrigatorios: string[];
   campos_opcionais: string[];
+  max_usos?: number;
+  usos_atuais?: number;
+  expires_at?: string;
 }
 
 const PreCadastro = () => {
@@ -25,7 +30,7 @@ const PreCadastro = () => {
   const [submitted, setSubmitted] = useState(false);
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -47,21 +52,23 @@ const PreCadastro = () => {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('precadastro_tokens')
-          .select('*')
-          .eq('token', token)
-          .eq('ativo', true)
-          .single();
+        const q = query(
+          collection(db, 'precadastro_tokens'),
+          where('token', '==', token),
+          where('ativo', '==', true)
+        );
+        const snapshot = await getDocs(q);
 
-        if (fetchError || !data) {
+        if (snapshot.empty) {
           setError('Link expirado ou inválido');
           setLoading(false);
           return;
         }
 
+        const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as TokenData;
+
         // Check if max uses exceeded
-        if (data.max_usos && data.usos_atuais >= data.max_usos) {
+        if (data.max_usos && data.usos_atuais !== undefined && data.usos_atuais >= data.max_usos) {
           setError('Este link atingiu o limite máximo de usos');
           setLoading(false);
           return;
@@ -79,7 +86,8 @@ const PreCadastro = () => {
           campos_obrigatorios: data.campos_obrigatorios as string[] || ['nome', 'email', 'telefone'],
           campos_opcionais: data.campos_opcionais as string[] || []
         });
-      } catch {
+      } catch (err) {
+        console.error('Error validating token:', err);
         setError('Erro ao validar link');
       } finally {
         setLoading(false);
@@ -91,7 +99,7 @@ const PreCadastro = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!tokenData) return;
 
     // Validate required fields
@@ -106,15 +114,13 @@ const PreCadastro = () => {
     setSubmitting(true);
 
     try {
-      // Get org_id from token function
-      const { data: orgId, error: tokenError } = await supabase
-        .rpc('increment_precadastro_token_usage', { _token: token });
+      // Increment token usage and get orgId
+      const tokenRef = doc(db, 'precadastro_tokens', tokenData.id);
+      await updateDoc(tokenRef, {
+        usos_atuais: increment(1)
+      });
 
-      if (tokenError || !orgId) {
-        toast.error('Link inválido ou expirado');
-        setSubmitting(false);
-        return;
-      }
+      const orgId = tokenData.organization_id;
 
       // Insert precadastro with additional data
       const dadosAdicionais: Record<string, string> = {};
@@ -122,21 +128,18 @@ const PreCadastro = () => {
       if (formData.convenio) dadosAdicionais.convenio = formData.convenio;
       if (formData.queixa_principal) dadosAdicionais.queixa_principal = formData.queixa_principal;
 
-      const { error: insertError } = await supabase
-        .from('precadastros')
-        .insert({
-          token_id: tokenData.id,
-          organization_id: orgId,
-          nome: formData.nome,
-          email: formData.email || null,
-          telefone: formData.telefone || null,
-          data_nascimento: formData.data_nascimento || null,
-          endereco: formData.endereco || null,
-          observacoes: formData.observacoes || null,
-          dados_adicionais: Object.keys(dadosAdicionais).length > 0 ? dadosAdicionais : null
-        });
-
-      if (insertError) throw insertError;
+      await addDoc(collection(db, 'precastros'), {
+        token_id: tokenData.id,
+        organization_id: orgId,
+        nome: formData.nome,
+        email: formData.email || null,
+        telefone: formData.telefone || null,
+        data_nascimento: formData.data_nascimento || null,
+        endereco: formData.endereco || null,
+        observacoes: formData.observacoes || null,
+        dados_adicionais: Object.keys(dadosAdicionais).length > 0 ? dadosAdicionais : null,
+        created_at: new Date().toISOString()
+      });
 
       setSubmitted(true);
       toast.success('Pré-cadastro realizado com sucesso!');
@@ -211,7 +214,7 @@ const PreCadastro = () => {
             {tokenData?.descricao || 'Preencha seus dados para iniciar seu atendimento'}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isFieldVisible('nome') && (

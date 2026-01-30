@@ -11,6 +11,8 @@ import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -19,6 +21,13 @@ interface LeaderboardEntry {
   total_xp: number;
   current_streak: number;
   title?: string;
+}
+
+interface GamificationData {
+  patient_id: string;
+  level: number;
+  total_points: number;
+  current_streak: number;
 }
 
 const RANK_ICONS = [Crown, Medal, Award];
@@ -54,43 +63,39 @@ export default function GamificationLeaderboardPage() {
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ['gamification-leaderboard', period],
     queryFn: async () => {
-      let query = supabase
-        .from('patient_gamification')
-        .select(`
-          patient_id,
-          total_points,
-          level,
-          current_streak,
-          last_activity_date
-        `);
+      const gamificationRef = collection(db, 'patient_gamification');
+      let q;
 
-      // Apply period filter (simplified - in production you'd filter by date)
       if (period === 'weekly') {
-        // Would filter by last 7 days
-        query = query.order('current_streak', { ascending: false });
+        q = query(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
       } else if (period === 'monthly') {
-        // Would filter by last 30 days
-        query = query.order('current_streak', { ascending: false });
+        q = query(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
       } else {
-        query = query.order('total_points', { ascending: false });
+        q = query(gamificationRef, orderBy('total_points', 'desc'), limit(50));
       }
 
-      const { data, error } = await query.limit(50);
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(d => ({ patient_id: d.id, ...d.data() })) as GamificationData[];
 
-      if (error) throw error;
-
-      const patientIds = (data || []).map(d => d.patient_id);
+      const patientIds = data.map(d => d.patient_id);
       if (patientIds.length === 0) return [];
 
-      // Fetch patient names
-      const { data: patients } = await supabase
-        .from('patients')
-        .select('id, full_name')
-        .in('id', patientIds);
+      // Fetch patient names in chunks of 30 (Firestore limit for 'in' operator is 30)
+      const patientMap = new Map<string, string>();
+      const chunks = [];
+      for (let i = 0; i < patientIds.length; i += 30) {
+        chunks.push(patientIds.slice(i, i + 30));
+      }
 
-      const patientMap = new Map((patients || []).map(p => [p.id, p.full_name]));
+      for (const chunk of chunks) {
+        const qPatients = query(collection(db, 'patients'), where('__name__', 'in', chunk));
+        const snapshotPatients = await getDocs(qPatients);
+        snapshotPatients.docs.forEach(d => {
+          patientMap.set(d.id, d.data().full_name);
+        });
+      }
 
-      return (data || []).map(entry => ({
+      return data.map(entry => ({
         patient_id: entry.patient_id,
         patient_name: patientMap.get(entry.patient_id) || 'Paciente',
         current_level: entry.level,
@@ -174,7 +179,7 @@ export default function GamificationLeaderboardPage() {
               </div>
 
               {/* Period Filter */}
-              <Tabs value={period} onValueChange={(v: any) => setPeriod(v)} className="w-auto">
+              <Tabs value={period} onValueChange={(v) => setPeriod(v as 'weekly' | 'monthly' | 'all')} className="w-auto">
                 <TabsList>
                   <TabsTrigger value="weekly">Semana</TabsTrigger>
                   <TabsTrigger value="monthly">Mês</TabsTrigger>

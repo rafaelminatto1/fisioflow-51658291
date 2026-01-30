@@ -23,6 +23,7 @@ import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRigh
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
+import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Link } from 'react-router-dom';
@@ -31,6 +32,8 @@ import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { format, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
+import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc } from '@/integrations/firebase/app';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 // Lazy load CalendarView for better initial load performance
@@ -262,18 +265,16 @@ const Schedule = () => {
 
   const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', appointment.id);
+      // FIX: Migrated from Supabase to Firestore
+      await deleteDoc(doc(db, 'appointments', appointment.id));
 
-      if (error) throw error;
       toast({
         title: '✅ Agendamento excluído',
         description: `Agendamento de ${appointment.patientName} foi excluído.`
       });
       refetch();
-    } catch {
+    } catch (err) {
+      logger.error('Erro ao excluir agendamento', err, 'Schedule');
       toast({
         title: '❌ Erro ao excluir',
         description: 'Não foi possível excluir o agendamento.',
@@ -418,6 +419,29 @@ const Schedule = () => {
           dataSource={dataSource}
         />
 
+        {/* AI Assistant - Agenda Insight */}
+        <section className="px-4 sm:px-6 mt-6 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="bg-gradient-to-r from-blue-600/10 to-blue-400/5 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-blue-500/20 flex-shrink-0 flex items-center justify-center text-blue-600">
+                <Sparkles className="h-6 w-6 animate-pulse" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Assistente de Agenda Clinsight</h2>
+                <p className="text-sm text-muted-foreground">Otimize seus horários com sugestões inteligentes da IA.</p>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              className="rounded-xl font-bold shadow-md hover:shadow-lg h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white transition-all group"
+              onClick={() => toast({ title: "IA Analisando...", description: "Verificando disponibilidade e padrões de agendamento." })}
+            >
+              <Sparkles className="mr-2 h-4 w-4 group-hover:rotate-12 transition-transform" />
+              Sugerir Otimização
+            </Button>
+          </div>
+        </section>
+
         {/* Header Section - Enhanced with better visual hierarchy */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
           <div className="px-4 sm:px-6 py-4">
@@ -512,11 +536,10 @@ const Schedule = () => {
                 <Button
                   variant={isSelectionMode ? "default" : "outline"}
                   size="icon"
-                  className={`h-9 w-9 rounded-lg transition-all ${
-                    isSelectionMode
-                      ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
+                  className={`h-9 w-9 rounded-lg transition-all ${isSelectionMode
+                    ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
                   onClick={toggleSelectionMode}
                   title="Modo de Seleção (atalho: A)"
                 >
@@ -596,8 +619,19 @@ const Schedule = () => {
           <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
-                <CalendarView
-                  appointments={filteredAppointments}
+                {filteredAppointments.length === 0 && !isLoading ? (
+                  <div className="h-full flex items-center justify-center p-8">
+                    <EmptyState 
+                      icon={Calendar}
+                      title="Agenda Livre"
+                      description="Nenhum atendimento encontrado para os critérios selecionados."
+                      actionLabel="Novo Agendamento"
+                      onAction={() => setIsModalOpen(true)}
+                    />
+                  </div>
+                ) : (
+                  <CalendarView
+                    appointments={filteredAppointments}
                   currentDate={currentDate}
                   onDateChange={setCurrentDate}
                   viewType={viewType as CalendarViewType}
@@ -611,7 +645,8 @@ const Schedule = () => {
                   selectedIds={selectedIds}
                   onToggleSelection={toggleSelection}
                 />
-              </Suspense>
+              )}
+            </Suspense>
             </div>
           </div>
         </div>

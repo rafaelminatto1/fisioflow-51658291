@@ -170,9 +170,10 @@ const styles = StyleSheet.create({
   },
 });
 
-interface ReciboData {
+export interface ReciboData {
   numero: number;
   valor: number;
+  valor_extenso?: string;
   referente: string;
   dataEmissao: Date | string;
   emitente: {

@@ -224,6 +224,8 @@ export const INVALID_PATIENT_COLUMNS = new Set([
   'patient_name'
 ] as const);
 
+type InvalidPatientColumn = 'name' | 'nome' | 'whatsapp' | 'first_name' | 'last_name' | 'patient_name';
+
 /**
  * Validate a select query string for invalid columns
  * @throws Error if invalid columns are detected
@@ -242,7 +244,7 @@ export function validatePatientSelectQuery(query: string): void {
     // Extract base column name (handle aliases like 'name:full_name')
     const baseColumn = column.split(':')[0].trim();
 
-    if (INVALID_PATIENT_COLUMNS.has(baseColumn as any)) {
+    if (INVALID_PATIENT_COLUMNS.has(baseColumn as InvalidPatientColumn)) {
       throw new Error(
         `❌ Invalid patient column: '${column}'.\n` +
         `Column '${baseColumn}' does not exist in the patients table.\n` +

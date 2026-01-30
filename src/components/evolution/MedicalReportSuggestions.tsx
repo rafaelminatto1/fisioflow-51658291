@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,341 +9,157 @@ import {
   Copy,
   Check,
   TrendingUp,
-  TrendingDown,
-  Activity,
-  Target,
-  Calendar,
-  FileText,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { differenceInDays } from 'date-fns';
-
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { useAI } from '@/integrations/firebase/ai';
 
 interface MedicalReportSuggestionsProps {
   patientId: string;
 }
 
-interface Insight {
-  id: string;
-  type: 'improvement' | 'milestone' | 'comparison' | 'recommendation';
-  icon: React.ReactNode;
+interface ClinicalInsight {
   title: string;
   description: string;
-  data?: unknown;
-  priority: 'high' | 'medium' | 'low';
+  type: 'improvement' | 'alert' | 'recommendation';
 }
 
 export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> = ({
   patientId
 }) => {
   const { toast } = useToast();
-  const [insights, setInsights] = useState<Insight[]>([]);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { generate } = useAI();
+  const [insights, setInsights] = useState<ClinicalInsight[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [copiedIndex, setCopiedId] = useState<number | null>(null);
 
-
-
-  const generateInsights = React.useCallback(async () => {
+  const generateAIInsights = async () => {
+    if (!patientId) return;
+    
     setIsLoading(true);
     try {
-      const generatedInsights: Insight[] = [];
+      // 1. Buscar dados históricos do Firestore (substituindo Supabase)
+      const soapRef = collection(db, 'soap_records');
+      const soapQuery = query(soapRef, where('patient_id', '==', patientId), orderBy('created_at', 'desc'), limit(5));
+      const soapSnap = await getDocs(soapQuery);
+      const history = soapSnap.docs.map(d => d.data());
 
-      // Fetch patient data (Check if exists)
-      await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', patientId)
-        .single();
+      const measureRef = collection(db, 'evolution_measurements');
+      const measureQuery = query(measureRef, where('patient_id', '==', patientId), orderBy('measured_at', 'desc'), limit(10));
+      const measureSnap = await getDocs(measureQuery);
+      const metrics = measureSnap.docs.map(d => d.data());
 
-      // Fetch SOAP records
-      const { data: soapRecords } = await supabase
-        .from('soap_records')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: true });
+      // 2. Construir prompt rico para o Gemini
+      const prompt = `
+        Aja como um fisioterapeuta sênior. Analise o histórico clínico do paciente e gere 3 insights estruturados para o relatório de evolução.
+        Histórico SOAP Recente: ${JSON.stringify(history)}
+        Métricas de Evolução: ${JSON.stringify(metrics)}
+        
+        Retorne exatamente no formato JSON:
+        [{"title": "Título Curto", "description": "Texto profissional", "type": "improvement | alert | recommendation"}]
+        Responda em Português Brasileiro.
+      `;
 
-      // Fetch measurements
-      const { data: measurements } = await supabase
-        .from('evolution_measurements')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('measured_at', { ascending: true });
+      const result = await generate(prompt, {
+        userId: 'system-therapist',
+        feature: 'clinical_analysis' as any,
+      });
 
-      // Fetch appointments
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('status', 'atendido')
-        .order('appointment_date', { ascending: true });
-
-      // Fetch goals
-      const { data: goals } = await supabase
-        .from('patient_goals')
-        .select('*')
-        .eq('patient_id', patientId);
-
-      // Generate pain evolution insight
-      const painMeasurements = measurements?.filter(m =>
-        m.measurement_type === 'pain' || m.measurement_name.toLowerCase().includes('dor')
-      );
-
-      if (painMeasurements && painMeasurements.length >= 2) {
-        const firstPain = painMeasurements[0].value;
-        const lastPain = painMeasurements[painMeasurements.length - 1].value;
-        const sessions = soapRecords?.length || 0;
-
-        if (lastPain < firstPain) {
-          generatedInsights.push({
-            id: 'pain_reduction',
-            type: 'improvement',
-            icon: <TrendingDown className="h-4 w-4 text-green-500" />,
-            title: 'Redução de Dor',
-            description: `Paciente apresentou redução de dor de ${firstPain}/10 para ${lastPain}/10 em ${sessions} sessões de tratamento.`,
-            priority: 'high'
-          });
-        }
+      // Parse safely
+      try {
+        const cleanedContent = result.content.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(cleanedContent);
+        setInsights(parsed);
+      } catch (e) {
+        // Fallback if AI doesn't return clean JSON
+        setInsights([{
+          title: "Análise de Evolução",
+          description: result.content,
+          type: "recommendation"
+        }]);
       }
-
-      // Generate ROM improvement insight
-      const romMeasurements = measurements?.filter(m =>
-        m.measurement_type === 'rom' || m.measurement_name.toLowerCase().includes('amplitude')
-      );
-
-      if (romMeasurements && romMeasurements.length >= 2) {
-        const firstROM = romMeasurements[0].value;
-        const lastROM = romMeasurements[romMeasurements.length - 1].value;
-        const improvement = ((lastROM - firstROM) / firstROM * 100).toFixed(0);
-
-        if (lastROM > firstROM) {
-          generatedInsights.push({
-            id: 'rom_improvement',
-            type: 'improvement',
-            icon: <TrendingUp className="h-4 w-4 text-blue-500" />,
-            title: 'Ganho de Amplitude',
-            description: `Amplitude de movimento aumentou ${improvement}% desde a avaliação inicial (${firstROM}° → ${lastROM}°).`,
-            priority: 'high'
-          });
-        }
-      }
-
-      // Generate treatment duration insight
-      if (appointments && appointments.length > 0) {
-        const firstDate = new Date(appointments[0].appointment_date);
-        const lastDate = new Date(appointments[appointments.length - 1].appointment_date);
-        const daysInTreatment = differenceInDays(lastDate, firstDate);
-        const weeks = Math.floor(daysInTreatment / 7);
-
-        generatedInsights.push({
-          id: 'treatment_duration',
-          type: 'milestone',
-          icon: <Calendar className="h-4 w-4 text-purple-500" />,
-          title: 'Tempo de Tratamento',
-          description: `Paciente em acompanhamento há ${weeks > 0 ? `${weeks} semanas` : `${daysInTreatment} dias`}, com ${appointments.length} sessões realizadas.`,
-          priority: 'medium'
-        });
-      }
-
-      // Generate attendance rate insight
-      if (appointments) {
-        const { count: totalScheduled } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('patient_id', patientId);
-
-        const attendanceRate = ((appointments.length / (totalScheduled || 1)) * 100).toFixed(0);
-
-        if (Number(attendanceRate) >= 80) {
-          generatedInsights.push({
-            id: 'attendance',
-            type: 'milestone',
-            icon: <Activity className="h-4 w-4 text-green-500" />,
-            title: 'Boa Adesão',
-            description: `Taxa de presença de ${attendanceRate}%, demonstrando excelente adesão ao tratamento.`,
-            priority: 'medium'
-          });
-        }
-      }
-
-      // Generate goal progress insight
-      const completedGoals = goals?.filter(g => g.status === 'completed') || [];
-      if (completedGoals.length > 0) {
-        generatedInsights.push({
-          id: 'goals_completed',
-          type: 'milestone',
-          icon: <Target className="h-4 w-4 text-amber-500" />,
-          title: 'Objetivos Alcançados',
-          description: `${completedGoals.length} objetivo(s) terapêutico(s) alcançado(s): ${completedGoals.map(g => g.goal_title).join(', ')}.`,
-          priority: 'high'
-        });
-      }
-
-      // Generate strength improvement insight
-      const strengthMeasurements = measurements?.filter(m =>
-        m.measurement_type === 'strength' || m.measurement_name.toLowerCase().includes('força')
-      );
-
-      if (strengthMeasurements && strengthMeasurements.length >= 2) {
-        const firstStrength = strengthMeasurements[0].value;
-        const lastStrength = strengthMeasurements[strengthMeasurements.length - 1].value;
-
-        if (lastStrength > firstStrength) {
-          generatedInsights.push({
-            id: 'strength_improvement',
-            type: 'improvement',
-            icon: <TrendingUp className="h-4 w-4 text-orange-500" />,
-            title: 'Ganho de Força',
-            description: `Teste de força muscular: evolução de grau ${firstStrength} para grau ${lastStrength}.`,
-            priority: 'medium'
-          });
-        }
-      }
-
-      // Add recommendation based on progress
-      if (generatedInsights.filter(i => i.type === 'improvement').length >= 2) {
-        generatedInsights.push({
-          id: 'recommendation',
-          type: 'recommendation',
-          icon: <Sparkles className="h-4 w-4 text-indigo-500" />,
-          title: 'Recomendação',
-          description: 'Paciente apresenta evolução satisfatória. Considerar progressão do protocolo de exercícios e reavaliação dos objetivos.',
-          priority: 'low'
-        });
-      }
-
-      setInsights(generatedInsights);
     } catch (error) {
-      console.error('Error generating insights:', error);
+      console.error('Erro ao gerar insights clínicos:', error);
+      toast({ title: "Erro na IA", description: "Não foi possível analisar o histórico agora.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-
-  }, [patientId]);
+  };
 
   useEffect(() => {
-    generateInsights();
-  }, [generateInsights]);
+    generateAIInsights();
+  }, [patientId]);
 
-  const copyToClipboard = (insight: Insight) => {
-    navigator.clipboard.writeText(insight.description);
-    setCopiedId(insight.id);
-    toast({
-      title: 'Copiado!',
-      description: 'Texto copiado para a área de transferência.'
-    });
+  const copyToClipboard = (text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(index);
+    toast({ title: 'Copiado!', description: 'Texto pronto para o seu prontuário.' });
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const copyAllInsights = () => {
-    const allText = insights.map(i => `• ${i.description}`).join('\n');
-    navigator.clipboard.writeText(allText);
-    toast({
-      title: 'Todos os insights copiados!',
-      description: 'Texto completo copiado para a área de transferência.'
-    });
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'medium': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-      case 'low': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'improvement': return 'Melhora';
-      case 'milestone': return 'Marco';
-      case 'comparison': return 'Comparação';
-      case 'recommendation': return 'Sugestão';
-      default: return type;
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-pulse text-muted-foreground">
-              Gerando insights...
+  return (
+    <Card className="border-blue-500/20 shadow-sm">
+      <CardHeader className="pb-3 border-b bg-blue-50/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-500 rounded-lg text-white">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Sugestões de Evolução (IA)</CardTitle>
+              <CardDescription className="text-[10px]">Baseado no histórico completo do paciente</CardDescription>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-amber-500" />
-            Sugestões para Relatório
-          </CardTitle>
-          {insights.length > 0 && (
-            <Button variant="outline" size="sm" onClick={copyAllInsights}>
-              <FileText className="h-4 w-4 mr-2" />
-              Copiar Todos
-            </Button>
-          )}
+          <Button variant="ghost" size="sm" onClick={generateAIInsights} disabled={isLoading} className="h-8">
+            {isLoading ? <RefreshCw className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {insights.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Lightbulb className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p>Nenhum insight disponível ainda.</p>
-            <p className="text-sm">Registre mais evoluções para gerar sugestões automáticas.</p>
+      <CardContent className="pt-4">
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="h-16 bg-muted animate-pulse rounded-xl" />
+            <div className="h-16 bg-muted animate-pulse rounded-xl" />
+          </div>
+        ) : insights.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            <p className="text-sm italic">Nenhum dado suficiente para gerar insights automáticos.</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-3">
-              {insights.map((insight, index) => (
-                <React.Fragment key={insight.id}>
-                  <div className="group relative p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">
-                        {insight.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{insight.title}</span>
-                          <Badge variant="secondary" className={`text-xs ${getPriorityColor(insight.priority)}`}>
-                            {getTypeLabel(insight.type)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {insight.description}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                        onClick={() => copyToClipboard(insight)}
-                      >
-                        {copiedId === insight.id ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+          <div className="space-y-4">
+            {insights.map((insight, idx) => (
+              <div key={idx} className="group relative p-3 rounded-xl border border-border/50 bg-card hover:border-blue-300 transition-all">
+                <div className="flex items-start gap-3">
+                  <div className={`mt-1 p-1 rounded ${
+                    insight.type === 'improvement' ? 'bg-green-100 text-green-600' : 
+                    insight.type === 'alert' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {insight.type === 'improvement' ? <TrendingUp className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
                   </div>
-                  {index < insights.length - 1 && <Separator />}
-                </React.Fragment>
-              ))}
-            </div>
-          </ScrollArea>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-xs mb-1">{insight.title}</p>
+                    <p className="text-sm text-foreground/80 leading-relaxed italic line-clamp-3 group-hover:line-clamp-none transition-all">
+                      "{insight.description}"
+                    </p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => copyToClipboard(insight.description, idx)}
+                  >
+                    {copiedIndex === idx ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
   );
 };
-
-export default MedicalReportSuggestions;

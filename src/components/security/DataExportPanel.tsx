@@ -138,7 +138,7 @@ export function DataExportPanel() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={getStatusColor(request.status) as any}>
+                      <Badge variant={getStatusColor(request.status) as "default" | "secondary" | "destructive" | "outline"}>
                         {request.status === "pending" && "Pendente"}
                         {request.status === "processing" && "Processando"}
                         {request.status === "completed" && "Concluído"}

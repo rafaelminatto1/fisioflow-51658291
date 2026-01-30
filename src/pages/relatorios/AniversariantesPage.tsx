@@ -28,6 +28,14 @@ interface Aniversariante {
   email: string | null;
 }
 
+interface PatientDocument {
+  id: string;
+  name: string;
+  birth_date?: string;
+  phone?: string | null;
+  email?: string | null;
+}
+
 export default function AniversariantesPage() {
   const [search, setSearch] = useState('');
   const [mesSelecionado, setMesSelecionado] = useState(new Date().getMonth() + 1);
@@ -45,12 +53,12 @@ export default function AniversariantesPage() {
       // Filtrar por mês e calcular dados
       return snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter((p: any) => {
+        .filter((p: PatientDocument) => {
           if (!p.birth_date) return false;
           const birthMonth = new Date(p.birth_date).getMonth() + 1;
           return birthMonth === mesSelecionado;
         })
-        .map((p: any) => ({
+        .map((p: PatientDocument) => ({
           id: p.id,
           name: p.name,
           birth_date: p.birth_date,

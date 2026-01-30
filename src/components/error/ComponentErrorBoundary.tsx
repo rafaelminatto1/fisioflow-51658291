@@ -99,7 +99,7 @@ export class ComponentErrorBoundary extends Component<
     if (fallback) {
       if (typeof fallback === 'function') {
         return fallback(error!, {
-          componentStack: '' as any,
+          componentStack: '',
         } as React.ErrorInfo);
       }
       return fallback;

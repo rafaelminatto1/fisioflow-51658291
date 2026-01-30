@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MessageSquare, Activity, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from 'firebase/firestore';
 
 // Define interface for appointment data
 interface Appointment {
@@ -30,75 +32,53 @@ export default function PatientApp() {
   async function loadAppointments() {
     try {
       setLoading(true);
-      
-      // Função auxiliar para timeout
-      const withTimeout = <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
-        return Promise.race([
-          Promise.resolve(promise),
-          new Promise<T>((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
-          ),
-        ]);
-      };
 
-      // Buscar paciente pelo user_id com retry
-      let patient = null;
-      let retries = 0;
-      const maxRetries = 3;
+      // Buscar paciente pelo user_id (profile_id in Firestore)
+      if (!user) return;
 
-      while (retries < maxRetries && !patient) {
-        try {
-          const result = await withTimeout(
-            supabase
-              .from('patients')
-              .select('id')
-              .eq('profile_id', user?.id)
-              .single(),
-            8000
-          );
-          
-          if (result.data) {
-            patient = result.data;
-            break;
-          }
-        } catch {
-          retries++;
-          if (retries < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-          }
-        }
-      }
+      const qPatient = query(
+        collection(db, 'patients'),
+        where('profile_id', '==', user.uid)
+      );
+      const snapshotPatient = await getDocs(qPatient);
 
-      if (patient?.id) {
-        // Carregar agendamentos com retry
-        retries = 0;
-        let appointmentsData = null;
+      if (!snapshotPatient.empty) {
+        const patientData = snapshotPatient.docs[0].data();
+        const patientId = snapshotPatient.docs[0].id;
 
-        while (retries < maxRetries && !appointmentsData) {
-          try {
-            const result = await withTimeout(
-              supabase
-                .from('appointments')
-                .select('*, therapists:profiles(name)')
-                .eq('patient_id', patient.id)
-                .gte('start_time', new Date().toISOString())
-                .order('start_time', { ascending: true }),
-              8000
-            );
-            
-            if (result.data) {
-              appointmentsData = result.data;
-              break;
+        // Carregar agendamentos
+        const qApts = query(
+          collection(db, 'appointments'),
+          where('patient_id', '==', patientId),
+          where('start_time', '>=', new Date().toISOString()),
+          firestoreOrderBy('start_time', 'asc')
+        );
+
+        const snapshotApts = await getDocs(qApts);
+
+        const appointmentsWithTherapists = await Promise.all(
+          snapshotApts.docs.map(async (aptDoc) => {
+            const aptData = aptDoc.data();
+
+            // Fetch therapist profile name
+            let therapistName = 'Fisioterapeuta';
+            if (aptData.therapist_id) {
+              const therapistDoc = await getDoc(doc(db, 'profiles', aptData.therapist_id));
+              if (therapistDoc.exists()) {
+                therapistName = therapistDoc.data().full_name;
+              }
             }
-          } catch {
-            retries++;
-            if (retries < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-            }
-          }
-        }
 
-        setAppointments(appointmentsData || []);
+            return {
+              id: aptDoc.id,
+              start_time: aptData.start_time,
+              status: aptData.status,
+              therapists: { name: therapistName }
+            } as Appointment;
+          })
+        );
+
+        setAppointments(appointmentsWithTherapists);
       } else {
         setAppointments([]);
       }

@@ -59,7 +59,7 @@ export function AdvancedReportGenerator() {
     }
 
     const snapshot = await getDocs(q);
-    const data: any[] = [];
+    const data: AppointmentData[] = [];
     snapshot.forEach((doc) => {
       const appointmentData = doc.data();
       // For now, we'll just get the basic data. Patient names would need to be fetched separately.

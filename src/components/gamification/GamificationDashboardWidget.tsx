@@ -38,6 +38,17 @@ interface GamificationData {
   levelCalculation: LevelCalculationResult | null;
 }
 
+interface AchievementLog {
+  id: string;
+  unlocked_at: string;
+  achievements?: {
+    title?: string;
+    description?: string;
+    xp_reward?: number;
+    icon?: string;
+  };
+}
+
 export function GamificationDashboardWidget({
   patientId,
   compact = false,
@@ -102,7 +113,7 @@ export function GamificationDashboardWidget({
           .order('unlocked_at', { ascending: false })
           .limit(10);
 
-        const unlockedAchievements = (achievementsData || []).map((log: any) => ({
+        const unlockedAchievements = (achievementsData || []).map((log: AchievementLog) => ({
           id: log.id,
           title: log.achievements?.title || 'Conquista',
           description: log.achievements?.description || '',

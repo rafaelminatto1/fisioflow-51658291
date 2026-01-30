@@ -39,6 +39,15 @@ export interface PreviousEvolution {
     plan?: string;
 }
 
+export interface RequiredMeasurement {
+    id: string;
+    pathology_name: string;
+    measurement_name: string;
+    measurement_unit?: string;
+    alert_level: 'high' | 'medium' | 'low';
+    instructions?: string;
+}
+
 interface SOAPSection {
     key: keyof SOAPData;
     label: string;
@@ -255,7 +264,7 @@ interface EvolutionDraggableGridProps {
     // Props for MeasurementWidget
     patientId?: string;
     soapRecordId?: string;
-    requiredMeasurements?: any[]; // Using any[] to avoid circular dependency or complex type import for now, can refine later
+    requiredMeasurements?: RequiredMeasurement[];
     // Exercises
     exercises?: SessionExercise[];
     onExercisesChange?: (exercises: SessionExercise[]) => void;

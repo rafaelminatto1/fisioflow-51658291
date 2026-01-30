@@ -31,7 +31,7 @@ interface MedicalChatbotProps {
 }
 
 interface ChatBubbleProps {
-  message: { id?: string; content: string; type?: string; timestamp?: string; metadata?: any };
+  message: { id?: string; content: string; type?: 'text' | 'quick_reply' | 'appointment' | 'exercise' | 'medication' | 'emergency'; timestamp?: string; metadata?: { confidence?: number; intent?: string; suggestions?: string[] } };
   isUser: boolean;
   showTime?: boolean;
 }
@@ -86,7 +86,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, isUser, showTime = tru
         <div className={`px-4 py-2 rounded-lg ${bubbleClass} shadow-sm`}>
           <div className="flex items-center space-x-1 mb-1">
             <span className="text-xs opacity-75">
-              {getMessageTypeIcon(message.type as any)}
+              {getMessageTypeIcon(message.type || 'text')}
             </span>
             {message.metadata?.confidence && (
               <span className="text-xs opacity-60">

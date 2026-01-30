@@ -71,7 +71,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
 
       const vouchersWithRelations: VoucherWithRelations[] = [];
       for (const doc of snapshot.docs) {
-        const voucher = { id: doc.id, ...doc.data() } as any;
+        const voucher = { id: doc.id, ...doc.data() } as { id: string; expiration_date: string; patient_id: string; organization_id: string };
 
         vouchersWithRelations.push({
           id: voucher.id,

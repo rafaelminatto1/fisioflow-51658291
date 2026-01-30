@@ -76,7 +76,7 @@ export function DailyQuests({ quests, onComplete, isLoading }: DailyQuestsProps)
                         ) : (
                             <AnimatePresence mode='popLayout'>
                                 {quests.map((quest) => {
-                                    const IconComponent = (Icons as any)[quest.icon] || Icons.Star;
+                                    const IconComponent = (Icons as Record<string, React.ComponentType<{ className?: string }>>)[quest.icon] || Icons.Star;
 
                                     return (
                                         <motion.div

@@ -15,7 +15,7 @@ export function BackupSettings() {
         setIsExporting(true);
         try {
             const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
-            const backupData: Record<string, any> = {
+            const backupData: Record<string, unknown> = {
                 metadata: {
                     timestamp: new Date().toISOString(),
                     version: '3.0'

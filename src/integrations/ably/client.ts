@@ -32,7 +32,7 @@ export function getAblyClient(): Ably.Realtime {
                 autoConnect: false,
                 // Suppress all connection errors
                 logLevel: 0, // NONE
-            }) as any;
+            });
 
             // Prevent connection attempts
             if (ablyClient.connection) {

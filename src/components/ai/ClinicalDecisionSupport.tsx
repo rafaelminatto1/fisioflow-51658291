@@ -416,7 +416,7 @@ export function ClinicalDecisionSupport({
 
       {/* Results Tabs */}
       {(painAnalysis || recoveryPrediction || treatmentResponse) && (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pain' | 'recovery' | 'response')}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pain">
               <HeartPulse className="h-4 w-4 mr-2" />

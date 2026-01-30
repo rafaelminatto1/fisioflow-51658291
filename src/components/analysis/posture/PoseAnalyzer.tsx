@@ -147,8 +147,7 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
             await import('@mediapipe/pose');
 
             // The module attaches Pose to the global window object
-            // We cast window to any to avoid TS errors with custom properties
-            const PoseClass = (window as any).Pose as PoseConstructor;
+            const PoseClass = (window as Window & { Pose?: PoseConstructor }).Pose;
 
             if (!PoseClass) {
                 console.error('MediaPipe Pose not found on window object');

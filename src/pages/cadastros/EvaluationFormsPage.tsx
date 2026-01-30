@@ -37,6 +37,19 @@ import { TemplateFilters as TemplateFiltersComponent } from '@/components/evalua
 import { useToggleFavorite } from '@/hooks/useTemplateFavorites';
 import { useTemplateStats } from '@/hooks/useTemplateStats';
 
+interface EvaluationFormField {
+  tipo_campo: string;
+  label: string;
+  placeholder?: string;
+  opcoes: string | string[];
+  ordem: number;
+  obrigatorio: boolean;
+  grupo?: string;
+  descricao?: string;
+  minimo?: number;
+  maximo?: number;
+}
+
 const TIPOS_FICHA = [
   { value: 'anamnese', label: 'Anamnese' },
   { value: 'avaliacao_postural', label: 'Avaliação Postural' },
@@ -211,7 +224,7 @@ export default function EvaluationFormsPage() {
       descricao: form.descricao,
       tipo: form.tipo,
       referencias: form.referencias,
-      fields: (form.evaluation_form_fields || []).map((f: any) => ({
+      fields: (form.evaluation_form_fields || []).map((f: EvaluationFormField) => ({
         tipo_campo: f.tipo_campo,
         label: f.label,
         placeholder: f.placeholder,
@@ -622,14 +635,14 @@ export default function EvaluationFormsPage() {
             {previewForm && (
               <div className="pb-10">
                 <DynamicFieldRenderer
-                  fields={(previewForm.evaluation_form_fields || []).map((f: any) => ({
+                  fields={(previewForm.evaluation_form_fields || []).map((f: EvaluationFormField) => ({
                     ...f,
                     section: f.grupo,
                     min: f.minimo,
                     max: f.maximo,
                     description: f.descricao,
                     opcoes: typeof f.opcoes === 'string' ? JSON.parse(f.opcoes) : f.opcoes,
-                  })).sort((a: any, b: any) => a.ordem - b.ordem)}
+                  })).sort((a: EvaluationFormField, b: EvaluationFormField) => a.ordem - b.ordem)}
                   values={{}}
                   onChange={() => { }}
                   readOnly={true}

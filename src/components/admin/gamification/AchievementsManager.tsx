@@ -108,7 +108,7 @@ export default function AchievementsManager() {
 
     const upsertAchievement = useMutation({
         mutationFn: async (values: Partial<Achievement>) => {
-            const achievementData = {
+            const achievementData: Omit<Achievement, 'id'> & { created_at?: string } = {
                 code: values.code!,
                 title: values.title!,
                 description: values.description!,

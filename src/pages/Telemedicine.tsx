@@ -14,26 +14,34 @@ import { Video, Plus, Clock, Users, Play, Copy, Loader2, Calendar, PhoneCall } f
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientHelpers } from '@/types';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, orderBy as firestoreOrderBy } from 'firebase/firestore';
+
+interface PatientListItem {
+  id: string;
+  full_name: string;
+  status: string;
+}
 
 const Telemedicine = () => {
   const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState('');
-  
+
   const { data: rooms, isLoading: roomsLoading } = useTelemedicineRooms();
   const createRoom = useCreateTelemedicineRoom();
-  
+
   // Fetch patients for selection
   const { data: patients } = useQuery({
     queryKey: ['patients-for-telemedicine'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id, name, email, phone')
-        .eq('status', 'ativo')
-        .order('name');
-      if (error) throw error;
-      return data;
+      const q = query(
+        collection(db, 'patients'),
+        where('status', '==', 'ativo'),
+        firestoreOrderBy('full_name')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as PatientListItem[];
     }
   });
 
@@ -42,7 +50,7 @@ const Telemedicine = () => {
       toast.error('Selecione um paciente');
       return;
     }
-    
+
     try {
       const result = await createRoom.mutateAsync({ patient_id: selectedPatient });
       setIsCreateOpen(false);
@@ -116,9 +124,9 @@ const Telemedicine = () => {
                       {patients?.map((patient) => {
                         const patientName = PatientHelpers.getName(patient);
                         return (
-                        <SelectItem key={patient.id} value={patient.id} className="text-sm">
-                          {patientName}
-                        </SelectItem>
+                          <SelectItem key={patient.id} value={patient.id} className="text-sm">
+                            {patientName}
+                          </SelectItem>
                         );
                       })}
                     </SelectContent>

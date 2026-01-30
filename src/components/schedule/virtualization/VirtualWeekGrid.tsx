@@ -9,6 +9,7 @@ import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import { format, isSameDay, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
+import type { CardSize } from '@/types/agenda';
 import { cn } from '@/lib/utils';
 import { BUSINESS_HOURS } from '@/lib/calendar/constants';
 import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
@@ -145,7 +146,7 @@ const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(({ index, 
         // Duration-based height calculation
         const duration = apt.duration || 60;
         const height = calculateAppointmentCardHeight(
-          data.cardSize as any,
+          data.cardSize as CardSize,
           duration,
           data.heightScale
         );

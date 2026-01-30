@@ -21,7 +21,19 @@ import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  setDoc,
+  doc,
+  getDoc,
+  limit,
+  orderBy as firestoreOrderBy
+} from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Activity } from 'lucide-react';
 
@@ -615,7 +627,7 @@ function RelatorioEditor({
                       value={atendimento.tipo}
                       onValueChange={(v) => {
                         const newAtendimentos = [...data.atendimentos];
-                        newAtendimentos[index] = { ...atendimento, tipo: v as any };
+                        newAtendimentos[index] = { ...atendimento, tipo: v as 'avaliacao' | 'evolucao' | 'alta' | 'retorno' };
                         onChange({ ...data, atendimentos: newAtendimentos });
                       }}
                     >
@@ -733,12 +745,12 @@ export default function RelatorioConvenioPage() {
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ['relatorios-convenio'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('relatorios_convenio')
-        .select('*')
-        .order('data_emissao', { ascending: false });
-      if (error) throw error;
-      return data;
+      const q = query(
+        collection(db, 'relatorios_convenio'),
+        firestoreOrderBy('data_emissao', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioConvenioData[];
     },
   });
 
@@ -746,11 +758,9 @@ export default function RelatorioConvenioPage() {
   const { data: pacientes = [] } = useQuery({
     queryKey: ['pacientes-select'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('patients')
-        .select('id, full_name, cpf, phone, email, birth_date')
-        .order('full_name');
-      return data || [];
+      const q = query(collection(db, 'patients'), firestoreOrderBy('full_name'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; full_name: string; cpf?: string; birth_date?: string; phone?: string; email?: string }>;
     },
   });
 
@@ -758,24 +768,23 @@ export default function RelatorioConvenioPage() {
   const { data: convenios = [] } = useQuery({
     queryKey: ['convenios-select'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('convenios')
-        .select('*');
-      return data || [];
+      const snapshot = await getDocs(collection(db, 'convenios'));
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; nome: string; cnpj?: string; codigo_ans?: string }>;
     },
   });
 
   // Salvar relatório
   const saveRelatorio = useMutation({
     mutationFn: async (data: RelatorioConvenioData) => {
-      const { data: result, error } = await supabase
-        .from('relatorios_convenio')
-        .upsert(data)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return result;
+      if (data.id) {
+        const docRef = doc(db, 'relatorios_convenio', data.id);
+        await setDoc(docRef, data, { merge: true });
+        return data;
+      } else {
+        const { id, ...rest } = data;
+        const docRef = await addDoc(collection(db, 'relatorios_convenio'), rest);
+        return { id: docRef.id, ...rest };
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['relatorios-convenio'] });
@@ -789,12 +798,18 @@ export default function RelatorioConvenioPage() {
   // Criar relatório a partir de atendimentos
   const criarRelatorio = async (pacienteId: string) => {
     // Buscar atendimentos do paciente
-    const { data: atendimentos } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('patient_id', pacienteId)
-      .gte('start_time', new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString())
-      .order('start_time', { ascending: true });
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    const qAppointments = query(
+      collection(db, 'appointments'),
+      where('patient_id', '==', pacienteId),
+      where('start_time', '>=', oneMonthAgo.toISOString()),
+      firestoreOrderBy('start_time', 'asc')
+    );
+
+    const snapshotAppointments = await getDocs(qAppointments);
+    const atendimentos = snapshotAppointments.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; start_time: string; end_time?: string; status?: string; service_names?: string[] }>;
 
     if (!atendimentos || atendimentos.length === 0) {
       toast.error('Nenhum atendimento encontrado no último mês.');
@@ -814,22 +829,34 @@ export default function RelatorioConvenioPage() {
     const org = orgData;
 
     // Buscar convênio do paciente
-    const { data: pacienteConvenio } = await supabase
-      .from('patient_convenios')
-      .select('*, convenios(*)')
-      .eq('patient_id', pacienteId)
-      .eq('ativo', true)
-      .single();
+    const qConvenio = query(
+      collection(db, 'patient_convenios'),
+      where('patient_id', '==', pacienteId),
+      where('ativo', '==', true),
+      limit(1)
+    );
+    const snapshotConvenio = await getDocs(qConvenio);
+    const pacienteConvenio = snapshotConvenio.docs.length > 0 ? snapshotConvenio.docs[0].data() : null;
 
-    const convenio = pacienteConvenio?.convenios || convenios[0];
+    let convenio = null;
+    if (pacienteConvenio?.convenio_id) {
+      const convenioDoc = await getDoc(doc(db, 'convenios', pacienteConvenio.convenio_id));
+      if (convenioDoc.exists()) {
+        convenio = convenioDoc.data();
+      }
+    }
+
+    if (!convenio) convenio = convenios[0];
 
     // Buscar evoluções
-    const { data: evolucoes } = await supabase
-      .from('evolucoes')
-      .select('*')
-      .eq('patient_id', pacienteId)
-      .order('data', { ascending: false })
-      .limit(5);
+    const qEvolucoes = query(
+      collection(db, 'evolucoes'),
+      where('patient_id', '==', pacienteId),
+      firestoreOrderBy('data', 'desc'),
+      limit(5)
+    );
+    const snapshotEvolucoes = await getDocs(qEvolucoes);
+    const evolucoes = snapshotEvolucoes.docs.map(d => d.data());
 
     const novoRelatorio: RelatorioConvenioData = {
       id: '',
@@ -899,7 +926,7 @@ export default function RelatorioConvenioPage() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'criar' | 'lista' | 'modelos')}>
           <TabsList>
             <TabsTrigger value="criar">Criar Relatório</TabsTrigger>
             <TabsTrigger value="lista">Relatórios Salvos</TabsTrigger>

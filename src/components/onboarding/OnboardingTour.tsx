@@ -21,6 +21,13 @@ interface OnboardingStep {
   route?: string;
 }
 
+interface OnboardingProgressData {
+  show?: boolean;
+  completed_at?: string;
+  user_id?: string;
+  organization_id?: string;
+}
+
 const onboardingSteps: OnboardingStep[] = [
   {
     id: 'welcome',
@@ -112,7 +119,7 @@ export const OnboardingTour = () => {
   // Initialize onboarding if needed
   useEffect(() => {
     const initOnboarding = async () => {
-      const data = onboardingData as any;
+      const data = onboardingData as OnboardingProgressData | undefined;
       if (data?.show && !data?.completed_at) {
         setIsOpen(true);
 

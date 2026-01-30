@@ -96,13 +96,13 @@ export function ProjectModal({ open, onOpenChange, project }: ProjectModalProps)
                     ...data,
                     start_date: data.start_date || undefined,
                     end_date: data.end_date || undefined
-                } as any);
+                } as Partial<Project> & { id: string });
             } else {
                 await createProject.mutateAsync({
                     ...data,
                     start_date: data.start_date || undefined,
                     end_date: data.end_date || undefined
-                } as any);
+                } as Partial<Project>);
             }
             onOpenChange(false);
         } catch {

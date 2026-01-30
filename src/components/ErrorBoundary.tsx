@@ -6,7 +6,7 @@
  */
 
 import { Component, ReactNode } from 'react';
-import { Button } from '@fisioflow/shared-ui';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   children: ReactNode;
@@ -61,8 +61,9 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Enviar para serviço de logging (ex: Sentry)
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
+    const sentry = typeof window !== 'undefined' ? (window as Window & { Sentry?: { captureException: (error: Error, context: object) => void } }).Sentry : undefined;
+    if (sentry) {
+      sentry.captureException(error, {
         contexts: {
           react: {
             componentStack: errorInfo.componentStack,
@@ -147,13 +148,12 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3 justify-center">
               <Button
                 variant="outline"
-                onPress={this.handleReset}
+                onClick={this.handleReset}
               >
                 Tentar novamente
               </Button>
               <Button
-                variant="default"
-                onPress={this.handleReload}
+                onClick={this.handleReload}
               >
                 Recarregar página
               </Button>
@@ -211,7 +211,7 @@ export function SimpleErrorFallback({
         <Button
           variant="ghost"
           size="sm"
-          onPress={reset}
+          onClick={reset}
         >
           Tentar novamente
         </Button>

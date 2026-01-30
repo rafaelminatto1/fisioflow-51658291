@@ -189,13 +189,14 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
         }, 'QuickPatientModal');
 
         return newPatient;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Capturar e logar erros do Firebase Functions
+        const error = err instanceof Error ? err : new Error(String(err));
         logger.error('Erro ao criar paciente via Firebase Functions', {
-          error: err,
-          errorMessage: err?.message,
-          errorCode: err?.code,
-          errorDetails: err?.details,
+          error,
+          errorMessage: error.message,
+          errorCode: (error as { code?: string }).code,
+          errorDetails: (error as { details?: unknown }).details,
         }, 'QuickPatientModal');
 
         // Re-throw com contexto adicional para o getErrorMessage
@@ -230,7 +231,7 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
         onPatientCreated(newPatient.id, (newPatient.name || newPatient.full_name || 'Paciente') as string);
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
 
       // Melhorar o log para incluir FunctionCallError

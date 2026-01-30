@@ -39,6 +39,15 @@ interface Organization {
   };
 }
 
+interface ReactivationEvent {
+  name: string;
+  data: {
+    to: string;
+    patientName: string;
+    organizationName: string;
+  };
+}
+
 export const reactivationWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-reactivation-weekly',
@@ -132,7 +141,7 @@ export const reactivationWorkflow = inngest.createFunction(
 
     // Step 3: Queue Messages
     const results = await step.run('queue-reactivation', async () => {
-      const events: any[] = [];
+      const events: ReactivationEvent[] = [];
 
       for (const p of patientsWithOrg) {
         const org = p.organization;

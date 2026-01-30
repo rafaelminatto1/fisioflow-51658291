@@ -15,15 +15,28 @@ import {
     FileText
 } from 'lucide-react';
 
+interface Goal {
+  id: string;
+  title: string;
+  target_date: string;
+  status: string;
+}
+
+interface Pathology {
+  id: string;
+  name: string;
+  code?: string;
+}
+
 interface EvolutionAlertsProps {
-    overdueGoals: any[];
+    overdueGoals: Goal[];
     painScale: { level: number; location?: string; character?: string };
     painTrend: 'worsening' | 'improving' | 'stable' | 'fluctuating' | null;
-    upcomingGoals: any[];
+    upcomingGoals: Goal[];
     daysSinceLastEvolution: number | null;
     sessionDurationMinutes: number;
     sessionLongAlertShown: boolean;
-    activePathologies: any[];
+    activePathologies: Pathology[];
     previousEvolutionsCount: number;
     onTabChange: (tab: string) => void;
 }

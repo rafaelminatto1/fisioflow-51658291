@@ -118,7 +118,7 @@ export default function GamificationAchievementsPage() {
               </div>
 
               {/* Status Filter */}
-              <Tabs value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)} className="w-auto">
+              <Tabs value={filterStatus} onValueChange={(v) => setFilterStatus(v as 'all' | 'unlocked' | 'locked')} className="w-auto">
                 <TabsList>
                   <TabsTrigger value="all">Todas</TabsTrigger>
                   <TabsTrigger value="unlocked">Desbloqueadas</TabsTrigger>
@@ -127,7 +127,7 @@ export default function GamificationAchievementsPage() {
               </Tabs>
 
               {/* Category Filter */}
-              <Tabs value={filterCategory} onValueChange={(v: any) => setFilterCategory(v)} className="w-auto">
+              <Tabs value={filterCategory} onValueChange={(v) => setFilterCategory(v as 'all' | 'sessions' | 'exercises' | 'streaks' | 'social')} className="w-auto">
                 <TabsList>
                   <TabsTrigger value="all">Todas</TabsTrigger>
                   <TabsTrigger value="sessions">Sessões</TabsTrigger>

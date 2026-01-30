@@ -21,8 +21,8 @@ export const generateTransactionsCSV = (transactions: Transaction[]): string => 
     const headers = ['ID', 'Data', 'Descrição', 'Tipo', 'Valor', 'Status', 'Paciente', 'Origem'];
     const rows = transactions.map(t => {
         const date = t.created_at ? format(new Date(t.created_at), 'dd/MM/yyyy HH:mm:ss') : '';
-        const patientName = (t.metadata as any)?.patient_name || '';
-        const source = (t.metadata as any)?.source || '';
+        const patientName = (t.metadata?.patient_name as string | undefined) || '';
+        const source = (t.metadata?.source as string | undefined) || '';
 
         // Escape special characters and wrap in quotes
         const safeDesc = `"${(t.descricao || '').replace(/"/g, '""')}"`;

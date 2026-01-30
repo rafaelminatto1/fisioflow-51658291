@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getFirebaseDb } from "@/integrations/firebase/app";
+import { db } from "@/integrations/firebase/app";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, addDays, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";

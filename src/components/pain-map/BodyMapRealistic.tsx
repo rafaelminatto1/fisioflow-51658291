@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 
+type RegionCode = string;
+
 interface BodyMapRealisticProps {
     view: 'front' | 'back';
     points: PainPoint[];
@@ -352,7 +354,7 @@ export function BodyMapRealistic({
                                             isSelected && "opacity-100"
                                         )}>
                                             <Badge variant="secondary" className="bg-black/80 text-white hover:bg-black/90 text-[10px] whitespace-nowrap">
-                                                {PainMapService.getRegionLabel(point.region as any)}
+                                                {PainMapService.getRegionLabel(point.region as RegionCode)}
                                             </Badge>
                                         </div>
                                     </div>
@@ -395,7 +397,7 @@ export function BodyMapRealistic({
                             </CardHeader>
                             <CardContent className="pt-4">
                                 <PainDetailsForm
-                                    selectedRegion={currentSelectedPoint.regionCode as any}
+                                    selectedRegion={currentSelectedPoint.regionCode as RegionCode}
                                     intensity={currentSelectedPoint.intensity as PainIntensity}
                                     painType={currentSelectedPoint.painType as PainType}
                                     description={currentSelectedPoint.notes || ''}
@@ -417,7 +419,7 @@ export function BodyMapRealistic({
                         </div>
                         <div className="max-h-[60vh] overflow-y-auto">
                             <PainDetailsForm
-                                selectedRegion={currentSelectedPoint.regionCode as any}
+                                selectedRegion={currentSelectedPoint.regionCode as RegionCode}
                                 intensity={currentSelectedPoint.intensity as PainIntensity}
                                 painType={currentSelectedPoint.painType as PainType}
                                 description={currentSelectedPoint.notes || ''}

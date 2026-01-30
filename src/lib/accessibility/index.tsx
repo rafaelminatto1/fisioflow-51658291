@@ -90,7 +90,7 @@ export function useFocusRestoration(isOpen: boolean) {
 /**
  * Checks color contrast ratio for WCAG compliance
  */
-export function getContrastRatio foreground: string): number {
+export function getContrastRatio(foreground: string, background: string): number {
   const getLuminance = (color: string): number => {
     const hex = color.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16) / 255;
@@ -155,11 +155,13 @@ export const KEYS = {
   PAGE_DOWN: 'PageDown',
 } as const;
 
+export type NavigationKey = typeof KEYS[keyof typeof KEYS];
+
 /**
  * Checks if key is a keyboard navigation key
  */
 export function isNavigationKey(key: string): boolean {
-  return Object.values(KEYS).includes(key as any);
+  return Object.values(KEYS).includes(key as NavigationKey);
 }
 
 /**

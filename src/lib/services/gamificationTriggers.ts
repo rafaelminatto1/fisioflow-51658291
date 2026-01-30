@@ -70,7 +70,7 @@ export interface LevelCalculationResult {
 interface GamificationSettings {
   base_xp: number;
   multiplier: number;
-  [key: string]: any;
+  [key: string]: number | string | boolean;
 }
 
 // Helper to convert Firestore doc to data
@@ -110,7 +110,7 @@ export class GamificationTriggerService {
       };
 
       snapshot.forEach(docSnap => {
-        const data = docSnap.data() as { key: string; value: any };
+        const data = docSnap.data() as { key: string; value: number | string | boolean };
         settings[data.key] = data.value;
       });
 

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { useEmpresasParceiras } from '@/hooks/useEmpresasParceiras';
+import {
+  useEmpresasParceiras,
+  useCreateEmpresaParceira,
+  useUpdateEmpresaParceira,
+  useDeleteEmpresaParceira
+} from '@/hooks/useEmpresasParceiras';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +35,10 @@ const Partner = () => {
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
 
   const { data: empresas = [], refetch } = useEmpresasParceiras();
-  
+  const createEmpresa = useCreateEmpresaParceira();
+  const updateEmpresa = useUpdateEmpresaParceira();
+  const deleteEmpresa = useDeleteEmpresaParceira();
+
   const partners = empresas.map(e => ({
     id: e.id,
     name: e.nome,
@@ -72,38 +80,25 @@ const Partner = () => {
       const empresaData = {
         nome: formData.name,
         contato: formData.contact,
-        email: formData.email || null,
-        telefone: formData.phone || null,
-        observacoes: formData.description || null,
-        ativo: true
+        email: formData.email || undefined,
+        telefone: formData.phone || undefined,
+        observacoes: formData.description || undefined,
+        ativo: true,
+        contrapartidas: ''
       };
 
       if (editingPartner) {
-        const { error } = await supabase
-          .from('empresas_parceiras')
-          .update(empresaData)
-          .eq('id', editingPartner.id);
-        
-        if (error) throw error;
-        toast({ title: 'Parceiro atualizado com sucesso' });
+        await updateEmpresa.mutateAsync({
+          id: editingPartner.id,
+          data: empresaData
+        });
       } else {
-        const { error } = await supabase
-          .from('empresas_parceiras')
-          .insert(empresaData);
-        
-        if (error) throw error;
-        toast({ title: 'Parceiro adicionado com sucesso' });
+        await createEmpresa.mutateAsync(empresaData);
       }
 
-      refetch();
       resetForm();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro';
-      toast({
-        title: 'Erro ao salvar',
-        description: errorMessage,
-        variant: 'destructive'
-      });
+      // Error handled by mutation toast
     }
   };
 
@@ -123,21 +118,9 @@ const Partner = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('empresas_parceiras')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      toast({ title: 'Parceiro removido' });
-      refetch();
+      await deleteEmpresa.mutateAsync(id);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro';
-      toast({
-        title: 'Erro ao deletar',
-        description: errorMessage,
-        variant: 'destructive'
-      });
+      // Error handled by mutation toast
     }
   };
 

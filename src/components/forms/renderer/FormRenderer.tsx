@@ -34,7 +34,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     isSubmitting = false,
     readOnly = false
 }) => {
-    const [formData, setFormData] = useState<Record<string, any>>(initialData || {}); // eslint-disable-line @typescript-eslint/no-explicit-any
+    const [formData, setFormData] = useState<Record<string, unknown>>(initialData || {});
     const [errors, setErrors] = useState<Record<string, string>>({});
     const { toast } = useToast();
 

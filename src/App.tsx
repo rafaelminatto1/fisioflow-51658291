@@ -20,7 +20,7 @@ import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
-import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
+// DESABILITADO: import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
@@ -109,7 +109,8 @@ const StatsigProviderWrapper = ({ children }: { children: React.ReactNode }) => 
 
 const App = () => {
   // Gerenciar atualizações do Service Worker
-  useServiceWorkerUpdate();
+  // DESABILITADO: useServiceWorkerUpdate();
+  // Os alertas de "Nova versão disponível" foram desabilitados conforme solicitação
 
   useEffect(() => {
     logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');

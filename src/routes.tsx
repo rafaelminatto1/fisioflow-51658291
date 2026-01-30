@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 // =============================================================================
 // LAZY LOADED PAGES WITH OPTIMIZED CHUNKS
 // =============================================================================
+// NOTE: Removed webpackPrefetch from routes to prevent early loading of large chunks
+// Only prefetch when user is likely to navigate (use React usePrefetchPattern instead)
 
 // Auth pages - Eager load for faster authentication
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
@@ -12,24 +14,12 @@ const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
 const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));
 
 // =============================================================================
-// CORE PAGES - High priority with prefetch for immediate user access
+// CORE PAGES - Lazy loaded without prefetch to reduce initial bundle
 // =============================================================================
 
-const Index = lazy(() => import(
-  /* webpackChunkName: "dashboard" */
-  /* webpackPrefetch: true */
-  "./pages/Index"
-));
-const Patients = lazy(() => import(
-  /* webpackChunkName: "patients" */
-  /* webpackPrefetch: true */
-  "./pages/Patients"
-));
-const Schedule = lazy(() => import(
-  /* webpackChunkName: "schedule" */
-  /* webpackPrefetch: true */
-  "./pages/Schedule"
-));
+const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "./pages/Index"));
+const Patients = lazy(() => import(/* webpackChunkName: "patients" */ "./pages/Patients"));
+const Schedule = lazy(() => import(/* webpackChunkName: "schedule" */ "./pages/Schedule"));
 const Exercises = lazy(() => import(/* webpackChunkName: "exercises" */ "./pages/Exercises"));
 const Financial = lazy(() => import(/* webpackChunkName: "financial" */ "./pages/Financial"));
 const Reports = lazy(() => import(/* webpackChunkName: "reports" */ "./pages/Reports"));
@@ -48,28 +38,12 @@ const Telemedicine = lazy(() => import(/* webpackChunkName: "telemedicine" */ ".
 const TelemedicineRoom = lazy(() => import(/* webpackChunkName: "telemedicine-room" */ "./pages/TelemedicineRoom"));
 const ExerciseLibraryExpanded = lazy(() => import(/* webpackChunkName: "exercises-library" */ "./pages/ExerciseLibraryExpanded"));
 const Biofeedback = lazy(() => import(/* webpackChunkName: "biofeedback" */ "./pages/Biofeedback"));
-const PatientEvolution = lazy(() => import(
-  /* webpackChunkName: "patient-evolution" */
-  /* webpackPrefetch: true */
-  "./pages/PatientEvolution"
-));
+const PatientEvolution = lazy(() => import(/* webpackChunkName: "patient-evolution" */ "./pages/PatientEvolution"));
 const PatientEvolutionReport = lazy(() => import(/* webpackChunkName: "patient-evolution-report" */ "./pages/PatientEvolutionReport"));
-const SessionEvolutionPage = lazy(() => import(
-  /* webpackChunkName: "session-evolution" */
-  /* webpackPrefetch: true */
-  "./pages/SessionEvolutionPage"
-));
+const SessionEvolutionPage = lazy(() => import(/* webpackChunkName: "session-evolution" */ "./pages/SessionEvolutionPage"));
 const PainMapHistoryPage = lazy(() => import(/* webpackChunkName: "pain-maps" */ "./pages/patients/PainMapHistoryPage"));
-const NewEvaluationPage = lazy(() => import(
-  /* webpackChunkName: "evaluation-new" */
-  /* webpackPrefetch: true */
-  "./pages/patients/NewEvaluationPage"
-));
-const PatientProfilePage = lazy(() => import(
-  /* webpackChunkName: "patient-profile" */
-  /* webpackPrefetch: true */
-  "./pages/patients/PatientProfilePage"
-));
+const NewEvaluationPage = lazy(() => import(/* webpackChunkName: "evaluation-new" */ "./pages/patients/NewEvaluationPage"));
+const PatientProfilePage = lazy(() => import(/* webpackChunkName: "patient-profile" */ "./pages/patients/PatientProfilePage"));
 const Communications = lazy(() => import(/* webpackChunkName: "communications" */ "./pages/Communications"));
 
 // Settings & configuration pages

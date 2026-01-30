@@ -1,10 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getFirebaseDb } from "@/integrations/firebase/app";
+import { db } from "@/integrations/firebase/app";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
+
+interface PatientData {
+  id: string;
+  birth_date?: string;
+}
 
 export function PatientAnalytics() {
   const { data: genderData } = useQuery({
@@ -52,7 +57,7 @@ export function PatientAnalytics() {
         "70+": 0,
       };
 
-      patients.forEach((p: any) => {
+      patients.forEach((p: PatientData) => {
         if (p.birth_date) {
           const age = new Date().getFullYear() - new Date(p.birth_date).getFullYear();
           if (age < 18) ageRanges["0-17"]++;

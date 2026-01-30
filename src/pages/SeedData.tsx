@@ -79,8 +79,8 @@ export default function SeedData() {
                     const newPatient = await api.patients.create(patientData);
                     patientId = newPatient.id;
                     addLog(`✅ Paciente criado via API: ${patientName} (${patientId})`);
-                } catch (err: any) {
-                    addLog(`⚠️ Erro ao criar via API: ${err.message}. Tentando via Firestore direto...`);
+                } catch (err) {
+                    addLog(`⚠️ Erro ao criar via API: ${err instanceof Error ? err.message : 'Erro desconhecido'}. Tentando via Firestore direto...`);
 
                     // Fallback via Firestore
                     try {
@@ -101,8 +101,8 @@ export default function SeedData() {
                         });
                         patientId = docRef.id;
                         addLog(`✅ Paciente criado via Firestore: ${patientName} (${patientId})`);
-                    } catch (fsErr: any) {
-                        addLog(`❌ Falha total ao criar paciente: ${fsErr.message}`);
+                    } catch (fsErr) {
+                        addLog(`❌ Falha total ao criar paciente: ${fsErr instanceof Error ? fsErr.message : 'Erro desconhecido'}`);
                         continue;
                     }
                 }
@@ -189,7 +189,7 @@ export default function SeedData() {
                                 session_id: 'temp-session',
                                 created_at: new Date().toISOString()
                             }
-                        ] as any[] // Cast as any to avoid strict type checks on ID which is generated backend
+                        ] as Array<{ id: string }> // Cast to avoid strict type checks on ID which is generated backend
                     });
 
                     // Also create entry in `treatment_sessions` to mirror `usePatientEvolution.firebase.ts` logic?
@@ -220,9 +220,9 @@ export default function SeedData() {
             toast.success('Processo concluído!');
             addLog('PROCESS COMPLETED SUCCESSFULLY.');
 
-        } catch (error: any) {
+        } catch (error) {
             console.error(error);
-            addLog(`❌ ERRO FATAL: ${error.message}`);
+            addLog(`❌ ERRO FATAL: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
             toast.error('Erro ao processar seeding.');
         } finally {
             setLoading(false);

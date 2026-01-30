@@ -230,7 +230,7 @@ const optimizationSchema = z.object({
     recommendedDuration: z.string(),
     recommendedIntensity: z.string(),
     focusAreas: z.array(z.string()),
-  })),
+  }),
 });
 
 // ============================================================================

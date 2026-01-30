@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Auth Test</title>
+</head>
+<body>
+    <h1>Firebase Auth Test</h1>
+    <div id="result"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCz2c3HvQoV7RvFCbCaudbEEelEQaO-tY8",
+            authDomain: "fisioflow-migration.firebaseapp.com",
+            projectId: "fisioflow-migration",
+            storageBucket: "fisioflow-migration.firebasestorage.app",
+            messagingSenderId: "412418905255",
+            appId: "1:412418905255:web:07bc8e405b6f5c1e597782"
+        };
+
+        const result = document.getElementById('result');
+
+        try {
+            result.innerHTML = '<p>Initializing Firebase...</p>';
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            result.innerHTML += '<p>Firebase initialized successfully!</p>';
+
+            result.innerHTML += '<p>Attempting login...</p>';
+            const userCredential = await signInWithEmailAndPassword(auth, 'rafael.minatto@yahoo.com.br', 'Yukari30@');
+            result.innerHTML += '<p style="color: green;">LOGIN SUCCESSFUL!</p>';
+            result.innerHTML += '<p>User: ' + userCredential.user.email + '</p>';
+            result.innerHTML += '<p>UID: ' + userCredential.user.uid + '</p>';
+        } catch (error) {
+            result.innerHTML += '<p style="color: red;">ERROR: ' + error.message + '</p>';
+            result.innerHTML += '<p>Code: ' + error.code + '</p>';
+            console.error('Full error:', error);
+        }
+    </script>
+</body>
+</html>

@@ -24,14 +24,20 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+interface ChartEntry {
+  color: string;
+  name: string;
+  value: number;
+}
+
 // Custom Tooltip
-const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<any, any>) => {
+const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-border bg-card p-3 shadow-md">
         <p className="text-sm font-medium mb-2">{label}</p>
         <div className="space-y-1.5">
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: ChartEntry, index: number) => (
             <div key={index} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <div

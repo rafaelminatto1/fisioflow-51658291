@@ -132,7 +132,7 @@ export const DateTimeSection = ({
                         </PopoverContent>
                     </Popover>
                     {errors.appointment_date && (
-                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_date as any)?.message}</p>
+                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
                     )}
                 </div>
 
@@ -170,7 +170,7 @@ export const DateTimeSection = ({
                         </SelectContent>
                     </Select>
                     {errors.appointment_time && (
-                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_time as any)?.message}</p>
+                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_time as { message?: string })?.message}</p>
                     )}
                 </div>
 
@@ -259,7 +259,7 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     </SelectContent>
                 </Select>
                 {errors.type && (
-                    <p className="text-[10px] text-destructive font-medium">{(errors.type as any)?.message}</p>
+                    <p className="text-[10px] text-destructive font-medium">{(errors.type as { message?: string })?.message}</p>
                 )}
             </div>
 

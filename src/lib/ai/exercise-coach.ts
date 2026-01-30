@@ -19,6 +19,13 @@
 // IMPORTS
 // ============================================================================
 
+// Extend global Window interface for webkitAudioContext vendor prefix
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 import {
   LiveSessionConfig,
   LiveSessionState,
@@ -477,7 +484,7 @@ export class ExerciseCoach {
     if (!this.session) throw new Error('No active session');
 
     // Create audio context
-    this.session.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+    this.session.audioContext = new (window.AudioContext || window.webkitAudioContext)({
       sampleRate: this.session.config.audio.outputSampleRate,
     });
 

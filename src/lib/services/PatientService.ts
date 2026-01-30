@@ -6,6 +6,34 @@ import {
 } from '@/integrations/firebase/functions';
 import { getPatientName } from '@/lib/constants/patient-queries';
 
+interface PatientApiData {
+  id: string;
+  name?: string;
+  full_name?: string;
+  email?: string | null;
+  phone?: string | null;
+  cpf?: string | null;
+  birth_date?: string;
+  gender?: string;
+  main_condition?: string;
+  observations?: string;
+  status: string;
+  progress?: number;
+  incomplete_registration?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface PatientUpdateData {
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  cpf?: string | null;
+  birth_date?: string;
+  main_condition?: string | null;
+  status?: string;
+}
+
 /**
  * Patient service with optimized queries
  * Uses centralized constants for consistency
@@ -19,7 +47,7 @@ export class PatientService {
     const response = await patientsApi.list({ limit: 1000 });
     const data = response.data || [];
 
-    return data.map((p: any) => ({
+    return data.map((p: PatientApiData) => ({
       id: p.id,
       name: p.name || p.full_name || 'Sem nome', // Fallback for name
       email: p.email ?? undefined,
@@ -98,7 +126,7 @@ export class PatientService {
    * Update an existing patient
    */
   static async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient> {
-    const updateData: any = {};
+    const updateData: PatientUpdateData = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.email !== undefined) updateData.email = updates.email;
     if (updates.phone !== undefined) updateData.phone = updates.phone;

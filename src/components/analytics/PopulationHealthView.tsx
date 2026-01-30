@@ -44,12 +44,14 @@ import {
   Activity,
   Award,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   RefreshCw,
   Calendar,
   ArrowUp,
   ArrowDown,
   Minus,
+  Info,
 } from 'lucide-react';
 import {
   usePopulationHealthAnalysis,

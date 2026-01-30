@@ -36,6 +36,11 @@ interface PublicProfile {
     slug: string;
 }
 
+interface BookingResponse {
+    error?: string;
+    success?: boolean;
+}
+
 export const BookingPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
@@ -71,11 +76,11 @@ export const BookingPage = () => {
 
                 const data = querySnapshot.docs[0].data();
                 setProfile(data as PublicProfile);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error loading profile:', error);
                 toast({
                     title: 'Perfil não encontrado',
-                    description: error.message || 'Não foi possível encontrar o profissional solicitado.',
+                    description: error instanceof Error ? error.message : 'Não foi possível encontrar o profissional solicitado.',
                     variant: 'destructive'
                 });
             } finally {
@@ -105,18 +110,18 @@ export const BookingPage = () => {
                 }
             });
 
-            const data = result.data as any;
+            const data = result.data as BookingResponse;
 
             if (data?.error) {
                 throw new Error(data.error);
             }
 
             setStep(3);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error booking:', error);
             toast({
                 title: 'Erro ao agendar',
-                description: error.message || 'Não foi possível realizar o agendamento. Tente novamente ou entre em contato.',
+                description: error instanceof Error ? error.message : 'Não foi possível realizar o agendamento. Tente novamente ou entre em contato.',
                 variant: 'destructive'
             });
         } finally {

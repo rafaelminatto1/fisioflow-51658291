@@ -114,7 +114,7 @@ export default function GamificationQuestsPage() {
           </Card>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'daily' | 'weekly')}>
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="daily" className="gap-2">
                 <Calendar className="w-4 h-4" />

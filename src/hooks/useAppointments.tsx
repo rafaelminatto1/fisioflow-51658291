@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { db } from '@/integrations/firebase/app';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
@@ -21,7 +22,7 @@ export const appointmentKeys = {
   detail: (id: string) => [...appointmentKeys.details(), id] as const,
 } as const;
 
-// Função auxiliar para criar timeout em promises (suporta PromiseLike do Supabase)
+// Função auxiliar para criar timeout em promises (suporta PromiseLike do Firestore)
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
@@ -63,7 +64,7 @@ export interface AppointmentsQueryResult {
   data: AppointmentBase[];
   isFromCache: boolean;
   cacheTimestamp: string | null;
-  source?: 'supabase' | 'indexeddb' | 'localstorage' | 'memory';
+  source?: 'firestore' | 'indexeddb' | 'localstorage' | 'memory';
 }
 
 // Salvar backup de emergência em localStorage (compactado)
@@ -148,7 +149,7 @@ function getEmergencyBackup(organizationId?: string): AppointmentsQueryResult {
 async function fetchAppointments(organizationIdOverride?: string | null): Promise<AppointmentsQueryResult> {
   const timer = logger.startTimer('fetchAppointments');
 
-  logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
+  logger.info('Carregando agendamentos do Firestore', {}, 'useAppointments');
 
   // Checar se está offline primeiro
   if (!navigator.onLine) {
@@ -191,7 +192,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     saveEmergencyBackup(data, organizationId || undefined);
 
     timer();
-    return { data, isFromCache: false, cacheTimestamp: null, source: 'supabase' };
+    return { data, isFromCache: false, cacheTimestamp: null, source: 'firestore' };
 
   } catch (error: unknown) {
     logger.error('Erro crítico no fetchAppointments', error, 'useAppointments');
@@ -274,42 +275,37 @@ export function useAppointments() {
   const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
 
-  // Setup Realtime subscription using Ably
+  // Setup Realtime subscription using Firestore onSnapshot
   useEffect(() => {
-    if (!organizationId) return;
+    if (!organizationId || !db) return;
 
-    logger.info('Realtime (Ably): Subscribing to appointments', { organizationId }, 'useAppointments');
+    logger.info('Realtime (Firestore): Subscribing to appointments', { organizationId }, 'useAppointments');
 
-    const ably = getAblyClient();
-    const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
+    const q = query(
+      collection(db, 'appointments'),
+      where('organization_id', '==', organizationId)
+    );
 
-    channel.subscribe(ABLY_EVENTS.update, (message) => {
-      const payload = message.data as { eventType: string; data: Record<string, unknown> };
-      logger.info(`Realtime event (Ably): appointments ${payload.eventType}`, {}, 'useAppointments');
-
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      // Invalidate query to trigger re-fetch from API
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-
-      if (payload.eventType === 'INSERT') {
-        toast({
-          title: '🔄 Novo agendamento',
-          description: 'Um novo agendamento foi criado por outro usuário',
-        });
-      } else if (payload.eventType === 'UPDATE') {
-        toast({
-          title: '🔄 Agendamento atualizado',
-          description: 'Um agendamento foi atualizado por outro usuário',
-        });
-      } else if (payload.eventType === 'DELETE') {
-        toast({
-          title: '🔄 Agendamento removido',
-          description: 'Um agendamento foi removido por outro usuário',
-        });
-      }
+      
+      snapshot.docChanges().forEach((change) => {
+        // Only show toast for external changes (added by others)
+        if (change.type === 'added' && !snapshot.metadata.hasPendingWrites) {
+          toast({
+            title: '🔄 Novo agendamento',
+            description: 'Um novo agendamento foi criado por outro usuário',
+          });
+        }
+      });
+    }, (error) => {
+      logger.error('Firestore snapshot error', error, 'useAppointments');
     });
 
     return () => {
-      logger.info('Realtime (Ably): Unsubscribing from appointments', { organizationId }, 'useAppointments');
-      channel.unsubscribe();
+      logger.info('Realtime (Firestore): Unsubscribing from appointments', { organizationId }, 'useAppointments');
+      unsubscribe();
     };
   }, [toast, organizationId, queryClient]);
 

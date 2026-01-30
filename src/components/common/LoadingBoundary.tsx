@@ -35,7 +35,7 @@ export function withLoadingBoundary<P extends object>(
   return function WrappedComponent(props: P) {
     return (
       <LoadingBoundary type={type} rows={rows}>
-        <Component {...(props as any)} />
+        <Component {...props} />
       </LoadingBoundary>
     );
   };
@@ -89,7 +89,7 @@ export function createLazyComponent<
           fallback || <LoadingSkeleton type={type} rows={rows} />
         }
       >
-        <LazyComponent {...(props as any)} />
+        <LazyComponent {...props} />
       </Suspense>
     );
   };
@@ -188,7 +188,7 @@ export function createSafeLazyComponent<P extends object>(
             loadingFallback || <LoadingSkeleton type="card" rows={3} />
           }
         >
-          <LazyComponent {...(props as any)} />
+          <LazyComponent {...props} />
         </Suspense>
       </ErrorBoundary>
     );

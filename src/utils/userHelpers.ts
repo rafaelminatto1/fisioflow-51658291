@@ -28,9 +28,9 @@ export async function getUserOrganizationId(): Promise<string | null> {
 
     const profileData = profileSnap.data();
     return profileData?.organization_id || null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao buscar organização do usuário no Firestore:', error);
-    throw new Error(`Erro ao buscar organização do usuário: ${error.message}`);
+    throw new Error(`Erro ao buscar organização do usuário: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

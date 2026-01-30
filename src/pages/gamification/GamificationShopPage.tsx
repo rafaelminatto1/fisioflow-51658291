@@ -203,7 +203,7 @@ export default function GamificationShopPage() {
           />
 
           {/* Category Tabs */}
-          <Tabs value={selectedCategory} onValueChange={(v: any) => setSelectedCategory(v)}>
+          <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as 'all' | 'streak_freeze' | 'avatar' | 'title' | 'boost' | 'special')}>
             <ScrollArea className="w-full">
               <TabsList className="w-full justify-start">
                 {(Object.keys(categoryLabels) as Array<keyof typeof categoryLabels>).map((cat) => (

@@ -90,7 +90,7 @@ export const fetchProfile = async (userId: string): Promise<any | null> => {
 /**
  * Update profile data
  */
-export const updateProfile = async (userId: string, updates: Record<string, any>): Promise<boolean> => {
+export const updateProfile = async (userId: string, updates: Record<string, unknown>): Promise<boolean> => {
   try {
     const profileRef = doc(db, 'profiles', userId);
     await setDoc(profileRef, {

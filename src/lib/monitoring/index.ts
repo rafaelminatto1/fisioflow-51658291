@@ -139,7 +139,7 @@ function setupPerformanceMonitoring() {
  */
 export function trackMetric(
   type: MetricType,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   value?: number
 ) {
   const timestamp = Date.now();
@@ -181,7 +181,7 @@ export function trackMetric(
  */
 export function trackError(
   error: Error,
-  context?: Record<string, any>,
+  context?: Record<string, unknown>,
   level: 'error' | 'warning' | 'info' = 'error'
 ) {
   const userId = getUserId();
@@ -259,7 +259,7 @@ export function trackDatabaseQuery(
  */
 export function trackBusinessEvent(
   event: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ) {
   trackMetric(event as MetricType, data);
 
@@ -277,7 +277,7 @@ export function trackBusinessEvent(
  */
 export function trackFeatureUsage(
   featureName: string,
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ) {
   trackMetric(MetricType.FEATURE_USED, {
     feature: featureName,
@@ -465,7 +465,7 @@ export function createDebouncedTrack(
 ) {
   let timeoutId: number | null = null;
 
-  return (data: Record<string, any>) => {
+  return (data: Record<string, unknown>) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }

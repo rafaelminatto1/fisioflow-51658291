@@ -76,11 +76,15 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return null;
         }
 
+        // Definição do papel baseada no email (Admin Bootstrap)
+        const defaultRole = firebaseUser.email === 'rafael.minatto@yahoo.com.br' ? 'admin' : 'fisioterapeuta';
+
         // Criar perfil se não existir
-        await setDocToFirestore(profileRef, {
+        await setDoc(profileRef, {
           user_id: firebaseUser.uid,
-          full_name: firebaseUser.displayName || null,
+          full_name: firebaseUser.displayName || 'Usuário',
           email: firebaseUser.email || null,
+          role: defaultRole,
           avatar_url: firebaseUser.photoURL || null,
           phone: null,
           organization_id: organizationId,
@@ -95,7 +99,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           user_id: firebaseUser.uid,
           full_name: firebaseUser.displayName || 'Usuário',
           email: firebaseUser.email || undefined,
-          role: 'fisioterapeuta', // Default role
+          role: defaultRole,
           phone: undefined,
           organization_id: organizationId,
           onboarding_completed: false,
@@ -113,28 +117,47 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const fetchProfile = useCallback(async (firebaseUser: User): Promise<Profile | null> => {
     try {
-      // TEMPORÁRIO: Usar Firestore para profile (funciona)
-      // TODO: Migrar completamente para Firebase Functions/PostgreSQL quando Cloud SQL estiver configurado
-      console.log('[fetchProfile] Using Firestore (TEMPORARY while Cloud SQL is being configured)...');
+      // TEMPORÁRIO: Usar Firestore para profile como fonte primária
+      // TODO: Migrar completamente para Firebase Functions/PostgreSQL quando Cloud SQL estiver 100% estável
+      console.log('[AuthContextProvider] Fetching profile from Firestore...');
       const profile = await ensureProfile(firebaseUser);
 
-      // Tentar sincronizar organization_id com PostgreSQL em background
       if (profile) {
+        // Tentar sincronizar organization_id com PostgreSQL em background
+        // Importante: PostgreSQL é a autoridade para organization_id em multi-tenancy
         profileApi.getCurrent().then(pgProfile => {
-          if (pgProfile?.organization_id && (!profile.organization_id || profile.organization_id !== pgProfile.organization_id)) {
-            console.log('[fetchProfile] Syncing organization_id from PostgreSQL:', pgProfile.organization_id);
-            // Atualizar Firestore com organization_id do PostgreSQL
+          if (!pgProfile) {
+            console.warn('[AuthContextProvider] PostgreSQL profile not found during sync');
+            return;
+          }
+
+          const hasOrgChanged = pgProfile.organization_id &&
+            (!profile.organization_id || profile.organization_id !== pgProfile.organization_id);
+
+          if (hasOrgChanged) {
+            console.info('[AuthContextProvider] Syncing organization_id from PostgreSQL:', pgProfile.organization_id);
+
+            // Atualizar Firestore para manter consistência e permitir cache offline
             const profileRef = doc(db, 'profiles', firebaseUser.uid);
-            setDoc(profileRef, { organization_id: pgProfile.organization_id }, { merge: true });
+            updateDoc(profileRef, {
+              organization_id: pgProfile.organization_id,
+              updated_at: new Date().toISOString()
+            }).catch(err => {
+              logger.error('Failed to sync PostgreSQL organization_id to Firestore', err, 'AuthContextProvider');
+            });
+
+            // Atualizar estado local
+            setProfile(prev => prev ? { ...prev, organization_id: pgProfile.organization_id } : null);
           }
         }).catch(err => {
-          console.warn('[fetchProfile] Could not sync organization_id from PostgreSQL:', err);
+          // Registrar erro mas não bloquear o login, pois o Firestore ainda serve como fallback funcional
+          logger.warn('Background profile sync with PostgreSQL failed', err, 'AuthContextProvider');
         });
       }
 
       return profile;
     } catch (err) {
-      logger.error('Erro ao buscar perfil', err, 'AuthContextProvider');
+      logger.error('Erro crítico ao buscar perfil', err, 'AuthContextProvider');
       return null;
     }
   }, []);
@@ -159,21 +182,23 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let mounted = true;
 
     // Firebase Auth State Listener
-    const unsubscribe = onAuthStateChange(async (firebaseUser) => {
+    const unsubscribe = onAuthStateChange((firebaseUser) => {
       if (!mounted) return;
 
       if (firebaseUser) {
         setUser(firebaseUser);
-        setLoading(false);
         setInitialized(true);
 
-        // Carregar perfil do Firestore
-        try {
-          const profileData = await fetchProfile(firebaseUser);
+        // OTIMIZAÇÃO: Definir loading=false imediatamente para renderizar a UI
+        // O perfil será carregado em background
+        setLoading(false);
+
+        // Carregar perfil do Firestore em background (não bloqueia a UI)
+        fetchProfile(firebaseUser).then(profileData => {
           if (mounted) setProfile(profileData);
-        } catch (err) {
+        }).catch(err => {
           logger.error('Erro ao carregar perfil', err, 'AuthContextProvider');
-        }
+        });
       } else {
         setUser(null);
         setProfile(null);

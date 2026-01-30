@@ -10,6 +10,17 @@ import { logger } from '../errors/logger.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Type for Resend email send options
+interface ResendEmailOptions {
+  from: string;
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  replyTo?: string;
+  tags?: Array<{ name: string; value: string }>;
+}
+
 // ============================================================================
 // EMAIL TEMPLATES
 // ============================================================================
@@ -345,7 +356,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
       emailOptions.tags = Object.entries(options.tags).map(([key, value]) => ({ name: key, value }));
     }
 
-    const { data, error } = await resend.emails.send(emailOptions as any);
+    const { data, error } = await resend.emails.send(emailOptions as ResendEmailOptions);
 
     if (error) {
       logger.error('Resend error:', error, 'resend.ts');

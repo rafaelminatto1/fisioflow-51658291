@@ -13,11 +13,28 @@ import { ptBR } from 'date-fns/locale';
 import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'sonner';
 
+interface PreCadastroToken {
+  id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+  is_active: boolean;
+  max_uses: number;
+  usage_count: number;
+}
+
+interface CreateLinkData {
+  nome: string;
+  expires_in_days: number;
+  max_uses: number;
+  required_fields: string[];
+}
+
 interface LinkManagementProps {
-    tokens: any[];
+    tokens: PreCadastroToken[];
     isLoading: boolean;
     onToggleStatus: (id: string, currentStatus: boolean) => void;
-    onCreateLink: (data: any) => Promise<void>;
+    onCreateLink: (data: CreateLinkData) => Promise<void>;
     isCreating: boolean;
 }
 

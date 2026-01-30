@@ -12,7 +12,6 @@ import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekView } from './CalendarWeekView';
 import { CalendarMonthView } from './CalendarMonthView';
-import { CalendarEmptyState } from './CalendarEmptyState';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
@@ -137,36 +136,6 @@ export const CalendarView = memo(({
       setOptimisticAppointments([]);
     }
   }, [dragState.savingAppointmentId, pendingOptimisticUpdate]);
-
-  // Check if there are appointments in the current view
-  const hasAppointmentsInView = useMemo(() => {
-    if (viewType === 'day') {
-      return displayAppointments.some(apt => {
-        const aptDate = typeof apt.date === 'string'
-          ? new Date(apt.date)
-          : apt.date;
-        return isSameDay(aptDate, currentDate);
-      });
-    } else if (viewType === 'week') {
-      const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-      return displayAppointments.some(apt => {
-        const aptDate = typeof apt.date === 'string'
-          ? new Date(apt.date)
-          : apt.date;
-        return aptDate >= weekStart && aptDate <= weekEnd;
-      });
-    } else {
-      // Month view - check if any appointments in the current month
-      return displayAppointments.some(apt => {
-        const aptDate = typeof apt.date === 'string'
-          ? new Date(apt.date)
-          : apt.date;
-        return aptDate.getMonth() === currentDate.getMonth() &&
-               aptDate.getFullYear() === currentDate.getFullYear();
-      });
-    }
-  }, [displayAppointments, currentDate, viewType]);
 
   const currentTimePosition = useMemo(() => {
     const hours = currentTime.getHours();
@@ -478,104 +447,89 @@ export const CalendarView = memo(({
           </div>
 
           <div className="flex-1 relative" id="calendar-grid" role="tabpanel" aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}>
-            {!hasAppointmentsInView && displayAppointments.length === 0 ? (
-              <CalendarEmptyState
-                viewType={viewType}
-                currentDate={currentDate}
-                onCreateAppointment={() => {
-                  const now = new Date();
-                  const hours = String(now.getHours()).padStart(2, '0');
-                  const minutes = now.getMinutes() < 30 ? '00' : '30';
-                  onTimeSlotClick(currentDate, `${hours}:${minutes}`);
-                }}
-              />
-            ) : (
-              <>
-                {viewType === 'day' && (
-                  <div key="day-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                    <CalendarDayView
-                      currentDate={currentDate}
-                      currentTime={currentTime}
-                      currentTimePosition={currentTimePosition}
-                      getAppointmentsForDate={getAppointmentsForDate}
-                      appointments={displayAppointments}
-                      savingAppointmentId={dragState.savingAppointmentId}
-                      timeSlots={memoizedTimeSlots}
-                      isDayClosed={isDayClosed}
-                      onTimeSlotClick={onTimeSlotClick}
-                      onEditAppointment={onEditAppointment}
-                      onDeleteAppointment={onDeleteAppointment}
-                      onAppointmentReschedule={onAppointmentReschedule}
-                      dragState={dragState}
-                      dropTarget={dropTarget}
-                      handleDragStart={handleDragStart}
-                      handleDragEnd={handleDragEnd}
-                      handleDragOver={handleDragOver}
-                      handleDragLeave={handleDragLeave}
-                      handleDrop={handleDrop}
-                      isTimeBlocked={isTimeBlocked}
-                      getBlockReason={getBlockReason}
-                      _getStatusColor={getStatusColor}
-                      isOverCapacity={isOverCapacity}
-                      openPopoverId={openPopoverId}
-                      setOpenPopoverId={setOpenPopoverId}
-                      selectionMode={selectionMode}
-                      selectedIds={selectedIds}
-                      onToggleSelection={onToggleSelection}
-                    />
-                  </div>
-                )}
+            {viewType === 'day' && (
+              <div key="day-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
+                <CalendarDayView
+                  currentDate={currentDate}
+                  currentTime={currentTime}
+                  currentTimePosition={currentTimePosition}
+                  getAppointmentsForDate={getAppointmentsForDate}
+                  appointments={displayAppointments}
+                  savingAppointmentId={dragState.savingAppointmentId}
+                  timeSlots={memoizedTimeSlots}
+                  isDayClosed={isDayClosed}
+                  onTimeSlotClick={onTimeSlotClick}
+                  onEditAppointment={onEditAppointment}
+                  onDeleteAppointment={onDeleteAppointment}
+                  onAppointmentReschedule={onAppointmentReschedule}
+                  dragState={dragState}
+                  dropTarget={dropTarget}
+                  handleDragStart={handleDragStart}
+                  handleDragEnd={handleDragEnd}
+                  handleDragOver={handleDragOver}
+                  handleDragLeave={handleDragLeave}
+                  handleDrop={handleDrop}
+                  isTimeBlocked={isTimeBlocked}
+                  getBlockReason={getBlockReason}
+                  _getStatusColor={getStatusColor}
+                  isOverCapacity={isOverCapacity}
+                  openPopoverId={openPopoverId}
+                  setOpenPopoverId={setOpenPopoverId}
+                  selectionMode={selectionMode}
+                  selectedIds={selectedIds}
+                  onToggleSelection={onToggleSelection}
+                />
+              </div>
+            )}
 
-                {viewType === 'week' && (
-                  <div key="week-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                    <CalendarWeekView
-                      currentDate={currentDate}
-                      appointments={displayAppointments}
-                      savingAppointmentId={dragState.savingAppointmentId}
-                      onTimeSlotClick={onTimeSlotClick}
-                      onEditAppointment={onEditAppointment}
-                      onDeleteAppointment={onDeleteAppointment}
-                      onAppointmentReschedule={onAppointmentReschedule}
-                      dragState={dragState}
-                      dropTarget={dropTarget}
-                      handleDragStart={handleDragStart}
-                      handleDragEnd={handleDragEnd}
-                      handleDragOver={handleDragOver}
-                      handleDragLeave={handleDragLeave}
-                      handleDrop={handleDrop}
-                      checkTimeBlocked={checkTimeBlocked}
-                      isDayClosedForDate={isDayClosedForDate}
-                      getStatusColor={getStatusColor}
-                      isOverCapacity={isOverCapacity}
-                      openPopoverId={openPopoverId}
-                      setOpenPopoverId={setOpenPopoverId}
-                      selectionMode={selectionMode}
-                      selectedIds={selectedIds}
-                      onToggleSelection={onToggleSelection}
-                    />
-                  </div>
-                )}
+            {viewType === 'week' && (
+              <div key="week-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
+                <CalendarWeekView
+                  currentDate={currentDate}
+                  appointments={displayAppointments}
+                  savingAppointmentId={dragState.savingAppointmentId}
+                  onTimeSlotClick={onTimeSlotClick}
+                  onEditAppointment={onEditAppointment}
+                  onDeleteAppointment={onDeleteAppointment}
+                  onAppointmentReschedule={onAppointmentReschedule}
+                  dragState={dragState}
+                  dropTarget={dropTarget}
+                  handleDragStart={handleDragStart}
+                  handleDragEnd={handleDragEnd}
+                  handleDragOver={handleDragOver}
+                  handleDragLeave={handleDragLeave}
+                  handleDrop={handleDrop}
+                  checkTimeBlocked={checkTimeBlocked}
+                  isDayClosedForDate={isDayClosedForDate}
+                  getStatusColor={getStatusColor}
+                  isOverCapacity={isOverCapacity}
+                  openPopoverId={openPopoverId}
+                  setOpenPopoverId={setOpenPopoverId}
+                  selectionMode={selectionMode}
+                  selectedIds={selectedIds}
+                  onToggleSelection={onToggleSelection}
+                />
+              </div>
+            )}
 
-                {viewType === 'month' && (
-                  <div key="month-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                    <CalendarMonthView
-                      currentDate={currentDate}
-                      appointments={appointments}
-                      onDateChange={onDateChange}
-                      onEditAppointment={onEditAppointment}
-                      onDeleteAppointment={onDeleteAppointment}
-                      getAppointmentsForDate={getAppointmentsForDate}
-                      getStatusColor={getStatusColor}
-                      isOverCapacity={isOverCapacity}
-                      openPopoverId={openPopoverId}
-                      setOpenPopoverId={setOpenPopoverId}
-                      selectionMode={selectionMode}
-                      selectedIds={selectedIds}
-                      onToggleSelection={onToggleSelection}
-                    />
-                  </div>
-                )}
-              </>
+            {viewType === 'month' && (
+              <div key="month-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
+                <CalendarMonthView
+                  currentDate={currentDate}
+                  appointments={appointments}
+                  onDateChange={onDateChange}
+                  onEditAppointment={onEditAppointment}
+                  onDeleteAppointment={onDeleteAppointment}
+                  getAppointmentsForDate={getAppointmentsForDate}
+                  getStatusColor={getStatusColor}
+                  isOverCapacity={isOverCapacity}
+                  openPopoverId={openPopoverId}
+                  setOpenPopoverId={setOpenPopoverId}
+                  selectionMode={selectionMode}
+                  selectedIds={selectedIds}
+                  onToggleSelection={onToggleSelection}
+                />
+              </div>
             )}
           </div>
         </CardContent>

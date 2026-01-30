@@ -34,7 +34,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
   const [autoReminders, setAutoReminders] = useState(true);
   const [appointmentReminders, setAppointmentReminders] = useState(true);
   const [exerciseReminders, setExerciseReminders] = useState(true);
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<Array<{ id: string; message: string; sent_at: string; status?: string }>>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchHistory = async () => {
@@ -42,7 +42,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
       setLoadingHistory(true);
       const getHistory = httpsCallable(functions, 'getWhatsAppHistory');
       const result = await getHistory({ patientId: _patientId });
-      setHistory((result.data as any).data || []);
+      setHistory((result.data as { data?: Array<{ id: string; message: string; sent_at: string; status?: string }> }).data || []);
     } catch (error) {
       console.error('Error fetching WhatsApp history:', error);
     } finally {
@@ -104,11 +104,11 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
 
       setMessage('');
       fetchHistory(); // Refresh history
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error sending WhatsApp message:', error);
       toast({
         title: 'Erro ao enviar mensagem',
-        description: error.message || 'Tente novamente',
+        description: error instanceof Error ? error.message : 'Tente novamente',
         variant: 'destructive'
       });
     } finally {

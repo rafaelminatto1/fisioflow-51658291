@@ -52,7 +52,7 @@ let functionsInstance: Functions | null = null;
  */
 export function getFirebaseApp(): FirebaseApp {
   if (!appInstance) {
-    appInstance = getApps().length === 0 ? initializeApp(firebaseConfig, APP_NAME) : getApps()[0];
+    appInstance = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   }
   return appInstance;
 }
@@ -87,10 +87,11 @@ export async function getFirebaseDb(): Promise<Firestore> {
         // Habilitar persistência com multi-tab support
         await enableMultiTabIndexedDbPersistence(dbInstance);
         console.log('🗄️ Firestore: Multi-tab persistence enabled');
-      } catch (err: any) {
-        if (err.code === 'failed-precondition') {
+      } catch (err: unknown) {
+        const error = err as { code?: string };
+        if (error.code === 'failed-precondition') {
           console.warn('⚠️ Firestore: Persistence failed - multiple tabs open');
-        } else if (err.code === 'unimplemented') {
+        } else if (error.code === 'unimplemented') {
           console.warn('⚠️ Firestore: Persistence not supported in this browser');
         } else {
           console.error('❌ Firestore: Persistence error:', err);

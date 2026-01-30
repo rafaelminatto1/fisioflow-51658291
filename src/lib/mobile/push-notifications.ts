@@ -13,7 +13,7 @@ export interface PushNotificationData {
   body: string;
   userId?: string;
   type: 'appointment' | 'message' | 'alert' | 'update';
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 /**
@@ -46,7 +46,7 @@ export async function initPushNotifications(): Promise<void> {
     });
 
     // Listener: Erro no registro
-    await PushNotifications.addListener('registrationError', (error: any) => {
+    await PushNotifications.addListener('registrationError', (error: unknown) => {
       console.error('Erro no registro de push notification:', error);
     });
 
@@ -213,7 +213,7 @@ export async function cancelNotification(ids: number[]): Promise<void> {
 /**
  * Obtém lista de notificações agendadas
  */
-export async function getScheduledNotifications(): Promise<any[]> {
+export async function getScheduledNotifications(): Promise<LocalNotificationScheduleResult[]> {
   try {
     const pending = await LocalNotifications.getPending();
     return pending.notifications || [];

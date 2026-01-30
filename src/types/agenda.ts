@@ -75,7 +75,7 @@ export interface StatusConfig {
   twBg: string;
   twBorder: string;
   twText: string;
-  icon?: any; // Lucide icon type
+  icon?: React.ComponentType<{ className?: string }>; // Lucide icon type
   allowedActions: string[];
 }
 

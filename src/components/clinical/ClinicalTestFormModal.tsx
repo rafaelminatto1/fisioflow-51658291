@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { db } from '@/integrations/firebase/app';
+import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import {
     Dialog,
     DialogContent,
@@ -113,27 +115,24 @@ export function ClinicalTestFormModal({
 
     const createMutation = useMutation({
         mutationFn: async (data: ClinicalTest) => {
-            const { error } = await supabase
-                .from('clinical_test_templates')
-                .insert({
-                    name: data.name,
-                    name_en: data.name_en || null,
-                    category: data.category,
-                    target_joint: data.target_joint,
-                    purpose: data.purpose,
-                    execution: data.execution,
-                    positive_sign: data.positive_sign || null,
-                    reference: data.reference || null,
-                    sensitivity_specificity: data.sensitivity_specificity || null,
-                    tags: data.tags || [],
-                    type: data.type || 'special_test',
-                    fields_definition: data.fields_definition || [],
-                    regularity_sessions: data.regularity_sessions || null,
-                    organization_id: organizationId,
-                    created_by: user?.id,
-                });
-
-            if (error) throw error;
+            await addDoc(collection(db, 'clinical_test_templates'), {
+                name: data.name,
+                name_en: data.name_en || null,
+                category: data.category,
+                target_joint: data.target_joint,
+                purpose: data.purpose,
+                execution: data.execution,
+                positive_sign: data.positive_sign || null,
+                reference: data.reference || null,
+                sensitivity_specificity: data.sensitivity_specificity || null,
+                tags: data.tags || [],
+                type: data.type || 'special_test',
+                fields_definition: data.fields_definition || [],
+                regularity_sessions: data.regularity_sessions || null,
+                organization_id: organizationId,
+                created_by: user?.uid,
+                created_at: serverTimestamp(),
+            });
         },
         onSuccess: () => {
             toast.success('Teste clínico criado com sucesso!');
@@ -150,27 +149,23 @@ export function ClinicalTestFormModal({
         mutationFn: async (data: ClinicalTest) => {
             if (!data.id) throw new Error('Test ID is required for update');
 
-            const { error } = await supabase
-                .from('clinical_test_templates')
-                .update({
-                    name: data.name,
-                    name_en: data.name_en || null,
-                    category: data.category,
-                    target_joint: data.target_joint,
-                    purpose: data.purpose,
-                    execution: data.execution,
-                    positive_sign: data.positive_sign || null,
-                    reference: data.reference || null,
-                    sensitivity_specificity: data.sensitivity_specificity || null,
-                    tags: data.tags || [],
-                    type: data.type || 'special_test',
-                    fields_definition: data.fields_definition || [],
-                    regularity_sessions: data.regularity_sessions || null,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', data.id);
-
-            if (error) throw error;
+            const docRef = doc(db, 'clinical_test_templates', data.id);
+            await setDoc(docRef, {
+                name: data.name,
+                name_en: data.name_en || null,
+                category: data.category,
+                target_joint: data.target_joint,
+                purpose: data.purpose,
+                execution: data.execution,
+                positive_sign: data.positive_sign || null,
+                reference: data.reference || null,
+                sensitivity_specificity: data.sensitivity_specificity || null,
+                tags: data.tags || [],
+                type: data.type || 'special_test',
+                fields_definition: data.fields_definition || [],
+                regularity_sessions: data.regularity_sessions || null,
+                updated_at: serverTimestamp(),
+            }, { merge: true });
         },
         onSuccess: () => {
             toast.success('Teste clínico atualizado com sucesso!');

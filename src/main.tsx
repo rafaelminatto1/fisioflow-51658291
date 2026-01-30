@@ -35,6 +35,11 @@ window.addEventListener('unhandledrejection', (event) => {
 // SERVICE WORKER REGISTRATION
 // ============================================================================
 
+// TEMPORARILY DISABLED: Service Worker may be interfering with Firebase Auth
+// TODO: Re-enable after fixing the issue
+console.log('[SW] Service Worker registration disabled temporarily to fix Firebase Auth');
+
+/*
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
@@ -83,6 +88,7 @@ if ('serviceWorker' in navigator) {
     }
   });
 }
+*/
 
 // ============================================================================
 // CACHE INVALIDATION FOR DEVELOPMENT

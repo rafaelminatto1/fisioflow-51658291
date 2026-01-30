@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import {
   FileText, Plus, Download, Send, CheckCircle2, AlertCircle,
   Settings, Eye, Edit, Trash2, Clock, Calendar, Building2,
@@ -32,7 +33,7 @@ import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, query, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 
 
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
 // Componente PDF da NFS-e
 function NFSePDFDocument({ nfse }: { nfse: NFSe }) {
   return (
-    <Document size="A4">
+    <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
@@ -478,12 +479,9 @@ export default function NFSePage() {
   const { data: nfses = [], isLoading } = useQuery({
     queryKey: ['nfse-list'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('nfse')
-        .select('*')
-        .order('data_emissao', { ascending: false });
-      if (error) throw error;
-      return data as NFSe[];
+      const q = query(collection(db, 'nfse'), orderBy('data_emissao', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as NFSe[];
     },
   });
 
@@ -491,11 +489,9 @@ export default function NFSePage() {
   const { data: config } = useQuery({
     queryKey: ['nfse-config'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('nfse_config')
-        .select('*')
-        .single();
-      return data as NFSConfig | null;
+      const docRef = doc(db, 'nfse_config', 'default');
+      const docSnap = await getDoc(docRef);
+      return docSnap.exists() ? docSnap.data() as NFSConfig : null;
     },
   });
 
@@ -514,14 +510,10 @@ export default function NFSePage() {
       const valorISS = (valorNumerico * aliquota) / 100;
 
       // Gerar número
-      const { data: lastNFSe } = await supabase
-        .from('nfse')
-        .select('numero')
-        .order('numero', { ascending: false })
-        .limit(1)
-        .single();
-
-      const novoNumero = (lastNFSe?.numero || 0) + 1;
+      const q = query(collection(db, 'nfse'), orderBy('numero', 'desc'), limit(1));
+      const snapshot = await getDocs(q);
+      const lastNFSe = snapshot.empty ? null : snapshot.docs[0].data();
+      const novoNumero = (Number(lastNFSe?.numero) || 0) + 1;
 
       const nfse: Omit<NFSe, 'id'> = {
         numero: novoNumero.toString().padStart(10, '0'),
@@ -550,14 +542,8 @@ export default function NFSePage() {
         status: config?.auto_emissao ? 'emitida' : 'rascunho',
       };
 
-      const { data: result, error } = await supabase
-        .from('nfse')
-        .insert([nfse])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return result;
+      const docRef = await addDoc(collection(db, 'nfse'), nfse);
+      return { id: docRef.id, ...nfse };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nfse-list'] });
@@ -628,7 +614,7 @@ export default function NFSePage() {
           </Card>
         )}
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'lista' | 'config')}>
           <TabsList>
             <TabsTrigger value="lista">Lista de NFSe</TabsTrigger>
             <TabsTrigger value="config">Configurações</TabsTrigger>

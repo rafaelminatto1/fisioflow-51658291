@@ -6,7 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./firebase": "./src/firebase/index.ts",
-    "/functions": "./src/functions/index.ts",
+    "./functions": "./src/functions/index.ts",
     "./firestore": "./src/firestore/index.ts",
     "./storage": "./src/storage/index.ts",
     "./offline": "./src/offline/index.ts",

@@ -46,11 +46,23 @@ import {
   useEvolutionMeasurements,
 } from '@/hooks/usePatientEvolution';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
-import { useAutoSaveSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
+import { useAutoSaveSoapRecord, useSoapRecords, type SoapRecord } from '@/hooks/useSoapRecords';
 import { useGamification } from '@/hooks/useGamification';
 import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+import { db, getFirebaseAuth } from '@/integrations/firebase/app';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  limit,
+} from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 // Componentes de Evolução
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
@@ -115,6 +127,7 @@ const PatientEvolution = () => {
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
+  const [measurementEvolution, setMeasurementEvolution] = useState<Array<{ name: string; initial: { value: number | string; unit: string; date: string }; current: { value: number | string; unit: string; date: string }; improvement: number | string }>>([]);
 
   // Estados de UI
   const [sessionStartTime] = useState(new Date());
@@ -298,8 +311,8 @@ const PatientEvolution = () => {
   const painTrend = useMemo(() => {
     const recentPainLevels = previousEvolutions
       .slice(0, 5)
-      .filter((e: any) => e.pain_level !== null && e.pain_level !== undefined)
-      .map((e: any) => e.pain_level || 0);
+      .filter((e: SoapRecord) => e.pain_level !== null && e.pain_level !== undefined)
+      .map((e: SoapRecord) => e.pain_level || 0);
 
     if (recentPainLevels.length < 2) return null;
 
@@ -477,55 +490,40 @@ const PatientEvolution = () => {
         setCurrentSoapRecordId(record.id);
       }
 
-      // Salvar sessão de tratamento (exercícios realizados)
-      const { data: { user } } = await supabase.auth.getUser();
+      // Salvar sessão de tratamento (exercícios realizados) - Migrado para Firebase
+      const user = getFirebaseAuth().currentUser;
       if (user) {
         // Verificar se já existe sessão para este agendamento
         let existingSessionId = null;
         if (appointmentId) {
-          const { data: existingSession } = await supabase
-            .from('treatment_sessions')
-            .select('id')
-            .eq('appointment_id', appointmentId)
-            .maybeSingle();
-          if (existingSession) existingSessionId = existingSession.id;
+          const q = query(
+            collection(db, 'treatment_sessions'),
+            where('appointment_id', '==', appointmentId),
+            limit(1)
+          );
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            existingSessionId = snapshot.docs[0].id;
+          }
         }
 
         const sessionData = {
           patient_id: patientId,
-          therapist_id: user.id,
+          therapist_id: user.uid,
           appointment_id: appointmentId || null,
           session_date: new Date().toISOString(),
           session_type: 'treatment',
-          pain_level_before: 0,
-          pain_level_after: 0,
-          functional_score_before: 0,
-          functional_score_after: 0,
           exercises_performed: sessionExercises,
-          observations: assessment,
-          status: 'completed',
-          created_by: user.id
+          pain_level_before: painScale.level,
+          updated_at: new Date().toISOString(),
         };
 
-        let sessionError: { message: string } | null = null;
         if (existingSessionId) {
-          const { error } = await supabase
-            .from('treatment_sessions')
-            .update(sessionData)
-            .eq('id', existingSessionId);
-          sessionError = error;
+          await updateDoc(doc(db, 'treatment_sessions', existingSessionId), sessionData);
         } else {
-          const { error } = await supabase
-            .from('treatment_sessions')
-            .insert(sessionData);
-          sessionError = error;
-        }
-
-        if (sessionError) {
-          toast({
-            title: 'Aviso',
-            description: 'Evolução salva, mas houve um erro ao salvar a sessão de exercícios.',
-            variant: 'default'
+          await addDoc(collection(db, 'treatment_sessions'), {
+            ...sessionData,
+            created_at: new Date().toISOString(),
           });
         }
       }

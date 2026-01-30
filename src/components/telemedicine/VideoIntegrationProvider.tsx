@@ -39,14 +39,14 @@ export function useVideoIntegration(config?: VideoIntegrationConfig) {
   useEffect(() => {
     // Verificar se a API do provedor está disponível
     if (provider === 'whereby') {
-      const wherebyEmbed = (window as any).WherebyEmbed;
+      const wherebyEmbed = (window as Window & { WherebyEmbed?: { new: (element: HTMLElement, config: Record<string, unknown>) => { on: (event: string, callback: () => void) => void } } }).WherebyEmbed;
       if (!wherebyEmbed && !config?.roomUrl) {
         setError('Whereby não está configurado');
         return;
       }
       setIsReady(true);
     } else if (provider === 'twilio') {
-      const Twilio = (window as any).Twilio;
+      const Twilio = (window as Window & { Twilio?: unknown }).Twilio;
       if (!Twilio && !config?.apiKey) {
         setError('Twilio não está configurado');
         return;
@@ -401,8 +401,8 @@ function WherebyEmbed({
   }, []);
 
   useEffect(() => {
-    if (isLoaded && containerRef.current && (window as any).WherebyEmbed) {
-      const embed = new (window as any).WherebyEmbed(containerRef.current, {
+    if (isLoaded && containerRef.current && (window as Window & { WherebyEmbed?: { new: (element: HTMLElement, config: Record<string, unknown>) => { on: (event: string, callback: () => void) => void } } }).WherebyEmbed) {
+      const embed = new (window as Window & { WherebyEmbed?: { new: (element: HTMLElement, config: Record<string, unknown>) => { on: (event: string, callback: () => void) => void } } }).WherebyEmbed(containerRef.current, {
         roomUrl,
         title: 'Consulta Online',
         participantCount: 'none',

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from 'firebase/firestore';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -81,12 +81,9 @@ export default function CRMCampanhasPage() {
   const { data: campanhas = [], isLoading } = useQuery({
     queryKey: ['email-campanhas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('email_campanhas')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as EmailCampaign[];
+      const q = query(collection(db, 'email_campanhas'), orderBy('created_at', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailCampaign[];
     },
   });
 
@@ -94,12 +91,9 @@ export default function CRMCampanhasPage() {
   const { data: templates = [] } = useQuery({
     queryKey: ['email-templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('email_templates')
-        .select('*')
-        .order('name');
-      if (error) throw error;
-      return data as EmailTemplate[];
+      const q = query(collection(db, 'email_templates'), orderBy('name'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailTemplate[];
     },
   });
 
@@ -107,10 +101,8 @@ export default function CRMCampanhasPage() {
   const { data: leads = [] } = useQuery({
     queryKey: ['leads-segmentacao'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('leads')
-        .select('id, name, email, stage, source, created_at');
-      return data || [];
+      const snapshot = await getDocs(collection(db, 'leads'));
+      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }));
     },
   });
 
@@ -132,23 +124,20 @@ export default function CRMCampanhasPage() {
         ? new Date(`${data.scheduled_date}T${data.scheduled_time}`).toISOString()
         : undefined;
 
-      const { data: result, error } = await supabase
-        .from('email_campanhas')
-        .insert([{
-          name: data.name,
-          subject: data.subject,
-          preview_text: data.preview_text,
-          content: data.content,
-          target_segment: data.target_segment,
-          recipient_count: recipientCount,
-          scheduled_at: scheduledAt,
-          status: data.schedule_type === 'agendado' ? 'agendado' : 'rascunho',
-        }])
-        .select()
-        .single();
+      const campaignData = {
+        name: data.name,
+        subject: data.subject,
+        preview_text: data.preview_text,
+        content: data.content,
+        target_segment: data.target_segment,
+        recipient_count: recipientCount,
+        scheduled_at: scheduledAt,
+        status: data.schedule_type === 'agendado' ? 'agendado' : 'rascunho',
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-      return result;
+      const docRef = await addDoc(collection(db, 'email_campanhas'), campaignData);
+      return { id: docRef.id, ...campaignData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-campanhas'] });
@@ -171,20 +160,19 @@ export default function CRMCampanhasPage() {
   // Enviar campanha
   const sendCampaign = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('email_campanhas')
-        .update({ status: 'enviando', sent_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
+      await updateDoc(doc(db, 'email_campanhas', id), {
+        status: 'enviando',
+        sent_at: new Date().toISOString()
+      });
 
       // Simular envio (em produção, isso seria processado por uma fila)
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Atualizar como enviado
-      await supabase
-        .from('email_campanhas')
-        .update({ status: 'enviado', sent_count: leads.length })
-        .eq('id', id);
+      await updateDoc(doc(db, 'email_campanhas', id), {
+        status: 'enviado',
+        sent_count: leads.length
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-campanhas'] });
@@ -196,19 +184,16 @@ export default function CRMCampanhasPage() {
   // Criar template
   const createTemplate = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const { data: result, error } = await supabase
-        .from('email_templates')
-        .insert([{
-          name: data.name,
-          subject: data.subject,
-          content: data.content,
-          category: 'custom',
-          variables: extractVariables(data.content),
-        }])
-        .select()
-        .single();
-      if (error) throw error;
-      return result;
+      const templateData = {
+        name: data.name,
+        subject: data.subject,
+        content: data.content,
+        category: 'custom',
+        variables: extractVariables(data.content),
+      };
+
+      const docRef = await addDoc(collection(db, 'email_templates'), templateData);
+      return { id: docRef.id, ...templateData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-templates'] });
@@ -382,7 +367,7 @@ export default function CRMCampanhasPage() {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'campanhas' | 'templates' | 'relatorio')}>
           <TabsList>
             <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>

@@ -10,16 +10,18 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
+type GamificationSettingValue = string | number | boolean;
+
 type GamificationSetting = {
     key: string;
-    value: any;
+    value: GamificationSettingValue;
     description: string;
 };
 
 export default function GamificationSettings() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
-    const [changedSettings, setChangedSettings] = useState<Record<string, any>>({});
+    const [changedSettings, setChangedSettings] = useState<Record<string, GamificationSettingValue>>({});
 
     const { data: settings, isLoading } = useQuery({
         queryKey: ['gamification-settings'],
@@ -41,7 +43,7 @@ export default function GamificationSettings() {
     });
 
     const updateSettings = useMutation({
-        mutationFn: async (updatedItems: Record<string, any>) => {
+        mutationFn: async (updatedItems: Record<string, GamificationSettingValue>) => {
             const batch = writeBatch(db);
 
             Object.entries(updatedItems).forEach(([key, value]) => {

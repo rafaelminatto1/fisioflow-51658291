@@ -11,6 +11,8 @@ import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart as RechartsPieChart, Pie } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 interface DemonstrativoData {
   periodo: string;
@@ -48,13 +50,17 @@ export default function DemonstrativoMensalPage() {
       const dataFim = endOfMonth(new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1)).toISOString();
 
       // Buscar movimentações do caixa
-      const { data: movs, error: movsError } = await supabase
-        .from('movimentacoes_caixa')
-        .select('*')
-        .gte('data', dataInicio.split('T')[0])
-        .lte('data', dataFim.split('T')[0]);
+      const startDay = dataInicio.split('T')[0];
+      const endDay = dataFim.split('T')[0];
 
-      if (movsError) throw movsError;
+      const qMovs = query(
+        collection(db, 'movimentacoes_caixa'),
+        where('data', '>=', startDay),
+        where('data', '<=', endDay)
+      );
+
+      const snapshotMovs = await getDocs(qMovs);
+      const movs = snapshotMovs.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Array<{ id: string; tipo: string; valor: string | number; categoria?: string; forma_pagamento?: string; data: string }>;
 
       const movimentacoes = movs || [];
       const entradas = movimentacoes.filter(m => m.tipo === 'entrada');
@@ -81,25 +87,31 @@ export default function DemonstrativoMensalPage() {
       });
 
       // Buscar contas a receber e pagar
-      const { data: contasReceber } = await supabase
-        .from('contas_financeiras')
-        .select('valor')
-        .eq('tipo', 'receber')
-        .eq('status', 'pendente');
+      const qContasReceber = query(
+        collection(db, 'contas_financeiras'),
+        where('tipo', '==', 'receber'),
+        where('status', '==', 'pendente')
+      );
+      const snapshotContasReceber = await getDocs(qContasReceber);
+      const contasReceber = snapshotContasReceber.docs.map(doc => doc.data());
 
-      const { data: contasPagar } = await supabase
-        .from('contas_financeiras')
-        .select('valor')
-        .eq('tipo', 'pagar')
-        .eq('status', 'pendente');
+      const qContasPagar = query(
+        collection(db, 'contas_financeiras'),
+        where('tipo', '==', 'pagar'),
+        where('status', '==', 'pendente')
+      );
+      const snapshotContasPagar = await getDocs(qContasPagar);
+      const contasPagar = snapshotContasPagar.docs.map(doc => doc.data());
 
       // Buscar total de atendimentos (sessões concluídas)
-      const { count: totalAtendimentos } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact', head: true })
-        .gte('start_time', dataInicio)
-        .lte('start_time', dataFim)
-        .eq('status', 'atendido');
+      const qAppointments = query(
+        collection(db, 'appointments'),
+        where('start_time', '>=', dataInicio),
+        where('start_time', '<=', dataFim),
+        where('status', '==', 'atendido')
+      );
+      const snapshotAppointments = await getDocs(qAppointments);
+      const totalAtendimentos = snapshotAppointments.size;
 
       return {
         periodo: `${meses.find(m => m.value === mesSelecionado)?.label} de ${anoSelecionado}`,
@@ -141,11 +153,16 @@ export default function DemonstrativoMensalPage() {
       const dataInicio = startOfMonth(dataAnterior).toISOString();
       const dataFim = endOfMonth(dataAnterior).toISOString();
 
-      const { data: movs } = await supabase
-        .from('movimentacoes_caixa')
-        .select('*')
-        .gte('data', dataInicio.split('T')[0])
-        .lte('data', dataFim.split('T')[0]);
+      const startDayAnterior = dataInicio.split('T')[0];
+      const endDayAnterior = dataFim.split('T')[0];
+
+      const qMovsAnterior = query(
+        collection(db, 'movimentacoes_caixa'),
+        where('data', '>=', startDayAnterior),
+        where('data', '<=', endDayAnterior)
+      );
+      const snapshotMovsAnterior = await getDocs(qMovsAnterior);
+      const movs = snapshotMovsAnterior.docs.map(doc => doc.data()) as Array<{ tipo: string; valor: string | number }>;
 
       const movimentacoes = movs || [];
       const totalEntradas = movimentacoes.filter(m => m.tipo === 'entrada').reduce((acc, m) => acc + Number(m.valor), 0);

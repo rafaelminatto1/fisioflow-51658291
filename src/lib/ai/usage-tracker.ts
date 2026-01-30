@@ -92,7 +92,7 @@ export interface BudgetStatus {
 /**
  * AI Usage Monitor class
  */
-class AIUsageMonitor {
+class AIUsageMonitorService {
   private collectionName = 'ai_usage_records';
   private cache = new Map<string, Record<AIFeatureCategory, UsageStats>>();
   private cacheExpiry = 60000; // 1 minute
@@ -553,14 +553,14 @@ class AIUsageMonitor {
 /**
  * Singleton instance
  */
-let usageMonitor: AIUsageMonitor | null = null;
+let usageMonitor: AIUsageMonitorService | null = null;
 
 /**
  * Get or create usage monitor
  */
-export function getAIUsageMonitor(): AIUsageMonitor {
+export function getAIUsageMonitor(): AIUsageMonitorService {
   if (!usageMonitor) {
-    usageMonitor = new AIUsageMonitor();
+    usageMonitor = new AIUsageMonitorService();
   }
   return usageMonitor;
 }

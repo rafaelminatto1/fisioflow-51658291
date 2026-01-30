@@ -68,7 +68,7 @@ export function CRMAutomacoes() {
     await createMutation.mutateAsync({
       ...formData,
       ativo: false,
-    } as any);
+    });
     setIsDialogOpen(false);
     resetForm();
   };

@@ -93,14 +93,6 @@ export class FirebaseQueryBuilder {
   }
 
   /**
-   * Retorna apenas um documento (como Supabase .single())
-   */
-  single(): FirebaseQueryBuilder {
-    this._single = true;
-    return this;
-  }
-
-  /**
    * Executa query e retorna único documento
    */
   async single<T = DocumentData>(): Promise<T | null> {

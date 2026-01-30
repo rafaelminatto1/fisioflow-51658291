@@ -25,7 +25,7 @@ interface EvolutionMetrics {
   totalSessions: number;
   prescribedSessions?: number;
   averageImprovement: number;
-  measurementEvolution?: any[];
+  measurementEvolution?: Array<{ name: string; initial: { value: number | string; unit: string; date: string }; current: { value: number | string; unit: string; date: string }; improvement: number | string }>;
 }
 
 export const generateEvolutionPDF = (
@@ -111,7 +111,7 @@ export const generateEvolutionPDF = (
     doc.text('📈 Evolução das Medições (Antes vs Depois)', 20, yPos);
     yPos += 8;
 
-    const measTableData = metrics.measurementEvolution.map((m: any) => {
+    const measTableData = metrics.measurementEvolution.map((m: { name: string; initial: { value: number | string; unit: string }; current: { value: number | string; unit: string }; improvement: number | string }) => {
       const diff = m.improvement;
       const diffColor = parseFloat(diff) > 0 ? '↑' : parseFloat(diff) < 0 ? '↓' : '-';
 
@@ -133,7 +133,7 @@ export const generateEvolutionPDF = (
       margin: { left: 20, right: 20 },
     });
 
-    yPos = (doc as any).lastAutoTable.finalY + 15;
+    yPos = (doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
   }
 
   // --- Sessions History Table ---
@@ -170,7 +170,7 @@ export const generateEvolutionPDF = (
     margin: { left: 20, right: 20 },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 20;
+  yPos = (doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 20;
 
   // --- Scientific References ---
   if (yPos > 240) { doc.addPage(); addHeader(); yPos = 55; }

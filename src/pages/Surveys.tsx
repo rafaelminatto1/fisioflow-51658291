@@ -48,7 +48,7 @@ export default function Surveys() {
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
-      survey.patient?.name?.toLowerCase().includes(search) ||
+      survey.patient?.full_name?.toLowerCase().includes(search) ||
       survey.therapist?.name?.toLowerCase().includes(search) ||
       survey.comments?.toLowerCase().includes(search)
     );
@@ -68,7 +68,7 @@ export default function Surveys() {
     return 'Promotor';
   };
 
-  const getNPSColor = (score: number | null) => {
+  const getNPSColor = (score: number | null): "secondary" | "destructive" | "default" | "outline" => {
     if (score === null) return 'secondary';
     if (score <= 6) return 'destructive';
     if (score >= 7 && score <= 8) return 'default';
@@ -208,7 +208,7 @@ export default function Surveys() {
                         <TableRow key={survey.id}>
                           <TableCell>
                             <div>
-                              <p className="font-medium">{survey.patient?.name || 'N/A'}</p>
+                              <p className="font-medium">{survey.patient?.full_name || 'N/A'}</p>
                               {survey.therapist && (
                                 <p className="text-sm text-muted-foreground">
                                   {survey.therapist.name}
@@ -217,7 +217,7 @@ export default function Surveys() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getNPSColor(survey.nps_score) as any}>
+                            <Badge variant={getNPSColor(survey.nps_score)}>
                               {survey.nps_score !== null ? `${survey.nps_score}/10` : 'N/A'}
                             </Badge>
                             <p className="text-xs text-muted-foreground mt-1">

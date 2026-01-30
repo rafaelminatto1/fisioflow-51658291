@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { EventPlannerAI } from '@/components/eventos/EventPlannerAI';
 
 interface Evento {
   id: string;
@@ -177,6 +178,9 @@ export default function Eventos() {
               </Button>
             )}
           </div>
+
+          <EventPlannerAI />
+          
           <EventosStatsWidget />
           
           {/* Stats cards */}

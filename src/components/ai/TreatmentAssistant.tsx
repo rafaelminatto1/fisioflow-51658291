@@ -37,8 +37,13 @@ interface TreatmentAssistantProps {
 
 export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: TreatmentAssistantProps) {
   const [loading, setLoading] = useState(false);
-  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<string | null | undefined>(undefined);
   const [activeAction, setActiveAction] = useState<string | null>(null);
+
+  interface TreatmentAssistantResponse {
+    error?: string;
+    suggestion?: string;
+  }
 
   const callAI = async (action: string) => {
     try {
@@ -51,7 +56,7 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
       const treatmentAssistantFunction = httpsCallable(functions, 'ai-treatment-assistant');
       const result = await treatmentAssistantFunction({ patientId, action });
 
-      const data = result.data as any;
+      const data = result.data as TreatmentAssistantResponse;
 
       if (data?.error) {
         throw new Error(data.error);

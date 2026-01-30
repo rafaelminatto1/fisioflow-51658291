@@ -49,7 +49,7 @@ export const DuplicateAppointmentDialog: React.FC<DuplicateAppointmentDialogProp
     } else if (duplicateType === 'multiple') {
       dates = selectedDates;
     } else if (duplicateType === 'weekly' && appointment) {
-      const baseDate = new Date((appointment as any).appointment_date);
+      const baseDate = new Date(appointment.date || appointment.appointment_date || '');
       for (let i = 1; i <= weekCount; i++) {
         dates.push(addWeeks(baseDate, i));
       }
@@ -107,7 +107,7 @@ export const DuplicateAppointmentDialog: React.FC<DuplicateAppointmentDialogProp
                   variant={duplicateType === option.value ? 'default' : 'outline'}
                   className="h-16 flex-col gap-1"
                   onClick={() => {
-                    setDuplicateType(option.value as any);
+                    setDuplicateType(option.value as DuplicateType);
                     setSelectedDates([]);
                   }}
                 >
@@ -183,7 +183,7 @@ export const DuplicateAppointmentDialog: React.FC<DuplicateAppointmentDialogProp
                 onCheckedChange={(checked) => setKeepTime(checked as boolean)}
               />
               <Label htmlFor="keep-time" className="text-sm cursor-pointer">
-                Manter mesmo horário ({(appointment as any).appointment_time})
+                Manter mesmo horário ({appointment.time || appointment.appointment_time})
               </Label>
             </div>
 
