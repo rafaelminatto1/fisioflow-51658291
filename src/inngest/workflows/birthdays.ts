@@ -18,6 +18,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
+import { logger } from '@/lib/errors/logger.js';
 
 // Types for birthday workflow
 interface Patient {
@@ -94,7 +95,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
         birthdayPatients = fullSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } else {
         // Fall back to client-side filtering (less efficient)
-        console.warn('[Birthday] birthday_MMDD field not found, using client-side filtering');
+        logger.warn('[Birthday] birthday_MMDD field not found, using client-side filtering', undefined, 'birthdays-workflow');
         const snapshot = await db.collection('patients')
           .where('active', '==', true)
           .select('id', 'name', 'email', 'phone', 'date_of_birth', 'organization_id', 'settings', 'notification_preferences')
