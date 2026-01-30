@@ -5,6 +5,7 @@
  */
 
 import { Inngest } from 'inngest';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Create Inngest client with proper configuration
@@ -27,10 +28,10 @@ export const loggerMiddleware = {
   onFunctionRun: ({ ctx, fn }: { ctx: { runId: string; event: { id: string } }; fn: { name: string } }) => {
     return {
       transformOutput: (output: unknown) => {
-        console.log(`[Inngest] Function ${fn.name} completed`, {
+        logger.info(`[Inngest] Function ${fn.name} completed`, {
           runId: ctx.runId,
           eventId: ctx.event.id,
-        });
+        }, 'inngest');
         return output;
       },
     };
