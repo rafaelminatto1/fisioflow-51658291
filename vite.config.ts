@@ -218,6 +218,11 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "lodash": "lodash-es",
+        // Workspace packages - point to src since Vite aliases don't respect package.json exports
+        "@fisioflow/shared-api": path.resolve(__dirname, "./packages/shared-api/src"),
+        "@fisioflow/shared-types": path.resolve(__dirname, "./packages/shared-types/src"),
+        "@fisioflow/shared-constants": path.resolve(__dirname, "./packages/shared-constants/src"),
+        "@fisioflow/shared-utils": path.resolve(__dirname, "./packages/shared-utils/src"),
         // Allow importing legacy module from react-grid-layout
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
       },

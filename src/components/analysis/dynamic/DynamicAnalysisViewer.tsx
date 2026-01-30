@@ -8,8 +8,13 @@ import {
 import { DynamicAnalysis, GaitMetrics, OverheadSquatMetrics, RombergMetrics } from '@/types/analysis/schemas';
 import { DynamicCompareMetrics } from '@/types/analysis/dynamic_compare';
 
+// Legacy data type with trial_type
+interface LegacyAnalysisData {
+  trial_type?: 'GAIT' | 'SQUAT_OVERHEAD' | 'ROMBERG';
+}
+
 interface DynamicAnalysisViewerProps {
-    data: DynamicAnalysis | DynamicCompareMetrics | Record<string, unknown>;
+    data: DynamicAnalysis | DynamicCompareMetrics | LegacyAnalysisData | Record<string, unknown>;
 }
 
 const DynamicAnalysisViewer: React.FC<DynamicAnalysisViewerProps> = ({ data }) => {
@@ -58,9 +63,7 @@ const DynamicAnalysisViewer: React.FC<DynamicAnalysisViewerProps> = ({ data }) =
     }
 
     // 2. Legacy Dashboards (Gait, Squat, Romberg)
-    // Cast to any to access trial_type safely since we know it exists in legacy schemas
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const legacyData = data as any;
+    const legacyData = data as LegacyAnalysisData;
     if (legacyData?.trial_type === 'GAIT') return <GaitDashboard data={legacyData as GaitMetrics} />;
     if (legacyData?.trial_type === 'SQUAT_OVERHEAD') return <SquatDashboard data={legacyData as OverheadSquatMetrics} />;
     if (legacyData?.trial_type === 'ROMBERG') return <RombergDashboard data={legacyData as RombergMetrics} />;

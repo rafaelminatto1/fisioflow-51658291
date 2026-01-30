@@ -61,7 +61,7 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
         throw new Error('Patient not found');
       }
 
-      const patientData = { id: patientSnap.id, ...patientSnap.data() } as any;
+      const patientData = { id: patientSnap.id, ...patientSnap.data() } as Record<string, unknown>;
 
       // Fetch sessions for this patient (last 10)
       const sessionsSnapshot = await db.collection('soap_records')
@@ -104,7 +104,7 @@ Age: ${patient.date_of_birth}
 Main Complaint: ${patient.main_complaint || 'Not specified'}
 
 Recent Sessions (${recentSessions.length}):
-${recentSessions.map((s: any, i: number) => `
+${recentSessions.map((s, i: number) => `
 Session ${i + 1} (${s.created_at}):
 - Subjective: ${s.subjective || 'N/A'}
 - Objective: ${s.objective || 'N/A'}

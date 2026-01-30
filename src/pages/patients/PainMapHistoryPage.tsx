@@ -6,16 +6,18 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/app';
 import MainLayout from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  ArrowLeft, Calendar, FileText, TrendingDown, Activity,
+  ArrowLeft, Calendar, FileText, TrendingDown, TrendingUp, Activity,
   MapPin, Target, Clock, Download, GitCompare
 } from 'lucide-react';
 import { usePainMapHistory } from '@/hooks/usePainMapHistory';
@@ -24,8 +26,15 @@ import { PainMapService } from '@/lib/services/painMapService';
 import type { PainMapPoint, BodyRegion } from '@/types/painMap';
 import { PatientHelpers } from '@/types';
 
+// Type extension for jsPDF with autoTable plugin
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable?: {
+    finalY: number;
+  };
+}
+
 // Mini body SVG for cards
-const bodyPaths: Record<BodyRegion, { path: string }> = {
+const bodyPaths: Partial<Record<BodyRegion, { path: string }>> = {
   cabeca: { path: "M50,5 C58,5 64,12 64,22 C64,32 58,38 50,38 C42,38 36,32 36,22 C36,12 42,5 50,5 Z" },
   pescoco: { path: "M45,38 L55,38 L56,48 L44,48 Z" },
   ombro_direito: { path: "M44,48 L28,58 L26,54 C30,50 38,48 44,48 Z" },
@@ -68,11 +77,13 @@ function MiniBodyThumbnail({ painPoints }: { painPoints: PainMapPoint[] }) {
   return (
     <svg viewBox="0 0 100 240" className="w-16 h-24">
       {(Object.keys(bodyPaths) as BodyRegion[]).map((region) => {
+        const pathData = bodyPaths[region];
+        if (!pathData) return null;
         const intensity = pointsMap.get(region) || 0;
         return (
           <path
             key={region}
-            d={bodyPaths[region].path}
+            d={pathData.path}
             fill={intensity > 0 ? getColor(intensity) : 'hsl(var(--muted))'}
             stroke="hsl(var(--border))"
             strokeWidth="0.3"
@@ -94,13 +105,10 @@ export default function PainMapHistoryPage() {
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id, name')
-        .eq('id', patientId)
-        .single();
-      if (error) throw error;
-      return data;
+      const docRef = doc(db, 'patients', patientId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return null;
+      return { id: docSnap.id, ...docSnap.data() } as Patient;
     },
     enabled: !!patientId
   });
@@ -115,22 +123,23 @@ export default function PainMapHistoryPage() {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     // Header
     doc.setFontSize(18);
     doc.setTextColor(80, 52, 255);
     doc.text('Relatório de Evolução de Dor', pageWidth / 2, 20, { align: 'center' });
-    
+
     // Patient info
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Paciente: ${PatientHelpers.getName(patient)}`, 14, 35);
+    let patientName = PatientHelpers.getName(patient);
+    doc.text(`Paciente: ${patientName}`, 14, 35);
     doc.text(`Data do Relatório: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, 14, 42);
-    
+
     // Statistics
     doc.setFontSize(14);
     doc.text('Estatísticas Gerais', 14, 55);
-    
+
     autoTable(doc, {
       startY: 60,
       head: [['Métrica', 'Valor']],
@@ -139,7 +148,7 @@ export default function PainMapHistoryPage() {
         ['Média de Dor', `${historyData.statistics.avgPainLevel}/10`],
         ['Redução de Dor', `${historyData.statistics.painReduction}%`],
         ['Região Mais Afetada', historyData.statistics.mostAffectedRegion],
-        ['Previsão de Alta', historyData.statistics.estimatedWeeksToRecovery 
+        ['Previsão de Alta', historyData.statistics.estimatedWeeksToRecovery
           ? `${historyData.statistics.estimatedWeeksToRecovery} semanas`
           : 'Não disponível'
         ],
@@ -149,10 +158,10 @@ export default function PainMapHistoryPage() {
     });
 
     // Insights
-    const insightY = (doc as any).lastAutoTable.finalY + 15;
+    const insightY = (doc as jsPDFWithAutoTable).lastAutoTable?.finalY ? (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15 : 80;
     doc.setFontSize(14);
     doc.text('Insights', 14, insightY);
-    
+
     autoTable(doc, {
       startY: insightY + 5,
       head: [['Status', 'Observação']],
@@ -162,10 +171,10 @@ export default function PainMapHistoryPage() {
     });
 
     // Region ranking
-    const regionY = (doc as any).lastAutoTable.finalY + 15;
+    const regionY = (doc as jsPDFWithAutoTable).lastAutoTable?.finalY ? (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15 : 140;
     doc.setFontSize(14);
     doc.text('Ranking de Regiões Mais Afetadas', 14, regionY);
-    
+
     autoTable(doc, {
       startY: regionY + 5,
       head: [['Região', 'Intensidade Média', 'Frequência']],
@@ -183,7 +192,7 @@ export default function PainMapHistoryPage() {
       doc.addPage();
       doc.setFontSize(14);
       doc.text('Histórico de Sessões', 14, 20);
-      
+
       autoTable(doc, {
         startY: 25,
         head: [['Data', 'Dor Global', 'Regiões Afetadas', 'Observações']],
@@ -212,7 +221,7 @@ export default function PainMapHistoryPage() {
       );
     }
 
-    const patientName = PatientHelpers.getName(patient);
+    patientName = PatientHelpers.getName(patient);
     doc.save(`fisioflow_mapa_dor_${patientName.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
   };
 
@@ -319,7 +328,7 @@ export default function PainMapHistoryPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Previsão Alta</p>
                       <p className="text-2xl font-bold">
-                        {historyData.statistics.estimatedWeeksToRecovery 
+                        {historyData.statistics.estimatedWeeksToRecovery
                           ? `${historyData.statistics.estimatedWeeksToRecovery}sem`
                           : 'N/A'
                         }
@@ -344,11 +353,10 @@ export default function PainMapHistoryPage() {
                     {historyData.insights.map((insight, idx) => (
                       <div
                         key={idx}
-                        className={`p-3 rounded-lg flex items-center gap-3 ${
-                          insight.type === 'improvement' ? 'bg-green-500/10' :
+                        className={`p-3 rounded-lg flex items-center gap-3 ${insight.type === 'improvement' ? 'bg-green-500/10' :
                           insight.type === 'worsening' ? 'bg-red-500/10' :
-                          'bg-muted/50'
-                        }`}
+                            'bg-muted/50'
+                          }`}
                       >
                         <span className="text-xl">{insight.icon}</span>
                         <p className="text-sm">{insight.text}</p>
@@ -459,8 +467,8 @@ export default function PainMapHistoryPage() {
                                   </p>
                                   <Badge variant={
                                     painMap.global_pain_level <= 3 ? 'secondary' :
-                                    painMap.global_pain_level <= 6 ? 'default' :
-                                    'destructive'
+                                      painMap.global_pain_level <= 6 ? 'default' :
+                                        'destructive'
                                   }>
                                     {painMap.global_pain_level}/10
                                   </Badge>

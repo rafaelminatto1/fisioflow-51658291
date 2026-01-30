@@ -564,5 +564,5 @@ export function SwipeActionItem({ children, actions }: SwipeActionItemProps) {
       >
         {children}
       </div>
-    </div  );
+    </div>);
 }

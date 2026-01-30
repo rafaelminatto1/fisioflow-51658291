@@ -26,6 +26,16 @@ interface AudioTranscriptionProps {
   }) => void;
 }
 
+interface TranscriptionResponse {
+  error?: string;
+  soapData?: {
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+  };
+}
+
 export function AudioTranscription({ patientId, onTranscriptionComplete }: AudioTranscriptionProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -136,7 +146,7 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
           patientId
         });
 
-        const data = result.data as any;
+        const data = result.data as TranscriptionResponse;
 
         if (data?.error) {
           throw new Error(data.error);

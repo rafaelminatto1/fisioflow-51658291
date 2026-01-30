@@ -11,6 +11,14 @@ import { PreCadastroStats } from '@/components/precadastro/PreCadastroStats';
 import { PreCadastroList } from '@/components/precadastro/PreCadastroList';
 import { LinkManagement } from '@/components/precadastro/LinkManagement';
 
+interface NewTokenData {
+  nome?: string;
+  descricao?: string;
+  max_usos?: string | number;
+  validade_dias: string | number;
+  campos_obrigatorios: string[];
+  campos_opcionais: string[];
+}
 
 const PreCadastroAdmin = () => {
   const { user } = useAuth();
@@ -39,7 +47,7 @@ const PreCadastroAdmin = () => {
 
   // Create token mutation
   const createToken = useMutation({
-    mutationFn: async (newToken: any) => {
+    mutationFn: async (newToken: NewTokenData) => {
       if (!user?.uid) throw new Error('Usuário não autenticado');
 
       const organizationId = orgData?.id;

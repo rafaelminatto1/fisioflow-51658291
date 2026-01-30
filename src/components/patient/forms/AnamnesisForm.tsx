@@ -67,7 +67,7 @@ interface AnamnesisFormProps {
 }
 
 export const AnamnesisForm = ({ data, onChange, readOnly = false }: AnamnesisFormProps) => {
-    const handleChange = (field: keyof AnamnesisFormData, value: any) => {
+    const handleChange = (field: keyof AnamnesisFormData, value: string | number | boolean | string[]) => {
         onChange({ ...data, [field]: value });
     };
 

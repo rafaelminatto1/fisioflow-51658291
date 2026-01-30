@@ -34,6 +34,8 @@ import {
   exerciseVideosService,
   MAX_VIDEO_SIZE,
   ALLOWED_VIDEO_EXTENSIONS,
+  VideoCategory,
+  VideoDifficulty,
 } from '@/services/exerciseVideos';
 
 export interface ExerciseVideoUploadProps {
@@ -236,8 +238,8 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
           description: description.trim() || undefined,
           file: videoFile,
           thumbnail: thumbnailFile || undefined,
-          category: category as any,
-          difficulty: difficulty as any,
+          category: category as VideoCategory,
+          difficulty: difficulty as VideoDifficulty,
           body_parts: selectedBodyParts,
           equipment: selectedEquipment,
         },

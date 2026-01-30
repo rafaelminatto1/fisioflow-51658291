@@ -30,6 +30,8 @@ export interface Organization {
   name: string;
   slug: string;
   settings: Record<string, unknown>;
+  address?: string;
+  logo_url?: string;
   active: boolean;
   created_at: string;
   updated_at: string;

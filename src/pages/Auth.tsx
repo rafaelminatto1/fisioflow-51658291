@@ -159,9 +159,9 @@ export default function Auth() {
       const { signInWithOAuth } = await import('@/integrations/firebase/auth');
       await signInWithOAuth('google');
       // On success, the onAuthStateChange in AuthContextProvider will trigger
-    } catch (err: any) {
+    } catch (err) {
       logger.error('Erro no login com Google', err, 'Auth');
-      const errorMessage = err.message || 'Erro ao conectar com Google.';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao conectar com Google.';
       setError(errorMessage);
       toast({
         title: 'Erro no login',
@@ -180,9 +180,9 @@ export default function Auth() {
     try {
       const { signInWithOAuth } = await import('@/integrations/firebase/auth');
       await signInWithOAuth('github');
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Erro no login com GitHub', err, 'Auth');
-      const errorMessage = err.message || 'Erro ao conectar com GitHub.';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao conectar com GitHub.';
       setError(errorMessage);
       toast({
         title: 'Erro no login',
@@ -194,15 +194,12 @@ export default function Auth() {
     }
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignIn = async (data: { email: string; password: string }) => {
     setLoading(true);
     setError('');
 
-
-
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(data.email, data.password);
 
       if (error) {
         setError(error.message);
@@ -390,10 +387,7 @@ export default function Auth() {
             <TabsContent value="login" className="space-y-5 mt-6 focus-visible:outline-none">
               <LoginForm
                 onSubmit={handleSignIn}
-                email={email}
-                onEmailChange={handleEmailChange}
-                password={password}
-                onPasswordChange={handlePasswordChange}
+                defaultEmail={email}
                 loading={loading}
                 error={error}
                 activeTab={activeTab}

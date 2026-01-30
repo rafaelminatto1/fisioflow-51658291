@@ -33,6 +33,12 @@ import {
   formatSessionDuration,
 } from '@fisioflow/shared-api/firebase/ai/live-config';
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -254,7 +260,7 @@ export class VoiceAssistant {
     if (!this.session) throw new Error('No active session');
 
     // Create audio context
-    this.session.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+    this.session.audioContext = new (window.AudioContext || window.webkitAudioContext)({
       sampleRate: this.session.config.audio.outputSampleRate,
     });
 

@@ -18,9 +18,22 @@ import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/Rec
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, getDoc, limit } from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+
+// Type definitions
+interface PatientSelect {
+  id: string;
+  full_name: string;
+  cpf?: string;
+}
+
+interface OrganizationData {
+  name?: string;
+  address?: string;
+  logo_url?: string;
+}
 
 export default function RecibosPage() {
   const { user } = useAuth();
@@ -57,11 +70,9 @@ export default function RecibosPage() {
   const { data: pacientes = [] } = useQuery({
     queryKey: ['pacientes-select'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('patients')
-        .select('id, full_name, cpf, email, phone')
-        .order('full_name');
-      return data || [];
+      const q = query(collection(db, 'patients'), orderBy('full_name'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as PatientSelect[];
     },
   });
 
@@ -74,12 +85,9 @@ export default function RecibosPage() {
     e.preventDefault();
 
     // Buscar último número de recibo
-    const { data: ultimoRecibo } = await supabase
-      .from('recibos')
-      .select('numero_recibo')
-      .order('numero_recibo', { ascending: false })
-      .limit(1)
-      .single();
+    const q = query(collection(db, 'recibos'), orderBy('numero_recibo', 'desc'), limit(1));
+    const snapshot = await getDocs(q);
+    const ultimoRecibo = snapshot.empty ? null : snapshot.docs[0].data();
 
     const novoNumero = (ultimoRecibo?.numero_recibo || 0) + 1;
     const valorNumerico = parseFloat(formData.valor);
@@ -89,14 +97,14 @@ export default function RecibosPage() {
     let pagadorCpf = formData.cpf_cnpj_pagador;
 
     if (formData.patient_id) {
-      const paciente = pacientes.find(p => p.id === formData.patient_id);
+      const paciente = pacientes.find((p) => p.id === formData.patient_id);
       if (paciente) {
         pagadorNome = paciente.full_name;
         if (!pagadorCpf) pagadorCpf = paciente.cpf;
       }
     }
 
-    const novoRecibo: Omit<ReciboData, 'numero' | 'dataEmissao'> & { numero?: number } = {
+    const novoRecibo: ReciboData = {
       numero: novoNumero,
       valor: valorNumerico,
       valor_extenso: valorPorExtenso(valorNumerico),
@@ -109,14 +117,14 @@ export default function RecibosPage() {
         cpfCnpj: clinicaConfig?.profile?.cpf_cnpj,
         telefone: clinicaConfig?.profile?.phone,
         email: clinicaConfig?.profile?.email,
-        endereco: clinicaConfig?.org?.address,
+        endereco: (clinicaConfig?.org as OrganizationData | undefined)?.address,
       },
       pagador: pagadorNome ? {
         nome: pagadorNome,
         cpfCnpj: pagadorCpf,
       } : undefined,
       assinado: true,
-      logoUrl: clinicaConfig?.org?.logo_url,
+      logoUrl: (clinicaConfig?.org as OrganizationData | undefined)?.logo_url,
     };
 
     // Salvar no banco
@@ -155,7 +163,7 @@ export default function RecibosPage() {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'lista' | 'criar' | 'config')}>
           <TabsList>
             <TabsTrigger value="lista">Lista de Recibos</TabsTrigger>
             <TabsTrigger value="criar">Criar Recibo</TabsTrigger>
@@ -208,7 +216,7 @@ export default function RecibosPage() {
                           dataEmissao: recibo.data_emissao,
                           emitente: {
                             nome: recibo.emitido_por,
-                            cpfCnpj: recibo.cpf_cnpj_emitente,
+                            cpfCnpj: recibo.cpf_cnpj_emitente || undefined,
                           },
                           assinado: recibo.assinado,
                         };
@@ -268,7 +276,7 @@ export default function RecibosPage() {
                         <SelectValue placeholder="Selecione o paciente" />
                       </SelectTrigger>
                       <SelectContent>
-                        {pacientes.map(p => (
+                        {pacientes.map((p: PatientSelect) => (
                           <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
                         ))}
                       </SelectContent>

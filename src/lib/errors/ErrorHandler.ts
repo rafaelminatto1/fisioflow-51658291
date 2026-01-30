@@ -242,12 +242,12 @@ export const ErrorHandler = {
     /**
      * Wrap a function with error handling
      */
-    wrap<T extends (...args: any[]) => any>(
+    wrap<T extends (...args: unknown[]) => unknown>(
         fn: T,
         context?: string,
         options?: ErrorNotificationOptions
     ): T {
-        return ((...args: any[]) => {
+        return ((...args: unknown[]) => {
             try {
                 const result = fn(...args);
                 // Handle async functions

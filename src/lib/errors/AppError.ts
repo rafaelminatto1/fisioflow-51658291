@@ -229,17 +229,18 @@ export class SupabaseError extends AppError {
     /**
      * Create from Supabase Postgres error
      */
-    static fromPostgresError(error: any): SupabaseError {
-        const code = error.code || 'UNKNOWN_ERROR';
-        const message = error.message || 'Erro no banco de dados';
-        const details = error.details || undefined;
-        const hint = error.hint || undefined;
+    static fromPostgresError(error: unknown): SupabaseError {
+        const code = (error as { code?: string })?.code || 'UNKNOWN_ERROR';
+        const message = (error as { message?: string })?.message || 'Erro no banco de dados';
+        const details = (error as { details?: string })?.details || undefined;
+        const hint = (error as { hint?: string })?.hint || undefined;
 
         const context: Record<string, unknown> = {};
         if (details) context.details = details;
         if (hint) context.hint = hint;
-        if (error.table) context.table = error.table;
-        if (error.column) context.column = error.column;
+        const err = error as { table?: string; column?: string };
+        if (err.table) context.table = err.table;
+        if (err.column) context.column = err.column;
 
         // Map Postgres error codes to AppError types
         switch (code) {
@@ -263,9 +264,10 @@ export class SupabaseError extends AppError {
     /**
      * Create from Supabase Auth error
      */
-    static fromAuthError(error: any): SupabaseError {
-        const message = error.message || 'Erro de autenticação';
-        const status = error.status || 500;
+    static fromAuthError(error: unknown): SupabaseError {
+        const authError = error as { message?: string; status?: number };
+        const message = authError.message || 'Erro de autenticação';
+        const status = authError.status || 500;
 
         // Map common auth errors
         if (message.includes('Invalid login credentials')) {

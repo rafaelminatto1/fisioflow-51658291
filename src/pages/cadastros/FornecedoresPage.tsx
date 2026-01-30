@@ -260,9 +260,9 @@ export default function FornecedoresPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tipo de Pessoa</Label>
-                  <Select 
-                    value={watch('tipo_pessoa')} 
-                    onValueChange={(v) => setValue('tipo_pessoa', v as any)}
+                  <Select
+                    value={watch('tipo_pessoa')}
+                    onValueChange={(v) => setValue('tipo_pessoa', v as 'pj' | 'pf')}
                   >
                     <SelectTrigger>
                       <SelectValue />

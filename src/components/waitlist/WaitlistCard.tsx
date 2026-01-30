@@ -66,7 +66,7 @@ export function WaitlistCard({
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">{entry.patient?.name || 'Paciente'}</span>
-              <Badge variant={priorityConfig.color as any}>
+              <Badge variant={priorityConfig.color as "default" | "secondary" | "destructive" | "outline"}>
                 {priorityConfig.label}
               </Badge>
               {entry.refusal_count > 0 && (

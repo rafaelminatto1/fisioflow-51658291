@@ -263,9 +263,9 @@ export default function FeriadosPage() {
 
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <Select 
-                    value={watch('tipo')} 
-                    onValueChange={(v) => setValue('tipo', v as any)}
+                  <Select
+                    value={watch('tipo')}
+                    onValueChange={(v) => setValue('tipo', v as 'nacional' | 'estadual' | 'municipal' | 'ponto_facultativo')}
                   >
                     <SelectTrigger>
                       <SelectValue />

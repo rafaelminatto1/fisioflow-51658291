@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps, AreaChart, Area } from 'recharts';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { cn } from '@/lib/utils';
 
 // Custom Tooltip Component
 const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<any, any>) => {
@@ -174,7 +175,7 @@ export const GamificationDashboard: React.FC = () => {
                     <span className="text-2xl font-bold">{stats?.totalXpAwarded?.toLocaleString() || 0}</span>
                     <span className="text-xs text-muted-foreground">pontos</span>
                   </div>
-                  <Progress value={75} className="h-1 mt-3 bg-yellow-500/20" indicatorClassName="bg-yellow-500" />
+                  <Progress value={75} className="h-1 mt-3 bg-yellow-500/20 [&>div]:bg-yellow-500" />
                 </CardContent>
               </Card>
             </AnimatedCard>
@@ -314,8 +315,13 @@ export const GamificationDashboard: React.FC = () => {
                         </div>
                         <Progress
                           value={(achievement.count / maxAchievements) * 100}
-                          className="h-2"
-                          indicatorClassName={index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : index === 2 ? "bg-orange-600" : "bg-primary/50"}
+                          className={cn(
+                            "h-2",
+                            index === 0 && "[&>div]:bg-yellow-500",
+                            index === 1 && "[&>div]:bg-gray-400",
+                            index === 2 && "[&>div]:bg-orange-600",
+                            index > 2 && "[&>div]:bg-primary/50"
+                          )}
                         />
                       </div>
                     ))}
