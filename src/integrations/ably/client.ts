@@ -4,6 +4,7 @@
  */
 
 import * as Ably from 'ably';
+import { logger } from '@/lib/errors/logger';
 
 const ABLY_KEY = import.meta.env.VITE_ABLY_API_KEY;
 
@@ -25,7 +26,7 @@ export function isAblyConfigured(): boolean {
 export function getAblyClient(): Ably.Realtime {
     if (!ablyClient) {
         if (!isAblyAvailable) {
-            console.warn('[Ably] VITE_ABLY_API_KEY não configurada. Realtime desativado (usando mock).');
+            logger.warn('[Ably] VITE_ABLY_API_KEY não configurada. Realtime desativado (usando mock).', undefined, 'ably-client');
             // Create a mock client that doesn't connect but provides the same interface
             ablyClient = new Ably.Realtime({
                 key: 'mock:mock',
