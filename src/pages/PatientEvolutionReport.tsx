@@ -10,6 +10,7 @@ import { LoadingSkeleton, EmptyState } from "@/components/ui";
 import { generateEvolutionPDF } from "@/lib/export/evolutionPdfExport";
 import { toast } from "sonner";
 import { PatientHelpers } from "@/types";
+import { logger } from "@/lib/errors/logger";
 
 const PatientEvolutionReport = () => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -53,7 +54,7 @@ const PatientEvolutionReport = () => {
       pdf.save(`evolucao-${patientName.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
+      logger.error('Erro ao gerar PDF', error, 'PatientEvolutionReport');
       toast.error('Erro ao gerar PDF');
     }
   };
