@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Exercise } from '../types/models';
+import { logger } from '../lib/logger';
 
 /**
  * Interfaces
@@ -76,7 +77,7 @@ export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesR
       categories: categoriesResult.rows.map((r: { category: string }) => r.category),
     };
   } catch (error: unknown) {
-    console.error('Error in listExercises:', error);
+    logger.error('Error in listExercises:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar exercícios';
     throw new HttpsError('internal', errorMessage);
@@ -116,7 +117,7 @@ export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseRespons
 
     return { data: result.rows[0] as Exercise };
   } catch (error: unknown) {
-    console.error('Error in getExercise:', error);
+    logger.error('Error in getExercise:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercício';
     throw new HttpsError('internal', errorMessage);
@@ -186,7 +187,7 @@ export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Prom
 
     return { data: result.rows as Exercise[] };
   } catch (error: unknown) {
-    console.error('Error in searchSimilarExercises:', error);
+    logger.error('Error in searchSimilarExercises:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercícios similares';
     throw new HttpsError('internal', errorMessage);
@@ -220,7 +221,7 @@ export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesRes
       })),
     };
   } catch (error: unknown) {
-    console.error('Error in getExerciseCategories:', error);
+    logger.error('Error in getExerciseCategories:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar categorias';
     throw new HttpsError('internal', errorMessage);
@@ -278,7 +279,7 @@ export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseRespons
 
     return { data: result.rows[0] };
   } catch (error: unknown) {
-    console.error('Error in logExercise:', error);
+    logger.error('Error in logExercise:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao registrar exercício';
     throw new HttpsError('internal', errorMessage);
@@ -352,7 +353,7 @@ export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Prom
 
     return { data };
   } catch (error: unknown) {
-    console.error('Error in getPrescribedExercises:', error);
+    logger.error('Error in getPrescribedExercises:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prescrições';
     throw new HttpsError('internal', errorMessage);
@@ -427,7 +428,7 @@ export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerci
 
     return { data: result.rows[0] as Exercise };
   } catch (error: unknown) {
-    console.error('Error in createExercise:', error);
+    logger.error('Error in createExercise:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar exercício';
     throw new HttpsError('internal', errorMessage);
@@ -478,7 +479,7 @@ export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exer
 
     return { data: result.rows[0] as Exercise };
   } catch (error: unknown) {
-    console.error('Error in updateExercise:', error);
+    logger.error('Error in updateExercise:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar exercício';
     throw new HttpsError('internal', errorMessage);
@@ -520,7 +521,7 @@ export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: b
 
     return { success: true };
   } catch (error: unknown) {
-    console.error('Error in deleteExercise:', error);
+    logger.error('Error in deleteExercise:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir exercício';
     throw new HttpsError('internal', errorMessage);
@@ -580,7 +581,7 @@ export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: b
     return { success: true, deletedCount: deleteResult.rowCount || 0 };
   } catch (err: unknown) {
     await pool.query('ROLLBACK');
-    console.error('Error in mergeExercises:', err);
+    logger.error('Error in mergeExercises:', err);
     const errorMessage = err instanceof Error ? err.message : 'Erro ao unir exercícios';
     throw new HttpsError('internal', errorMessage);
   }
