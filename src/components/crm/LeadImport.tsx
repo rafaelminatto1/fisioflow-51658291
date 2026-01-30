@@ -10,6 +10,7 @@ import { useDropzone } from 'react-dropzone';
 import { useCallback } from 'react';
 import { useImportLeads } from '@/hooks/useCRM';
 import * as XLSX from 'xlsx';
+import { logger } from '@/lib/errors/logger';
 
 interface LeadPreview {
   nome: string;
@@ -60,7 +61,7 @@ export function LeadImport() {
         setPreviewData(previews);
         setIsDialogOpen(true);
       } catch (error) {
-        console.error('Error processing file:', error);
+        logger.error('Error processing file', error, 'LeadImport');
       }
     };
     

@@ -19,6 +19,7 @@ import {
   calculatePainMapStatistics,
   type PainMapExportData,
 } from '@/lib/utils/painMapExport';
+import { logger } from '@/lib/errors/logger';
 
 interface PainMapToolbarProps {
   patientName: string;
@@ -52,7 +53,7 @@ export function PainMapToolbar({
       toast.success(`Relatório exportado em ${format.toUpperCase()}`);
     } catch (error) {
       toast.error('Erro ao exportar relatório');
-      console.error(error);
+      logger.error('Error exporting pain map report', error, 'PainMapToolbar');
     }
   };
 
@@ -71,7 +72,7 @@ export function PainMapToolbar({
       toast.success('Relatório PDF exportado com sucesso');
     } catch (error) {
       toast.error('Erro ao exportar PDF');
-      console.error(error);
+      logger.error('Error exporting pain map PDF', error, 'PainMapToolbar');
     }
   };
 
@@ -90,7 +91,7 @@ export function PainMapToolbar({
       toast.success('Relatório enviado para impressão');
     } catch (error) {
       toast.error('Erro ao imprimir relatório');
-      console.error(error);
+      logger.error('Error printing pain map report', error, 'PainMapToolbar');
     }
   };
 
@@ -117,7 +118,7 @@ export function PainMapToolbar({
       }
     } catch (error) {
       toast.error('Erro ao copiar relatório');
-      console.error(error);
+      logger.error('Error copying pain map report', error, 'PainMapToolbar');
     }
   };
 
