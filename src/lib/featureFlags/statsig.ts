@@ -6,6 +6,7 @@
  */
 
 import * as React from 'react';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -84,7 +85,7 @@ export async function initStatsig(
   _sdkKey?: string,
   _user?: StatsigUser
 ): Promise<boolean> {
-  console.info('[FeatureFlags] Using static defaults (Statsig removed)');
+  logger.info('[FeatureFlags] Using static defaults (Statsig removed)', undefined, 'statsig');
   isInitialized = true;
   return true;
 }
