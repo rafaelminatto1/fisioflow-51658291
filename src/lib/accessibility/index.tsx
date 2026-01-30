@@ -6,6 +6,8 @@
  * @module lib/accessibility
  */
 
+import React from 'react';
+
 /**
  * Announces messages to screen readers via ARIA live regions
  */
