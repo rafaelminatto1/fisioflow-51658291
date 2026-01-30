@@ -1,7 +1,6 @@
 import { init as coreInit } from '@cornerstonejs/core';
 import { init as toolsInit } from '@cornerstonejs/tools';
 import { logger } from '@/lib/errors/logger';
-// import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
 
 let initialized = false;
 
