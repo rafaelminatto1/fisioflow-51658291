@@ -1,6 +1,7 @@
 // Utilitário para adicionar gráficos aos PDFs usando Chart.js e html2canvas
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { logger } from '@/lib/errors/logger';
 
 export interface ChartData {
   labels: string[];
@@ -183,7 +184,7 @@ export async function addChartJSChartToPDF(
 
     return y + height + 10;
   } catch (error) {
-    console.error('Erro ao converter gráfico para PDF:', error);
+    logger.error('Erro ao converter gráfico para PDF', error, 'pdfCharts');
     throw error;
   }
 }

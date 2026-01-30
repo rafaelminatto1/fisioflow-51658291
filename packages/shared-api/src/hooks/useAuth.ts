@@ -74,7 +74,7 @@ export function useAuth(): UseAuthReturn {
           // User is signed in
           try {
             // Fetch user data from Firestore
-            const userDoc = await getDoc(doc(db, COLLECTIONS.users, firebaseUser.uid));
+            const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, firebaseUser.uid));
 
             if (userDoc.exists()) {
               const userData = userDoc.data() as UserData;
@@ -146,7 +146,7 @@ export function useAuth(): UseAuthReturn {
     if (!state.user) return;
 
     try {
-      const userDoc = await getDoc(doc(db, COLLECTIONS.users, state.user.uid));
+      const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, state.user.uid));
 
       if (userDoc.exists()) {
         const userData = userDoc.data() as UserData;
@@ -210,7 +210,7 @@ export function useUserData(userId?: string) {
     setError(null);
 
     const unsubscribe = onSnapshot(
-      doc(db, COLLECTIONS.users, targetUserId),
+      doc(db, COLLECTIONS.USERS, targetUserId),
       (doc) => {
         if (doc.exists()) {
           setUserData(doc.data() as UserData);

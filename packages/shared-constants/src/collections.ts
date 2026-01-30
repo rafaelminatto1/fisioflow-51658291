@@ -15,6 +15,10 @@ export const COLLECTIONS = {
   PAYMENTS: 'payments',
   NOTIFICATIONS: 'notifications',
   ACHIEVEMENTS: 'achievements',
+  // Progress tracking collections
+  EXERCISE_PROGRESS: 'exercise_progress',
+  PATIENT_PROGRESS: 'patient_progress',
+  DAILY_STATS: 'daily_stats',
 } as const;
 
 // Exercise Categories
