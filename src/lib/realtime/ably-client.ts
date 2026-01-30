@@ -4,6 +4,7 @@
  */
 
 import * as Ably from 'ably';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Configuração do Ably
@@ -11,7 +12,7 @@ import * as Ably from 'ably';
 const ABLY_API_KEY = import.meta.env.VITE_ABLY_API_KEY;
 
 if (!ABLY_API_KEY) {
-  console.warn('VITE_ABLY_API_KEY não configurada. Realtime não funcionará.');
+  logger.warn('VITE_ABLY_API_KEY não configurada. Realtime não funcionará.', undefined, 'ably-client');
 }
 
 /**
@@ -84,19 +85,19 @@ export function getAblyClient(): Ably.Realtime {
 
     // Logs de conexão (remover em produção)
     ablyClient.connection.on('connected', () => {
-      console.log('[Ably] Conectado');
+      logger.info('[Ably] Conectado', undefined, 'ably-client');
     });
 
     ablyClient.connection.on('disconnected', () => {
-      console.log('[Ably] Desconectado temporariamente');
+      logger.info('[Ably] Desconectado temporariamente', undefined, 'ably-client');
     });
 
     ablyClient.connection.on('suspended', () => {
-      console.warn('[Ably] Conexão suspensa');
+      logger.warn('[Ably] Conexão suspensa', undefined, 'ably-client');
     });
 
     ablyClient.connection.on('failed', (err) => {
-      console.error('[Ably] Falha na conexão:', err);
+      logger.error('[Ably] Falha na conexão', err, 'ably-client');
     });
   }
 
