@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   collection,
   doc,
@@ -89,7 +90,7 @@ export const useOrganizations = () => {
       const orgSnap = await getDoc(orgRef);
 
       if (!orgSnap.exists()) {
-        console.warn('Organization not found for ID:', organizationId);
+        logger.warn('Organization not found for ID', { organizationId }, 'useOrganizations');
         return null;
       }
 
