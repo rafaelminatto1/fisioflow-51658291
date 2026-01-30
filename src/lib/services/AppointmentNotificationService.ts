@@ -116,13 +116,13 @@ export class AppointmentNotificationService {
       logger.info('Notificando cancelamento', { appointmentId }, 'AppointmentNotificationService');
 
       // TODO: Implement Firebase Cloud Function call
-      console.log('[AppointmentNotificationService] notifyCancellation:', {
+      logger.debug('[AppointmentNotificationService] notifyCancellation:', {
         appointmentId,
         patientId,
         date: date.toLocaleDateString('pt-BR'),
         time,
         patientName,
-      });
+      }, 'AppointmentNotificationService');
 
       logger.info('Notificação de cancelamento enviada (placeholder)', { appointmentId }, 'AppointmentNotificationService');
       return { success: true, appointmentId };
