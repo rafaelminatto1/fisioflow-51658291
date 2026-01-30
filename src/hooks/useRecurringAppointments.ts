@@ -392,7 +392,7 @@ export function useCreateRecurringSeries() {
       });
     },
     onError: (error) => {
-      console.error('Erro ao criar série recorrente:', error);
+      logger.error('Erro ao criar série recorrente', error, 'useRecurringAppointments');
       toast({
         title: '❌ Erro ao criar série',
         description: error.message,

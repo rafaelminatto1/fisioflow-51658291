@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 // Interfaces para o Chatbot
 interface ChatMessage {
@@ -499,7 +500,7 @@ export const useMedicalChatbot = () => {
       setCurrentSession(updatedSession);
       
       // Salvar sessão (mock)
-      console.log('Sessão finalizada:', updatedSession);
+      logger.info('Sessão finalizada', updatedSession, 'useMedicalChatbot');
     }
   }, [currentSession, messages]);
 

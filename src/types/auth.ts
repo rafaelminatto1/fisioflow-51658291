@@ -1,6 +1,6 @@
 // Tipos para autenticação e perfis
 
-export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente' | 'parceiro' | 'recepcionista';
+export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente' | 'parceiro' | 'recepcionista' | 'pending';
 
 export interface AvailableHours {
   [day: string]: {

@@ -61,6 +61,7 @@ exports.clinicalAnalysis = (0, https_1.onCall)({
     cors: true,
     region: 'southamerica-east1',
     memory: '1GiB',
+    cpu: 1,
     maxInstances: 10,
 }, async (request) => {
     const startTime = Date.now();

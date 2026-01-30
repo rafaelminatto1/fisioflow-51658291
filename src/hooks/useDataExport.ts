@@ -18,6 +18,7 @@ import {
   query,
   where
 } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 export function useDataExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -70,7 +71,7 @@ export function useDataExport() {
       });
 
     } catch (error) {
-      console.error('Export erro:', error);
+      logger.error('Export erro', error, 'useDataExport');
       toast({
         title: "Erro na exportação",
         description: "Não foi possível gerar o arquivo de dados.",

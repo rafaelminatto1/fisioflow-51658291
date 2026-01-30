@@ -24,6 +24,7 @@ import {
 } from '@/lib/waitlist/smart-waitlist';
 import { db } from '@/integrations/firebase/app';
 import { doc, updateDoc } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 
 // =====================================================================
@@ -238,10 +239,10 @@ export function useAutoOfferSlots() {
       const failCount = results.filter(r => !r.success).length;
 
       if (successCount > 0) {
-        console.log(`[useAutoOfferSlots] ${successCount} ofertas enviadas com sucesso`);
+        logger.info(`[useAutoOfferSlots] ${successCount} ofertas enviadas com sucesso`, undefined, 'useSmartWaitlist');
       }
       if (failCount > 0) {
-        console.warn(`[useAutoOfferSlots] ${failCount} ofertas falharam`);
+        logger.warn(`[useAutoOfferSlots] ${failCount} ofertas falharam`, undefined, 'useSmartWaitlist');
       }
     },
   });

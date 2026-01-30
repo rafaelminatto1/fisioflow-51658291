@@ -33,6 +33,7 @@ import {
   orderBy,
   limit
 } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 const auth = getAuth();
 
@@ -525,7 +526,7 @@ export function usePatientEvolutionData() {
                 description: 'Sessão de fisioterapia concluída'
               });
             } catch (e) {
-              console.error("Failed to award XP", e);
+              logger.error("Failed to award XP", e, 'usePatientEvolution');
             }
           }
           setTimeout(() => navigate('/schedule'), 1500);

@@ -502,7 +502,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 
       return actions.filter((a) => canRetryAction(a.retryCount, maxRetryAttempts));
     } catch (error) {
-      console.error('[OfflineStorage] Error getting pending actions:', error);
+      logger.error('[OfflineStorage] Error getting pending actions', error, 'useOfflineStorage');
       return [];
     }
   }, [maxRetryAttempts]);
@@ -552,7 +552,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
           }
 
           result.failed++;
-          console.error('[OfflineStorage] Action failed:', action, error);
+          logger.error('[OfflineStorage] Action failed', error, 'useOfflineStorage');
         }
       }
 
@@ -568,7 +568,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         });
       }
     } catch (error) {
-      console.error('[OfflineStorage] Sync error:', error);
+      logger.error('[OfflineStorage] Sync error', error, 'useOfflineStorage');
       result.skipped = pendingActions;
     } finally {
       syncInProgress.current = false;
@@ -601,7 +601,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         // POST /api/patient-risk-scores
         break;
       default:
-        console.warn('[OfflineStorage] Unknown action type:', actionType);
+        logger.warn('[OfflineStorage] Unknown action type', { actionType }, 'useOfflineStorage');
     }
 
     // Simulate API call delay
@@ -633,7 +633,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
           expiresAt: Date.now() + expiryMs,
         });
       } catch (error) {
-        console.error('[OfflineStorage] Error caching session data:', error);
+        logger.error('[OfflineStorage] Error caching session data', error, 'useOfflineStorage');
         throw error;
       }
     },
@@ -661,7 +661,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 
         return cached.data;
       } catch (error) {
-        console.error('[OfflineStorage] Error getting cached session data:', error);
+        logger.error('[OfflineStorage] Error getting cached session data', error, 'useOfflineStorage');
         return null;
       }
     },
@@ -677,7 +677,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       const db = await getDB();
       await db.delete('session_cache', sessionId);
     } catch (error) {
-      console.error('[OfflineStorage] Error removing session data:', error);
+      logger.error('[OfflineStorage] Error removing session data', error, 'useOfflineStorage');
     }
   }, []);
 
@@ -705,7 +705,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 
       return expiredKeys.length;
     } catch (error) {
-      console.error('[OfflineStorage] Error clearing expired sessions:', error);
+      logger.error('[OfflineStorage] Error clearing expired sessions', error, 'useOfflineStorage');
       return 0;
     }
   }, []);
@@ -732,7 +732,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       const pending = await index.count(false);
       setPendingActions(pending);
     } catch (error) {
-      console.error('[OfflineStorage] Error loading cache stats:', error);
+      logger.error('[OfflineStorage] Error loading cache stats', error, 'useOfflineStorage');
     }
   }, [getAllCachedPatients]);
 
@@ -747,7 +747,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       await loadCacheStats();
       toast.success('Cache limpo com sucesso');
     } catch (error) {
-      console.error('[OfflineStorage] Error clearing cache:', error);
+      logger.error('[OfflineStorage] Error clearing cache', error, 'useOfflineStorage');
       toast.error('Erro ao limpar cache');
       throw error;
     }
@@ -776,7 +776,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       }
       return null;
     } catch (error) {
-      console.error('[OfflineStorage] Error getting storage size:', error);
+      logger.error('[OfflineStorage] Error getting storage size', error, 'useOfflineStorage');
       return null;
     }
   }, []);
@@ -816,7 +816,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         })),
       };
     } catch (error) {
-      console.error('[OfflineStorage] Error exporting data:', error);
+      logger.error('[OfflineStorage] Error exporting data', error, 'useOfflineStorage');
       throw error;
     }
   }, []);
@@ -844,7 +844,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 
       return clearedCount;
     } catch (error) {
-      console.error('[OfflineStorage] Error clearing failed actions:', error);
+      logger.error('[OfflineStorage] Error clearing failed actions', error, 'useOfflineStorage');
       return 0;
     }
   }, [maxRetryAttempts, loadCacheStats]);

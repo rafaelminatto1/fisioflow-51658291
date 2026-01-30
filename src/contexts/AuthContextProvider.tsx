@@ -60,102 +60,61 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   /**
-   * Garante que o perfil exista no Firestore (defensivo)
+   * Waits for the profile to be created by the backend trigger
    */
-  const ensureProfile = async (firebaseUser: User) => {
+  const waitForProfile = async (firebaseUser: User, attempts = 0): Promise<Profile | null> => {
     try {
       const profileRef = doc(db, 'profiles', firebaseUser.uid);
       const profileSnap = await getDoc(profileRef);
 
-      if (!profileSnap.exists()) {
-        // Obter ou criar organização padrão
-        const organizationId = await getOrCreateDefaultOrganization();
-
-        if (!organizationId) {
-          logger.error('Não foi possível obter ou criar organização para o usuário', null, 'AuthContextProvider');
-          return null;
-        }
-
-        // Definição do papel baseada no email (Admin Bootstrap)
-        const defaultRole = firebaseUser.email === 'rafael.minatto@yahoo.com.br' ? 'admin' : 'fisioterapeuta';
-
-        // Criar perfil se não existir
-        await setDoc(profileRef, {
-          user_id: firebaseUser.uid,
-          full_name: firebaseUser.displayName || 'Usuário',
-          email: firebaseUser.email || null,
-          role: defaultRole,
-          avatar_url: firebaseUser.photoURL || null,
-          phone: null,
-          organization_id: organizationId,
-          onboarding_completed: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        // Retornar dados iniciais
-        return {
-          id: profileRef.id,
-          user_id: firebaseUser.uid,
-          full_name: firebaseUser.displayName || 'Usuário',
-          email: firebaseUser.email || undefined,
-          role: defaultRole,
-          phone: undefined,
-          organization_id: organizationId,
-          onboarding_completed: false,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as Profile;
+      if (profileSnap.exists()) {
+        return { id: profileSnap.id, ...profileSnap.data() } as Profile;
       }
-      return { id: profileSnap.id, ...profileSnap.data() } as Profile;
+
+      // If profile doesn't exist yet, wait and retry (logic handled in fetchProfile recursion)
+      // This is expected immediately after registration while the backend trigger runs
+      return null;
     } catch (err) {
-      logger.error('Erro ao garantir perfil', err, 'AuthContextProvider');
+      logger.error('Error fetching profile', err, 'AuthContextProvider');
       return null;
     }
   };
 
-  const fetchProfile = useCallback(async (firebaseUser: User): Promise<Profile | null> => {
+  const fetchProfile = useCallback(async (firebaseUser: User, attempt = 1): Promise<Profile | null> => {
     try {
-      // TEMPORÁRIO: Usar Firestore para profile como fonte primária
-      // TODO: Migrar completamente para Firebase Functions/PostgreSQL quando Cloud SQL estiver 100% estável
-      logger.debug('Fetching profile from Firestore', null, 'AuthContextProvider');
-      const profile = await ensureProfile(firebaseUser);
+      logger.debug(`Fetching profile from Firestore (Attempt ${attempt})`, null, 'AuthContextProvider');
+      const profile = await waitForProfile(firebaseUser);
 
       if (profile) {
-        // Tentar sincronizar organization_id com PostgreSQL em background
-        // Importante: PostgreSQL é a autoridade para organization_id em multi-tenancy
+        // Sync organization logic (kept from original)
         profileApi.getCurrent().then(pgProfile => {
-          if (!pgProfile) {
-            logger.warn('PostgreSQL profile not found during sync', null, 'AuthContextProvider');
-            return;
-          }
+          if (!pgProfile || !profile) return;
 
           const hasOrgChanged = pgProfile.organization_id &&
             (!profile.organization_id || profile.organization_id !== pgProfile.organization_id);
 
           if (hasOrgChanged) {
-            logger.info('Syncing organization_id from PostgreSQL', { organization_id: pgProfile.organization_id }, 'AuthContextProvider');
-
-            // Atualizar Firestore para manter consistência e permitir cache offline
             const profileRef = doc(db, 'profiles', firebaseUser.uid);
             updateDoc(profileRef, {
               organization_id: pgProfile.organization_id,
               updated_at: new Date().toISOString()
-            }).catch(err => {
-              logger.error('Failed to sync PostgreSQL organization_id to Firestore', err, 'AuthContextProvider');
-            });
-
-            // Atualizar estado local
-            setProfile(prev => prev ? { ...prev, organization_id: pgProfile.organization_id } : null);
+            }).catch(err => console.error(err));
           }
-        }).catch(err => {
-          // Registrar erro mas não bloquear o login, pois o Firestore ainda serve como fallback funcional
-          logger.warn('Background profile sync with PostgreSQL failed', err, 'AuthContextProvider');
-        });
-      }
+        }).catch(err => logger.warn('PG Sync failed', err));
 
-      return profile;
+        return profile;
+      } else {
+        // Profile not found yet. If this is a new registration, it might take a moment.
+        // Retry a few times with delay
+        if (attempt < 5) {
+          logger.info(`Profile not found, retrying... (${attempt}/5)`, null, 'AuthContextProvider');
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+          return fetchProfile(firebaseUser, attempt + 1);
+        }
+
+        logger.warn('Profile not found after retries. Backend trigger might be slow or failed.', null, 'AuthContextProvider');
+        return null;
+      }
     } catch (err) {
       logger.error('Erro crítico ao buscar perfil', err, 'AuthContextProvider');
       return null;

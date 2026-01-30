@@ -95,7 +95,7 @@ export const useAssetAnnotations = (assetId: string | null) => {
           setAnnotations([]);
         }
       } catch (error) {
-        console.error('Error loading annotations:', error);
+        logger.error('Error loading annotations', error, 'useAssetAnnotations');
         toast({
           variant: 'destructive',
           title: 'Erro ao carregar anotações',
