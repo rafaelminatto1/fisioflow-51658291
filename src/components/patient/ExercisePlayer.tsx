@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { PatientService } from '@/lib/services/PatientService';
+import { logger } from '@/lib/errors/logger';
 
 // Interfaces definindo a estrutura dos dados
 interface Exercise {
@@ -137,7 +138,7 @@ export function ExercisePlayer({ prescription, onComplete, onExit }: ExercisePla
                 toast.success("Exercício registrado!");
             }
         } catch (error) {
-            console.error('Error logging exercise:', error);
+            logger.error('Error logging exercise', error, 'ExercisePlayer');
             toast.error("Erro ao salvar progresso. Tente novamente.");
         }
     };
