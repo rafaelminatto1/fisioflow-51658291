@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Patient } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -171,7 +172,7 @@ export function ClinicalDecisionSupport({
         description: 'Todos os insights foram gerados com sucesso',
       });
     } catch (err) {
-      console.error('[ClinicalDecisionSupport] Error:', err);
+      logger.error('[ClinicalDecisionSupport] Error', err, 'ClinicalDecisionSupport');
       const errorMessage = err instanceof Error ? err.message : 'Erro ao realizar análises';
       setError(errorMessage);
       setOptimisticResult(null);
