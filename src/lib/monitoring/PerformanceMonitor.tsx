@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 // Só ativo em desenvolvimento
 const IS_DEV = process.env.NODE_ENV === 'development';
@@ -35,11 +36,11 @@ class PerformanceMonitor {
             const navEntry = entry as PerformanceNavigationTiming;
             const loadTime = navEntry.loadEventEnd - navEntry.fetchStart;
 
-            console.groupCollapsed('🚀 Performance: Navigation');
-            console.log(`DOM Content Loaded: ${(navEntry.domContentLoadedEventEnd - navEntry.fetchStart).toFixed(0)}ms`);
-            console.log(`Load Complete: ${loadTime.toFixed(0)}ms`);
-            console.log(`DOM Complete: ${(navEntry.domComplete - navEntry.fetchStart).toFixed(0)}ms`);
-            console.groupEnd();
+            logger.info('🚀 Performance: Navigation', {
+              domContentLoaded: `${(navEntry.domContentLoadedEventEnd - navEntry.fetchStart).toFixed(0)}ms`,
+              loadComplete: `${loadTime.toFixed(0)}ms`,
+              domComplete: `${(navEntry.domComplete - navEntry.fetchStart).toFixed(0)}ms`
+            }, 'PerformanceMonitor');
           }
         }
       });
@@ -54,7 +55,7 @@ class PerformanceMonitor {
       const paintObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'paint') {
-            console.log(`🎨 ${entry.name}: ${(entry as PerformancePaintTiming).startTime.toFixed(0)}ms`);
+            logger.info(`🎨 ${entry.name}`, { duration: `${(entry as PerformancePaintTiming).startTime.toFixed(0)}ms` }, 'PerformanceMonitor');
           }
         }
       });
@@ -69,7 +70,7 @@ class PerformanceMonitor {
       const longTaskObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'longtask') {
-            console.warn(`⚠️ Long Task detected: ${entry.duration.toFixed(0)}ms`, entry);
+            logger.warn(`⚠️ Long Task detected: ${entry.duration.toFixed(0)}ms`, { entry }, 'PerformanceMonitor');
           }
         }
       });
@@ -114,11 +115,13 @@ class PerformanceMonitor {
 
         // Log se for muito lento
         if (measure.duration > 16) {
-          console.warn(
-            `🐌 Performance: ${name} levou ${measure.duration.toFixed(2)}ms (>16ms = 60fps threshold)`
+          logger.warn(
+            `🐌 Performance: ${name} levou ${measure.duration.toFixed(2)}ms (>16ms = 60fps threshold)`,
+            undefined,
+            'PerformanceMonitor'
           );
         } else if (measure.duration > 8) {
-          console.log(`⏱️ Performance: ${name}: ${measure.duration.toFixed(2)}ms`);
+          logger.info(`⏱️ Performance: ${name}`, { duration: `${measure.duration.toFixed(2)}ms` }, 'PerformanceMonitor');
         }
       }
     } catch (e) {
@@ -186,7 +189,7 @@ class PerformanceMonitor {
   reportSummary() {
     if (!IS_DEV) return;
 
-    console.groupCollapsed('📊 Performance Summary');
+    const metrics: Array<{ name: string; avg: string; max: string; count: number; emoji: string }> = [];
 
     // Reportar métricas coletadas
     for (const [name, durations] of this.metrics.entries()) {
@@ -194,26 +197,25 @@ class PerformanceMonitor {
       if (stats) {
         const { avg, max, count } = stats;
         const emoji = avg > 50 ? '🔴' : avg > 16 ? '🟡' : '🟢';
-        console.log(
-          `${emoji} ${name}: avg ${avg.toFixed(2)}ms, max ${max.toFixed(2)}ms (${count} calls)`
-        );
+        metrics.push({ name, avg: avg.toFixed(2), max: max.toFixed(2), count, emoji });
       }
     }
+
+    // Log summary
+    logger.info('📊 Performance Summary', { metrics }, 'PerformanceMonitor');
 
     // Métricas de navegação
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navigation) {
       const loadTime = navigation.loadEventEnd - navigation.fetchStart;
-      console.log(`⚡ Page Load: ${loadTime.toFixed(0)}ms`);
+      logger.info(`⚡ Page Load`, { loadTime: `${loadTime.toFixed(0)}ms` }, 'PerformanceMonitor');
     }
 
     // Contagem de long tasks
     const longTasks = performance.getEntriesByType('longtask');
     if (longTasks.length > 0) {
-      console.warn(`⚠️ ${longTasks.length} long tasks detected (blocking main thread)`);
+      logger.warn(`⚠️ ${longTasks.length} long tasks detected (blocking main thread)`, { count: longTasks.length }, 'PerformanceMonitor');
     }
-
-    console.groupEnd();
   }
 
   /**
@@ -249,9 +251,10 @@ export function useComponentPerformance(componentName: string, enabled = IS_DEV)
     renderCount.current++;
 
     if (renderCount.current > 10) {
-      console.warn(
-        `🔄 Component "${componentName}" re-rendered ${renderCount.current} times. ` +
-        'Consider using React.memo or useMemo/useCallback.'
+      logger.warn(
+        `🔄 Component "${componentName}" re-rendered ${renderCount.current} times. Consider using React.memo or useMemo/useCallback.`,
+        { componentName, renderCount: renderCount.current },
+        'PerformanceMonitor'
       );
     }
   });
@@ -322,9 +325,9 @@ declare global {
 
 if (IS_DEV && typeof window !== 'undefined') {
   window.__perfMonitor = getPerformanceMonitor();
-  console.log('💡 Performance Monitor disponível em window.__perfMonitor');
-  console.log('   - __perfMonitor.markStart(name)');
-  console.log('   - __perfMonitor.markEnd(name)');
-  console.log('   - __perfMonitor.getStats(name)');
-  console.log('   - __perfMonitor.reportSummary()');
+  logger.info('💡 Performance Monitor disponível em window.__perfMonitor', undefined, 'PerformanceMonitor');
+  logger.info('   - __perfMonitor.markStart(name)', undefined, 'PerformanceMonitor');
+  logger.info('   - __perfMonitor.markEnd(name)', undefined, 'PerformanceMonitor');
+  logger.info('   - __perfMonitor.getStats(name)', undefined, 'PerformanceMonitor');
+  logger.info('   - __perfMonitor.reportSummary()', undefined, 'PerformanceMonitor');
 }

@@ -11,6 +11,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
+import { logger } from '@/lib/errors/logger.js';
 
 type DateRange = { start: string; end: string };
 type Organization = { id: string; name?: string };
@@ -102,7 +103,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
 
     // Send emails to therapists
     await step.run('send-summary-emails', async () => {
-      console.log('[Weekly Summary] Reports generated:', results.length);
+      logger.info('[Weekly Summary] Reports generated', { count: results.length }, 'weekly-summary-workflow');
       // TODO: Implement email sending via Resend
       return true;
     });
