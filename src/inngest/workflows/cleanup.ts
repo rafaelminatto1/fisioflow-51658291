@@ -12,6 +12,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, CleanupPayload, CleanupResult, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { deleteByQuery } from '../../lib/firebase/admin.js';
+import { logger } from '@/lib/errors/logger.js';
 
 export const cleanupWorkflow = inngest.createFunction(
   {
@@ -173,13 +174,13 @@ export const cleanupWorkflow = inngest.createFunction(
 
     // Log completion
     await step.run('log-cleanup-summary', async () => {
-      console.log('[Cleanup] Completed:', {
+      logger.info('[Cleanup] Completed', {
         notificationHistory: result.deletedRecords.notificationHistory,
         passwordResetTokens: result.deletedRecords.passwordResetTokens,
         systemHealthLogs: result.deletedRecords.systemHealthLogs,
         incompleteSessions: result.deletedRecords.incompleteSessions,
         errors: result.errors,
-      });
+      }, 'cleanup-workflow');
       return true;
     });
 
