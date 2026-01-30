@@ -30,7 +30,8 @@ setGlobalOptions({
         DB_HOST_IP_PUBLIC_SECRET,
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
         WHATSAPP_ACCESS_TOKEN_SECRET
-    ]
+    ],
+    maxInstances: 10,
 });
 
 // ============================================================================
