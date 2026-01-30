@@ -5,7 +5,7 @@
  */
 
 import { firestore } from 'firebase-admin';
-import {HttpsError, onCall} from 'firebase-functions/v2/https';
+import { HttpsError, onCall } from 'firebase-functions/v2/https';
 
 // Tipos de consentimento LGPD
 export enum ConsentType {
@@ -45,7 +45,7 @@ export interface PrivacyPreferences {
  * Cloud Function: Registrar consentimento do usuário
  */
 export const recordConsent = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -124,7 +124,7 @@ export const recordConsent = onCall({
  * Cloud Function: Revogar consentimento (direito ao arrependimento)
  */
 export const revokeConsent = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -170,7 +170,7 @@ export const revokeConsent = onCall({
  * Cloud Function: Obter todos os consentimentos do usuário
  */
 export const getUserConsents = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -198,7 +198,7 @@ export const getUserConsents = onCall({
  * Cloud Function: Aceitar todos os termos (onboarding)
  */
 export const acceptAllTerms = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {

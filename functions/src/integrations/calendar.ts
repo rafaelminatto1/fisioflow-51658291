@@ -19,7 +19,7 @@ const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
  * Cloud Function: Sincronizar agendamento com Google Calendar
  */
 export const syncToGoogleCalendar = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -105,16 +105,16 @@ export const syncToGoogleCalendar = onCall({
 
     const endTime = appointment?.endTime
       ? (() => {
-          const [endHours, endMinutes] = appointment.endTime.split(':');
-          const endDateTime = new Date(dateTime);
-          endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
-          return endDateTime.toISOString();
-        })()
+        const [endHours, endMinutes] = appointment.endTime.split(':');
+        const endDateTime = new Date(dateTime);
+        endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0, 0);
+        return endDateTime.toISOString();
+      })()
       : (() => {
-          const endDateTime = new Date(dateTime);
-          endDateTime.setHours(dateTime.getHours() + 1);
-          return endDateTime.toISOString();
-        })();
+        const endDateTime = new Date(dateTime);
+        endDateTime.setHours(dateTime.getHours() + 1);
+        return endDateTime.toISOString();
+      })();
 
     let googleEventId: string | null = null;
 
@@ -249,7 +249,7 @@ export const syncToGoogleCalendar = onCall({
  * Cloud Function: Exportar agenda para iCal
  */
 export const exportToICal = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -317,7 +317,7 @@ export const exportToICal = onCall({
  * Cloud Function: Conectar Google Calendar (OAuth)
  */
 export const connectGoogleCalendar = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -371,7 +371,7 @@ export const connectGoogleCalendar = onCall({
  * Cloud Function: Desconectar Google Calendar
  */
 export const disconnectGoogleCalendar = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -398,7 +398,7 @@ export const disconnectGoogleCalendar = onCall({
  * Cloud Function: Obter URL de autorização OAuth
  */
 export const getGoogleAuthUrl = onCall({
-  region: 'southamerica-east1',
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
