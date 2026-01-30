@@ -7,7 +7,6 @@
  * @module components/error-boundaries/ErrorFallback
  */
 
-import React from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
