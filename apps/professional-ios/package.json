@@ -19,6 +19,7 @@
     "@fisioflow/shared-types": "workspace:*",
     "@fisioflow/shared-utils": "workspace:*",
     "@fisioflow/shared-api": "workspace:*",
+    "@fisioflow/shared-ui": "workspace:*",
     "@phosphor-icons/react": "^2.0.0",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-community/netinfo": "^11.0.0",
