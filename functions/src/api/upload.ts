@@ -68,7 +68,7 @@ interface ListFilesResponse {
 /**
  * Generate a signed URL for direct upload to Firebase Storage
  */
-export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<GenerateUploadTokenResponse>>(
+export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<GenerateUploadTokenResponse>>({ cors: true },
   async (request) => {
     const { data, auth } = request;
 
@@ -146,7 +146,7 @@ export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<Ge
 /**
  * Confirm an upload and get the download URL
  */
-export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadResponse>>(
+export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadResponse>>({ cors: true },
   async (request) => {
     const { data, auth } = request;
 
@@ -219,7 +219,7 @@ export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadR
 /**
  * Delete a file from Firebase Storage
  */
-export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>(
+export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>({ cors: true },
   async (request) => {
     const { data, auth } = request;
 
@@ -266,7 +266,7 @@ export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>
 /**
  * List files owned by the user
  */
-export const listUserFiles = onCall<ListFilesRequest, Promise<ListFilesResponse>>(
+export const listUserFiles = onCall<ListFilesRequest, Promise<ListFilesResponse>>({ cors: true },
   async (request) => {
     const { data, auth } = request;
 

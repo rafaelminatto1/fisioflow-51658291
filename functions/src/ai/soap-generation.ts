@@ -88,6 +88,7 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const soapGeneration = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
   maxInstances: 10,
@@ -276,14 +277,14 @@ async function generateSOAPNote(consultationText: string, patientContext: any): 
     const { VertexAI } = await import('@google-cloud/vertexai');
 
     const vertexAI = new VertexAI({
-    project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
-  });
+      project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
+    });
 
-  const generativeModel = vertexAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
-  });
+    const generativeModel = vertexAI.getGenerativeModel({
+      model: 'gemini-2.5-pro',
+    });
 
-  // Build prompt
+    // Build prompt
     const prompt = buildSOAPPrompt(consultationText, patientContext);
 
     // Generate using Pro for clinical accuracy
@@ -349,7 +350,7 @@ Return ONLY valid JSON with this structure:
 
     // Estimate cost (Pro: $1.25/M input, $5.00/M output)
     const estimatedCost = (promptTokens / 1_000_000) * 1.25 +
-                         (completionTokens / 1_000_000) * 5.00;
+      (completionTokens / 1_000_000) * 5.00;
 
     return {
       success: true,
@@ -386,12 +387,12 @@ async function transcribeAudio(
     const { VertexAI } = await import('@google-cloud/vertexai');
 
     const vertexAI = new VertexAI({
-    project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
-  });
+      project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
+    });
 
-  const generativeModel = vertexAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
-  });
+    const generativeModel = vertexAI.getGenerativeModel({
+      model: 'gemini-2.5-pro',
+    });
 
     const result = await generativeModel.generateContent({
       contents: [{

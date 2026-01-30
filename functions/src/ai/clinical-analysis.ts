@@ -98,6 +98,7 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const clinicalAnalysis = onCall({
+  cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
   maxInstances: 10,
@@ -273,12 +274,12 @@ async function generateClinicalAnalysis(
     const { VertexAI } = await import('@google-cloud/vertexai');
 
     const vertexAI = new VertexAI({
-    project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
-  });
+      project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
+    });
 
     const generativeModel = vertexAI.getGenerativeModel({
-    model: redFlagCheckOnly ? 'gemini-2.5-flash' : 'gemini-2.5-pro',
-  });
+      model: redFlagCheckOnly ? 'gemini-2.5-flash' : 'gemini-2.5-pro',
+    });
     const temperature = redFlagCheckOnly ? 0.1 : 0.2;
     const maxTokens = redFlagCheckOnly ? 2048 : 8192;
 
@@ -370,7 +371,7 @@ Return ONLY valid JSON matching the provided schema.`;
     const costPerMillionInput = redFlagCheckOnly ? 0.075 : 1.25;
     const costPerMillionOutput = redFlagCheckOnly ? 0.30 : 5.00;
     const estimatedCost = (promptTokens / 1_000_000) * costPerMillionInput +
-                         (completionTokens / 1_000_000) * costPerMillionOutput;
+      (completionTokens / 1_000_000) * costPerMillionOutput;
 
     return {
       success: true,
@@ -418,9 +419,9 @@ Sessão ${s.sessionNumber}:
     ? `
 **Sinais Vitais:**
 ${Object.entries(currentSOAP.vitalSigns)
-  .filter(([_, v]) => v !== undefined)
-  .map(([k, v]) => `- ${k}: ${v}`)
-  .join('\n')}
+      .filter(([_, v]) => v !== undefined)
+      .map(([k, v]) => `- ${k}: ${v}`)
+      .join('\n')}
 `
     : '';
 
@@ -447,8 +448,8 @@ ${JSON.stringify(currentSOAP.functionalTests, null, 2)}
 ${vitalSignsText}
 - Subjetivo: ${currentSOAP.subjective || 'Não informado'}
 - Objetivo: ${typeof currentSOAP.objective === 'object'
-    ? JSON.stringify(currentSOAP.objective, null, 2)
-    : currentSOAP.objective || 'Não realizado'}
+        ? JSON.stringify(currentSOAP.objective, null, 2)
+        : currentSOAP.objective || 'Não realizado'}
 - Avaliação: ${currentSOAP.assessment || 'Não realizada'}
 
 ${historyText}
@@ -489,16 +490,16 @@ ${currentSOAP.subjective || 'Não informado'}
 
 **Objetivo (Exame Físico):**
 ${typeof currentSOAP.objective === 'object'
-    ? JSON.stringify(currentSOAP.objective, null, 2)
-    : currentSOAP.objective || 'Não realizado'}
+      ? JSON.stringify(currentSOAP.objective, null, 2)
+      : currentSOAP.objective || 'Não realizado'}
 
 **Avaliação Clínica:**
 ${currentSOAP.assessment || 'Não realizada'}
 
 **Plano de Tratamento:**
 ${typeof currentSOAP.plan === 'object'
-    ? JSON.stringify(currentSOAP.plan, null, 2)
-    : currentSOAP.plan || 'Não definido'}
+      ? JSON.stringify(currentSOAP.plan, null, 2)
+      : currentSOAP.plan || 'Não definido'}
 ${historyText}
 
 ## Análise Solicitada
