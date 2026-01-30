@@ -1,4 +1,5 @@
 import { MetricDefinition, MetricRegistrySchema } from './metricRegistry.zod';
+import { logger } from '@/lib/errors/logger';
 
 export const metricRegistry: Record<string, MetricDefinition> = {
     // --- GAIT ---
@@ -263,6 +264,6 @@ export const metricRegistry: Record<string, MetricDefinition> = {
 try {
     MetricRegistrySchema.parse(metricRegistry);
     // console.log("Metric Registry Validated ✅");
-} catch {
-    console.error("Metric Registry Validation Failed ❌", e);
+} catch (e) {
+    logger.error("Metric Registry Validation Failed", e, 'metricRegistry');
 }

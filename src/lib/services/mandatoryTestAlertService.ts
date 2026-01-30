@@ -101,7 +101,7 @@ export class MandatoryTestAlertService {
 
     // In production, this should call a Cloud Function to store in audit_log
     // For now, we'll just log the exception
-    console.log('Audit log entry:', exceptionRecord);
+    logger.debug('Audit log entry', exceptionRecord, 'MandatoryTestAlertService');
   }
 
   /**

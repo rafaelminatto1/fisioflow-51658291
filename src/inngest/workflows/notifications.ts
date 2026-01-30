@@ -13,6 +13,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';
+import { logger } from '@/lib/errors/logger';
 
 type NotificationResult = { sent: boolean; channel: string; error?: string };
 
@@ -79,7 +80,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
           const tokensSnapshot = await db.collection('users').doc(userId).collection('push_tokens').get();
 
           if (tokensSnapshot.empty) {
-            console.log('[Notification] No push tokens found for user', { userId });
+            logger.info('[Notification] No push tokens found for user', { userId }, 'notifications-workflow');
             return { sent: false, channel: 'push', error: 'No tokens found' };
           }
 
@@ -106,11 +107,11 @@ export const sendNotificationWorkflow = inngest.createFunction(
           const response = await messaging.sendEachForMulticast(message);
 
           if (response.failureCount > 0) {
-            console.warn('[Notification] Some push notifications failed', {
+            logger.warn('[Notification] Some push notifications failed', {
               success: response.successCount,
               failure: response.failureCount,
               errors: response.responses.filter(r => !r.success).map(r => r.error)
-            });
+            }, 'notifications-workflow');
 
             // Optional: Clean up invalid tokens here if error is 'registration-token-not-registered'
           }
@@ -119,7 +120,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
         }
 
         default:
-          console.warn('[Notification] Unknown notification type', { type });
+          logger.warn('[Notification] Unknown notification type', { type }, 'notifications-workflow');
           return { sent: false, channel: type, error: 'Unknown type' };
       }
     });

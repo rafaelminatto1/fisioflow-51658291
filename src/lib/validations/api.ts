@@ -9,6 +9,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Common validation schemas
@@ -499,7 +500,7 @@ export async function parseApiResponse<T>(
     return schema.parse(rawData);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('[Zod Validation Error]:', error.errors);
+      logger.error('[Zod Validation Error]', error.errors, 'api-validations');
       throw new Error(
         `API response validation failed: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`
       );
@@ -545,7 +546,7 @@ export function validateWithLogging<T>(
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    console.error(`[Validation Error - ${context}]:`, result.error.errors);
+    logger.error(`[Validation Error - ${context}]`, result.error.errors, 'api-validations');
     return null;
   }
 

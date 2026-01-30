@@ -17,6 +17,7 @@ import {
     AngleTool,
     MagnifyTool,
 } from '@cornerstonejs/tools';
+import { logger } from '@/lib/errors/logger';
 
 export const TOOLS = {
     WindowLevelTool,
@@ -57,7 +58,7 @@ export default async function initCornerstone() {
     addTool(MagnifyTool);
 
     isInitialized = true;
-    console.log('Cornerstone3D initialized');
+    logger.info('Cornerstone3D initialized', undefined, 'initCornerstone');
 }
 
 export function createToolGroup(toolGroupId: string) {

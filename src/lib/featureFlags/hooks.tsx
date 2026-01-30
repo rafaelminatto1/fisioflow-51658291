@@ -64,9 +64,9 @@ export function FeatureFlagProvider({
   // Debug log to verify key (masked)
   useEffect(() => {
     if (statsigKey) {
-      console.log('[Statsig] Key present (Statsig removed in this build)');
+      logger.debug('[Statsig] Key present (Statsig removed in this build)', undefined, 'featureFlags');
     } else {
-      console.warn('[Statsig] No key found');
+      logger.warn('[Statsig] No key found', undefined, 'featureFlags');
     }
   }, [statsigKey]);
 

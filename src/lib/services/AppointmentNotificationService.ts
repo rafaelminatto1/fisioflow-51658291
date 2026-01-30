@@ -80,13 +80,13 @@ export class AppointmentNotificationService {
       logger.info('Notificando reagendamento', { appointmentId, newDate, newTime }, 'AppointmentNotificationService');
 
       // TODO: Implement Firebase Cloud Function call
-      console.log('[AppointmentNotificationService] notifyReschedule:', {
+      logger.debug('[AppointmentNotificationService] notifyReschedule', {
         appointmentId,
         patientId,
         newDate: newDate.toLocaleDateString('pt-BR'),
         newTime,
         patientName,
-      });
+      }, 'AppointmentNotificationService');
 
       logger.info('Notificação de reagendamento enviada (placeholder)', { appointmentId }, 'AppointmentNotificationService');
       return { success: true, appointmentId };

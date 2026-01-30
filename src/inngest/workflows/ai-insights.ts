@@ -13,6 +13,7 @@ import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { logger } from '@/lib/errors/logger';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 
 type PatientData = {
@@ -122,7 +123,7 @@ Please provide:
 
         return object;
       } catch (error) {
-        console.error('[AI Insights] Generation error:', error);
+        logger.error('[AI Insights] Generation error', error, 'ai-insights-workflow');
         return {
           summary: 'Unable to generate insights',
           trends: [],

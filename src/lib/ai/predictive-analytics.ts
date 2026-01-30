@@ -16,6 +16,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -220,7 +221,7 @@ async function fetchSimilarCases(
       ...doc.data(),
     }));
   } catch (error) {
-    console.error('[Predictive Analytics] Error fetching similar cases:', error);
+    logger.error('[Predictive Analytics] Error fetching similar cases', error, 'predictive-analytics');
     return [];
   }
 }
@@ -396,7 +397,7 @@ export async function predictRecoveryTimeline(
 
     return prediction;
   } catch (error) {
-    console.error('[Predictive Analytics] AI prediction error:', error);
+    logger.error('[Predictive Analytics] AI prediction error', error, 'predictive-analytics');
 
     // Fallback to statistical prediction
     return generateFallbackPrediction(patientId, currentCondition, similarCaseStats);
@@ -621,9 +622,9 @@ async function storePrediction(
       created_at: new Date().toISOString(),
     });
 
-    console.log(`[Predictive Analytics] Prediction stored for patient ${patientId}`);
+    logger.info(`[Predictive Analytics] Prediction stored for patient ${patientId}`, undefined, 'predictive-analytics');
   } catch (error) {
-    console.error('[Predictive Analytics] Error storing prediction:', error);
+    logger.error('[Predictive Analytics] Error storing prediction', error, 'predictive-analytics');
   }
 }
 
