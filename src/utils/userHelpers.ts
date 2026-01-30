@@ -4,6 +4,7 @@
 
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Obtém o organization_id do usuário atual
@@ -29,7 +30,7 @@ export async function getUserOrganizationId(): Promise<string | null> {
     const profileData = profileSnap.data();
     return profileData?.organization_id || null;
   } catch (error: unknown) {
-    console.error('Erro ao buscar organização do usuário no Firestore:', error);
+    logger.error('Erro ao buscar organização do usuário no Firestore', error, 'userHelpers');
     throw new Error(`Erro ao buscar organização do usuário: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
