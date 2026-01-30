@@ -33,9 +33,9 @@ import { Search, UserPlus, UserMinus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-type AppRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
-const ROLES: { value: AppRole; label: string; variant: 'default' | 'secondary' | 'outline' }[] = [
+
+const ROLES: { value: UserRole; label: string; variant: 'default' | 'secondary' | 'outline' }[] = [
   { value: 'admin', label: 'Admin', variant: 'default' },
   { value: 'fisioterapeuta', label: 'Fisioterapeuta', variant: 'secondary' },
   { value: 'estagiario', label: 'Estagiário', variant: 'outline' },
@@ -43,11 +43,11 @@ const ROLES: { value: AppRole; label: string; variant: 'default' | 'secondary' |
 ];
 
 export default function UserManagement() {
-  const { users, isLoading, addRole, removeRole } = useUsers();
+  const { users, isLoading, updateRole } = useUsers();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [newRole, setNewRole] = useState<AppRole>('paciente');
+  const [newRole, setNewRole] = useState<UserRole>('paciente');
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -55,18 +55,14 @@ export default function UserManagement() {
       user.email.toLowerCase().includes(search.toLowerCase());
 
     const matchesRole =
-      roleFilter === 'all' || user.roles.includes(roleFilter as AppRole);
+      roleFilter === 'all' || user.role === roleFilter;
 
     return matchesSearch && matchesRole;
   });
 
-  const handleAddRole = (userId: string) => {
-    addRole({ userId, role: newRole });
+  const handleUpdateRole = (userId: string) => {
+    updateRole({ userId, role: newRole as UserRole });
     setSelectedUser(null);
-  };
-
-  const handleRemoveRole = (userId: string, role: AppRole) => {
-    removeRole({ userId, role });
   };
 
   return (
@@ -105,6 +101,7 @@ export default function UserManagement() {
                       {role.label}
                     </SelectItem>
                   ))}
+                  <SelectItem value="pending">Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -130,97 +127,84 @@ export default function UserManagement() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Funções</TableHead>
+                    <TableHead>Função Atual</TableHead>
                     <TableHead>Cadastrado em</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.full_name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 flex-wrap">
-                          {user.roles.length === 0 ? (
-                            <Badge variant="outline">Sem função</Badge>
-                          ) : (
-                            user.roles.map((role) => {
-                              const roleInfo = ROLES.find((r) => r.value === role);
-                              return (
-                                <Badge
-                                  key={role}
-                                  variant={roleInfo?.variant || 'outline'}
-                                  className="gap-1"
-                                >
-                                  {roleInfo?.label || role}
-                                  <UserMinus
-                                    className="h-3 w-3 cursor-pointer hover:text-destructive"
-                                    onClick={() => handleRemoveRole(user.id, role)}
-                                  />
-                                </Badge>
-                              );
-                            })
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(user.created_at), 'dd/MM/yyyy', {
-                          locale: ptBR,
-                        })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Dialog
-                          open={selectedUser === user.id}
-                          onOpenChange={(open) =>
-                            setSelectedUser(open ? user.id : null)
-                          }
-                        >
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Adicionar Função
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>
-                                Adicionar Função para {user.full_name}
-                              </DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4">
-                              <Select
-                                value={newRole}
-                                onValueChange={(value) => setNewRole(value as AppRole)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione uma função" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {ROLES.map((role) => (
-                                    <SelectItem
-                                      key={role.value}
-                                      value={role.value}
-                                      disabled={user.roles.includes(role.value)}
-                                    >
-                                      {role.label}
-                                      {user.roles.includes(role.value) && ' (já possui)'}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                onClick={() => handleAddRole(user.id)}
-                                className="w-full"
-                              >
-                                Adicionar Função
+                  {filteredUsers.map((user) => {
+                    const roleInfo = ROLES.find((r) => r.value === user.role);
+                    const isPending = user.role === 'pending';
+
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.full_name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={isPending ? 'destructive' : roleInfo?.variant || 'secondary'}
+                          >
+                            {isPending ? 'Pendente' : (roleInfo?.label || user.role)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(user.created_at), 'dd/MM/yyyy', {
+                            locale: ptBR,
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Dialog
+                            open={selectedUser === user.id}
+                            onOpenChange={(open) => {
+                              setSelectedUser(open ? user.id : null);
+                              if (open) setNewRole(user.role);
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Alterar Função
                               </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Alterar Função de {user.full_name}
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4 pt-4">
+                                <Select
+                                  value={newRole}
+                                  onValueChange={(value) => setNewRole(value as UserRole)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione uma função" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {ROLES.map((role) => (
+                                      <SelectItem
+                                        key={role.value}
+                                        value={role.value}
+                                      >
+                                        {role.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  onClick={() => handleUpdateRole(user.id)}
+                                  className="w-full"
+                                >
+                                  Salvar Alteração
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
