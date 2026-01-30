@@ -3,6 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Serviço para gerenciar Push Notifications no iOS
@@ -23,7 +24,7 @@ export interface PushNotificationData {
 export async function initPushNotifications(): Promise<void> {
   // Verificar se está em plataforma nativa
   if (!Capacitor.isNativePlatform()) {
-    console.log('Push notifications não disponíveis na web');
+    logger.info('Push notifications não disponíveis na web', undefined, 'push-notifications');
     return;
   }
 
@@ -33,26 +34,26 @@ export async function initPushNotifications(): Promise<void> {
 
     if (result.receive === 'granted') {
       await PushNotifications.register();
-      console.log('Push notifications registradas com sucesso');
+      logger.info('Push notifications registradas com sucesso', undefined, 'push-notifications');
     } else {
-      console.warn('Permissão de notificação negada pelo usuário');
+      logger.warn('Permissão de notificação negada pelo usuário', undefined, 'push-notifications');
       return;
     }
 
     // Listener: Registro bem-sucedido
     await PushNotifications.addListener('registration', async (token: Token) => {
-      console.log('Push token registrado:', token.value);
+      logger.info('Push token registrado', { token: token.value }, 'push-notifications');
       await savePushTokenToDatabase(token.value);
     });
 
     // Listener: Erro no registro
     await PushNotifications.addListener('registrationError', (error: unknown) => {
-      console.error('Erro no registro de push notification:', error);
+      logger.error('Erro no registro de push notification', error, 'push-notifications');
     });
 
     // Listener: Notificação recebida (app em foreground)
     await PushNotifications.addListener('pushNotificationReceived', async (notification: PushNotificationSchema) => {
-      console.log('Notificação recebida (app aberto):', notification);
+      logger.info('Notificação recebida (app aberto)', { notification }, 'push-notifications');
 
       // Mostrar notificação local também
       await showLocalNotification({
@@ -64,11 +65,11 @@ export async function initPushNotifications(): Promise<void> {
 
     // Listener: Notificação clicada (app aberto pela notificação)
     await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
-      console.log('Notificação clicada:', notification);
+      logger.info('Notificação clicada', { notification }, 'push-notifications');
       handleNotificationAction(notification);
     });
   } catch (error) {
-    console.error('Erro ao inicializar push notifications:', error);
+    logger.error('Erro ao inicializar push notifications', error, 'push-notifications');
   }
 }
 
@@ -99,12 +100,12 @@ async function savePushTokenToDatabase(token: string): Promise<void> {
         last_used: new Date().toISOString()
       }, { merge: true });
 
-      console.log('Token salvo no Firestore');
+      logger.info('Token salvo no Firestore', undefined, 'push-notifications');
     } else {
-      console.log('Usuário não autenticado, token não salvo');
+      logger.info('Usuário não autenticado, token não salvo', undefined, 'push-notifications');
     }
   } catch (error) {
-    console.error('Erro ao salvar token:', error);
+    logger.error('Erro ao salvar token', error, 'push-notifications');
   }
 }
 
@@ -140,16 +141,16 @@ function handleNotificationAction(notification: ActionPerformed): void {
   // TODO: Implementar navegação baseada no tipo
   switch (type) {
     case 'appointment':
-      console.log('Navegar para detalhes da consulta');
+      logger.info('Navegar para detalhes da consulta', undefined, 'push-notifications');
       break;
     case 'message':
-      console.log('Navegar para chat');
+      logger.info('Navegar para chat', undefined, 'push-notifications');
       break;
     case 'alert':
-      console.log('Navegar para alerta');
+      logger.info('Navegar para alerta', undefined, 'push-notifications');
       break;
     default:
-      console.log('Navegar para dashboard');
+      logger.info('Navegar para dashboard', undefined, 'push-notifications');
   }
 }
 
@@ -177,7 +178,7 @@ export async function sendLocalNotification(options: {
       ],
     });
   } catch (error) {
-    console.error('Erro ao enviar notificação local:', error);
+    logger.error('Erro ao enviar notificação local', error, 'push-notifications');
   }
 }
 
@@ -193,7 +194,7 @@ export async function clearAllNotifications(): Promise<void> {
       await LocalNotifications.cancel({ notifications: pending.notifications });
     }
   } catch (error) {
-    console.error('Erro ao limpar notificações:', error);
+    logger.error('Erro ao limpar notificações', error, 'push-notifications');
   }
 }
 
@@ -206,7 +207,7 @@ export async function cancelNotification(ids: number[]): Promise<void> {
       notifications: ids.map(id => ({ id })),
     });
   } catch (error) {
-    console.error('Erro ao cancelar notificações:', error);
+    logger.error('Erro ao cancelar notificações', error, 'push-notifications');
   }
 }
 
@@ -218,7 +219,7 @@ export async function getScheduledNotifications(): Promise<LocalNotificationSche
     const pending = await LocalNotifications.getPending();
     return pending.notifications || [];
   } catch (error) {
-    console.error('Erro ao obter notificações agendadas:', error);
+    logger.error('Erro ao obter notificações agendadas', error, 'push-notifications');
     return [];
   }
 }

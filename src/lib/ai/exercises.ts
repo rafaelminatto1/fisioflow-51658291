@@ -11,6 +11,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import type { Exercise, Patient, SOAPRecord } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -335,7 +336,7 @@ export class ExerciseAIAssistant {
         const parsed = ExerciseProgramSchema.parse(JSON.parse(cleanedJson));
         programData = parsed as ExerciseProgramRecommendation;
       } catch (parseError) {
-        console.error('[ExerciseAI] JSON parse error:', parseError);
+        logger.error('[ExerciseAI] JSON parse error', parseError, 'exercises');
         return {
           success: false,
           error: 'Failed to parse AI response as valid exercise program',
@@ -357,7 +358,7 @@ export class ExerciseAIAssistant {
         },
       };
     } catch (error) {
-      console.error('[ExerciseAI] Generation error:', error);
+      logger.error('[ExerciseAI] Generation error', error, 'exercises');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
