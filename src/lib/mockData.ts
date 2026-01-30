@@ -2,6 +2,7 @@
 
 import { AppointmentBase, AppointmentType, AppointmentStatus } from '@/types/appointment';
 import { Patient } from '@/types';
+import { logger } from '@/lib/errors/logger';
 
 // ============= PACIENTES MOCK =============
 export const mockPatients: Patient[] = [
@@ -149,7 +150,7 @@ const generateAppointmentsForWeek = (): AppointmentBase[] => {
 
     // Validar que mockPatients é um array
     if (!Array.isArray(mockPatients) || mockPatients.length === 0) {
-      console.error('mockPatients não é um array ou está vazio');
+      logger.error('mockPatients não é um array ou está vazio', undefined, 'mockData');
       return [];
     }
 
@@ -222,7 +223,7 @@ const generateAppointmentsForWeek = (): AppointmentBase[] => {
 
     // Validar que appointments ainda é um array antes de chamar sort
     if (!Array.isArray(appointments)) {
-      console.error('appointments não é um array antes do sort');
+      logger.error('appointments não é um array antes do sort', undefined, 'mockData');
       return [];
     }
 
@@ -236,7 +237,7 @@ const generateAppointmentsForWeek = (): AppointmentBase[] => {
       return aTimeStr.localeCompare(bTimeStr);
     });
   } catch (error) {
-    console.error('Erro ao gerar agendamentos mock:', error);
+    logger.error('Erro ao gerar agendamentos mock', error, 'mockData');
     return [];
   }
 };
