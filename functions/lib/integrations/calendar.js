@@ -52,7 +52,7 @@ const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
  * Cloud Function: Sincronizar agendamento com Google Calendar
  */
 exports.syncToGoogleCalendar = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -235,7 +235,7 @@ exports.syncToGoogleCalendar = (0, https_1.onCall)({
  * Cloud Function: Exportar agenda para iCal
  */
 exports.exportToICal = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -289,7 +289,7 @@ exports.exportToICal = (0, https_1.onCall)({
  * Cloud Function: Conectar Google Calendar (OAuth)
  */
 exports.connectGoogleCalendar = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -329,7 +329,7 @@ exports.connectGoogleCalendar = (0, https_1.onCall)({
  * Cloud Function: Desconectar Google Calendar
  */
 exports.disconnectGoogleCalendar = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -352,7 +352,7 @@ exports.disconnectGoogleCalendar = (0, https_1.onCall)({
  * Cloud Function: Obter URL de autorização OAuth
  */
 exports.getGoogleAuthUrl = (0, https_1.onCall)({
-    region: 'southamerica-east1',
+    cors: true,
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {

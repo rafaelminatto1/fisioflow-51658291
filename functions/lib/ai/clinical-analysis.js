@@ -58,6 +58,7 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.clinicalAnalysis = (0, https_1.onCall)({
+    cors: true,
     region: 'southamerica-east1',
     memory: '1GiB',
     maxInstances: 10,
