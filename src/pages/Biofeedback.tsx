@@ -1,4 +1,3 @@
-import React from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MovementAnalysis } from '@/components/biofeedback/MovementAnalysis';
 import { Activity } from 'lucide-react';
