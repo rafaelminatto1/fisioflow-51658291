@@ -1,5 +1,6 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { Pool } from 'pg';
+import { logger } from '../lib/logger';
 
 export const dailyReminders = onSchedule('every day 08:00', async (event) => {
   const pool = new Pool({
@@ -15,7 +16,7 @@ export const dailyReminders = onSchedule('every day 08:00', async (event) => {
       WHERE a.date = CURRENT_DATE AND a.status = 'agendado'
     `);
 
-    console.log(`Enviando ${result.rows.length} lembretes...`);
+    logger.info(`Enviando ${result.rows.length} lembretes...`);
     
     // Lógica de envio (WhatsApp/Email) aqui
     
