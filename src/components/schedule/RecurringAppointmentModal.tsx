@@ -18,6 +18,7 @@ import { CalendarIcon, Clock, Info, Repeat, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { RecurringAppointmentFormData, RecurrenceType, RecurrenceEndType, DayOfWeek } from '@/types/recurring-appointment';
+import { logger } from '@/lib/errors/logger';
 
 // =====================================================================
 // TYPES
@@ -193,7 +194,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
 
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao criar série recorrente:', error);
+      logger.error('Erro ao criar série recorrente', error, 'RecurringAppointmentModal');
       toast({
         title: '❌ Erro ao criar série',
         description: error instanceof Error ? error.message : 'Tente novamente',
