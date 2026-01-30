@@ -15,6 +15,7 @@ import { Mic, Square, Play, Pause, Trash2, FileText, Loader2 } from 'lucide-reac
 import { toast } from '@/hooks/use-toast';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
+import { logger } from '@/lib/errors/logger';
 
 interface AudioTranscriptionProps {
   patientId: string;
@@ -81,7 +82,7 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
         description: 'Fale naturalmente sobre a sessão.',
       });
     } catch (error) {
-      console.error('Erro ao iniciar gravação:', error);
+      logger.error('Erro ao iniciar gravação', error, 'AudioTranscription');
       toast({
         title: 'Erro',
         description: 'Não foi possível acessar o microfone.',
@@ -163,7 +164,7 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
         }
       };
     } catch (error) {
-      console.error('Erro na transcrição:', error);
+      logger.error('Erro na transcrição', error, 'AudioTranscription');
       toast({
         title: 'Erro',
         description: 'Não foi possível transcrever o áudio.',
