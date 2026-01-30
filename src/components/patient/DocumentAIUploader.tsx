@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 // Tipos
 export interface DocumentAIUploaderProps {
@@ -307,7 +308,7 @@ export function DocumentAIUploader({
             documentType: selectedDocumentType,
             language,
             onProgress: (progress, stage) => {
-              console.log(`${file.name}: ${stage} (${progress}%)`);
+              logger.debug(`${file.name}: ${stage} (${progress}%)`, { fileName: file.name, stage, progress }, 'DocumentAIUploader');
             }
           });
 
@@ -324,7 +325,7 @@ export function DocumentAIUploader({
           });
 
         } catch (error) {
-          console.error(`Erro ao analisar ${file.name}:`, error);
+          logger.error(`Erro ao analisar ${file.name}`, error, 'DocumentAIUploader');
           toast.error(
             language === 'pt-BR'
               ? `Erro ao analisar ${file.name}`
@@ -345,7 +346,7 @@ export function DocumentAIUploader({
       }
 
     } catch (error) {
-      console.error('Erro na análise:', error);
+      logger.error('Erro na análise', error, 'DocumentAIUploader');
       toast.error(
         language === 'pt-BR'
           ? 'Erro ao analisar documentos'
