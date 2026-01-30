@@ -76,6 +76,7 @@ var WhatsAppTemplate;
  */
 exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -148,6 +149,7 @@ exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
  */
 exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -201,6 +203,7 @@ exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
  */
 exports.sendWhatsAppWelcome = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -237,6 +240,7 @@ exports.sendWhatsAppWelcome = (0, https_1.onCall)({
  */
 exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -282,6 +286,7 @@ exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
  */
 exports.sendWhatsAppExerciseAssigned = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -574,6 +579,7 @@ async function handleAutoReply(from, text, patient) {
  */
 exports.testWhatsAppMessage = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -623,6 +629,7 @@ exports.testWhatsAppMessage = (0, https_1.onCall)({
  */
 exports.testWhatsAppTemplate = (0, https_1.onCall)({
     cors: true,
+    region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
 }, async (request) => {
@@ -713,6 +720,7 @@ exports.testWhatsAppTemplate = (0, https_1.onCall)({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 exports.getWhatsAppHistory = (0, https_1.onCall)({
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
 }, async (request) => {
