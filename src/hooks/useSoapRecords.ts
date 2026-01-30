@@ -33,7 +33,6 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { ensureProfile } from '@/lib/database/profiles';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 const storage = getFirebaseStorage();
 
@@ -151,12 +150,12 @@ export interface SessionTemplate {
 }
 
 // Helper: Convert Firestore doc to SoapRecord
-const convertDocToSoapRecord = (doc: any): SoapRecord => {
+const convertDocToSoapRecord = (doc: { id: string; data: () => Record<string, unknown> }): SoapRecord => {
   const data = doc.data();
   return {
     id: doc.id,
     ...data,
-    record_date: data.record_date || new Date().toISOString().split('T')[0],
+    record_date: (data.record_date as string) || new Date().toISOString().split('T')[0],
   } as SoapRecord;
 };
 
@@ -414,7 +413,7 @@ export const useDraftSoapRecords = (patientId: string) => {
 // ===== SESSION ATTACHMENTS =====
 
 // Helper: Convert Firestore doc to SessionAttachment
-const convertDocToSessionAttachment = (doc: any): SessionAttachment => {
+const convertDocToSessionAttachment = (doc: { id: string; data: () => Record<string, unknown> }): SessionAttachment => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -573,7 +572,7 @@ export const useDeleteSessionAttachment = () => {
 // ===== SESSION TEMPLATES =====
 
 // Helper: Convert Firestore doc to SessionTemplate
-const convertDocToSessionTemplate = (doc: any): SessionTemplate => {
+const convertDocToSessionTemplate = (doc: { id: string; data: () => Record<string, unknown> }): SessionTemplate => {
   const data = doc.data();
   return {
     id: doc.id,

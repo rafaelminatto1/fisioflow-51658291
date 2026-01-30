@@ -32,7 +32,7 @@ import {
   type UserInventoryItem,
   type BuyItemParams,
 } from '@/types/gamification';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   doc,
@@ -47,8 +47,6 @@ import {
   limit,
   setDoc
 } from 'firebase/firestore';
-
-const db = getFirebaseDb();
 
 // Level Calculation Constants - buscar do banco se disponível
 const LEVEL_BASE_XP = 1000;
@@ -113,7 +111,7 @@ export interface UseGamificationResult {
   progressPercentage: number;
   xpProgress: number; // same as progressPercentage, alias
   totalSessions: number; // mock or real
-  recentTransactions: any[]; // simplified
+  recentTransactions: Array<{ id: string; amount: number; reason: string; created_at: string }>; // simplified
 }
 
 export const useGamification = (patientId: string): UseGamificationResult => {

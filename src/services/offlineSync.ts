@@ -10,7 +10,7 @@
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
 import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy, limit as limitClause } from 'firebase/firestore';
 
 // const db = getFirebaseDb(); // Moved inside functions
@@ -488,7 +488,6 @@ class OfflineSyncService {
     try {
       console.log('[OfflineSyncService] Starting critical data caching...');
       // Initialize both databases correctly
-      const firestoreDb = getFirebaseDb();
       const localDb = await getDB();
 
       // 1. Cache upcoming appointments (next 24 hours)
@@ -506,7 +505,7 @@ class OfflineSyncService {
 
       try {
         const appointmentsQ = query(
-          collection(firestoreDb, 'appointments'),
+          collection(db, 'appointments'),
           where('appointment_date', '>=', todayStr),
           where('appointment_date', '<=', tomorrowStr)
         );
@@ -542,7 +541,7 @@ class OfflineSyncService {
       let exercises;
       try {
         const exercisesQ = query(
-          collection(firestoreDb, 'exercises'),
+          collection(db, 'exercises'),
           limitClause(100)
         );
         const exercisesSnapshot = await getDocs(exercisesQ);

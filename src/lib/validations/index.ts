@@ -175,3 +175,7 @@ export const validateUUID = (uuid: string): boolean => {
 };
 
 export const uuidSchema = z.string().uuid('ID inválido');
+
+// ============= API Validation Schemas =============
+// Re-export API validation schemas from api.ts
+export * from './api';

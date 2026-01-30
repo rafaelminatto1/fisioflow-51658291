@@ -9,10 +9,8 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { getFirebaseDb } from "@/integrations/firebase/app";
+import { db } from "@/integrations/firebase/app";
 import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
-
-const db = getFirebaseDb();
 
 export interface PatientActivitySummary {
   id: string;
@@ -61,7 +59,7 @@ export interface DailyMetrics {
 }
 
 // Helper function to convert Firestore doc to type
-const convertDoc = <T>(doc: any): T => {
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => {
   return { id: doc.id, ...doc.data() } as T;
 };
 

@@ -24,7 +24,7 @@ import {
   LeaderboardEntry,
   LeaderboardFilters,
 } from '@/types/gamification';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -38,11 +38,18 @@ import {
   limit,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+interface Profile {
+  id: string;
+  last_activity_date?: string;
+  level?: number;
+  current_streak?: number;
+  [key: string]: unknown;
+}
 
 export interface UseGamificationAdminResult {
   // Statistics
@@ -130,35 +137,35 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
 
       // Support both 'amount' and 'xp_amount' column names
       const totalXpAwarded = xpDataSnap.docs.reduce((sum, doc) => {
-        const data = doc.data();
-        const amount = (data as any).amount || (data as any).xp_amount || 0;
+        const data = doc.data() as { amount?: number; xp_amount?: number };
+        const amount = data.amount || data.xp_amount || 0;
         return sum + (typeof amount === 'number' ? amount : 0);
       }, 0);
 
       const profiles = allProfiles;
-      const activeLast30Days = profiles.filter((p: any) => {
+      const activeLast30Days = profiles.filter((p: Profile) => {
         const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
         return lastActivity && lastActivity >= startDate;
       }).length;
 
-      const activeLast7Days = profiles.filter((p: any) => {
+      const activeLast7Days = profiles.filter((p: Profile) => {
         const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
         return lastActivity && lastActivity >= sevenDaysAgo;
       }).length;
 
       const achievementsUnlocked = achievementsSnap.size;
 
-      const atRiskPatients = profiles.filter((p: any) => {
+      const atRiskPatients = profiles.filter((p: Profile) => {
         const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
         return lastActivity && lastActivity < sevenDaysAgo;
       }).length;
 
       const averageLevel = profiles.length > 0
-        ? profiles.reduce((sum, p: any) => sum + (p.level || 0), 0) / profiles.length
+        ? profiles.reduce((sum, p: Profile) => sum + (p.level || 0), 0) / profiles.length
         : 0;
 
       const averageStreak = profiles.length > 0
-        ? profiles.reduce((sum, p: any) => sum + (p.current_streak || 0), 0) / profiles.length
+        ? profiles.reduce((sum, p: Profile) => sum + (p.current_streak || 0), 0) / profiles.length
         : 0;
 
       const engagementRate = totalPatients > 0
@@ -202,6 +209,14 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
       const transactions = snapshot.docs.map(doc => doc.data());
 
       // Group by date
+      interface TransactionData {
+        created_at: string;
+        patient_id: string;
+        amount?: number;
+        xp_amount?: number;
+        reason?: string;
+      }
+
       const grouped = transactions.reduce((acc, t) => {
         const date = t.created_at.split('T')[0];
         if (!acc[date]) {
@@ -214,7 +229,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
           };
         }
         // Support both 'amount' and 'xp_amount' column names
-        const amount = (t as any).amount || (t as any).xp_amount || 0;
+        const amount = (t as TransactionData).amount || (t as TransactionData).xp_amount || 0;
         acc[date].xpAwarded += amount;
         if (t.reason === 'daily_quest') acc[date].questsCompleted++;
         if (t.reason === 'achievement_unlocked') acc[date].achievementsUnlocked++;
@@ -278,10 +293,15 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
         const lastActivity = data.last_activity_date ? new Date(data.last_activity_date) : null;
         const daysInactive = lastActivity ? differenceInDays(new Date(), lastActivity) : 999;
 
+        interface PatientInfo {
+          full_name?: string;
+          email?: string;
+        }
+
         results.push({
           patient_id: patientId,
-          patient_name: (patientInfo as any).full_name || 'Desconhecido',
-          email: (patientInfo as any).email,
+          patient_name: (patientInfo as PatientInfo).full_name || 'Desconhecido',
+          email: (patientInfo as PatientInfo).email,
           level: data.level,
           lastActivity: data.last_activity_date,
           daysInactive,
@@ -359,7 +379,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
 
       if (snapshot.empty) return null;
 
-      const getSetting = (key: string, defaultValue: any) => {
+      const getSetting = (key: string, defaultValue: unknown) => {
         const settingDoc = snapshot.docs.find(doc => doc.data().key === key);
         if (!settingDoc?.data()?.value) return defaultValue;
         try {

@@ -61,8 +61,8 @@ export function useGeolocation() {
       setIsLoading(false);
 
       return locationData;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao obter localização';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao obter localização';
       setError(errorMessage);
       setIsLoading(false);
       console.error('Erro ao obter localização:', err);

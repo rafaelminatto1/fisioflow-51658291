@@ -4,6 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePermissions } from '../usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 
+// Type for Supabase query mock
+type SupabaseQueryMock = {
+  select: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+};
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
@@ -40,7 +46,7 @@ describe('usePermissions', () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: mockUser },
       error: null,
-    } as any);
+    } as SupabaseQueryMock);
 
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -49,7 +55,7 @@ describe('usePermissions', () => {
           error: null,
         }),
       }),
-    } as any);
+    } as SupabaseQueryMock);
 
     const { result } = renderHook(() => usePermissions(), { wrapper: createWrapper() });
 
@@ -65,7 +71,7 @@ describe('usePermissions', () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: mockUser },
       error: null,
-    } as any);
+    } as SupabaseQueryMock);
 
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -74,7 +80,7 @@ describe('usePermissions', () => {
           error: null,
         }),
       }),
-    } as any);
+    } as SupabaseQueryMock);
 
     const { result } = renderHook(() => usePermissions(), { wrapper: createWrapper() });
 
@@ -90,7 +96,7 @@ describe('usePermissions', () => {
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: mockUser },
       error: null,
-    } as any);
+    } as SupabaseQueryMock);
 
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -99,7 +105,7 @@ describe('usePermissions', () => {
           error: null,
         }),
       }),
-    } as any);
+    } as SupabaseQueryMock);
 
     const { result } = renderHook(() => usePermissions(), { wrapper: createWrapper() });
 

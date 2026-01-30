@@ -10,7 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   query,
@@ -23,10 +23,8 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
-
 // Helper to convert doc
-const convertDoc = (doc: any) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export interface TelemedicineRoom {
   id: string;

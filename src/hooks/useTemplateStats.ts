@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EvaluationForm } from '@/types/clinical-forms';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -22,7 +22,6 @@ import {
   limit as limitFn,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 /**
  * Hook para obter estatísticas gerais dos templates
@@ -42,23 +41,23 @@ export function useTemplateStats() {
 
       // Calculate stats
       const total = forms.length;
-      const favorites = forms.filter((f: any) => f.is_favorite).length;
+      const favorites = forms.filter((f) => f.is_favorite).length;
 
       // Get recently used (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const recentlyUsed = forms
-        .filter((f: any) => {
+        .filter((f) => {
           const lastUsed = f.last_used_at ? new Date(f.last_used_at) : null;
           return lastUsed && lastUsed >= thirtyDaysAgo;
         })
-        .reduce((sum, f: any) => sum + (f.usage_count || 0), 0);
+        .reduce((sum, f) => sum + (f.usage_count || 0), 0);
 
       // Get templates by category
       const byCategory: Record<string, number> = {};
       forms.forEach((form) => {
-        const tipo = (form as any).tipo;
+        const tipo = form.tipo;
         byCategory[tipo] = (byCategory[tipo] || 0) + 1;
       });
 
@@ -122,9 +121,14 @@ export function useMostUsedTemplates(limitNum = 10) {
       let forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Filter and sort by usage_count client-side
+      interface FormWithUsage {
+        usage_count?: number | null;
+        [key: string]: unknown;
+      }
+
       forms = forms
-        .filter((f: any) => f.usage_count !== null && f.usage_count > 0)
-        .sort((a: any, b: any) => b.usage_count - a.usage_count)
+        .filter((f: FormWithUsage) => f.usage_count !== null && f.usage_count > 0)
+        .sort((a: FormWithUsage, b: FormWithUsage) => (b.usage_count || 0) - (a.usage_count || 0))
         .slice(0, limitNum);
 
       return forms as EvaluationForm[];
@@ -148,11 +152,15 @@ export function useRecentlyUsedTemplates(limitNum = 6) {
       let forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Filter and sort by last_used_at client-side
+      interface FormWithLastUsed {
+        last_used_at: string | null;
+      }
+
       forms = forms
-        .filter((f: any) => f.last_used_at !== null)
-        .sort((a: any, b: any) => {
-          const aTime = new Date(a.last_used_at).getTime();
-          const bTime = new Date(b.last_used_at).getTime();
+        .filter((f: FormWithLastUsed) => f.last_used_at !== null)
+        .sort((a: FormWithLastUsed, b: FormWithLastUsed) => {
+          const aTime = new Date(a.last_used_at || '').getTime();
+          const bTime = new Date(b.last_used_at || '').getTime();
           return bTime - aTime;
         })
         .slice(0, limitNum);

@@ -17,7 +17,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getFirebaseDb, getFirebaseAuth } from '@/integrations/firebase/app';
+import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -34,11 +34,10 @@ import {
   writeBatch
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 const auth = getFirebaseAuth();
 
 // Helper
-const convertDoc = <T>(doc: any): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
 
 // ==================== GAMIFICATION ====================
 

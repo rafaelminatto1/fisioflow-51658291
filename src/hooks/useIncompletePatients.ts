@@ -8,10 +8,9 @@
 
 import { useState, useEffect } from 'react';
 import { logger } from '@/lib/errors/logger';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 interface IncompletePatient {
   id: string;

@@ -14,7 +14,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '@fisioflow/shared-api/firebase';
+import { db } from '@/integrations/firebase/app';
 import type { PainMapRecord, PainMapPoint, PainEvolutionData } from '@/types/painMap';
 
 // ============================================================================

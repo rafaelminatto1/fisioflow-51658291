@@ -10,7 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import {
   collection,
   getDocs,
@@ -24,7 +24,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 
-const db = getFirebaseDb();
 
 export interface SatisfactionSurvey {
   id: string;
@@ -97,77 +96,77 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
 
       // Apply filters
       if (filters?.patient_id) {
-        data = data.filter((item: any) => item.patient_id === filters.patient_id);
+        data = data.filter((item: SatisfactionSurvey) => item.patient_id === filters.patient_id);
       }
 
       if (filters?.therapist_id) {
-        data = data.filter((item: any) => item.therapist_id === filters.therapist_id);
+        data = data.filter((item: SatisfactionSurvey) => item.therapist_id === filters.therapist_id);
       }
 
       if (filters?.start_date) {
-        data = data.filter((item: any) => item.sent_at >= filters.start_date);
+        data = data.filter((item: SatisfactionSurvey) => item.sent_at >= filters.start_date);
       }
 
       if (filters?.end_date) {
-        data = data.filter((item: any) => item.sent_at <= filters.end_date);
+        data = data.filter((item: SatisfactionSurvey) => item.sent_at <= filters.end_date);
       }
 
       if (filters?.responded !== undefined) {
-        data = data.filter((item: any) => {
+        data = data.filter((item: SatisfactionSurvey) => {
           const hasResponded = item.responded_at !== null;
           return filters.responded ? hasResponded : !hasResponded;
         });
       }
 
       // Fetch patient data
-      const patientIds = data.map((item: any) => item.patient_id).filter(Boolean);
-      const patientMap = new Map<string, any>();
+      const patientIds = data.map((item: SatisfactionSurvey) => item.patient_id).filter(Boolean);
+      const patientMap = new Map<string, { id: string; full_name: string }>();
 
       await Promise.all([...new Set(patientIds)].map(async (patientId) => {
         const patientDoc = await getDoc(doc(db, 'patients', patientId));
         if (patientDoc.exists()) {
           patientMap.set(patientId, {
             id: patientDoc.id,
-            full_name: patientDoc.data().full_name,
+            full_name: patientDoc.data().full_name as string,
           });
         }
       }));
 
       // Fetch appointment data
-      const appointmentIds = data.map((item: any) => item.appointment_id).filter(Boolean);
-      const appointmentMap = new Map<string, any>();
+      const appointmentIds = data.map((item: SatisfactionSurvey) => item.appointment_id).filter((id): id is string => id !== null);
+      const appointmentMap = new Map<string, { id: string; start_time: string }>();
 
       await Promise.all([...new Set(appointmentIds)].map(async (appointmentId) => {
         const appointmentDoc = await getDoc(doc(db, 'appointments', appointmentId));
         if (appointmentDoc.exists()) {
           appointmentMap.set(appointmentId, {
             id: appointmentDoc.id,
-            start_time: appointmentDoc.data().start_time,
+            start_time: appointmentDoc.data().start_time as string,
           });
         }
       }));
 
       // Fetch therapist names from Firestore
-      const therapistIds = [...new Set(data.map((item: any) => item.therapist_id).filter(Boolean))];
+      const therapistIds = [...new Set(data.map((item: SatisfactionSurvey) => item.therapist_id).filter((id): id is string => id !== null))];
       const therapistMap = new Map<string, string>();
 
       if (therapistIds.length > 0) {
         const profilesQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
         const profilesSnap = await getDocs(profilesQ);
         profilesSnap.forEach(doc => {
-          therapistMap.set(doc.data().user_id, doc.data().full_name);
+          therapistMap.set(doc.data().user_id as string, doc.data().full_name as string);
         });
       }
 
       // Map data to expected format
-      return data.map((item: any) => ({
+      return data.map((item: SatisfactionSurvey) => ({
         ...item,
         patient: patientMap.get(item.patient_id),
-        appointment: appointmentMap.get(item.appointment_id),
+        appointment: item.appointment_id ? appointmentMap.get(item.appointment_id) : undefined,
         therapist: item.therapist_id ? {
           id: item.therapist_id,
           name: therapistMap.get(item.therapist_id) || 'Terapeuta'
-        } : null,
+        } : undefined,
       })) as SatisfactionSurvey[];
     },
   });
@@ -178,28 +177,28 @@ export function useSurveyStats() {
     queryKey: ['survey-stats'],
     queryFn: async () => {
       const snapshot = await getDocs(collection(db, 'satisfaction_surveys'));
-      const surveys = snapshot.docs.map(doc => doc.data());
+      const surveys = snapshot.docs.map(doc => doc.data()) as SatisfactionSurvey[];
 
       const total = surveys.length || 0;
-      const respondedSurveys = surveys.filter((s: any) => s.responded_at);
+      const respondedSurveys = surveys.filter((s) => s.responded_at !== null);
       const respondedCount = respondedSurveys.length;
 
-      const promotores = respondedSurveys.filter((s: any) => s.nps_score && s.nps_score >= 9).length;
-      const neutros = respondedSurveys.filter((s: any) => s.nps_score && s.nps_score >= 7 && s.nps_score <= 8).length;
-      const detratores = respondedSurveys.filter((s: any) => s.nps_score && s.nps_score <= 6).length;
+      const promotores = respondedSurveys.filter((s) => s.nps_score !== null && s.nps_score >= 9).length;
+      const neutros = respondedSurveys.filter((s) => s.nps_score !== null && s.nps_score >= 7 && s.nps_score <= 8).length;
+      const detratores = respondedSurveys.filter((s) => s.nps_score !== null && s.nps_score <= 6).length;
 
       const nps = respondedCount > 0 ? Math.round(((promotores - detratores) / respondedCount) * 100) : 0;
 
       const avgCareQuality = respondedCount > 0
-        ? respondedSurveys.reduce((sum, s: any) => sum + (s.q_care_quality || 0), 0) / respondedCount
+        ? respondedSurveys.reduce((sum, s) => sum + (s.q_care_quality || 0), 0) / respondedCount
         : 0;
 
       const avgProfessionalism = respondedCount > 0
-        ? respondedSurveys.reduce((sum, s: any) => sum + (s.q_professionalism || 0), 0) / respondedCount
+        ? respondedSurveys.reduce((sum, s) => sum + (s.q_professionalism || 0), 0) / respondedCount
         : 0;
 
       const avgCommunication = respondedCount > 0
-        ? respondedSurveys.reduce((sum, s: any) => sum + (s.q_communication || 0), 0) / respondedCount
+        ? respondedSurveys.reduce((sum, s) => sum + (s.q_communication || 0), 0) / respondedCount
         : 0;
 
       const responseRate = total > 0 ? Math.round((respondedCount / total) * 100) : 0;

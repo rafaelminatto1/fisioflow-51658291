@@ -1,11 +1,10 @@
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import type { Pathology, PathologyFormData } from '@/types/evolution';
 
 export class PathologyService {
   // Optimized: Select only required columns instead of *
   static async getPathologiesByPatientId(patientId: string): Promise<Pathology[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'patient_pathologies'),
       where('patient_id', '==', patientId),
@@ -29,7 +28,6 @@ export class PathologyService {
 
   // Optimized: Select only required columns instead of *
   static async getActivePathologies(patientId: string): Promise<Pathology[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'patient_pathologies'),
       where('patient_id', '==', patientId),
@@ -54,7 +52,6 @@ export class PathologyService {
 
   // Optimized: Select only required columns instead of *
   static async getResolvedPathologies(patientId: string): Promise<Pathology[]> {
-    const db = getFirebaseDb();
     const q = query(
       collection(db, 'patient_pathologies'),
       where('patient_id', '==', patientId),
@@ -81,7 +78,6 @@ export class PathologyService {
 
   // Optimized: Select only required columns
   static async addPathology(data: PathologyFormData): Promise<Pathology> {
-    const db = getFirebaseDb();
     const now = new Date().toISOString();
     const dataToSave = {
       ...data,
@@ -106,7 +102,6 @@ export class PathologyService {
 
   // Optimized: Select only required columns
   static async updatePathology(pathologyId: string, data: Partial<PathologyFormData>): Promise<Pathology> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_pathologies', pathologyId);
 
     await updateDoc(docRef, {
@@ -139,7 +134,6 @@ export class PathologyService {
   }
 
   static async deletePathology(pathologyId: string): Promise<void> {
-    const db = getFirebaseDb();
     const docRef = doc(db, 'patient_pathologies', pathologyId);
     await deleteDoc(docRef);
   }

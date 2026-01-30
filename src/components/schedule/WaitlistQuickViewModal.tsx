@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -21,6 +22,7 @@ import {
   Sun,
   Sunset,
   Moon,
+  UserCircle2,
 } from 'lucide-react';
 import { useWaitlist, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { cn } from '@/lib/utils';
@@ -126,27 +128,75 @@ export function WaitlistQuickViewModal({
           {/* List */}
           <ScrollArea className="h-[400px] pr-2">
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Carregando...
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8 text-muted-foreground"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span>Carregando lista de espera...</span>
+                </div>
+              </motion.div>
             ) : filteredWaitlist.length === 0 ? (
-              <div className="text-center py-12">
-                <Clock className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-12"
+              >
+                <div className="relative inline-block mb-4">
+                  <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl" />
+                  <Clock className="h-16 w-16 mx-auto text-muted-foreground/50 relative" />
+                </div>
+                <p className="text-muted-foreground font-medium">
                   {searchQuery ? 'Nenhum paciente encontrado' : 'Lista de espera vazia'}
                 </p>
-              </div>
+                {searchQuery && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-xs text-muted-foreground mt-2"
+                  >
+                    Tente buscar por outro nome
+                  </motion.p>
+                )}
+              </motion.div>
             ) : (
               <div className="space-y-3">
-                {filteredWaitlist.map((entry, index) => (
-                  <div
-                    key={entry.id}
-                    className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                  >
+                <AnimatePresence mode="popLayout">
+                  {filteredWaitlist.map((entry, index) => (
+                    <motion.div
+                      key={entry.id}
+                      layout
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{
+                        layout: { duration: 0.2 },
+                        opacity: { duration: 0.15 },
+                        y: { duration: 0.2 },
+                      }}
+                      whileHover={{ scale: 1.01, x: 2 }}
+                      className="group relative p-4 rounded-xl border bg-card hover:bg-muted/30 hover:border-primary/20 hover:shadow-md transition-all cursor-default"
+                    >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold">
-                          {index + 1}
+                        {/* Avatar with initials */}
+                        <div className="flex-shrink-0 relative">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 dark:from-primary/30 dark:to-primary/20 border-2 border-primary/20 flex items-center justify-center text-sm font-bold text-primary shadow-sm">
+                            {entry.patient?.name
+                              ? entry.patient.name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                              : <UserCircle2 className="w-5 h-5" />}
+                          </div>
+                          {/* Priority indicator */}
+                          {entry.priority === 'urgent' && (
+                            <motion.div
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                              className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-card"
+                            />
+                          )}
                         </div>
 
                         <div className="flex-1 min-w-0 space-y-2">
@@ -231,17 +281,20 @@ export function WaitlistQuickViewModal({
                       </div>
 
                       {/* Schedule Button */}
-                      <Button
-                        size="sm"
-                        className="h-8 gap-1.5 flex-shrink-0"
-                        onClick={() => handleSchedule(entry)}
-                      >
-                        <Calendar className="h-3.5 w-3.5" />
-                        Agendar
-                      </Button>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          size="sm"
+                          className="h-9 gap-2 flex-shrink-0 shadow-sm hover:shadow-md transition-shadow"
+                          onClick={() => handleSchedule(entry)}
+                        >
+                          <Calendar className="h-4 w-4" />
+                          Agendar
+                        </Button>
+                      </motion.div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+              </AnimatePresence>
               </div>
             )}
           </ScrollArea>

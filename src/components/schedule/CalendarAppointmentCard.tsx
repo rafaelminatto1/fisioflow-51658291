@@ -148,7 +148,7 @@ const CalendarAppointmentCardBase = ({
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
     const [isHovered, setIsHovered] = useState(false);
-    const { cardSize } = useCardSize();
+    const { cardSize, fontPercentage } = useCardSize();
 
     // Status visual config
     const statusStyles = getStatusStyles(appointment.status);
@@ -157,6 +157,12 @@ const CalendarAppointmentCardBase = ({
 
     // Get card size configuration
     const sizeConfig = CARD_SIZE_CONFIGS[cardSize];
+
+    // Calculate scaled font sizes based on user preference
+    const fontScale = fontPercentage / 100; // Convert percentage to multiplier (0.5 to 1.5)
+    const scaledTimeFontSize = Math.round(sizeConfig.timeFontSize * fontScale);
+    const scaledNameFontSize = Math.round(sizeConfig.nameFontSize * fontScale);
+    const scaledTypeFontSize = Math.round(sizeConfig.typeFontSize * fontScale);
 
     const duration = appointment.duration || 60;
     const isSmall = duration <= 30; // 30 min or less
@@ -205,16 +211,26 @@ const CalendarAppointmentCardBase = ({
                     stiffness: 350,
                     damping: 30
                 },
-                opacity: { duration: 0.15 },
-                scale: { duration: 0.15 }
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 },
+                boxShadow: { duration: 0.2 }
             }}
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.95, y: 4 }}
             animate={{
-                opacity: isDragging ? 0.6 : 1,
-                scale: isDragging ? 0.95 : 1
+                opacity: isDragging ? 0.8 : 1,
+                scale: isDragging ? 0.98 : 1,
+                y: 0,
+                boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
             }}
-            whileHover={{ scale: isTouch ? 1 : 1.005, zIndex: 20 }}
-            whileTap={{ scale: isTouch ? 0.97 : 1 }}
+            whileHover={{
+                scale: isTouch ? 1 : 1.02,
+                zIndex: 20,
+                transition: { duration: 0.15 }
+            }}
+            whileTap={{
+                scale: isTouch ? 0.97 : 0.99,
+                transition: { duration: 0.1 }
+            }}
             draggable={draggable}
             onDragStart={(e) => {
                 if (draggable) {
@@ -234,19 +250,19 @@ const CalendarAppointmentCardBase = ({
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "absolute rounded-md flex flex-col overflow-hidden transition-colors border",
-                "shadow-xs hover:shadow-md cursor-pointer",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                "absolute rounded-lg flex flex-col overflow-hidden transition-all border",
+                "cursor-pointer",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 statusStyles.bg,
                 statusStyles.hoverBg,
                 statusStyles.border,
                 draggable && "cursor-grab active:cursor-grabbing",
-                isDragging && "z-50 ring-2 ring-blue-400 grayscale",
+                isDragging && "z-50 ring-2 ring-blue-500 shadow-2xl",
                 isSaving && "animate-pulse-subtle ring-2 ring-amber-400/60 ring-offset-1 z-30",
-                !isDragging && isHovered && !selectionMode && "ring-1 ring-black/10 dark:ring-white/10",
-                isDropTarget && !isDragging && "ring-2 ring-primary/60 ring-offset-1 shadow-lg z-25",
-                selectionMode && "hover:opacity-90 active:scale-95",
-                isSelected && "ring-2 ring-primary ring-offset-1 z-40",
+                !isDragging && isHovered && !selectionMode && "ring-2 ring-black/5 dark:ring-white/10 shadow-xl",
+                isDropTarget && !isDragging && "ring-2 ring-primary/70 ring-offset-1 shadow-2xl z-25",
+                selectionMode && "hover:opacity-90 active:scale-95 transition-all",
+                isSelected && "ring-2 ring-primary ring-offset-1 shadow-xl z-40",
                 isTouch && "active:scale-95 transition-transform"
             )}
             style={{
@@ -289,7 +305,7 @@ const CalendarAppointmentCardBase = ({
                                         "font-mono font-semibold truncate leading-none tracking-tight",
                                         statusStyles.text,
                                     )}
-                                    style={{ fontSize: `${sizeConfig.timeFontSize}px` }}
+                                    style={{ fontSize: `${scaledTimeFontSize}px` }}
                                 >
                                     {normalizeTime(appointment.time)}
                                 </span>
@@ -326,7 +342,7 @@ const CalendarAppointmentCardBase = ({
                                     >
                                         <AvatarFallback
                                             className={cn("font-bold", statusStyles.accent, "text-white")}
-                                            style={{ fontSize: `${sizeConfig.avatarSize * 0.4}px` }}
+                                            style={{ fontSize: `${Math.round(sizeConfig.avatarSize * 0.4 * fontScale)}px` }}
                                         >
                                             {getInitials(appointment.patientName)}
                                         </AvatarFallback>
@@ -340,7 +356,7 @@ const CalendarAppointmentCardBase = ({
                                         "block font-bold leading-tight line-clamp-2 tracking-tight",
                                         statusStyles.text,
                                     )}
-                                    style={{ fontSize: `${sizeConfig.nameFontSize}px` }}
+                                    style={{ fontSize: `${scaledNameFontSize}px` }}
                                 >
                                     {appointment.patientName}
                                 </span>
@@ -351,7 +367,7 @@ const CalendarAppointmentCardBase = ({
                                             "block truncate opacity-70 mt-0.5 font-medium",
                                             statusStyles.subtext
                                         )}
-                                        style={{ fontSize: `${sizeConfig.typeFontSize}px` }}
+                                        style={{ fontSize: `${scaledTypeFontSize}px` }}
                                     >
                                         {appointment.type}
                                     </span>

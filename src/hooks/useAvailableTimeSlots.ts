@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { collection, doc, getDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
 import type { BusinessHour, BlockedTime } from './useScheduleSettings';
 import { useAuth } from './useAuth';
@@ -16,8 +16,6 @@ import { useAuth } from './useAuth';
 import { generateTimeSlots, TimeSlotInfo } from '@/utils/scheduleHelpers';
 
 export type { TimeSlotInfo };
-
-const db = getFirebaseDb();
 
 export function useAvailableTimeSlots(date: Date | null) {
   const { user } = useAuth();

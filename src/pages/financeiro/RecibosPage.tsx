@@ -17,7 +17,7 @@ import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
 import { useAuth } from '@/contexts/AuthContext';
-import { getFirebaseDb } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
@@ -46,7 +46,6 @@ export default function RecibosPage() {
     queryKey: ['clinica-config', user?.uid],
     queryFn: async () => {
       if (!user) return null;
-      const db = getFirebaseDb();
       const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
       const profile = profileDoc.exists() ? profileDoc.data() : null;
       return { profile, org: orgData };
