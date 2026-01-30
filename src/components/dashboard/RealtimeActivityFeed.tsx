@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
+import { logger } from '@/lib/errors/logger';
 
 interface ActivityEvent {
   id: string;
@@ -112,7 +113,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         setActivities(activityList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
         setIsLoading(false);
       } catch (error) {
-        console.error('Error loading activities:', error);
+        logger.error('Error loading activities', error, 'RealtimeActivityFeed');
         setActivities([]);
         setIsLoading(false);
       }
@@ -144,7 +145,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
                 patientName = patientData.full_name || patientData.name || 'Paciente';
               }
             } catch (e) {
-              console.error('Error fetching patient:', e);
+              logger.error('Error fetching patient', e, 'RealtimeActivityFeed');
             }
           }
 
@@ -166,7 +167,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
       }
     }, (error) => {
-      console.warn('RealtimeActivityFeed: Appointments subscription error', error);
+      logger.warn('Appointments subscription error', error, 'RealtimeActivityFeed');
     });
 
     unsubscribers.push(appointmentsUnsub);
@@ -200,7 +201,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
       }
     }, (error) => {
-      console.warn('RealtimeActivityFeed: Patients subscription error', error);
+      logger.warn('Patients subscription error', error, 'RealtimeActivityFeed');
     });
 
     unsubscribers.push(patientsUnsub);

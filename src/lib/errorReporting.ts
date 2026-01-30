@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import * as Sentry from "@sentry/react";
+import { logger } from '@/lib/errors/logger';
 
 interface ErrorReportOptions {
     /**
@@ -31,7 +32,7 @@ export const reportError = (error: unknown, options: ErrorReportOptions = {}) =>
 
     // 1. Log to Console (always useful for debugging)
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[ErrorReport] ${errorMessage}`, { error, context });
+    logger.error(`[ErrorReport] ${errorMessage}`, { error, context }, 'errorReporting');
 
     // 2. Log to Sentry
     // We check if capturing exceptions is safe/configured implicitly by the Sentry SDK presence
@@ -40,7 +41,7 @@ export const reportError = (error: unknown, options: ErrorReportOptions = {}) =>
             extra: context,
         });
     } catch (sentryError) {
-        console.error("Failed to report error to Sentry:", sentryError);
+        logger.error("Failed to report error to Sentry", sentryError, 'errorReporting');
     }
 
     // 3. Show Toast
