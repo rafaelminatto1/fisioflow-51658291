@@ -27,7 +27,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once
-const APP_NAME = 'fisioflow-patient';
+const APP_NAME = 'fisioflow-professional';
 
 function getFirebaseApp() {
   const existingApps = getApps();

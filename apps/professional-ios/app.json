@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#1E293B"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fisioflow.professionals",
@@ -27,44 +29,49 @@
           "reservedClientId": "CLIENT_ID_REVERSO_DO_FIREBASE"
         }
       },
-      "bundleIdentifier": "com.fisioflow.professionals"
-    },
-    "android": {
-      "package": "com.fisioflow.professionals",
-      "googleServicesFile": "./google-services.json"
-    },
-    "plugins": [
-      "@expo/config-plugins",
-      [
-        "@expo-google-fonts/inter",
-        {
-          "fonts": ["inter_400", "inter_500", "inter_600", "inter_700"]
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#1E293B"
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
-      }
-    },
-    "updates": {
-      "url": "https://u.expo.dev/será-adicionado-pelo-eas"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     }
+  },
+  "android": {
+    "package": "com.fisioflow.professionals",
+    "googleServicesFile": "./google-services.json"
+  },
+  "plugins": [
+    "@expo/config-plugins",
+    [
+      "@expo-google-fonts/inter",
+      {
+        "fonts": [
+          "inter_400",
+          "inter_500",
+          "inter_600",
+          "inter_700"
+        ]
+      }
+    ],
+    [
+      "expo-notifications",
+      {
+        "icon": "./assets/notification-icon.png",
+        "color": "#1E293B"
+      }
+    ]
+  ],
+  "experiments": {
+    "typedRoutes": true
+  },
+  "extra": {
+    "router": {
+      "origin": false
+    },
+    "eas": {
+      "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
+    }
+  },
+  "updates": {
+    "url": "https://u.expo.dev/será-adicionado-pelo-eas"
+  },
+  "runtimeVersion": {
+    "policy": "appVersion"
   }
+}
 }
