@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { Patient } from "@/types";
+import { logger } from '@/lib/errors/logger';
 
 interface PatientComboboxProps {
   patients: Patient[];
@@ -36,7 +37,7 @@ export function PatientCombobox({
   className,
 }: PatientComboboxProps) {
   React.useEffect(() => {
-    console.log('PatientCombobox mounted. Patients prop length:', patients?.length);
+    logger.debug('PatientCombobox mounted', { patientsLength: patients?.length }, 'PatientCombobox');
   }, [patients]);
 
   const [open, setOpen] = React.useState(false);
