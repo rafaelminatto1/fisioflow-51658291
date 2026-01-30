@@ -3,6 +3,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 export function PWAUpdatePrompt() {
   const [showReload, setShowReload] = useState(false);
@@ -12,7 +13,7 @@ export function PWAUpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(swUrl, r) {
-      console.log('Service Worker registrado:', swUrl);
+      logger.info('Service Worker registrado', { swUrl }, 'PWAUpdatePrompt');
 
       // Verificar atualizações a cada 1 hora
       if (r) {
@@ -22,7 +23,7 @@ export function PWAUpdatePrompt() {
       }
     },
     onRegisterError(error) {
-      console.log('Erro ao registrar SW:', error);
+      logger.error('Erro ao registrar SW', error, 'PWAUpdatePrompt');
     },
   });
 
