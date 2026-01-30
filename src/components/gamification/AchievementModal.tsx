@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, Zap, X, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
