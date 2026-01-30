@@ -9,7 +9,9 @@ import {
     DB_PASS_SECRET,
     DB_USER_SECRET,
     DB_NAME_SECRET,
-    CLOUD_SQL_CONNECTION_NAME_SECRET
+    CLOUD_SQL_CONNECTION_NAME_SECRET,
+    DB_HOST_IP_SECRET,
+    DB_HOST_IP_PUBLIC_SECRET
 } from './init';
 import {
     WHATSAPP_PHONE_NUMBER_ID_SECRET,
@@ -18,15 +20,19 @@ import {
 
 // Set global options for all functions
 setGlobalOptions({
-    region: 'us-central1',
+    region: 'southamerica-east1',
     secrets: [
         DB_PASS_SECRET,
         DB_USER_SECRET,
         DB_NAME_SECRET,
         CLOUD_SQL_CONNECTION_NAME_SECRET,
+        DB_HOST_IP_SECRET,
+        DB_HOST_IP_PUBLIC_SECRET,
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
         WHATSAPP_ACCESS_TOKEN_SECRET
-    ]
+    ],
+    vpcConnector: "cloudsql-connector",
+    vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY"
 });
 
 // ============================================================================

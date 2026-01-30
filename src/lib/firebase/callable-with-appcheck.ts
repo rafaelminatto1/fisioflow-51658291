@@ -14,9 +14,9 @@ export async function callableWithAppCheck<T = any, R = any>(
   data?: T
 ): Promise<R> {
   const app = getApp();
-  const functions = getFunctions(app, 'us-central1');
-  const region = functions.region || 'us-central1';
-  
+  const functions = getFunctions(app, 'southamerica-east1');
+  const region = functions.region || 'southamerica-east1';
+
   // Obter token do App Check
   let appCheckToken: string | undefined;
   try {
@@ -31,7 +31,7 @@ export async function callableWithAppCheck<T = any, R = any>(
   const authToken = await auth.currentUser?.getIdToken();
 
   // Construir URL da função
-  const url = `https://us-central1-fisioflow-migration.cloudfunctions.net/${name}`;
+  const url = `https://southamerica-east1-fisioflow-migration.cloudfunctions.net/${name}`;
 
   // Fazer requisição com fetch para incluir custom headers
   const response = await fetch(url, {

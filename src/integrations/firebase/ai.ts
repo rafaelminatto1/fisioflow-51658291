@@ -24,6 +24,7 @@ import { initializeRemoteConfig, REMOTE_CONFIG_KEYS } from '@/lib/firebase/remot
 import { initAppCheck, getAppCheckToken } from '@/lib/firebase/app-check';
 import { AIUsageMonitor as UsageMonitor } from '@/lib/ai/usage-tracker';
 import { ClinicalPromptBuilder } from '@/lib/ai/prompts/clinical-prompts';
+import { logger } from '@/lib/errors/logger';
 
 // Temporary stub for AIRemoteConfig compatibility
 const AIRemoteConfig = {
@@ -104,7 +105,7 @@ export class FirebaseAIService {
       try {
         initAppCheck();
       } catch (error) {
-        console.warn('App Check initialization failed:', error);
+        logger.warn('App Check initialization failed', error, 'firebase-ai');
       }
 
       const ai = getFirebaseAI();
@@ -115,13 +116,13 @@ export class FirebaseAIService {
           const model = AIModelFactory.getModel(modelType, ai);
           this.models.set(modelType, model);
         } catch (error) {
-          console.warn(`Failed to initialize model ${modelType}:`, error);
+          logger.warn(`Failed to initialize model ${modelType}`, error, 'firebase-ai');
         }
       }
 
       this.initialized = true;
     } catch (error) {
-      console.error('Failed to initialize Firebase AI Service:', error);
+      logger.error('Failed to initialize Firebase AI Service', error, 'firebase-ai');
     }
   }
 

@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { initSentry } from "@/lib/sentry/config";
 import { initAppCheck } from "@/lib/firebase/app-check";
+import { logger } from '@/lib/errors/logger';
 
 // Inicializar serviços globais
 initSentry();
@@ -16,19 +17,19 @@ initAppCheck();
 
 // Global Chunk Load Error Handler for Vite
 window.addEventListener('vite:preloadError', (event) => {
-  console.error('Vite preload error detected:', event);
+  logger.error('Vite preload error detected', event as Error, 'main.tsx');
   // Reloading the page to fetch the latest deployment
   window.location.reload();
 });
 
 // Handler para erros não capturados
 window.addEventListener('error', (event) => {
-  console.error('Unhandled error:', event.error);
+  logger.error('Unhandled error', event.error as Error, 'main.tsx');
 });
 
 // Handler para promises rejeitadas não capturadas
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  logger.error('Unhandled promise rejection', event.reason as Error, 'main.tsx');
 });
 
 // ============================================================================
@@ -37,7 +38,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // TEMPORARILY DISABLED: Service Worker may be interfering with Firebase Auth
 // TODO: Re-enable after fixing the issue
-console.log('[SW] Service Worker registration disabled temporarily to fix Firebase Auth');
+logger.debug('Service Worker registration disabled temporarily to fix Firebase Auth', null, 'main.tsx');
 
 /*
 // Registrar Service Worker para PWA
@@ -48,7 +49,7 @@ if ('serviceWorker' in navigator) {
         scope: '/',
       });
 
-      console.log('[SW] Service Worker registered:', registration.scope);
+      logger.debug(`Service Worker registered: ${registration.scope}`, null, 'main.tsx');
 
       // Verificar por atualizações
       registration.addEventListener('updatefound', () => {
@@ -58,7 +59,7 @@ if ('serviceWorker' in navigator) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // Nova versão disponível
-              console.log('[SW] New version available');
+              logger.debug('New version available', null, 'main.tsx');
 
               // Notificar usuário (opcional - implementar UI)
               if (window.confirm('Nova versão disponível. Deseja atualizar?')) {
@@ -73,7 +74,7 @@ if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'SKIP_WAITING') {
           // SW solicitou ativação imediata
-          console.log('[SW] Skip waiting recebido, recarregando...');
+          logger.debug('Skip waiting recebido, recarregando...', null, 'main.tsx');
           window.location.reload();
         }
       });
@@ -84,7 +85,7 @@ if ('serviceWorker' in navigator) {
         // await Notification.requestPermission();
       }
     } catch (error) {
-      console.error('[SW] Service Worker registration failed:', error);
+      logger.error('Service Worker registration failed', error as Error, 'main.tsx');
     }
   });
 }
