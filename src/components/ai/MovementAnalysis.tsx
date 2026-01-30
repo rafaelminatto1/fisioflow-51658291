@@ -41,6 +41,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -240,7 +241,7 @@ export function MovementAnalysis({
       });
 
     } catch (err) {
-      console.error('[MovementAnalysis] Error recording:', err);
+      logger.error('[MovementAnalysis] Error recording', err, 'MovementAnalysis');
       toast({
         title: 'Erro ao acessar câmera',
         description: 'Verifique as permissões da câmera',
@@ -329,7 +330,7 @@ export function MovementAnalysis({
           : `Overall score: ${result.formQuality.overall}/100`,
       });
     } catch (err) {
-      console.error('[MovementAnalysis] Error:', err);
+      logger.error('[MovementAnalysis] Error', err, 'MovementAnalysis');
       const errorMessage = err instanceof Error ? err.message : language === 'pt-BR'
         ? 'Erro ao analisar movimento'
         : 'Error analyzing movement';
