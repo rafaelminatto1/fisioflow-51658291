@@ -57,7 +57,9 @@
     "professional:start": "pnpm --filter @fisioflow/professional-ios start",
     "professional:build:prod": "pnpm --filter @fisioflow/professional-ios build:prod",
     "db:proxy": "bash ./scripts/db-proxy.sh",
-    "verify": "node scripts/health-check.js"
+    "verify": "node scripts/health-check.js",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.7",
@@ -206,7 +208,8 @@
     "yaml": "^2.8.2",
     "youtube-sr": "^4.3.12",
     "zod": "^3.25.76",
-    "zustand": "^4.5.5"
+    "zustand": "^4.5.5",
+    "react-native": "0.76.9"
   },
   "devDependencies": {
     "@capacitor-firebase/authentication": "^8.0.1",

@@ -27,13 +27,8 @@ export const CLOUD_SQL_CONNECTION_NAME_SECRET = defineSecret('CLOUD_SQL_CONNECTI
 export const DB_HOST_IP_SECRET = defineSecret('DB_HOST_IP');
 export const DB_HOST_IP_PUBLIC_SECRET = defineSecret('DB_HOST_IP_PUBLIC');
 
-export const CORS_ORIGINS = [
-    'https://moocafisio.com.br',
-    'https://fisioflow-migration.web.app',
-    'https://fisioflow-migration.firebaseapp.com',
-    'http://localhost:5173',
-    'http://localhost:5000'
-];
+// Firebase Functions v2 onCall requires true for CORS (array not supported)
+export const CORS_ORIGINS = true;
 
 // ============================================================================
 // SINGLETON INSTANCES
