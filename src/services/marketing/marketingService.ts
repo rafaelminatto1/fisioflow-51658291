@@ -6,9 +6,8 @@
  * - supabase.from('marketing_exports').insert() → Firestore addDoc()
  */
 
-import { db } from '@/integrations/firebase/app';
-import { getFirebaseStorage } from '@/integrations/firebase/storage';
-import { collection, addDoc } from 'firebase/firestore';
+import { db, collection, addDoc } from '@/integrations/firebase/app';
+s/firebase/storage';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

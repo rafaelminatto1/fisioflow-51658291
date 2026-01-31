@@ -3,7 +3,8 @@
  */
 
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/integrations/firebase/app';
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**

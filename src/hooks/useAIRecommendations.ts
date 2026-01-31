@@ -11,18 +11,10 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, query, where, orderBy, limit as queryLimit,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit as queryLimit,
-} from 'firebase/firestore';
+
 import {
   generatePatientRecommendations,
   generateBulkPatientRecommendations,

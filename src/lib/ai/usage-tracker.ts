@@ -7,9 +7,8 @@
  * @module lib/ai/usage-monitor
  */
 
-import { collection, doc, setDoc, getDoc, getDocs, query, where, sum, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/integrations/firebase/app';
-import { AIModelType, AIFeatureCategory, AIUsageRecord } from '@fisioflow/shared-api/firebase/ai/config';
+import { db, collection, doc, setDoc, getDoc, getDocs, query, where, sum, orderBy, limit } from '@/integrations/firebase/app';
+ecord } from '@fisioflow/shared-api/firebase/ai/config';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**

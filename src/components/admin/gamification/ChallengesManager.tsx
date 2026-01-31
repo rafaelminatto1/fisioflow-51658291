@@ -1,18 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-    collection,
-    doc,
-    getDocs,
-    query,
-    orderBy,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    QueryDocumentSnapshot
-} from 'firebase/firestore';
-import { db } from '@/integrations/firebase/app';
-import { Button } from '@/components/ui/button';
+import { db, collection, doc, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';

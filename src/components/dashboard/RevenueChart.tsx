@@ -1,7 +1,6 @@
 // Gráfico de receita em tempo real
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { db, collection, query, where, orderBy, onSnapshot, Timestamp } from '@/integrations/firebase/app';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';

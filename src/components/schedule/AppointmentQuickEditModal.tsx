@@ -64,10 +64,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
 import { PatientService } from '@/services/patientService';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
-
+import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
+ointmentBase } from '@/types/appointment';
 
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;

@@ -10,17 +10,10 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { collection, getDocs, query, where, orderBy, doc, getDoc,  } from '@/integrations/firebase/app';
 import { toast } from "sonner";
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
+
 
 export interface PatientEvolutionData {
   sessions: {
