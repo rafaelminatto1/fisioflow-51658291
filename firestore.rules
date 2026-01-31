@@ -34,7 +34,8 @@ service cloud.firestore {
     function isBootstrapAdmin() {
       return isAuthenticated() && 
         (request.auth.token.email == 'rafael.minatto@yahoo.com.br' || 
-         request.auth.token.email == 'rafael.minatto@yahoo.cpm.br');
+         request.auth.token.email == 'rafael.minatto@yahoo.cpm.br' ||
+         request.auth.uid == 'sj9b11xOjPT8Q34pPHBMUIPzvQQ2');
     }
 
     // Verificar se o usuário é fisioterapeuta

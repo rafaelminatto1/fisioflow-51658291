@@ -6,7 +6,7 @@
  * @module firebase/ai/instance
  */
 
-import { getFirebaseAI as getFirebaseAISdk } from '@firebase/ai';
+import { getVertexAI as getFirebaseAISdk } from 'firebase/vertexai';
 import app from '../config';
 
 let aiInstance: ReturnType<typeof getFirebaseAISdk> | null = null;

@@ -1,6 +1,7 @@
 {
   "name": "@fisioflow/professional-ios",
   "version": "1.0.0",
+  "packageManager": "pnpm@9.15.0",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

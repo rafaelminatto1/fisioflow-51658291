@@ -5,7 +5,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { authorizeRequest } from '../middleware/auth';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
 
@@ -17,7 +17,7 @@ interface GetProfileResponse {
 /**
  * Retorna o perfil completo do usuário autenticado
  */
-export const getProfile = onCall<{}, Promise<GetProfileResponse>>({ cors: true }, async (request) => {
+export const getProfile = onCall<{}, Promise<GetProfileResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -72,7 +72,7 @@ interface UpdateProfileResponse {
 /**
  * Atualiza o perfil do usuário autenticado
  */
-export const updateProfile = onCall<UpdateProfileRequest, Promise<UpdateProfileResponse>>({ cors: true }, async (request) => {
+export const updateProfile = onCall<UpdateProfileRequest, Promise<UpdateProfileResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }

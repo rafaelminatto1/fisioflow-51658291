@@ -47,7 +47,7 @@ const logger_1 = require("../lib/logger");
 /**
  * Lista pacientes com filtros opcionais
  */
-exports.listPatients = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.listPatients = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     console.log('[listPatients] ===== START =====');
     if (!request.auth || !request.auth.token) {
         logger_1.logger.error('[listPatients] Unauthenticated request');
@@ -127,7 +127,7 @@ exports.listPatients = (0, https_1.onCall)({ cors: true }, async (request) => {
 /**
  * Busca um paciente por ID
  */
-exports.getPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getPatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -169,7 +169,7 @@ exports.getPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
 /**
  * Cria um novo paciente
  */
-exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createPatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     logger_1.logger.debug('[createPatient] ===== START =====');
     if (!request.auth || !request.auth.token) {
         logger_1.logger.error('[createPatient] Unauthenticated request');
@@ -261,7 +261,7 @@ exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
 /**
  * Atualiza um paciente existente
  */
-exports.updatePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updatePatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -351,7 +351,7 @@ exports.updatePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
 /**
  * Remove (soft delete) um paciente
  */
-exports.deletePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.deletePatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -399,7 +399,7 @@ exports.deletePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
 /**
  * Busca estatísticas de um paciente
  */
-exports.getPatientStats = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getPatientStats = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

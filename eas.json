@@ -8,6 +8,15 @@
       "developmentClient": true,
       "distribution": "internal"
     },
+    "professional-dev": {
+      "extends": "development",
+      "ios": {
+        "scheme": "professional-ios"
+      },
+      "android": {
+        "gradleCommand": ":apps:professional-ios:assembleDebug"
+      }
+    },
     "preview": {
       "distribution": "internal"
     },

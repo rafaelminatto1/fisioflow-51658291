@@ -21,7 +21,8 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Necessário para registrar avaliações e exercícios",
-        "NSPhotoLibraryUsageDescription": "Necessário para acessar fotos de pacientes"
+        "NSPhotoLibraryUsageDescription": "Necessário para acessar fotos de pacientes",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -44,7 +45,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
+        "projectId": "4194ce78-9370-453e-81f8-0cec68250ae8"
       }
     },
     "updates": {
@@ -52,6 +53,7 @@
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "owner": "rafaelminatto"
   }
 }

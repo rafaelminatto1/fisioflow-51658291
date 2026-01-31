@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Appointment } from '../types/models';
 import { logger } from '../lib/logger';
@@ -24,7 +24,7 @@ interface ListAppointmentsResponse {
 /**
  * Lista agendamentos com filtros
  */
-export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppointmentsResponse>>({ cors: true }, async (request) => {
+export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppointmentsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -112,7 +112,7 @@ interface GetAppointmentResponse {
 /**
  * Busca um agendamento por ID
  */
-export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointmentResponse>>({ cors: true }, async (request) => {
+export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -193,7 +193,7 @@ async function checkTimeConflictHelper(pool: any, params: CheckTimeConflictReque
 /**
  * Verifica conflito de horário (Exposed Function)
  */
-export const checkTimeConflict = onCall({ cors: true }, async (request) => {
+export const checkTimeConflict = onCall({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -247,7 +247,7 @@ interface CreateAppointmentResponse {
 /**
  * Cria um novo agendamento
  */
-export const createAppointment = onCall<CreateAppointmentRequest, Promise<CreateAppointmentResponse>>({ cors: true }, async (request) => {
+export const createAppointment = onCall<CreateAppointmentRequest, Promise<CreateAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -343,7 +343,7 @@ interface UpdateAppointmentResponse {
 /**
  * Atualiza um agendamento
  */
-export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<UpdateAppointmentResponse>>({ cors: true }, async (request) => {
+export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<UpdateAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -461,7 +461,7 @@ interface CancelAppointmentResponse {
 /**
  * Cancela um agendamento
  */
-export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<CancelAppointmentResponse>>({ cors: true }, async (request) => {
+export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<CancelAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
