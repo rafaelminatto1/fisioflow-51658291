@@ -299,7 +299,9 @@
       "Bash(yarn:*)",
       "Bash(npm --version)",
       "Bash(eas build:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(NODE_OPTIONS='--max-old-space-size=8192' ./node_modules/.bin/vite build:*)",
+      "mcp__plugin_firebase_firebase__firebase_get_security_rules"
     ],
     "deny": [],
     "ask": [],
