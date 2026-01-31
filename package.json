@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": "24.x",
+    "node": ">=18.0.0",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
@@ -176,9 +176,8 @@
     "openai": "^6.16.0",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
-    "react": "^18.3.1",
-    "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
     "react-error-boundary": "^6.0.1",
     "react-grid-layout": "^2.2.2",
@@ -223,8 +222,8 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.16.5",
     "@types/pg": "^8.16.0",
-    "@types/react": "^18.3.23",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/swagger-ui-react": "^5.18.0",
     "@vitejs/plugin-react": "^5.0.2",
     "@vitejs/plugin-react-swc": "^3.11.0",
@@ -257,9 +256,9 @@
   },
   "pnpm": {
     "overrides": {
-      "react": "^19.1.0",
-      "react-dom": "^19.1.0",
-      "@types/react": "^19.1.10",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "@types/react": "^19.0.0",
       "@react-native-async-storage/async-storage": "^2.2.0",
       "@expo/metro-config": "^54.0.0",
       "@expo/metro": "^54.0.0"
