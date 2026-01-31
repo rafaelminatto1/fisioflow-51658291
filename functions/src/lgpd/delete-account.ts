@@ -10,6 +10,7 @@
 import { firestore, auth } from 'firebase-admin';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS } from '../init';
 
 /**
  * Níveis de retenção de dados conforme LGPD e leis brasileiras
@@ -78,6 +79,7 @@ export const requestAccountDeletion = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
   maxInstances: 10,
+  cors: CORS_ORIGINS,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -156,6 +158,7 @@ export const cancelDeletionRequest = onCall({
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
+  cors: CORS_ORIGINS,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -207,6 +210,7 @@ export const executeAccountDeletion = onCall({
   memory: '1GiB',
   maxInstances: 1,
   timeoutSeconds: 540,
+  cors: CORS_ORIGINS,
 }, async (request) => {
   // Verificar se é admin (para deleção manual)
   if (request.auth) {

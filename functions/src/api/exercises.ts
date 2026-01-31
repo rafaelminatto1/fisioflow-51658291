@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Exercise } from '../types/models';
 import { logger } from '../lib/logger';
@@ -20,7 +20,7 @@ interface ListExercisesResponse {
   categories: string[];
 }
 
-export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesResponse>>({ cors: true }, async (request) => {
+export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -92,7 +92,7 @@ interface GetExerciseResponse {
   data: Exercise;
 }
 
-export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseResponse>>({ cors: true }, async (request) => {
+export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -134,7 +134,7 @@ interface SearchSimilarExercisesResponse {
   data: Exercise[];
 }
 
-export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Promise<SearchSimilarExercisesResponse>>({ cors: true }, async (request) => {
+export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Promise<SearchSimilarExercisesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -198,7 +198,7 @@ interface GetExerciseCategoriesResponse {
   data: { id: string, name: string }[];
 }
 
-export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesResponse>>({ cors: true }, async (request) => {
+export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -239,7 +239,7 @@ interface LogExerciseResponse {
   data: any; // Using explicit any for now as ExerciseLog model is not strictly defined in models.ts yet
 }
 
-export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseResponse>>({ cors: true }, async (request) => {
+export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -294,7 +294,7 @@ interface GetPrescribedExercisesResponse {
   data: any[]; // Using explicit any for PrescribedExercise rich type
 }
 
-export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Promise<GetPrescribedExercisesResponse>>({ cors: true }, async (request) => {
+export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Promise<GetPrescribedExercisesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -383,7 +383,7 @@ interface CreateExerciseResponse {
   data: Exercise;
 }
 
-export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerciseResponse>>({ cors: true }, async (request) => {
+export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerciseResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -440,7 +440,7 @@ interface UpdateExerciseRequest {
   [key: string]: any;
 }
 
-export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exercise }>>({ cors: true }, async (request) => {
+export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exercise }>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -490,7 +490,7 @@ interface DeleteExerciseRequest {
   id: string;
 }
 
-export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: boolean }>>({ cors: true }, async (request) => {
+export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: boolean }>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -533,7 +533,7 @@ interface MergeExercisesRequest {
   mergeIds: string[];
 }
 
-export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: boolean, deletedCount: number }>>({ cors: true }, async (request) => {
+export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: boolean, deletedCount: number }>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
