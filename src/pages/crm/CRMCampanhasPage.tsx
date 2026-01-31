@@ -24,7 +24,7 @@ import {
   XCircle, AlertCircle, TrendingUp, Filter, FileText
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
  from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -78,7 +78,7 @@ export default function CRMCampanhasPage() {
   const { data: campanhas = [], isLoading } = useQuery({
     queryKey: ['email-campanhas'],
     queryFn: async () => {
-      const q = query(collection(db, 'email_campanhas'), orderBy('created_at', 'desc'));
+      const q = firestoreQuery(collection(db, 'email_campanhas'), orderBy('created_at', 'desc'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailCampaign[];
     },
@@ -88,7 +88,7 @@ export default function CRMCampanhasPage() {
   const { data: templates = [] } = useQuery({
     queryKey: ['email-templates'],
     queryFn: async () => {
-      const q = query(collection(db, 'email_templates'), orderBy('name'));
+      const q = firestoreQuery(collection(db, 'email_templates'), orderBy('name'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailTemplate[];
     },

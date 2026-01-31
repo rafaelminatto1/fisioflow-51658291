@@ -39,7 +39,7 @@ import {
   audioChunkToBase64,
   base64ToAudioChunk,
   formatSessionDuration,
-} from '@fisioflow/shared-api/firebase/ai/live-config';
+} from '@/lib/ai/live-config';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================

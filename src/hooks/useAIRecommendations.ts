@@ -11,7 +11,7 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query, where, orderBy, limit as queryLimit,  } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit as queryLimit,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -97,7 +97,7 @@ export function usePatientRecommendations(patientId: string) {
       const patient = convertDoc(patientDoc);
 
       // Fetch appointment history
-      const appointmentsQuery = query(
+      const appointmentsQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('patient_id', '==', patientId),
         orderBy('date', 'desc'),
@@ -107,7 +107,7 @@ export function usePatientRecommendations(patientId: string) {
       const appointments = appointmentsSnap.docs.map(convertDoc);
 
       // Fetch evolution data
-      const evolutionsQuery = query(
+      const evolutionsQuery = firestoreQuery(
         collection(db, 'patient_evolutions'),
         where('patient_id', '==', patientId),
         orderBy('date', 'desc'),
@@ -152,7 +152,7 @@ export function useAllPatientRecommendations(options?: {
     queryKey: [...AI_KEYS.allRecommendations(), status, limit],
     queryFn: async (): Promise<PatientRecommendation[]> => {
       // Fetch patients with their appointment and evolution data
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients'),
         queryLimit(limit)
       );
@@ -163,13 +163,13 @@ export function useAllPatientRecommendations(options?: {
       const patientsWithData = await Promise.all(
         patients.map(async (patient: Patient) => {
           const [appointmentsSnap, evolutionsSnap] = await Promise.all([
-            getDocs(query(
+            getDocs(firestoreQuery(
               collection(db, 'appointments'),
               where('patient_id', '==', patient.id),
               orderBy('date', 'desc'),
               queryLimit(20)
             )),
-            getDocs(query(
+            getDocs(firestoreQuery(
               collection(db, 'patient_evolutions'),
               where('patient_id', '==', patient.id),
               orderBy('date', 'desc'),
@@ -229,7 +229,7 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
       const patient = convertDoc(patientDoc);
 
       // Fetch last therapist
-      const lastAptQuery = query(
+      const lastAptQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('patient_id', '==', options.patientId),
         where('status', '==', 'atendido'),
@@ -240,7 +240,7 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
       const lastApt = lastAptSnap.docs.map(convertDoc)[0];
 
       // Fetch therapists
-      const therapistsQuery = query(
+      const therapistsQuery = firestoreQuery(
         collection(db, 'therapists'),
         where('status', '==', 'active')
       );
@@ -273,7 +273,7 @@ export function useTreatmentInsights(patientId: string) {
       const patient = convertDoc(patientDoc);
 
       // Fetch evolution data
-      const evolutionsQuery = query(
+      const evolutionsQuery = firestoreQuery(
         collection(db, 'patient_evolutions'),
         where('patient_id', '==', patientId),
         orderBy('date', 'asc')
@@ -282,7 +282,7 @@ export function useTreatmentInsights(patientId: string) {
       const evolutions = evolutionsSnap.docs.map(convertDoc);
 
       // Fetch active goals
-      const goalsQuery = query(
+      const goalsQuery = firestoreQuery(
         collection(db, 'patient_goals'),
         where('patient_id', '==', patientId),
         where('status', '==', 'active')
@@ -324,7 +324,7 @@ export function useNextAppointmentSuggestion(patientId: string) {
     queryKey: AI_KEYS.nextAppointment(patientId),
     queryFn: async () => {
       // Fetch appointment history
-      const appointmentsQuery = query(
+      const appointmentsQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('patient_id', '==', patientId),
         where('status', '==', 'atendido'),

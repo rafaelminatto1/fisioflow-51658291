@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, deleteDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -58,7 +58,7 @@ export default function QuestsManager() {
         queryKey: ['admin-quests'],
         queryFn: async () => {
             const questRef = collection(db, 'quest_definitions');
-            const q = query(questRef, orderBy('created_at', 'desc'));
+            const q = firestoreQuery(questRef, orderBy('created_at', 'desc'));
             const querySnapshot = await getDocs(q);
 
             const quests: QuestDefinition[] = [];

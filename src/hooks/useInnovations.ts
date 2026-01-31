@@ -16,7 +16,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, setDoc, writeBatch } from '@/integrations/firebase/app';
+import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy, limit, setDoc, writeBatch } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
@@ -67,7 +67,7 @@ export function usePatientLevel(patientId: string) {
   return useQuery({
     queryKey: ['patient-level', patientId],
     queryFn: async () => {
-      const q = query(collection(db, 'patient_levels'), where('patient_id', '==', patientId));
+      const q = firestoreQuery(collection(db, 'patient_levels'), where('patient_id', '==', patientId));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) return null;
@@ -81,7 +81,7 @@ export function useGamificationRewards() {
   return useQuery({
     queryKey: ['gamification-rewards'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'gamification_rewards'),
         where('is_active', '==', true),
         orderBy('xp_required', 'asc')
@@ -97,7 +97,7 @@ export function usePatientAchievements(patientId: string) {
   return useQuery({
     queryKey: ['patient-achievements', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_achievements'),
         where('patient_id', '==', patientId),
         orderBy('unlocked_at', 'desc')
@@ -187,7 +187,7 @@ export function useInventory() {
   return useQuery({
     queryKey: ['inventory'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'clinic_inventory'),
         where('is_active', '==', true),
         orderBy('item_name')
@@ -236,14 +236,14 @@ export function useInventoryMovements(inventoryId?: string) {
   return useQuery({
     queryKey: ['inventory-movements', inventoryId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'inventory_movements'),
         orderBy('created_at', 'desc'),
         limit(100)
       );
 
       if (inventoryId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'inventory_movements'),
           where('inventory_id', '==', inventoryId),
           orderBy('created_at', 'desc'),
@@ -297,16 +297,16 @@ export function useStaffPerformance(therapistId?: string, startDate?: string, en
   return useQuery({
     queryKey: ['staff-performance', therapistId, startDate, endDate],
     queryFn: async () => {
-      let q = query(collection(db, 'staff_performance_metrics'), orderBy('metric_date', 'desc'));
+      let q = firestoreQuery(collection(db, 'staff_performance_metrics'), orderBy('metric_date', 'desc'));
 
       if (therapistId) {
-        q = query(q, where('therapist_id', '==', therapistId));
+        q = firestoreQuery(q, where('therapist_id', '==', therapistId));
       }
       if (startDate) {
-        q = query(q, where('metric_date', '>=', startDate));
+        q = firestoreQuery(q, where('metric_date', '>=', startDate));
       }
       if (endDate) {
-        q = query(q, where('metric_date', '<=', endDate));
+        q = firestoreQuery(q, where('metric_date', '<=', endDate));
       }
 
       const snapshot = await getDocs(q);
@@ -333,7 +333,7 @@ export function useAppointmentPredictions() {
   return useQuery({
     queryKey: ['appointment-predictions'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'appointment_predictions'),
         orderBy('no_show_probability', 'desc'),
         limit(50)
@@ -366,7 +366,7 @@ export function useRevenueForecasts() {
   return useQuery({
     queryKey: ['revenue-forecasts'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'revenue_forecasts'),
         orderBy('forecast_date', 'asc'),
         limit(90)
@@ -399,7 +399,7 @@ export function useWhatsAppExerciseQueue() {
   return useQuery({
     queryKey: ['whatsapp-exercise-queue'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'whatsapp_exercise_queue'),
         orderBy('created_at', 'desc'),
         limit(100)
@@ -447,14 +447,14 @@ export function usePatientSelfAssessments(patientId?: string) {
   return useQuery({
     queryKey: ['patient-self-assessments', patientId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'patient_self_assessments'),
         orderBy('created_at', 'desc'),
         limit(100)
       );
 
       if (patientId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'patient_self_assessments'),
           where('patient_id', '==', patientId),
           orderBy('created_at', 'desc'),

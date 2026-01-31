@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { db, doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
+import { db, doc, getDoc, getDocs, collection, query as firestoreQuery, where, addDoc, updateDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
@@ -72,10 +72,10 @@ export default function NewEvaluationPage() {
 
             const [patientDoc, goalsQuery, pathologiesQuery, surgeriesQuery, appointmentsQuery] = await Promise.all([
                 getDoc(doc(db, 'patients', patientId)),
-                getDocs(query(collection(db, 'patient_goals'), where('patient_id', '==', patientId))),
-                getDocs(query(collection(db, 'patient_pathologies'), where('patient_id', '==', patientId))),
-                getDocs(query(collection(db, 'patient_surgeries'), where('patient_id', '==', patientId))),
-                getDocs(query(collection(db, 'appointments'), where('patient_id', '==', patientId), orderBy('appointment_date', 'desc'), limitClause(20)))
+                getDocs(firestoreQuery(collection(db, 'patient_goals'), where('patient_id', '==', patientId))),
+                getDocs(firestoreQuery(collection(db, 'patient_pathologies'), where('patient_id', '==', patientId))),
+                getDocs(firestoreQuery(collection(db, 'patient_surgeries'), where('patient_id', '==', patientId))),
+                getDocs(firestoreQuery(collection(db, 'appointments'), where('patient_id', '==', patientId), orderBy('appointment_date', 'desc'), limitClause(20)))
             ]);
 
             if (!patientDoc.exists()) throw new Error('Paciente não encontrado');

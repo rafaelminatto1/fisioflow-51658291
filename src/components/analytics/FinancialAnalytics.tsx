@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
-Grid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -27,7 +27,7 @@ export function FinancialAnalytics() {
         const monthStart = startOfMonth(month);
         const monthEnd = startOfMonth(addMonths(month, 1));
 
-        const q = query(
+        const q = firestoreQuery(
           collection(db, "appointments"),
           where("appointment_date", ">=", monthStart.toISOString()),
           where("appointment_date", "<", monthEnd.toISOString()),
@@ -54,7 +54,7 @@ export function FinancialAnalytics() {
     queryFn: async () => {
       const oneMonthAgo = subMonths(new Date(), 1);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, "payments"),
         where("created_at", ">=", oneMonthAgo.toISOString())
       );

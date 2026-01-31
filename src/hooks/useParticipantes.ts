@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { ParticipanteCreate, ParticipanteUpdate } from '@/lib/validations/participante';
 import { db } from '@/integrations/firebase/app';
@@ -31,7 +31,7 @@ export function useParticipantes(eventoId: string) {
   return useQuery({
     queryKey: ['participantes', eventoId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'participantes'),
         where('evento_id', '==', eventoId),
         orderBy('created_at', 'desc')
@@ -59,7 +59,7 @@ export function useCreateParticipante() {
       };
 
       const docRef = await addDoc(collection(db, 'participantes'), participanteData);
-      const snapshot = await getDocs(query(collection(db, 'participantes')));
+      const snapshot = await getDocs(firestoreQuery(collection(db, 'participantes')));
       const newDoc = snapshot.docs.find(doc => doc.id === docRef.id);
 
       if (!newDoc) throw new Error('Failed to create participante');
@@ -114,7 +114,7 @@ export function useUpdateParticipante() {
         updated_at: new Date().toISOString(),
       });
 
-      const snapshot = await getDocs(query(collection(db, 'participantes')));
+      const snapshot = await getDocs(firestoreQuery(collection(db, 'participantes')));
       const updatedDoc = snapshot.docs.find(doc => doc.id === id);
 
       if (!updatedDoc) throw new Error('Failed to update participante');
@@ -196,7 +196,7 @@ export function useExportParticipantes() {
 
   return useMutation({
     mutationFn: async (eventoId: string) => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'participantes'),
         where('evento_id', '==', eventoId)
       );

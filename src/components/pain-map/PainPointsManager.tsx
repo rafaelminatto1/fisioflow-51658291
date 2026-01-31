@@ -86,12 +86,12 @@ export function PainPointsManager({
 
     // Filtro de busca
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const searchLower = searchQuery.toLowerCase();
       result = result.filter(p =>
-        p.region.toLowerCase().includes(query) ||
-        p.muscleName?.toLowerCase().includes(query) ||
-        p.notes?.toLowerCase().includes(query) ||
-        p.painType.toLowerCase().includes(query)
+        p.region.toLowerCase().includes(searchLower) ||
+        p.muscleName?.toLowerCase().includes(searchLower) ||
+        p.notes?.toLowerCase().includes(searchLower) ||
+        p.painType.toLowerCase().includes(searchLower)
       );
     }
 
