@@ -3,10 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, limit, onSnapshot } from 'firebase/firestore';
-import { PatientHelpers } from '@/types';
-import { cn } from '@/lib/utils';
+import { db, collection, query, where, limit, onSnapshot } from '@/integrations/firebase/app';
+{ cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

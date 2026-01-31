@@ -1,4 +1,5 @@
 import { memo, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import { deleteDoc, doc } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
@@ -24,7 +25,7 @@ import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { format, startOfDay, endOfDay, parseISO, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
-import { deleteDoc, doc } from 'firebase/firestore';
+
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>

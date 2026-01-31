@@ -8,18 +8,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, addDoc, updateDoc, doc, query, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-} from 'firebase/firestore';
+
 
 
 export interface WhatsAppMessage {

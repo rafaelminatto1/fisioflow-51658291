@@ -36,7 +36,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { db, collection, addDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { collection as collectionRef, addDoc as addDocToFirestore } from 'firebase/firestore';
 
 interface MeasurementField {
   label: string;
@@ -77,7 +76,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
 
         setLoading(true);
         try {
-            await addDocToFirestore(collectionRef(db, 'clinical_test_templates'), {
+            await addDoc(collection(db, 'clinical_test_templates'), {
                 name: formData.name,
                 category: formData.category,
                 target_joint: formData.target_joint,

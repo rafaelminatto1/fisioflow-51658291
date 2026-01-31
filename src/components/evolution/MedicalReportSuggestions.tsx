@@ -14,8 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { db, collection, query, where, getDocs, orderBy, limit } from '@/integrations/firebase/app';
 import { useAI } from '@/integrations/firebase/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

@@ -6,21 +6,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { ChecklistItemCreate, ChecklistItemUpdate } from '@/lib/validations/checklist';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy
-} from 'firebase/firestore';
+
 
 
 export function useChecklist(eventoId: string) {

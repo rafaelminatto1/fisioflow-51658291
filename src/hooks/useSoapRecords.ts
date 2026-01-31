@@ -8,6 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, QueryConstraint, serverTimestamp, Timestamp } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import {
   getFirebaseDb,
@@ -15,22 +16,7 @@ import {
   getFirebaseStorage
 } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  QueryConstraint,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore';
+
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { ensureProfile } from '@/lib/database/profiles';
 

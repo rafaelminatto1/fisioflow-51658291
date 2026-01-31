@@ -15,9 +15,10 @@
  * - Debounce para evitar flickering
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { collection, getDocs, limit, query } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
+
 
 
 export type ConnectionState = 'online' | 'offline' | 'checking' | 'reconnecting';

@@ -7,9 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MessageSquare, Activity, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from 'firebase/firestore';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+rs/logger';
 
 // Define interface for appointment data
 interface Appointment {

@@ -1,8 +1,5 @@
-import { db } from '@/integrations/firebase/app';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, QueryDocumentSnapshot } from 'firebase/firestore';
-import type {
-  PainMapRecord,
-  PainMapFormData,
+import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+
   PainEvolutionData,
   PainStatistics,
   BodyRegion
