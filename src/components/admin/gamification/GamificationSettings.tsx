@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query, orderBy, updateDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, updateDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,7 @@ export default function GamificationSettings() {
         queryKey: ['gamification-settings'],
         queryFn: async () => {
             const settingsRef = collection(db, 'gamification_settings');
-            const q = query(settingsRef, orderBy('key'));
+            const q = firestoreQuery(settingsRef, orderBy('key'));
             const querySnapshot = await getDocs(q);
 
             const settings: GamificationSetting[] = [];

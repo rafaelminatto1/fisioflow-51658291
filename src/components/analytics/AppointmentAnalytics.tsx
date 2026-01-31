@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query, where } from '@/integrations/firebase/app';
-id, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -18,7 +18,7 @@ export function AppointmentAnalytics() {
         const dayStart = startOfDay(day);
         const dayEnd = endOfDay(day);
 
-        const q = query(
+        const q = firestoreQuery(
           collection(db, "appointments"),
           where("appointment_date", ">=", dayStart.toISOString()),
           where("appointment_date", "<=", dayEnd.toISOString())
@@ -44,7 +44,7 @@ export function AppointmentAnalytics() {
       const statuses = ["agendado", "confirmado", "concluido", "cancelado"];
 
       const promises = statuses.map(async (status) => {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, "appointments"),
           where("status", "==", status),
           where("appointment_date", ">=", thirtyDaysAgo.toISOString())

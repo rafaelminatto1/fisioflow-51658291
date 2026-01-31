@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "rnscreens_autolinked_build",
+		"source" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-screens@4.16.0_react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cl_mkkohuc77xgxsw2pjufaxwb2by/node_modules/react-native-screens/android/src/main/jni"
+	}
+}

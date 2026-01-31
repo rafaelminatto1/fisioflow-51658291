@@ -11,7 +11,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -106,7 +106,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
         getDocs(collection(db, 'patient_gamification')),
 
         // Total XP awarded (filtered by date)
-        getDocs(query(
+        getDocs(firestoreQuery(
           collection(db, 'xp_transactions'),
           where('created_at', '>=', startDate.toISOString())
         )),
@@ -115,7 +115,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
         getDocs(collection(db, 'patient_gamification')),
 
         // Total achievements unlocked (filtered by date)
-        getDocs(query(
+        getDocs(firestoreQuery(
           collection(db, 'achievements_log'),
           where('created_at', '>=', startDate.toISOString())
         )),
@@ -186,7 +186,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
     queryFn: async (): Promise<EngagementData[]> => {
       const startDate = subDays(new Date(), days);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'xp_transactions'),
         where('created_at', '>=', startDate.toISOString()),
         orderBy('created_at', 'asc')
@@ -254,7 +254,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
     queryFn: async (): Promise<AtRiskPatient[]> => {
       const sevenDaysAgo = subDays(new Date(), 7);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_gamification'),
         where('last_activity_date', '<', sevenDaysAgo.toISOString()),
         orderBy('last_activity_date', 'asc'),
@@ -272,7 +272,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
         const patientId = doc.id;
 
         // Fetch patient info
-        const patientQuery = query(
+        const patientQuery = firestoreQuery(
           collection(db, 'patients'),
           where('__name__', '==', patientId),
           limit(1)
@@ -354,7 +354,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
   const { data: levelSettings, isLoading: levelSettingsLoading } = useQuery({
     queryKey: ['gamification-admin-level-settings'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'gamification_settings'),
         where('key', 'in', [
           'level_progression_type',
@@ -523,7 +523,7 @@ function useUpdateLevelSettings() {
       multiplier: number;
     }) => {
       // Get all setting documents
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'gamification_settings'),
         where('key', 'in', [
           'level_progression_type',

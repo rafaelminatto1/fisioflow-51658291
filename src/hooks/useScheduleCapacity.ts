@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
@@ -52,7 +52,7 @@ export function useScheduleCapacity() {
     queryFn: async () => {
       if (!organizationId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'schedule_capacity_config'),
         where('organization_id', '==', organizationId),
         orderBy('day_of_week', 'asc'),

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
@@ -66,7 +66,7 @@ export function useCommunications(filters?: { channel?: string; status?: string 
   return useQuery({
     queryKey: ['communications', filters],
     queryFn: async () => {
-      let baseQuery = query(
+      let baseQuery = firestoreQuery(
         collection(db, 'communication_logs'),
         orderBy('created_at', 'desc'),
         limit(100)

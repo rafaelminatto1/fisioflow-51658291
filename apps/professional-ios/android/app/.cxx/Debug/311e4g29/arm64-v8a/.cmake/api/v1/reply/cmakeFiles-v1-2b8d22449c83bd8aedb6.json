@@ -1,0 +1,276 @@
+{
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeSystem.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/android.toolchain.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/android-legacy.toolchain.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/abis.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/platforms.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Initialize.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/hooks/pre/Android-Initialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCCompiler.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/hooks/pre/Android.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Linux.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/UnixPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/hooks/pre/Android-Clang.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/ndk/27.1.12297006/build/cmake/flags.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@13.6.9_@types+react@19.2.9_react@19.2.3/node_modules/react-native/ReactAndroid/cmake-utils/ReactNative-application.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@13.6.9_@types+react@19.2.9_react@19.2.3/node_modules/react-native/ReactAndroid/cmake-utils/folly-flags.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@13.6.9_@types+react@19.2.9_react@19.2.3/node_modules/react-native/ReactCommon/cmake-utils/react-native-flags.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckIPOSupported.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckIPOSupported/CMakeLists-CXX.txt.in"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckIPOSupported/foo.cpp"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/home/rafael/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/CheckIPOSupported/main.cpp"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/prefab/arm64-v8a/prefab/lib/aarch64-linux-android/cmake/ReactAndroid/ReactAndroidConfigVersion.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/prefab/arm64-v8a/prefab/lib/aarch64-linux-android/cmake/ReactAndroid/ReactAndroidConfig.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/prefab/arm64-v8a/prefab/lib/aarch64-linux-android/cmake/fbjni/fbjniConfigVersion.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/prefab/arm64-v8a/prefab/lib/aarch64-linux-android/cmake/fbjni/fbjniConfig.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/build/generated/autolinking/src/main/jni/Android-autolinking.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@react-native-async-storage+async-storage@2.2.0_react-native@0.81.5_@babel+core@7.28.5_@react_wfzk55zufjcytrbbrvkx7ewlcu/node_modules/@react-native-async-storage/async-storage/android/build/generated/source/codegen/jni/CMakeLists.txt"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-gesture-handler@2.28.0_react-native@0.81.5_@babel+core@7.28.5_@react-native-comm_rn6g22xhbx2gs6joauhf5ad4nu/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-reanimated@4.1.6_@babel+core@7.28.5_react-native-worklets@0.7.2_@babel+core@7.28_454ggspsbghpeqwxkmj53wa2zu/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/CMakeLists.txt"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-safe-area-context@5.6.2_react-native@0.81.5_@babel+core@7.28.5_@react-native-com_6kd7saxoa3ieqxikvlwnifvm2u/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-screens@4.16.0_react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cl_mkkohuc77xgxsw2pjufaxwb2by/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-svg@15.12.1_react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@1_scznkipapmbynsgm5i5qxakiyy/node_modules/react-native-svg/android/src/main/jni/CMakeLists.txt"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/prefab/arm64-v8a/prefab/lib/aarch64-linux-android/cmake/ReactAndroid/ReactAndroidConfigVersion.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/prefab/arm64-v8a/prefab/lib/aarch64-linux-android/cmake/ReactAndroid/ReactAndroidConfig.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-worklets@0.7.2_@babel+core@7.28.5_react-native@0.81.5_@babel+core@7.28.5_@react-_o6nacenhxgrjsd6hbgflvg5qie/node_modules/react-native-worklets/android/build/generated/source/codegen/jni/CMakeLists.txt"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/apps/professional-ios/android/app/.cxx/Debug/311e4g29/arm64-v8a",
+		"source" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@13.6.9_@types+react@19.2.9_react@19.2.3/node_modules/react-native/ReactAndroid/cmake-utils/default-app-setup"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}

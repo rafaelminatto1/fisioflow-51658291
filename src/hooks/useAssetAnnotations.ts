@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, doc, getDoc, getDocs, query, where, addDoc, updateDoc, orderBy,  } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, addDoc, updateDoc, orderBy,  } from '@/integrations/firebase/app';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -58,7 +58,7 @@ export const useAssetAnnotations = (assetId: string | null) => {
     const loadAnnotations = async () => {
       setIsLoading(true);
       try {
-        const annotationsQuery = query(
+        const annotationsQuery = firestoreQuery(
           collection(db, 'asset_annotations'),
           where('asset_id', '==', assetId),
           orderBy('version', 'desc')

@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { EventoCreate, EventoUpdate } from '@/lib/validations/evento';
 import { mockEventos } from '@/lib/mockData';
@@ -44,7 +44,7 @@ export function useEventos(filtros?: { status?: string; categoria?: string; busc
   return useQuery({
     queryKey: ['eventos', filtros],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'eventos'),
         orderBy('data_inicio', 'desc')
       );

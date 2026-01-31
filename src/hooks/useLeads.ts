@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -46,10 +46,10 @@ export function useLeads(estagio?: string) {
   return useQuery({
     queryKey: ['leads', estagio],
     queryFn: async () => {
-      let q = query(collection(db, 'leads'), orderBy('created_at', 'desc'));
+      let q = firestoreQuery(collection(db, 'leads'), orderBy('created_at', 'desc'));
 
       if (estagio) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'leads'),
           where('estagio', '==', estagio),
           orderBy('created_at', 'desc')
@@ -83,7 +83,7 @@ export function useLeadHistorico(leadId: string | undefined) {
     queryFn: async () => {
       if (!leadId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'lead_historico'),
         where('lead_id', '==', leadId),
         orderBy('created_at', 'desc')
@@ -181,7 +181,7 @@ export function useLeadMetrics() {
   return useQuery({
     queryKey: ['lead-metrics'],
     queryFn: async () => {
-      const q = query(collection(db, 'leads'));
+      const q = firestoreQuery(collection(db, 'leads'));
       const snapshot = await getDocs(q);
       const leads = snapshot.docs.map(convertDoc) as Lead[];
 

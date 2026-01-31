@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, QueryConstraint, serverTimestamp, Timestamp } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, QueryConstraint, serverTimestamp, Timestamp } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import {
   getFirebaseDb,
@@ -151,7 +151,7 @@ export const useSoapRecords = (patientId: string, limitValue = 10) => {
   return useQuery({
     queryKey: soapKeys.list(patientId, { limit: limitValue }),
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'soap_records'),
         where('patient_id', '==', patientId),
         orderBy('record_date', 'desc'),
@@ -173,7 +173,7 @@ export const useInfiniteSoapRecords = (patientId: string, limitValue = 20) => {
     queryFn: async ({ pageParam = 0 }) => {
       // For simplicity, fetch all and slice client-side
       // In production, implement proper cursor-based pagination
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'soap_records'),
         where('patient_id', '==', patientId),
         orderBy('record_date', 'desc')
@@ -382,7 +382,7 @@ export const useDraftSoapRecords = (patientId: string) => {
   return useQuery({
     queryKey: soapKeys.drafts(patientId),
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'soap_records'),
         where('patient_id', '==', patientId),
         where('status', '==', 'draft'),
@@ -413,15 +413,15 @@ export const useSessionAttachments = (soapRecordId?: string, patientId?: string)
   return useQuery({
     queryKey: soapKeys.attachments(soapRecordId, patientId),
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'session_attachments'),
         orderBy('uploaded_at', 'desc')
       );
 
       if (soapRecordId) {
-        q = query(collection(db, 'session_attachments'), where('soap_record_id', '==', soapRecordId), orderBy('uploaded_at', 'desc'));
+        q = firestoreQuery(collection(db, 'session_attachments'), where('soap_record_id', '==', soapRecordId), orderBy('uploaded_at', 'desc'));
       } else if (patientId) {
-        q = query(collection(db, 'session_attachments'), where('patient_id', '==', patientId), orderBy('uploaded_at', 'desc'));
+        q = firestoreQuery(collection(db, 'session_attachments'), where('patient_id', '==', patientId), orderBy('uploaded_at', 'desc'));
       }
 
       const snapshot = await getDocs(q);
@@ -575,7 +575,7 @@ export const useSessionTemplates = (therapistId?: string) => {
       if (!therapistId) return [];
 
       // Query for global templates OR therapist-specific templates
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'session_templates'),
         orderBy('created_at', 'desc')
       );
@@ -729,7 +729,7 @@ export const useAutoSaveSoapRecord = () => {
 
       // Se tem appointment_id, verifica se existe draft
       if (data.appointment_id) {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'soap_records'),
           where('appointment_id', '==', data.appointment_id),
           where('status', '==', 'draft'),

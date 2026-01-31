@@ -10,7 +10,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDoc, getDocs, addDoc, doc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDoc, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
 import { db } from '@/integrations/firebase/app';
@@ -49,7 +49,7 @@ export const useApplyExerciseTemplate = () => {
       const template = { id: templateDoc.id, ...templateDoc.data() };
 
       // 2. Buscar itens do template
-      const itemsQuery = query(
+      const itemsQuery = firestoreQuery(
         collection(db, 'exercise_template_items'),
         where('template_id', '==', templateId),
         orderBy('order_index')

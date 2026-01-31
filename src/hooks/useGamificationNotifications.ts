@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, Unsubscribe, getDocs,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, Unsubscribe, getDocs,  } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useToast } from '@/hooks/use-toast';
@@ -78,7 +78,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
       if (!patientId) return [];
 
       try {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'gamification_notifications'),
           where('patient_id', '==', patientId),
           orderBy('created_at', 'desc'),
@@ -133,7 +133,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
 
     try {
       // Buscar todas não lidas
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'gamification_notifications'),
         where('patient_id', '==', patientId),
         where('read_at', '==', null)
@@ -191,7 +191,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
     }
 
     // Criar query para listener
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'gamification_notifications'),
       where('patient_id', '==', patientId),
       orderBy('created_at', 'desc'),

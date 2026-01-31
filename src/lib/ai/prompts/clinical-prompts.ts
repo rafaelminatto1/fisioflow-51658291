@@ -7,7 +7,7 @@
  * @module lib/ai/prompts/clinical-prompts
  */
 
-import { AIFeatureCategory } from '@fisioflow/shared-api/firebase/ai/config';
+import { AIFeatureCategory } from '@/integrations/firebase/ai';
 
 /**
  * System prompt base with safety guidelines

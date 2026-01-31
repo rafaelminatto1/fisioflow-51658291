@@ -10,7 +10,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, getDocs, doc, getDoc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc } from '@/integrations/firebase/app';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
@@ -107,7 +107,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
       // Or we can query profiles directly if they have roles.
       // Based on previous code: supabase.from('user_roles').in('role', ...)
 
-      const rolesQ = query(
+      const rolesQ = firestoreQuery(
         collection(db, 'user_roles'),
         where('role', 'in', ['admin', 'fisioterapeuta'])
       );
@@ -137,7 +137,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
         // Firestore 'in' limit is 10. If more therapists, need to chunk or query all in range and filter in JS.
         // For simplicity, querying by date range then filtering by therapist_id in JS is often better if dataset isn't huge.
 
-        const aptQ = query(
+        const aptQ = firestoreQuery(
           collection(db, 'appointments'),
           where('appointment_date', '>=', format(start, 'yyyy-MM-dd')), // Assuming string date comparison works for yyyy-MM-dd
           where('appointment_date', '<=', format(end, 'yyyy-MM-dd'))
@@ -160,7 +160,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
       }
 
       // Get NPS data
-      const npsQ = query(
+      const npsQ = firestoreQuery(
         collection(db, 'crm_pesquisas_nps'),
         where('created_at', '>=', start.toISOString()),
         where('created_at', '<=', end.toISOString())
@@ -192,7 +192,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
       let allCompletedAppointments: CompletedAppointment[] = [];
       if (therapistIds.length > 0) {
         // Warning: uncapped query.
-        const completedApptQ = query(
+        const completedApptQ = firestoreQuery(
           collection(db, 'appointments'),
           where('status', '==', 'concluido'),
           where('therapist_id', 'in', therapistIds.slice(0, 10)) // Firestore limit 10 for 'in'

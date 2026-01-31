@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, getDocFromServer } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, getDocFromServer } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -78,7 +78,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
       if (!patientId) return [];
 
       try {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'patient_quests'),
           where('patient_id', '==', patientId),
           orderBy('created_at', 'desc')
@@ -120,7 +120,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
     queryKey: ['available-quests'],
     queryFn: async () => {
       try {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'quest_definitions'),
           where('is_active', '==', true),
           orderBy('category', 'asc')
@@ -198,7 +198,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
       // Adicionar XP ao gamification profile
       if (xpReward > 0) {
         // Buscar profile atual
-        const profileQ = query(
+        const profileQ = firestoreQuery(
           collection(db, 'patient_gamification'),
           where('patient_id', '==', patientId),
           limit(1)

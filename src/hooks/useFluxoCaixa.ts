@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
 
 
@@ -53,7 +53,7 @@ export function useMovimentacoesCaixa(dataInicio?: string, dataFim?: string) {
   return useQuery({
     queryKey: ['movimentacoes-caixa', dataInicio, dataFim],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'movimentacoes_caixa'),
         orderBy('data', 'desc')
       );
@@ -78,7 +78,7 @@ export function useFluxoCaixaResumo() {
   return useQuery({
     queryKey: ['fluxo-caixa-resumo'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'fluxo_caixa_resumo'),
         orderBy('mes', 'desc'),
         limit(12)
@@ -94,7 +94,7 @@ export function useCaixaDiario(data: string) {
   return useQuery({
     queryKey: ['caixa-diario', data],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'movimentacoes_caixa'),
         where('data', '==', data),
         orderBy('created_at', 'asc')

@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -38,13 +38,13 @@ export function useTransacoes(userId?: string) {
   return useQuery({
     queryKey: ['transacoes', userId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'transacoes'),
         orderBy('created_at', 'desc')
       );
 
       if (userId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'transacoes'),
           where('user_id', '==', userId),
           orderBy('created_at', 'desc')
