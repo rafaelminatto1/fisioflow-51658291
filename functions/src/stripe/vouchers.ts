@@ -10,6 +10,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS } from '../init';
 
 // Configuração do Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -56,7 +57,7 @@ const VOUCHER_SESSIONS: Record<VoucherType, number> = {
  * Cria uma sessão de checkout no Stripe para pagamento de voucher
  */
 export const createVoucherCheckout = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -227,7 +228,7 @@ export const stripeWebhook = onCall({
  * Cloud Function: Listar vouchers disponíveis
  */
 export const listAvailableVouchers = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -248,7 +249,7 @@ export const listAvailableVouchers = onCall({
  * Cloud Function: Obter vouchers do usuário
  */
 export const getUserVouchers = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,

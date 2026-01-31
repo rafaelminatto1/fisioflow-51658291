@@ -15,12 +15,8 @@
       "env": [
         {
           "variables": {
-            "DB_HOST": "35.192.122.198",
             "DB_SOCKET_PATH": "/cloudsql",
-            "ABLY_API_KEY": "zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30",
-            "NODE_ENV": "production",
-            "WHATSAPP_BUSINESS_ACCOUNT_ID": "806225345331804",
-            "WHATSAPP_PHONE_NUMBER": "+551158749885"
+            "NODE_ENV": "production"
           }
         }
       ]
@@ -60,6 +56,10 @@
           {
             "key": "Permissions-Policy",
             "value": "camera=self, microphone=self, geolocation=self"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://fisioflow-migration.firebaseapp.com https://ably.io; frame-src 'self' https://www.youtube.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';"
           }
         ]
       },

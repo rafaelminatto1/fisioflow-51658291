@@ -6,7 +6,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { logger } from '../lib/logger';
 
 interface GetPatientStatsRequest {
@@ -27,7 +27,7 @@ interface PatientStatsResponse {
  * Obtém estatísticas de um paciente
  */
 export const getPatientStats = onCall<GetPatientStatsRequest, Promise<PatientStatsResponse>>(
-  { cors: true },
+  { cors: CORS_ORIGINS },
   async (request) => {
     if (!request.auth || !request.auth.token) {
       throw new HttpsError('unauthenticated', 'Requisita autenticação.');

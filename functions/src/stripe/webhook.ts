@@ -11,13 +11,23 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS, defineSecret } from '../init';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
+// Define secrets for Secret Manager
+const STRIPE_SECRET_KEY_SECRET = defineSecret('STRIPE_SECRET_KEY');
+const STRIPE_WEBHOOK_SECRET_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
+
+// Get Stripe credentials from Secret Manager with fallback
+const getStripeSecretKey = () => STRIPE_SECRET_KEY_SECRET.value() || process.env.STRIPE_SECRET_KEY!;
+const getStripeWebhookSecret = () => STRIPE_WEBHOOK_SECRET_SECRET.value() || process.env.STRIPE_WEBHOOK_SECRET!;
+
+// Initialize Stripe with Secret Manager credentials
+const stripe = new Stripe(getStripeSecretKey(), {
+  apiVersion: '2025-02-24.acacia' as any,
   typescript: true,
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = getStripeWebhookSecret();
 
 /**
  * HTTP Endpoint para Webhooks do Stripe
@@ -28,6 +38,8 @@ export const stripeWebhookHttp = onRequest({
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
+  cors: CORS_ORIGINS,
+  secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
 }, async (request, response) => {
   const sig = request.headers['stripe-signature'] as string;
   const body = request.rawBody.toString('utf8');
@@ -38,7 +50,8 @@ export const stripeWebhookHttp = onRequest({
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (error: any) {
     logger.error('Webhook signature verification failed:', error);
-    return response.status(401).json({ error: 'Assinatura inválida' });
+    response.status(401).json({ error: 'Assinatura inválida' });
+    return;
   }
 
   logger.info(`Webhook received: ${event.type}`);
@@ -73,10 +86,10 @@ export const stripeWebhookHttp = onRequest({
         logger.info(`Unhandled event type: ${event.type}`);
     }
 
-    return response.json({ received: true });
+    response.json({ received: true });
   } catch (error: any) {
     logger.error('Error processing webhook:', error);
-    return response.status(500).json({ error: 'Erro ao processar webhook' });
+    response.status(500).json({ error: 'Erro ao processar webhook' });
   }
 });
 
@@ -90,6 +103,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (!userId) {
     logger.error('No userId in session metadata');
+    return;
+  }
+
+  // Idempotency check: skip if already processed
+  const existingCheckout = await firestore()
+    .collection('checkout_sessions')
+    .doc(session.id)
+    .get();
+
+  if (existingCheckout.exists && existingCheckout.data()?.status === 'completed') {
+    logger.info(`Checkout session ${session.id} already processed, skipping`);
     return;
   }
 

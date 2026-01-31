@@ -12,7 +12,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import { logger } from 'firebase-functions';
-import { getAdminDb, getAdminMessaging } from '../init';
+import { getAdminDb, getAdminMessaging, CORS_ORIGINS } from '../init';
 import { FieldValue } from 'firebase-admin/firestore';
 
 // ============================================================================
@@ -83,7 +83,7 @@ function getNotificationsCollection() {
  */
 export const sendNotification = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     region: 'southamerica-east1',
   },
   async (request): Promise<{ success: boolean; notificationId?: string; result?: NotificationResult }> => {
@@ -183,7 +183,7 @@ interface SendBatchNotificationsData {
 
 export const sendNotificationBatch = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     region: 'southamerica-east1',
   },
   async (request): Promise<{ success: boolean; queued: number; timestamp: string }> => {
@@ -390,7 +390,7 @@ export const processNotificationQueue = onMessagePublished(
  */
 export const emailWebhook = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     region: 'southamerica-east1',
   },
   async (request) => {

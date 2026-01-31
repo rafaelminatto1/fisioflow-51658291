@@ -1,5 +1,6 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { Pool } from 'pg';
+import { CORS_ORIGINS } from './init';
 
 /**
  * HTTP endpoint to run migration (no auth required - temporary!)
@@ -10,6 +11,7 @@ import { Pool } from 'pg';
 export const runMigrationHttp = onRequest({
   secrets: ['DB_PASS'],
   memory: '256MiB',
+  cors: CORS_ORIGINS,
 }, async (req, res) => {
   // Simple API key check (optional security)
   const apiKey = req.query.key;

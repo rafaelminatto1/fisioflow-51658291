@@ -143,11 +143,11 @@ export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
+
+  // Verificar App Check
+  verifyAppCheck(request);
+
   const auth = await authorizeRequest(request.auth.token);
-  verifyAppCheck(request);
-  console.log('App Check verified');
-  verifyAppCheck(request);
-  // App Check verified");
   const { patientId, profileId } = request.data;
 
   if (!patientId && !profileId) {
@@ -344,11 +344,11 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
+
+  // Verificar App Check
+  verifyAppCheck(request);
+
   const auth = await authorizeRequest(request.auth.token);
-  verifyAppCheck(request);
-  console.log('App Check verified');
-  verifyAppCheck(request);
-  // App Check verified");
   const { patientId, ...updates } = request.data;
 
   if (!patientId) {
@@ -456,11 +456,11 @@ export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientR
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
+
+  // Verificar App Check
+  verifyAppCheck(request);
+
   const auth = await authorizeRequest(request.auth.token);
-  verifyAppCheck(request);
-  console.log('App Check verified');
-  verifyAppCheck(request);
-  // App Check verified");
   const { patientId } = request.data;
 
   if (!patientId) {

@@ -174,13 +174,22 @@ export function getPool(): Pool {
             ? process.env.CLOUD_SQL_CONNECTION_NAME
             : (getSecretValue(CLOUD_SQL_CONNECTION_NAME_SECRET) || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
 
+        // Pool configuration optimized for Cloud Functions serverless
+        // Each function instance gets its own pool, so keep it small
         const config: any = {
             user: dbUser,
             password: dbPass,
             database: dbName,
-            max: 20,
-            idleTimeoutMillis: 60000,
-            connectionTimeoutMillis: 30000,
+            // Cloud Functions typically only need 2-5 connections per instance
+            // Multiple instances each get their own pool
+            max: 5,                    // Reduced from 20 (better for serverless)
+            min: 0,                   // Allow pool to drain completely
+            idleTimeoutMillis: 30000, // 30 seconds (reduced from 60s)
+            connectionTimeoutMillis: 10000, // 10 seconds (fail fast)
+            acquireTimeoutMillis: 10000,      // Add acquire timeout
+            evictionRunIntervalMillis: 5000,   // Clean idle connections periodically
+            // Cloud Functions optimization
+            allowExitOnIdle: true,             // Allow process to exit when pool is idle
         };
 
         // Prefer Public IP if available (as it's now authorized)
@@ -218,14 +227,30 @@ export function getPool(): Pool {
 
         poolInstance = new Pool(config);
 
-        // Handle pool errors with better logging
-        poolInstance.on('error', (err) => {
-            logger.error('[Pool] Unexpected error on idle client:', err.message);
-            if (err.message.includes('connect')) {
-                logger.error('[Pool] This usually means PostgreSQL is not running or not accessible.');
-                logger.error('[Pool] Check your database configuration:');
-                logger.error('[Pool] - For local development: ensure PostgreSQL is running');
-                logger.error('[Pool] - For production: ensure Cloud SQL secrets are configured');
+        // Handle pool errors with better logging and error type detection
+        poolInstance.on('error', (err: any) => {
+            const errorInfo = {
+                message: err.message,
+                code: err.code,
+                stack: err.stack,
+                timestamp: new Date().toISOString(),
+            };
+
+            logger.error('[Pool] Unexpected error on idle client', errorInfo);
+
+            // Handle specific error codes with actionable messages
+            if (err.code === 'ECONNREFUSED') {
+                logger.error('[Pool] Connection refused - PostgreSQL may not be running');
+            } else if (err.code === 'ETIMEDOUT') {
+                logger.error('[Pool] Connection timeout - check network/firewall settings');
+            } else if (err.code === 'ENOTFOUND') {
+                logger.error('[Pool] Host not found - check database host configuration');
+            } else if (err.message && err.message.includes('connect')) {
+                logger.error('[Pool] Connection error details:', {
+                    hint: 'Check if PostgreSQL/Cloud SQL is running and accessible',
+                    localHint: 'For local: ensure PostgreSQL is running on configured host',
+                    prodHint: 'For production: ensure Cloud SQL secrets and IP authorization are configured',
+                });
             }
         });
 
@@ -400,4 +425,61 @@ export async function createDocument(
     };
     await ref.create(docData);
     return { id: ref.id, ref };
+}
+
+// ============================================================================
+// POOL MANAGEMENT
+// ============================================================================
+
+/**
+ * Get pool status for monitoring
+ */
+export function getPoolStatus() {
+    if (!poolInstance) return { connected: false };
+    return {
+        connected: true,
+        totalCount: poolInstance.totalCount,
+        idleCount: poolInstance.idleCount,
+        waitingCount: poolInstance.waitingCount,
+    };
+}
+
+/**
+ * Gracefully shutdown database pool
+ * Call this when the function instance is being terminated
+ */
+export async function shutdownPool(): Promise<void> {
+    if (poolInstance) {
+        try {
+            await poolInstance.end();
+            poolInstance = null;
+            logger.info('[Pool] Database pool closed gracefully');
+        } catch (error) {
+            logger.error('[Pool] Error closing pool:', error);
+        }
+    }
+}
+
+/**
+ * Warmup the connection pool (call during cold starts)
+ */
+export async function warmupPool(): Promise<void> {
+    const pool = getPool();
+    try {
+        await pool.query('SELECT 1');
+        logger.info('[Pool] Warmup completed successfully');
+    } catch (err) {
+        logger.error('[Pool] Failed to warm up connection pool:', err);
+    }
+}
+
+// Handle termination signals properly for graceful shutdown
+if (typeof process !== 'undefined') {
+    const shutdownHandler = async () => {
+        await shutdownPool();
+        process.exit(0);
+    };
+
+    process.on('SIGINT', shutdownHandler);
+    process.on('SIGTERM', shutdownHandler);
 }

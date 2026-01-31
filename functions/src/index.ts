@@ -31,8 +31,12 @@ setGlobalOptions({
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
         WHATSAPP_ACCESS_TOKEN_SECRET
     ],
-    maxInstances: 1,
-    cpu: 0.5
+    // Allow up to 100 concurrent instances per function (removed bottleneck)
+    maxInstances: 100,
+    // Use full CPU vCPU for better performance
+    cpu: 1,
+    // Set default memory for all functions
+    memory: '512MiB',
 });
 
 // ============================================================================
@@ -41,7 +45,7 @@ setGlobalOptions({
 
 // Import init for local usage in Triggers, but DO NOT EXPORT complex objects
 // which confuse the firebase-functions loader.
-import { adminDb } from './init';
+import { adminDb, CORS_ORIGINS } from './init';
 
 // Initialize Sentry for error tracking (side effect import)
 import './lib/sentry';
@@ -144,6 +148,8 @@ import { runMigrationHttp } from './runMigrationHttp';
 export { runMigrationHttp };
 import { createPerformanceIndexes } from './migrations/create-performance-indexes';
 export { createPerformanceIndexes };
+import { runPerformanceIndexes } from './migrations/run-performance-indexes';
+export { runPerformanceIndexes };
 import { setupMonitoring } from './api/setup-monitoring';
 export { setupMonitoring };
 
@@ -167,7 +173,9 @@ export const realtimePublish = realtimePublisher.realtimePublish;
 // HTTP FUNCTIONS
 // ============================================================================
 
-export const apiRouter = functions.https.onRequest(async (req, res) => {
+export const apiRouter = functions.https.onRequest({
+    cors: CORS_ORIGINS,
+}, async (req, res) => {
     // Router principal para endpoints HTTP
     const { path } = req;
 
@@ -186,57 +194,98 @@ export const apiRouter = functions.https.onRequest(async (req, res) => {
 // BACKGROUND TRIGGERS
 // ============================================================================
 
-// Firestore triggers
-export const onPatientCreated = functions.firestore.onDocumentCreated('patients/{patientId}', async (event) => {
-    const snapshot = event.data;
-    if (!snapshot) return;
+// Firestore triggers with proper error handling
+export const onPatientCreated = functions.firestore.onDocumentCreated(
+    {
+        document: 'patients/{patientId}',
+        region: 'southamerica-east1',
+        memory: '256MiB',
+    },
+    async (event) => {
+        const snapshot = event.data;
+        if (!snapshot) return;
 
-    const patient = snapshot.data();
-    const db = adminDb;
+        const patient = snapshot.data();
+        const db = adminDb;
 
-    // Criar registro financeiro inicial
-    await db.collection('patient_financial_summaries').doc(snapshot.id).set({
-        patient_id: snapshot.id,
-        organization_id: patient.organization_id,
-        total_paid_cents: 0,
-        individual_sessions_paid: 0,
-        package_sessions_total: 0,
-        package_sessions_used: 0,
-        package_sessions_available: 0,
-        updated_at: new Date().toISOString(),
-    });
-});
-
-export const onAppointmentCreated = functions.firestore.onDocumentCreated('appointments/{appointmentId}', async (event) => {
-    const snapshot = event.data;
-    if (!snapshot) return;
-
-    const appointment = snapshot.data();
-
-    // Publicar no Ably para atualização em tempo real
-
-    const realtime = await import('./realtime/publisher');
-    await realtime.publishAppointmentEvent(appointment.organization_id, {
-        event: 'INSERT',
-        new: appointment,
-        old: null,
-    });
-});
-
-export const onAppointmentUpdated = functions.firestore.onDocumentWritten('appointments/{appointmentId}', async (event) => {
-    const before = event.data?.before.data();
-    const after = event.data?.after.data();
-
-    if (before && after) {
-
-        const realtime = await import('./realtime/publisher');
-        await realtime.publishAppointmentEvent(after.organization_id, {
-            event: 'UPDATE',
-            new: after,
-            old: before,
-        });
+        try {
+            // Criar registro financeiro inicial
+            await db.collection('patient_financial_summaries').doc(snapshot.id).set({
+                patient_id: snapshot.id,
+                organization_id: patient.organization_id,
+                total_paid_cents: 0,
+                individual_sessions_paid: 0,
+                package_sessions_total: 0,
+                package_sessions_used: 0,
+                package_sessions_available: 0,
+                updated_at: new Date().toISOString(),
+            });
+        } catch (error: any) {
+            // Distinguish between retryable and non-retryable errors
+            const errorCode = error.code;
+            if (errorCode === 'already-exists' || errorCode === 'permission-denied') {
+                // Non-retryable error - log and continue
+                console.error('[onPatientCreated] Non-retryable error:', error.message);
+                return; // Don't throw - allows trigger to complete
+            }
+            // Retryable error - rethrow for Cloud Functions to retry
+            throw error;
+        }
     }
-});
+);
+
+export const onAppointmentCreated = functions.firestore.onDocumentCreated(
+    {
+        document: 'appointments/{appointmentId}',
+        region: 'southamerica-east1',
+        memory: '256MiB',
+    },
+    async (event) => {
+        const snapshot = event.data;
+        if (!snapshot) return;
+
+        const appointment = snapshot.data();
+
+        // Publicar no Ably para atualização em tempo real com timeout protection
+        try {
+            const realtime = await import('./realtime/publisher');
+            await realtime.publishAppointmentEvent(appointment.organization_id, {
+                event: 'INSERT',
+                new: appointment,
+                old: null,
+            });
+        } catch (err) {
+            // Non-critical error - log but don't fail the trigger
+            console.error('[onAppointmentCreated] Realtime publish failed (non-critical):', err);
+        }
+    }
+);
+
+export const onAppointmentUpdated = functions.firestore.onDocumentWritten(
+    {
+        document: 'appointments/{appointmentId}',
+        region: 'southamerica-east1',
+        memory: '256MiB',
+    },
+    async (event) => {
+        const before = event.data?.before.data();
+        const after = event.data?.after.data();
+
+        if (before && after) {
+            try {
+                const realtime = await import('./realtime/publisher');
+                await realtime.publishAppointmentEvent(after.organization_id, {
+                    event: 'UPDATE',
+                    new: after,
+                    old: before,
+                });
+            } catch (err) {
+                // Non-critical error - log but don't fail the trigger
+                console.error('[onAppointmentUpdated] Realtime publish failed (non-critical):', err);
+            }
+        }
+    }
+);
 
 // ============================================================================
 // SCHEDULED FUNCTIONS (Cron Jobs)

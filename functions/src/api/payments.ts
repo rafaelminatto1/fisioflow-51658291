@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Payment, PatientSessionPackage } from '../types/models';
 import { logger } from '../lib/logger';
@@ -17,7 +17,7 @@ interface ListPaymentsResponse {
   data: Payment[];
 }
 
-export const listPayments = onCall<ListPaymentsRequest, Promise<ListPaymentsResponse>>({ cors: true }, async (request) => {
+export const listPayments = onCall<ListPaymentsRequest, Promise<ListPaymentsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -75,7 +75,7 @@ interface GetPatientFinancialSummaryResponse {
   active_packages: PatientSessionPackage[];
 }
 
-export const getPatientFinancialSummary = onCall<GetPatientFinancialSummaryRequest, Promise<GetPatientFinancialSummaryResponse>>({ cors: true }, async (request) => {
+export const getPatientFinancialSummary = onCall<GetPatientFinancialSummaryRequest, Promise<GetPatientFinancialSummaryResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -165,7 +165,7 @@ interface CreatePaymentResponse {
   data: Payment;
 }
 
-export const createPayment = onCall<CreatePaymentRequest, Promise<CreatePaymentResponse>>({ cors: true }, async (request) => {
+export const createPayment = onCall<CreatePaymentRequest, Promise<CreatePaymentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }

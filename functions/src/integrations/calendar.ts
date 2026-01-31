@@ -11,6 +11,7 @@ import { firestore } from 'firebase-admin';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS } from '../init';
 
 // Configuração do Google Calendar
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
@@ -19,7 +20,7 @@ const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
  * Cloud Function: Sincronizar agendamento com Google Calendar
  */
 export const syncToGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -249,7 +250,7 @@ export const syncToGoogleCalendar = onCall({
  * Cloud Function: Exportar agenda para iCal
  */
 export const exportToICal = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -317,7 +318,7 @@ export const exportToICal = onCall({
  * Cloud Function: Conectar Google Calendar (OAuth)
  */
 export const connectGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -371,7 +372,7 @@ export const connectGoogleCalendar = onCall({
  * Cloud Function: Desconectar Google Calendar
  */
 export const disconnectGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -398,7 +399,7 @@ export const disconnectGoogleCalendar = onCall({
  * Cloud Function: Obter URL de autorização OAuth
  */
 export const getGoogleAuthUrl = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
