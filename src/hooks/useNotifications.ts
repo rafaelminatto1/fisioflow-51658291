@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDocs, addDoc, updateDoc, query, where, orderBy, limit, onSnapshot, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, onSnapshot, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
@@ -51,7 +51,7 @@ export const useNotifications = (limitValue = 10) => {
       if (!user) return [];
 
       try {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'notifications'),
           where('user_id', '==', user.uid),
           orderBy('created_at', 'desc'),
@@ -99,7 +99,7 @@ export const useNotifications = (limitValue = 10) => {
       if (!user) return;
 
       // First, fetch all unread notifications
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'notifications'),
         where('user_id', '==', user.uid),
         where('is_read', '==', false)
@@ -131,7 +131,7 @@ export const useNotifications = (limitValue = 10) => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'notifications'),
       where('user_id', '==', user.uid),
       orderBy('created_at', 'desc'),

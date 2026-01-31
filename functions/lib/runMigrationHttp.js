@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runMigrationHttp = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const pg_1 = require("pg");
+const init_1 = require("./init");
 /**
  * HTTP endpoint to run migration (no auth required - temporary!)
  * DELETE THIS AFTER MIGRATION IS COMPLETE!
@@ -12,6 +13,7 @@ const pg_1 = require("pg");
 exports.runMigrationHttp = (0, https_1.onRequest)({
     secrets: ['DB_PASS'],
     memory: '256MiB',
+    cors: init_1.CORS_ORIGINS,
 }, async (req, res) => {
     // Simple API key check (optional security)
     const apiKey = req.query.key;

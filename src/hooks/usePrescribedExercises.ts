@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
 
 import { db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +28,7 @@ export const usePrescribedExercises = (patientId: string) => {
         queryFn: async () => {
             if (!patientId) return [];
 
-            const q = query(
+            const q = firestoreQuery(
                 collection(db, 'prescribed_exercises'),
                 where('patient_id', '==', patientId),
                 where('is_active', '==', true)
@@ -47,7 +47,7 @@ export const usePrescribedExercises = (patientId: string) => {
 
             // Fetch exercise details
             if (exerciseIds.length > 0) {
-                const exercisesQuery = query(
+                const exercisesQuery = firestoreQuery(
                     collection(db, 'exercises')
                 );
                 const exercisesSnapshot = await getDocs(exercisesQuery);

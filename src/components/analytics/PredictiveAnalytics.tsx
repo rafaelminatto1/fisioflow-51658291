@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query, where } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format, addDays, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,7 +22,7 @@ export function PredictiveAnalytics() {
         const dayStart = startOfDay(day);
         const dayEnd = endOfDay(day);
 
-        const q = query(
+        const q = firestoreQuery(
           collection(db, "appointments"),
           where("appointment_date", ">=", dayStart.toISOString()),
           where("appointment_date", "<=", dayEnd.toISOString())
@@ -65,14 +65,14 @@ export function PredictiveAnalytics() {
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       // Taxa de cancelamento
-      const totalAppointmentsQuery = query(
+      const totalAppointmentsQuery = firestoreQuery(
         collection(db, "appointments"),
         where("appointment_date", ">=", thirtyDaysAgo.toISOString())
       );
       const totalAppointmentsSnapshot = await getDocs(totalAppointmentsQuery);
       const totalAppointments = totalAppointmentsSnapshot.docs.length;
 
-      const canceledAppointmentsQuery = query(
+      const canceledAppointmentsQuery = firestoreQuery(
         collection(db, "appointments"),
         where("status", "==", "cancelado"),
         where("appointment_date", ">=", thirtyDaysAgo.toISOString())

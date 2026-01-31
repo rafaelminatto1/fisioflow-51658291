@@ -46,6 +46,7 @@ exports.clinicalAnalysis = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
+const init_1 = require("../init");
 const firestore = admin.firestore();
 // ============================================================================
 // RATE LIMITING CONFIG
@@ -58,11 +59,12 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.clinicalAnalysis = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
     maxInstances: 10,
+    timeoutSeconds: 300, // 5 minutes for AI generation
 }, async (request) => {
     const startTime = Date.now();
     // Authentication check

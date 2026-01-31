@@ -46,13 +46,57 @@ const https_1 = require("firebase-functions/v2/https");
 const firebase_admin_1 = require("firebase-admin");
 const logger = __importStar(require("firebase-functions/logger"));
 const params_1 = require("firebase-functions/params");
+const init_1 = require("../init");
 exports.WHATSAPP_PHONE_NUMBER_ID_SECRET = (0, params_1.defineSecret)('WHATSAPP_PHONE_NUMBER_ID');
 exports.WHATSAPP_ACCESS_TOKEN_SECRET = (0, params_1.defineSecret)('WHATSAPP_ACCESS_TOKEN');
+// WhatsApp API configuration
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0';
+const WHATSAPP_TIMEOUT_MS = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000; // Initial delay with exponential backoff
 // Helper to get secrets with environment variable fallback
 const getWhatsAppPhoneNumberId = () => exports.WHATSAPP_PHONE_NUMBER_ID_SECRET.value() || process.env.WHATSAPP_PHONE_NUMBER_ID;
 const getWhatsAppAccessToken = () => exports.WHATSAPP_ACCESS_TOKEN_SECRET.value() || process.env.WHATSAPP_ACCESS_TOKEN;
-const init_1 = require("../init");
+/**
+ * Sleep utility for retry delays
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+/**
+ * Retry wrapper with exponential backoff for WhatsApp API calls
+ */
+async function fetchWithRetry(url, options, retryCount = 0) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), WHATSAPP_TIMEOUT_MS);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        // Retry on 5xx errors or rate limiting (429)
+        if (!response.ok && retryCount < MAX_RETRIES && (response.status >= 500 || response.status === 429)) {
+            const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+            logger.warn(`WhatsApp API error ${response.status}, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+            await sleep(delay);
+            return fetchWithRetry(url, options, retryCount + 1);
+        }
+        return response;
+    }
+    catch (error) {
+        clearTimeout(timeoutId);
+        // Retry on network errors or timeout
+        if (retryCount < MAX_RETRIES && (error.name === 'AbortError' || error.message?.includes('fetch') || error.message?.includes('network'))) {
+            const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+            logger.warn(`WhatsApp API network error, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error.message);
+            await sleep(delay);
+            return fetchWithRetry(url, options, retryCount + 1);
+        }
+        throw error;
+    }
+}
+const init_2 = require("../init");
 const auth_1 = require("../middleware/auth");
 /**
  * Templates de WhatsApp aprovados
@@ -75,7 +119,7 @@ var WhatsAppTemplate;
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -148,7 +192,7 @@ exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -202,7 +246,7 @@ exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 exports.sendWhatsAppWelcome = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -239,7 +283,7 @@ exports.sendWhatsAppWelcome = (0, https_1.onCall)({
  * Cloud Function: Enviar mensagem personalizada
  */
 exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -285,7 +329,7 @@ exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 exports.sendWhatsAppExerciseAssigned = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -338,7 +382,7 @@ async function sendWhatsAppTemplateMessage(params) {
             components: params.components || [],
         },
     };
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${getWhatsAppAccessToken()}`,
@@ -368,7 +412,7 @@ async function sendWhatsAppTextMessage(params) {
             body: params.message,
         },
     };
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${getWhatsAppAccessToken()}`,
@@ -415,6 +459,32 @@ function isValidWhatsAppPhone(phone) {
     return /^55\d{10,11}$/.test(formatted);
 }
 /**
+ * Verify WhatsApp webhook signature using X-Hub-Signature-256
+ */
+function verifyWhatsAppSignature(payload, signature, appSecret) {
+    if (!signature) {
+        return false;
+    }
+    // WhatsApp uses SHA-256: signature format is "sha256=<hex>"
+    const signatureParts = signature.split('=');
+    if (signatureParts.length !== 2 || signatureParts[0] !== 'sha256') {
+        logger.error('[WhatsApp] Invalid signature format');
+        return false;
+    }
+    // Import crypto for HMAC verification
+    const crypto = require('crypto');
+    const expectedSignature = crypto
+        .createHmac('sha256', appSecret)
+        .update(payload, 'utf8')
+        .digest('hex');
+    // Secure comparison
+    const providedSignature = signatureParts[1];
+    if (expectedSignature.length !== providedSignature.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(Buffer.from(expectedSignature, 'utf8'), Buffer.from(providedSignature, 'utf8'));
+}
+/**
  * HTTP Endpoint para webhook do WhatsApp (opcional)
  * Usado para receber mensagens e status updates dos usuários
  */
@@ -422,6 +492,7 @@ exports.whatsappWebhookHttp = (0, https_1.onRequest)({
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
+    secrets: ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET'],
 }, async (request, response) => {
     // Verificar token de verificação do WhatsApp
     const mode = request.query['hub.mode'];
@@ -433,6 +504,15 @@ exports.whatsappWebhookHttp = (0, https_1.onRequest)({
             return response.status(200).send(challenge);
         }
         return response.status(403).send('Forbidden');
+    }
+    // Verify webhook signature for POST requests
+    const signature = request.headers['x-hub-signature-256'];
+    const appSecret = exports.WHATSAPP_ACCESS_TOKEN_SECRET.value() || process.env.WHATSAPP_APP_SECRET || process.env.WHATSAPP_ACCESS_TOKEN;
+    // Get raw body for signature verification
+    const rawBody = request.rawBody?.toString() || JSON.stringify(request.body);
+    if (!verifyWhatsAppSignature(rawBody, signature, appSecret)) {
+        logger.error('[WhatsApp] Invalid webhook signature');
+        return response.status(403).send('Invalid signature');
     }
     // Processar webhook
     try {
@@ -502,7 +582,7 @@ async function handleIncomingWhatsAppMessage(message) {
             createdAt: firebase_admin_1.firestore.FieldValue.serverTimestamp(),
         });
         // Salvar mensagem recebida no Cloud SQL
-        const pool = (0, init_1.getPool)();
+        const pool = (0, init_2.getPool)();
         await pool.query(`INSERT INTO whatsapp_messages (
         organization_id, patient_id, from_phone, to_phone, message, type, message_id, status, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [
@@ -538,7 +618,7 @@ async function handleWhatsAppMessageStatus(status) {
         });
     }
     // Atualizar status no Cloud SQL
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     await pool.query('UPDATE whatsapp_messages SET status = $1, metadata = jsonb_set(COALESCE(metadata, \'{}\'), \'{status_history}\', COALESCE(metadata->\'status_history\', \'[]\'::jsonb) || $2::jsonb) WHERE message_id = $3', [
         messageStatus,
         JSON.stringify([{ status: messageStatus, timestamp: new Date().toISOString() }]),
@@ -578,7 +658,7 @@ async function handleAutoReply(from, text, patient) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 exports.testWhatsAppMessage = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -628,7 +708,7 @@ exports.testWhatsAppMessage = (0, https_1.onCall)({
  * Envia um template específico para verificar se foi aprovado
  */
 exports.testWhatsAppTemplate = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -720,7 +800,7 @@ exports.testWhatsAppTemplate = (0, https_1.onCall)({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 exports.getWhatsAppHistory = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
 }, async (request) => {
@@ -729,7 +809,7 @@ exports.getWhatsAppHistory = (0, https_1.onCall)({
     }
     const { patientId, limit = 50, offset = 0 } = request.data;
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         const result = await pool.query(`SELECT * FROM whatsapp_messages 
        WHERE organization_id = $1 AND patient_id = $2
@@ -752,7 +832,7 @@ exports.getWhatsAppHistory = (0, https_1.onCall)({
  * Registra uma mensagem no banco de dados
  */
 async function logWhatsAppMessage(params) {
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         await pool.query(`INSERT INTO whatsapp_messages (
         organization_id, patient_id, from_phone, to_phone, message, type, template_name, message_id, status

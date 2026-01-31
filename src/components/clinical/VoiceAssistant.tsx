@@ -31,7 +31,7 @@ import {
 
 import { VoiceAssistant as VoiceAssistantClass, KeyPoint } from '@/lib/ai/voice-assistant';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import type { LiveSessionCallbacks, LiveSessionState } from '@fisioflow/shared-api/firebase/ai/live-config';
+import type { LiveSessionCallbacks, LiveSessionState } from '@/lib/ai/live-config';
 
 // ============================================================================
 // TYPES

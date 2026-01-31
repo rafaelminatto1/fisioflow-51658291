@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, query, orderBy, limit, getDocs, QueryDocumentSnapshot } from '@/integrations/firebase/app';
- } from '@/components/ui/card';
+import { db, collection, query as firestoreQuery, orderBy, limit, getDocs, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Medal, Crown, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,7 @@ export function Leaderboard({ currentPatientId }: LeaderboardProps) {
     queryFn: async () => {
       // Query Firebase Firestore for leaderboard data
       const gamificationRef = collection(db, 'patient_gamification');
-      const q = query(gamificationRef, orderBy('total_points', 'desc'), limit(50));
+      const q = firestoreQuery(gamificationRef, orderBy('total_points', 'desc'), limit(50));
       const querySnapshot = await getDocs(q);
 
       const entries: LeaderboardEntry[] = [];

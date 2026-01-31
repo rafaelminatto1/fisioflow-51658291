@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, orderBy, limit, getDocs } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, orderBy, limit, getDocs } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
 
 
@@ -24,7 +24,7 @@ export function useSecurityMonitoring() {
   const { data: recentAttempts = [], isLoading: attemptsLoading } = useQuery({
     queryKey: ['login-attempts'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'login_attempts'),
         orderBy('created_at', 'desc'),
         limit(50)
@@ -39,7 +39,7 @@ export function useSecurityMonitoring() {
   const { data: suspiciousActivity = [], isLoading: suspiciousLoading } = useQuery({
     queryKey: ['suspicious-activity'],
     queryFn: async () => {
-      const q = query(collection(db, 'suspicious_login_activity'));
+      const q = firestoreQuery(collection(db, 'suspicious_login_activity'));
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SuspiciousActivity[];

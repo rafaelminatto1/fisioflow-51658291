@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { doc, getDoc, getDocs, query, where } from '@/integrations/firebase/app';
+import { doc, getDoc, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -32,9 +32,9 @@ export function useDataExport() {
 
       // 2. Fetch related data (appointments, records, etc) in parallel
       const [appointmentsSnap, recordsSnap, exercisesSnap] = await Promise.all([
-        getDocs(query(collection(db, 'appointments'), where('patient_id', '==', patientId))),
-        getDocs(query(collection(db, 'medical_records'), where('patient_id', '==', patientId))),
-        getDocs(query(collection(db, 'prescribed_exercises'), where('patient_id', '==', patientId)))
+        getDocs(firestoreQuery(collection(db, 'appointments'), where('patient_id', '==', patientId))),
+        getDocs(firestoreQuery(collection(db, 'medical_records'), where('patient_id', '==', patientId))),
+        getDocs(firestoreQuery(collection(db, 'prescribed_exercises'), where('patient_id', '==', patientId)))
       ]);
 
       const appointments = appointmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));

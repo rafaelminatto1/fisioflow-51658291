@@ -15,7 +15,7 @@
  * - Debounce para evitar flickering
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, limit, query } from '@/integrations/firebase/app';
+import { collection, getDocs, limit, query as firestoreQuery } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 
@@ -55,7 +55,7 @@ async function checkRealConnectivity(): Promise<boolean> {
     // Fazer ping real ao Firestore
     try {
         // Usar health check simples com query leve ao Firestore
-        const q = query(collection(db, 'organizations'), limit(1));
+        const q = firestoreQuery(collection(db, 'organizations'), limit(1));
         await getDocs(q);
 
         // Se não há erro, está conectado
