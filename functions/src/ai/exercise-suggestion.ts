@@ -11,6 +11,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS } from '../init';
+import { withIdempotency } from '../lib/idempotency';
 
 const firestore = admin.firestore();
 
@@ -82,11 +84,12 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const exerciseSuggestion = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '1GiB',
   cpu: 1,
   maxInstances: 10,
+  timeoutSeconds: 300, // 5 minutes for AI generation
 }, async (request): Promise<ExerciseSuggestionResponse> => {
   const startTime = Date.now();
 
@@ -180,8 +183,23 @@ export const exerciseSuggestion = onCall({
       sessionCount: soapHistory.length,
     };
 
-    // Call Gemini 2.5 Flash-Lite for exercise suggestions
-    const aiResult = await generateExerciseSuggestions(context);
+    // Call Gemini 2.5 Flash-Lite for exercise suggestions (with idempotency cache)
+    const cacheParams = {
+      patientId: data.patientId,
+      goals: data.goals,
+      availableEquipment: data.availableEquipment,
+      treatmentPhase: data.treatmentPhase,
+      painMap: data.painMap,
+      sessionCount: context.sessionCount,
+    };
+
+    const aiResult = await withIdempotency(
+      'EXERCISE_RECOMMENDATION',
+      userId,
+      cacheParams,
+      () => generateExerciseSuggestions(context),
+      { cacheTtl: 5 * 60 * 1000 } // 5 minute cache
+    );
 
     if (!aiResult.success) {
       throw new HttpsError('internal', aiResult.error || 'AI generation failed');
