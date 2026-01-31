@@ -9,3 +9,7 @@
 ## 2024-05-23 - [Test Environment & Build Memory]
 **Learning:** The local Vitest environment is unstable for component tests (JSDOM issues), making unit testing difficult. Additionally, the build process runs out of memory on standard settings.
 **Action:** Use `pnpm build:prod` (which increases memory) for builds, and rely on Playwright for reliable frontend verification when unit tests fail due to environment issues.
+
+## 2024-05-24 - [Firestore Batch Parallelization & Query Bugs]
+**Learning:** `useMultiplePatientStats` was sequentially fetching batches of patients in a loop, increasing latency linearly with the number of patients. Also, querying `where(documentId(), 'in', batch)` against a list of foreign keys (patient_id) returns zero results; the correct field must be used.
+**Action:** Use `Promise.all` to fetch Firestore batches in parallel to improve list loading performance, and carefully verify query fields against schema (especially `documentId()` vs foreign keys).
