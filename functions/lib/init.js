@@ -25,6 +25,7 @@ const storage_1 = require("firebase-admin/storage");
 const messaging_1 = require("firebase-admin/messaging");
 const pg_1 = require("pg");
 const params_1 = require("firebase-functions/params");
+const logger_1 = require("./lib/logger");
 // ============================================================================
 // SECRETS DEFINITIONS
 // ============================================================================
@@ -138,12 +139,21 @@ function getPool() {
             ? (process.env.DB_NAME || 'fisioflow')
             : (exports.DB_NAME_SECRET.value() || process.env.DB_NAME);
         if (!process.env.FUNCTIONS_EMULATOR && (!dbUser || !dbPass || !dbName)) {
-            console.error('[Pool] Critical: Missing database credentials in production environment.');
-            console.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
+            logger_1.logger.error('[Pool] Critical: Missing database credentials in production environment.');
+            logger_1.logger.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
         }
+        // Local helper for safe secret access
+        const getSecretValue = (secret) => {
+            try {
+                return secret.value();
+            }
+            catch (e) {
+                return null;
+            }
+        };
         const connectionName = process.env.FUNCTIONS_EMULATOR === 'true'
             ? process.env.CLOUD_SQL_CONNECTION_NAME
-            : (exports.CLOUD_SQL_CONNECTION_NAME_SECRET.value() || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
+            : (getSecretValue(exports.CLOUD_SQL_CONNECTION_NAME_SECRET) || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
         const config = {
             user: dbUser,
             password: dbPass,
@@ -152,51 +162,54 @@ function getPool() {
             idleTimeoutMillis: 60000,
             connectionTimeoutMillis: 30000,
         };
-        // Prefer IP for production (more reliable without VPC)
-        const dbHostIp = process.env.FUNCTIONS_EMULATOR === 'true'
-            ? null
-            : (exports.DB_HOST_IP_SECRET.value() || process.env.DB_HOST_IP || '35.192.122.198');
+        // Prefer Public IP if available (as it's now authorized)
+        let dbHostIp = null;
+        if (process.env.FUNCTIONS_EMULATOR !== 'true') {
+            dbHostIp = getSecretValue(exports.DB_HOST_IP_PUBLIC_SECRET) || getSecretValue(exports.DB_HOST_IP_SECRET) || process.env.DB_HOST_IP;
+        }
         if (process.env.FUNCTIONS_EMULATOR === 'true') {
             // EMULADOR: Usar configuração local para teste
             config.host = process.env.DB_HOST || 'localhost';
             config.port = parseInt(process.env.DB_PORT || '5432');
-            console.log(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
+            logger_1.logger.info(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
         }
         else if (dbHostIp) {
-            // PRODUÇÃO: Usar IP público do Cloud SQL com SSL
+            // PRODUÇÃO: Usar IP do Cloud SQL com SSL (Prioridade agora que autorizamos 0.0.0.0/0)
             config.host = dbHostIp;
             config.port = 5432;
             config.ssl = {
                 rejectUnauthorized: false, // Cloud SQL usa certificados auto-assinados
                 mode: 'require', // Exigir SSL
             };
-            console.log(`[Pool] Using Cloud SQL public IP with SSL: ${config.host}:${config.port}`);
+            logger_1.logger.info(`[Pool] Using Cloud SQL IP with SSL: ${config.host}:${config.port}`);
         }
         else if (connectionName && (connectionName.includes(':') || connectionName.startsWith('/'))) {
-            // PRODUÇÃO: Fallback para Unix socket do Cloud SQL
+            // PRODUÇÃO: Unix socket como fallback
             config.host = connectionName.startsWith('/') ? connectionName : `/cloudsql/${connectionName}`;
-            console.log(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
+            // Socket doesn't use port
+            delete config.port;
+            logger_1.logger.info(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
         }
         else {
             // Fallback total para localhost
             config.host = 'localhost';
             config.port = 5432;
-            console.warn('[Pool] Warning: No database host/connection configured. Falling back to localhost.');
+            logger_1.logger.warn('[Pool] Warning: No database host/connection configured. Falling back to localhost.');
         }
         poolInstance = new pg_1.Pool(config);
         // Handle pool errors with better logging
         poolInstance.on('error', (err) => {
-            console.error('[Pool] Unexpected error on idle client:', err.message);
+            logger_1.logger.error('[Pool] Unexpected error on idle client:', err.message);
             if (err.message.includes('connect')) {
-                console.error('[Pool] This usually means PostgreSQL is not running or not accessible.');
-                console.error('[Pool] Check your database configuration:');
-                console.error('[Pool] - For local development: ensure PostgreSQL is running');
-                console.error('[Pool] - For production: ensure Cloud SQL secrets are configured');
+                logger_1.logger.error('[Pool] This usually means PostgreSQL is not running or not accessible.');
+                logger_1.logger.error('[Pool] Check your database configuration:');
+                logger_1.logger.error('[Pool] - For local development: ensure PostgreSQL is running');
+                logger_1.logger.error('[Pool] - For production: ensure Cloud SQL secrets are configured');
             }
         });
         // Test the connection
         poolInstance.query('SELECT 1').catch((err) => {
-            console.error('[Pool] Initial connection test failed:', err.message);
+            logger_1.logger.error('[Pool] Initial connection test failed:', err.message);
         });
     }
     return poolInstance;

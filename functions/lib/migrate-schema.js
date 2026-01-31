@@ -43,7 +43,7 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 // Cloud SQL connection for Cloud Functions
 const dbSocketPath = process.env.DB_SOCKET_PATH || '/cloudsql';
-const cloudSqlConnectionName = 'fisioflow-migration:us-central1:fisioflow-pg';
+const cloudSqlConnectionName = 'fisioflow-migration:southamerica-east1:fisioflow-pg';
 const pool = new pg_1.Pool({
     host: path.join(dbSocketPath, cloudSqlConnectionName),
     user: 'fisioflow',

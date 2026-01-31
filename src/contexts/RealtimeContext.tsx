@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef } f
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 
 export interface DashboardMetrics {

@@ -1,6 +1,6 @@
 import type { PainPoint } from '@/components/pain-map/BodyMap';
 import { jsPDF } from 'jspdf';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface PainMapExportData {
   patientName: string;

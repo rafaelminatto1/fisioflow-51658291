@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileUp, Activity, Image as ImageIcon, Video, RotateCcw, Loader2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { GaitMetrics } from '@/types/analysis/schemas';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Lazy-loaded heavy components for code-splitting
 const DicomViewer = lazy(() => import('../dicom/DicomViewer'));

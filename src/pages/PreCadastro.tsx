@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { CheckCircle2, Loader2, AlertCircle, Heart, Calendar, Phone, Mail, User } from 'lucide-react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
 

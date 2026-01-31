@@ -1,6 +1,6 @@
 import { db } from '@/integrations/firebase/app';
 import { collection, addDoc } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE';
 

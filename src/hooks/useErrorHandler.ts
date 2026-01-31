@@ -10,7 +10,7 @@
 
 import { useCallback, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ApiErrorOptions {
   /** Mensagem customizada para o usuário */

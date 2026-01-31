@@ -8,7 +8,7 @@
  */
 import { put, list } from '@vercel/blob';
 import type { AppointmentBase } from '@/types/appointment';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const BLOB_CACHE_PREFIX = 'cache/appointments/';
 

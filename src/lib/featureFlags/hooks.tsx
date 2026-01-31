@@ -27,6 +27,7 @@ import {
   StatsigOptions,
   StatsigUser
 } from './statsig';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // CONTEXT

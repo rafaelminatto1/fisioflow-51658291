@@ -7,7 +7,7 @@
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const PROXY_FUNCTION = 'dicom-proxy';
 
@@ -69,7 +69,7 @@ export const dicomWebClient = {
 
         // For MVP, we return the base Function URL.
         // In production, you should configure this based on your Firebase project region
-        const region = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'us-central1';
+        const region = import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION || 'southamerica-east1';
         const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 
         if (projectId) {

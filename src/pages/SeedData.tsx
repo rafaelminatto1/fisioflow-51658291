@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { addDays, subDays, startOfWeek, isWeekend, format } from 'date-fns';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export default function SeedData() {
     const { user, profile } = useAuth();

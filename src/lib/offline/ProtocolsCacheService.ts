@@ -1,7 +1,7 @@
 /**
  * Service for caching exercise protocols data offline.
  */
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface CacheMetadata {
     lastUpdated: string;

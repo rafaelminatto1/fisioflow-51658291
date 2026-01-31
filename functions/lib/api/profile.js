@@ -8,6 +8,7 @@ exports.updateProfile = exports.getProfile = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const auth_1 = require("../middleware/auth");
 const init_1 = require("../init");
+const logger_1 = require("../lib/logger");
 /**
  * Retorna o perfil completo do usuário autenticado
  */
@@ -35,7 +36,7 @@ exports.getProfile = (0, https_1.onCall)({ cors: true }, async (request) => {
     catch (error) {
         if (error instanceof https_1.HttpsError)
             throw error;
-        console.error('Erro ao buscar perfil:', error);
+        logger_1.logger.error('Erro ao buscar perfil:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar perfil';
         throw new https_1.HttpsError('internal', errorMessage);
     }
@@ -94,7 +95,7 @@ exports.updateProfile = (0, https_1.onCall)({ cors: true }, async (request) => {
     catch (error) {
         if (error instanceof https_1.HttpsError)
             throw error;
-        console.error('Erro ao atualizar perfil:', error);
+        logger_1.logger.error('Erro ao atualizar perfil:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar perfil';
         throw new https_1.HttpsError('internal', errorMessage);
     }
