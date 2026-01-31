@@ -5,6 +5,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import * as SplashScreen from 'expo-splash-screen';
+import { registerForPushNotificationsAsync } from '@/lib/notifications';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -17,9 +18,20 @@ export default function RootLayout() {
   useEffect(() => {
     const unsubscribe = initialize();
 
+    // Initialize push notifications when app starts
+    const initNotifications = async () => {
+      try {
+        await registerForPushNotificationsAsync();
+        console.log('Push notifications initialized');
+      } catch (error) {
+        console.error('Failed to initialize push notifications:', error);
+      }
+    };
+
     // Hide splash screen when auth state is determined
     if (!isLoading) {
       SplashScreen.hideAsync();
+      initNotifications();
     }
 
     return () => unsubscribe();
