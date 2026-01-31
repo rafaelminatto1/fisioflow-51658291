@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { collection, getDocs, query, orderBy, limit, where } from '@/integrations/firebase/app';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+
 
 // Gamification Components
 import GamificationHeader from '@/components/gamification/GamificationHeader';

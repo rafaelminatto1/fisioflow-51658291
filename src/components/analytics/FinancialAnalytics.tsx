@@ -1,8 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { db } from "@/integrations/firebase/app";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+Grid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

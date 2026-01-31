@@ -7,9 +7,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, onSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+
 
 
 interface IncompletePatient {

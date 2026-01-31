@@ -8,22 +8,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-} from 'firebase/firestore';
+
 import { GoogleAuthProvider, signInWithPopup, linkWithPopup, unlink } from 'firebase/auth';
 
 const auth = getFirebaseAuth();

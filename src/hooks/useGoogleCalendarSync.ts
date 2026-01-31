@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { doc, getDoc, setDoc, deleteDoc, updateDoc } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -21,13 +22,7 @@ import {
   SyncResult,
 } from '@/lib/calendar/google-sync';
 import { db } from '@/integrations/firebase/app';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc,
-  updateDoc
-} from 'firebase/firestore';
+
 
 
 // =====================================================================

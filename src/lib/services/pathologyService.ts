@@ -1,6 +1,5 @@
-import { db } from '@/integrations/firebase/app';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
-import type { Pathology, PathologyFormData } from '@/types/evolution';
+import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+ '@/types/evolution';
 
 export class PathologyService {
   // Optimized: Select only required columns instead of *

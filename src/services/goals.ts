@@ -11,21 +11,9 @@
  */
 
 import { db } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import {
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    orderBy,
-    writeBatch,
-    documentId
-} from 'firebase/firestore';
+
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';

@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { doc, getDoc, updateDoc, collection, getDocs } from '@/integrations/firebase/app';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const TelemedicineRoom = () => {
