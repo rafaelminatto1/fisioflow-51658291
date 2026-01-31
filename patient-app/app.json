@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "FisioFlow Paciente",
-    "slug": "fisioflow-patient",
+    "slug": "vite_react_shadcn_ts",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -40,14 +40,7 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#0D9488"
-        }
-      ]
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -60,6 +53,6 @@
         "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
       }
     },
-    "owner": "fisioflow"
+    "owner": "rafaelminatto"
   }
 }
