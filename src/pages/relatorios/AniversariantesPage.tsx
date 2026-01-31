@@ -14,9 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Cake, Gift, Phone, Mail, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-
+import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
 
 interface Aniversariante {
   id: string;

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
+
 import { subDays, subMonths, format, differenceInDays, startOfMonth, parseISO } from 'date-fns';
 import { CACHE_TIMES, STALE_TIMES } from '@/lib/queryConfig';
 import { PatientHelpers } from '@/types';

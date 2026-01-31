@@ -1,6 +1,5 @@
-import { db } from '@/integrations/firebase/app';
-import { collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from 'firebase/firestore';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+rs/logger';
 
 /**
  * XP Rewards Configuration

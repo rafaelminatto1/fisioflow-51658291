@@ -7,6 +7,7 @@
  */
 
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, limit,  } from '@/integrations/firebase/app';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   format,
@@ -53,16 +54,7 @@ import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc,
-  limit,
-} from 'firebase/firestore';
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Componentes de Evolução

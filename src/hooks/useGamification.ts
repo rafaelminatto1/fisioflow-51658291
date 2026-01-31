@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useCallback, useMemo, useRef } from 'react';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, setDoc } from '@/integrations/firebase/app';
 import { triggerGamificationFeedback } from "@/lib/gamification/feedback-utils";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
@@ -35,20 +36,7 @@ import {
   type BuyItemParams,
 } from '@/types/gamification';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  setDoc
-} from 'firebase/firestore';
+
 
 // Level Calculation Constants - buscar do banco se disponível
 const LEVEL_BASE_XP = 1000;

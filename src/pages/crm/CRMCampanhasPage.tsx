@@ -24,12 +24,9 @@ import {
   XCircle, AlertCircle, TrendingUp, Filter, FileText
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from 'firebase/firestore';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { db, collection, query, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+ from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 
 interface EmailCampaign {
   id: string;

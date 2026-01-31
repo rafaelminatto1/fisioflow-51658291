@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { collection, query, getDocs, orderBy as firestoreOrderBy, deleteDoc, doc } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import {
     Plus,
 } from 'lucide-react';
 import { db } from '@/integrations/firebase/app';
-import { collection, query, getDocs, orderBy as firestoreOrderBy, deleteDoc, doc } from 'firebase/firestore';
+
 
 // Extracted Components
 import { ClinicalTestFormModal } from '@/components/clinical/ClinicalTestFormModal';

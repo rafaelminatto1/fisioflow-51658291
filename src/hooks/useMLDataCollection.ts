@@ -14,21 +14,10 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, query, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, setDoc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  orderBy,
-  limit,
-  addDoc,
-  updateDoc,
-  setDoc
-} from 'firebase/firestore';
+
 import crypto from 'crypto';
 import type { MLTrainingData } from '@/types/patientAnalytics';
 

@@ -7,6 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { doc, updateDoc } from '@/integrations/firebase/app';
 import { useState, useCallback } from 'react';
 import { addDays, format, isSameDay, parseISO } from 'date-fns';
 import { useWaitlist, WaitlistEntry } from './useWaitlist';
@@ -23,7 +24,7 @@ import {
   WaitlistAnalytics,
 } from '@/lib/waitlist/smart-waitlist';
 import { db } from '@/integrations/firebase/app';
-import { doc, updateDoc } from 'firebase/firestore';
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 

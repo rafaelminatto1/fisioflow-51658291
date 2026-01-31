@@ -9,6 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -21,17 +22,7 @@ import {
 } from '@/types/recurring-appointment';
 import { addDays, addWeeks, addMonths, addYears, startOfDay, isSameDay } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc,
-  getDoc,
-  query,
-  where,
-  orderBy,
-} from 'firebase/firestore';
+
 
 
 interface FirestoreSeriesData {

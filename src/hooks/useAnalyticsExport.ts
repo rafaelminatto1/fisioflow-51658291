@@ -14,9 +14,10 @@
  */
 
 import { useState } from 'react';
+import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

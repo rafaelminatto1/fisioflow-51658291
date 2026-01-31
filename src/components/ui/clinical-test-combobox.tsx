@@ -17,10 +17,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import { db } from "@/integrations/firebase/app";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { Badge } from "@/components/ui/badge";
-import {
+import { db, collection, getDocs, query, orderBy } from '@/integrations/firebase/app';
+port {
     Tooltip,
     TooltipContent,
     TooltipProvider,

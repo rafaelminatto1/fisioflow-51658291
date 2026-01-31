@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, orderBy, limit, getDocs, QueryDocumentSnapshot } from 'firebase/firestore';
-import { db } from '@/integrations/firebase/app';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { db, collection, query, orderBy, limit, getDocs, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+ } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Medal, Crown, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';

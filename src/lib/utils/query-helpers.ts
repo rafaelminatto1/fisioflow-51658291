@@ -9,10 +9,8 @@
  * @module lib/utils/query-helpers
  */
 
-import { db } from '@/integrations/firebase/app';
-import { query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from 'firebase/firestore';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-
+import { db, query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
+rs/logger';
 
 // ==============================================================================
 // TIMEOUT & RETRY HELPERS

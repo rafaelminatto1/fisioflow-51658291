@@ -8,10 +8,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, doc, getDoc, query, where, orderBy } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
+
 
 
 export type PeriodFilter = 'week' | 'month' | 'quarter' | 'year' | 'custom';

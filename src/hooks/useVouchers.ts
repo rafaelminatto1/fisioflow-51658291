@@ -9,21 +9,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  query,
-  where,
-  orderBy,
-} from 'firebase/firestore';
+
 
 
 export interface Voucher {

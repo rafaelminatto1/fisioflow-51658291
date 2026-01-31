@@ -7,16 +7,10 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, query, where, orderBy, documentId } from '@/integrations/firebase/app';
 import { differenceInDays } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  documentId
-} from 'firebase/firestore';
+
 
 
 // ============================================================================================

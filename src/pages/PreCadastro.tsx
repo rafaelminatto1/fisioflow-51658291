@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, increment } from '@/integrations/firebase/app';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,7 @@ import { toast } from 'sonner';
 import { CheckCircle2, Loader2, AlertCircle, Heart, Calendar, Phone, Mail, User } from 'lucide-react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
+
 
 interface TokenData {
   id: string;

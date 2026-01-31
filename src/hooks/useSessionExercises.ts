@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs } from '@/integrations/firebase/app';
+
 import { db } from '@/integrations/firebase/app';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 

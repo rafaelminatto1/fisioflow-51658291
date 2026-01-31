@@ -32,10 +32,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/integrations/firebase/app';
-import { doc, getDoc, setDoc, query, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from 'firebase/firestore';
-import { useOrganizations } from '@/hooks/useOrganizations';
-
+import { db, doc, getDoc, setDoc, query, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+nizations';
 
 interface NFSe {
   id: string;

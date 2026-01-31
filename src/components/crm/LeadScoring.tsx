@@ -13,12 +13,8 @@ import {
   CheckCircle2, Clock, Phone, Mail, Calendar
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as queryFn, orderBy, doc, getDoc } from '@/integrations/firebase/app';
-import { collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, orderBy as orderByFn, doc as docRef, getDoc as getDocFromFirestore } from 'firebase/firestore';
-import { useLeadScoring } from './hooks/useLeadScoring';
-
-// Type for lead score data
-interface LeadScoreData {
+import { db, collection, getDocs, query as queryFn, orderBy, doc, getDoc, query as queryFromFirestore } from '@/integrations/firebase/app';
+{
   id: string;
   lead_id: string;
   total_score: number;

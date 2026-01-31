@@ -8,18 +8,12 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { collection, query, where, getDocs, orderBy, limit,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { getFirebaseApp } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  limit,
-} from 'firebase/firestore';
+
 
 const functions = getFunctions(getFirebaseApp());
 const db = getFirebaseApp().firestore() || null;

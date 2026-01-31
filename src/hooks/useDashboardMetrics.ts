@@ -15,11 +15,9 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, query, where, orderBy, limit, getCountFromServer, QueryConstraint, onSnapshot } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection, getDocs, query, where, orderBy, limit,
-  getCountFromServer, QueryConstraint, onSnapshot
-} from 'firebase/firestore';
+
 import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';

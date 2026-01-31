@@ -5,7 +5,54 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from 'firebase/firestore';
+import {
+  getFirestore,
+  Firestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  collectionGroup,
+  getDocs,
+  query,
+  where,
+  limit,
+  addDoc,
+  deleteDoc,
+  enableMultiTabIndexedDbPersistence,
+  enableIndexedDbPersistence,
+  orderBy,
+  onSnapshot,
+  getDocsFromCache,
+  getDocFromCache,
+  getDocsFromServer,
+  getDocFromServer,
+  getCountFromServer,
+  Timestamp,
+  serverTimestamp,
+  increment,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  runTransaction,
+  writeBatch,
+  startAfter,
+  startAt,
+  endBefore,
+  endAt,
+  and,
+  or,
+  documentId,
+  Query,
+  CollectionReference,
+  DocumentReference,
+  DocumentData,
+  QueryDocumentSnapshot,
+  QuerySnapshot,
+  QueryConstraint,
+  Unsubscribe
+} from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -208,7 +255,54 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
 /**
  * Re-export Firestore functions for convenience
  */
-export { doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc };
+export {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  collectionGroup,
+  getDocs,
+  query,
+  where,
+  limit,
+  addDoc,
+  deleteDoc,
+  orderBy,
+  onSnapshot,
+  getDocsFromCache,
+  getDocFromCache,
+  getDocsFromServer,
+  getDocFromServer,
+  getCountFromServer,
+  Timestamp,
+  serverTimestamp,
+  increment,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  runTransaction,
+  writeBatch,
+  startAfter,
+  startAt,
+  endBefore,
+  endAt,
+  and,
+  or,
+  documentId
+};
+
+// Re-export types
+export type {
+  Query,
+  CollectionReference,
+  DocumentReference,
+  DocumentData,
+  QueryDocumentSnapshot,
+  QuerySnapshot,
+  QueryConstraint,
+  Unsubscribe
+};
 
 /**
  * Re-export Functions helper for convenience

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { addDoc, collection } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/integrations/firebase/functions';
@@ -6,7 +7,7 @@ import { SessionEvolutionService } from '@/lib/services/sessionEvolutionService'
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { addDays, subDays, startOfWeek, isWeekend, format } from 'date-fns';
-import { addDoc, collection } from 'firebase/firestore';
+
 import { db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

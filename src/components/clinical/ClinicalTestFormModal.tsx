@@ -2,12 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
-import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
+import { db, collection, addDoc, setDoc, doc, serverTimestamp } from '@/integrations/firebase/app';
+gHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

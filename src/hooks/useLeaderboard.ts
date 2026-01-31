@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { collection, getDocs, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subDays, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -18,14 +19,7 @@ import {
 } from '@/types/gamification';
 import { downloadCSV } from '@/utils/csvExport';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-} from 'firebase/firestore';
+
 
 // ============================================================================
 // TYPES

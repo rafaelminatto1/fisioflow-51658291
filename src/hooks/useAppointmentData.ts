@@ -7,6 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { doc, getDoc } from '@/integrations/firebase/app';
 import {
     PATIENT_SELECT,
     devValidate as devValidatePatient,
@@ -18,7 +19,7 @@ import {
     type AppointmentDBStandard
 } from '@/lib/constants/appointment-queries';
 import { db } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
+
 
 
 export const useAppointmentData = (appointmentId: string | undefined) => {

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { collection, query, orderBy, limit, getDocs } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+
 
 interface LoginAttempt {
   id: string;

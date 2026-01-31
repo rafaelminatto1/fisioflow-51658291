@@ -7,10 +7,11 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { collection, query, where, getDocs } from '@/integrations/firebase/app';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth, AuthError } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';

@@ -8,21 +8,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  query,
-  where,
-  orderBy as firestoreOrderBy,
-  limit as firestoreLimit,
-  getDocs,
-  startAfter,
-  QueryConstraint,
-  DocumentData,
-  QueryDocumentSnapshot
-} from 'firebase/firestore';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-
+import { db, collection, query, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+rs/logger';
 
 // ============================================================================
 // TYPES

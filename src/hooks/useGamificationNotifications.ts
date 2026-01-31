@@ -8,20 +8,9 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
+import { collection, query, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, Unsubscribe, getDocs,  } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Unsubscribe,
-  getDocs,
-} from 'firebase/firestore';
+
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';

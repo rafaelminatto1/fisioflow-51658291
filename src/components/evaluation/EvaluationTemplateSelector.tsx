@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
+import { db, collection, getDocs, query, where, orderBy, getDoc, doc } from '@/integrations/firebase/app';
 import { Check, ChevronsUpDown, FileText, Search, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

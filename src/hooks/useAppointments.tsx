@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, onSnapshot, query, where } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';

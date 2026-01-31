@@ -20,21 +20,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  setDoc,
-  doc,
-  getDoc,
-  limit,
-  orderBy as firestoreOrderBy
-} from 'firebase/firestore';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { db, collection, query, where, getDocs, addDoc, updateDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+nizations';
 import { Activity } from 'lucide-react';
 
 // Registrar font para PDF
@@ -187,8 +174,6 @@ interface RelatorioConvenioData {
   conduta?: string;
   data_emissao: string;
 }
-
-
 
 // Componente PDF do Relatório
 function RelatorioConvenioPDF({ data }: { data: RelatorioConvenioData }) {

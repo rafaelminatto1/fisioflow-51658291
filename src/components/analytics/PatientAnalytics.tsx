@@ -1,8 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { db } from "@/integrations/firebase/app";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 

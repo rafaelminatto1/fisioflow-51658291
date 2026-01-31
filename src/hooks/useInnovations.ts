@@ -16,23 +16,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, setDoc, writeBatch } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  limit,
-  setDoc,
-  writeBatch
-} from 'firebase/firestore';
+
 
 const auth = getFirebaseAuth();
 

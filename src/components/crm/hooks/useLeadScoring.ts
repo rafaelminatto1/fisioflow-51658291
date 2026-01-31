@@ -9,13 +9,8 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
-
-
-interface ScoreFactor {
-  type: string;
-  description: string;
+import { db, collection, getDocs, query, where, doc, getDoc } from '@/integrations/firebase/app';
+tion: string;
   points: number;
 }
 

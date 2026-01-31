@@ -11,17 +11,10 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { collection, query, where, getDocs, doc, getDoc, orderBy,  } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  orderBy,
-} from 'firebase/firestore';
+
 import {
   generateDashboardMetrics,
   generateTrendData,

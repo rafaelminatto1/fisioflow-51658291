@@ -7,15 +7,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit
-} from 'firebase/firestore';
+
 
 
 export interface MovimentacaoCaixa {
