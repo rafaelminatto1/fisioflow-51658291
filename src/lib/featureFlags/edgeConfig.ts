@@ -6,7 +6,7 @@
  */
 
 import { get } from '@vercel/edge-config';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface FeatureFlagConfig {
   enabled: boolean;

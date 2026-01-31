@@ -46,7 +46,7 @@ export class StructuredLogger {
   private readonly region: string;
   private readonly context: LogContext;
 
-  constructor(functionName: string, region: string = 'us-central1') {
+  constructor(functionName: string, region: string = 'southamerica-east1') {
     this.functionName = functionName;
     this.region = region;
     this.context = {

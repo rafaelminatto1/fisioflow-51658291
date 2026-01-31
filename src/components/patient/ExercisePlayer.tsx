@@ -10,7 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { PatientService } from '@/lib/services/PatientService';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Interfaces definindo a estrutura dos dados
 interface Exercise {

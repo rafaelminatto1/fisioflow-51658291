@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 const auth = getFirebaseAuth();

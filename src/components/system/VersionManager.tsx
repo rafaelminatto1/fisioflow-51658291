@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Componente que gerencia a versão da aplicação e limpa caches antigos

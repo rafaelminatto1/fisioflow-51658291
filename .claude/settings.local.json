@@ -275,7 +275,10 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npx tsc:*)",
       "Bash(DEBUG=vite:*)",
       "Bash(gh pr view:*)",
-      "Bash(git apply:*)"
+      "Bash(git apply:*)",
+      "Bash(cat:*)",
+      "Bash(./gradlew tasks:*)",
+      "Bash(./gradlew assembleDebug:*)"
     ],
     "deny": [],
     "ask": [],

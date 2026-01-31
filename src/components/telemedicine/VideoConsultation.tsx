@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, MessageSquare, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface VideoConsultationProps {
   patientName?: string;

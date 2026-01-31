@@ -37,6 +37,7 @@ exports.createPayment = exports.getPatientFinancialSummary = exports.listPayment
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
+const logger_1 = require("../lib/logger");
 exports.listPayments = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
@@ -65,7 +66,7 @@ exports.listPayments = (0, https_1.onCall)({ cors: true }, async (request) => {
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in listPayments:', error);
+        logger_1.logger.error('Error in listPayments:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar pagamentos';
@@ -124,7 +125,7 @@ exports.getPatientFinancialSummary = (0, https_1.onCall)({ cors: true }, async (
         };
     }
     catch (error) {
-        console.error('Error in getPatientFinancialSummary:', error);
+        logger_1.logger.error('Error in getPatientFinancialSummary:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar resumo financeiro';
@@ -178,12 +179,12 @@ exports.createPayment = (0, https_1.onCall)({ cors: true }, async (request) => {
             });
         }
         catch (e) {
-            console.error('Error publishing to Ably:', e);
+            logger_1.logger.error('Error publishing to Ably:', e);
         }
         return { data: payment };
     }
     catch (error) {
-        console.error('Error in createPayment:', error);
+        logger_1.logger.error('Error in createPayment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar pagamento';

@@ -36,7 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/components/ui/CommandPalette';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Hooks
 import {
@@ -63,7 +63,7 @@ import {
   doc,
   limit,
 } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Componentes de Evolução
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { functions } from '@/integrations/firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { httpsCallable } from 'firebase/functions';
 import { UserRole } from '@/types/auth';
 

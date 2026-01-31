@@ -12,7 +12,7 @@ import { usePainEvolution, usePainStatistics } from '@/hooks/usePainMaps';
 import { usePatientSurgeries, usePatientPathologies, usePatientGoals } from '@/hooks/usePatientEvolution';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ReportGeneratorDialogProps {
   patientId: string;

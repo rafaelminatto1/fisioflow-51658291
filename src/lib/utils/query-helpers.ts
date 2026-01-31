@@ -11,7 +11,7 @@
 
 import { db } from '@/integrations/firebase/app';
 import { query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 
 // ==============================================================================
