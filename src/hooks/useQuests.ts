@@ -9,20 +9,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, getDocFromServer } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  getDocFromServer
-} from 'firebase/firestore';
+
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

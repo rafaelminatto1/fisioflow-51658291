@@ -8,9 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import { doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
 import { User as FirebaseUser } from 'firebase/auth';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 

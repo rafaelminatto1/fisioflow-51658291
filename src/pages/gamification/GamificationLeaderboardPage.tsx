@@ -11,8 +11,7 @@ import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { db, collection, query, where, getDocs, limit, orderBy } from '@/integrations/firebase/app';
 
 interface LeaderboardEntry {
   patient_id: string;

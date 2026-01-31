@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, addDoc } from '@/integrations/firebase/app';
-import { doc as docRef, getDoc as getDocFromFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, addDoc as addDocToFirestore } from 'firebase/firestore';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { SOAPFormPanel } from './SOAPFormPanel';
@@ -90,8 +89,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
       // Load appointment data
       if (appointmentId) {
-        const appointmentRef = docRef(db, 'appointments', appointmentId);
-        const appointmentSnap = await getDocFromFirestore(appointmentRef);
+        const appointmentRef = doc(db, 'appointments', appointmentId);
+        const appointmentSnap = await getDoc(appointmentRef);
 
         if (!appointmentSnap.exists()) {
           throw new Error('Appointment not found');
@@ -101,8 +100,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
         // Load patient
         if (appointmentData.patient_id) {
-          const patientRef = docRef(db, 'patients', appointmentData.patient_id);
-          const patientSnap = await getDocFromFirestore(patientRef);
+          const patientRef = doc(db, 'patients', appointmentData.patient_id);
+          const patientSnap = await getDoc(patientRef);
           if (patientSnap.exists()) {
             setPatient({ id: patientSnap.id, ...patientSnap.data() });
             currentPatientId = appointmentData.patient_id;
@@ -128,8 +127,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         }
       } else if (propPatientId) {
         // Load patient directly
-        const patientRef = docRef(db, 'patients', propPatientId);
-        const patientSnap = await getDocFromFirestore(patientRef);
+        const patientRef = doc(db, 'patients', propPatientId);
+        const patientSnap = await getDoc(patientRef);
 
         if (!patientSnap.exists()) {
           throw new Error('Patient not found');
@@ -142,37 +141,37 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       // Load patient related data
       if (currentPatientId) {
         // Calculate session number
-        const appointmentsQuery = queryFromFirestore(
-          collectionRef(db, 'appointments'),
-          whereFn('patient_id', '==', currentPatientId),
-          whereFn('status', '==', 'atendido')
+        const appointmentsQuery = query(
+          collection(db, 'appointments'),
+          where('patient_id', '==', currentPatientId),
+          where('status', '==', 'atendido')
         );
-        const appointmentsSnap = await getDocsFromCollection(appointmentsQuery);
+        const appointmentsSnap = await getDocs(appointmentsQuery);
         const calculatedSessionNumber = appointmentsSnap.size + 1;
         setSessionNumber(calculatedSessionNumber);
 
         // Load surgeries
-        const surgeriesQuery = queryFromFirestore(
-          collectionRef(db, 'patient_surgeries'),
-          whereFn('patient_id', '==', currentPatientId)
+        const surgeriesQuery = query(
+          collection(db, 'patient_surgeries'),
+          where('patient_id', '==', currentPatientId)
         );
-        const surgeriesSnap = await getDocsFromCollection(surgeriesQuery);
+        const surgeriesSnap = await getDocs(surgeriesQuery);
         setSurgeries(surgeriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // Load pathologies
-        const pathologiesQuery = queryFromFirestore(
-          collectionRef(db, 'patient_pathologies'),
-          whereFn('patient_id', '==', currentPatientId)
+        const pathologiesQuery = query(
+          collection(db, 'patient_pathologies'),
+          where('patient_id', '==', currentPatientId)
         );
-        const pathologiesSnap = await getDocsFromCollection(pathologiesQuery);
+        const pathologiesSnap = await getDocs(pathologiesQuery);
         setPathologies(pathologiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // Load goals
-        const goalsQuery = queryFromFirestore(
-          collectionRef(db, 'patient_goals'),
-          whereFn('patient_id', '==', currentPatientId)
+        const goalsQuery = query(
+          collection(db, 'patient_goals'),
+          where('patient_id', '==', currentPatientId)
         );
-        const goalsSnap = await getDocsFromCollection(goalsQuery);
+        const goalsSnap = await getDocs(goalsQuery);
         setGoals(goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // Check mandatory tests
@@ -290,7 +289,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       if (!user) throw new Error('Usuário não autenticado');
 
       // Save SOAP record
-      const soapRecordRef = docRef(collectionRef(db, 'soap_records'));
+      const soapRecordRef = docRef(collection(db, 'soap_records'));
       const soapRecordData = {
         patient_id: patientId,
         appointment_id: appointmentId || null,
@@ -302,7 +301,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         record_date: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString()
       };
-      await setDocToFirestore(soapRecordRef, soapRecordData);
+      await setDoc(soapRecordRef, soapRecordData);
       const soapRecordId = soapRecordRef.id;
 
       if (soapData && soapRecordId) {
@@ -313,11 +312,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       // First, check if a session already exists for this appointment to avoid duplicates
       let existingSessionId = null;
       if (appointmentId) {
-        const sessionsQuery = queryFromFirestore(
-          collectionRef(db, 'treatment_sessions'),
-          whereFn('appointment_id', '==', appointmentId)
+        const sessionsQuery = query(
+          collection(db, 'treatment_sessions'),
+          where('appointment_id', '==', appointmentId)
         );
-        const sessionsSnap = await getDocsFromCollection(sessionsQuery);
+        const sessionsSnap = await getDocs(sessionsQuery);
         if (!sessionsSnap.empty) {
           existingSessionId = sessionsSnap.docs[0].id;
         }
@@ -342,14 +341,14 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       };
 
       if (existingSessionId) {
-        await updateDocInFirestore(docRef(db, 'treatment_sessions', existingSessionId), sessionData);
+        await updateDoc(doc(db, 'treatment_sessions', existingSessionId), sessionData);
       } else {
-        await addDocToFirestore(collectionRef(db, 'treatment_sessions'), sessionData);
+        await addDoc(collection(db, 'treatment_sessions'), sessionData);
       }
 
       // Update appointment status
       if (appointmentId) {
-        await updateDocInFirestore(docRef(db, 'appointments', appointmentId), {
+        await updateDoc(doc(db, 'appointments', appointmentId), {
           status: 'Realizado',
           notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecordId, exercises: sessionExercises })
         });
