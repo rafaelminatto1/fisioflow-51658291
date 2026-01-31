@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EvaluationForm, EvaluationFormField } from '@/types/clinical-forms';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

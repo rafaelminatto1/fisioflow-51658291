@@ -19,7 +19,7 @@ import {
   type RemoteConfig,
 } from 'firebase/remote-config';
 import { app } from '@/integrations/firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

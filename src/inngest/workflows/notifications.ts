@@ -13,7 +13,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 type NotificationResult = { sent: boolean; channel: string; error?: string };
 

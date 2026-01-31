@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot, collection, query, where, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../config';
+import { doc, onSnapshot, collection, query, where, getDoc, getDocs, setDoc, updateDoc, orderBy } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import { COLLECTIONS } from '@fisioflow/shared-constants';
 import { startOfDay, endOfDay, subDays, differenceInDays, format } from 'date-fns';
 

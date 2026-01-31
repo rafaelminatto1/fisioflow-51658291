@@ -17,6 +17,7 @@ const auth = () => (0, auth_1.getAuth)((0, app_1.getApp)());
 const https_1 = require("firebase-functions/v2/https");
 // Re-exportar getPool do index
 const init_1 = require("../init");
+const logger_1 = require("../lib/logger");
 /**
  * Extrai e verifica o token Bearer do header Authorization
  *
@@ -75,7 +76,7 @@ async function getProfile(userId) {
        WHERE user_id = $1`, [userId]);
         if (result.rows.length === 0) {
             // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
-            console.log(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
+            logger_1.logger.info(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
             // Generate a deterministic UUID based on user ID for the organization
             // This ensures the same user always gets the same organization
             const organizationId = `org-${userId.substring(0, 8)}-${userId.substring(8, 16)}-${userId.substring(16, 24)}-${userId.substring(24, 32)}`;
@@ -86,14 +87,14 @@ async function getProfile(userId) {
                 await pool.query(`INSERT INTO organizations (id, name, slug, active, email)
              VALUES ($1, 'Clínica Principal', $2, true, $3)
              ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug`, [organizationId, orgSlug, 'admin@fisioflow.com.br']);
-                console.log(`[Auth Middleware] Created/updated organization: ${organizationId} with slug: ${orgSlug}`);
+                logger_1.logger.info(`[Auth Middleware] Created/updated organization: ${organizationId} with slug: ${orgSlug}`);
             }
             catch (orgError) {
                 // If organization already exists but slug conflicts, generate a unique one
                 if (orgError.code === '23505') { // unique_violation
                     const uniqueSlug = `${orgSlug}-${Date.now().toString(36)}`;
                     await pool.query(`UPDATE organizations SET slug = $1 WHERE id = $2`, [uniqueSlug, organizationId]);
-                    console.log(`[Auth Middleware] Updated organization slug to: ${uniqueSlug}`);
+                    logger_1.logger.info(`[Auth Middleware] Updated organization slug to: ${uniqueSlug}`);
                 }
                 else {
                     throw orgError;
@@ -103,7 +104,7 @@ async function getProfile(userId) {
             const newProfile = await pool.query(`INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
            VALUES ($1, $2, $3, $4, $5, $6)
            RETURNING id, user_id, organization_id, role, full_name, email, is_active`, [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com.br', true]);
-            console.log(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);
+            logger_1.logger.info(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);
             return newProfile.rows[0];
         }
         const profile = result.rows[0];
@@ -116,7 +117,7 @@ async function getProfile(userId) {
         // If database connection fails, provide a more helpful error
         if (error instanceof Error) {
             if (error.message.includes('connect') || error.message.includes('ECONNREFUSED')) {
-                console.error('[Auth Middleware] Database connection error:', error.message);
+                logger_1.logger.error('[Auth Middleware] Database connection error:', error.message);
                 throw new https_1.HttpsError('internal', 'Erro de conexão com o banco de dados. Verifique se o PostgreSQL/Cloud SQL está configurado e acessível.');
             }
         }

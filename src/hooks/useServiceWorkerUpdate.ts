@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Workbox } from 'workbox-window';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Hook para gerenciar atualizações do Service Worker

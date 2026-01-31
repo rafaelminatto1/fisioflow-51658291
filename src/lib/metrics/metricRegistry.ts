@@ -1,5 +1,5 @@
 import { MetricDefinition, MetricRegistrySchema } from './metricRegistry.zod';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export const metricRegistry: Record<string, MetricDefinition> = {
     // --- GAIT ---

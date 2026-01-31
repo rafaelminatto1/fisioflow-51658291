@@ -2,7 +2,7 @@
  * Service for caching patients data offline.
  */
 import { Patient } from '@/schemas/patient';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface CacheMetadata {
     lastUpdated: string;

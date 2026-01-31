@@ -37,6 +37,7 @@ exports.savePainRecord = exports.getPainRecords = exports.updateTreatmentSession
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
+const logger_1 = require("../lib/logger");
 exports.getPatientRecords = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
@@ -73,7 +74,7 @@ exports.getPatientRecords = (0, https_1.onCall)({ cors: true }, async (request) 
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in getPatientRecords:', error);
+        logger_1.logger.error('Error in getPatientRecords:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prontuários';
@@ -119,12 +120,12 @@ exports.createMedicalRecord = (0, https_1.onCall)({ cors: true }, async (request
             });
         }
         catch (e) {
-            console.error('Error publishing to Ably:', e);
+            logger_1.logger.error('Error publishing to Ably:', e);
         }
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in createMedicalRecord:', error);
+        logger_1.logger.error('Error in createMedicalRecord:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar prontuário';
@@ -173,7 +174,7 @@ exports.updateMedicalRecord = (0, https_1.onCall)({ cors: true }, async (request
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in updateMedicalRecord:', error);
+        logger_1.logger.error('Error in updateMedicalRecord:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar prontuário';
@@ -207,7 +208,7 @@ exports.listTreatmentSessions = (0, https_1.onCall)({ cors: true }, async (reque
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in listTreatmentSessions:', error);
+        logger_1.logger.error('Error in listTreatmentSessions:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar sessões';
@@ -268,13 +269,13 @@ exports.createTreatmentSession = (0, https_1.onCall)({ cors: true }, async (requ
                 ]);
             }
             catch (e) {
-                console.error('Error recording patient progress:', e);
+                logger_1.logger.error('Error recording patient progress:', e);
             }
         }
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in createTreatmentSession:', error);
+        logger_1.logger.error('Error in createTreatmentSession:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar sessão';
@@ -332,7 +333,7 @@ exports.updateTreatmentSession = (0, https_1.onCall)({ cors: true }, async (requ
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in updateTreatmentSession:', error);
+        logger_1.logger.error('Error in updateTreatmentSession:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar sessão';
@@ -359,7 +360,7 @@ exports.getPainRecords = (0, https_1.onCall)({ cors: true }, async (request) => 
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in getPainRecords:', error);
+        logger_1.logger.error('Error in getPainRecords:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar registros de dor';
@@ -393,7 +394,7 @@ exports.savePainRecord = (0, https_1.onCall)({ cors: true }, async (request) => 
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in savePainRecord:', error);
+        logger_1.logger.error('Error in savePainRecord:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar registro de dor';

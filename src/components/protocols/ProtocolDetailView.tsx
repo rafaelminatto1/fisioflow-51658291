@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/data/protocols';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
 import { useOrganizations } from '@/hooks/useOrganizations';

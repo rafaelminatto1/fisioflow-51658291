@@ -18,7 +18,7 @@ import {
   query,
   where
 } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function useDataExport() {
   const [isExporting, setIsExporting] = useState(false);
