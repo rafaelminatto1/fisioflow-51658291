@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -38,7 +38,7 @@ export function useEventoTemplates() {
   return useQuery({
     queryKey: ['evento-templates'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evento_templates'),
         orderBy('created_at', 'desc')
       );
@@ -63,7 +63,7 @@ export function useCreateTemplateFromEvento() {
       const evento = { id: eventoDoc.id, ...eventoDoc.data() };
 
       // Fetch checklist items for this evento
-      const checklistQ = query(
+      const checklistQ = firestoreQuery(
         collection(db, 'checklist_items'),
         where('evento_id', '==', eventoId)
       );

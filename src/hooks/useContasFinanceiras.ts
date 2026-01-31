@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, addDoc, updateDoc, deleteDoc, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+import { collection, doc, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, getDocs } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -37,13 +37,13 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
     queryKey: ['contas-financeiras', tipo, status],
     queryFn: async () => {
       try {
-        let q = query(
+        let q = firestoreQuery(
           collection(db, 'contas_financeiras'),
           orderBy('data_vencimento', 'asc')
         );
 
         if (tipo) {
-          q = query(
+          q = firestoreQuery(
             collection(db, 'contas_financeiras'),
             where('tipo', '==', tipo),
             orderBy('data_vencimento', 'asc')
@@ -52,14 +52,14 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
 
         if (status) {
           if (tipo) {
-            q = query(
+            q = firestoreQuery(
               collection(db, 'contas_financeiras'),
               where('tipo', '==', tipo),
               where('status', '==', status),
               orderBy('data_vencimento', 'asc')
             );
           } else {
-            q = query(
+            q = firestoreQuery(
               collection(db, 'contas_financeiras'),
               where('status', '==', status),
               orderBy('data_vencimento', 'asc')

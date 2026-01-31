@@ -587,10 +587,10 @@ export function CohortComparison({
 
   const filteredCohorts = useMemo(() => {
     if (!searchQuery) return cohorts;
-    const query = searchQuery.toLowerCase();
+    const searchLower = searchQuery.toLowerCase();
     return cohorts.filter((c) =>
-      c.name.toLowerCase().includes(query) ||
-      formatCohortName(c.name).toLowerCase().includes(query)
+      c.name.toLowerCase().includes(searchLower) ||
+      formatCohortName(c.name).toLowerCase().includes(searchLower)
     );
   }, [cohorts, searchQuery]);
 

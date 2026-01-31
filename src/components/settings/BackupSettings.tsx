@@ -5,7 +5,8 @@ import { Database, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
-s() {
+
+export function BackupSettings() {
     const [isExporting, setIsExporting] = useState(false);
     const { toast } = useToast();
 

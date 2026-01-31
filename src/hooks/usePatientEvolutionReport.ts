@@ -10,7 +10,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query, where, orderBy, doc, getDoc,  } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, doc, getDoc,  } from '@/integrations/firebase/app';
 import { toast } from "sonner";
 import { db } from '@/integrations/firebase/app';
 
@@ -46,7 +46,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
     queryKey: ["patient-evolution-report", patientId],
     queryFn: async (): Promise<PatientEvolutionData> => {
       // Buscar registros SOAP do paciente
-      const soapQ = query(
+      const soapQ = firestoreQuery(
         collection(db, 'soap_records'),
         where('patient_id', '==', patientId),
         orderBy('record_date', 'asc')
@@ -55,7 +55,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
       const soapRecords = soapSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Buscar medições de evolução
-      const measurementsQ = query(
+      const measurementsQ = firestoreQuery(
         collection(db, 'evolution_measurements'),
         where('patient_id', '==', patientId),
         orderBy('measured_at', 'asc')
@@ -64,7 +64,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
       const measurements = measurementsSnap.docs.map(doc => doc.data());
 
       // Buscar sessões prescritas (pacotes)
-      const packagesQ = query(
+      const packagesQ = firestoreQuery(
         collection(db, 'session_packages'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc')
@@ -132,7 +132,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         const painMapsResults = await Promise.all(
           chunks.map(chunk =>
             getDocs(
-              query(collection(db, 'pain_maps'), where('session_id', 'in', chunk))
+              firestoreQuery(collection(db, 'pain_maps'), where('session_id', 'in', chunk))
             )
           )
         );
@@ -150,7 +150,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
 
       const therapistMap = new Map<string, string>();
       if (therapistIds.length > 0) {
-        const profilesQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
+        const profilesQ = firestoreQuery(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
         const profilesSnap = await getDocs(profilesQ);
         profilesSnap.forEach(doc => {
           therapistMap.set(doc.data().user_id, doc.data().full_name);

@@ -15,7 +15,7 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query, where, orderBy, limit, getCountFromServer, QueryConstraint, onSnapshot } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, getCountFromServer, QueryConstraint, onSnapshot } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
 
 import { useEffect } from 'react';
@@ -97,14 +97,14 @@ export const useDashboardMetrics = () => {
     const today = formatDateToLocalISO(new Date());
     
     // Listener para agendamentos de hoje
-    const appointmentsQuery = query(
+    const appointmentsQuery = firestoreQuery(
       collection(db, 'appointments'),
       where('appointment_date', '==', today)
     );
 
     // Listener para novos pacientes (últimos 30 dias)
     const thirtyDaysAgo = formatDateToLocalISO(subMonths(new Date(), 1));
-    const patientsQuery = query(
+    const patientsQuery = firestoreQuery(
       collection(db, 'patients'),
       where('created_at', '>=', thirtyDaysAgo)
     );
@@ -142,7 +142,7 @@ export const useDashboardMetrics = () => {
           if (!db) {
             throw new Error('Firestore instance "db" is not available');
           }
-          const q = query(collection(db, collectionName), ...constraints);
+          const q = firestoreQuery(collection(db, collectionName), ...constraints);
           const snapshot = await getCountFromServer(q);
           return snapshot.data().count;
         } catch (error: UnknownError) {
@@ -159,7 +159,7 @@ export const useDashboardMetrics = () => {
           if (!db) {
             throw new Error('Firestore instance "db" is not available');
           }
-          const q = query(collection(db, collectionName), ...constraints);
+          const q = firestoreQuery(collection(db, collectionName), ...constraints);
           const snapshot = await getDocs(q);
           return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error: UnknownError) {
@@ -295,7 +295,7 @@ export const useDashboardMetrics = () => {
 
       if (uniqueTherapistUserIds.length > 0) {
         // Query profiles from Firestore
-        const profilesQ = query(
+        const profilesQ = firestoreQuery(
           collection(db, 'profiles'),
           where('user_id', 'in', uniqueTherapistUserIds.slice(0, 10)) // Firestore 'in' limit is 10
         );
@@ -336,7 +336,7 @@ export const useDashboardMetrics = () => {
       const therapistProfiles = new Map<string, { full_name?: string }>();
 
       if (therapistIds.length > 0) {
-        const profileQ = query(
+        const profileQ = firestoreQuery(
           collection(db, 'profiles'),
           where('user_id', 'in', therapistIds.slice(0, 10))
         );

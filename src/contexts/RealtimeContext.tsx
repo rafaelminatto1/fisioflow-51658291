@@ -74,6 +74,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Ref para tracking de updates em batch
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
@@ -216,7 +217,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return () => { };
     }
 
-    logger.info('Realtime: Subscribing to appointments via Ably', { organizationId }, 'RealtimeContext');
+    logger.info('Realtime: Subscribing to appointments via Ably', { organizationId, retryCount }, 'RealtimeContext');
 
     const ably = getAblyClient();
     const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
@@ -230,18 +231,36 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       handleRealtimeChange(payload);
     });
 
+    // Handle channel errors (e.g. 410 Gone)
+    const handleChannelState = (stateChange: Ably.ChannelStateChange) => {
+      if (stateChange.current === 'failed' || stateChange.current === 'suspended') {
+        logger.error(`Realtime: Ably channel ${stateChange.current}`, stateChange.reason, 'RealtimeContext');
+        setIsSubscribed(false);
+
+        // Auto-retry connection after delay
+        const timeout = setTimeout(() => {
+          logger.info('Realtime: Retrying subscription...', {}, 'RealtimeContext');
+          setRetryCount(prev => prev + 1);
+        }, 5000);
+
+        return () => clearTimeout(timeout);
+      }
+    };
+
+    channel.on(handleChannelState);
     setIsSubscribed(true);
 
     return () => {
       logger.info('Realtime: Unsubscribing from Ably channel', { organizationId }, 'RealtimeContext');
       channel.unsubscribe();
+      channel.off(handleChannelState);
       setIsSubscribed(false);
 
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
     };
-  }, [organizationId, handleRealtimeChange]);
+  }, [organizationId, handleRealtimeChange, retryCount]);
 
   /**
    * Carregar appointments iniciais ao montar o provider

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 import { db } from '@/integrations/firebase/app';
@@ -48,7 +48,7 @@ export function useEvaluationForms(tipo?: string) {
   return useQuery({
     queryKey: ['evaluation-forms', tipo],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_forms'),
         where('ativo', '==', true),
         orderBy('nome')
@@ -78,7 +78,7 @@ export function useEvaluationFormWithFields(formId: string | undefined) {
         throw new Error('Ficha não encontrada');
       }
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_form_fields'),
         where('form_id', '==', formId),
         orderBy('ordem')
@@ -191,7 +191,7 @@ export function useDuplicateEvaluationForm() {
       const newForm = convertDocToEvaluationForm(newFormSnap);
 
       // 3. Get original fields
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_form_fields'),
         where('form_id', '==', id)
       );

@@ -9,7 +9,10 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
-le: string;
+
+interface OnboardingStep {
+  id: string;
+  title: string;
   description: string;
   icon: React.ReactNode;
   action?: string;
