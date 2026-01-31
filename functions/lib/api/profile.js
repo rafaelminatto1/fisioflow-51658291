@@ -12,7 +12,7 @@ const logger_1 = require("../lib/logger");
 /**
  * Retorna o perfil completo do usuário autenticado
  */
-exports.getProfile = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getProfile = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -44,7 +44,7 @@ exports.getProfile = (0, https_1.onCall)({ cors: true }, async (request) => {
 /**
  * Atualiza o perfil do usuário autenticado
  */
-exports.updateProfile = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updateProfile = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
