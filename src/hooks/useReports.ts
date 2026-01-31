@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
 import { db } from '@/integrations/firebase/app';
 import {

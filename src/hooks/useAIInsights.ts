@@ -8,7 +8,7 @@
 import { useCompletion, useChat } from '@ai-sdk/react';
 import { useState, useMemo } from 'react';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

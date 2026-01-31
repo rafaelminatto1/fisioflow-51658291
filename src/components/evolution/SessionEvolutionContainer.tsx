@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, addDoc } from '@/integrations/firebase/app';
 import { doc as docRef, getDoc as getDocFromFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, addDoc as addDocToFirestore } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { SOAPFormPanel } from './SOAPFormPanel';
 import { SessionHistoryPanel } from './SessionHistoryPanel';

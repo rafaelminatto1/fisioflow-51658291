@@ -1,5 +1,5 @@
 import { UnifiedLandmark } from '@/utils/geometry';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Extend Window interface for MediaPipe Pose
 declare global {

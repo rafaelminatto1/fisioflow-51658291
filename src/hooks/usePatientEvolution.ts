@@ -18,7 +18,7 @@ import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 import { getAuth } from 'firebase/auth';
 import {

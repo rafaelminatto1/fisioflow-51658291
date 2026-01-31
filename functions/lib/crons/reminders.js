@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.dailyReminders = void 0;
 const scheduler_1 = require("firebase-functions/v2/scheduler");
 const pg_1 = require("pg");
+const logger_1 = require("../lib/logger");
 exports.dailyReminders = (0, scheduler_1.onSchedule)('every day 08:00', async (event) => {
     const pool = new pg_1.Pool({
         connectionString: process.env.CLOUD_SQL_CONNECTION_STRING,
@@ -15,7 +16,7 @@ exports.dailyReminders = (0, scheduler_1.onSchedule)('every day 08:00', async (e
       JOIN patients p ON a.patient_id = p.id
       WHERE a.date = CURRENT_DATE AND a.status = 'agendado'
     `);
-        console.log(`Enviando ${result.rows.length} lembretes...`);
+        logger_1.logger.info(`Enviando ${result.rows.length} lembretes...`);
         // Lógica de envio (WhatsApp/Email) aqui
     }
     finally {

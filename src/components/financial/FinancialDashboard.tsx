@@ -10,7 +10,7 @@ import { generateTransactionsCSV, downloadCSV } from '@/utils/csvExport';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export const FinancialDashboard: React.FC = () => {
   const { stats, loading, period, setPeriod, transactions } = useFinancial();

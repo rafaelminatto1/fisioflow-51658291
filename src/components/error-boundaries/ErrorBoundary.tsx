@@ -16,7 +16,7 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { ErrorFallback } from './ErrorFallback';
 
 export interface ErrorBoundaryProps {

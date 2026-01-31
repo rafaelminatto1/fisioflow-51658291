@@ -24,7 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, Loader2, BookOpen, Settings, BarChart3 } from 'lucide-react';
 import { ClinicalTestMetricsBuilder, MetricField } from './ClinicalTestMetricsBuilder';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ClinicalTest {
     id?: string;

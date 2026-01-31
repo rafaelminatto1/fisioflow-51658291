@@ -7,7 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const getEnv = (key: string): string | undefined => {
   // @ts-expect-error - import.meta is not fully typed in all environments

@@ -257,9 +257,9 @@
   },
   "pnpm": {
     "overrides": {
-      "react": "^18.3.1",
-      "react-dom": "^18.3.1",
-      "@types/react": "^18.3.0",
+      "react": "^19.1.0",
+      "react-dom": "^19.1.0",
+      "@types/react": "^19.1.10",
       "@react-native-async-storage/async-storage": "^2.2.0",
       "@expo/metro-config": "^54.0.0",
       "@expo/metro": "^54.0.0"

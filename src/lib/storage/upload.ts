@@ -33,7 +33,7 @@ import {
   type UploadResult,
   type StorageStats,
 } from '@/lib/firebase/storage';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // RE-EXPORTS FOR BACKWARD COMPATIBILITY

@@ -6,7 +6,7 @@ import { useAI } from '@/integrations/firebase/ai';
 import { DashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIFeatureCategory } from '@fisioflow/shared-api/firebase/ai/config';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface AIInsightsWidgetProps {
   metrics: DashboardMetrics | undefined;

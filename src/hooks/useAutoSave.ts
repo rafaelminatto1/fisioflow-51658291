@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { useAI } from '@/integrations/firebase/ai';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface MedicalReportSuggestionsProps {
   patientId: string;
