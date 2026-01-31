@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, setDoc } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, setDoc } from '@/integrations/firebase/app';
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
@@ -66,7 +66,7 @@ export function useMFASettings() {
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) return null;
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'mfa_settings'),
         where('user_id', '==', firebaseUser.uid),
         limit(1)
@@ -102,7 +102,7 @@ export function useMFASettings() {
       };
 
       // Check if settings already exist
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'mfa_settings'),
         where('user_id', '==', firebaseUser.uid),
         limit(1)
@@ -143,7 +143,7 @@ export function useMFASettings() {
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) throw new Error("Usuário não autenticado");
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'mfa_settings'),
         where('user_id', '==', firebaseUser.uid),
         limit(1)
@@ -205,7 +205,7 @@ export function useMFASettings() {
 
       // This would normally verify against a stored OTP or use Firebase Auth
       // For now, check backup codes
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'mfa_settings'),
         where('user_id', '==', firebaseUser.uid),
         limit(1)

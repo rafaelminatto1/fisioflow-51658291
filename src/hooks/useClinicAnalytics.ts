@@ -11,7 +11,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, getDocs, doc, getDoc, orderBy,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy,  } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
 
@@ -147,14 +147,14 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
 
       // Fetch all data in parallel
       const [appointmentsSnap, patientsSnap, profilesSnap, paymentsSnap] = await Promise.all([
-        getDocs(query(
+        getDocs(firestoreQuery(
           collection(db, 'appointments'),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString())
         )),
-        getDocs(query(collection(db, 'patients'), orderBy('created_at', 'desc'))),
+        getDocs(firestoreQuery(collection(db, 'patients'), orderBy('created_at', 'desc'))),
         getDocs(collection(db, 'profiles')),
-        getDocs(query(
+        getDocs(firestoreQuery(
           collection(db, 'payments'),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString())
@@ -170,7 +170,7 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
       const patientIds = (patients as Patient[]).map((p) => p.id);
       const lastAppointments = await Promise.all(
         patientIds.map(async (patientId: string) => {
-          const aptSnap = await getDocs(query(
+          const aptSnap = await getDocs(firestoreQuery(
             collection(db, 'appointments'),
             where('patient_id', '==', patientId),
             where('status', '==', 'atendido'),
@@ -246,7 +246,7 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
           start = startOfMonth(end);
       }
 
-      const snap = await getDocs(query(
+      const snap = await getDocs(firestoreQuery(
         collection(db, 'appointments'),
         where('date', '>=', start.toISOString()),
         where('date', '<=', end.toISOString())
@@ -299,7 +299,7 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
           start = startOfMonth(end);
       }
 
-      const snap = await getDocs(query(
+      const snap = await getDocs(firestoreQuery(
         collection(db, 'payments'),
         where('date', '>=', start.toISOString()),
         where('date', '<=', end.toISOString()),
@@ -351,7 +351,7 @@ export function usePatientTrends(options: TrendsOptions = {}) {
           start = startOfMonth(end);
       }
 
-      const snap = await getDocs(query(
+      const snap = await getDocs(firestoreQuery(
         collection(db, 'patients'),
         where('created_at', '>=', start.toISOString()),
         where('created_at', '<=', end.toISOString())
@@ -424,12 +424,12 @@ export function useComparisonMetrics(options: ComparisonMetricsOptions) {
 
       // Fetch current period data
       const [currentSnap, previousSnap] = await Promise.all([
-        getDocs(query(
+        getDocs(firestoreQuery(
           collection(db, 'appointments'),
           where('date', '>=', currentStart.toISOString()),
           where('date', '<=', end.toISOString())
         )),
-        getDocs(query(
+        getDocs(firestoreQuery(
           collection(db, 'appointments'),
           where('date', '>=', previousStart.toISOString()),
           where('date', '<=', previousEnd.toISOString())
@@ -482,7 +482,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
       const end = new Date();
 
       if (metric === 'appointments') {
-        const snap = await getDocs(query(
+        const snap = await getDocs(firestoreQuery(
           collection(db, 'appointments'),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString()),
@@ -523,7 +523,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
           .slice(0, 5);
       } else {
         // Revenue by therapist - requires payment appointments to have therapist_id
-        const snap = await getDocs(query(
+        const snap = await getDocs(firestoreQuery(
           collection(db, 'payments'),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString()),

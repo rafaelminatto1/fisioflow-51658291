@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query, where, orderBy, getDoc, doc } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy, getDoc, doc } from '@/integrations/firebase/app';
 import { Check, ChevronsUpDown, FileText, Search, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -86,7 +86,7 @@ export function EvaluationTemplateSelector({
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ['evaluation-templates-with-fields', category],
         queryFn: async () => {
-            let q = query(
+            let q = firestoreQuery(
                 collection(db, 'evaluation_forms'),
                 where('ativo', '==', true),
                 orderBy('nome')
@@ -106,7 +106,7 @@ export function EvaluationTemplateSelector({
                     }
 
                     // Fetch fields for this form
-                    const fieldsQuery = query(
+                    const fieldsQuery = firestoreQuery(
                         collection(db, 'evaluation_form_fields'),
                         where('form_id', '==', form.id),
                         orderBy('ordem')
@@ -172,11 +172,11 @@ export function EvaluationTemplateSelector({
     const filteredTemplates = useMemo(() => {
         if (!searchQuery.trim()) return templates;
 
-        const query = searchQuery.toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
         return templates.filter(t =>
-            t.nome.toLowerCase().includes(query) ||
-            t.descricao?.toLowerCase().includes(query) ||
-            t.tipo?.toLowerCase().includes(query)
+            t.nome.toLowerCase().includes(searchLower) ||
+            t.descricao?.toLowerCase().includes(searchLower) ||
+            t.tipo?.toLowerCase().includes(searchLower)
         );
     }, [templates, searchQuery]);
 

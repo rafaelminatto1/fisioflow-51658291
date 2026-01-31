@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy, getDoc,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, addDoc, deleteDoc, doc, orderBy, getDoc,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, getFirebaseStorage } from '@/integrations/firebase/app';
@@ -51,7 +51,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
     }
 
     try {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'medical_requests'),
         where('patient_id', '==', patientId),
         where('organization_id', '==', organizationId),
@@ -64,7 +64,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
           const requestData = convertDoc(requestDoc);
 
           // Fetch files for this request
-          const filesQ = query(
+          const filesQ = firestoreQuery(
             collection(db, 'medical_request_files'),
             where('medical_request_id', '==', requestDoc.id)
           );
@@ -152,7 +152,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
 
     try {
       // Get files to delete from storage
-      const filesQ = query(
+      const filesQ = firestoreQuery(
         collection(db, 'medical_request_files'),
         where('medical_request_id', '==', requestId)
       );

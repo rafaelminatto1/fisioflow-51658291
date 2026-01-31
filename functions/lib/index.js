@@ -38,7 +38,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.getPatientStats = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
-exports.updateUserRole = exports.listUsers = exports.onUserCreated = exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = void 0;
+exports.updateUserRole = exports.listUsers = exports.onUserCreated = exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.runPerformanceIndexes = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = void 0;
 const functions = __importStar(require("firebase-functions/v2"));
 const v2_1 = require("firebase-functions/v2");
 const init_1 = require("./init");
@@ -56,8 +56,12 @@ const whatsapp_1 = require("./communications/whatsapp");
         whatsapp_1.WHATSAPP_PHONE_NUMBER_ID_SECRET,
         whatsapp_1.WHATSAPP_ACCESS_TOKEN_SECRET
     ],
-    maxInstances: 1,
-    cpu: 0.5
+    // Allow up to 100 concurrent instances per function (removed bottleneck)
+    maxInstances: 100,
+    // Use full CPU vCPU for better performance
+    cpu: 1,
+    // Set default memory for all functions
+    memory: '512MiB',
 });
 // ============================================================================
 // INICIALIZAÇÃO IMPORTS
@@ -156,6 +160,8 @@ const runMigrationHttp_1 = require("./runMigrationHttp");
 Object.defineProperty(exports, "runMigrationHttp", { enumerable: true, get: function () { return runMigrationHttp_1.runMigrationHttp; } });
 const create_performance_indexes_1 = require("./migrations/create-performance-indexes");
 Object.defineProperty(exports, "createPerformanceIndexes", { enumerable: true, get: function () { return create_performance_indexes_1.createPerformanceIndexes; } });
+const run_performance_indexes_1 = require("./migrations/run-performance-indexes");
+Object.defineProperty(exports, "runPerformanceIndexes", { enumerable: true, get: function () { return run_performance_indexes_1.runPerformanceIndexes; } });
 const setup_monitoring_1 = require("./api/setup-monitoring");
 Object.defineProperty(exports, "setupMonitoring", { enumerable: true, get: function () { return setup_monitoring_1.setupMonitoring; } });
 // ============================================================================
@@ -177,7 +183,9 @@ exports.realtimePublish = realtimePublisher.realtimePublish;
 // ============================================================================
 // HTTP FUNCTIONS
 // ============================================================================
-exports.apiRouter = functions.https.onRequest(async (req, res) => {
+exports.apiRouter = functions.https.onRequest({
+    cors: init_2.CORS_ORIGINS,
+}, async (req, res) => {
     // Router principal para endpoints HTTP
     const { path } = req;
     // Parse do path
@@ -193,48 +201,85 @@ exports.apiRouter = functions.https.onRequest(async (req, res) => {
 // ============================================================================
 // BACKGROUND TRIGGERS
 // ============================================================================
-// Firestore triggers
-exports.onPatientCreated = functions.firestore.onDocumentCreated('patients/{patientId}', async (event) => {
+// Firestore triggers with proper error handling
+exports.onPatientCreated = functions.firestore.onDocumentCreated({
+    document: 'patients/{patientId}',
+    region: 'southamerica-east1',
+    memory: '256MiB',
+}, async (event) => {
     const snapshot = event.data;
     if (!snapshot)
         return;
     const patient = snapshot.data();
     const db = init_2.adminDb;
-    // Criar registro financeiro inicial
-    await db.collection('patient_financial_summaries').doc(snapshot.id).set({
-        patient_id: snapshot.id,
-        organization_id: patient.organization_id,
-        total_paid_cents: 0,
-        individual_sessions_paid: 0,
-        package_sessions_total: 0,
-        package_sessions_used: 0,
-        package_sessions_available: 0,
-        updated_at: new Date().toISOString(),
-    });
+    try {
+        // Criar registro financeiro inicial
+        await db.collection('patient_financial_summaries').doc(snapshot.id).set({
+            patient_id: snapshot.id,
+            organization_id: patient.organization_id,
+            total_paid_cents: 0,
+            individual_sessions_paid: 0,
+            package_sessions_total: 0,
+            package_sessions_used: 0,
+            package_sessions_available: 0,
+            updated_at: new Date().toISOString(),
+        });
+    }
+    catch (error) {
+        // Distinguish between retryable and non-retryable errors
+        const errorCode = error.code;
+        if (errorCode === 'already-exists' || errorCode === 'permission-denied') {
+            // Non-retryable error - log and continue
+            console.error('[onPatientCreated] Non-retryable error:', error.message);
+            return; // Don't throw - allows trigger to complete
+        }
+        // Retryable error - rethrow for Cloud Functions to retry
+        throw error;
+    }
 });
-exports.onAppointmentCreated = functions.firestore.onDocumentCreated('appointments/{appointmentId}', async (event) => {
+exports.onAppointmentCreated = functions.firestore.onDocumentCreated({
+    document: 'appointments/{appointmentId}',
+    region: 'southamerica-east1',
+    memory: '256MiB',
+}, async (event) => {
     const snapshot = event.data;
     if (!snapshot)
         return;
     const appointment = snapshot.data();
-    // Publicar no Ably para atualização em tempo real
-    const realtime = await Promise.resolve().then(() => __importStar(require('./realtime/publisher')));
-    await realtime.publishAppointmentEvent(appointment.organization_id, {
-        event: 'INSERT',
-        new: appointment,
-        old: null,
-    });
+    // Publicar no Ably para atualização em tempo real com timeout protection
+    try {
+        const realtime = await Promise.resolve().then(() => __importStar(require('./realtime/publisher')));
+        await realtime.publishAppointmentEvent(appointment.organization_id, {
+            event: 'INSERT',
+            new: appointment,
+            old: null,
+        });
+    }
+    catch (err) {
+        // Non-critical error - log but don't fail the trigger
+        console.error('[onAppointmentCreated] Realtime publish failed (non-critical):', err);
+    }
 });
-exports.onAppointmentUpdated = functions.firestore.onDocumentWritten('appointments/{appointmentId}', async (event) => {
+exports.onAppointmentUpdated = functions.firestore.onDocumentWritten({
+    document: 'appointments/{appointmentId}',
+    region: 'southamerica-east1',
+    memory: '256MiB',
+}, async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     if (before && after) {
-        const realtime = await Promise.resolve().then(() => __importStar(require('./realtime/publisher')));
-        await realtime.publishAppointmentEvent(after.organization_id, {
-            event: 'UPDATE',
-            new: after,
-            old: before,
-        });
+        try {
+            const realtime = await Promise.resolve().then(() => __importStar(require('./realtime/publisher')));
+            await realtime.publishAppointmentEvent(after.organization_id, {
+                event: 'UPDATE',
+                new: after,
+                old: before,
+            });
+        }
+        catch (err) {
+            // Non-critical error - log but don't fail the trigger
+            console.error('[onAppointmentUpdated] Realtime publish failed (non-critical):', err);
+        }
     }
 });
 // ============================================================================

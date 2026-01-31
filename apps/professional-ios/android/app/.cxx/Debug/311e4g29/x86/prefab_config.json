@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "prefabPath": "/home/rafael/.gradle/caches/modules-2/files-2.1/com.google.prefab/cli/2.1.0/aa32fec809c44fa531f01dcfb739b5b3304d3050/cli-2.1.0-all.jar",
+  "packages": [
+    "/home/rafael/.gradle/caches/8.14.3/transforms/b2680b08f1e2cb52f3dff51eef1dacfb/transformed/react-android-0.81.5-debug/prefab",
+    "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-reanimated@4.1.6_@babel+core@7.28.5_react-native-worklets@0.7.2_@babel+core@7.28_454ggspsbghpeqwxkmj53wa2zu/node_modules/react-native-reanimated/android/build/intermediates/prefab_package/debug/prefab",
+    "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-worklets@0.7.2_@babel+core@7.28.5_react-native@0.81.5_@babel+core@7.28.5_@react-_o6nacenhxgrjsd6hbgflvg5qie/node_modules/react-native-worklets/android/build/intermediates/prefab_package/debug/prefab",
+    "/home/rafael/.gradle/caches/8.14.3/transforms/9f8bf174426a62033c5396f3e1842ab7/transformed/hermes-android-0.81.5-debug/prefab",
+    "/home/rafael/.gradle/caches/8.14.3/transforms/c4ed38aee617328a15ca67287b31027e/transformed/fbjni-0.7.0/prefab"
+  ]
+}

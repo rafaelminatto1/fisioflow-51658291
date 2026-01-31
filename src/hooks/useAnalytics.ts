@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { db } from "@/integrations/firebase/app";
 
 
@@ -68,7 +68,7 @@ export function usePatientActivitySummary() {
   return useQuery({
     queryKey: ["patient-activity-summary"],
     queryFn: async () => {
-      const q = query(collection(db, "patient_activity_summary"));
+      const q = firestoreQuery(collection(db, "patient_activity_summary"));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => convertDoc<PatientActivitySummary>(doc));
     },
@@ -80,7 +80,7 @@ export function useFinancialSummary() {
   return useQuery({
     queryKey: ["financial-summary"],
     queryFn: async () => {
-      const q = query(collection(db, "financial_summary"));
+      const q = firestoreQuery(collection(db, "financial_summary"));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => convertDoc<FinancialSummary>(doc));
     },
@@ -92,7 +92,7 @@ export function useNewPatientsByPeriod() {
   return useQuery({
     queryKey: ["new-patients-by-period"],
     queryFn: async () => {
-      const q = query(collection(db, "new_patients_by_period"));
+      const q = firestoreQuery(collection(db, "new_patients_by_period"));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => convertDoc<NewPatientsByPeriod>(doc));
     },
@@ -104,7 +104,7 @@ export function useDailyMetrics(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: ["daily-metrics", startDate, endDate],
     queryFn: async () => {
-      let q = query(collection(db, "daily_metrics"));
+      let q = firestoreQuery(collection(db, "daily_metrics"));
 
       // Note: Firestore requires composite indexes for multiple range queries
       // For now, we'll fetch all and filter on the client side

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebaseAuth, db, getFirebaseStorage } from '@/integrations/firebase/app';
 
@@ -47,7 +47,7 @@ export const usePatientDocuments = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-documents', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_documents'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc')

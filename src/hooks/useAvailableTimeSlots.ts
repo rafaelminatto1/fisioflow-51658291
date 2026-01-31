@@ -7,7 +7,7 @@
  */
 
 import { useMemo } from 'react';
-import { collection, doc, getDoc, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
 
@@ -41,7 +41,7 @@ export function useAvailableTimeSlots(date: Date | null) {
   const { data: businessHours } = useQuery({
     queryKey: ['business-hours', organizationId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'schedule_business_hours'),
         where('organization_id', '==', organizationId),
         orderBy('day_of_week')
@@ -56,7 +56,7 @@ export function useAvailableTimeSlots(date: Date | null) {
   const { data: blockedTimes } = useQuery({
     queryKey: ['blocked-times', organizationId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'schedule_blocked_times'),
         where('organization_id', '==', organizationId)
       );

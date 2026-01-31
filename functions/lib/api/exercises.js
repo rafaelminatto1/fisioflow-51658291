@@ -5,7 +5,7 @@ const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 const logger_1 = require("../lib/logger");
-exports.listExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.listExercises = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -58,7 +58,7 @@ exports.listExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getExercise = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -83,7 +83,7 @@ exports.getExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.searchSimilarExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.searchSimilarExercises = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -128,7 +128,7 @@ exports.searchSimilarExercises = (0, https_1.onCall)({ cors: true }, async (requ
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getExerciseCategories = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getExerciseCategories = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -154,7 +154,7 @@ exports.getExerciseCategories = (0, https_1.onCall)({ cors: true }, async (reque
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.logExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.logExercise = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -190,7 +190,7 @@ exports.logExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getPrescribedExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getPrescribedExercises = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -244,7 +244,7 @@ exports.getPrescribedExercises = (0, https_1.onCall)({ cors: true }, async (requ
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.createExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createExercise = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -289,7 +289,7 @@ exports.createExercise = (0, https_1.onCall)({ cors: true }, async (request) => 
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.updateExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updateExercise = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -324,7 +324,7 @@ exports.updateExercise = (0, https_1.onCall)({ cors: true }, async (request) => 
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.deleteExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.deleteExercise = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -353,7 +353,7 @@ exports.deleteExercise = (0, https_1.onCall)({ cors: true }, async (request) => 
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.mergeExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.mergeExercises = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

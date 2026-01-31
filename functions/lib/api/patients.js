@@ -131,11 +131,9 @@ exports.getPatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (r
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
+    // Verificar App Check
+    (0, app_check_1.verifyAppCheck)(request);
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    (0, app_check_1.verifyAppCheck)(request);
-    console.log('App Check verified');
-    (0, app_check_1.verifyAppCheck)(request);
-    // App Check verified");
     const { patientId, profileId } = request.data;
     if (!patientId && !profileId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId ou profileId é obrigatório');
@@ -265,11 +263,9 @@ exports.updatePatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
+    // Verificar App Check
+    (0, app_check_1.verifyAppCheck)(request);
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    (0, app_check_1.verifyAppCheck)(request);
-    console.log('App Check verified');
-    (0, app_check_1.verifyAppCheck)(request);
-    // App Check verified");
     const { patientId, ...updates } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -355,11 +351,9 @@ exports.deletePatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
+    // Verificar App Check
+    (0, app_check_1.verifyAppCheck)(request);
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    (0, app_check_1.verifyAppCheck)(request);
-    console.log('App Check verified');
-    (0, app_check_1.verifyAppCheck)(request);
-    // App Check verified");
     const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, onSnapshot, query, where } from '@/integrations/firebase/app';
+import { collection, onSnapshot, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
 
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
@@ -282,7 +282,7 @@ export function useAppointments() {
 
     logger.info('Realtime (Firestore): Subscribing to appointments', { organizationId }, 'useAppointments');
 
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'appointments'),
       where('organization_id', '==', organizationId)
     );
@@ -310,7 +310,7 @@ export function useAppointments() {
     };
   }, [toast, organizationId, queryClient]);
 
-  const query = useQuery({
+  const appointmentsQuery = useQuery({
     queryKey: appointmentKeys.list(organizationId),
     queryFn: () => fetchAppointments(organizationId),
     staleTime: 1000 * 10,
@@ -325,7 +325,7 @@ export function useAppointments() {
     throwOnError: false,
   });
 
-  const result = query.data as AppointmentsQueryResult | undefined;
+  const result = appointmentsQuery.data as AppointmentsQueryResult | undefined;
   const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(organizationId));
 
   let finalData: AppointmentBase[] = [];
@@ -346,7 +346,7 @@ export function useAppointments() {
   }
 
   const refreshAppointments = async () => {
-    return await query.refetch();
+    return await appointmentsQuery.refetch();
   };
 
   const isUsingStaleData = dataSource !== 'fresh' && finalData.length > 0;

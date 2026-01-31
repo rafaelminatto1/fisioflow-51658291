@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { collection, onSnapshot, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, onSnapshot, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
 
@@ -20,7 +20,7 @@ export const useFinancial = () => {
   useEffect(() => {
     if (!db || !profile?.organization_id) return;
 
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'contas_financeiras'),
       where('organization_id', '==', profile.organization_id)
     );

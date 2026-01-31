@@ -8,8 +8,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
-import { functions, httpsCallable } from '@/integrations/firebase/functions';
+import { db, collection, query as firestoreQuery, where, getDocs } from '@/integrations/firebase/app';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -65,7 +66,7 @@ export const BookingPage = () => {
         async function loadProfile() {
             if (!slug) return;
             try {
-                const q = query(collection(db, 'profiles'), where('slug', '==', slug));
+                const q = firestoreQuery(collection(db, 'profiles'), where('slug', '==', slug));
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {

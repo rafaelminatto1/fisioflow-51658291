@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, doc, getDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -40,7 +40,7 @@ export function useDocumentSignatures(documentId?: string) {
   return useQuery({
     queryKey: ['document-signatures', documentId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'document_signatures'),
         orderBy('signed_at', 'desc')
       );
@@ -104,7 +104,7 @@ export function useCreateSignature() {
 export function useVerifySignature() {
   return useMutation({
     mutationFn: async ({ documentId, hash }: { documentId: string; hash: string }) => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'document_signatures'),
         where('document_id', '==', documentId),
         where('signature_hash', '==', hash),

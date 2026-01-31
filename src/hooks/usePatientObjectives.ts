@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -40,7 +40,7 @@ export function usePatientObjectives() {
   return useQuery({
     queryKey: ['patient-objectives'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_objectives'),
         where('ativo', '==', true),
         orderBy('categoria', 'asc'),
@@ -59,7 +59,7 @@ export function usePatientAssignedObjectives(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_objective_assignments'),
         where('patient_id', '==', patientId),
         orderBy('prioridade', 'asc')

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -34,7 +34,7 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['whatsapp-messages', appointmentId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'whatsapp_messages'),
         orderBy('sent_at', 'desc')
       );
@@ -56,7 +56,7 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'appointments'),
         where('confirmation_status', '==', 'pending'),
         where('appointment_date', '>=', today),
