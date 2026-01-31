@@ -7,13 +7,14 @@ import { onCall } from 'firebase-functions/v2/https';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp } from 'firebase-admin/app';
 import { getApps } from 'firebase-admin/app';
+import { CORS_ORIGINS } from '../init';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
   initializeApp();
 }
 
-export const createAdminUser = onCall({ cors: true }, async () => {
+export const createAdminUser = onCall({ cors: CORS_ORIGINS }, async () => {
   const auth = getAuth();
 
   try {
