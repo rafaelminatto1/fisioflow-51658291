@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { MedicalRecord, TreatmentSession, PainRecord } from '../types/models';
 import { logger } from '../lib/logger';
@@ -17,7 +17,7 @@ interface GetPatientRecordsResponse {
   data: MedicalRecord[];
 }
 
-export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPatientRecordsResponse>>({ cors: true }, async (request) => {
+export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPatientRecordsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -86,7 +86,7 @@ interface CreateMedicalRecordResponse {
   data: MedicalRecord;
 }
 
-export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<CreateMedicalRecordResponse>>({ cors: true }, async (request) => {
+export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<CreateMedicalRecordResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -168,7 +168,7 @@ interface UpdateMedicalRecordResponse {
   data: MedicalRecord;
 }
 
-export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<UpdateMedicalRecordResponse>>({ cors: true }, async (request) => {
+export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<UpdateMedicalRecordResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -246,7 +246,7 @@ interface ListTreatmentSessionsResponse {
   data: TreatmentSession[];
 }
 
-export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promise<ListTreatmentSessionsResponse>>({ cors: true }, async (request) => {
+export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promise<ListTreatmentSessionsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -303,7 +303,7 @@ interface CreateTreatmentSessionResponse {
   data: TreatmentSession;
 }
 
-export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Promise<CreateTreatmentSessionResponse>>({ cors: true }, async (request) => {
+export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Promise<CreateTreatmentSessionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -410,7 +410,7 @@ interface UpdateTreatmentSessionResponse {
   data: TreatmentSession;
 }
 
-export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Promise<UpdateTreatmentSessionResponse>>({ cors: true }, async (request) => {
+export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Promise<UpdateTreatmentSessionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -498,7 +498,7 @@ interface GetPainRecordsResponse {
   data: PainRecord[];
 }
 
-export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecordsResponse>>({ cors: true }, async (request) => {
+export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecordsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -546,7 +546,7 @@ interface SavePainRecordResponse {
   data: PainRecord;
 }
 
-export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainRecordResponse>>({ cors: true }, async (request) => {
+export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainRecordResponse>>({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
