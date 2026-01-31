@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { PrestadorCreate, PrestadorUpdate } from '@/lib/validations/prestador';
 import { db } from '@/integrations/firebase/app';
@@ -30,7 +30,7 @@ export function usePrestadores(eventoId: string) {
     queryFn: async () => {
       if (!eventoId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'prestadores'),
         where('evento_id', '==', eventoId),
         orderBy('created_at', 'desc')

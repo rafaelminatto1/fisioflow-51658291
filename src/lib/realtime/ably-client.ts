@@ -59,6 +59,20 @@ let ablyClient: Ably.Realtime | null = null;
 const connectionPromise: Promise<Ably.Realtime> | null = null;
 
 /**
+ * Reseta o cliente Ably Realtime
+ */
+export function resetAblyClient() {
+  if (ablyClient) {
+    try {
+      ablyClient.close();
+    } catch (e) {
+      console.error('Error closing Ably client:', e);
+    }
+    ablyClient = null;
+  }
+}
+
+/**
  * Obtém ou cria o cliente Ably Realtime
  */
 export function getAblyClient(): Ably.Realtime {
@@ -96,8 +110,16 @@ export function getAblyClient(): Ably.Realtime {
       logger.warn('[Ably] Conexão suspensa', undefined, 'ably-client');
     });
 
-    ablyClient.connection.on('failed', (err) => {
-      logger.error('[Ably] Falha na conexão', err, 'ably-client');
+    ablyClient.connection.on('failed', (stateChange) => {
+      const reason = stateChange.reason;
+      logger.error('[Ably] Falha na conexão', reason, 'ably-client');
+
+      // 41010: Transport refused (often 410 Gone)
+      // 40140-40149: Token expired
+      if (reason && (reason.code === 41010 || (reason.code >= 40140 && reason.code <= 40149))) {
+        logger.error(`[Ably] Recoverable failure detected (${reason.code}). Resetting client.`, undefined, 'ably-client');
+        resetAblyClient();
+      }
     });
   }
 
@@ -142,7 +164,7 @@ export class AblySubscriptionManager {
   private channels: Map<string, Ably.RealtimeChannel> = new Map();
   private unsubscribers: Map<string, () => void> = new Map();
 
-  constructor(private client: Ably.Realtime) {}
+  constructor(private client: Ably.Realtime) { }
 
   /**
    * Inscreve em atualizações de agendamentos

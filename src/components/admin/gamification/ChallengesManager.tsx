@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -44,7 +44,7 @@ export default function ChallengesManager() {
         queryKey: ['admin-challenges'],
         queryFn: async () => {
             const challengesRef = collection(db, 'weekly_challenges');
-            const q = query(challengesRef, orderBy('start_date', 'desc'));
+            const q = firestoreQuery(challengesRef, orderBy('start_date', 'desc'));
             const querySnapshot = await getDocs(q);
 
             const challenges: WeeklyChallenge[] = [];

@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
@@ -76,7 +76,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
   return useQuery({
     queryKey: ['satisfaction-surveys', filters],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'satisfaction_surveys'),
         orderBy('sent_at', 'desc')
       );
@@ -141,7 +141,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       const therapistMap = new Map<string, string>();
 
       if (therapistIds.length > 0) {
-        const profilesQ = query(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
+        const profilesQ = firestoreQuery(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
         const profilesSnap = await getDocs(profilesQ);
         profilesSnap.forEach(doc => {
           therapistMap.set(doc.data().user_id as string, doc.data().full_name as string);

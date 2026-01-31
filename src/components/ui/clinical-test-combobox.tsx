@@ -17,8 +17,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query, orderBy } from '@/integrations/firebase/app';
-port {
+import { db, collection, getDocs, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -65,7 +65,7 @@ export function ClinicalTestCombobox({
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-combobox'],
         queryFn: async () => {
-            const q = query(
+            const q = firestoreQuery(
                 collection(db, 'clinical_test_templates'),
                 orderBy('name')
             );
@@ -83,13 +83,13 @@ export function ClinicalTestCombobox({
     const filteredTests = React.useMemo(() => {
         if (!searchTerm) return tests;
 
-        const query = searchTerm.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
         return tests.filter((test) =>
-            test.name.toLowerCase().includes(query) ||
-            (test.name_en && test.name_en.toLowerCase().includes(query)) ||
-            (test.category && test.category.toLowerCase().includes(query)) ||
-            (test.target_joint && test.target_joint.toLowerCase().includes(query)) ||
-            (test.tags && test.tags.some((t) => t.toLowerCase().includes(query)))
+            test.name.toLowerCase().includes(searchLower) ||
+            (test.name_en && test.name_en.toLowerCase().includes(searchLower)) ||
+            (test.category && test.category.toLowerCase().includes(searchLower)) ||
+            (test.target_joint && test.target_joint.toLowerCase().includes(searchLower)) ||
+            (test.tags && test.tags.some((t) => t.toLowerCase().includes(searchLower)))
         );
     }, [tests, searchTerm]);
 

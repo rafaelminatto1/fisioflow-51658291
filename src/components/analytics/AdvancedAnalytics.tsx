@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import type { Timestamp } from '@/integrations/firebase/app';
-, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
@@ -57,10 +57,10 @@ export default function AdvancedAnalytics() {
     queryFn: async () => {
 
       const [patientsSnapshot, appointmentsSnapshot, eventsSnapshot, transactionsSnapshot] = await Promise.all([
-        getDocs(query(collection(db, 'patients'))),
-        getDocs(query(collection(db, 'appointments'), orderBy('created_at', 'desc'))),
-        getDocs(query(collection(db, 'eventos'))),
-        getDocs(query(collection(db, 'transacoes')))
+        getDocs(firestoreQuery(collection(db, 'patients'))),
+        getDocs(firestoreQuery(collection(db, 'appointments'), orderBy('created_at', 'desc'))),
+        getDocs(firestoreQuery(collection(db, 'eventos'))),
+        getDocs(firestoreQuery(collection(db, 'transacoes')))
       ]);
 
       const transactions: TransactionRecord[] = [];
@@ -101,7 +101,7 @@ export default function AdvancedAnalytics() {
     queryFn: async () => {
       const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'appointments'),
         where('created_at', '>=', startDate),
         orderBy('created_at', 'desc')
@@ -129,7 +129,7 @@ export default function AdvancedAnalytics() {
   const { data: appointmentStatus } = useQuery<StatusDistribution[]>({
     queryKey: ['appointment-status'],
     queryFn: async () => {
-      const snapshot = await getDocs(query(collection(db, 'appointments')));
+      const snapshot = await getDocs(firestoreQuery(collection(db, 'appointments')));
 
       const statusCount: Record<string, number> = {};
       snapshot.forEach((doc) => {
@@ -147,7 +147,7 @@ export default function AdvancedAnalytics() {
     queryFn: async () => {
       const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'transacoes'),
         where('created_at', '>=', startDate),
         orderBy('created_at', 'desc')

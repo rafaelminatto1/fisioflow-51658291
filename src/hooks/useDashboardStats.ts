@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getCountFromServer, query, where, onSnapshot } from '@/integrations/firebase/app';
+import { collection, getCountFromServer, query as firestoreQuery, where, onSnapshot } from '@/integrations/firebase/app';
 import { format } from 'date-fns';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
@@ -95,7 +95,7 @@ export const useDashboardStats = () => {
         retryWithBackoff(() =>
           withTimeout(
             getCountFromServer(
-              query(collection(db, 'patients'), where('created_at', '>=', startOfMonth.toISOString()))
+              firestoreQuery(collection(db, 'patients'), where('created_at', '>=', startOfMonth.toISOString()))
             ),
             8000
           ).then(result => result.data().count)
@@ -103,7 +103,7 @@ export const useDashboardStats = () => {
         retryWithBackoff(() =>
           withTimeout(
             getCountFromServer(
-              query(collection(db, 'appointments'), where('appointment_date', '==', today))
+              firestoreQuery(collection(db, 'appointments'), where('appointment_date', '==', today))
             ),
             8000
           ).then(result => result.data().count)
@@ -111,7 +111,7 @@ export const useDashboardStats = () => {
         retryWithBackoff(() =>
           withTimeout(
             getCountFromServer(
-              query(
+              firestoreQuery(
                 collection(db, 'appointments'),
                 where('appointment_date', '==', today),
                 where('status', '==', 'concluido')

@@ -7,7 +7,7 @@
  */
 
 import { db, collection, addDoc } from '@/integrations/firebase/app';
-s/firebase/storage';
+import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

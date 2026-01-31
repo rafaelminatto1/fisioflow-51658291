@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, getDocsFromCache, getDocsFromServer } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, getDocsFromCache, getDocsFromServer } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
@@ -86,20 +86,20 @@ export function useWaitlist(filters?: {
   const queryResult = useQuery({
     queryKey: ['waitlist', filters],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'waitlist'),
         orderBy('created_at', 'asc')
       );
 
       // Apply status filter
       if (filters?.status && filters.status !== 'all') {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'waitlist'),
           where('status', '==', filters.status),
           orderBy('created_at', 'asc')
         );
       } else if (!filters?.status) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'waitlist'),
           where('status', '==', 'waiting'),
           orderBy('created_at', 'asc')
@@ -108,7 +108,7 @@ export function useWaitlist(filters?: {
 
       // Apply priority filter
       if (filters?.priority) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'waitlist'),
           where('priority', '==', filters.priority),
           orderBy('created_at', 'asc')
@@ -202,7 +202,7 @@ export function useAddToWaitlist() {
   return useMutation({
     mutationFn: async (input: AddToWaitlistInput) => {
       // Verificar se paciente já está na lista
-      const existingQ = query(
+      const existingQ = firestoreQuery(
         collection(db, 'waitlist'),
         where('patient_id', '==', input.patient_id),
         where('status', '==', 'waiting'),
@@ -356,7 +356,7 @@ export function useAcceptOffer() {
       });
 
       // Atualizar histórico de ofertas
-      const offersQ = query(
+      const offersQ = firestoreQuery(
         collection(db, 'waitlist_offers'),
         where('appointment_id', '==', waitlistId),
         where('response', '==', 'pending')
@@ -414,7 +414,7 @@ export function useRejectOffer() {
       });
 
       // Atualizar histórico de ofertas
-      const offersQ = query(
+      const offersQ = firestoreQuery(
         collection(db, 'waitlist_offers'),
         where('appointment_id', '==', waitlistId),
         where('response', '==', 'pending')
@@ -483,13 +483,13 @@ export function useWaitlistOffers(patientId?: string) {
   return useQuery({
     queryKey: ['waitlist-offers', patientId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'waitlist_offers'),
         orderBy('created_at', 'desc')
       );
 
       if (patientId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'waitlist_offers'),
           where('patient_id', '==', patientId),
           orderBy('created_at', 'desc')

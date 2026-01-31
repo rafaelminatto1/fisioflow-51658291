@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, orderBy,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, doc, getDoc, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
@@ -43,7 +43,7 @@ export function useTelemedicineRooms() {
     queryFn: async () => {
       if (!organizationId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'telemedicine_rooms'),
         where('organization_id', '==', organizationId),
         orderBy('created_at', 'desc')

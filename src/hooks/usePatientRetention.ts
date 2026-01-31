@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, getDocs, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
 
 import { subDays, subMonths, format, differenceInDays, startOfMonth, parseISO } from 'date-fns';
 import { CACHE_TIMES, STALE_TIMES } from '@/lib/queryConfig';
@@ -125,7 +125,7 @@ export function useRetentionMetrics() {
       const now = new Date();
 
       // Get all patients with their activity
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients')
       );
       const patientsSnap = await getDocs(patientsQuery);
@@ -150,7 +150,7 @@ export function useRetentionMetrics() {
       }));
 
       // Get appointments for each patient
-      const appointmentsQuery = query(
+      const appointmentsQuery = firestoreQuery(
         collection(db, 'appointments'),
         orderBy('appointment_date', 'desc')
       );
@@ -235,7 +235,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
     queryFn: async (): Promise<PatientAtRisk[]> => {
       const now = new Date();
 
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients'),
         where('status', '==', 'ativo')
       );
@@ -250,7 +250,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
         ...doc.data()
       }));
 
-      const appointmentsQuery = query(
+      const appointmentsQuery = firestoreQuery(
         collection(db, 'appointments')
       );
       const appointmentsSnap = await getDocs(appointmentsQuery);
@@ -332,7 +332,7 @@ export function useCohortAnalysis(months: number = 12) {
       const now = new Date();
 
       // Get patients with creation date
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients'),
         where('created_at', '>=', subMonths(now, months).toISOString())
       );
@@ -348,7 +348,7 @@ export function useCohortAnalysis(months: number = 12) {
       }));
 
       // Get all appointments
-      const appointmentsQuery = query(
+      const appointmentsQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('status', '==', 'concluido')
       );
@@ -430,7 +430,7 @@ export function useChurnTrends(months: number = 12) {
       const trends: ChurnTrend[] = [];
 
       // Get all patients
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients')
       );
       const patientsSnap = await getDocs(patientsQuery);
@@ -445,7 +445,7 @@ export function useChurnTrends(months: number = 12) {
       }));
 
       // Get all completed appointments
-      const appointmentsQuery = query(
+      const appointmentsQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('status', '==', 'concluido'),
         where('appointment_date', '>=', subMonths(now, months + 3).toISOString())
@@ -558,7 +558,7 @@ export function useSendReactivationCampaign() {
       }
 
       // Get patient details for sending
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients')
       );
       const patientsSnap = await getDocs(patientsQuery);

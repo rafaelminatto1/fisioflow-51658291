@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -85,7 +85,7 @@ async function fetchRecurringSeries(params?: {
     constraints.push(where('is_active', '==', params.is_active));
   }
 
-  const q = query(...constraints);
+  const q = firestoreQuery(...constraints);
   const snapshot = await getDocs(q);
 
   const series = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -175,7 +175,7 @@ async function fetchRecurringSeriesById(
 async function fetchSeriesOccurrences(
   seriesId: string
 ): Promise<RecurringAppointmentOccurrence[]> {
-  const q = query(
+  const q = firestoreQuery(
     collection(db, 'recurring_appointment_occurrences'),
     where('series_id', '==', seriesId),
     orderBy('occurrence_date', 'asc')

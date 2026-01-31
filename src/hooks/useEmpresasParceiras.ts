@@ -10,7 +10,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -42,7 +42,7 @@ export function useEmpresasParceiras() {
   return useQuery({
     queryKey: ['empresas-parceiras'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'empresas_parceiras'),
         orderBy('nome')
       );

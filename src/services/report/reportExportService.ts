@@ -6,7 +6,7 @@
  */
 
 import { db, collection, addDoc } from '@/integrations/firebase/app';
-rs/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ExportOptions {
     format: 'pdf' | 'text' | 'whatsapp';

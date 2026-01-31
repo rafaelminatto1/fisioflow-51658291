@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +47,7 @@ export function useVouchers() {
   return useQuery({
     queryKey: ['vouchers'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'vouchers'),
         where('ativo', '==', true),
         orderBy('preco', 'asc')
@@ -67,7 +67,7 @@ export function useUserVouchers() {
     queryFn: async () => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'user_vouchers'),
         where('user_id', '==', user.uid),
         orderBy('data_compra', 'desc')
@@ -212,7 +212,7 @@ export function useAllVouchers() {
   return useQuery({
     queryKey: ['all-vouchers'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'vouchers'),
         orderBy('created_at', 'desc')
       );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, addDoc, deleteDoc } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query as firestoreQuery, where, addDoc, deleteDoc } from '@/integrations/firebase/app';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -50,7 +50,7 @@ export const usePushNotifications = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'push_subscriptions'),
         where('user_id', '==', user.uid),
         where('active', '==', true)
@@ -126,7 +126,7 @@ export const usePushNotifications = () => {
       // Better strategy: Use a hash of endpoint as ID, or just query first.
 
       // We will check if it exists:
-      const q = query(collection(db, 'push_subscriptions'), where('user_id', '==', user.uid), where('endpoint', '==', endpoint));
+      const q = firestoreQuery(collection(db, 'push_subscriptions'), where('user_id', '==', user.uid), where('endpoint', '==', endpoint));
       const existingSnap = await getDocs(q);
 
       const subscriptionData = {
@@ -178,7 +178,7 @@ export const usePushNotifications = () => {
 
         // Deactivate in database
         if (user) {
-          const q = query(
+          const q = firestoreQuery(
             collection(db, 'push_subscriptions'),
             where('user_id', '==', user.uid),
             where('endpoint', '==', subscription.endpoint)

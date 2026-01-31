@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -43,7 +43,7 @@ export function useConvenios() {
   return useQuery({
     queryKey: ['convenios'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'convenios'),
         orderBy('nome')
       );

@@ -1,5 +1,5 @@
 import { MainLayout } from '@/components/layout/MainLayout';
-import { collection, getDocs, query, orderBy, addDoc, updateDoc, doc, writeBatch } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, doc, writeBatch } from '@/integrations/firebase/app';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,7 +29,7 @@ const PreCadastroAdmin = () => {
   const { data: tokens, isLoading: tokensLoading } = useQuery({
     queryKey: ['precadastro-tokens'],
     queryFn: async () => {
-      const q = query(collection(db, 'precadastro_tokens'), orderBy('created_at', 'desc'));
+      const q = firestoreQuery(collection(db, 'precadastro_tokens'), orderBy('created_at', 'desc'));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
@@ -39,7 +39,7 @@ const PreCadastroAdmin = () => {
   const { data: precadastros, isLoading: precadastrosLoading } = useQuery({
     queryKey: ['precadastros'],
     queryFn: async () => {
-      const q = query(collection(db, 'precadastros'), orderBy('created_at', 'desc'));
+      const q = firestoreQuery(collection(db, 'precadastros'), orderBy('created_at', 'desc'));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }

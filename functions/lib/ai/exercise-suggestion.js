@@ -46,6 +46,8 @@ exports.exerciseSuggestion = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
+const init_1 = require("../init");
+const idempotency_1 = require("../lib/idempotency");
 const firestore = admin.firestore();
 // ============================================================================
 // RATE LIMITING CONFIG
@@ -58,11 +60,12 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.exerciseSuggestion = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
     maxInstances: 10,
+    timeoutSeconds: 300, // 5 minutes for AI generation
 }, async (request) => {
     const startTime = Date.now();
     // Authentication check
@@ -136,8 +139,17 @@ exports.exerciseSuggestion = (0, https_1.onCall)({
             treatmentPhase: data.treatmentPhase || determineTreatmentPhase(soapHistory.length),
             sessionCount: soapHistory.length,
         };
-        // Call Gemini 2.5 Flash-Lite for exercise suggestions
-        const aiResult = await generateExerciseSuggestions(context);
+        // Call Gemini 2.5 Flash-Lite for exercise suggestions (with idempotency cache)
+        const cacheParams = {
+            patientId: data.patientId,
+            goals: data.goals,
+            availableEquipment: data.availableEquipment,
+            treatmentPhase: data.treatmentPhase,
+            painMap: data.painMap,
+            sessionCount: context.sessionCount,
+        };
+        const aiResult = await (0, idempotency_1.withIdempotency)('EXERCISE_RECOMMENDATION', userId, cacheParams, () => generateExerciseSuggestions(context), { cacheTtl: 5 * 60 * 1000 } // 5 minute cache
+        );
         if (!aiResult.success) {
             throw new https_1.HttpsError('internal', aiResult.error || 'AI generation failed');
         }

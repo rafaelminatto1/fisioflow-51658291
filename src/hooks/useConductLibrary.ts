@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
@@ -47,7 +47,7 @@ export const useConductLibrary = (category?: string) => {
   return useQuery({
     queryKey: ['conduct-library', category],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'conduct_library'),
         orderBy('title')
       );
