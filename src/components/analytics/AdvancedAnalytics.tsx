@@ -1,12 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+import type { Timestamp } from '@/integrations/firebase/app';
+, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
-import type { Timestamp } from 'firebase/firestore';
-
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 // Types for analytics data
@@ -235,7 +233,6 @@ export default function AdvancedAnalytics() {
 
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { Sparkles, Brain, AlertCircle, TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
-
 
       <Tabs defaultValue="appointments" className="w-full">
         <TabsList className="grid w-full grid-cols-4">

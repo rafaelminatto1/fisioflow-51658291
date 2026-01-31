@@ -6,13 +6,9 @@
  * - supabase.from('user_roles') → Firestore collection 'user_roles'
  */
 
-import { doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from 'firebase/firestore';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
-
-
-/**
- * Ensures a profile and default role exist for a user.
+import { db, doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from '@/integrations/firebase/app';
+or a user.
  * This is a defensive utility to recover from cases where the database trigger might have failed.
  *
  * Migrated from Supabase to Firebase Firestore.

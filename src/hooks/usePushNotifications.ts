@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, addDoc, deleteDoc } from '@/integrations/firebase/app';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -10,18 +11,7 @@ import { db } from '@/integrations/firebase/app';
  * Migration from Supabase to Firebase Firestore:
  * - push_subscriptions -> Firestore collection 'push_subscriptions'
  */
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  addDoc,
-  deleteDoc
-} from 'firebase/firestore';
+
 
 
 export interface PushSubscription {

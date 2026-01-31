@@ -11,11 +11,7 @@ import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart as RechartsPieChart, Pie } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-
-interface DemonstrativoData {
-  periodo: string;
+import { db, collection, query, where, getDocs, orderBy } from '@/integrations/firebase/app';
   entradas: number;
   saidas: number;
   saldo: number;

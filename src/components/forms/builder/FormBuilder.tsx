@@ -26,11 +26,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from '@/integrations/firebase/app';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc as docRef, getDoc as getDocFromFirestore, setDoc as setDocToFirestore, updateDoc as updateDocInFirestore, collection as collectionRef, getDocs as getDocsFromCollection, query as queryFromFirestore, where as whereFn, deleteDoc as deleteDocFromFirestore } from 'firebase/firestore';
-
-interface FormBuilderProps {
-    formId?: string; // If provided, we are editing specific fields for this form
+elds for this form
     initialData?: EvaluationForm; // Optional initial data
     onSave?: () => void;
     onBack?: () => void;

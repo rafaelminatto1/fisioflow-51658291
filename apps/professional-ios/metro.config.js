@@ -3,7 +3,6 @@ const path = require('path');
 
 // Find the project and workspace root
 const projectRoot = __dirname;
-// This can be replaced with `find-up` however for simplicity we just go up one level
 const workspaceRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
@@ -18,7 +17,18 @@ config.resolver.nodeModulesPaths = [
 ];
 
 // 3. Force Metro to resolve (and bundle) packages from their source if needed
-// This is important for packages linked via pnpm/workspace
 config.resolver.disableHierarchicalLookup = true;
+
+// 4. Block duplicates that cause crashes (Reanimated)
+config.resolver.blockList = [
+    // Exclude react-native-reanimated from root if it exists, forcing usage of app's version
+    new RegExp(
+        `^${escape(path.resolve(workspaceRoot, 'node_modules/react-native-reanimated'))}\\/.*$`
+    ),
+];
+
+function escape(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 module.exports = config;

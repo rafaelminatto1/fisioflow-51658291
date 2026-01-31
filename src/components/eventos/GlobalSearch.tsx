@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '@/integrations/firebase/app';
-import { collection, getDocs, query, where, orderBy, limit, getDoc, doc } from 'firebase/firestore';
+import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
 import {
   CommandDialog,
   CommandEmpty,

@@ -6,18 +6,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, getCountFromServer, query, where, orderBy, limit } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  getCountFromServer,
-  query,
-  where,
-  orderBy,
-  limit
-} from 'firebase/firestore';
+
 
 // ============================================================================
 // TYPES

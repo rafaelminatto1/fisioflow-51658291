@@ -6,19 +6,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  orderBy
-} from 'firebase/firestore';
+
 
 
 export interface Convenio {

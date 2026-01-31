@@ -11,10 +11,8 @@ import {
 } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Checkbox } from '@/components/ui/checkbox';
-import { db } from '@/integrations/firebase/app';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { toast } from 'sonner';
-import { FileText, Download, Loader2 } from 'lucide-react';
+import { db, collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import jsPDF from 'jspdf';
