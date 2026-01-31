@@ -10,15 +10,74 @@ import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 import { defineSecret } from 'firebase-functions/params';
+import { CORS_ORIGINS } from '../init';
 
 export const WHATSAPP_PHONE_NUMBER_ID_SECRET = defineSecret('WHATSAPP_PHONE_NUMBER_ID');
 export const WHATSAPP_ACCESS_TOKEN_SECRET = defineSecret('WHATSAPP_ACCESS_TOKEN');
 
+// WhatsApp API configuration
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0';
+const WHATSAPP_TIMEOUT_MS = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000; // Initial delay with exponential backoff
 
 // Helper to get secrets with environment variable fallback
 const getWhatsAppPhoneNumberId = () => WHATSAPP_PHONE_NUMBER_ID_SECRET.value() || process.env.WHATSAPP_PHONE_NUMBER_ID!;
 const getWhatsAppAccessToken = () => WHATSAPP_ACCESS_TOKEN_SECRET.value() || process.env.WHATSAPP_ACCESS_TOKEN!;
+
+/**
+ * Sleep utility for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Retry wrapper with exponential backoff for WhatsApp API calls
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retryCount = 0
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), WHATSAPP_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    // Retry on 5xx errors or rate limiting (429)
+    if (!response.ok && retryCount < MAX_RETRIES && (
+      response.status >= 500 || response.status === 429
+    )) {
+      const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+      logger.warn(`WhatsApp API error ${response.status}, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+      await sleep(delay);
+      return fetchWithRetry(url, options, retryCount + 1);
+    }
+
+    return response;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+
+    // Retry on network errors or timeout
+    if (retryCount < MAX_RETRIES && (
+      error.name === 'AbortError' || error.message?.includes('fetch') || error.message?.includes('network')
+    )) {
+      const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+      logger.warn(`WhatsApp API network error, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error.message);
+      await sleep(delay);
+      return fetchWithRetry(url, options, retryCount + 1);
+    }
+
+    throw error;
+  }
+}
 
 import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
@@ -44,7 +103,7 @@ export enum WhatsAppTemplate {
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 export const sendWhatsAppAppointmentConfirmation = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -134,7 +193,7 @@ export const sendWhatsAppAppointmentConfirmation = onCall({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 export const sendWhatsAppAppointmentReminder = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -203,7 +262,7 @@ export const sendWhatsAppAppointmentReminder = onCall({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 export const sendWhatsAppWelcome = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -248,7 +307,7 @@ export const sendWhatsAppWelcome = onCall({
  * Cloud Function: Enviar mensagem personalizada
  */
 export const sendWhatsAppCustomMessage = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -308,7 +367,7 @@ export const sendWhatsAppCustomMessage = onCall({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 export const sendWhatsAppExerciseAssigned = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -384,7 +443,7 @@ async function sendWhatsAppTemplateMessage(params: {
     },
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${getWhatsAppAccessToken()}`,
@@ -423,7 +482,7 @@ async function sendWhatsAppTextMessage(params: {
     },
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${getWhatsAppAccessToken()}`,
@@ -480,6 +539,44 @@ export function isValidWhatsAppPhone(phone: string): boolean {
 }
 
 /**
+ * Verify WhatsApp webhook signature using X-Hub-Signature-256
+ */
+function verifyWhatsAppSignature(
+  payload: string,
+  signature: string | undefined,
+  appSecret: string
+): boolean {
+  if (!signature) {
+    return false;
+  }
+
+  // WhatsApp uses SHA-256: signature format is "sha256=<hex>"
+  const signatureParts = signature.split('=');
+  if (signatureParts.length !== 2 || signatureParts[0] !== 'sha256') {
+    logger.error('[WhatsApp] Invalid signature format');
+    return false;
+  }
+
+  // Import crypto for HMAC verification
+  const crypto = require('crypto');
+  const expectedSignature = crypto
+    .createHmac('sha256', appSecret)
+    .update(payload, 'utf8')
+    .digest('hex');
+
+  // Secure comparison
+  const providedSignature = signatureParts[1];
+  if (expectedSignature.length !== providedSignature.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expectedSignature, 'utf8'),
+    Buffer.from(providedSignature, 'utf8')
+  );
+}
+
+/**
  * HTTP Endpoint para webhook do WhatsApp (opcional)
  * Usado para receber mensagens e status updates dos usuários
  */
@@ -487,6 +584,7 @@ export const whatsappWebhookHttp = onRequest({
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
+  secrets: ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET'],
 }, async (request: any, response: any) => {
   // Verificar token de verificação do WhatsApp
   const mode = request.query['hub.mode'];
@@ -499,6 +597,18 @@ export const whatsappWebhookHttp = onRequest({
       return response.status(200).send(challenge);
     }
     return response.status(403).send('Forbidden');
+  }
+
+  // Verify webhook signature for POST requests
+  const signature = request.headers['x-hub-signature-256'] as string;
+  const appSecret = WHATSAPP_ACCESS_TOKEN_SECRET.value() || process.env.WHATSAPP_APP_SECRET || process.env.WHATSAPP_ACCESS_TOKEN!;
+
+  // Get raw body for signature verification
+  const rawBody = request.rawBody?.toString() || JSON.stringify(request.body);
+
+  if (!verifyWhatsAppSignature(rawBody, signature, appSecret)) {
+    logger.error('[WhatsApp] Invalid webhook signature');
+    return response.status(403).send('Invalid signature');
   }
 
   // Processar webhook
@@ -671,7 +781,7 @@ async function handleAutoReply(from: string, text: string, patient: any) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 export const testWhatsAppMessage = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -737,7 +847,7 @@ export const testWhatsAppMessage = onCall({
  * Envia um template específico para verificar se foi aprovado
  */
 export const testWhatsAppTemplate = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -857,7 +967,7 @@ export const testWhatsAppTemplate = onCall({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 export const getWhatsAppHistory = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '256MiB',
 }, async (request) => {

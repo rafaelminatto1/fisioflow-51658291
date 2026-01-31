@@ -5,6 +5,7 @@
 
 import { onCall } from 'firebase-functions/v2/https';
 import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 interface AlertPolicy {
   displayName: string;
@@ -15,7 +16,7 @@ interface AlertPolicy {
   severity: string;
 }
 
-export const setupMonitoring = onCall({ cors: true },
+export const setupMonitoring = onCall({ cors: CORS_ORIGINS },
   async (request) => {
     // Verificar se é admin
     if (!request.auth?.token?.admin) {
