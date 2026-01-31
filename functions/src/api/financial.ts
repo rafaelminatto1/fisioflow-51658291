@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Transaction } from '../types/models';
 import { logger } from '../lib/logger';
@@ -19,7 +19,7 @@ interface ListTransactionsResponse {
 /**
  * Lista transações financeiras
  */
-export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>({ cors: true }, async (request) => {
+export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -61,7 +61,7 @@ interface CreateTransactionResponse {
 /**
  * Cria uma nova transação
  */
-export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>({ cors: true }, async (request) => {
+export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -118,7 +118,7 @@ interface UpdateTransactionResponse {
 /**
  * Atualiza uma transação
  */
-export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>({ cors: true }, async (request) => {
+export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -194,7 +194,7 @@ interface DeleteTransactionRequest {
 /**
  * Remove uma transação
  */
-export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>({ cors: true }, async (request) => {
+export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -237,7 +237,7 @@ interface FindTransactionByAppointmentIdResponse {
 /**
  * Busca transação por ID do agendamento (metadados)
  */
-export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>({ cors: true }, async (request) => {
+export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -295,7 +295,7 @@ interface GetEventReportResponse {
 /**
  * Gera relatório financeiro de evento
  */
-export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>({ cors: true }, async (request) => {
+export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>({ cors: CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }

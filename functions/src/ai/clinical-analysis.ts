@@ -11,6 +11,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS } from '../init';
 
 const firestore = admin.firestore();
 
@@ -98,11 +99,12 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const clinicalAnalysis = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '1GiB',
   cpu: 1,
   maxInstances: 10,
+  timeoutSeconds: 300, // 5 minutes for AI generation
 }, async (request): Promise<ClinicalAnalysisResponse> => {
   const startTime = Date.now();
 

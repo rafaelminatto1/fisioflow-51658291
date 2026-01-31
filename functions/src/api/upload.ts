@@ -9,7 +9,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
-import { getAdminAuth, getAdminStorage } from '../init';
+import { getAdminAuth, getAdminStorage, CORS_ORIGINS } from '../init';
 
 // ============================================================================
 // TYPES
@@ -68,7 +68,7 @@ interface ListFilesResponse {
 /**
  * Generate a signed URL for direct upload to Firebase Storage
  */
-export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<GenerateUploadTokenResponse>>({ cors: true },
+export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<GenerateUploadTokenResponse>>({ cors: CORS_ORIGINS },
   async (request) => {
     const { data, auth } = request;
 
@@ -146,7 +146,7 @@ export const generateUploadToken = onCall<GenerateUploadTokenRequest, Promise<Ge
 /**
  * Confirm an upload and get the download URL
  */
-export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadResponse>>({ cors: true },
+export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadResponse>>({ cors: CORS_ORIGINS },
   async (request) => {
     const { data, auth } = request;
 
@@ -219,7 +219,7 @@ export const confirmUpload = onCall<ConfirmUploadRequest, Promise<ConfirmUploadR
 /**
  * Delete a file from Firebase Storage
  */
-export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>({ cors: true },
+export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>({ cors: CORS_ORIGINS },
   async (request) => {
     const { data, auth } = request;
 
@@ -266,7 +266,7 @@ export const deleteFile = onCall<DeleteFileRequest, Promise<DeleteFileResponse>>
 /**
  * List files owned by the user
  */
-export const listUserFiles = onCall<ListFilesRequest, Promise<ListFilesResponse>>({ cors: true },
+export const listUserFiles = onCall<ListFilesRequest, Promise<ListFilesResponse>>({ cors: CORS_ORIGINS },
   async (request) => {
     const { data, auth } = request;
 

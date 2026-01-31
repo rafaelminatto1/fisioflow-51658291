@@ -4,14 +4,14 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET } from '../init';
+import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET, CORS_ORIGINS } from '../init';
 
 /**
  * Migration para criar índices de performance no PostgreSQL
  */
 export const createPerformanceIndexes = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     secrets: [DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET],
   },
   async (request) => {
