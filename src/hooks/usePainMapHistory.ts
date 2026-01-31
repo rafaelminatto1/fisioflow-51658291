@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+
 import { db } from '@/integrations/firebase/app';
 import type { PainMapRecord, BodyRegion, PainMapPoint } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';

@@ -28,10 +28,8 @@ import {
   RefreshCw, History, Award, Zap, User
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { collection, doc, getDocs, query, where, orderBy, limit, getDoc } from 'firebase/firestore';
-import { db } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
-import { format, differenceInDays } from 'date-fns';
+import { db, collection, doc, getDocs, query, where, orderBy, limit, getDoc } from '@/integrations/firebase/app';
+ort { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { GamificationProfile, XpTransaction, Achievement } from '@/types/gamification';
 

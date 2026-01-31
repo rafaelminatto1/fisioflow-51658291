@@ -8,10 +8,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '@/integrations/firebase/app';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
+import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
+import { functions, httpsCallable } from '@/integrations/firebase/functions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -25,7 +23,6 @@ import { Loader2, Calendar as CalendarIcon, Clock, CheckCircle2, User } from 'lu
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
 
 interface PublicProfile {
     id: string;

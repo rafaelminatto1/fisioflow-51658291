@@ -11,6 +11,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -25,18 +26,7 @@ import {
   LeaderboardFilters,
 } from '@/types/gamification';
 import { db } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc,
-  getDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-} from 'firebase/firestore';
+
 
 
 // ============================================================================

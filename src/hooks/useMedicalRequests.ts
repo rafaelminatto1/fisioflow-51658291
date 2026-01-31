@@ -9,20 +9,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy, getDoc,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, getFirebaseStorage } from '@/integrations/firebase/app';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  deleteDoc,
-  doc,
-  orderBy,
-  getDoc,
-} from 'firebase/firestore';
+
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
+import { collection, query, where, onSnapshot } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 

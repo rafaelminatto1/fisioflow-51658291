@@ -6,9 +6,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, query, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+
 
 export interface Project {
     id: string;

@@ -8,24 +8,9 @@
  */
 
 import { db } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, limit as limitClause, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, QueryConstraint, and as firestoreAnd, or as firestoreOr,  } from '@/integrations/firebase/app';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit as limitClause,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-  query as firestoreQuery,
-  QueryConstraint,
-  and as firestoreAnd,
-  or as firestoreOr,
-} from 'firebase/firestore';
+
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';

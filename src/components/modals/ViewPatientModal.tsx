@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-import { doc, getDoc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
-import {
+import { db, doc, getDoc } from '@/integrations/firebase/app';
+mport {
   User,
   Mail,
   Phone,

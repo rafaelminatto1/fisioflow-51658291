@@ -5,10 +5,7 @@ import { Database, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
-import { collection as collectionRef, getDocs as getDocsFromCollection } from 'firebase/firestore';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-
-export function BackupSettings() {
+s() {
     const [isExporting, setIsExporting] = useState(false);
     const { toast } = useToast();
 
@@ -31,7 +28,6 @@ export function BackupSettings() {
                 'session_packages',
                 'patient_packages'
             ];
-
 
             await Promise.all(collections.map(async (colName) => {
                 const colRef = collectionRef(db, colName);

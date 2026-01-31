@@ -7,9 +7,10 @@
  */
 
 import { useMemo } from 'react';
+import { collection, doc, getDoc, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { collection, doc, getDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+
 import type { BusinessHour, BlockedTime } from './useScheduleSettings';
 import { useAuth } from './useAuth';
 

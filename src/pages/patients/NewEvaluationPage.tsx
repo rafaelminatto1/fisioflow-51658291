@@ -31,9 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
-import { doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from 'firebase/firestore';
-import { PatientHelpers } from '@/types';
+import { db, doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';

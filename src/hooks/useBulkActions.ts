@@ -10,9 +10,10 @@
  */
 
 import { useState, useCallback } from 'react';
+import { collection, doc, writeBatch } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
-import { collection, doc, writeBatch } from 'firebase/firestore';
+
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
