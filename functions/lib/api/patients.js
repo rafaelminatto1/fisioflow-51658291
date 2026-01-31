@@ -43,13 +43,14 @@ const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 const app_check_1 = require("../middleware/app-check");
 const rate_limit_1 = require("../middleware/rate-limit");
+const logger_1 = require("../lib/logger");
 /**
  * Lista pacientes com filtros opcionais
  */
 exports.listPatients = (0, https_1.onCall)({ cors: true }, async (request) => {
     console.log('[listPatients] ===== START =====');
     if (!request.auth || !request.auth.token) {
-        console.error('[listPatients] Unauthenticated request');
+        logger_1.logger.error('[listPatients] Unauthenticated request');
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     console.log('[listPatients] Auth token present, uid:', request.auth.uid);
@@ -115,7 +116,7 @@ exports.listPatients = (0, https_1.onCall)({ cors: true }, async (request) => {
         };
     }
     catch (error) {
-        console.error('Error in listPatients:', error);
+        logger_1.logger.error('Error in listPatients:', error);
         if (error instanceof https_1.HttpsError) {
             throw error;
         }
@@ -134,7 +135,7 @@ exports.getPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     (0, app_check_1.verifyAppCheck)(request);
     console.log('App Check verified');
     (0, app_check_1.verifyAppCheck)(request);
-    console.log("App Check verified");
+    // App Check verified");
     const { patientId, profileId } = request.data;
     if (!patientId && !profileId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId ou profileId é obrigatório');
@@ -158,7 +159,7 @@ exports.getPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in getPatient:', error);
+        logger_1.logger.error('Error in getPatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar paciente';
@@ -169,24 +170,24 @@ exports.getPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
  * Cria um novo paciente
  */
 exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
-    console.log('[createPatient] ===== START =====');
+    logger_1.logger.debug('[createPatient] ===== START =====');
     if (!request.auth || !request.auth.token) {
-        console.error('[createPatient] Unauthenticated request');
+        logger_1.logger.error('[createPatient] Unauthenticated request');
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
-    console.log('[createPatient] Auth token present, uid:', request.auth.uid);
+    logger_1.logger.debug('[createPatient] Auth token present, uid:', request.auth.uid);
     // Verificar App Check
     (0, app_check_1.verifyAppCheck)(request);
-    console.log('[createPatient] App Check verified');
+    logger_1.logger.debug('[createPatient] App Check verified');
     // Verificar rate limit
     await (0, rate_limit_1.enforceRateLimit)(request, rate_limit_1.RATE_LIMITS.callable);
-    console.log('[createPatient] Rate limit check passed');
+    logger_1.logger.debug('[createPatient] Rate limit check passed');
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
     const data = request.data;
     // DEBUG: Log organization_id ao criar paciente
-    console.log('[createPatient] auth.organizationId:', auth.organizationId);
-    console.log('[createPatient] auth.userId:', auth.userId);
-    console.log('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone }));
+    logger_1.logger.debug('[createPatient] auth.organizationId:', auth.organizationId);
+    logger_1.logger.debug('[createPatient] auth.userId:', auth.userId);
+    logger_1.logger.debug('[createPatient] data:', JSON.stringify({ name: data.name, phone: data.phone }));
     // Validar campos obrigatórios
     if (!data.name) {
         throw new https_1.HttpsError('invalid-argument', 'name é obrigatório');
@@ -201,11 +202,11 @@ exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
             }
         }
         // [AUTO-FIX] Ensure organization exists to satisfy FK constraint
-        console.log('[createPatient] Target Org ID:', auth.organizationId);
+        logger_1.logger.debug('[createPatient] Target Org ID:', auth.organizationId);
         const orgInsertSql = `INSERT INTO organizations (id, name, slug, active, email)
        VALUES ($1, 'Clínica Principal', 'default-org', true, 'admin@fisioflow.com.br')
        ON CONFLICT (id) DO NOTHING`;
-        console.log('[createPatient] Org Insert SQL:', orgInsertSql);
+        logger_1.logger.debug('[createPatient] Org Insert SQL:', orgInsertSql);
         await pool.query(orgInsertSql, [auth.organizationId]);
         // Inserir paciente
         const result = await pool.query(`INSERT INTO patients (
@@ -229,7 +230,7 @@ exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
             data.incomplete_registration || false
         ]);
         const patient = result.rows[0];
-        console.log('[createPatient] Patient created:', JSON.stringify({
+        logger_1.logger.debug('[createPatient] Patient created:', JSON.stringify({
             id: patient.id,
             name: patient.name,
             organization_id: patient.organization_id,
@@ -245,12 +246,12 @@ exports.createPatient = (0, https_1.onCall)({ cors: true }, async (request) => {
             });
         }
         catch (err) {
-            console.error('Erro ao publicar evento no Ably:', err);
+            logger_1.logger.error('Erro ao publicar evento no Ably:', err);
         }
         return { data: patient };
     }
     catch (error) {
-        console.error('Error in createPatient:', error);
+        logger_1.logger.error('Error in createPatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao criar paciente';
@@ -268,7 +269,7 @@ exports.updatePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     (0, app_check_1.verifyAppCheck)(request);
     console.log('App Check verified');
     (0, app_check_1.verifyAppCheck)(request);
-    console.log("App Check verified");
+    // App Check verified");
     const { patientId, ...updates } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -335,12 +336,12 @@ exports.updatePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
             });
         }
         catch (err) {
-            console.error('Erro ao publicar evento no Ably:', err);
+            logger_1.logger.error('Erro ao publicar evento no Ably:', err);
         }
         return { data: patient };
     }
     catch (error) {
-        console.error('Error in updatePatient:', error);
+        logger_1.logger.error('Error in updatePatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar paciente';
@@ -358,7 +359,7 @@ exports.deletePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
     (0, app_check_1.verifyAppCheck)(request);
     console.log('App Check verified');
     (0, app_check_1.verifyAppCheck)(request);
-    console.log("App Check verified");
+    // App Check verified");
     const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -383,12 +384,12 @@ exports.deletePatient = (0, https_1.onCall)({ cors: true }, async (request) => {
             });
         }
         catch (err) {
-            console.error('Erro ao publicar evento no Ably:', err);
+            logger_1.logger.error('Erro ao publicar evento no Ably:', err);
         }
         return { success: true };
     }
     catch (error) {
-        console.error('Error in deletePatient:', error);
+        logger_1.logger.error('Error in deletePatient:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao excluir paciente';
@@ -406,7 +407,7 @@ exports.getPatientStats = (0, https_1.onCall)({ cors: true }, async (request) =>
     (0, app_check_1.verifyAppCheck)(request);
     console.log('App Check verified');
     (0, app_check_1.verifyAppCheck)(request);
-    console.log("App Check verified");
+    // App Check verified");
     const { patientId } = request.data;
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
@@ -449,7 +450,7 @@ exports.getPatientStats = (0, https_1.onCall)({ cors: true }, async (request) =>
         };
     }
     catch (error) {
-        console.error('Error in getPatientStats:', error);
+        logger_1.logger.error('Error in getPatientStats:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar estatísticas';

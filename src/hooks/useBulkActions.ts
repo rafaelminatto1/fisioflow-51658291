@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function useBulkActions() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

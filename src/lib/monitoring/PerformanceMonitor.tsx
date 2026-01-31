@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Só ativo em desenvolvimento
 const IS_DEV = process.env.NODE_ENV === 'development';

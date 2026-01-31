@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useCreatePagamento, useUpdatePagamento } from '@/hooks/usePagamentos';
 import { pagamentoCreateSchema, type PagamentoCreate } from '@/lib/validations/pagamento';
 import { cn } from '@/lib/utils';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface PagamentoModalProps {
   open: boolean;

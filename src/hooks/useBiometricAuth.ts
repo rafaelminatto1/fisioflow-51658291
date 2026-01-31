@@ -1,6 +1,6 @@
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { useCallback, useEffect, useState } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface BiometricAuthState {
   isAvailable: boolean;

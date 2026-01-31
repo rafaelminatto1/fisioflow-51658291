@@ -8,7 +8,7 @@
  */
 
 import { kv } from '@vercel/kv';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface CacheOptions {
   /**

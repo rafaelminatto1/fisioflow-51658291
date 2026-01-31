@@ -28,7 +28,7 @@ import {
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 
 // Types matching the DB schema manually for now (until types.ts is regenerated)

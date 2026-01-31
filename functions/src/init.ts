@@ -153,9 +153,18 @@ export function getPool(): Pool {
             logger.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
         }
 
+        // Local helper for safe secret access
+        const getSecretValue = (secret: any) => {
+            try {
+                return secret.value();
+            } catch (e) {
+                return null;
+            }
+        };
+
         const connectionName = process.env.FUNCTIONS_EMULATOR === 'true'
             ? process.env.CLOUD_SQL_CONNECTION_NAME
-            : (CLOUD_SQL_CONNECTION_NAME_SECRET.value() || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
+            : (getSecretValue(CLOUD_SQL_CONNECTION_NAME_SECRET) || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
 
         const config: any = {
             user: dbUser,
@@ -166,10 +175,11 @@ export function getPool(): Pool {
             connectionTimeoutMillis: 30000,
         };
 
-        // Prefer IP for production (more reliable without VPC)
-        const dbHostIp = process.env.FUNCTIONS_EMULATOR === 'true'
-            ? null
-            : (DB_HOST_IP_SECRET.value() || process.env.DB_HOST_IP || '35.192.122.198');
+        // Prefer Public IP if available (as it's now authorized)
+        let dbHostIp = null;
+        if (process.env.FUNCTIONS_EMULATOR !== 'true') {
+            dbHostIp = getSecretValue(DB_HOST_IP_PUBLIC_SECRET) || getSecretValue(DB_HOST_IP_SECRET) || process.env.DB_HOST_IP;
+        }
 
         if (process.env.FUNCTIONS_EMULATOR === 'true') {
             // EMULADOR: Usar configuração local para teste
@@ -177,17 +187,19 @@ export function getPool(): Pool {
             config.port = parseInt(process.env.DB_PORT || '5432');
             logger.info(`[Pool] Using local emulator config: ${config.host}:${config.port}`);
         } else if (dbHostIp) {
-            // PRODUÇÃO: Usar IP público do Cloud SQL com SSL
+            // PRODUÇÃO: Usar IP do Cloud SQL com SSL (Prioridade agora que autorizamos 0.0.0.0/0)
             config.host = dbHostIp;
             config.port = 5432;
             config.ssl = {
                 rejectUnauthorized: false, // Cloud SQL usa certificados auto-assinados
                 mode: 'require', // Exigir SSL
             };
-            logger.info(`[Pool] Using Cloud SQL public IP with SSL: ${config.host}:${config.port}`);
+            logger.info(`[Pool] Using Cloud SQL IP with SSL: ${config.host}:${config.port}`);
         } else if (connectionName && (connectionName.includes(':') || connectionName.startsWith('/'))) {
-            // PRODUÇÃO: Fallback para Unix socket do Cloud SQL
+            // PRODUÇÃO: Unix socket como fallback
             config.host = connectionName.startsWith('/') ? connectionName : `/cloudsql/${connectionName}`;
+            // Socket doesn't use port
+            delete config.port;
             logger.info(`[Pool] Using Cloud SQL Unix socket: ${config.host}`);
         } else {
             // Fallback total para localhost

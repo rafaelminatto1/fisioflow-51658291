@@ -12,7 +12,14 @@ require("../init");
 exports.healthCheck = (0, https_1.onRequest)({
     memory: '256MiB',
     maxInstances: 1,
-    secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'DB_HOST_IP'],
+    secrets: [
+        init_1.DB_PASS_SECRET,
+        init_1.DB_USER_SECRET,
+        init_1.DB_NAME_SECRET,
+        init_1.DB_HOST_IP_SECRET,
+        init_1.DB_HOST_IP_PUBLIC_SECRET,
+        init_1.CLOUD_SQL_CONNECTION_NAME_SECRET
+    ],
 }, async (req, res) => {
     // CORS headers
     res.set('Access-Control-Allow-Origin', '*');

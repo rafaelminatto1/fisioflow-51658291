@@ -4,7 +4,7 @@
  */
 
 import * as Ably from 'ably';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const ABLY_KEY = import.meta.env.VITE_ABLY_API_KEY;
 

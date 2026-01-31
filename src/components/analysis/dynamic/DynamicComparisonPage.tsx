@@ -18,7 +18,7 @@ import { processVideo, VideoAnalysisFrame } from '@/services/ai/videoPoseService
 import { analyzeDynamicComparison } from '@/utils/dynamicMetricsEngine';
 import { generateClinicalReport, AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';
 import { DynamicCompareMetrics } from '@/types/analysis/dynamic_compare';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const DynamicComparisonPage = () => {
     const { toast } = useToast();

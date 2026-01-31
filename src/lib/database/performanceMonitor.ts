@@ -9,7 +9,7 @@
  * since Firebase doesn't have the same database introspection capabilities.
  */
 
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 
 

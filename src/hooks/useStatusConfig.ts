@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
 import type { StatusConfig, SessionStatus } from '@/types/agenda';
 import { getTextColorClass, getOptimalTextColor } from '@/utils/colorContrast';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const STORAGE_KEY = 'fisioflow_status_config';
 

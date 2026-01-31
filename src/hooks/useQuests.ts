@@ -24,7 +24,7 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type QuestCategory = 'daily' | 'weekly' | 'special';
 export type QuestStatus = 'pending' | 'in_progress' | 'completed' | 'expired';

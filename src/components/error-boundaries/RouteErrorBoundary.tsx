@@ -18,7 +18,7 @@
 import React, { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import ErrorBoundary, { ErrorBoundaryProps } from './ErrorBoundary';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface RouteErrorBoundaryProps extends Omit<ErrorBoundaryProps, 'onError'> {
   /** Optional route name for better error reporting */
