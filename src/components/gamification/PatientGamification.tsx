@@ -14,6 +14,7 @@ import {
   Loader2,
   Lock
 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGamification, type Achievement } from '@/hooks/useGamification';
 import { formatDistanceToNow } from 'date-fns';
@@ -171,7 +172,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 blur opacity-40 animate-pulse" />
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 300, damping: 15 }}
@@ -264,93 +265,93 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
       </Card>
 
       <Tabs defaultValue="overview" className="w-full space-y-6">
-          <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/50">
-            <TabsTrigger value="overview" className="rounded-full px-4 text-xs sm:text-sm">Visão Geral</TabsTrigger>
-            <TabsTrigger value="ranking" className="rounded-full px-4 text-xs sm:text-sm">Ranking</TabsTrigger>
-            <TabsTrigger value="achievements" className="rounded-full px-4 text-xs sm:text-sm">Conquistas</TabsTrigger>
-            <TabsTrigger value="shop" className="rounded-full px-4 text-xs sm:text-sm flex gap-2">
-              Loja 
-              <Badge variant="secondary" className="px-1 py-0 h-4 text-[9px]">{totalPoints} pts</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="rounded-full px-4 text-xs sm:text-sm">Inventário</TabsTrigger>
-          </TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/50">
+          <TabsTrigger value="overview" className="rounded-full px-4 text-xs sm:text-sm">Visão Geral</TabsTrigger>
+          <TabsTrigger value="ranking" className="rounded-full px-4 text-xs sm:text-sm">Ranking</TabsTrigger>
+          <TabsTrigger value="achievements" className="rounded-full px-4 text-xs sm:text-sm">Conquistas</TabsTrigger>
+          <TabsTrigger value="shop" className="rounded-full px-4 text-xs sm:text-sm flex gap-2">
+            Loja
+            <Badge variant="secondary" className="px-1 py-0 h-4 text-[9px]">{totalPoints} pts</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="inventory" className="rounded-full px-4 text-xs sm:text-sm">Inventário</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="overview" className="space-y-6 mt-0 animate-in fade-in-50">
-             <div className="h-[400px]">
-                <DailyQuests
-                  quests={dailyQuests}
-                  onComplete={(id) => completeQuest.mutate({ questId: id })}
-                />
-             </div>
+        <TabsContent value="overview" className="space-y-6 mt-0 animate-in fade-in-50">
+          <div className="h-[400px]">
+            <DailyQuests
+              quests={dailyQuests}
+              onComplete={(id) => completeQuest.mutate({ questId: id })}
+            />
+          </div>
 
-             <div className="space-y-4">
-                <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-                  <Icons.Map className="h-5 w-5 text-primary" />
-                  Sua Jornada
-                </h3>
-                <JourneyMap totalSessions={totalSessions} currentLevel={currentLevel} />
-             </div>
-          </TabsContent>
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold flex items-center gap-2 px-1">
+              <Icons.Map className="h-5 w-5 text-primary" />
+              Sua Jornada
+            </h3>
+            <JourneyMap totalSessions={totalSessions} currentLevel={currentLevel} />
+          </div>
+        </TabsContent>
 
-          <TabsContent value="ranking" className="mt-0 animate-in fade-in-50">
-             <Leaderboard currentPatientId={patientId} />
-          </TabsContent>
+        <TabsContent value="ranking" className="mt-0 animate-in fade-in-50">
+          <Leaderboard currentPatientId={patientId} />
+        </TabsContent>
 
-          <TabsContent value="achievements" className="mt-0 animate-in fade-in-50">
-             <div className="space-y-4">
-                <div className="flex items-center justify-between px-1">
-                   <h3 className="text-lg font-bold flex items-center gap-2">
-                     <Award className="h-5 w-5 text-primary" />
-                     Todas Conquistas
-                   </h3>
+        <TabsContent value="achievements" className="mt-0 animate-in fade-in-50">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <Award className="h-5 w-5 text-primary" />
+                Todas Conquistas
+              </h3>
+            </div>
+
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/30 mb-4">
+                <TabsTrigger value="all" className="rounded-full px-3 text-xs">Todas</TabsTrigger>
+                <TabsTrigger value="streak" className="rounded-full px-3 text-xs">Consistência</TabsTrigger>
+                <TabsTrigger value="milestone" className="rounded-full px-3 text-xs">Marcos</TabsTrigger>
+                <TabsTrigger value="timing" className="rounded-full px-3 text-xs">Horários</TabsTrigger>
+                <TabsTrigger value="recovery" className="rounded-full px-3 text-xs">Saúde</TabsTrigger>
+                <TabsTrigger value="level" className="rounded-full px-3 text-xs">Níveis</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all" className="mt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {allAchievements.map(renderAchievementCard)}
+                  {allAchievements.length === 0 && (
+                    <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
+                      Nenhuma conquista disponível.
+                    </div>
+                  )}
                 </div>
-                
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/30 mb-4">
-                    <TabsTrigger value="all" className="rounded-full px-3 text-xs">Todas</TabsTrigger>
-                    <TabsTrigger value="streak" className="rounded-full px-3 text-xs">Consistência</TabsTrigger>
-                    <TabsTrigger value="milestone" className="rounded-full px-3 text-xs">Marcos</TabsTrigger>
-                    <TabsTrigger value="timing" className="rounded-full px-3 text-xs">Horários</TabsTrigger>
-                    <TabsTrigger value="recovery" className="rounded-full px-3 text-xs">Saúde</TabsTrigger>
-                    <TabsTrigger value="level" className="rounded-full px-3 text-xs">Níveis</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="all" className="mt-0">
+              </TabsContent>
+
+              {['streak', 'milestone', 'timing', 'recovery', 'level'].map(tab => {
+                const filtered = allAchievements.filter(a => a.category === tab);
+                return (
+                  <TabsContent key={tab} value={tab} className="mt-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {allAchievements.map(renderAchievementCard)}
-                      {allAchievements.length === 0 && (
-                        <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
-                           Nenhuma conquista disponível.
+                      {filtered.length > 0 ? filtered.map(renderAchievementCard) : (
+                        <div className="col-span-full py-8 text-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                          Nenhuma conquista nesta categoria ainda.
                         </div>
                       )}
                     </div>
                   </TabsContent>
-                  
-                  {['streak', 'milestone', 'timing', 'recovery', 'level'].map(tab => {
-                     const filtered = allAchievements.filter(a => a.category === tab);
-                     return (
-                      <TabsContent key={tab} value={tab} className="mt-0">
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           {filtered.length > 0 ? filtered.map(renderAchievementCard) : (
-                              <div className="col-span-full py-8 text-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
-                                Nenhuma conquista nesta categoria ainda.
-                              </div>
-                           )}
-                         </div>
-                      </TabsContent>
-                     );
-                  })}
-                </Tabs>
-             </div>
-          </TabsContent>
+                );
+              })}
+            </Tabs>
+          </div>
+        </TabsContent>
 
-          <TabsContent value="shop" className="mt-0 animate-in fade-in-50">
-             <RewardsShop patientId={patientId} />
-          </TabsContent>
+        <TabsContent value="shop" className="mt-0 animate-in fade-in-50">
+          <RewardsShop patientId={patientId} />
+        </TabsContent>
 
-          <TabsContent value="inventory" className="mt-0 animate-in fade-in-50">
-             <UserInventory patientId={patientId} />
-          </TabsContent>
+        <TabsContent value="inventory" className="mt-0 animate-in fade-in-50">
+          <UserInventory patientId={patientId} />
+        </TabsContent>
       </Tabs>
 
       {/* Recent Rewards / History */}
@@ -375,9 +376,9 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
                     </div>
                     <div>
                       <p className="font-medium">
-                        {tx.reason === 'manual_adjustment' ? 'Bônus do Terapeuta' : 
-                         tx.reason === 'daily_quest' ? 'Missão Diária' :
-                         tx.reason === 'achievement_unlocked' ? 'Conquista' : 'Atividade'}
+                        {tx.reason === 'manual_adjustment' ? 'Bônus do Terapeuta' :
+                          tx.reason === 'daily_quest' ? 'Missão Diária' :
+                            tx.reason === 'achievement_unlocked' ? 'Conquista' : 'Atividade'}
                       </p>
                       <p className="text-xs text-muted-foreground">{tx.description || 'XP ganho'}</p>
                     </div>
@@ -413,10 +414,10 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
         </div>
       )}
 
-      <LevelUpModal 
-        isOpen={showLevelUp} 
-        onClose={() => setShowLevelUp(false)} 
-        level={currentLevel} 
+      <LevelUpModal
+        isOpen={showLevelUp}
+        onClose={() => setShowLevelUp(false)}
+        level={currentLevel}
       />
     </div>
   );
