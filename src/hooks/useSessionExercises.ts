@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, orderBy, limit, getDocs } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, limit, getDocs } from '@/integrations/firebase/app';
 
 import { db } from '@/integrations/firebase/app';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
@@ -11,7 +11,7 @@ export const useSessionExercises = (patientId: string) => {
         queryFn: async () => {
             if (!patientId) return null;
 
-            const q = query(
+            const q = firestoreQuery(
                 collection(db, 'treatment_sessions'),
                 where('patient_id', '==', patientId),
                 orderBy('session_date', 'desc'),

@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
 
 import { useSoapRecords } from './useSoapRecords';
@@ -34,7 +34,7 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
     queryKey: ['intelligent-conduct-suggestions', patientId],
     queryFn: async () => {
       // Buscar patologias do paciente
-      const pathologiesQuery = query(
+      const pathologiesQuery = firestoreQuery(
         collection(db, 'patient_pathologies'),
         where('patient_id', '==', patientId),
         where('status', '==', 'em_tratamento')
@@ -43,7 +43,7 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
       const pathologies = pathologiesSnap.docs.map(convertDoc);
 
       // Buscar avaliação médica recente
-      const medicalRecordsQuery = query(
+      const medicalRecordsQuery = firestoreQuery(
         collection(db, 'medical_records'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc'),
@@ -62,7 +62,7 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
         .slice(0, 20);
 
       // Buscar condutas da biblioteca
-      const conductsQuery = query(collection(db, 'conduct_library'));
+      const conductsQuery = firestoreQuery(collection(db, 'conduct_library'));
       const conductsSnap = await getDocs(conductsQuery);
       const conducts = conductsSnap.docs.map(convertDoc);
 

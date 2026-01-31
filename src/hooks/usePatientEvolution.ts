@@ -11,7 +11,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -124,7 +124,7 @@ export const usePatientSurgeries = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-surgeries', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_surgeries'),
         where('patient_id', '==', patientId),
         orderBy('surgery_date', 'desc')
@@ -142,7 +142,7 @@ export const usePatientGoals = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-goals', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_goals'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc')
@@ -160,7 +160,7 @@ export const usePatientPathologies = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-pathologies', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_pathologies'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc')
@@ -183,7 +183,7 @@ export const useRequiredMeasurements = (pathologyNames: string[]) => {
       const allResults: PathologyRequiredMeasurement[] = [];
 
       for (const name of pathologyNames) {
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'pathology_required_measurements'),
           where('pathology_name', '==', name)
         );
@@ -204,7 +204,7 @@ export const useEvolutionMeasurements = (patientId: string) => {
   return useQuery({
     queryKey: ['evolution-measurements', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evolution_measurements'),
         where('patient_id', '==', patientId),
         orderBy('measured_at', 'desc')
@@ -458,7 +458,7 @@ export function usePatientEvolutionData() {
       const user = getCurrentUser();
       if (user && appointmentId) {
         // Check if session exists
-        const q = query(
+        const q = firestoreQuery(
           collection(db, 'treatment_sessions'),
           where('appointment_id', '==', appointmentId),
           limit(1)

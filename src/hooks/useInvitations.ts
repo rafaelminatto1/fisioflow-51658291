@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
@@ -45,7 +45,7 @@ export function useInvitations() {
   const { data: invitations = [], isLoading } = useQuery({
     queryKey: ['invitations'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'user_invitations'),
         orderBy('created_at', 'desc')
       );
@@ -82,7 +82,7 @@ export function useInvitations() {
       if (!firebaseUser) throw new Error('Usuário não autenticado');
 
       // Check if there's already a pending invitation for this email
-      const existingQ = query(
+      const existingQ = firestoreQuery(
         collection(db, 'user_invitations'),
         where('email', '==', email),
         where('used_at', '==', null),

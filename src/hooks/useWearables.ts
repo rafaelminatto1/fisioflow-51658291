@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, query, where, orderBy, getDocs, getDoc, doc } from '@/integrations/firebase/app';
+import { collection, addDoc, query as firestoreQuery, where, orderBy, getDocs, getDoc, doc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
@@ -37,7 +37,7 @@ export const useWearables = (patientId?: string) => {
         queryFn: async () => {
             if (!patientId) return [];
 
-            const q = query(
+            const q = firestoreQuery(
                 collection(db, 'wearable_data'),
                 where('patient_id', '==', patientId),
                 orderBy('timestamp', 'desc')

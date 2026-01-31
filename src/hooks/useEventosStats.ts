@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, getCountFromServer, query, where } from '@/integrations/firebase/app';
+import { collection, getDocs, getCountFromServer, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { db } from "@/integrations/firebase/app";
 
 
@@ -42,7 +42,7 @@ export function useEventosStats() {
     queryKey: ["eventos-stats"],
     queryFn: async (): Promise<EventosStats> => {
       // Fetch eventos
-      const eventosQ = query(collection(db, "eventos"));
+      const eventosQ = firestoreQuery(collection(db, "eventos"));
       const eventosSnap = await getDocs(eventosQ);
       const eventos = eventosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -55,7 +55,7 @@ export function useEventosStats() {
       ).length;
 
       // Fetch pagamentos
-      const pagamentosQ = query(collection(db, "pagamentos"));
+      const pagamentosQ = firestoreQuery(collection(db, "pagamentos"));
       const pagamentosSnap = await getDocs(pagamentosQ);
       const pagamentos = pagamentosSnap.docs.map(doc => doc.data());
 
@@ -72,7 +72,7 @@ export function useEventosStats() {
         : 0;
 
       // Count participantes
-      const participantesQ = query(collection(db, "participantes"));
+      const participantesQ = firestoreQuery(collection(db, "participantes"));
       const participantesSnap = await getCountFromServer(participantesQ);
       const totalParticipantes = participantesSnap.data().count;
 

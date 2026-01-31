@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db, collection, query, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 rs/logger';
 
 // ============================================================================
@@ -236,7 +236,7 @@ export function useOptimizedQuery<T = unknown>(
         constraints.push(firestoreLimit(limit));
       }
 
-      const q = query(collection(db, table), ...constraints);
+      const q = firestoreQuery(collection(db, table), ...constraints);
       const snapshot = await getDocs(q);
       const result = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
 
@@ -361,7 +361,7 @@ export function usePaginatedQuery<T = unknown>(
       // Safety limit 1000
       constraints.push(firestoreLimit(1000));
 
-      const q = query(collection(db, baseOptions.table), ...constraints);
+      const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
       const snapshot = await getDocs(q);
       const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
 
@@ -489,7 +489,7 @@ export function useInfiniteQuery<T = unknown>(
         constraints.push(startAfter(lastDoc));
       }
 
-      const q = query(collection(db, baseOptions.table), ...constraints);
+      const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
       const snapshot = await getDocs(q);
       const newData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
 

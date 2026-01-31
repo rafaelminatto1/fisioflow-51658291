@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, where, orderBy, documentId } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, documentId } from '@/integrations/firebase/app';
 import { differenceInDays } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
 
@@ -360,7 +360,7 @@ export const usePatientStats = (patientId: string | undefined) => {
       }
 
       // Fetch all patient appointments
-      const appointmentsQ = query(
+      const appointmentsQ = firestoreQuery(
         collection(db, 'appointments'),
         where('patient_id', '==', patientId),
         orderBy('appointment_date', 'desc')
@@ -369,7 +369,7 @@ export const usePatientStats = (patientId: string | undefined) => {
       const appointments = appointmentsSnap.docs.map(convertDocToAppointment);
 
       // Fetch finalized SOAP records
-      const soapQ = query(
+      const soapQ = firestoreQuery(
         collection(db, 'soap_records'),
         where('patient_id', '==', patientId),
         where('status', '==', 'finalized')
@@ -417,7 +417,7 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
         const batch = patientIds.slice(i, i + batchSize);
 
         // Fetch appointments
-        const appointmentsQ = query(
+        const appointmentsQ = firestoreQuery(
           collection(db, 'appointments'),
           where(documentId(), 'in', batch)
         );
@@ -425,7 +425,7 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
         allAppointments.push(...appointmentsSnap.docs.map(convertDocToAppointment));
 
         // Fetch SOAP records
-        const soapQ = query(
+        const soapQ = firestoreQuery(
           collection(db, 'soap_records'),
           where('patient_id', 'in', batch),
           where('status', '==', 'finalized')

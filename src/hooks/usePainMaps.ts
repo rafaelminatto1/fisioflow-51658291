@@ -8,7 +8,7 @@
  */
 
 import { useCallback } from 'react';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, delete as deleteDocs, writeBatch, documentId } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, delete as deleteDocs, writeBatch, documentId } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -76,7 +76,7 @@ export function usePainMapsBySession(sessionId: string | undefined) {
     queryFn: async () => {
       if (!sessionId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pain_maps'),
         where('session_id', '==', sessionId),
         orderBy('created_at', 'asc')
@@ -88,7 +88,7 @@ export function usePainMapsBySession(sessionId: string | undefined) {
       // Fetch points for each map
       const mapsWithPoints = await Promise.all(
         maps.map(async (map) => {
-          const pointsQ = query(
+          const pointsQ = firestoreQuery(
             collection(db, 'pain_map_points'),
             where('pain_map_id', '==', map.id)
           );
@@ -111,7 +111,7 @@ export function usePainMapsByPatient(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pain_maps'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'asc')
@@ -123,7 +123,7 @@ export function usePainMapsByPatient(patientId: string | undefined) {
       // Fetch points for each map
       const mapsWithPoints = await Promise.all(
         maps.map(async (map) => {
-          const pointsQ = query(
+          const pointsQ = firestoreQuery(
             collection(db, 'pain_map_points'),
             where('pain_map_id', '==', map.id)
           );
@@ -173,7 +173,7 @@ export function usePainMap(painMapId: string | undefined) {
       const map = convertDocToPainMap(snapshot);
 
       // Fetch points
-      const pointsQ = query(
+      const pointsQ = firestoreQuery(
         collection(db, 'pain_map_points'),
         where('pain_map_id', '==', map.id)
       );
@@ -281,7 +281,7 @@ export function useDeletePainMap() {
   return useMutation({
     mutationFn: async (painMapId: string) => {
       // Delete points first
-      const pointsQ = query(
+      const pointsQ = firestoreQuery(
         collection(db, 'pain_map_points'),
         where('pain_map_id', '==', painMapId)
       );
@@ -314,7 +314,7 @@ export function useComparePainMaps(patientId: string | undefined, mapIds: [strin
     queryFn: async () => {
       if (!patientId || !mapIds || mapIds.length !== 2) return null;
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pain_maps'),
         where(documentId(), 'in', mapIds),
         where('patient_id', '==', patientId),
@@ -329,7 +329,7 @@ export function useComparePainMaps(patientId: string | undefined, mapIds: [strin
       // Fetch points for each map
       const mapsWithPoints = await Promise.all(
         maps.map(async (map) => {
-          const pointsQ = query(
+          const pointsQ = firestoreQuery(
             collection(db, 'pain_map_points'),
             where('pain_map_id', '==', map.id)
           );
@@ -432,7 +432,7 @@ export function useUpdatePainMap() {
   return useMutation({
     mutationFn: async ({ painMapId, points }: { painMapId: string; points: Omit<PainPoint, 'id'>[] }) => {
       // Deletar pontos antigos
-      const pointsQ = query(
+      const pointsQ = firestoreQuery(
         collection(db, 'pain_map_points'),
         where('pain_map_id', '==', painMapId)
       );
@@ -504,7 +504,7 @@ export function usePainEvolution(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pain_maps'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'asc')
@@ -555,7 +555,7 @@ export function usePainStatistics(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return null;
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pain_maps'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'asc')

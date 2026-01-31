@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useCallback, useMemo, useRef } from 'react';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, setDoc } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, setDoc } from '@/integrations/firebase/app';
 import { triggerGamificationFeedback } from "@/lib/gamification/feedback-utils";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
@@ -114,7 +114,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: shopItems = [] } = useQuery({
     queryKey: ['shop-items'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'shop_items'),
         where('is_active', '==', true),
         orderBy('cost', 'asc')
@@ -129,7 +129,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: userInventory = [] } = useQuery({
     queryKey: ['user-inventory', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'user_inventory'),
         where('user_id', '==', patientId)
       );
@@ -178,7 +178,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
         if (shouldReset) {
           // Check for Streak Freeze in Inventory
-          const freezeQ = query(
+          const freezeQ = firestoreQuery(
             collection(db, 'user_inventory'),
             where('user_id', '==', patientId),
             where('item_code', '==', 'streak_freeze'),
@@ -237,7 +237,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       const today = new Date().toISOString().split('T')[0];
 
       // 1. Try to get existing quests for today
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'daily_quests'),
         where('patient_id', '==', patientId),
         where('date', '==', today),
@@ -288,8 +288,8 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     queryKey: ['achievements', patientId],
     queryFn: async () => {
       const [allSnapshot, unlockedSnapshot] = await Promise.all([
-        getDocs(query(collection(db, 'achievements'), where('is_active', '==', true))),
-        getDocs(query(collection(db, 'achievements_log'), where('patient_id', '==', patientId)))
+        getDocs(firestoreQuery(collection(db, 'achievements'), where('is_active', '==', true))),
+        getDocs(firestoreQuery(collection(db, 'achievements_log'), where('patient_id', '==', patientId)))
       ]);
 
       return {
@@ -307,7 +307,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: recentTransactions = [] } = useQuery({
     queryKey: ['xp-transactions', patientId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'xp_transactions'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc'),
@@ -382,7 +382,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       const updatedQuests = dailyQuests.map(q => q.id === questId ? { ...q, completed: true } : q);
 
       const today = new Date().toISOString().split('T')[0];
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'daily_quests'),
         where('patient_id', '==', patientId),
         where('date', '==', today),
@@ -423,7 +423,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       });
 
       // 2. Add to Inventory
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'user_inventory'),
         where('user_id', '==', patientId),
         where('item_id', '==', itemId),

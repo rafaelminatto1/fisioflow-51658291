@@ -1,8 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
-TrendingUp, Clock } from "lucide-react";
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
+import { Users, DollarSign, Calendar, TrendingUp, Clock } from "lucide-react";
 import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -24,7 +24,7 @@ export function InternalDashboard() {
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, "appointments"),
         where("appointment_date", ">=", thirtyDaysAgo.toISOString())
       );
@@ -45,7 +45,7 @@ export function InternalDashboard() {
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       // Buscar todos os pacientes
-      const allPatientsQuery = query(
+      const allPatientsQuery = firestoreQuery(
         collection(db, "patients"),
         orderBy("full_name")
       );
@@ -53,7 +53,7 @@ export function InternalDashboard() {
       const allPatients = allPatientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Buscar pacientes com agendamentos recentes
-      const recentAppointmentsQuery = query(
+      const recentAppointmentsQuery = firestoreQuery(
         collection(db, "appointments"),
         where("appointment_date", ">=", thirtyDaysAgo.toISOString())
       );
@@ -69,7 +69,7 @@ export function InternalDashboard() {
       // Buscar última consulta de cada paciente inativo
       const inactiveWithLastAppointment = await Promise.all(
         inactive.slice(0, 20).map(async (patient: { id: string }) => {
-          const lastApptQuery = query(
+          const lastApptQuery = firestoreQuery(
             collection(db, "appointments"),
             where("patient_id", "==", patient.id),
             orderBy("appointment_date", "desc"),
@@ -98,7 +98,7 @@ export function InternalDashboard() {
     queryKey: ["patients-with-sessions"],
     queryFn: async () => {
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, "session_packages"),
         where("status", "==", "ativo"),
         where("remaining_sessions", ">", 0)
@@ -149,7 +149,7 @@ export function InternalDashboard() {
       const monthStart = startOfMonth(now);
 
       // Hoje
-      const todayQuery = query(
+      const todayQuery = firestoreQuery(
         collection(db, "patients"),
         where("created_at", ">=", todayStart.toISOString())
       );
@@ -157,7 +157,7 @@ export function InternalDashboard() {
       const todayCount = todaySnapshot.docs.length;
 
       // Semana
-      const weekQuery = query(
+      const weekQuery = firestoreQuery(
         collection(db, "patients"),
         where("created_at", ">=", weekStart.toISOString())
       );
@@ -165,7 +165,7 @@ export function InternalDashboard() {
       const weekCount = weekSnapshot.docs.length;
 
       // Mês
-      const monthQuery = query(
+      const monthQuery = firestoreQuery(
         collection(db, "patients"),
         where("created_at", ">=", monthStart.toISOString())
       );
@@ -179,7 +179,7 @@ export function InternalDashboard() {
           const start = startOfMonth(monthDate);
           const end = startOfMonth(subMonths(monthDate, -1));
 
-          const monthQuery = query(
+          const monthQuery = firestoreQuery(
             collection(db, "patients"),
             where("created_at", ">=", start.toISOString()),
             where("created_at", "<", end.toISOString())

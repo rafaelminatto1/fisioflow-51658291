@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { collection, doc, getDoc, getDocs, setDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from "sonner";
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -45,7 +45,7 @@ export function useLGPDConsents() {
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'lgpd_consents'),
         where('user_id', '==', firebaseUser.uid),
         orderBy('created_at', 'desc')

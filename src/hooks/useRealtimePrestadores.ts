@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { collection, query, where, onSnapshot } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, onSnapshot } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
 
@@ -15,7 +15,7 @@ export function useRealtimePrestadores(eventoId: string) {
   useEffect(() => {
     if (!eventoId) return;
 
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'prestadores'),
       where('evento_id', '==', eventoId)
     );

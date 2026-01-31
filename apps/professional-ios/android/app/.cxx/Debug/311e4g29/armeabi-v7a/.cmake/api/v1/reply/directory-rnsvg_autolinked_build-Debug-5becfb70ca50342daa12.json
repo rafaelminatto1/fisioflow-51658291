@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "rnsvg_autolinked_build",
+		"source" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-svg@15.12.1_react-native@0.81.5_@babel+core@7.28.5_@react-native-community+cli@1_scznkipapmbynsgm5i5qxakiyy/node_modules/react-native-svg/android/src/main/jni"
+	}
+}

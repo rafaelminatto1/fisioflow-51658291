@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
 import { db } from '@/integrations/firebase/app';
@@ -90,7 +90,7 @@ export function useScheduleSettings() {
   const { data: businessHours, isLoading: isLoadingHours } = useQuery({
     queryKey: ['business-hours', organizationId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'schedule_business_hours'),
         where('organization_id', '==', organizationId)
       );
@@ -190,7 +190,7 @@ export function useScheduleSettings() {
   const { data: blockedTimes, isLoading: isLoadingBlocked } = useQuery({
     queryKey: ['blocked-times', organizationId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'schedule_blocked_times'),
         where('organization_id', '==', organizationId),
         orderBy('start_date', 'asc')

@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { PagamentoCreate, PagamentoUpdate } from '@/lib/validations/pagamento';
 import { db } from '@/integrations/firebase/app';
@@ -37,7 +37,7 @@ export function usePagamentos(eventoId: string) {
   return useQuery({
     queryKey: ['pagamentos', eventoId],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pagamentos'),
         where('evento_id', '==', eventoId),
         orderBy('pago_em', 'desc')

@@ -19,6 +19,17 @@ export function isAblyConfigured(): boolean {
     return isAblyAvailable;
 }
 
+export function resetAblyClient() {
+    if (ablyClient) {
+        try {
+            ablyClient.close();
+        } catch (e) {
+            console.error('Error closing Ably client:', e);
+        }
+        ablyClient = null;
+    }
+}
+
 /**
  * Obtém a instância do cliente Ably Realtime
  * Returns a mock client if Ably is not configured
@@ -37,16 +48,33 @@ export function getAblyClient(): Ably.Realtime {
 
             // Prevent connection attempts
             if (ablyClient.connection) {
-                ablyClient.connection.off = () => {};
-                ablyClient.connection.on = () => {};
+                ablyClient.connection.off = () => { };
+                ablyClient.connection.on = () => { };
             }
 
             return ablyClient;
         }
+
         ablyClient = new Ably.Realtime(ABLY_KEY, {
             logLevel: import.meta.env.DEV ? 4 : 2, // VERBOSE in dev, INFO in prod
             disconnectedTimeout: 30000,
             suspendedTimeout: 60000,
+        });
+
+        // Monitor connection handling for 410 Gone or Token errors
+        ablyClient.connection.on('failed', (stateChange) => {
+            const reason = stateChange.reason;
+            // 40140-40149: Token expired
+            // 40400: Resource not found (sometimes used for deleted apps)
+            // 41010: Transport refused
+            // 80000-80009: Connection errors
+            if (reason && (reason.code === 41010 || (reason.code >= 40140 && reason.code <= 40149))) {
+                logger.error(`[Ably] Connection failed with recoverable error ${reason.code}. Resetting client.`, reason, 'ably-client');
+                resetAblyClient();
+                // Attempt to reconnect with new client?
+                // The consumer (Context) will need to loop/retry, or we can try to recover here?
+                // But getAblyClient returns the *instance*. If we null it, next call gets new one.
+            }
         });
     }
     return ablyClient;

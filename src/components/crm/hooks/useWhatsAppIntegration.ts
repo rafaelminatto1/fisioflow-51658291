@@ -8,8 +8,10 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db, collection, getDoc, doc, addDoc, updateDoc, query } from '@/integrations/firebase/app';
-t sendMessage = useMutation({
+import { db, collection, getDoc, doc, addDoc, updateDoc, query as firestoreQuery } from '@/integrations/firebase/app';
+
+export function useWhatsAppIntegration() {
+  const sendMessage = useMutation({
     mutationFn: async (data: { recipient: string; message: string; templateId?: string }) => {
       // Check config
       const configRef = doc(db, 'whatsapp_config', 'default');

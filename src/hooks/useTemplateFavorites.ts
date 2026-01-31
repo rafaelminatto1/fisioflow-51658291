@@ -7,7 +7,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, updateDoc, doc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, updateDoc, doc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -69,7 +69,7 @@ export function useFavoriteTemplates() {
   return useQuery({
     queryKey: ['evaluation-forms', 'favorites'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_forms'),
         where('is_favorite', '==', true),
         where('ativo', '==', true),

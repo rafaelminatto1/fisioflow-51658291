@@ -289,11 +289,11 @@ export function CommandPalette({ open, onOpenChange, patientId, patientName }: C
       return commandItems;
     }
 
-    const query = searchQuery.toLowerCase();
+    const searchLower = searchQuery.toLowerCase();
     return commandItems.filter(item => {
-      const matchLabel = item.label.toLowerCase().includes(query);
-      const matchDescription = item.description?.toLowerCase().includes(query);
-      const matchKeywords = item.keywords?.some(keyword => keyword.toLowerCase().includes(query));
+      const matchLabel = item.label.toLowerCase().includes(searchLower);
+      const matchDescription = item.description?.toLowerCase().includes(searchLower);
+      const matchKeywords = item.keywords?.some(keyword => keyword.toLowerCase().includes(searchLower));
 
       return matchLabel || matchDescription || matchKeywords;
     });

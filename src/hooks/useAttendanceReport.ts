@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, doc, getDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db } from '@/integrations/firebase/app';
@@ -168,7 +168,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       const endDateStr = format(end, 'yyyy-MM-dd');
 
       // Build base query
-      let baseQuery = query(
+      let baseQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('appointment_date', '>=', startDateStr),
         where('appointment_date', '<=', endDateStr),
@@ -434,7 +434,7 @@ export const useTherapists = () => {
     queryKey: ['therapists-list'],
     queryFn: async () => {
       // Query user_roles for admin and fisioterapeuta roles
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'user_roles'),
         where('role', 'in', ['admin', 'fisioterapeuta'])
       );

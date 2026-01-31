@@ -14,24 +14,28 @@ service firebase.storage {
     // Verificar se o usuário é admin
     function isAdmin() {
       return isAuthenticated() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Verificar se o usuário é fisioterapeuta
     function isPhysiotherapist() {
       return isAuthenticated() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'fisioterapeuta';
     }
 
     // Verificar se o usuário é estagiário
     function isIntern() {
       return isAuthenticated() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'estagiario';
     }
 
     // Verificar se o usuário é paciente
     function isPatient() {
       return isAuthenticated() &&
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'paciente';
     }
 

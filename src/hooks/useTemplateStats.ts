@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, updateDoc, doc, getDoc, query, where, orderBy, limit as limitFn,  } from '@/integrations/firebase/app';
+import { collection, getDocs, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit as limitFn,  } from '@/integrations/firebase/app';
 import { EvaluationForm } from '@/types/clinical-forms';
 import { db } from '@/integrations/firebase/app';
 
@@ -22,7 +22,7 @@ export function useTemplateStats() {
     queryKey: ['template-stats'],
     queryFn: async () => {
       // Get all active forms
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_forms'),
         where('ativo', '==', true)
       );
@@ -103,7 +103,7 @@ export function useMostUsedTemplates(limitNum = 10) {
   return useQuery({
     queryKey: ['evaluation-forms', 'most-used', limitNum],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_forms'),
         where('ativo', '==', true)
       );
@@ -134,7 +134,7 @@ export function useRecentlyUsedTemplates(limitNum = 6) {
   return useQuery({
     queryKey: ['evaluation-forms', 'recently-used', limitNum],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_forms'),
         where('ativo', '==', true)
       );

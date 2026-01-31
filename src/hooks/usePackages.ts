@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { FinancialService } from '@/services/financialService';
@@ -69,7 +69,7 @@ export function useSessionPackages() {
   return useQuery({
     queryKey: ['session-packages'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'session_packages'),
         orderBy('total_sessions', 'asc') // Note: field name kept as in old DB or updated? I'll use total_sessions mapped to sessions_count
       );
@@ -104,13 +104,13 @@ export function usePatientPackages(patientId?: string) {
   return useQuery({
     queryKey: ['patient-packages', patientId || 'all'],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'patient_packages'),
         orderBy('purchased_at', 'desc')
       );
 
       if (patientId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'patient_packages'),
           where('patient_id', '==', patientId),
           orderBy('purchased_at', 'desc')

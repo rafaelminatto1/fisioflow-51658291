@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query, where,  } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where,  } from '@/integrations/firebase/app';
 import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { queryConfigs } from "@/lib/queryConfig";
@@ -83,7 +83,7 @@ export function useAnalyticsSummary() {
           retryWithBackoff(() =>
             withTimeout(
               getDocs(
-                query(
+                firestoreQuery(
                   collection(db, 'appointments'),
                   where('appointment_date', '>=', formatDateToLocalISO(currentMonthStart)),
                   where('appointment_date', '<=', formatDateToLocalISO(currentMonthEnd))
@@ -95,7 +95,7 @@ export function useAnalyticsSummary() {
           retryWithBackoff(() =>
             withTimeout(
               getDocs(
-                query(
+                firestoreQuery(
                   collection(db, 'appointments'),
                   where('appointment_date', '>=', formatDateToLocalISO(lastMonthStart)),
                   where('appointment_date', '<=', formatDateToLocalISO(lastMonthEnd))
@@ -107,7 +107,7 @@ export function useAnalyticsSummary() {
           retryWithBackoff(() =>
             withTimeout(
               getDocs(
-                query(
+                firestoreQuery(
                   collection(db, 'appointments'),
                   where('appointment_date', '>=', formatDateToLocalISO(subMonths(now, 1))),
                   where('appointment_date', '<=', formatDateToLocalISO(now))
@@ -119,7 +119,7 @@ export function useAnalyticsSummary() {
           retryWithBackoff(() =>
             withTimeout(
               getDocs(
-                query(
+                firestoreQuery(
                   collection(db, 'appointments'),
                   where('appointment_date', '>=', formatDateToLocalISO(subMonths(now, 2))),
                   where('appointment_date', '<=', formatDateToLocalISO(lastMonthEnd))
@@ -131,7 +131,7 @@ export function useAnalyticsSummary() {
           retryWithBackoff(() =>
             withTimeout(
               getDocs(
-                query(
+                firestoreQuery(
                   collection(db, 'appointments'),
                   where('appointment_date', '>=', formatDateToLocalISO(currentMonthStart)),
                   where('appointment_date', '<=', formatDateToLocalISO(currentMonthEnd)),
@@ -144,7 +144,7 @@ export function useAnalyticsSummary() {
           retryWithBackoff(() =>
             withTimeout(
               getDocs(
-                query(
+                firestoreQuery(
                   collection(db, 'appointments'),
                   where('appointment_date', '>=', formatDateToLocalISO(lastMonthStart)),
                   where('appointment_date', '<=', formatDateToLocalISO(lastMonthEnd)),

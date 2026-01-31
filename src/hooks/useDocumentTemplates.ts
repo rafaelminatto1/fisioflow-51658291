@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -69,7 +69,7 @@ export function useAtestadoTemplates() {
   return useQuery({
     queryKey: ['atestado_templates'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'atestado_templates'),
         orderBy('nome')
       );
@@ -152,7 +152,7 @@ export function useContratoTemplates() {
   return useQuery({
     queryKey: ['contrato_templates'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'contrato_templates'),
         orderBy('nome')
       );

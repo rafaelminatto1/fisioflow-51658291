@@ -28,8 +28,8 @@ import {
   RefreshCw, History, Award, Zap, User
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query, where, orderBy, limit, getDoc } from '@/integrations/firebase/app';
-ort { format, differenceInDays } from 'date-fns';
+import { db, collection, doc, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc } from '@/integrations/firebase/app';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { GamificationProfile, XpTransaction, Achievement } from '@/types/gamification';
 
@@ -111,7 +111,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
     queryKey: ['gamification-transactions', patientId],
     queryFn: async () => {
       const transactionsRef = collection(db, 'xp_transactions');
-      const q = query(
+      const q = firestoreQuery(
         transactionsRef,
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc'),
@@ -137,7 +137,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
     queryKey: ['gamification-achievements', patientId],
     queryFn: async () => {
       const achievementsLogRef = collection(db, 'achievements_log');
-      const q = query(
+      const q = firestoreQuery(
         achievementsLogRef,
         where('patient_id', '==', patientId),
         orderBy('unlocked_at', 'desc'),

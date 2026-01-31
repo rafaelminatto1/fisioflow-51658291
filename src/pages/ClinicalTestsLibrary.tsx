@@ -134,10 +134,10 @@ export default function ClinicalTestsLibrary() {
     };
 
     const filteredTests = tests.filter((test: ClinicalTest) => {
-        const query = searchTerm.toLowerCase();
-        const matchesSearch = test.name.toLowerCase().includes(query) ||
-            (test.tags && test.tags.some((t: string) => t.toLowerCase().includes(query))) ||
-            (test.target_joint && test.target_joint.toLowerCase().includes(query));
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = test.name.toLowerCase().includes(searchLower) ||
+            (test.tags && test.tags.some((t: string) => t.toLowerCase().includes(searchLower))) ||
+            (test.target_joint && test.target_joint.toLowerCase().includes(searchLower));
 
         let matchesCategory = true;
         if (activeFilter !== 'Todos') {

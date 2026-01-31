@@ -38,7 +38,7 @@ import {
   type Repetition,
 } from '@/lib/ai/exercise-coach';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import type { LiveSessionCallbacks } from '@fisioflow/shared-api/firebase/ai/live-config';
+import type { LiveSessionCallbacks } from '@/lib/ai/live-config';
 
 // ============================================================================
 // TYPES

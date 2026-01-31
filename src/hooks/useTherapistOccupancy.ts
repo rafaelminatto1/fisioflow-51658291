@@ -9,7 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, getDocs, doc, getDoc, orderBy } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
 
@@ -79,7 +79,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       const today = format(new Date(), 'yyyy-MM-dd');
 
       // Buscar todos os user_ids com role de fisioterapeuta ou admin no Firestore
-      const rolesQ = query(
+      const rolesQ = firestoreQuery(
         collection(db, 'user_roles'),
         where('role', 'in', ['admin', 'fisioterapeuta'])
       );
@@ -108,7 +108,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
 
       const therapists: TherapistBasic[] = [];
       await Promise.all(therapistUserIds.map(async (userId) => {
-        const profileQ = query(collection(db, 'profiles'), where('user_id', '==', userId));
+        const profileQ = firestoreQuery(collection(db, 'profiles'), where('user_id', '==', userId));
         const profileSnap = await getDocs(profileQ);
         if (!profileSnap.empty) {
           const p = profileSnap.docs[0].data();
@@ -148,7 +148,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
         const periodAppointmentsResults = await Promise.all(
           chunks.map(chunk =>
             getDocs(
-              query(
+              firestoreQuery(
                 collection(db, 'appointments'),
                 where('therapist_id', 'in', chunk),
                 where('appointment_date', '>=', format(start, 'yyyy-MM-dd')),
@@ -165,7 +165,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
         const todayAppointmentsResults = await Promise.all(
           chunks.map(chunk =>
             getDocs(
-              query(
+              firestoreQuery(
                 collection(db, 'appointments'),
                 where('therapist_id', 'in', chunk),
                 where('appointment_date', '==', today)

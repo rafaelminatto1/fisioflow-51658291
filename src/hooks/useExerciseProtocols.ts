@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { protocolsCacheService } from '@/lib/offline/ProtocolsCacheService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -122,7 +122,7 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
   }
 
   try {
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'exercise_protocols'),
       orderBy('condition_name')
     );
@@ -162,7 +162,7 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
 export const useExerciseProtocols = () => {
   const queryClient = useQueryClient();
 
-  const query = useQuery({
+  const protocolsQuery = useQuery({
     queryKey: ['exercise-protocols'],
     queryFn: fetchProtocols,
     staleTime: 1000 * 60 * 60, // 1 hora de frescor (protocolos mudam pouco)
@@ -172,7 +172,7 @@ export const useExerciseProtocols = () => {
   });
 
   // Lógica de Falback Multi-camada na leitura
-  const result = query.data;
+  const result = protocolsQuery.data;
   const previousData = queryClient.getQueryData<ProtocolsQueryResult>(['exercise-protocols']);
 
   let finalProtocols: ExerciseProtocol[] = [];
@@ -240,12 +240,12 @@ export const useExerciseProtocols = () => {
 
   // Retornar 'loading' APENAS se não tivermos NENHUM dado (nem cache, nem anterior)
   // Se tivermos fallback, não mostramos loading para evitar flash ou bloqueio da UI
-  const effectiveLoading = query.isLoading && finalProtocols.length === 0;
+  const effectiveLoading = protocolsQuery.isLoading && finalProtocols.length === 0;
 
   return {
     protocols: finalProtocols,
     loading: effectiveLoading,
-    error: query.error,
+    error: protocolsQuery.error,
     createProtocol: createMutation.mutate,
     updateProtocol: updateMutation.mutate,
     deleteProtocol: deleteMutation.mutate,

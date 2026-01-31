@@ -10,7 +10,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -44,7 +44,7 @@ export function useSalas() {
   return useQuery({
     queryKey: ['salas'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'salas'),
         orderBy('nome')
       );

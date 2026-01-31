@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
@@ -51,7 +51,7 @@ export const usePatientExams = (patientId?: string | null) => {
     }
 
     try {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_exams'),
         where('patient_id', '==', patientId),
         where('organization_id', '==', organizationId),
@@ -64,7 +64,7 @@ export const usePatientExams = (patientId?: string | null) => {
       // Fetch files for each exam
       const examsWithFiles = await Promise.all(
         examsData.map(async (exam) => {
-          const filesQuery = query(
+          const filesQuery = firestoreQuery(
             collection(db, 'patient_exam_files'),
             where('exam_id', '==', exam.id)
           );
@@ -148,7 +148,7 @@ export const usePatientExams = (patientId?: string | null) => {
 
     try {
       // Get files to delete from storage
-      const filesQuery = query(
+      const filesQuery = firestoreQuery(
         collection(db, 'patient_exam_files'),
         where('exam_id', '==', examId)
       );

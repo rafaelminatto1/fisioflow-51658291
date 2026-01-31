@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
@@ -83,7 +83,7 @@ export function useTarefas() {
       const user = auth.currentUser;
       if (!user) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'tarefas'),
         where('organization_id', '==', await getUserOrganizationId()),
         orderBy('order_index', 'asc')
@@ -108,7 +108,7 @@ export function useProjectTarefas(projectId: string | undefined) {
     queryFn: async () => {
       if (!projectId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'tarefas'),
         where('project_id', '==', projectId),
         orderBy('order_index', 'asc')

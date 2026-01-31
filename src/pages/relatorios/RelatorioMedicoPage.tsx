@@ -22,7 +22,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query, where, getDocs, addDoc, updateDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
 nizations';
 import { Download, Info } from 'lucide-react';
 
@@ -1096,7 +1096,7 @@ export default function RelatorioMedicoPage() {
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ['relatorios-medicos'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'relatorios_medicos'),
         firestoreOrderBy('data_emissao', 'desc')
       );
@@ -1109,7 +1109,7 @@ export default function RelatorioMedicoPage() {
   const { data: pacientes = [] } = useQuery({
     queryKey: ['pacientes-select-relatorio'],
     queryFn: async () => {
-      const q = query(collection(db, 'patients'), firestoreOrderBy('full_name'));
+      const q = firestoreQuery(collection(db, 'patients'), firestoreOrderBy('full_name'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; full_name: string }>;
     },
@@ -1154,7 +1154,7 @@ export default function RelatorioMedicoPage() {
     const { profile, org } = await carregarDadosProfissional();
 
     // Buscar evoluções do paciente
-    const qEvolucoes = query(
+    const qEvolucoes = firestoreQuery(
       collection(db, 'evolucoes'),
       where('patient_id', '==', pacienteId),
       firestoreOrderBy('data', 'asc')

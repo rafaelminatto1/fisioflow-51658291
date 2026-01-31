@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, query, orderBy, limit, getDocs, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, orderBy, limit, getDocs, QueryDocumentSnapshot } from '@/integrations/firebase/app';
  } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export function EnhancedLeaderboard({
     queryFn: async () => {
       // Query Firebase Firestore for leaderboard data
       const gamificationRef = collection(db, 'patient_gamification');
-      const q = query(gamificationRef, orderBy('total_points', 'desc'), limit(100));
+      const q = firestoreQuery(gamificationRef, orderBy('total_points', 'desc'), limit(100));
       const querySnapshot = await getDocs(q);
 
       let entries: LeaderboardEntry[] = [];
@@ -93,9 +93,9 @@ export function EnhancedLeaderboard({
   const filteredLeaderboard = useMemo(() => {
     if (!searchQuery) return leaderboard;
 
-    const query = searchQuery.toLowerCase();
+    const searchLower = searchQuery.toLowerCase();
     return leaderboard.filter(entry =>
-      entry.display_name.toLowerCase().includes(query)
+      entry.display_name.toLowerCase().includes(searchLower)
     );
   }, [leaderboard, searchQuery]);
 

@@ -8,7 +8,9 @@
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db, doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from '@/integrations/firebase/app';
-or a user.
+
+/**
+ * Ensure a profile exists in the database for a user.
  * This is a defensive utility to recover from cases where the database trigger might have failed.
  *
  * Migrated from Supabase to Firebase Firestore.

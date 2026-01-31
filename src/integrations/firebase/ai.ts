@@ -4,27 +4,116 @@
  * Main integration file for Firebase AI Logic service.
  */
 
-import { getFirebaseAI } from '@fisioflow/shared-api/firebase';
-import {
-  AIModelType,
-  AIFeatureCategory,
-  AIRequestOptions,
-  AIUsageRecord,
-  MODEL_CONFIGS,
-} from '@fisioflow/shared-api/firebase/ai/config';
-import {
-  AIModelFactory,
-  FirebaseAIModel,
-  type AIResponse,
-  type ChatMessage,
-  type AIFunction,
-  type AIStreamCallback
-} from '@fisioflow/shared-api/firebase/ai/models';
 import { initializeRemoteConfig, REMOTE_CONFIG_KEYS } from '@/lib/firebase/remote-config';
 import { initAppCheck, getAppCheckToken } from '@/lib/firebase/app-check';
 import { AIUsageMonitor as UsageMonitor } from '@/lib/ai/usage-tracker';
 import { ClinicalPromptBuilder } from '@/lib/ai/prompts/clinical-prompts';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+
+// AI Model Types (local definitions since shared-api was removed)
+export enum AIModelType {
+  GEMINI_2_5_FLASH = 'gemini-2.5-flash',
+  GEMINI_2_5_PRO = 'gemini-2.5-pro',
+  GEMINI_1_5_FLASH = 'gemini-1.5-flash',
+  GEMINI_PRO = 'gemini-pro',
+}
+
+export enum AIFeatureCategory {
+  CLINICAL_ANALYSIS = 'clinical_analysis',
+  EXERCISE_SUGGESTION = 'exercise_suggestion',
+  EXERCISE_RECOMMENDATION = 'exercise_recommendation',
+  SOAP_GENERATION = 'soap_generation',
+  MOVEMENT_ANALYSIS = 'movement_analysis',
+  REPORT_GENERATION = 'report_generation',
+  TREATMENT_PLANNING = 'treatment_planning',
+  PATIENT_CHAT = 'patient_chat',
+  PROGRESS_ANALYSIS = 'progress_analysis',
+  QUICK_SUGGESTIONS = 'quick_suggestions',
+}
+
+export interface AIRequestOptions {
+  model?: AIModelType;
+  maxTokens?: number;
+  temperature?: number;
+  stream?: boolean;
+}
+
+export interface AIUsageRecord {
+  id: string;
+  userId: string;
+  feature: AIFeatureCategory;
+  model: AIModelType;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  estimatedCost: number;
+  duration: number;
+  timestamp: Date;
+  success?: boolean;
+}
+
+export const MODEL_CONFIGS = {
+  [AIModelType.GEMINI_2_5_FLASH]: {
+    name: 'Gemini 2.5 Flash',
+    maxTokens: 8192,
+    defaultMaxTokens: 2048,
+  },
+  [AIModelType.GEMINI_2_5_PRO]: {
+    name: 'Gemini 2.5 Pro',
+    maxTokens: 16384,
+    defaultMaxTokens: 4096,
+  },
+  [AIModelType.GEMINI_1_5_FLASH]: {
+    name: 'Gemini 1.5 Flash',
+    maxTokens: 8192,
+    defaultMaxTokens: 2048,
+  },
+  [AIModelType.GEMINI_PRO]: {
+    name: 'Gemini Pro',
+    maxTokens: 30720,
+    defaultMaxTokens: 4096,
+  },
+};
+
+// AI Model Factory (local stub)
+class AIModelFactory {
+  static getModel(modelType: AIModelType, ai: any): any {
+    // Stub implementation - returns a mock model
+    return {
+      modelType,
+      generate: async (prompt: string, options?: AIRequestOptions) => {
+        logger.warn(`AI Model ${modelType} called but not implemented`, { prompt: prompt.substring(0, 100) }, 'ai-model-factory');
+        return {
+          content: '',
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          estimatedCost: 0,
+        };
+      },
+    };
+  }
+}
+
+// Stub for getFirebaseAI
+function getFirebaseAI() {
+  return {
+    model: 'gemini-2.5-flash',
+    apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+  };
+}
+
+// Stub for FirebaseAIModel
+interface FirebaseAIModel {
+  modelType: AIModelType;
+  generate(prompt: string, options?: AIRequestOptions): Promise<{
+    content: string;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    estimatedCost: number;
+  }>;
+}
 
 // Temporary stub for AIRemoteConfig compatibility
 const AIRemoteConfig = {

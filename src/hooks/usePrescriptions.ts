@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, setDoc } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, setDoc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { addDays, format } from 'date-fns';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
@@ -75,13 +75,13 @@ export const usePrescriptions = (patientId?: string) => {
   const { data: prescriptions = [], isLoading, error } = useQuery({
     queryKey: ['prescriptions', patientId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'exercise_prescriptions'),
         orderBy('created_at', 'desc')
       );
 
       if (patientId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'exercise_prescriptions'),
           where('patient_id', '==', patientId),
           orderBy('created_at', 'desc')
@@ -152,7 +152,7 @@ export const usePrescriptions = (patientId?: string) => {
       if (!firebaseUser) throw new Error('Usuário não autenticado');
 
       // Fetch profile to get therapist_id and organization_id
-      const profileQ = query(
+      const profileQ = firestoreQuery(
         collection(db, 'profiles'),
         where('user_id', '==', firebaseUser.uid),
         limit(1)
@@ -254,7 +254,7 @@ export const usePublicPrescription = (qrCode: string) => {
   const { data: prescription, isLoading, error } = useQuery({
     queryKey: ['public-prescription', qrCode],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'exercise_prescriptions'),
         where('qr_code', '==', qrCode),
         limit(1)

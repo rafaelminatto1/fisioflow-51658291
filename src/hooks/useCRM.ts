@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -93,13 +93,13 @@ export function useCRMTarefas(leadId?: string) {
   return useQuery({
     queryKey: ['crm-tarefas', leadId],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'crm_tarefas'),
         orderBy('data_vencimento', 'asc')
       );
 
       if (leadId) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'crm_tarefas'),
           where('lead_id', '==', leadId),
           orderBy('data_vencimento', 'asc')
@@ -117,7 +117,7 @@ export function useTarefasPendentes() {
     queryKey: ['crm-tarefas-pendentes'],
     queryFn: async () => {
       // Firestore IN query limited to 10
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'crm_tarefas'),
         where('status', 'in', ['pendente', 'em_andamento']),
         orderBy('data_vencimento', 'asc'),
@@ -226,7 +226,7 @@ export function useCRMCampanhas() {
   return useQuery({
     queryKey: ['crm-campanhas'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'crm_campanhas'),
         orderBy('created_at', 'desc')
       );
@@ -291,7 +291,7 @@ export function useCRMAutomacoes() {
   return useQuery({
     queryKey: ['crm-automacoes'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'crm_automacoes'),
         orderBy('created_at', 'desc')
       );
@@ -356,7 +356,7 @@ export function useNPSPesquisas() {
   return useQuery({
     queryKey: ['crm-nps'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'crm_pesquisas_nps'),
         orderBy('respondido_em', 'desc')
       );
@@ -399,7 +399,7 @@ export function useNPSMetrics() {
   return useQuery({
     queryKey: ['crm-nps-metrics'],
     queryFn: async () => {
-      const q = query(collection(db, 'crm_pesquisas_nps'));
+      const q = firestoreQuery(collection(db, 'crm_pesquisas_nps'));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(d => d.data()) as { nota: number; categoria: string }[];
 
@@ -441,7 +441,7 @@ export function useCRMAnalytics() {
     queryKey: ['crm-analytics'],
     queryFn: async () => {
       // Get all leads
-      const q = query(collection(db, 'leads'));
+      const q = firestoreQuery(collection(db, 'leads'));
       const snapshot = await getDocs(q);
       const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Array<{ id: string; origem?: string; estagio?: string }>[];
 

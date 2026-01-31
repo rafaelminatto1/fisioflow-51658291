@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "rngesturehandler_codegen_autolinked_build",
+		"source" : "/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-native-gesture-handler@2.28.0_react-native@0.81.5_@babel+core@7.28.5_@react-native-comm_rn6g22xhbx2gs6joauhf5ad4nu/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni"
+	}
+}

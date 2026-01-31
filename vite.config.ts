@@ -373,6 +373,12 @@ export default defineConfig(({ mode }) => {
         // React libraries que dependem do scheduler
         'react-router-dom',
         '@tanstack/react-query',
+        // Firebase - CRITICAL: garantir single instance
+        'firebase/app',
+        'firebase/auth',
+        'firebase/firestore',
+        'firebase/functions',
+        'firebase/storage',
         // Bibliotecas UI que usam React hooks internamente
         '@radix-ui/react-dialog',
         '@radix-ui/react-dropdown-menu',

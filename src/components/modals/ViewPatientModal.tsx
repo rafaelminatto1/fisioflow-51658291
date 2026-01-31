@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
 import { db, doc, getDoc } from '@/integrations/firebase/app';
-mport {
+import {
   User,
   Mail,
   Phone,

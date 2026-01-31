@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { collection, query, where, onSnapshot, Query, limit } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, onSnapshot, Query, limit } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -64,7 +64,7 @@ export function useRealtimeSubscription({
                 // Clean quotes if present
                 const effectiveValue = value.replace(/^['"]|['"]$/g, '');
                 if (effectiveValue) {
-                    q = query(colRef, where(field, '==', effectiveValue));
+                    q = firestoreQuery(colRef, where(field, '==', effectiveValue));
                 }
             } else if (effectiveFilter === 'organization_id=eq.undefined') {
                 // Skip if organization_id is undefined string

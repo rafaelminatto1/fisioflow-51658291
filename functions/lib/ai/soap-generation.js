@@ -46,6 +46,8 @@ exports.soapGeneration = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
+const init_1 = require("../init");
+const idempotency_1 = require("../lib/idempotency");
 const firestore = admin.firestore();
 // ============================================================================
 // RATE LIMITING CONFIG
@@ -58,11 +60,12 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.soapGeneration = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
     maxInstances: 10,
+    timeoutSeconds: 300, // 5 minutes for AI generation
 }, async (request) => {
     const startTime = Date.now();
     // Authentication check
@@ -150,8 +153,15 @@ exports.soapGeneration = (0, https_1.onCall)({
             transcription = transcriptionResult.transcription;
             consultationText = transcription;
         }
-        // Generate SOAP note using Gemini Pro
-        const aiResult = await generateSOAPNote(consultationText, patientContext);
+        // Generate SOAP note using Gemini Pro (with idempotency cache)
+        const cacheParams = {
+            patientId: data.patientId,
+            sessionNumber: data.sessionNumber,
+            sessionType: data.sessionType,
+            consultationText: consultationText.substring(0, 500), // First 500 chars for cache key
+        };
+        const aiResult = await (0, idempotency_1.withIdempotency)('SOAP_GENERATION', userId, cacheParams, () => generateSOAPNote(consultationText, patientContext), { cacheTtl: 5 * 60 * 1000 } // 5 minute cache
+        );
         if (!aiResult.success) {
             throw new https_1.HttpsError('internal', aiResult.error || 'SOAP generation failed');
         }

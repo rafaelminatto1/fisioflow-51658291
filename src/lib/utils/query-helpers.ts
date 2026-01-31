@@ -9,8 +9,8 @@
  * @module lib/utils/query-helpers
  */
 
-import { db, query, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
-rs/logger';
+import { db, query as firestoreQuery, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ==============================================================================
 // TIMEOUT & RETRY HELPERS
@@ -113,33 +113,33 @@ export function applyFilters<T>(
 
   // Organization filter
   if (filters.organizationId) {
-    result = query(result, where('organization_id', '==', filters.organizationId));
+    result = firestoreQuery(result, where('organization_id', '==', filters.organizationId));
   }
 
   // Status filters
   if (filters.status && typeof filters.status === 'string') {
-    result = query(result, where('status', '==', filters.status));
+    result = firestoreQuery(result, where('status', '==', filters.status));
   } else if (filters.inStatus) {
     // Firestore doesn't support 'in' with multiple values directly in the same way
     // Use array-contains-any for array fields or multiple queries
     if (filters.inStatus.length === 1) {
-      result = query(result, where('status', '==', filters.inStatus[0]));
+      result = firestoreQuery(result, where('status', '==', filters.inStatus[0]));
     }
     // For multiple values, you'd need to run multiple queries and merge results
   }
 
   // Ordering
   if (filters.orderBy) {
-    result = query(result, orderBy(filters.orderBy, filters.ascending ? 'asc' : 'desc'));
+    result = firestoreQuery(result, orderBy(filters.orderBy, filters.ascending ? 'asc' : 'desc'));
   }
 
   // Pagination
   if (filters.limit) {
-    result = query(result, limit(filters.limit));
+    result = firestoreQuery(result, limit(filters.limit));
   }
 
   if (filters.startAfter) {
-    result = query(result, startAfter(filters.startAfter));
+    result = firestoreQuery(result, startAfter(filters.startAfter));
   }
 
   return result;
@@ -308,28 +308,28 @@ export function createPaginatedQuery<T>(
     filters?: Array<{ field: string; op: '==' | '!=' | '>' | '>=' | '<' | '<=' | 'array-contains' | 'in'; value: unknown }>;
   }
 ): Query<T> {
-  let q = query(collectionRef);
+  let q = firestoreQuery(collectionRef);
 
   // Apply filters
   if (options.filters) {
     for (const filter of options.filters) {
-      q = query(q, where(filter.field, filter.op, filter.value));
+      q = firestoreQuery(q, where(filter.field, filter.op, filter.value));
     }
   }
 
   // Apply ordering
   if (options.orderBy) {
-    q = query(q, orderBy(options.orderBy, options.orderDirection || 'asc'));
+    q = firestoreQuery(q, orderBy(options.orderBy, options.orderDirection || 'asc'));
   }
 
   // Apply limit
   if (options.pageSize) {
-    q = query(q, limit(options.pageSize));
+    q = firestoreQuery(q, limit(options.pageSize));
   }
 
   // Apply cursor
   if (options.startAfter) {
-    q = query(q, startAfter(options.startAfter));
+    q = firestoreQuery(q, startAfter(options.startAfter));
   }
 
   return q;

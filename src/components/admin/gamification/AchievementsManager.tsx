@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, deleteDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -55,7 +55,7 @@ export default function AchievementsManager() {
         queryKey: ['admin-achievements'],
         queryFn: async () => {
             const achievementsRef = collection(db, 'achievements');
-            const q = query(achievementsRef, orderBy('xp_reward', 'asc'));
+            const q = firestoreQuery(achievementsRef, orderBy('xp_reward', 'asc'));
             const querySnapshot = await getDocs(q);
 
             const achievements: Achievement[] = [];

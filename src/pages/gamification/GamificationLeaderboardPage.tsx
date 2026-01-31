@@ -11,7 +11,7 @@ import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db, collection, query, where, getDocs, limit, orderBy } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, getDocs, limit, orderBy } from '@/integrations/firebase/app';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -66,11 +66,11 @@ export default function GamificationLeaderboardPage() {
       let q;
 
       if (period === 'weekly') {
-        q = query(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
+        q = firestoreQuery(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
       } else if (period === 'monthly') {
-        q = query(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
+        q = firestoreQuery(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
       } else {
-        q = query(gamificationRef, orderBy('total_points', 'desc'), limit(50));
+        q = firestoreQuery(gamificationRef, orderBy('total_points', 'desc'), limit(50));
       }
 
       const snapshot = await getDocs(q);
@@ -87,7 +87,7 @@ export default function GamificationLeaderboardPage() {
       }
 
       for (const chunk of chunks) {
-        const qPatients = query(collection(db, 'patients'), where('__name__', 'in', chunk));
+        const qPatients = firestoreQuery(collection(db, 'patients'), where('__name__', 'in', chunk));
         const snapshotPatients = await getDocs(qPatients);
         snapshotPatients.docs.forEach(d => {
           patientMap.set(d.id, d.data().full_name);

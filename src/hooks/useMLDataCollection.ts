@@ -14,7 +14,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, setDoc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, setDoc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -103,7 +103,7 @@ export async function collectPatientTrainingData(patientId: string) {
   const patient = patientSnap.data();
 
   // Get session metrics
-  const sessionsQ = query(
+  const sessionsQ = firestoreQuery(
     collection(db, 'patient_session_metrics'),
     where('patient_id', '==', patientId),
     orderBy('session_date', 'asc')
@@ -112,7 +112,7 @@ export async function collectPatientTrainingData(patientId: string) {
   const sessions = sessionsSnap.docs.map(d => d.data());
 
   // Get appointments for attendance calculation
-  const appointmentsQ = query(
+  const appointmentsQ = firestoreQuery(
     collection(db, 'appointments'),
     where('patient_id', '==', patientId)
   );
@@ -120,7 +120,7 @@ export async function collectPatientTrainingData(patientId: string) {
   const appointments = appointmentsSnap.docs.map(d => d.data());
 
   // Get primary pathology
-  const pathologyQ = query(
+  const pathologyQ = firestoreQuery(
     collection(db, 'patient_pathologies'),
     where('patient_id', '==', patientId),
     where('status', '==', 'em_tratamento'),
@@ -196,7 +196,7 @@ export function useCollectPatientMLData() {
       const trainingData = await collectPatientTrainingData(patientId);
 
       // Check if record exists
-      const q = query(collection(db, 'ml_training_data'), where('patient_hash', '==', trainingData.patient_hash));
+      const q = firestoreQuery(collection(db, 'ml_training_data'), where('patient_hash', '==', trainingData.patient_hash));
       const querySnap = await getDocs(q);
 
       if (!querySnap.empty) {
@@ -232,7 +232,7 @@ export function useBatchCollectMLData() {
       const limitNum = options?.limit || 50;
 
       // Get patients with sufficient data
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patients'),
         orderBy('created_at', 'desc'),
         limit(limitNum)
@@ -248,7 +248,7 @@ export function useBatchCollectMLData() {
           const trainingData = await collectPatientTrainingData(patient.id);
 
           // Upsert logic
-          const existQ = query(collection(db, 'ml_training_data'), where('patient_hash', '==', trainingData.patient_hash));
+          const existQ = firestoreQuery(collection(db, 'ml_training_data'), where('patient_hash', '==', trainingData.patient_hash));
           const existSnap = await getDocs(existQ);
 
           if (!existSnap.empty) {
@@ -285,7 +285,7 @@ export function useMLTrainingDataStats() {
   return useQuery({
     queryKey: ['ml-training-data-stats'],
     queryFn: async () => {
-      const q = query(collection(db, 'ml_training_data'));
+      const q = firestoreQuery(collection(db, 'ml_training_data'));
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MLTrainingData[];
 
@@ -390,7 +390,7 @@ export function useGeneratePatientPredictions() {
       ];
 
       // Deactivate old predictions
-      const oldPredsQ = query(
+      const oldPredsQ = firestoreQuery(
         collection(db, 'patient_predictions'),
         where('patient_id', '==', patientId),
         where('is_active', '==', true)

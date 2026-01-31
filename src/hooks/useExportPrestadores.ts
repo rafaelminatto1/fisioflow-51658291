@@ -6,7 +6,7 @@
  */
 
 import { useMutation } from '@tanstack/react-query';
-import { collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 
@@ -16,7 +16,7 @@ export function useExportPrestadores() {
 
   return useMutation({
     mutationFn: async (eventoId: string) => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'prestadores'),
         where('evento_id', '==', eventoId),
         orderBy('nome', 'asc')

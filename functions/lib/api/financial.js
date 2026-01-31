@@ -8,7 +8,7 @@ const logger_1 = require("../lib/logger");
 /**
  * Lista transações financeiras
  */
-exports.listTransactions = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.listTransactions = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -33,7 +33,7 @@ exports.listTransactions = (0, https_1.onCall)({ cors: true }, async (request) =
 /**
  * Cria uma nova transação
  */
-exports.createTransaction = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createTransaction = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -70,7 +70,7 @@ exports.createTransaction = (0, https_1.onCall)({ cors: true }, async (request) 
 /**
  * Atualiza uma transação
  */
-exports.updateTransaction = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updateTransaction = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -128,7 +128,7 @@ exports.updateTransaction = (0, https_1.onCall)({ cors: true }, async (request) 
 /**
  * Remove uma transação
  */
-exports.deleteTransaction = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.deleteTransaction = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -156,7 +156,7 @@ exports.deleteTransaction = (0, https_1.onCall)({ cors: true }, async (request) 
 /**
  * Busca transação por ID do agendamento (metadados)
  */
-exports.findTransactionByAppointmentId = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.findTransactionByAppointmentId = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -187,7 +187,7 @@ exports.findTransactionByAppointmentId = (0, https_1.onCall)({ cors: true }, asy
 /**
  * Gera relatório financeiro de evento
  */
-exports.getEventReport = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getEventReport = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

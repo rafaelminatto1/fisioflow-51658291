@@ -9,11 +9,12 @@ const https_1 = require("firebase-functions/v2/https");
 const auth_1 = require("firebase-admin/auth");
 const app_1 = require("firebase-admin/app");
 const app_2 = require("firebase-admin/app");
+const init_1 = require("../init");
 // Initialize Firebase Admin
 if (!(0, app_2.getApps)().length) {
     (0, app_1.initializeApp)();
 }
-exports.createAdminUser = (0, https_1.onCall)({ cors: true }, async () => {
+exports.createAdminUser = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async () => {
     const auth = (0, auth_1.getAuth)();
     try {
         // Verificar se usuário já existe

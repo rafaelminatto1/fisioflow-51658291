@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -82,7 +82,7 @@ export const useExerciseTemplates = (category?: string) => {
   const { data: templates = [], isLoading, error } = useQuery({
     queryKey: ['exercise-templates', category],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'exercise_templates'),
         orderBy('condition_name')
       );
@@ -176,7 +176,7 @@ export const useTemplateItems = (templateId?: string) => {
     queryFn: async () => {
       if (!templateId) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'exercise_template_items'),
         where('template_id', '==', templateId),
         orderBy('order_index')

@@ -38,7 +38,7 @@ const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 const logger_1 = require("../lib/logger");
-exports.getPatientRecords = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getPatientRecords = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -81,7 +81,7 @@ exports.getPatientRecords = (0, https_1.onCall)({ cors: true }, async (request) 
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.createMedicalRecord = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createMedicalRecord = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -132,7 +132,7 @@ exports.createMedicalRecord = (0, https_1.onCall)({ cors: true }, async (request
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.updateMedicalRecord = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updateMedicalRecord = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -181,7 +181,7 @@ exports.updateMedicalRecord = (0, https_1.onCall)({ cors: true }, async (request
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.listTreatmentSessions = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.listTreatmentSessions = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -215,7 +215,7 @@ exports.listTreatmentSessions = (0, https_1.onCall)({ cors: true }, async (reque
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.createTreatmentSession = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createTreatmentSession = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -282,7 +282,7 @@ exports.createTreatmentSession = (0, https_1.onCall)({ cors: true }, async (requ
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.updateTreatmentSession = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.updateTreatmentSession = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -340,7 +340,7 @@ exports.updateTreatmentSession = (0, https_1.onCall)({ cors: true }, async (requ
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getPainRecords = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getPainRecords = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -367,7 +367,7 @@ exports.getPainRecords = (0, https_1.onCall)({ cors: true }, async (request) => 
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.savePainRecord = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.savePainRecord = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

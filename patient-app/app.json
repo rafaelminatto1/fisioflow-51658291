@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fisioflow.patient",
+      "bundleIdentifier": "com.rafaelminatto.fisioflow",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Permitir acesso a camera para fotos de perfil e exercicios",
@@ -57,7 +57,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
       }
     },
     "owner": "fisioflow"

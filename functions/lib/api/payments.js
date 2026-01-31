@@ -38,7 +38,7 @@ const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 const logger_1 = require("../lib/logger");
-exports.listPayments = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.listPayments = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -73,7 +73,7 @@ exports.listPayments = (0, https_1.onCall)({ cors: true }, async (request) => {
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.getPatientFinancialSummary = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.getPatientFinancialSummary = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -132,7 +132,7 @@ exports.getPatientFinancialSummary = (0, https_1.onCall)({ cors: true }, async (
         throw new https_1.HttpsError('internal', errorMessage);
     }
 });
-exports.createPayment = (0, https_1.onCall)({ cors: true }, async (request) => {
+exports.createPayment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }

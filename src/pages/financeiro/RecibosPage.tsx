@@ -17,7 +17,7 @@ import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query, orderBy, getDocs, doc, getDoc, limit } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, orderBy, getDocs, doc, getDoc, limit } from '@/integrations/firebase/app';
 nizations';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
@@ -69,7 +69,7 @@ export default function RecibosPage() {
   const { data: pacientes = [] } = useQuery({
     queryKey: ['pacientes-select'],
     queryFn: async () => {
-      const q = query(collection(db, 'patients'), orderBy('full_name'));
+      const q = firestoreQuery(collection(db, 'patients'), orderBy('full_name'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as PatientSelect[];
     },
@@ -84,7 +84,7 @@ export default function RecibosPage() {
     e.preventDefault();
 
     // Buscar último número de recibo
-    const q = query(collection(db, 'recibos'), orderBy('numero_recibo', 'desc'), limit(1));
+    const q = firestoreQuery(collection(db, 'recibos'), orderBy('numero_recibo', 'desc'), limit(1));
     const snapshot = await getDocs(q);
     const ultimoRecibo = snapshot.empty ? null : snapshot.docs[0].data();
 

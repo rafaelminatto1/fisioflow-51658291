@@ -14,7 +14,7 @@
  */
 
 import { useState } from 'react';
-import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/integrations/firebase/app';
 
@@ -826,7 +826,7 @@ export function useBatchAnalyticsExport() {
         const patient = { id: patientSnap.id, ...patientSnap.data() };
 
         // Fetch session count
-        const appointmentsQuery = query(
+        const appointmentsQuery = firestoreQuery(
           collection(db, 'appointments'),
           where('patient_id', '==', patientId),
           where('status', 'in', ['atendido', 'confirmado'])
@@ -835,7 +835,7 @@ export function useBatchAnalyticsExport() {
         const sessionCount = appointmentsSnap.size;
 
         // Fetch risk score
-        const riskScoreQuery = query(
+        const riskScoreQuery = firestoreQuery(
           collection(db, 'patient_risk_scores'),
           where('patient_id', '==', patientId),
           orderBy('calculated_at', 'desc'),

@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, onSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 
@@ -27,7 +27,7 @@ export const useIncompletePatients = () => {
   useEffect(() => {
     setIsLoading(true);
 
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'patients'),
       where('incomplete_registration', '==', true),
       orderBy('created_at', 'desc')

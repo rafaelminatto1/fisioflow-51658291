@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
-, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 
@@ -16,14 +16,14 @@ export function PatientAnalytics() {
     queryFn: async () => {
 
       // Usar status dos pacientes ao invés de gender
-      const activeQuery = query(
+      const activeQuery = firestoreQuery(
         collection(db, "patients"),
         where("status", "==", "ativo")
       );
       const activeSnapshot = await getDocs(activeQuery);
       const activeCount = activeSnapshot.docs.length;
 
-      const inactiveQuery = query(
+      const inactiveQuery = firestoreQuery(
         collection(db, "patients"),
         where("status", "==", "inativo")
       );
@@ -40,7 +40,7 @@ export function PatientAnalytics() {
   const { data: ageData } = useQuery({
     queryKey: ["patient-age-analytics"],
     queryFn: async () => {
-      const patientsQuery = query(
+      const patientsQuery = firestoreQuery(
         collection(db, "patients"),
         orderBy("full_name")
       );

@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
@@ -43,7 +43,7 @@ export function useProjects() {
     return useQuery({
         queryKey: ['projects'],
         queryFn: async () => {
-            const q = query(collection(db, 'projects'), orderBy('created_at', 'desc'));
+            const q = firestoreQuery(collection(db, 'projects'), orderBy('created_at', 'desc'));
             const snapshot = await getDocs(q);
             const data = snapshot.docs.map(convertDoc);
 
@@ -111,7 +111,7 @@ export function useCreateProject() {
             // We should use `useAuth` hook in components but here we are in a hook, 
             // relying on auth.currentUser is fine if strictly client-side.
             // Better to fetch profile by user_id
-            const q = query(collection(db, 'profiles'), where('user_id', '==', firebaseUser.uid));
+            const q = firestoreQuery(collection(db, 'profiles'), where('user_id', '==', firebaseUser.uid));
             const profileSnap = await getDocs(q);
             const profile = !profileSnap.empty ? profileSnap.docs[0].data() : null;
 

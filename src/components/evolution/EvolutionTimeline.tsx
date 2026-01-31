@@ -847,10 +847,10 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
     // Filtro por busca
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+      const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter(e =>
-        e.title.toLowerCase().includes(query) ||
-        (e.description && e.description.toLowerCase().includes(query))
+        e.title.toLowerCase().includes(searchLower) ||
+        (e.description && e.description.toLowerCase().includes(searchLower))
       );
     }
 

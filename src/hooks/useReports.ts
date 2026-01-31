@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, getCountFromServer, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
 import { db } from '@/integrations/firebase/app';
@@ -98,7 +98,7 @@ const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: 
 // Função auxiliar para calcular NPS
 async function calculateNPS(): Promise<number> {
   try {
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'satisfaction_surveys')
     );
     const snapshot = await getDocs(q);
@@ -124,14 +124,14 @@ async function calculateNPS(): Promise<number> {
 async function calculateExerciseAdherence(patientId?: string): Promise<number> {
   try {
     // Adesão simplificada baseada em sessões completadas
-    let q = query(
+    let q = firestoreQuery(
       collection(db, 'sessions'),
       where('status', '==', 'completed'),
       limit(100)
     );
 
     if (patientId) {
-      q = query(
+      q = firestoreQuery(
         collection(db, 'sessions'),
         where('status', '==', 'completed'),
         where('patient_id', '==', patientId),
@@ -161,7 +161,7 @@ export function useDashboardKPIs(period: string = 'month') {
       const { startDate, endDate } = getPeriodDates(period);
 
       // Pacientes ativos
-      const activePatientsQ = query(
+      const activePatientsQ = firestoreQuery(
         collection(db, 'patients'),
         where('is_active', '==', true)
       );
@@ -169,7 +169,7 @@ export function useDashboardKPIs(period: string = 'month') {
       const activePatients = activePatientsSnap.data().count;
 
       // Receita do período
-      const paymentsQ = query(
+      const paymentsQ = firestoreQuery(
         collection(db, 'payments'),
         where('status', '==', 'paid'),
         where('paid_at', '>=', startDate),
@@ -181,7 +181,7 @@ export function useDashboardKPIs(period: string = 'month') {
       const monthlyRevenue = payments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
 
       // Agendamentos do período
-      const appointmentsQ = query(
+      const appointmentsQ = firestoreQuery(
         collection(db, 'appointments'),
         where('start_time', '>=', startDate),
         where('start_time', '<=', endDate)
@@ -200,7 +200,7 @@ export function useDashboardKPIs(period: string = 'month') {
 
       // Agendamentos de hoje
       const today = new Date().toISOString().split('T')[0];
-      const todayQ = query(
+      const todayQ = firestoreQuery(
         collection(db, 'appointments'),
         where('start_time', '>=', `${today}T00:00:00`),
         where('start_time', '<=', `${today}T23:59:59`)
@@ -232,7 +232,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
     queryKey: ['reports', 'financial', startDate, endDate],
     queryFn: async () => {
       // Receitas
-      const paymentsQ = query(
+      const paymentsQ = firestoreQuery(
         collection(db, 'payments'),
         where('status', '==', 'completed'),
         where('paid_at', '>=', startDate),
@@ -251,7 +251,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
       });
 
       // Por terapeuta
-      const sessionsQ = query(
+      const sessionsQ = firestoreQuery(
         collection(db, 'sessions'),
         where('status', '==', 'completed'),
         where('started_at', '>=', startDate),
@@ -286,7 +286,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
         .sort((a, b) => b.revenue - a.revenue);
 
       // Taxa de inadimplência
-      const pendingQ = query(
+      const pendingQ = firestoreQuery(
         collection(db, 'payments'),
         where('status', '==', 'pending'),
         where('created_at', '>=', startDate),
@@ -322,7 +322,7 @@ export function usePatientEvolution(patientId: string | undefined) {
       if (!patientId) return null;
 
       // Dados do paciente
-      const patientQ = query(
+      const patientQ = firestoreQuery(
         collection(db, 'patients'),
         where('id', '==', patientId),
         limit(1)
@@ -333,7 +333,7 @@ export function usePatientEvolution(patientId: string | undefined) {
       const patient = convertDoc(patientSnap.docs[0]);
 
       // Sessões
-      const sessionsQ = query(
+      const sessionsQ = firestoreQuery(
         collection(db, 'sessions'),
         where('patient_id', '==', patientId),
         where('status', '==', 'completed'),
@@ -402,7 +402,7 @@ export function useOccupancyReport(startDate: string, endDate: string) {
   return useQuery({
     queryKey: ['reports', 'occupancy', startDate, endDate],
     queryFn: async () => {
-      const appointmentsQ = query(
+      const appointmentsQ = firestoreQuery(
         collection(db, 'appointments'),
         where('start_time', '>=', startDate),
         where('start_time', '<=', endDate + 'T23:59:59')
@@ -492,7 +492,7 @@ async function getRevenueChart(
   startDate: string,
   endDate: string
 ): Promise<{ date: string; revenue: number }[]> {
-  const q = query(
+  const q = firestoreQuery(
     collection(db, 'payments'),
     where('status', '==', 'completed'),
     where('paid_at', '>=', startDate),

@@ -32,7 +32,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, doc, getDoc, setDoc, query, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, doc, getDoc, setDoc, query as firestoreQuery, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 nizations';
 
 interface NFSe {
@@ -477,7 +477,7 @@ export default function NFSePage() {
   const { data: nfses = [], isLoading } = useQuery({
     queryKey: ['nfse-list'],
     queryFn: async () => {
-      const q = query(collection(db, 'nfse'), orderBy('data_emissao', 'desc'));
+      const q = firestoreQuery(collection(db, 'nfse'), orderBy('data_emissao', 'desc'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as NFSe[];
     },
@@ -508,7 +508,7 @@ export default function NFSePage() {
       const valorISS = (valorNumerico * aliquota) / 100;
 
       // Gerar número
-      const q = query(collection(db, 'nfse'), orderBy('numero', 'desc'), limit(1));
+      const q = firestoreQuery(collection(db, 'nfse'), orderBy('numero', 'desc'), limit(1));
       const snapshot = await getDocs(q);
       const lastNFSe = snapshot.empty ? null : snapshot.docs[0].data();
       const novoNumero = (Number(lastNFSe?.numero) || 0) + 1;

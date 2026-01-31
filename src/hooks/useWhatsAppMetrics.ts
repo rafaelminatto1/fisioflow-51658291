@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, getDocs, orderBy, limit, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
 import { WhatsAppService } from '@/lib/services/WhatsAppService';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
@@ -66,7 +66,7 @@ export function useWhatsAppMetricsSummary(days: number = 30) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'whatsapp_metrics'),
         where('created_at', '>=', startDate.toISOString()),
         where('message_type', '==', 'outbound')
@@ -114,7 +114,7 @@ export function useWhatsAppMessages(limitCount: number = 50) {
   return useQuery({
     queryKey: ['whatsapp', 'messages', limitCount],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'whatsapp_metrics'),
         orderBy('created_at', 'desc'),
         limit(limitCount)
@@ -139,7 +139,7 @@ export function useWhatsAppTemplates() {
   return useQuery({
     queryKey: ['whatsapp', 'templates'],
     queryFn: async () => {
-      const q = query(collection(db, 'whatsapp_templates'), orderBy('name'));
+      const q = firestoreQuery(collection(db, 'whatsapp_templates'), orderBy('name'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WhatsAppTemplate[];
     },
@@ -152,7 +152,7 @@ export function useWhatsAppWebhookLogs(limitCount: number = 100) {
   return useQuery({
     queryKey: ['whatsapp', 'webhook-logs', limitCount],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'whatsapp_webhook_logs'),
         orderBy('created_at', 'desc'),
         limit(limitCount)
@@ -216,7 +216,7 @@ export function useWhatsAppDailyStats(days: number = 7) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'whatsapp_metrics'),
         where('created_at', '>=', startDate.toISOString()),
         where('message_type', '==', 'outbound')

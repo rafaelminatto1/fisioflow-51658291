@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { collection, query, where, getDocs, orderBy, addDoc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, orderBy, addDoc } from '@/integrations/firebase/app';
 import { toast } from "sonner";
 import { db, getFirebaseAuth } from "@/integrations/firebase/app";
 
@@ -25,7 +25,7 @@ export const useStandardizedTests = (patientId: string) => {
   return useQuery({
     queryKey: ["standardized-tests", patientId],
     queryFn: async (): Promise<StandardizedTestResult[]> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, "standardized_test_results"),
         where("patient_id", "==", patientId),
         orderBy("created_at", "desc")

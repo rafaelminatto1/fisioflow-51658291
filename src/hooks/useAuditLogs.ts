@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -54,14 +54,14 @@ export function useAuditLogs(filters?: AuditFilters) {
   const { data: logs = [], isLoading, refetch } = useQuery<AuditLog[]>({
     queryKey: ['audit-logs', filters],
     queryFn: async () => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'audit_log'),
         orderBy('timestamp', 'desc'),
         limit(500)
       );
 
       if (filters?.action) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'audit_log'),
           where('action', '==', filters.action),
           orderBy('timestamp', 'desc'),
@@ -106,7 +106,7 @@ export function useAuditLogs(filters?: AuditFilters) {
         // Firestore doesn't support 'in' with many values efficiently
         // For now, we'll fetch in batches or filter client-side
         for (const userId of userIds) {
-          const profileQ = query(
+          const profileQ = firestoreQuery(
             collection(db, 'profiles'),
             where('user_id', '==', userId),
             limit(1)
@@ -247,7 +247,7 @@ export function useBackups() {
   const { data: backups = [], isLoading } = useQuery({
     queryKey: ['backups'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'backup_logs'),
         orderBy('created_at', 'desc'),
         limit(50)

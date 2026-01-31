@@ -15,7 +15,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
@@ -94,7 +94,7 @@ export function usePatientLifecycleEvents(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.lifecycle(patientId),
     queryFn: async (): Promise<PatientLifecycleEvent[]> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_lifecycle_events'),
         where('patient_id', '==', patientId),
         orderBy('event_date', 'asc')
@@ -205,14 +205,14 @@ export function usePatientOutcomeMeasures(
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.outcomes(patientId), measureType, limitValue],
     queryFn: async (): Promise<PatientOutcomeMeasure[]> => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'patient_outcome_measures'),
         where('patient_id', '==', patientId),
         orderBy('measurement_date', 'asc')
       );
 
       if (measureType) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'patient_outcome_measures'),
           where('patient_id', '==', patientId),
           where('measure_type', '==', measureType),
@@ -340,7 +340,7 @@ export function usePatientSessionMetrics(patientId: string, limitValue?: number)
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.sessions(patientId), limitValue],
     queryFn: async (): Promise<PatientSessionMetrics[]> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_session_metrics'),
         where('patient_id', '==', patientId),
         orderBy('session_date', 'asc')
@@ -396,7 +396,7 @@ export function usePatientPredictions(patientId: string, predictionType?: Predic
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.predictions(patientId), predictionType],
     queryFn: async (): Promise<PatientPrediction[]> => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'patient_predictions'),
         where('patient_id', '==', patientId),
         where('is_active', '==', true),
@@ -404,7 +404,7 @@ export function usePatientPredictions(patientId: string, predictionType?: Predic
       );
 
       if (predictionType) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'patient_predictions'),
           where('patient_id', '==', patientId),
           where('prediction_type', '==', predictionType),
@@ -429,7 +429,7 @@ export function usePatientRiskScore(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.risk(patientId),
     queryFn: async (): Promise<PatientRiskScore | null> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_risk_scores'),
         where('patient_id', '==', patientId),
         orderBy('calculated_at', 'desc'),
@@ -474,7 +474,7 @@ export function usePatientGoals(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.goals(patientId),
     queryFn: async (): Promise<PatientGoalTracking[]> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_goal_tracking'),
         where('patient_id', '==', patientId),
         orderBy('target_date', 'asc')
@@ -575,14 +575,14 @@ export function usePatientInsights(patientId: string, includeAcknowledged = fals
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.insights(patientId), includeAcknowledged],
     queryFn: async (): Promise<PatientInsight[]> => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'patient_insights'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc')
       );
 
       if (!includeAcknowledged) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'patient_insights'),
           where('patient_id', '==', patientId),
           where('is_acknowledged', '==', false),
@@ -634,13 +634,13 @@ export function useClinicalBenchmarks(benchmarkCategory?: string) {
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.benchmarks(), benchmarkCategory],
     queryFn: async (): Promise<ClinicalBenchmark[]> => {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, 'clinical_benchmarks'),
         orderBy('benchmark_name', 'asc')
       );
 
       if (benchmarkCategory) {
-        q = query(
+        q = firestoreQuery(
           collection(db, 'clinical_benchmarks'),
           where('benchmark_category', '==', benchmarkCategory),
           orderBy('benchmark_name', 'asc')

@@ -9,7 +9,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -118,7 +118,7 @@ export function useStoredPrediction(patientId: string) {
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.prediction(patientId),
     queryFn: async (): Promise<RecoveryPrediction | null> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_predictions'),
         where('patient_id', '==', patientId),
         where('prediction_type', '==', 'recovery_timeline'),
@@ -229,7 +229,7 @@ export function useMilestonesProgress(patientId: string) {
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.milestones(patientId),
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'patient_predictions'),
         where('patient_id', '==', patientId),
         where('prediction_type', '==', 'recovery_timeline'),

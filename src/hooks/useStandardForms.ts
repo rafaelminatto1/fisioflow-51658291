@@ -7,7 +7,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, query, where, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, query as firestoreQuery, where, limit } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -673,7 +673,7 @@ export function useStandardFormExists(formType: keyof typeof STANDARD_FORMS) {
     queryFn: async () => {
       const formConfig = STANDARD_FORMS[formType];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'evaluation_forms'),
         where('nome', '==', formConfig.nome),
         where('tipo', '==', formConfig.tipo),

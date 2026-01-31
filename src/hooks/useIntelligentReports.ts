@@ -8,7 +8,7 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { collection, query, where, getDocs, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, orderBy, limit,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { getFirebaseApp } from '@/integrations/firebase/app';
@@ -61,7 +61,7 @@ export function useIntelligentReports(patientId?: string) {
     queryFn: async () => {
       if (!patientId || !db) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'generated_reports'),
         where('patient_id', '==', patientId),
         orderBy('created_at', 'desc'),

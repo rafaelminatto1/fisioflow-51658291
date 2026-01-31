@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
@@ -61,7 +61,7 @@ export function usePrecadastroTokens() {
 
       if (!profileData?.organization_id) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'precadastro_tokens'),
         where('organization_id', '==', profileData.organization_id),
         orderBy('created_at', 'desc')
@@ -86,7 +86,7 @@ export function usePrecadastros() {
 
       if (!profileData?.organization_id) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'precadastros'),
         where('organization_id', '==', profileData.organization_id),
         orderBy('created_at', 'desc')

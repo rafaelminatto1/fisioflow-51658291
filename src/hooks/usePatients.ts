@@ -10,7 +10,7 @@
  * @module hooks/usePatients
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { patientsApi } from '@/integrations/firebase/functions';
@@ -62,6 +62,8 @@ export const useActivePatients = () => {
   logger.debug('[useActivePatients] Profile', { profile }, 'usePatients');
   logger.debug('[useActivePatients] OrganizationId', { organizationId }, 'usePatients');
 
+  const [retryCount, setRetryCount] = useState(0);
+
   // Setup realtime subscription via Ably
   useEffect(() => {
     if (!organizationId) {
@@ -69,7 +71,7 @@ export const useActivePatients = () => {
       return;
     }
 
-    logger.info('useActivePatients: subscribing via Ably', { organizationId }, 'usePatients');
+    logger.info('useActivePatients: subscribing via Ably', { organizationId, retryCount }, 'usePatients');
 
     const ably = getAblyClient();
     const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
@@ -79,11 +81,27 @@ export const useActivePatients = () => {
       queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
     });
 
+    // Handle channel errors (e.g. 410 Gone)
+    const handleChannelState = (stateChange: any) => {
+      if (stateChange.current === 'failed' || stateChange.current === 'suspended') {
+        logger.error(`Realtime: Ably channel ${stateChange.current}`, stateChange.reason, 'usePatients');
+
+        // Auto-retry connection after delay
+        setTimeout(() => {
+          logger.info('Realtime: Retrying patients subscription...', {}, 'usePatients');
+          setRetryCount(prev => prev + 1);
+        }, 5000);
+      }
+    };
+
+    channel.on(handleChannelState);
+
     return () => {
       logger.info('Realtime (Ably): Unsubscribing from patients channel', { organizationId }, 'usePatients');
       channel.unsubscribe();
+      channel.off(handleChannelState);
     };
-  }, [organizationId, queryClient]);
+  }, [organizationId, queryClient, retryCount]);
 
   const result = useQuery({
     queryKey: ['patients', organizationId],

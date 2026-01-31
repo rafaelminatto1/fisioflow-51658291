@@ -8,7 +8,7 @@ const firestore = (0, init_1.getAdminDb)();
  * Cloud Function: Sugerir exercícios baseado em diagnóstico
  */
 exports.suggestExercises = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '512MiB',
     maxInstances: 10,
@@ -49,7 +49,7 @@ exports.suggestExercises = (0, https_1.onCall)({
  * Cloud Function: Analisar prontuário do paciente
  */
 exports.analyzePatientRecord = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '512MiB',
     maxInstances: 10,
@@ -93,7 +93,7 @@ exports.analyzePatientRecord = (0, https_1.onCall)({
  * Cloud Function: Predizer tempo de recuperação
  */
 exports.predictRecoveryTime = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -162,7 +162,7 @@ exports.predictRecoveryTime = (0, https_1.onCall)({
  * Cloud Function: Chatbot IA para pacientes
  */
 exports.patientChatbot = (0, https_1.onCall)({
-    cors: true,
+    cors: init_1.CORS_ORIGINS,
     region: 'southamerica-east1',
     memory: '512MiB',
     maxInstances: 10,

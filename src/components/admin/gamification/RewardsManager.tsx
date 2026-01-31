@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query, orderBy, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -45,7 +45,7 @@ export default function RewardsManager() {
         queryKey: ['admin-rewards'],
         queryFn: async () => {
             const rewardsRef = collection(db, 'rewards');
-            const q = query(rewardsRef, orderBy('created_at', 'desc'));
+            const q = firestoreQuery(rewardsRef, orderBy('created_at', 'desc'));
             const querySnapshot = await getDocs(q);
 
             const rewards: Reward[] = [];

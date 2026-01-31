@@ -3,7 +3,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { db, collection, addDoc, setDoc, doc, serverTimestamp } from '@/integrations/firebase/app';
-gHeader,
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

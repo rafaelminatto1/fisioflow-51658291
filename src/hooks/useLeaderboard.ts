@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subDays, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -77,7 +77,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
     queryFn: async (): Promise<{ leaderboard: LeaderboardEntry[]; totalCount: number }> => {
       // Build base query
       const sortColumn = filters.sortBy === 'total_xp' ? 'total_points' : filters.sortBy;
-      let baseQuery = query(
+      let baseQuery = firestoreQuery(
         collection(db, 'patient_gamification'),
         orderBy(sortColumn, filters.order === 'asc' ? 'asc' : 'desc')
       );
@@ -114,7 +114,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
 
       // Fetch patient data in batches (Firestore limitation)
       for (const patientId of patientIds) {
-        const patientQuery = query(
+        const patientQuery = firestoreQuery(
           collection(db, 'patients'),
           where('__name__', '==', patientId),
           limit(1)
@@ -164,7 +164,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       const achievementMap: Record<string, number> = {};
 
       for (const patientId of paginatedPatientIds) {
-        const achievementsQuery = query(
+        const achievementsQuery = firestoreQuery(
           collection(db, 'achievements_log'),
           where('patient_id', '==', patientId)
         );
@@ -282,7 +282,7 @@ export const useEngagementData = (defaultDays: number = 30): UseEngagementDataRe
     queryFn: async (): Promise<EngagementData[]> => {
       const startDate = subDays(new Date(), days);
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'xp_transactions'),
         where('created_at', '>=', startDate.toISOString()),
         orderBy('created_at', 'asc')

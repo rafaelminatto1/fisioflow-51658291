@@ -7,8 +7,8 @@
  * @module lib/ai/usage-monitor
  */
 
-import { db, collection, doc, setDoc, getDoc, getDocs, query, where, sum, orderBy, limit } from '@/integrations/firebase/app';
-ecord } from '@fisioflow/shared-api/firebase/ai/config';
+import { db, collection, doc, setDoc, getDoc, getDocs, query as firestoreQuery, where, sum, orderBy, limit } from '@/integrations/firebase/app';
+import { AIUsageRecord, AIFeatureCategory, AIModelType } from '@/integrations/firebase/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
@@ -277,7 +277,7 @@ class AIUsageMonitorService {
     count = 50
   ): Promise<AIUsageRecord[]> {
     try {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, this.collectionName),
         where('userId', '==', userId),
         orderBy('timestamp', 'desc'),
@@ -362,14 +362,13 @@ class AIUsageMonitorService {
     outputTokens: number
   ): number {
     const costs: Record<AIModelType, { input: number; output: number }> = {
-      [AIModelType.FLASH]: { input: 0.075, output: 0.30 },
-      [AIModelType.FLASH_LITE]: { input: 0.075, output: 0.15 },
-      [AIModelType.PRO]: { input: 1.25, output: 5.00 },
-      [AIModelType.FLASH_LEGACY]: { input: 0.15, output: 0.60 },
-      [AIModelType.PRO_LEGACY]: { input: 3.50, output: 10.50 },
+      [AIModelType.GEMINI_2_5_FLASH]: { input: 0.075, output: 0.30 },
+      [AIModelType.GEMINI_1_5_FLASH]: { input: 0.075, output: 0.15 },
+      [AIModelType.GEMINI_2_5_PRO]: { input: 1.25, output: 5.00 },
+      [AIModelType.GEMINI_PRO]: { input: 3.50, output: 10.50 },
     };
 
-    const pricing = costs[model] || costs[AIModelType.FLASH];
+    const pricing = costs[model] || costs[AIModelType.GEMINI_2_5_FLASH];
     const inputCost = (inputTokens / 1_000_000) * pricing.input;
     const outputCost = (outputTokens / 1_000_000) * pricing.output;
 
@@ -441,7 +440,7 @@ class AIUsageMonitorService {
     feature?: AIFeatureCategory
   ): Promise<AIUsageRecord[]> {
     try {
-      let q = query(
+      let q = firestoreQuery(
         collection(db, this.collectionName),
         where('userId', '==', userId),
         where('timestamp', '>=', startDate.toISOString())

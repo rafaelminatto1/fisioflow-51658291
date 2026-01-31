@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
-Statistics, AssessmentTestConfig } from '@/types/evolution';
+import type { TestEvolutionData, TestStatistics, AssessmentTestConfig } from '@/types/evolution';
 
 export class TestEvolutionService {
   static async getTestEvolutionData(patientId: string, testName: string): Promise<TestEvolutionData[]> {

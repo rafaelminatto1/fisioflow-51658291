@@ -8,7 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -80,7 +80,7 @@ export function useCalendarIntegration() {
     queryFn: async () => {
       if (!user?.id) return null;
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'calendar_integrations'),
         where('user_id', '==', user.id),
         where('provider', '==', 'google'),
@@ -101,7 +101,7 @@ export function useCalendarIntegration() {
     queryFn: async () => {
       if (!integration?.id) return [];
 
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'calendar_sync_logs'),
         where('integration_id', '==', integration.id),
         orderBy('created_at', 'desc'),

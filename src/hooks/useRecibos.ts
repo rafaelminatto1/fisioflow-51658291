@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, query, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
 
@@ -39,7 +39,7 @@ export function useRecibos() {
   return useQuery({
     queryKey: ['recibos'],
     queryFn: async () => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'recibos'),
         orderBy('numero_recibo', 'desc')
       );
@@ -61,7 +61,7 @@ export function useCreateRecibo() {
       };
 
       const docRef = await addDoc(collection(db, 'recibos'), reciboData);
-      const snapshot = await getDocs(query(collection(db, 'recibos')));
+      const snapshot = await getDocs(firestoreQuery(collection(db, 'recibos')));
       const newDoc = snapshot.docs.find(doc => doc.id === docRef.id);
 
       if (!newDoc) throw new Error('Failed to create recibo');

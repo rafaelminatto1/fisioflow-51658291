@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, getDocs } from '@/integrations/firebase/app';
 
 import { db } from '@/integrations/firebase/app';
 import type { PainMapRecord, BodyRegion, PainMapPoint } from '@/types/painMap';
@@ -47,7 +47,7 @@ export function usePainMapHistory(patientId: string) {
   return useQuery({
     queryKey: ['pain-map-history', patientId],
     queryFn: async (): Promise<PainMapHistoryData> => {
-      const q = query(
+      const q = firestoreQuery(
         collection(db, 'pain_maps'),
         where('patient_id', '==', patientId),
         orderBy('recorded_at', 'desc')

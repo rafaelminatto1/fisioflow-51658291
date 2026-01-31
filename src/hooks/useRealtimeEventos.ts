@@ -7,7 +7,7 @@
  */
 
 import { useEffect } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -25,7 +25,7 @@ export function useRealtimeEventos() {
 
   useEffect(() => {
     // Firestore onSnapshot for real-time updates
-    const q = query(
+    const q = firestoreQuery(
       collection(db, 'eventos'),
       orderBy('created_at', 'desc'),
       limit(100)
