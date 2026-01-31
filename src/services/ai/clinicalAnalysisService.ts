@@ -7,7 +7,7 @@
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface AIAnalysisResult {
   summary: string;

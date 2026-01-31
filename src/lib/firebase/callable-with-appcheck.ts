@@ -1,7 +1,7 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAppCheck } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Wrapper para httpsCallable que inclui token do App Check

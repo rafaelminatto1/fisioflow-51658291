@@ -11,7 +11,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import type { Exercise, Patient, SOAPRecord } from '@/types';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

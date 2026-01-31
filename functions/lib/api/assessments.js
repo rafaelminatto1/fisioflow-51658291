@@ -37,6 +37,7 @@ exports.updateAssessment = exports.createAssessment = exports.getAssessment = ex
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
+const logger_1 = require("../lib/logger");
 exports.listAssessmentTemplates = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
@@ -55,7 +56,7 @@ exports.listAssessmentTemplates = (0, https_1.onCall)({ cors: true }, async (req
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in listAssessmentTemplates:', error);
+        logger_1.logger.error('Error in listAssessmentTemplates:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar templates';
@@ -108,7 +109,7 @@ exports.getAssessmentTemplate = (0, https_1.onCall)({ cors: true }, async (reque
         };
     }
     catch (error) {
-        console.error('Error in getAssessmentTemplate:', error);
+        logger_1.logger.error('Error in getAssessmentTemplate:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar template';
@@ -149,7 +150,7 @@ exports.listAssessments = (0, https_1.onCall)({ cors: true }, async (request) =>
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in listAssessments:', error);
+        logger_1.logger.error('Error in listAssessments:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar avaliações';
@@ -192,7 +193,7 @@ exports.getAssessment = (0, https_1.onCall)({ cors: true }, async (request) => {
         };
     }
     catch (error) {
-        console.error('Error in getAssessment:', error);
+        logger_1.logger.error('Error in getAssessment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar avaliação';
@@ -259,7 +260,7 @@ exports.createAssessment = (0, https_1.onCall)({ cors: true }, async (request) =
                 });
             }
             catch (e) {
-                console.error('Error publishing to Ably:', e);
+                logger_1.logger.error('Error publishing to Ably:', e);
             }
             return { data: assessment };
         }
@@ -269,7 +270,7 @@ exports.createAssessment = (0, https_1.onCall)({ cors: true }, async (request) =
         }
     }
     catch (error) {
-        console.error('Error in createAssessment:', error);
+        logger_1.logger.error('Error in createAssessment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar avaliação';
@@ -345,7 +346,7 @@ exports.updateAssessment = (0, https_1.onCall)({ cors: true }, async (request) =
         }
     }
     catch (error) {
-        console.error('Error in updateAssessment:', error);
+        logger_1.logger.error('Error in updateAssessment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar avaliação';

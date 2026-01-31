@@ -1,7 +1,7 @@
 import Ajv from "ajv/dist/2020";
 import dynamicCompareSchema from "../../../schemas/dynamic_compare_metrics.schema.json";
 import addFormats from "ajv-formats";
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const ajv = new Ajv({
     allErrors: true,

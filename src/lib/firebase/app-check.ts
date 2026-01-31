@@ -1,6 +1,6 @@
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Extend global self type for Firebase App Check debug token
 declare global {

@@ -14,7 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Metric } from 'web-vitals';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Extend Window interface for analytics globals
 declare global {

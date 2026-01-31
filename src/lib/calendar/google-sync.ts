@@ -8,7 +8,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { Appointment } from '@/types/appointment';
 import { calculateEndTime } from './utils';
 import { STATUS_COLORS } from './constants';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // =====================================================================
 // TYPES

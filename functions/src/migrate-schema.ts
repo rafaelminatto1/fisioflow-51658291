@@ -9,7 +9,7 @@ import * as path from 'path';
 
 // Cloud SQL connection for Cloud Functions
 const dbSocketPath = process.env.DB_SOCKET_PATH || '/cloudsql';
-const cloudSqlConnectionName = 'fisioflow-migration:us-central1:fisioflow-pg';
+const cloudSqlConnectionName = 'fisioflow-migration:southamerica-east1:fisioflow-pg';
 
 const pool = new Pool({
   host: path.join(dbSocketPath, cloudSqlConnectionName),

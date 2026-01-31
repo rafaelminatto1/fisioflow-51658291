@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Tipos de sons de gamificação

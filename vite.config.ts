@@ -58,6 +58,15 @@ export const cancelScheduledNotificationAsync = async () => {};
 export const getAllScheduledNotificationsAsync = async () => [];
 export const getDevicePushTokenAsync = async () => ({ type: 'web', data: 'mock' });
 export const getPermissionsAsync = async () => ({ granted: true, canAskAgain: true });
+export const setNotificationChannelAsync = async () => {};
+export const AndroidImportance = { MAX: 5, HIGH: 4, DEFAULT: 3, LOW: 2, MIN: 1, NONE: 0 };
+export const dismissNotificationAsync = async () => {};
+export const dismissAllNotificationsAsync = async () => {};
+export const setBadgeCountAsync = async () => {};
+export const getBadgeCountAsync = async () => 0;
+export const cancelAllScheduledNotificationsAsync = async () => {};
+export const SchedulableTriggerInputTypes = { CALENDAR: 'calendar' };
+export const isDevice = false;
 export const Constants = { executionEnvironment: 'WEB' };
 export const Platform = { OS: 'web' };
 export const AsyncStorage = {
@@ -352,7 +361,7 @@ export default defineConfig(({ mode }) => {
       },
       chunkSizeWarningLimit: 5000,
       reportCompressedSize: false,
-      sourcemap: false,
+      sourcemap: true,
     },
     optimizeDeps: {
       holdUntilCrawlEnd: false,

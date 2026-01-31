@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 
 import { VoiceAssistant as VoiceAssistantClass, KeyPoint } from '@/lib/ai/voice-assistant';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { LiveSessionCallbacks, LiveSessionState } from '@fisioflow/shared-api/firebase/ai/live-config';
 
 // ============================================================================

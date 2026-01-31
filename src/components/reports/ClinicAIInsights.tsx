@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, TrendingUp, TrendingDown, Target, Zap, Info } from 'lucide-react';
 import { useAI } from '@/integrations/firebase/ai';
 import { motion, AnimatePresence } from 'framer-motion';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ClinicAIInsightsProps {
   data: {

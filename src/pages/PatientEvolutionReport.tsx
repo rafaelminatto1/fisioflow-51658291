@@ -10,7 +10,7 @@ import { LoadingSkeleton, EmptyState } from "@/components/ui";
 import { generateEvolutionPDF } from "@/lib/export/evolutionPdfExport";
 import { toast } from "sonner";
 import { PatientHelpers } from "@/types";
-import { logger } from "@/lib/errors/logger";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 const PatientEvolutionReport = () => {
   const { patientId } = useParams<{ patientId: string }>();

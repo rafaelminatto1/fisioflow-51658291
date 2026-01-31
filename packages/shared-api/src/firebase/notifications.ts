@@ -8,15 +8,12 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { messaging, isSupported } from './config';
+import { messaging, isSupported, db } from './config';
+import { getToken as firebaseGetToken, onMessage as firebaseOnMessage } from 'firebase/messaging';
 import { doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from './config';
 import { COLLECTIONS } from '@fisioflow/shared-constants';
 
-// ============================================
-// Types
-// ============================================
-
+// ... (types)
 export interface PushTokenData {
   token: string;
   platform: 'ios' | 'android';
@@ -41,13 +38,7 @@ export interface FcmMessage {
   condition?: string;
 }
 
-// ============================================
-// Notification Behavior Configuration
-// ============================================
-
-/**
- * Configure how notifications are displayed when app is in foreground
- */
+// ... (No changes to setNotificationHandler)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -56,23 +47,15 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// ============================================
-// Push Token Management
-// ============================================
-
-/**
- * Register for push notifications and get the token
- */
+// ... (registerForPushNotificationsAsync)
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   let token: string | null = null;
 
-  // Check if device is physical (not simulator)
   if (!Device.isDevice) {
     console.warn('Push notifications only work on physical devices');
     return null;
   }
 
-  // Check platform support
   const supported = await isSupported();
   if (!supported) {
     console.warn('FCM not supported on this platform');
@@ -80,7 +63,6 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 
   try {
-    // Request permission
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -94,21 +76,19 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       return null;
     }
 
-    // For iOS: get APNs token
     if (Platform.OS === 'ios') {
       const projectId = process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID;
       if (!projectId) {
         throw new Error('EXPO_PUBLIC_FIREBASE_PROJECT_ID not set');
       }
 
-      token = await Notifications.getExpoPushTokenAsync({
+      const expoToken = await Notifications.getExpoPushTokenAsync({
         projectId,
       });
+      token = expoToken.data;
     } else {
-      // For Android: get FCM token
       if (messaging) {
-        const fcmToken = await messaging.getToken();
-        token = fcmToken;
+        token = await firebaseGetToken(messaging);
       }
     }
 
@@ -120,9 +100,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 }
 
-/**
- * Save push token to Firestore for the user
- */
+// ... (savePushToken, removePushToken, listeners)
 export async function savePushToken(
   userId: string,
   token: string
@@ -135,9 +113,7 @@ export async function savePushToken(
       updatedAt: new Date().toISOString(),
     };
 
-    // Use subcollection 'push_tokens' for better scalability and consistency with backend
     const tokenRef = doc(db, COLLECTIONS.USERS, userId, 'push_tokens', token);
-
     await setDoc(tokenRef, tokenData, { merge: true });
     console.log(`Token saved/updated in users/${userId}/push_tokens/${token}`);
   } catch (error) {
@@ -146,12 +122,8 @@ export async function savePushToken(
   }
 }
 
-/**
- * Remove push token from user (when logging out)
- */
 export async function removePushToken(userId: string, token: string): Promise<void> {
   try {
-    // Remove from subcollection
     const tokenRef = doc(db, COLLECTIONS.USERS, userId, 'push_tokens', token);
     await deleteDoc(tokenRef);
     console.log(`Token removed from users/${userId}/push_tokens/${token}`);
@@ -161,15 +133,8 @@ export async function removePushToken(userId: string, token: string): Promise<vo
   }
 }
 
-// ============================================
-// Notification Listeners
-// ============================================
-
 type NotificationHandler = (notification: Notifications.Notification) => void;
 
-/**
- * Listen for notifications received while app is in foreground
- */
 export function subscribeToForegroundNotifications(
   handler: NotificationHandler
 ): () => void {
@@ -177,9 +142,6 @@ export function subscribeToForegroundNotifications(
   return () => subscription.remove();
 }
 
-/**
- * Listen for notification response (user tapped on notification)
- */
 export function subscribeToNotificationResponses(
   handler: (response: Notifications.NotificationResponse) => void
 ): () => void {
@@ -187,13 +149,7 @@ export function subscribeToNotificationResponses(
   return () => subscription.remove();
 }
 
-// ============================================
-// Local Notifications
-// ============================================
-
-/**
- * Schedule a local notification
- */
+// ... (local notifications)
 export async function scheduleLocalNotification(
   title: string,
   body: string,
@@ -208,15 +164,12 @@ export async function scheduleLocalNotification(
       sound: true,
       badge: 1,
     },
-    trigger: trigger || null, // null = show immediately
+    trigger: trigger || null,
   });
 
   return notificationId;
 }
 
-/**
- * Schedule a repeating notification (e.g., daily exercise reminder)
- */
 export async function scheduleRepeatingNotification(
   title: string,
   body: string,
@@ -243,59 +196,30 @@ export async function scheduleRepeatingNotification(
   return notificationId;
 }
 
-/**
- * Cancel a scheduled notification
- */
 export async function cancelNotification(notificationId: string): Promise<void> {
   await Notifications.cancelScheduledNotificationAsync(notificationId);
 }
 
-/**
- * Cancel all scheduled notifications
- */
 export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-/**
- * Dismiss a presented notification
- */
 export async function dismissNotification(notificationId: string): Promise<void> {
   await Notifications.dismissNotificationAsync(notificationId);
 }
 
-/**
- * Dismiss all presented notifications
- */
 export async function dismissAllNotifications(): Promise<void> {
   await Notifications.dismissAllNotificationsAsync();
 }
 
-// ============================================
-// Badge Management
-// ============================================
-
-/**
- * Set the app badge number
- */
 export async function setBadgeCount(count: number): Promise<void> {
   await Notifications.setBadgeCountAsync(count);
 }
 
-/**
- * Get the current badge count
- */
 export async function getBadgeCount(): Promise<number> {
   return await Notifications.getBadgeCountAsync();
 }
 
-// ============================================
-// Notification Channels (Android only)
-// ============================================
-
-/**
- * Set up notification channels for Android
- */
 export async function setupNotificationChannels(): Promise<void> {
   if (Platform.OS !== 'android') return;
 
@@ -339,55 +263,35 @@ export async function setupNotificationChannels(): Promise<void> {
   });
 }
 
-// ============================================
-// FCM Message Listening (for background/terminated)
-// ============================================
-
-/**
- * Listen to FCM messages when app is in background
- * This should be called at app startup
- */
 export function listenToFcmMessages(
-  onMessage: (message: { data?: Record<string, string>; notification?: { title: string; body: string } }) => void
-): () => void | null {
+  onMessage: (message: any) => void
+): () => void {
   if (!messaging) {
     console.warn('Messaging not supported on this platform');
     return () => { };
   }
 
-  const unsubscribe = messaging.onMessage(onMessage);
+  const unsubscribe = firebaseOnMessage(messaging, onMessage);
   return unsubscribe;
 }
 
-// ============================================
-// Export notification service
-// ============================================
-
 export const notificationService = {
-  // Push token management
   registerForPushNotificationsAsync,
   savePushToken,
   removePushToken,
-
-  // Listeners
   subscribeToForegroundNotifications,
   subscribeToNotificationResponses,
   listenToFcmMessages,
-
-  // Local notifications
   scheduleLocalNotification,
   scheduleRepeatingNotification,
   cancelNotification,
   cancelAllNotifications,
   dismissNotification,
   dismissAllNotifications,
-
-  // Badge
   setBadgeCount,
   getBadgeCount,
-
-  // Channels
   setupNotificationChannels,
 };
 
 export default notificationService;
+

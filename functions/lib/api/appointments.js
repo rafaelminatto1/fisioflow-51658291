@@ -37,6 +37,7 @@ exports.cancelAppointment = exports.updateAppointment = exports.createAppointmen
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
+const logger_1 = require("../lib/logger");
 /**
  * Lista agendamentos com filtros
  */
@@ -92,7 +93,7 @@ exports.listAppointments = (0, https_1.onCall)({ cors: true }, async (request) =
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in listAppointments:', error);
+        logger_1.logger.error('Error in listAppointments:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar agendamentos';
@@ -128,7 +129,7 @@ exports.getAppointment = (0, https_1.onCall)({ cors: true }, async (request) => 
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in getAppointment:', error);
+        logger_1.logger.error('Error in getAppointment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar agendamento';
@@ -188,7 +189,7 @@ exports.checkTimeConflict = (0, https_1.onCall)({ cors: true }, async (request) 
         };
     }
     catch (error) {
-        console.error('Error in checkTimeConflict:', error);
+        logger_1.logger.error('Error in checkTimeConflict:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar conflito';
@@ -255,12 +256,12 @@ exports.createAppointment = (0, https_1.onCall)({ cors: true }, async (request) 
             });
         }
         catch (err) {
-            console.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Ably:', err);
         }
         return { data: appointment };
     }
     catch (error) {
-        console.error('Error in createAppointment:', error);
+        logger_1.logger.error('Error in createAppointment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar agendamento';
@@ -342,12 +343,12 @@ exports.updateAppointment = (0, https_1.onCall)({ cors: true }, async (request) 
             });
         }
         catch (err) {
-            console.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Ably:', err);
         }
         return { data: updatedAppt };
     }
     catch (error) {
-        console.error('Error in updateAppointment:', error);
+        logger_1.logger.error('Error in updateAppointment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
@@ -386,12 +387,12 @@ exports.cancelAppointment = (0, https_1.onCall)({ cors: true }, async (request) 
             });
         }
         catch (err) {
-            console.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Ably:', err);
         }
         return { success: true };
     }
     catch (error) {
-        console.error('Error in cancelAppointment:', error);
+        logger_1.logger.error('Error in cancelAppointment:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao cancelar agendamento';

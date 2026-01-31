@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { isSameDay, startOfDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface DragState {
     appointment: Appointment | null;

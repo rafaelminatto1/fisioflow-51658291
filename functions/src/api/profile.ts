@@ -8,7 +8,7 @@ import { authorizeRequest } from '../middleware/auth';
 import { getPool } from '../init';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
-import { logger } from '../lib/logger';
+
 
 interface GetProfileResponse {
     data: Profile;

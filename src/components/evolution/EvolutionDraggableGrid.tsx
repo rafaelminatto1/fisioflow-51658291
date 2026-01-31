@@ -16,7 +16,7 @@ import { ExerciseBlockWidget } from '@/components/evolution/ExerciseBlockWidget'
 import { HomeCareWidget } from '@/components/evolution/HomeCareWidget';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================================
 // TYPES & INTERFACES

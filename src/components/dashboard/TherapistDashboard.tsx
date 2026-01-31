@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { format, isSameDay, differenceInDays } from 'date-fns';
 import { useAppointments } from '@/hooks/useAppointments';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;

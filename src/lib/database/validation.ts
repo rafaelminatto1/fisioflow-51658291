@@ -19,8 +19,8 @@ import {
   isValidPathologyStatus,
   isValidPaymentStatus,
 } from './constants';
-import { logger } from '@/lib/errors/logger';
-} from './constants';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 
 // ============================================================================
 // ERROR TYPES

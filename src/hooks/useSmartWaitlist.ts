@@ -24,7 +24,7 @@ import {
 } from '@/lib/waitlist/smart-waitlist';
 import { db } from '@/integrations/firebase/app';
 import { doc, updateDoc } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 
 // =====================================================================

@@ -3,7 +3,7 @@
  * Útil para debugging de erros que ocorrem durante a renderização
  */
 import { useEffect, useRef } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function useRenderTracking(componentName: string, extraData?: Record<string, unknown>) {
   const renderCount = useRef(0);

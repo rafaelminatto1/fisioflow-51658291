@@ -6,6 +6,7 @@ import {
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
   updateProfile,
+  onAuthStateChanged as firebaseOnAuthStateChanged,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -88,12 +89,18 @@ async function getUserData(user: FirebaseUser) {
 
 // Auth state observer
 export function onAuthStateChanged(callback: (user: any | null) => void) {
-  return auth.onAuthStateChanged(async (firebaseUser) => {
+  return firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
-      const userData = await getUserData(firebaseUser);
-      callback(userData);
+      try {
+        const userData = await getUserData(firebaseUser);
+        callback(userData);
+      } catch (error) {
+        console.error('[Auth] Error getting user data:', error);
+        callback(null);
+      }
     } else {
       callback(null);
     }
   });
 }
+

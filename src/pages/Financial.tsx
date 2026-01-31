@@ -44,7 +44,7 @@ import { exportFinancialReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAI } from "@/integrations/firebase/ai";
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const Financial = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');

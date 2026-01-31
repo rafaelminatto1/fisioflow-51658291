@@ -38,7 +38,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.getPatientStats = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
-exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = void 0;
+exports.updateUserRole = exports.listUsers = exports.onUserCreated = exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = void 0;
 const functions = __importStar(require("firebase-functions/v2"));
 const v2_1 = require("firebase-functions/v2");
 const init_1 = require("./init");
@@ -272,8 +272,13 @@ var whatsapp_2 = require("./communications/whatsapp");
 Object.defineProperty(exports, "testWhatsAppMessage", { enumerable: true, get: function () { return whatsapp_2.testWhatsAppMessage; } });
 Object.defineProperty(exports, "testWhatsAppTemplate", { enumerable: true, get: function () { return whatsapp_2.testWhatsAppTemplate; } });
 // ============================================================================
-// AUTH TRIGGERS
-// ============================================================================
+// Auth Triggers
+const user_created_1 = require("./auth/user-created");
+Object.defineProperty(exports, "onUserCreated", { enumerable: true, get: function () { return user_created_1.onUserCreated; } });
+// User Management API
+const users_1 = require("./api/users");
+Object.defineProperty(exports, "listUsers", { enumerable: true, get: function () { return users_1.listUsers; } });
+Object.defineProperty(exports, "updateUserRole", { enumerable: true, get: function () { return users_1.updateUserRole; } });
 /**
  * Trigger disparado quando um novo usuário é criado no Firebase Auth.
  * Cria o perfil correspondente na tabela profiles do Cloud SQL.
@@ -285,8 +290,6 @@ Object.defineProperty(exports, "testWhatsAppTemplate", { enumerable: true, get: 
 //     const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
 //
 //     try {
-//         console.log(`[onUserCreated] Criando perfil para usuário: ${user.uid} (${user.email})`);
-//
 //         await pool.query(
 //             `INSERT INTO profiles (
 //                 user_id,
@@ -307,10 +310,8 @@ Object.defineProperty(exports, "testWhatsAppTemplate", { enumerable: true, get: 
 //                 user.emailVerified || false
 //             ]
 //         );
-//
-//         console.log(`[onUserCreated] Perfil criado com sucesso para ${user.uid}`);
 //     } catch (error) {
-//         console.error(`[onUserCreated] Erro ao criar perfil para ${user.uid}:`, error);
+//         // Error logged by logger
 //     }
 // });
 //# sourceMappingURL=index.js.map

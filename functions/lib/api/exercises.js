@@ -4,6 +4,7 @@ exports.mergeExercises = exports.deleteExercise = exports.updateExercise = expor
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
+const logger_1 = require("../lib/logger");
 exports.listExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token) {
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
@@ -50,7 +51,7 @@ exports.listExercises = (0, https_1.onCall)({ cors: true }, async (request) => {
         };
     }
     catch (error) {
-        console.error('Error in listExercises:', error);
+        logger_1.logger.error('Error in listExercises:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar exercícios';
@@ -75,7 +76,7 @@ exports.getExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in getExercise:', error);
+        logger_1.logger.error('Error in getExercise:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercício';
@@ -120,7 +121,7 @@ exports.searchSimilarExercises = (0, https_1.onCall)({ cors: true }, async (requ
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in searchSimilarExercises:', error);
+        logger_1.logger.error('Error in searchSimilarExercises:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercícios similares';
@@ -146,7 +147,7 @@ exports.getExerciseCategories = (0, https_1.onCall)({ cors: true }, async (reque
         };
     }
     catch (error) {
-        console.error('Error in getExerciseCategories:', error);
+        logger_1.logger.error('Error in getExerciseCategories:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar categorias';
@@ -182,7 +183,7 @@ exports.logExercise = (0, https_1.onCall)({ cors: true }, async (request) => {
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in logExercise:', error);
+        logger_1.logger.error('Error in logExercise:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao registrar exercício';
@@ -236,7 +237,7 @@ exports.getPrescribedExercises = (0, https_1.onCall)({ cors: true }, async (requ
         return { data };
     }
     catch (error) {
-        console.error('Error in getPrescribedExercises:', error);
+        logger_1.logger.error('Error in getPrescribedExercises:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prescrições';
@@ -281,7 +282,7 @@ exports.createExercise = (0, https_1.onCall)({ cors: true }, async (request) => 
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in createExercise:', error);
+        logger_1.logger.error('Error in createExercise:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar exercício';
@@ -316,7 +317,7 @@ exports.updateExercise = (0, https_1.onCall)({ cors: true }, async (request) => 
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in updateExercise:', error);
+        logger_1.logger.error('Error in updateExercise:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar exercício';
@@ -345,7 +346,7 @@ exports.deleteExercise = (0, https_1.onCall)({ cors: true }, async (request) => 
         return { success: true };
     }
     catch (error) {
-        console.error('Error in deleteExercise:', error);
+        logger_1.logger.error('Error in deleteExercise:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir exercício';
@@ -382,7 +383,7 @@ exports.mergeExercises = (0, https_1.onCall)({ cors: true }, async (request) => 
     }
     catch (err) {
         await pool.query('ROLLBACK');
-        console.error('Error in mergeExercises:', err);
+        logger_1.logger.error('Error in mergeExercises:', err);
         const errorMessage = err instanceof Error ? err.message : 'Erro ao unir exercícios';
         throw new https_1.HttpsError('internal', errorMessage);
     }

@@ -8,7 +8,7 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc, enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Configuração do Firebase (carregada das variáveis de ambiente)
 const firebaseConfig = {

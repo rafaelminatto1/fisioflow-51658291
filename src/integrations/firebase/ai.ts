@@ -24,7 +24,7 @@ import { initializeRemoteConfig, REMOTE_CONFIG_KEYS } from '@/lib/firebase/remot
 import { initAppCheck, getAppCheckToken } from '@/lib/firebase/app-check';
 import { AIUsageMonitor as UsageMonitor } from '@/lib/ai/usage-tracker';
 import { ClinicalPromptBuilder } from '@/lib/ai/prompts/clinical-prompts';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Temporary stub for AIRemoteConfig compatibility
 const AIRemoteConfig = {

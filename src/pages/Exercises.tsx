@@ -22,7 +22,7 @@ import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { Skeleton } from '@/components/ui/skeleton';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();

@@ -19,7 +19,7 @@ import {
   calculatePainMapStatistics,
   type PainMapExportData,
 } from '@/lib/utils/painMapExport';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface PainMapToolbarProps {
   patientName: string;

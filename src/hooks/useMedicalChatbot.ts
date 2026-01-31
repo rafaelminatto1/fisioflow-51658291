@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Interfaces para o Chatbot
 interface ChatMessage {

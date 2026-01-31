@@ -125,7 +125,6 @@ export function Avatar({
         <Image
           source={source}
           style={[styles.image, { borderRadius: defaultBorderRadius }]}
-          defaultSource={require('@expo/vector-icons/build/Feather/FEather.png')}
         />
       ) : displayInitials ? (
         <Text style={[styles.initials, textStyle]}>{displayInitials}</Text>

@@ -1,4 +1,4 @@
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export class TherapistAlertService {
   static async sendAlert(therapistId: string, message: string) {

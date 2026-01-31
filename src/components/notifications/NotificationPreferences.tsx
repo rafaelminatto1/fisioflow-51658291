@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function NotificationPreferences() {
   const { preferences, isLoading, error, updatePreferences, isUpdating } = useNotificationPreferences();

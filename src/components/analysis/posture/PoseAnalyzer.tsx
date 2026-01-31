@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Camera, Upload } from 'lucide-react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Type definitions for @mediapipe/pose (UMD module)
 interface PoseOptions {

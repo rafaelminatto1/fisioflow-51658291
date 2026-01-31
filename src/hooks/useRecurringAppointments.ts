@@ -11,6 +11,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import {
   RecurringAppointmentSeries,
   RecurringAppointmentOccurrence,

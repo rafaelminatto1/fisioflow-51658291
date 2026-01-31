@@ -14,7 +14,7 @@ import {
   getFirebaseAuth,
   getFirebaseStorage
 } from '@/integrations/firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import {
   collection,
   doc,

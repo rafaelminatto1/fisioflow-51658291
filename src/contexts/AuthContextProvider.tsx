@@ -4,7 +4,7 @@ import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSi
 import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
 import { profileApi } from '@/integrations/firebase/functions'; // Use Firebase Functions API
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContextType } from './AuthContext';
 

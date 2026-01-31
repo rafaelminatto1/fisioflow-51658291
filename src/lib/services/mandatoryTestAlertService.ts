@@ -2,7 +2,7 @@ import { getFirebaseAuth } from '@/integrations/firebase/app';
 import type { MandatoryTestAlert, AssessmentTestConfig } from '@/types/evolution';
 import { TestEvolutionService } from './testEvolutionService';
 import { PathologyService } from './pathologyService';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface AlertCheckResult {
   canSave: boolean;

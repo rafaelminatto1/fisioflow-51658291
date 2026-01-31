@@ -10,7 +10,7 @@ import { useDropzone } from 'react-dropzone';
 import { useCallback } from 'react';
 import { useImportLeads } from '@/hooks/useCRM';
 import * as XLSX from 'xlsx';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface LeadPreview {
   nome: string;

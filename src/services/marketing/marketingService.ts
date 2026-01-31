@@ -10,7 +10,7 @@ import { db } from '@/integrations/firebase/app';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const storage = getFirebaseStorage();
 

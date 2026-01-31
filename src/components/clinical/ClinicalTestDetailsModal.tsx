@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { generateClinicalTestPdf } from '@/utils/generateClinicalTestPdf';
 import { toast } from 'sonner';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ClinicalTest {
     id: string;

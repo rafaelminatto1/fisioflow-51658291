@@ -9,7 +9,7 @@ import { ScheduleHeaderRefactored } from '@/components/schedule/ScheduleHeaderRe
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, ChevronLeft, ChevronRight, CalendarDays, Users, Clock } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';

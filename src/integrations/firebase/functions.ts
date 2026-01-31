@@ -13,7 +13,7 @@ import { app } from './app';
 // ============================================================================
 
 /** Região padrão para as Cloud Functions */
-const DEFAULT_REGION = 'us-central1';
+const DEFAULT_REGION = 'southamerica-east1';
 
 /** Timeout padrão para chamadas de função (em segundos) */
 const DEFAULT_TIMEOUT = 60;

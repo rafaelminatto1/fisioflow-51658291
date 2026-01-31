@@ -1,6 +1,6 @@
 // Configuração do Sentry para o frontend
 import * as Sentry from '@sentry/react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;

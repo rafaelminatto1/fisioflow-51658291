@@ -5,7 +5,7 @@
  * Cache times, stale times, retry policies, etc.
  */
 
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Tempos de cache em milissegundos

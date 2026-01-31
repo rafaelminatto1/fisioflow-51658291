@@ -6,18 +6,18 @@
  * @module firebase/ai/instance
  */
 
-import { getFirebaseAI } from '@firebase/ai';
+import { getFirebaseAI as getFirebaseAISdk } from '@firebase/ai';
 import app from '../config';
 
-let aiInstance: ReturnType<typeof getFirebaseAI> | null = null;
+let aiInstance: ReturnType<typeof getFirebaseAISdk> | null = null;
 
 /**
  * Get Firebase AI Logic service instance
  */
-export function getFirebaseAI(): ReturnType<typeof getFirebaseAI> | null {
+export function getFirebaseAI(): ReturnType<typeof getFirebaseAISdk> | null {
   if (aiInstance === null) {
     try {
-      aiInstance = getFirebaseAI(app);
+      aiInstance = getFirebaseAISdk(app);
     } catch (error) {
       console.warn('Firebase AI Logic service not available:', error);
       aiInstance = null;

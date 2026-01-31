@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '../config';
+import { db } from '../../firebase/config';
 import { COLLECTIONS } from '@fisioflow/shared-constants';
 
 export interface Patient {
@@ -26,17 +26,17 @@ export function usePatients(professionalId?: string) {
     setError(null);
 
     // Query for patients
-    let query;
+    let patientQuery;
     if (professionalId) {
       // If professionalId provided, get only their patients
-      query = query(
+      patientQuery = query(
         collection(db, COLLECTIONS.PATIENTS),
         where('professionalId', '==', professionalId),
         where('isActive', '==', true)
       );
     } else {
       // Get all active patients
-      query = query(
+      patientQuery = query(
         collection(db, COLLECTIONS.PATIENTS),
         where('isActive', '==', true)
       );
@@ -44,7 +44,7 @@ export function usePatients(professionalId?: string) {
 
     // Real-time listener
     const unsubscribe = onSnapshot(
-      query,
+      patientQuery,
       (snapshot) => {
         const patientsList: Patient[] = [];
         snapshot.forEach((doc) => {

@@ -28,7 +28,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const storage = getFirebaseStorage();
 const auth = getFirebaseAuth();

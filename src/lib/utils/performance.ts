@@ -5,7 +5,7 @@
  * Core Web Vitals, tempo de renderização, e métricas customizadas
  */
 
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useEffect, useRef, useCallback } from 'react';
 
 // Types for Performance API entries

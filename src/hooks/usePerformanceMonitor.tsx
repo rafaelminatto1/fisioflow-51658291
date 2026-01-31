@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface PerformanceMetrics {
   renderTime: number;

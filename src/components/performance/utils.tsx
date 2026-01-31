@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Custom hook that returns a memoized callback with debounce

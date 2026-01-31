@@ -20,10 +20,11 @@ import {
   deleteDoc,
   doc,
   Unsubscribe,
+  getDocs,
 } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type NotificationType = 'achievement' | 'level_up' | 'quest_complete' | 'streak_milestone' | 'reward_unlocked';
 
@@ -279,5 +280,4 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
   };
 };
 
-// Missing import
-import { getDocs } from 'firebase/firestore';
+

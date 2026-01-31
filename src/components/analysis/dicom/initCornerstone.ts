@@ -1,6 +1,6 @@
 import { init as coreInit } from '@cornerstonejs/core';
 import { init as toolsInit } from '@cornerstonejs/tools';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 let initialized = false;
 

@@ -7,7 +7,7 @@ import { getAdminDb } from '../init';
 // However, since we are mixing v1 and v2, let's try to use v1 for auth triggers
 // to avoid complexity with Identity Platform restrictions.
 
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 
 /**
  * Trigger fired when a new user is created in Firebase Auth.

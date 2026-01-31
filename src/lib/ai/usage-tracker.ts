@@ -10,7 +10,7 @@
 import { collection, doc, setDoc, getDoc, getDocs, query, where, sum, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
 import { AIModelType, AIFeatureCategory, AIUsageRecord } from '@fisioflow/shared-api/firebase/ai/config';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Usage statistics for a period

@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Patient } from '@/types';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

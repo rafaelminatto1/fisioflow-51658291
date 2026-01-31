@@ -22,7 +22,7 @@ import { functions } from '@/lib/firebase';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface WhatsAppIntegrationProps {
   patientId: string;

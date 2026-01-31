@@ -2,7 +2,7 @@
 
 import { AppointmentBase, AppointmentType, AppointmentStatus } from '@/types/appointment';
 import { Patient } from '@/types';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============= PACIENTES MOCK =============
 export const mockPatients: Patient[] = [

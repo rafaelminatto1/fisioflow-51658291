@@ -10,7 +10,7 @@ import {
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type VideoProvider = 'builtin' | 'whereby' | 'twilio' | 'agora' | 'daily';
 

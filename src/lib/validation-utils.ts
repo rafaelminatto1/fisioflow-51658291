@@ -10,7 +10,7 @@
 
 import { z } from 'zod';
 import type { UnknownError, getErrorMessage, asError } from '@/types';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Safe parse wrapper that returns null on validation failure

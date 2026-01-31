@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { FinancialService, Transaction, FinancialStats } from '@/services/financialService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type { Transaction, FinancialStats };
 

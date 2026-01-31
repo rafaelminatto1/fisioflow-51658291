@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { exerciseVideosService, type ExerciseVideo } from '@/services/exerciseVideos';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ExerciseVideoPlayerProps {
   src: string;

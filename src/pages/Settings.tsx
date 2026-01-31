@@ -33,7 +33,7 @@ import { InviteUserModal } from '@/components/admin/InviteUserModal';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { BackupSettings } from '@/components/settings/BackupSettings';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================================
 // TYPES & INTERFACES

@@ -4,7 +4,15 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import {
+  DB_PASS_SECRET,
+  DB_USER_SECRET,
+  DB_NAME_SECRET,
+  DB_HOST_IP_SECRET,
+  DB_HOST_IP_PUBLIC_SECRET,
+  CLOUD_SQL_CONNECTION_NAME_SECRET,
+  getPool
+} from '../init';
 
 // Import secrets to register them with the functions framework
 import '../init';
@@ -12,7 +20,14 @@ import '../init';
 export const healthCheck = onRequest({
   memory: '256MiB',
   maxInstances: 1,
-  secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'DB_HOST_IP'],
+  secrets: [
+    DB_PASS_SECRET,
+    DB_USER_SECRET,
+    DB_NAME_SECRET,
+    DB_HOST_IP_SECRET,
+    DB_HOST_IP_PUBLIC_SECRET,
+    CLOUD_SQL_CONNECTION_NAME_SECRET
+  ],
 }, async (req, res) => {
   // CORS headers
   res.set('Access-Control-Allow-Origin', '*');

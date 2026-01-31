@@ -4,6 +4,7 @@ exports.getEventReport = exports.findTransactionByAppointmentId = exports.delete
 const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
+const logger_1 = require("../lib/logger");
 /**
  * Lista transações financeiras
  */
@@ -22,7 +23,7 @@ exports.listTransactions = (0, https_1.onCall)({ cors: true }, async (request) =
         return { data: result.rows };
     }
     catch (error) {
-        console.error('Error in listTransactions:', error);
+        logger_1.logger.error('Error in listTransactions:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar transações';
@@ -59,7 +60,7 @@ exports.createTransaction = (0, https_1.onCall)({ cors: true }, async (request) 
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in createTransaction:', error);
+        logger_1.logger.error('Error in createTransaction:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar transação';
@@ -117,7 +118,7 @@ exports.updateTransaction = (0, https_1.onCall)({ cors: true }, async (request) 
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in updateTransaction:', error);
+        logger_1.logger.error('Error in updateTransaction:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar transação';
@@ -145,7 +146,7 @@ exports.deleteTransaction = (0, https_1.onCall)({ cors: true }, async (request) 
         return { success: true };
     }
     catch (error) {
-        console.error('Error in deleteTransaction:', error);
+        logger_1.logger.error('Error in deleteTransaction:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir transação';
@@ -176,7 +177,7 @@ exports.findTransactionByAppointmentId = (0, https_1.onCall)({ cors: true }, asy
         return { data: result.rows[0] };
     }
     catch (error) {
-        console.error('Error in findTransactionByAppointmentId:', error);
+        logger_1.logger.error('Error in findTransactionByAppointmentId:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar transação';
@@ -247,7 +248,7 @@ exports.getEventReport = (0, https_1.onCall)({ cors: true }, async (request) => 
         };
     }
     catch (error) {
-        console.error('Error in getEventReport:', error);
+        logger_1.logger.error('Error in getEventReport:', error);
         if (error instanceof https_1.HttpsError)
             throw error;
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório';

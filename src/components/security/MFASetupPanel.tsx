@@ -11,7 +11,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { logger } from "@/lib/errors/logger";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export function MFASetupPanel() {
   const {

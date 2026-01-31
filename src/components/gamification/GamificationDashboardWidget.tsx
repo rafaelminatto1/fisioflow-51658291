@@ -6,7 +6,7 @@ import { LevelProgressWidget } from './widgets/LevelProgressWidget';
 import { RecentAchievementsWidget } from './widgets/RecentAchievementsWidget';
 import { DailyQuestsWidget } from './widgets/DailyQuestsWidget';
 import { GamificationTriggerService, type LevelCalculationResult } from '@/lib/services/gamificationTriggers';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface GamificationDashboardWidgetProps {
   patientId: string;

@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
 import { db } from '@/integrations/firebase/app';
 import { collection, getDocs, query, where, orderBy, limit as limitClause } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // const db = getFirebaseDb(); // Moved inside functions
 

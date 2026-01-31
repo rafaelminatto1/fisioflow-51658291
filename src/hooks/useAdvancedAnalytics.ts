@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Interfaces para Analytics
 interface MetricData {

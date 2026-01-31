@@ -1,5 +1,5 @@
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 type TransformOptions = {
     width?: number;

@@ -8,7 +8,7 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Tipos de eventos customizados
 export enum MetricType {

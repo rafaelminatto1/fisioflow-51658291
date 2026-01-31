@@ -7,7 +7,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { UnifiedLandmark, POSE_LANDMARKS, calculateAngle } from '@/utils/geometry';
 import { useMediaPipeVision } from '@/hooks/performance';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface BiofeedbackMetrics {
     kneeValgusL: number;

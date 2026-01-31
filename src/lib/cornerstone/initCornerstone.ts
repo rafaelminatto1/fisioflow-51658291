@@ -17,7 +17,7 @@ import {
     AngleTool,
     MagnifyTool,
 } from '@cornerstonejs/tools';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export const TOOLS = {
     WindowLevelTool,

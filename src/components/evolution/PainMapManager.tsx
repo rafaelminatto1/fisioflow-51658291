@@ -17,7 +17,7 @@ import type { PainPoint } from '@/components/pain-map/BodyMap';
 import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface PainMapManagerProps {
   patientId: string;

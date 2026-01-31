@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
 import { collection as collectionRef, getDocs as getDocsFromCollection } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function BackupSettings() {
     const [isExporting, setIsExporting] = useState(false);

@@ -9,7 +9,7 @@ import { detectPoseInImage } from '@/services/ai/poseDetectionService';
 import { UnifiedLandmark } from '@/utils/geometry';
 import { calculatePostureMetrics, PostureReport } from '@/utils/postureMetrics';
 import LandmarkEditor from './LandmarkEditor';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 type Step = 'upload' | 'analysis' | 'report';
 type ViewType = 'front' | 'side' | 'back';

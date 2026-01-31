@@ -5,7 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { initSentry } from "@/lib/sentry/config";
 import { initAppCheck } from "@/lib/firebase/app-check";
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Inicializar serviços globais
 initSentry();

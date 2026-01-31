@@ -8,7 +8,7 @@ import { collection, query, where, limit, onSnapshot } from 'firebase/firestore'
 import { PatientHelpers } from '@/types';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface Patient {
   id: string;

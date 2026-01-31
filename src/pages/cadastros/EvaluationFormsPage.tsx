@@ -36,7 +36,7 @@ import { TemplateGrid } from '@/components/evaluation/TemplateGrid';
 import { TemplateFilters as TemplateFiltersComponent } from '@/components/evaluation/TemplateFilters';
 import { useToggleFavorite } from '@/hooks/useTemplateFavorites';
 import { useTemplateStats } from '@/hooks/useTemplateStats';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface EvaluationFormField {
   tipo_campo: string;

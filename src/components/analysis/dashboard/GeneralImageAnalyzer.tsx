@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Brain, AlertTriangle } from 'lucide-react';
 import { analyzeWithGeminiVision, VisionAnalysisResult } from '@/services/ai/geminiVisionService';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface GeneralImageAnalyzerProps {
     file: File;

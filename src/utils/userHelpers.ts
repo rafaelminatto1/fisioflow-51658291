@@ -4,7 +4,7 @@
 
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { doc, getDoc } from 'firebase/firestore';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Obtém o organization_id do usuário atual

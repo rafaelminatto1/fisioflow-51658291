@@ -7,7 +7,7 @@ import { dicomWebClient, DicomStudy } from '@/services/dicom/dicomWebClient';
 import { getFirebaseFunctions } from '@/integrations/firebase/app';
 import { httpsCallable } from 'firebase/functions';
 import DicomViewer from './DicomViewer';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface DicomBrowserProps {
     onSelectSeries?: (studyInstanceUid: string, seriesInstanceUid: string) => void;

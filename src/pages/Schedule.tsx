@@ -18,7 +18,7 @@ import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useBulkActions } from '@/hooks/useBulkActions';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare, Calendar, Sparkles } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -431,8 +431,8 @@ const Schedule = () => {
                 <p className="text-sm text-muted-foreground">Otimize seus horários com sugestões inteligentes da IA.</p>
               </div>
             </div>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="rounded-xl font-bold shadow-md hover:shadow-lg h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white transition-all group"
               onClick={() => toast({ title: "IA Analisando...", description: "Verificando disponibilidade e padrões de agendamento." })}
             >
@@ -619,9 +619,9 @@ const Schedule = () => {
           <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
-                {filteredAppointments.length === 0 && !isLoading ? (
+                {filteredAppointments.length === 0 && !loading ? (
                   <div className="h-full flex items-center justify-center p-8">
-                    <EmptyState 
+                    <EmptyState
                       icon={Calendar}
                       title="Agenda Livre"
                       description="Nenhum atendimento encontrado para os critérios selecionados."
@@ -632,21 +632,21 @@ const Schedule = () => {
                 ) : (
                   <CalendarView
                     appointments={filteredAppointments}
-                  currentDate={currentDate}
-                  onDateChange={setCurrentDate}
-                  viewType={viewType as CalendarViewType}
-                  onViewTypeChange={handleViewTypeChange}
-                  onAppointmentClick={handleAppointmentClick}
-                  onTimeSlotClick={handleTimeSlotClick}
-                  onAppointmentReschedule={handleAppointmentReschedule}
-                  onEditAppointment={handleEditAppointment}
-                  onDeleteAppointment={handleDeleteAppointment}
-                  selectionMode={isSelectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelection={toggleSelection}
-                />
-              )}
-            </Suspense>
+                    currentDate={currentDate}
+                    onDateChange={setCurrentDate}
+                    viewType={viewType as CalendarViewType}
+                    onViewTypeChange={handleViewTypeChange}
+                    onAppointmentClick={handleAppointmentClick}
+                    onTimeSlotClick={handleTimeSlotClick}
+                    onAppointmentReschedule={handleAppointmentReschedule}
+                    onEditAppointment={handleEditAppointment}
+                    onDeleteAppointment={handleDeleteAppointment}
+                    selectionMode={isSelectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={toggleSelection}
+                  />
+                )}
+              </Suspense>
             </div>
           </div>
         </div>

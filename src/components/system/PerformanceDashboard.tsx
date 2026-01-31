@@ -37,7 +37,7 @@ import {
 import { Activity, Database, Zap, AlertTriangle, RefreshCw, Trash2, Search, TrendingUp } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

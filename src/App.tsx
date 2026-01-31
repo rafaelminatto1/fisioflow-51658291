@@ -9,7 +9,7 @@ import { RealtimeProvider } from "@/contexts/RealtimeContext";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { notificationManager } from '@/lib/services/NotificationManager';
 import { initMonitoring } from '@/lib/monitoring';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';

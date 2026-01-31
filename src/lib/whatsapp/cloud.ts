@@ -5,7 +5,7 @@
  * Replaces Evolution API for users with direct Cloud API credentials.
  */
 
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const WHATSAPP_API_VERSION = 'v18.0';
 

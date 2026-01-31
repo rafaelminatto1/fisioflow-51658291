@@ -13,7 +13,7 @@ import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekView } from './CalendarWeekView';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 
 export type CalendarViewType = 'day' | 'week' | 'month';

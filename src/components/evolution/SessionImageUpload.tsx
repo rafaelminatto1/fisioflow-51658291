@@ -52,7 +52,7 @@ import {
   File
 } from 'lucide-react';
 import { useUploadSessionAttachment, useDeleteSessionAttachment, useSessionAttachments, type SessionAttachmentCategory, type SessionAttachment } from '@/hooks/useSoapRecords';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface SessionImageUploadProps {
   patientId: string;

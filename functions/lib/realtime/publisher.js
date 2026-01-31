@@ -46,6 +46,7 @@ exports.publishPresence = publishPresence;
 exports.createAblyRealtimeClient = createAblyRealtimeClient;
 exports.subscribeToOrganizationChannels = subscribeToOrganizationChannels;
 const Ably = __importStar(require("ably"));
+const logger_1 = require("../lib/logger");
 // Cliente Ably REST (para publicação do servidor)
 let ablyRest = null;
 function getAblyRest() {
@@ -136,7 +137,7 @@ exports.realtimePublish = (0, https_1.onRequest)(async (req, res) => {
         res.json({ success: true });
     }
     catch (error) {
-        console.error('Erro ao publicar no Ably:', error);
+        logger_1.logger.error('Erro ao publicar no Ably:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.status(500).json({ error: errorMessage });
     }

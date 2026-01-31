@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useOfflineSync } from '@/services/offlineSync';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function SyncManager() {
     const { stats, syncNow, isOnline, cacheCriticalData } = useOfflineSync({

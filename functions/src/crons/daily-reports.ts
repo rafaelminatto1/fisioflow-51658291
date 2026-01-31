@@ -20,7 +20,7 @@ import { getAdminDb } from '../init';
  * - Compilar estatísticas de sessões do dia anterior
  *
  * Schedule: "every day 08:00"
- * Region: us-central1 (default)
+ * Region: southamerica-east1
  */
 export const dailyReports = onSchedule({
   schedule: 'every day 08:00',

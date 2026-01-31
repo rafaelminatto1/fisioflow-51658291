@@ -4,7 +4,7 @@ import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentTyp
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 import { AppError } from '@/lib/errors/AppError';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
 import type { UnknownError } from '@/types/common';

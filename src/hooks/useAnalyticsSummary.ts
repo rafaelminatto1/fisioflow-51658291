@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { queryConfigs } from "@/lib/queryConfig";
-import { logger } from "@/lib/errors/logger";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 import { db } from '@/integrations/firebase/app';
 import {
   collection,

@@ -5,7 +5,7 @@
  */
 
 import { Inngest } from 'inngest';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Create Inngest client with proper configuration

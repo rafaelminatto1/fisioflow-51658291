@@ -35,7 +35,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { db, collection, addDoc } from '@/integrations/firebase/app';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { collection as collectionRef, addDoc as addDocToFirestore } from 'firebase/firestore';
 
 interface MeasurementField {

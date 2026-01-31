@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Trophy, Activity, Brain, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useAI } from '@/integrations/firebase/ai';
 import { motion } from 'framer-motion';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ExerciseCoachAIProps {
   sessionData: {
