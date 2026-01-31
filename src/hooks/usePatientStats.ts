@@ -14,8 +14,7 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
-  documentId
+  orderBy
 } from 'firebase/firestore';
 
 
@@ -418,27 +417,42 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
       const batchSize = 10;
       const allAppointments: Appointment[] = [];
       const allSoapRecords: SOAPRecord[] = [];
+      const batches = [];
 
+      // Prepare batches
       for (let i = 0; i < patientIds.length; i += batchSize) {
-        const batch = patientIds.slice(i, i + batchSize);
-
-        // Fetch appointments
-        const appointmentsQ = query(
-          collection(db, 'appointments'),
-          where(documentId(), 'in', batch)
-        );
-        const appointmentsSnap = await getDocs(appointmentsQ);
-        allAppointments.push(...appointmentsSnap.docs.map(convertDocToAppointment));
-
-        // Fetch SOAP records
-        const soapQ = query(
-          collection(db, 'soap_records'),
-          where('patient_id', 'in', batch),
-          where('status', '==', 'finalized')
-        );
-        const soapSnap = await getDocs(soapQ);
-        allSoapRecords.push(...soapSnap.docs.map(convertDocToSOAPRecord));
+        batches.push(patientIds.slice(i, i + batchSize));
       }
+
+      // ⚡ Bolt Performance: Fetch batches in parallel and fix query bug
+      // Previously sequential loop + broken query (searching documentId instead of patient_id)
+      const batchResults = await Promise.all(
+        batches.map(async (batch) => {
+          // Fetch appointments and SOAP records in parallel for this batch
+          const [appointmentsSnap, soapSnap] = await Promise.all([
+            getDocs(query(
+              collection(db, 'appointments'),
+              where('patient_id', 'in', batch)
+            )),
+            getDocs(query(
+              collection(db, 'soap_records'),
+              where('patient_id', 'in', batch),
+              where('status', '==', 'finalized')
+            ))
+          ]);
+
+          return {
+            appointments: appointmentsSnap.docs.map(convertDocToAppointment),
+            soapRecords: soapSnap.docs.map(convertDocToSOAPRecord)
+          };
+        })
+      );
+
+      // Aggregate results
+      batchResults.forEach(result => {
+        allAppointments.push(...result.appointments);
+        allSoapRecords.push(...result.soapRecords);
+      });
 
       // Process each patient
       const statsMap: Record<string, PatientStats> = {};
