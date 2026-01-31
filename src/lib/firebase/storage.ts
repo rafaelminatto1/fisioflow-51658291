@@ -20,7 +20,7 @@ import {
 } from 'firebase/storage';
 import { storage } from '@/integrations/firebase/app';
 import { getAuth } from 'firebase/auth';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

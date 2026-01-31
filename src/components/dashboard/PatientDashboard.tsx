@@ -19,7 +19,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface PatientDashboardProps {
   _lastUpdate: Date;

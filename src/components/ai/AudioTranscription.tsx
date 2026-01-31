@@ -15,7 +15,7 @@ import { Mic, Square, Play, Pause, Trash2, FileText, Loader2 } from 'lucide-reac
 import { toast } from '@/hooks/use-toast';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface AudioTranscriptionProps {
   patientId: string;

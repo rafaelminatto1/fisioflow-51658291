@@ -10,7 +10,7 @@
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { logger } from '../../lib/errors/logger.js';
+import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
 
 type VoucherWithRelations = {

@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 

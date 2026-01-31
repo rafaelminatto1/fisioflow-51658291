@@ -34,7 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/integrations/firebase/app';
 import { doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, orderBy, limit as limitClause } from 'firebase/firestore';
 import { PatientHelpers } from '@/types';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
 

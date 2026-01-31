@@ -21,7 +21,7 @@ const init_1 = require("../init");
  * - Compilar estatísticas de sessões do dia anterior
  *
  * Schedule: "every day 08:00"
- * Region: us-central1 (default)
+ * Region: southamerica-east1
  */
 exports.dailyReports = (0, scheduler_1.onSchedule)({
     schedule: 'every day 08:00',

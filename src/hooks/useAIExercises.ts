@@ -17,7 +17,7 @@ import type {
   ExerciseSuggestionResponse,
 } from '@/lib/ai/exercises';
 import { createExerciseAIAssistant } from '@/lib/ai/exercises';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 // ============================================================================
 // TYPES
 // ============================================================================

@@ -19,7 +19,7 @@ import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 type ReportType = 'appointments' | 'financial' | 'patients' | 'analytics' | 'complete';
 type ExportFormat = 'pdf' | 'csv' | 'json';

@@ -1,6 +1,6 @@
 import { Component, ReactNode } from 'react';
 import { Provider } from '@/components/error-handling/ErrorBoundaryContext';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ErrorInfo {
   componentStack: string;

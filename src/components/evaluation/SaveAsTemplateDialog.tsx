@@ -22,7 +22,7 @@ import {
 import { Save, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TemplateField } from './EvaluationTemplateSelector';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface SaveAsTemplateDialogProps {
     open: boolean;

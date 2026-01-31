@@ -1,4 +1,4 @@
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 import { inngest } from '@/lib/inngest/client';
 import { Events } from '@/lib/inngest/types';
 

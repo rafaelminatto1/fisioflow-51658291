@@ -160,22 +160,23 @@ class Logger {
   }
 }
 
-export const logger = new Logger();
+export const fisioLogger = new Logger();
+export const logger = fisioLogger;
 
 // Convenience aliases for direct console.log replacement
 // Use these instead of console.log/warn/error throughout the codebase
 export const log = {
-  debug: (message: string, data?: unknown, component?: string) => logger.debug(message, data, component),
-  info: (message: string, data?: unknown, component?: string) => logger.info(message, data, component),
-  warn: (message: string, data?: unknown, component?: string) => logger.warn(message, data, component),
-  error: (message: string, error?: unknown, component?: string) => logger.error(message, error, component),
-  performance: (message: string, data?: unknown, component?: string) => logger.performance(message, data, component),
+  debug: (message: string, data?: unknown, component?: string) => fisioLogger.debug(message, data, component),
+  info: (message: string, data?: unknown, component?: string) => fisioLogger.info(message, data, component),
+  warn: (message: string, data?: unknown, component?: string) => fisioLogger.warn(message, data, component),
+  error: (message: string, error?: unknown, component?: string) => fisioLogger.error(message, error, component),
+  performance: (message: string, data?: unknown, component?: string) => fisioLogger.performance(message, data, component),
 };
 
 // Global error handler
 if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => {
-    logger.error('Global Error', {
+    fisioLogger.error('Global Error', {
       message: event.message,
       filename: event.filename,
       lineno: event.lineno,
@@ -185,7 +186,7 @@ if (typeof window !== 'undefined') {
   });
 
   window.addEventListener('unhandledrejection', (event) => {
-    logger.error('Unhandled Promise Rejection', {
+    fisioLogger.error('Unhandled Promise Rejection', {
       reason: event.reason
     });
   });

@@ -12,7 +12,7 @@ import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics
 import DeltaCards from '@/components/metrics/DeltaCards';
 import MetricsTrendChart, { TrendSeriesPoint } from '@/components/metrics/MetricsTrendChart';
 import GoalPanel from '@/components/goals/GoalPanel';
-import { logger } from '@/lib/errors/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Mock Data Loader (Replace with real fetch)
 const fetchCompareData = async (_id: string): Promise<Record<string, unknown>> => {

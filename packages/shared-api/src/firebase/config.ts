@@ -1,13 +1,22 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getMessaging, isSupported } from 'firebase/messaging';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import {
+  getAuth,
+  initializeAuth,
+  // @ts-ignore
+  getReactNativePersistence,
+  Auth
+} from 'firebase/auth';
+// import { getReactNativePersistence } from 'firebase/auth/react-native';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getMessaging, isSupported, Messaging } from 'firebase/messaging';
+import { getFunctions, Functions, connectFunctionsEmulator } from 'firebase/functions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
 
 // Safely get environment variable
 const getEnv = (key: string): string | undefined => {
-  // Try web env (Vite)
   try {
     // @ts-ignore - import.meta.env is Vite-specific
     if (typeof import.meta !== 'undefined' && import.meta.env) {
@@ -15,19 +24,14 @@ const getEnv = (key: string): string | undefined => {
       const viteValue = import.meta.env[`VITE_${key}`];
       if (viteValue) return viteValue;
     }
-  } catch (e) {
-    // Ignore
-  }
+  } catch (e) { }
 
-  // Try native env (Expo/React Native)
   try {
     if (typeof process !== 'undefined' && process.env) {
       const envValue = process.env[`EXPO_PUBLIC_${key}`];
       if (envValue) return envValue;
     }
-  } catch (e) {
-    // Ignore
-  }
+  } catch (e) { }
 
   return undefined;
 };
@@ -42,62 +46,63 @@ const firebaseConfig = {
   measurementId: getEnv('FIREBASE_MEASUREMENT_ID'),
 };
 
-// Validate config - only create app if we have valid config
-const requiredKeys: (keyof typeof firebaseConfig)[] = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'appId'];
-const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
-
-if (missingKeys.length > 0 && typeof window !== 'undefined') {
-  console.warn('[Firebase shared-api] Missing config keys:', missingKeys.join(', '));
-  console.warn('[Firebase shared-api] Skipping initialization, will use main Firebase app');
-}
-
-// Initialize Firebase with unique app name to avoid conflicts
-// ONLY if we have valid config - otherwise use existing app
-const APP_NAME = 'fisioflow-shared-api';
+const APP_NAME = 'fisioflow-main';
 const existingApps = getApps();
 
-let app;
-if (missingKeys.length === 0) {
-  // Only create new app if config is valid
-  const existingApp = existingApps.find(a => a.name === APP_NAME);
-  if (existingApp) {
-    app = existingApp;
-  } else {
-    app = initializeApp(firebaseConfig, APP_NAME);
+let app: FirebaseApp;
+
+// Logic: Prefer existing app, otherwise initialize
+if (existingApps.length > 0) {
+  app = existingApps[0];
+} else if (firebaseConfig.apiKey) {
+  app = initializeApp(firebaseConfig, APP_NAME);
+} else {
+  console.warn('[Firebase shared-api] No config found and no existing app. Initialization may fail.');
+  // Fallback to avoid immediate crash on import if possible
+  app = {} as FirebaseApp;
+}
+
+// Initialize Auth with persistence for React Native if applicable
+let auth: Auth;
+if (app.name) {
+  try {
+    if (Platform.OS !== 'web') {
+      auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+      });
+    } else {
+      auth = getAuth(app);
+    }
+  } catch (error) {
+    // Already initialized or platform issue
+    auth = getAuth(app);
   }
 } else {
-  // Use existing app (from main Firebase initialization)
-  // This ensures shared-api uses the same app as the main application
-  app = existingApps.length > 0 ? existingApps[0] : null;
+  auth = {} as Auth;
 }
 
-// If no app is available, we can't initialize services
-if (!app) {
-  throw new Error('[Firebase shared-api] No Firebase app available. Ensure Firebase is initialized before importing shared-api.');
-}
+// Initialize other services
+export const db: Firestore = app.name ? getFirestore(app) : {} as Firestore;
+export const storage: FirebaseStorage = app.name ? getStorage(app) : {} as FirebaseStorage;
+export const functions: Functions = app.name ? getFunctions(app, 'southamerica-east1') : {} as Functions;
 
-// Initialize services using the shared app instance
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-
-// Cloud Functions
-export const functions = getFunctions(app, 'us-central1');
+export { auth };
 
 // Messaging (with platform support check)
-export let messaging: ReturnType<typeof getMessaging> | null = null;
-isSupported().then((supported) => {
-  if (supported) {
-    messaging = getMessaging(app);
-  }
-});
-
-// Connect to emulator in development
-if (process.env.NODE_ENV === 'development' && process.env.EXPO_PUBLIC_USE_EMULATOR === 'true') {
-  connectFunctionsEmulator(functions, 'localhost', 5001);
+export let messaging: Messaging | null = null;
+if (app.name) {
+  isSupported().then((supported) => {
+    if (supported) {
+      messaging = getMessaging(app);
+    }
+  });
 }
 
-// Re-export isSupported
-export { isSupported } from 'firebase/messaging';
+// Connect to emulator in development
+if (process.env.NODE_ENV === 'development' && getEnv('USE_EMULATOR') === 'true') {
+  if (app.name) connectFunctionsEmulator(functions, 'localhost', 5001);
+}
 
+export { isSupported } from 'firebase/messaging';
 export default app;
+

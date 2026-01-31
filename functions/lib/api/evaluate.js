@@ -6,6 +6,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apiEvaluate = void 0;
 const https_1 = require("firebase-functions/v2/https");
+const logger_1 = require("../lib/logger");
 /**
  * Endpoint HTTP para avaliações
  * Suporta GET (listar/buscar) e POST (criar)
@@ -80,7 +81,7 @@ exports.apiEvaluate = (0, https_1.onRequest)((req, res) => {
         return;
     }
     catch (error) {
-        console.error('Erro em apiEvaluate:', error);
+        logger_1.logger.error('Erro em apiEvaluate:', error);
         res.status(500).json({
             error: 'Internal server error',
             message: error?.message || 'Unknown error',
