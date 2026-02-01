@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Card } from '@/components';
+import { Card, SyncIndicator } from '@/components';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -193,6 +193,9 @@ export default function AppointmentsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+      {/* Sync Indicator */}
+      <SyncIndicator />
+
       {/* Tab Selector */}
       <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TouchableOpacity
