@@ -25,9 +25,9 @@ import { HapticFeedback } from '@/lib/haptics';
 import { calculateAge, formatPhone, getInitials } from '@/lib/utils';
 import { doc, getDoc, collection, query, where, orderBy, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Patient, SOAPRecord, Appointment } from '@/types';
+import type { Patient, SOAPRecord, Appointment, Evaluation } from '@/types';
 
-type TabKey = 'info' | 'evolutions' | 'exercises' | 'appointments';
+type TabKey = 'info' | 'evolutions' | 'exercises' | 'appointments' | 'evaluations';
 
 export default function PatientDetailScreen() {
   const router = useRouter();
@@ -42,11 +42,13 @@ export default function PatientDetailScreen() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [evolutions, setEvolutions] = useState<SOAPRecord[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
 
   useEffect(() => {
     loadPatientData();
     loadEvolutions();
     loadAppointments();
+    loadEvaluations();
   }, [patientId]);
 
   const loadPatientData = async () => {
@@ -113,10 +115,26 @@ export default function PatientDetailScreen() {
 
     return onSnapshot(q, (snapshot) => {
       const items: Appointment[] = [];
-      snapshot.forEach((doc) => {
-        items.push({ id: doc.id, ...doc.data() } as Appointment);
+      snapshot.forEach((docSnap) => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as Appointment);
       });
       setAppointments(items.slice(0, 10)); // Last 10
+    });
+  };
+
+  const loadEvaluations = () => {
+    const q = query(
+      collection(db, 'evaluations'),
+      where('patient_id', '==', patientId),
+      orderBy('created_at', 'desc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const items: Evaluation[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as Evaluation);
+      });
+      setEvaluations(items);
     });
   };
 
@@ -154,6 +172,11 @@ export default function PatientDetailScreen() {
   const handleCreateExercisePlan = useCallback(() => {
     HapticFeedback.light();
     router.push(`/exercise-plans/new?patientId=${patientId}`);
+  }, [router, patientId]);
+
+  const handleNewEvaluation = useCallback(() => {
+    HapticFeedback.light();
+    router.push(`/evaluations/new?patientId=${patientId}`);
   }, [router, patientId]);
 
   const handleDeletePatient = useCallback(() => {
@@ -274,6 +297,7 @@ export default function PatientDetailScreen() {
           <TabButton label="Evoluções" active={activeTab === 'evolutions'} onPress={() => setActiveTab('evolutions')} count={evolutions.length} colors={colors} />
           <TabButton label="Exercícios" active={activeTab === 'exercises'} onPress={() => setActiveTab('exercises')} colors={colors} />
           <TabButton label="Agenda" active={activeTab === 'appointments'} onPress={() => setActiveTab('appointments')} count={appointments.length} colors={colors} />
+          <TabButton label="Avaliações" active={activeTab === 'evaluations'} onPress={() => setActiveTab('evaluations')} count={evaluations.length} colors={colors} />
         </View>
 
         {/* Tab Content */}
@@ -310,6 +334,29 @@ export default function PatientDetailScreen() {
               onCreatePlan={handleCreateExercisePlan}
               colors={colors}
             />
+          </View>
+        )}
+
+        {activeTab === 'evaluations' && (
+          <View style={styles.tabContent}>
+            <EvaluationsSection
+              evaluations={evaluations}
+              onView={(id) => router.push(`/evaluations/${id}`)}
+              onCreateNew={handleNewEvaluation}
+              colors={colors}
+            />
+            {evaluations.length === 0 && (
+              <Card style={styles.emptyCard}>
+                <Icon name="clipboard" size={48} color={colors.primary} style={styles.emptyIcon} />
+                <Text style={[styles.emptyText, { color: colors.text }]}>Nenhuma avaliação registrada</Text>
+                <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+                  Registre avaliações iniciais e de acompanhamento
+                </Text>
+                <Button variant="outline" size="sm" onPress={handleNewEvaluation} style={styles.emptyButton}>
+                  Nova Avaliação
+                </Button>
+              </Card>
+            )}
           </View>
         )}
 
@@ -470,6 +517,37 @@ function AppointmentsSection({ appointments, onView, colors }: any) {
       ))}
     </View>
   );
+}
+
+function EvaluationsSection({ evaluations, onView, onCreateNew, colors }: any) {
+  return (
+    <View style={styles.section}>
+      {evaluations.map((evaluation: any) => (
+        <Pressable key={evaluation.id} onPress={() => onView(evaluation.id)}>
+          <Card style={styles.evaluationCard}>
+            <View style={styles.evaluationHeader}>
+              <Text style={[styles.evaluationTitle, { color: colors.text }]}>
+                {evaluation.chiefComplaint || 'Avaliação'}
+              </Text>
+              <Text style={[styles.evaluationDate, { color: colors.textSecondary }]}>
+                {format(new Date(evaluation.createdAt), "dd/MM/yyyy")}
+              </Text>
+            </View>
+            {evaluation.diagnosis && (
+              <Text style={[styles.evaluationPreview, { color: colors.textSecondary }]} numberOfLines={2}>
+                <Text style={styles.evaluationDiagnosis}>Diagnóstico:</Text> {evaluation.diagnosis}
+              </Text>
+            )}
+          </Card>
+        </Pressable>
+      ))}
+      {evaluations.length === 0 && (
+        <Button variant="primary" onPress={onCreateNew} style={styles.createNewButton}>
+          <Icon name="plus" size={16} color="#fff" />
+          {' '}Primeira Avaliação
+        </Button>
+      )}
+    </View  );
 }
 
 const styles = StyleSheet.create({
