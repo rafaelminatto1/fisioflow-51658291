@@ -308,11 +308,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           <DrawerTrigger asChild>
             <span
               className="contents"
-              onClick={(e) => {
-                // Prevent opening if a drag might be happening
-                e.stopPropagation();
-                onOpenChange?.(true);
-              }}
               role="button"
               tabIndex={0}
               aria-haspopup="dialog"

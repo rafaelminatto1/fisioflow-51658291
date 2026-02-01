@@ -20,6 +20,8 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { formatCPF, formatPhoneInput } from '@/utils/formatInputs';
 import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeString, sanitizeEmail } from '@/lib/validations';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { collection, addDoc, serverTimestamp } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(200, 'Nome muito longo'),
@@ -188,16 +190,17 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
         incomplete_registration: false,
       };
 
-      // Insert direto no Supabase com organization_id
-      const { error } = await supabase
-        .from('patients')
-        .insert([patientData])
-        .select()
-        .single();
+      // Inserir no Firebase Firestore
+      const docRef = await addDoc(collection(db, 'patients'), {
+        ...patientData,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+      });
 
-      if (error) throw error;
-
-      logger.info('Paciente cadastrado com sucesso', { name: patientData.name }, 'NewPatientModal');
+      logger.info('Paciente cadastrado com sucesso', {
+        name: patientData.name,
+        id: docRef.id
+      }, 'NewPatientModal');
 
       toast({
         title: 'Paciente cadastrado!',
@@ -212,14 +215,15 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
       let errorMessage = 'Não foi possível cadastrar o paciente.';
 
-      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
-        errorMessage = 'Já existe um paciente com este CPF ou email cadastrado.';
-      } else if (error && typeof error === 'object' && 'code' in error && error.code === '42501') {
-        errorMessage = 'Você não tem permissão para cadastrar pacientes.';
-      } else if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
-        errorMessage = 'Erro de referência: verifique os dados informados.';
-      } else if (error instanceof Error && error.message) {
-        errorMessage = error.message;
+      // Firebase error handling
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied') || error.message.includes('Missing or insufficient permissions')) {
+          errorMessage = 'Você não tem permissão para cadastrar pacientes.';
+        } else if (error.message.includes('already exists')) {
+          errorMessage = 'Já existe um paciente com este CPF ou email cadastrado.';
+        } else {
+          errorMessage = error.message;
+        }
       }
 
       toast({

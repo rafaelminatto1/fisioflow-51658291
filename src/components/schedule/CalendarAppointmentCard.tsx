@@ -183,9 +183,8 @@ const CalendarAppointmentCardBase = ({
             return;
         }
 
-        if (isTouch) {
-            onOpenPopover(appointment.id);
-        }
+        // NOTA: O onOpenPopover é tratado pelo AppointmentQuickView wrapper
+        // Removemos a chamada direta aqui para evitar duplicação
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
