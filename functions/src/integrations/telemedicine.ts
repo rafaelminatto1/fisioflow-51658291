@@ -9,13 +9,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
-import { CORS_ORIGINS } from '../init';
 
 /**
  * Cloud Function: Criar sala de telemedicina
  */
 export const createTelemedicineRoom = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -114,7 +113,7 @@ export const createTelemedicineRoom = onCall({
  * Cloud Function: Entrar na sala de telemedicina
  */
 export const joinTelemedicineRoom = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -212,7 +211,7 @@ export const joinTelemedicineRoom = onCall({
  * Cloud Function: Encerrar sala de telemedicina
  */
 export const endTelemedicineRoom = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {
@@ -288,7 +287,7 @@ export const endTelemedicineRoom = onCall({
  * Cloud Function: Obter histórico de teleconsultas
  */
 export const getTelemedicineHistory = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   memory: '256MiB',
   maxInstances: 10,
 }, async (request) => {

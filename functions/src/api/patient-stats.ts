@@ -1,4 +1,4 @@
-/**
+ /**
  * API Functions: Patient Stats
  * Cloud Functions para estatísticas de pacientes
  */
