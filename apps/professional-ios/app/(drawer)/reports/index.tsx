@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { StatCard } from '@/components/ui/StatCard';
 import { DateRangePicker } from '@/components/DateRangePicker';
+import { WeeklyChart, generateWeekData } from '@/components/ui/WeeklyChart';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
@@ -245,6 +247,10 @@ function TabButton({ label, active, onPress, colors }: any) {
 }
 
 function OverviewTab({ reportData, colors }: { reportData: ReportData; colors: any }) {
+  // Sample week data - in real app would be fetched from database
+  const weekSessionsData = generateWeekData(new Date(), [3, 5, 4, 6, 4, 7, 5]);
+  const weekRevenueData = generateWeekData(new Date(), [450, 750, 600, 900, 600, 1050, 750]);
+
   return (
     <View style={styles.tabContent}>
       {/* Key Metrics */}
@@ -276,6 +282,24 @@ function OverviewTab({ reportData, colors }: { reportData: ReportData; colors: a
           color={reportData.occupancyRate >= 70 ? '#22c55e' : reportData.occupancyRate >= 40 ? '#f59e0b' : '#ef4444'}
         />
       </View>
+
+      {/* Weekly Sessions Chart */}
+      <WeeklyChart
+        data={weekSessionsData}
+        color="#3b82f6"
+        title="Sessões Esta Semana"
+        subtitle="Número de sessões realizadas por dia"
+        colors={colors}
+      />
+
+      {/* Weekly Revenue Chart */}
+      <WeeklyChart
+        data={weekRevenueData}
+        color="#22c55e"
+        title="Faturamento Semanal"
+        subtitle="Receita diária (R$)"
+        colors={colors}
+      />
 
       {/* Appointments Breakdown */}
       <Card style={styles.chartCard}>
@@ -313,6 +337,10 @@ function OverviewTab({ reportData, colors }: { reportData: ReportData; colors: a
 }
 
 function FinancialTab({ reportData, formatCurrency, colors }: any) {
+  // Sample week data - in real app would be fetched from database
+  const weekRevenueData = generateWeekData(new Date(), [450, 750, 600, 900, 600, 1050, 750]);
+  const weekSessionsData = generateWeekData(new Date(), [3, 5, 4, 6, 4, 7, 5]);
+
   return (
     <View style={styles.tabContent}>
       <View style={styles.metricsGrid}>
@@ -330,16 +358,23 @@ function FinancialTab({ reportData, formatCurrency, colors }: any) {
         />
       </View>
 
-      {/* Revenue Chart Placeholder */}
-      <Card style={styles.chartCard}>
-        <Text style={[styles.chartTitle, { color: colors.text }]}>Faturamento Mensal</Text>
-        <View style={styles.chartPlaceholder}>
-          <Icon name="bar-chart-3" size={48} color={colors.textSecondary} />
-          <Text style={[styles.chartPlaceholderText, { color: colors.textSecondary }]}>
-            Gráfico de faturamento em desenvolvimento
-          </Text>
-        </View>
-      </Card>
+      {/* Weekly Revenue Chart */}
+      <WeeklyChart
+        data={weekRevenueData}
+        color="#22c55e"
+        title="Faturamento da Semana"
+        subtitle="Receita diária (R$)"
+        colors={colors}
+      />
+
+      {/* Weekly Sessions Chart */}
+      <WeeklyChart
+        data={weekSessionsData}
+        color="#3b82f6"
+        title="Sessões da Semana"
+        subtitle="Número de sessões cobradas por dia"
+        colors={colors}
+      />
 
       {/* Payment Breakdown */}
       <Card style={styles.sectionCard}>
@@ -385,6 +420,10 @@ function PatientsTab({ reportData, colors }: any) {
 }
 
 function PerformanceTab({ reportData, colors }: any) {
+  // Sample week data - in real app would be fetched from database
+  const weekPerformanceData = generateWeekData(new Date(), [85, 90, 88, 95, 92, 98, 94]);
+  const weekCompletionData = generateWeekData(new Date(), [3, 5, 4, 6, 4, 7, 5]);
+
   return (
     <View style={styles.tabContent}>
       <View style={styles.metricsGrid}>
@@ -408,6 +447,25 @@ function PerformanceTab({ reportData, colors }: any) {
           subtitle="de 5.0"
         />
       </View>
+
+      {/* Weekly Performance Chart */}
+      <WeeklyChart
+        data={weekPerformanceData}
+        color="#22c55e"
+        title="Desempenho Semanal"
+        subtitle="Taxa de conclusão diária (%)"
+        maxValue={100}
+        colors={colors}
+      />
+
+      {/* Weekly Completion Chart */}
+      <WeeklyChart
+        data={weekCompletionData}
+        color="#3b82f6"
+        title="Sessões Concluídas"
+        subtitle="Número de sessões por dia"
+        colors={colors}
+      />
 
       {/* Session Completion Rate */}
       <Card style={styles.sectionCard}>

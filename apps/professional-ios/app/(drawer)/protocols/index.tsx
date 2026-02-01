@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -362,16 +363,6 @@ function StatCardLarge({ icon, label, value, colors }: { icon: string; label: st
       <Text style={[styles.statCardValue, { color: colors.text }]}>{value}</Text>
       <Text style={[styles.statCardLabel, { color: colors.textSecondary }]}>{label}</Text>
     </View  );
-}
-
-function Modal({ visible, transparent, animationType, onRequestClose, children }: any) {
-  // Simple modal implementation
-  if (!visible) return null;
-  return (
-    <View style={[styles.modalOverlay, transparent && styles.modalOverlayTransparent]}>
-      {children}
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({

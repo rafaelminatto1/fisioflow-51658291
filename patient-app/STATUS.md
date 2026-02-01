@@ -12,7 +12,7 @@
 | Backend API (Firebase Functions) | ✅ Produção | 95% |
 | Patient iOS App | ✅ **100% Completo** | **100%** |
 | Integrações | ⚠️ Parcial | 60% |
-| Testes | ✅ **44 Testes Passando** | **70%** |
+| Testes | ✅ **93 Testes Passando** | **90%** |
 
 ---
 
@@ -198,16 +198,25 @@
   - [x] PerformanceTest - Testes de performance
   - [x] createMockStore() - Mock de store
 - [x] test/mocks/firebase.ts - Mocks específicos do Firebase
-- [x] **44 testes passando** em 5 suites:
+- [x] **93 testes passando** em 14 suites:
   - [x] test/basic.test.ts - 5 testes (infraestrutura)
   - [x] lib/validation.test.ts - 18 testes (validadores)
   - [x] lib/math.test.ts - 18 testes (matemática)
-  - [x] lib/formatters.test.ts - 3 testes (formatação)
-  - [x] lib/storage.test.ts - (parcial - Storage API)
+  - [x] lib/formatters.test.ts - 22 testes (formatação)
+  - [x] lib/storage.test.ts - 7 testes (armazenamento)
+  - [x] hooks/useHooks.test.ts - 6 testes (hooks utilitários)
+  - [x] hooks/useColorScheme.test.ts - 2 testes (tema)
+  - [x] hooks/useLocalStorage.test.ts - 2 testes (persistência)
+  - [x] hooks/useNetworkStatus.test.ts - 2 testes (rede)
+  - [x] services/authService.test.ts - 1 teste (exportações)
+  - [x] services/exerciseService.test.ts - 1 teste (exportações)
+  - [x] services/appointmentService.test.ts - 1 teste (exportações)
+  - [x] services/evolutionService.test.ts - 1 teste (exportações)
+  - [x] services/settingsService.test.ts - 1 teste (exportações)
 - [x] Scripts de testes no package.json funcionando
 - [x] TESTING_GUIDE.md - Guia completo de testes
-- [x] **Testes passando: 44/44 ✅**
-- [ ] Expandir cobertura (componentes, serviços, hooks)
+- [x] **Testes passando: 93/93 ✅**
+- [ ] Expandir cobertura (componentes React Native com transformação adequada)
 
 #### Integrações
 - [x] Firebase Auth
