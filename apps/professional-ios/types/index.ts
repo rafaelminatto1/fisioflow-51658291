@@ -181,5 +181,38 @@ export interface Notification {
   createdAt: Date | string;
 }
 
+export interface Evaluation {
+  id: string;
+  patientId: string;
+  patientName?: string;
+  appointmentId?: string;
+  chiefComplaint: string;
+  historyOfPresentIllness?: string;
+  pastMedicalHistory?: string;
+  medications?: string;
+  examination?: {
+    inspection?: string;
+    palpation?: string;
+    range_of_motion?: Record<string, string>;
+    muscle_strength?: Record<string, string>;
+    special_tests?: Record<string, boolean>;
+  };
+  vitalSigns?: {
+    blood_pressure?: string;
+    heart_rate?: number;
+    temperature?: number;
+    respiratory_rate?: number;
+    oxygen_saturation?: number;
+  };
+  diagnosis?: string;
+  prognosis?: string;
+  treatmentPlan?: string;
+  recommendations?: string;
+  createdBy: string;
+  createdByName?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
 // Re-export auth types
 export * from './auth';
