@@ -117,11 +117,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const checkPatientHasPreviousSessionsRef = useRef(checkPatientHasPreviousSessions);
   checkPatientHasPreviousSessionsRef.current = checkPatientHasPreviousSessions;
 
-  // Armazena referência estável para setValue
-  // setValue não é estável e mudanças no array de dependências causam re-renderização infinita
-  const setValueRef = useRef(setValue);
-  setValueRef.current = setValue;
-
   // Armazena referência estável para appointments
   // evita que mudanças no array causem re-renderização infinita no useEffect de conflito
   const appointmentsRef = useRef(appointments);
@@ -153,6 +148,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   });
 
   const { handleSubmit, setValue, watch, reset } = methods;
+
+  // Armazena referência estável para setValue
+  // setValue não é estável e mudanças no array de dependências causam re-renderização infinita
+  const setValueRef = useRef(setValue);
+  setValueRef.current = setValue;
+
   // Helper to normalize appointment data for form
   const getInitialFormData = useCallback((apt: AppointmentBase | null | undefined, defaults: { date?: Date, time?: string, patientId?: string }): AppointmentFormData => {
     // 1. Determine Date
