@@ -12,7 +12,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
-import { CORS_ORIGINS } from '../init';
 
 const firestore = admin.firestore();
 
@@ -103,7 +102,7 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const movementAnalysis = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '2GiB',
   cpu: 1,

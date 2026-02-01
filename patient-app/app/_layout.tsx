@@ -5,6 +5,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import { initializeNotifications } from '@/lib/notificationsSystem';
+import { ToastContainer, ErrorBoundary } from '@/components';
 import * as SplashScreen from 'expo-splash-screen';
 
 // Prevent the splash screen from auto-hiding
@@ -38,7 +39,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -58,7 +59,8 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
-    </>
+      <ToastContainer />
+    </ErrorBoundary>
   );
 }
 

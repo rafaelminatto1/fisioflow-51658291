@@ -1,8 +1,117 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Appointment } from '../types/models';
 import { logger } from '../lib/logger';
+import * as admin from 'firebase-admin';
+
+const firebaseAuth = admin.auth();
+
+// ============================================================================
+// HTTP VERSION (for frontend fetch calls with CORS fix)
+// ============================================================================
+
+/**
+ * Helper to verify Firebase ID token from Authorization header
+ */
+async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new HttpsError('unauthenticated', 'No authorization header');
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+
+  try {
+    const decodedToken = await firebaseAuth.verifyIdToken(token);
+    return { uid: decodedToken.uid };
+  } catch (error) {
+    throw new HttpsError('unauthenticated', 'Invalid token');
+  }
+}
+
+/**
+ * CORS headers helper
+ */
+function setCorsHeaders(res: any) {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+/**
+ * Helper to get organization ID from user ID
+ */
+async function getOrganizationId(userId: string): Promise<string> {
+  const pool = getPool();
+  const result = await pool.query('SELECT organization_id FROM profiles WHERE user_id = $1', [userId]);
+  if (result.rows.length === 0) {
+    throw new HttpsError('not-found', 'Perfil não encontrado');
+  }
+  return result.rows[0].organization_id;
+}
+
+/**
+ * HTTP version of listAppointments for CORS/compatibility
+ */
+export const listAppointmentsHttp = onRequest(
+  {
+    region: 'southamerica-east1',
+    memory: '256MiB',
+    maxInstances: 100,
+  },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') {
+      setCorsHeaders(res);
+      res.status(204).send('');
+      return;
+    }
+
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    setCorsHeaders(res);
+
+    try {
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationId(uid);
+
+      const { dateFrom, dateTo, therapistId, status, patientId, limit = 100, offset = 0 } = req.body || {};
+      const pool = getPool();
+
+      let query = `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
+                   FROM appointments a
+                   LEFT JOIN patients p ON a.patient_id = p.id
+                   LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
+                   WHERE a.organization_id = $1`;
+      const params: (string | number)[] = [organizationId];
+      let paramCount = 1;
+
+      if (dateFrom) { query += ` AND a.date >= $${++paramCount}`; params.push(dateFrom); }
+      if (dateTo) { query += ` AND a.date <= $${++paramCount}`; params.push(dateTo); }
+      if (therapistId) { query += ` AND a.therapist_id = $${++paramCount}`; params.push(therapistId); }
+      if (status) { query += ` AND a.status = $${++paramCount}`; params.push(status); }
+      if (patientId) { query += ` AND a.patient_id = $${++paramCount}`; params.push(patientId); }
+
+      query += ` ORDER BY a.date, a.start_time LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+      params.push(limit, offset);
+
+      const result = await pool.query(query, params);
+      res.json({ data: result.rows as Appointment[] });
+    } catch (error: unknown) {
+      logger.error('Error in listAppointments:', error);
+      const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
+      res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao listar agendamentos' });
+    }
+  }
+);
+
+// ============================================================================
+// ORIGINAL CALLABLE VERSIONS (for other uses)
+// ============================================================================
 
 /**
  * Lista agendamentos com filtros

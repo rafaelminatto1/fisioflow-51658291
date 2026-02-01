@@ -11,7 +11,6 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
-import { CORS_ORIGINS, defineSecret } from '../init';
 
 // Define secrets for Secret Manager
 const STRIPE_SECRET_KEY_SECRET = defineSecret('STRIPE_SECRET_KEY');
@@ -38,7 +37,7 @@ export const stripeWebhookHttp = onRequest({
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
-  cors: CORS_ORIGINS,
+  cors: true,
   secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
 }, async (request, response) => {
   const sig = request.headers['stripe-signature'] as string;

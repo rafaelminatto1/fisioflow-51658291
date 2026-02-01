@@ -10,7 +10,6 @@ import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 import { defineSecret } from 'firebase-functions/params';
-import { CORS_ORIGINS } from '../init';
 
 export const WHATSAPP_PHONE_NUMBER_ID_SECRET = defineSecret('WHATSAPP_PHONE_NUMBER_ID');
 export const WHATSAPP_ACCESS_TOKEN_SECRET = defineSecret('WHATSAPP_ACCESS_TOKEN');
@@ -103,7 +102,7 @@ export enum WhatsAppTemplate {
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 export const sendWhatsAppAppointmentConfirmation = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -193,7 +192,7 @@ export const sendWhatsAppAppointmentConfirmation = onCall({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 export const sendWhatsAppAppointmentReminder = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -262,7 +261,7 @@ export const sendWhatsAppAppointmentReminder = onCall({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 export const sendWhatsAppWelcome = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -307,7 +306,7 @@ export const sendWhatsAppWelcome = onCall({
  * Cloud Function: Enviar mensagem personalizada
  */
 export const sendWhatsAppCustomMessage = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -367,7 +366,7 @@ export const sendWhatsAppCustomMessage = onCall({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 export const sendWhatsAppExerciseAssigned = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -781,7 +780,7 @@ async function handleAutoReply(from: string, text: string, patient: any) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 export const testWhatsAppMessage = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -847,7 +846,7 @@ export const testWhatsAppMessage = onCall({
  * Envia um template específico para verificar se foi aprovado
  */
 export const testWhatsAppTemplate = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -967,7 +966,7 @@ export const testWhatsAppTemplate = onCall({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 export const getWhatsAppHistory = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
 }, async (request) => {

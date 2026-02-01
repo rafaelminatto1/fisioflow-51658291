@@ -11,13 +11,12 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { CORS_ORIGINS } from '../init';
 
 /**
  * Cloud Function: Criar evolução completa (SOAP avançado)
  */
 export const createEvolution = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '512MiB',
   maxInstances: 10,
@@ -135,7 +134,7 @@ export const createEvolution = onCall({
  * Cloud Function: Atualizar evolução (com versionamento)
  */
 export const updateEvolution = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '512MiB',
   maxInstances: 10,
@@ -237,7 +236,7 @@ export const updateEvolution = onCall({
  * Cloud Function: Adicionar anexo à evolução
  */
 export const addEvolutionAttachment = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -298,7 +297,7 @@ export const addEvolutionAttachment = onCall({
  * Cloud Function: Obter histórico de evoluções do paciente
  */
 export const getPatientEvolutionHistory = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,
@@ -352,7 +351,7 @@ export const getPatientEvolutionHistory = onCall({
  * Cloud Function: Gerar relatório de evolução em PDF
  */
 export const generateEvolutionReport = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
   maxInstances: 5,
@@ -447,7 +446,7 @@ export const generateEvolutionReport = onCall({
  * Cloud Function: Comparar evoluções (antes/depois)
  */
 export const compareEvolutions = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '256MiB',
   maxInstances: 10,

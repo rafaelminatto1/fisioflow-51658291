@@ -14,29 +14,35 @@ import { auth } from '@/lib/firebase';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
+import { validators } from '@/lib/validation';
 
 export default function ForgotPasswordScreen() {
   const colors = useColors();
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleResetPassword = async () => {
-    if (!email.trim()) {
-      Alert.alert('Erro', 'Digite seu email');
+    // Validate email
+    const emailError = validators.email(email);
+    if (emailError) {
+      setError(emailError);
       return;
     }
 
+    setError('');
     setIsLoading(true);
+
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
       setSent(true);
     } catch (error: any) {
-      let message = 'Erro ao enviar email de recuperacao';
+      let message = 'Erro ao enviar email de recuperação';
       if (error.code === 'auth/user-not-found') {
-        message = 'Email nao encontrado';
+        message = 'Email não encontrado';
       } else if (error.code === 'auth/invalid-email') {
-        message = 'Email invalido';
+        message = 'Email inválido';
       }
       Alert.alert('Erro', message);
     } finally {
@@ -53,7 +59,7 @@ export default function ForgotPasswordScreen() {
           </View>
           <Text style={[styles.title, { color: colors.text }]}>Email Enviado!</Text>
           <Text style={[styles.description, { color: colors.textSecondary }]}>
-            Enviamos um link de recuperacao para {email}. Verifique sua caixa de entrada.
+            Enviamos um link de recuperação para {email}. Verifique sua caixa de entrada.
           </Text>
           <Button
             title="Voltar ao Login"
@@ -84,11 +90,15 @@ export default function ForgotPasswordScreen() {
             label="Email"
             placeholder="seu@email.com"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              setError('');
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             leftIcon="mail-outline"
+            error={error}
             containerStyle={styles.input}
           />
 

@@ -32,7 +32,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Inicio',
+          title: 'Início',
           headerTitle: 'FisioFlow',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
@@ -58,12 +58,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="progress"
+        options={{
+          title: 'Progresso',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trending-up" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null, // Hide from tab bar
         }}
       />
     </Tabs>

@@ -352,7 +352,7 @@ export function useAppointments() {
   const isUsingStaleData = dataSource !== 'fresh' && finalData.length > 0;
 
   return {
-    ...query,
+    ...appointmentsQuery,
     data: finalData,
     isFromCache: result?.isFromCache || dataSource === 'cache' || dataSource === 'previous',
     cacheTimestamp: result?.cacheTimestamp || null,

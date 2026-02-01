@@ -13,9 +13,10 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Button, Input } from '@/components';
+import { Button, Input, PasswordStrength } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { auth, db } from '@/lib/firebase';
+import { validators, ValidationErrors } from '@/lib/validation';
 
 export default function RegisterScreen() {
   const colors = useColors();
@@ -37,30 +38,26 @@ export default function RegisterScreen() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Nome é obrigatório';
-    } else if (formData.fullName.trim().length < 3) {
-      newErrors.fullName = 'Nome deve ter pelo menos 3 caracteres';
-    }
+    // Validate name
+    const nameError = validators.name(formData.fullName);
+    if (nameError) newErrors.fullName = nameError;
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email é obrigatório';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
+    // Validate email
+    const emailError = validators.email(formData.email);
+    if (emailError) newErrors.email = emailError;
 
-    if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
-    }
+    // Validate password
+    const passwordError = validators.password(formData.password);
+    if (passwordError) newErrors.password = passwordError;
 
+    // Validate confirm password
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Confirme sua senha';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'As senhas não coincidem';
     }
 
+    // Validate terms
     if (!formData.acceptTerms) {
       newErrors.acceptTerms = 'Você deve aceitar os termos de uso';
     }
@@ -203,7 +200,7 @@ export default function RegisterScreen() {
 
             <Input
               label="Senha"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={formData.password}
               onChangeText={(text) => {
                 setFormData({ ...formData, password: text });
@@ -217,6 +214,8 @@ export default function RegisterScreen() {
               onRightIconPress={() => setShowPassword(!showPassword)}
               leftIcon="lock-closed-outline"
             />
+
+            <PasswordStrength password={formData.password} />
 
             <Input
               label="Confirmar Senha"

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
+import { validators } from '@/lib/validation';
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -22,24 +23,27 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [localError, setLocalError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleLogin = async () => {
     clearError();
-    setLocalError('');
 
-    if (!email.trim()) {
-      setLocalError('Digite seu email');
+    // Validate email
+    const emailValidationError = validators.email(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
       return;
     }
 
+    // Validate password
     if (!password) {
-      setLocalError('Digite sua senha');
+      setPasswordError('Digite sua senha');
       return;
     }
 
     try {
-      await signIn(email.trim(), password);
+      await signIn(email.trim().toLowerCase(), password);
       router.replace('/(tabs)');
     } catch (err: any) {
       // Error is already handled by the store
@@ -72,10 +76,10 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View style={styles.form}>
-            {displayError ? (
+            {error ? (
               <View style={[styles.errorBox, { backgroundColor: colors.errorLight }]}>
                 <Text style={[styles.errorText, { color: colors.error }]}>
-                  {displayError}
+                  {error}
                 </Text>
               </View>
             ) : null}
@@ -86,13 +90,14 @@ export default function LoginScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
-                setLocalError('');
+                setEmailError('');
                 clearError();
               }}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               leftIcon="mail-outline"
+              error={emailError}
             />
 
             <Input
@@ -101,11 +106,12 @@ export default function LoginScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                setLocalError('');
+                setPasswordError('');
                 clearError();
               }}
               secureTextEntry
               leftIcon="lock-closed-outline"
+              error={passwordError}
             />
 
             <Link href="/(auth)/forgot-password" asChild>

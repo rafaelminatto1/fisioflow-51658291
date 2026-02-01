@@ -145,6 +145,28 @@
         "search_docs",
         "get_documentation"
       ]
+    },
+    "firebase-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@gannonh/firebase-mcp"
+      ],
+      "env": {
+        "SERVICE_ACCOUNT_KEY_PATH": "/home/rafael/antigravity/fisioflow/fisioflow-51658291/functions/service-account-key.json",
+        "FIREBASE_STORAGE_BUCKET": "fisioflow-migration.firebasestorage.app"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "gcloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@google-cloud/gcloud-mcp"
+      ],
+      "disabled": false,
+      "autoApprove": []
     }
   }
 }
