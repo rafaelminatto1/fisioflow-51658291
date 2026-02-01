@@ -74,7 +74,10 @@ export const DateTimeSection = ({
     setIsCalendarOpen,
     getCapacityForTime,
     conflictCount,
-    onAutoSchedule
+    onAutoSchedule,
+    watchedDateStr,
+    watchedTime,
+    watchedDuration
 }: {
     disabled: boolean,
     timeSlots: string[],
@@ -82,14 +85,18 @@ export const DateTimeSection = ({
     setIsCalendarOpen: (open: boolean) => void,
     getCapacityForTime: (day: number, time: string) => number,
     conflictCount: number,
-    onAutoSchedule?: () => void
+    onAutoSchedule?: () => void,
+    watchedDateStr?: string,
+    watchedTime?: string,
+    watchedDuration?: number
 }) => {
     const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
-    const watchedDateStr = watch('appointment_date');
-    const watchedTime = watch('appointment_time');
-    const watchedDuration = watch('duration');
+    // Use props if provided, otherwise watch (for backwards compatibility)
+    const _watchedDateStr = watchedDateStr ?? watch('appointment_date');
+    const _watchedTime = watchedTime ?? watch('appointment_time');
+    const _watchedDuration = watchedDuration ?? watch('duration');
 
-    const watchedDate = watchedDateStr ? (typeof watchedDateStr === 'string' ? parseISO(watchedDateStr) : watchedDateStr as Date) : null;
+    const watchedDate = _watchedDateStr ? (typeof _watchedDateStr === 'string' ? parseISO(_watchedDateStr) : _watchedDateStr as Date) : null;
 
     const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 0;
     const availableSlots = maxCapacity - conflictCount;
