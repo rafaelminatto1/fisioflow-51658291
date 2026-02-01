@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, documentId } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { differenceInDays } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
 
@@ -416,10 +416,10 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
       for (let i = 0; i < patientIds.length; i += batchSize) {
         const batch = patientIds.slice(i, i + batchSize);
 
-        // Fetch appointments
+        // Fetch appointments - filter by patient_id, not documentId
         const appointmentsQ = firestoreQuery(
           collection(db, 'appointments'),
-          where(documentId(), 'in', batch)
+          where('patient_id', 'in', batch)
         );
         const appointmentsSnap = await getDocs(appointmentsQ);
         allAppointments.push(...appointmentsSnap.docs.map(convertDocToAppointment));
