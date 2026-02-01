@@ -3,7 +3,7 @@ import { patientsApi } from '@/integrations/firebase/functions';
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { sanitizeString, sanitizeEmail, cleanCPF, cleanPhone } from '@/lib/validations';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 // ============================================================================================
 // TYPES
@@ -390,22 +390,22 @@ export const usePatientsPaginated = (params: PatientsQueryParams = {}): Patients
   const data = queryResult.data?.data || [];
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const nextPage = () => {
+  const nextPage = useCallback(() => {
     if (currentPage < totalPages) {
       setCurrentPage(p => p + 1);
     }
-  };
+  }, [currentPage, totalPages]);
 
-  const previousPage = () => {
+  const previousPage = useCallback(() => {
     if (currentPage > 1) {
       setCurrentPage(p => p - 1);
     }
-  };
+  }, [currentPage]);
 
-  const goToPage = (page: number) => {
+  const goToPage = useCallback((page: number) => {
     const validPage = Math.max(1, Math.min(page, totalPages));
     setCurrentPage(validPage);
-  };
+  }, [totalPages]);
 
   return {
     data,

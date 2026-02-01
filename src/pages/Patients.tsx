@@ -93,6 +93,7 @@ const Patients = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     goToPage(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, debouncedSearch, conditionFilter]);
 
   // Get unique conditions and statuses for filters (from current page)
