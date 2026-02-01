@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getAdminDb, getAdminAuth, CORS_ORIGINS } from '../init';
+import { getAdminDb, getAdminAuth } from '../init';
 import { logger } from 'firebase-functions';
 
 // Types
@@ -22,7 +22,7 @@ interface UserData {
  */
 export const listUsers = onCall(
     {
-        cors: CORS_ORIGINS,
+        cors: true,
         region: 'southamerica-east1',
     },
     async (request) => {
@@ -85,7 +85,7 @@ export const listUsers = onCall(
  */
 export const updateUserRole = onCall(
     {
-        cors: CORS_ORIGINS,
+        cors: true,
         region: 'southamerica-east1',
     },
     async (request) => {

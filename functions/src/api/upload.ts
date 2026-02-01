@@ -1,3 +1,4 @@
+import { CORS_ORIGINS } from "../init";
 /**
  * Upload API - Firebase Cloud Function
  *
@@ -9,7 +10,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
-import { getAdminAuth, getAdminStorage, CORS_ORIGINS } from '../init';
+import { getAdminAuth, getAdminStorage } from '../init';
 
 // ============================================================================
 // TYPES

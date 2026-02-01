@@ -1,5 +1,6 @@
+import { CORS_ORIGINS } from "../init";
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Exercise } from '../types/models';
 import { logger } from '../lib/logger';
