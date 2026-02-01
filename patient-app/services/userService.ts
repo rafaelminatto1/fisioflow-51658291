@@ -11,6 +11,8 @@ import {
   query,
   where,
   getCountFromServer,
+  updateDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { asyncResult, Result } from '@/lib/async';
@@ -91,8 +93,8 @@ export async function getUserStats(userId: string): Promise<Result<any>> {
     let totalExercises = 0;
     let completedExercises = 0;
 
-    plansSnapshot.forEach((doc) => {
-      const plan = doc.data();
+    plansSnapshot.forEach((docSnap) => {
+      const plan = docSnap.data();
       const exercises = plan.exercises || [];
       totalExercises += exercises.length;
       completedExercises += exercises.filter((e: any) => e.completed).length;
@@ -114,4 +116,53 @@ export async function getUserStats(userId: string): Promise<Result<any>> {
       totalEvolutions,
     };
   }, 'getUserStats');
+}
+
+/**
+ * Update user profile
+ */
+export interface UserProfileUpdate {
+  name?: string;
+  phone?: string;
+  photoURL?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  emergencyContact?: string;
+  emergencyContactPhone?: string;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  updates: UserProfileUpdate
+): Promise<Result<void>> {
+  return asyncResult(async () => {
+    perf.start('firestore_update_user_profile');
+
+    const userRef = doc(db, 'users', userId);
+    const updateData: any = {
+      updated_at: serverTimestamp(),
+    };
+
+    // Map fields to Firestore naming convention
+    if (updates.name !== undefined) updateData.display_name = updates.name;
+    if (updates.phone !== undefined) updateData.phone = updates.phone;
+    if (updates.photoURL !== undefined) updateData.photo_url = updates.photoURL;
+    if (updates.dateOfBirth !== undefined) updateData.date_of_birth = updates.dateOfBirth;
+    if (updates.gender !== undefined) updateData.gender = updates.gender;
+    if (updates.address !== undefined) updateData.address = updates.address;
+    if (updates.city !== undefined) updateData.city = updates.city;
+    if (updates.state !== undefined) updateData.state = updates.state;
+    if (updates.zipCode !== undefined) updateData.zip_code = updates.zipCode;
+    if (updates.emergencyContact !== undefined) updateData.emergency_contact = updates.emergencyContact;
+    if (updates.emergencyContactPhone !== undefined) updateData.emergency_contact_phone = updates.emergencyContactPhone;
+
+    await updateDoc(userRef, updateData);
+
+    perf.end('firestore_update_user_profile', true);
+    log.info('USER', 'Profile updated', { userId, updates });
+  }, 'updateUserProfile');
 }
