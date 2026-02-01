@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -113,6 +113,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return previousAppointments.length > 0;
   }, [appointments]);
 
+  // Armazena referência estável para checkPatientHasPreviousSessions
+  // evita que mudanças no array de appointments causem re-renderização infinita
+  const checkPatientHasPreviousSessionsRef = useRef(checkPatientHasPreviousSessions);
+  checkPatientHasPreviousSessionsRef.current = checkPatientHasPreviousSessions;
+
   const methods = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
@@ -225,7 +230,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   useEffect(() => {
     // Só aplica lógica automática para novos agendamentos (sem appointment definido)
     if (!appointment && isOpen && watchedPatientId && currentMode === 'create') {
-      const hasPreviousSessions = checkPatientHasPreviousSessions(watchedPatientId);
+      const hasPreviousSessions = checkPatientHasPreviousSessionsRef.current(watchedPatientId);
       // Se paciente nunca teve sessão, muda para "avaliacao"
       if (!hasPreviousSessions) {
         setValue('status', 'avaliacao');
@@ -233,7 +238,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         setValue('status', 'agendado');
       }
     }
-  }, [watchedPatientId, isOpen, appointment, currentMode, setValue, checkPatientHasPreviousSessions]);
+  }, [watchedPatientId, isOpen, appointment, currentMode, setValue]);
 
   const watchedDateStr = watch('appointment_date');
   const watchedTime = watch('appointment_time');
