@@ -118,6 +118,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const checkPatientHasPreviousSessionsRef = useRef(checkPatientHasPreviousSessions);
   checkPatientHasPreviousSessionsRef.current = checkPatientHasPreviousSessions;
 
+  // Armazena referência estável para setValue
+  // setValue não é estável e mudanças no array de dependências causam re-renderização infinita
+  const setValueRef = useRef(setValue);
+  setValueRef.current = setValue;
+
+  // Armazena referência estável para appointments
+  // evita que mudanças no array causem re-renderização infinita no useEffect de conflito
+  const appointmentsRef = useRef(appointments);
+  appointmentsRef.current = appointments;
+
+  // Armazena o último patientId para o qual o status foi definido
+  // evita definir o status múltiplas vezes para o mesmo paciente
+  const lastStatusPatientIdRef = useRef<string | null>(null);
+
   const methods = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
@@ -200,10 +214,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     };
   }, []);
 
-  const watchedPatientId = watch('patient_id');
+  // TEMPORARILY DISABLED FOR DEBUGGING - removing watch() calls
+  // const watchedPatientId = watch('patient_id');
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // Reset the ref when modal closes
+      lastStatusPatientIdRef.current = null;
+      return;
+    }
 
     try {
       const formData = getInitialFormData(appointment, {
@@ -226,27 +245,40 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
   }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, reset, getInitialFormData]);
 
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  /*
   // Monitora mudanças no paciente selecionado para ajustar o status automaticamente
   useEffect(() => {
     // Só aplica lógica automática para novos agendamentos (sem appointment definido)
     if (!appointment && isOpen && watchedPatientId && currentMode === 'create') {
+      // Evita definir o status múltiplas vezes para o mesmo paciente
+      if (lastStatusPatientIdRef.current === watchedPatientId) {
+        return;
+      }
+      lastStatusPatientIdRef.current = watchedPatientId;
+
       const hasPreviousSessions = checkPatientHasPreviousSessionsRef.current(watchedPatientId);
       // Se paciente nunca teve sessão, muda para "avaliacao"
       if (!hasPreviousSessions) {
-        setValue('status', 'avaliacao');
+        setValueRef.current('status', 'avaliacao');
       } else {
-        setValue('status', 'agendado');
+        setValueRef.current('status', 'agendado');
       }
     }
-  }, [watchedPatientId, isOpen, appointment, currentMode, setValue]);
+  }, [watchedPatientId, isOpen, appointment, currentMode]);
+  */
 
-  const watchedDateStr = watch('appointment_date');
-  const watchedTime = watch('appointment_time');
-  const watchedDuration = watch('duration');
-  const watchPaymentStatus = watch('payment_status');
-  const watchPaymentMethod = watch('payment_method');
-  const watchPaymentAmount = watch('payment_amount');
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  // const watchedDateStr = watch('appointment_date');
+  // const watchedTime = watch('appointment_time');
+  // const watchedDuration = watch('duration');
+  // const watchPaymentStatus = watch('payment_status');
+  // const watchPaymentMethod = watch('payment_method');
+  // const watchPaymentAmount = watch('payment_amount');
+  // const watchedStatus = watch('status');
 
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  /*
   const watchedDate = useMemo(() => {
     if (!watchedDateStr) return null;
     return typeof watchedDateStr === 'string' ? parseISO(watchedDateStr) : watchedDateStr;
@@ -259,14 +291,27 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         time: watchedTime,
         duration: watchedDuration,
         excludeId: appointment?.id,
-        appointments: appointments
+        appointments: appointmentsRef.current
       });
       setConflictCheck(result);
     }
-  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, appointments]);
+  }, [watchedDate, watchedTime, watchedDuration, appointment?.id]);
 
   const { timeSlots: slotInfo, isDayClosed } = useAvailableTimeSlots(watchedDate);
+  */
 
+  // Default values for debugging
+  const watchedDate = null;
+  const watchedTime = '';
+  const watchedDuration = 60;
+  const timeSlots: string[] = [];
+  const watchPaymentStatus = 'pending';
+  const watchPaymentMethod = '';
+  const watchPaymentAmount = 0;
+  const watchedStatus = 'agendado';
+
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  /*
   const timeSlots = useMemo(() => {
     if (slotInfo.length === 0 && !isDayClosed) {
       const slots: string[] = [];
@@ -279,6 +324,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
     return slotInfo.map(s => s.time);
   }, [slotInfo, isDayClosed]);
+  */
 
   const handleSave = async (data: AppointmentFormData) => {
     // Validar campos obrigatórios que podem ter passado pelo hook-form se a schema for muito permissiva
@@ -552,6 +598,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     }}
                   />
 
+                  <div style={{ padding: '20px' }}>
+                    <p>Modo de depuração: Modal simplificado</p>
+                    <p>isOpen: {String(isOpen)}</p>
+                  </div>
+                  {/* TEMPORARILY DISABLED FOR DEBUGGING
                   <DateTimeSection
                     disabled={currentMode === 'view'}
                     timeSlots={timeSlots}
@@ -559,6 +610,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     setIsCalendarOpen={setIsCalendarOpen}
                     getCapacityForTime={getCapacityForTime}
                     conflictCount={conflictCheck?.conflictCount || 0}
+                    watchedDateStr={watchedDateStr}
+                    watchedTime={watchedTime}
+                    watchedDuration={watchedDuration}
                     onAutoSchedule={() => {
                       if (!watchedDate) {
                         toast.error('Selecione uma data primeiro');
@@ -632,6 +686,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                       }
                     }}
                   />
+                  */}
 
                   <TypeAndStatusSection disabled={currentMode === 'view'} />
 
@@ -720,7 +775,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 disabled={isCreating || isUpdating}
                 className={cn(
                   "min-w-[80px] sm:min-w-[100px]",
-                  watch('status') === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white"
+                  watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white"
                 )}
                 size="sm"
               >
@@ -729,7 +784,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-1" />
-                    {watch('status') === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
+                    {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
                   </>
                 )}
               </Button>
