@@ -17,7 +17,16 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
 import { usePatientNotifications } from '@/lib/notificationsSystem';
+import { collection, query, where, getDocs, getCountFromServer } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { APP_VERSION } from '@/lib/constants';
 import * as Notifications from 'expo-notifications';
+
+interface UserStats {
+  totalAppointments: number;
+  totalExercises: number;
+  totalMonths: number;
+}
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -25,11 +34,18 @@ export default function ProfileScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
+  const [stats, setStats] = useState<UserStats>({
+    totalAppointments: 0,
+    totalExercises: 0,
+    totalMonths: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // Check notification permission status on mount
   useEffect(() => {
     checkNotificationStatus();
-  }, []);
+    fetchUserStats();
+  }, [user?.id]);
 
   const checkNotificationStatus = async () => {
     try {
@@ -39,6 +55,49 @@ export default function ProfileScreen() {
       console.error('Error checking notification status:', error);
     } finally {
       setLoadingNotifications(false);
+    }
+  };
+
+  const fetchUserStats = async () => {
+    if (!user?.id) {
+      setLoadingStats(false);
+      return;
+    }
+
+    try {
+      // Count completed appointments
+      const appointmentsRef = collection(db, 'users', user.id, 'appointments');
+      const appointmentsSnapshot = await getCountFromServer(appointmentsRef);
+      const totalAppointments = appointmentsSnapshot.data().count;
+
+      // Count exercises from all plans
+      const plansRef = collection(db, 'users', user.id, 'exercise_plans');
+      const plansSnapshot = await getDocs(plansRef);
+      let totalExercises = 0;
+      plansSnapshot.forEach((doc) => {
+        const plan = doc.data();
+        const exercises = plan.exercises || [];
+        const completed = exercises.filter((e: any) => e.completed).length;
+        totalExercises += completed;
+      });
+
+      // Calculate months since account creation
+      const createdAt = user.createdAt || new Date();
+      const now = new Date();
+      const monthsDiff = Math.max(
+        1,
+        Math.floor((now.getTime() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30))
+      );
+
+      setStats({
+        totalAppointments,
+        totalExercises,
+        totalMonths: monthsDiff,
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -95,29 +154,42 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
+      icon: 'settings-outline' as const,
+      label: 'Configurações Completas',
+      onPress: () => router.push('/(tabs)/settings'),
+      color: colors.primary,
+    },
+    {
       icon: 'person-outline' as const,
       label: 'Dados Pessoais',
-      onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
+      onPress: () => router.push('/(tabs)/settings'),
+      color: colors.text,
     },
     {
       icon: 'lock-closed-outline' as const,
       label: 'Alterar Senha',
-      onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
+      onPress: () => {
+        router.replace('/(auth)/forgot-password');
+      },
+      color: colors.text,
     },
     {
       icon: 'help-circle-outline' as const,
       label: 'Ajuda e Suporte',
-      onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
+      onPress: () => router.push('/(tabs)/settings'),
+      color: colors.text,
     },
     {
       icon: 'document-text-outline' as const,
       label: 'Termos de Uso',
-      onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
+      onPress: () => router.push('/(tabs)/settings'),
+      color: colors.text,
     },
     {
       icon: 'shield-outline' as const,
-      label: 'Politica de Privacidade',
-      onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
+      label: 'Política de Privacidade',
+      onPress: () => router.push('/(tabs)/settings'),
+      color: colors.text,
     },
   ];
 
@@ -146,19 +218,37 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsContainer}>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>12</Text>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={[styles.statValue, { color: colors.primary }]}>
+                {stats.totalAppointments}
+              </Text>
+            )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
               Consultas
             </Text>
           </Card>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.success }]}>48</Text>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={colors.success} />
+            ) : (
+              <Text style={[styles.statValue, { color: colors.success }]}>
+                {stats.totalExercises}
+              </Text>
+            )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
               Exercícios
             </Text>
           </Card>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.warning }]}>3</Text>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={colors.warning} />
+            ) : (
+              <Text style={[styles.statValue, { color: colors.warning }]}>
+                {stats.totalMonths}
+              </Text>
+            )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
               Meses
             </Text>
@@ -213,7 +303,11 @@ export default function ProfileScreen() {
               onPress={item.onPress}
             >
               <View style={styles.menuItemLeft}>
-                <Ionicons name={item.icon} size={22} color={colors.textSecondary} />
+                <Ionicons
+                  name={item.icon}
+                  size={22}
+                  color={(item as any).color || colors.textSecondary}
+                />
                 <Text style={[styles.menuItemLabel, { color: colors.text }]}>
                   {item.label}
                 </Text>
@@ -235,7 +329,7 @@ export default function ProfileScreen() {
 
         {/* Version */}
         <Text style={[styles.version, { color: colors.textMuted }]}>
-          FisioFlow v1.0.0
+          FisioFlow v{APP_VERSION}
         </Text>
       </ScrollView>
     </SafeAreaView>
