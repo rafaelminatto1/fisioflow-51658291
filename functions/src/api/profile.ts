@@ -34,26 +34,64 @@ async function verifyAuth(req: any): Promise<{ uid: string; token: any }> {
 
 /**
  * Helper to get user profile from database
+ * Tries PostgreSQL first, then Firestore as fallback
  */
 async function getUserProfile(userId: string): Promise<Profile> {
-  const pool = getPool();
+  // First try PostgreSQL
+  try {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT
+        id, user_id, organization_id, full_name, email,
+        phone, avatar_url, role, crefito, specialties,
+        bio, birth_date, is_active, last_login_at,
+        email_verified, preferences, created_at, updated_at
+      FROM profiles
+      WHERE user_id = $1`,
+      [userId]
+    );
 
-  const result = await pool.query(
-    `SELECT
-      id, user_id, organization_id, full_name, email,
-      phone, avatar_url, role, crefito, specialties,
-      bio, birth_date, is_active, last_login_at,
-      email_verified, preferences, created_at, updated_at
-    FROM profiles
-    WHERE user_id = $1`,
-    [userId]
-  );
-
-  if (result.rows.length === 0) {
-    throw new HttpsError('not-found', 'Perfil não encontrado');
+    if (result.rows.length > 0) {
+      return result.rows[0] as Profile;
+    }
+  } catch (error) {
+    logger.info('PostgreSQL query failed in getUserProfile, trying Firestore:', error);
   }
 
-  return result.rows[0] as Profile;
+  // Fallback to Firestore
+  try {
+    const profileDoc = await admin.firestore().collection('profiles').doc(userId).get();
+    if (profileDoc.exists) {
+      const data = profileDoc.data();
+      if (data) {
+        // Convert Firestore profile to Profile format
+        return {
+          id: userId,
+          user_id: userId,
+          organization_id: data.organizationId || data.activeOrganizationId || data.organizationIds?.[0] || 'default',
+          full_name: data.displayName || data.name || '',
+          email: data.email || '',
+          phone: data.phone || data.phoneNumber || '',
+          avatar_url: data.photoURL || data.avatarUrl || '',
+          role: data.role || 'user',
+          crefito: data.crefito || '',
+          specialties: data.specialties || [],
+          bio: data.bio || '',
+          birth_date: data.birthDate || null,
+          is_active: data.isActive !== false,
+          last_login_at: data.lastLoginAt || null,
+          email_verified: data.emailVerified || false,
+          preferences: data.preferences || {},
+          created_at: data.createdAt?.toDate?.() || new Date(),
+          updated_at: data.updatedAt?.toDate?.() || new Date(),
+        } as Profile;
+      }
+    }
+  } catch (error) {
+    logger.info('Firestore query failed in getUserProfile:', error);
+  }
+
+  throw new HttpsError('not-found', 'Perfil não encontrado em PostgreSQL nem Firestore');
 }
 
 /**
