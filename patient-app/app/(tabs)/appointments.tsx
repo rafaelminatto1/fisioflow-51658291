@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,64 +6,87 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
+import { useAuthStore } from '@/store/auth';
 import { Card } from '@/components';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface Appointment {
   id: string;
   type: string;
-  professional: string;
-  date: Date;
+  professional_name: string;
+  date: any; // Firestore Timestamp
+  time: string;
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
+  professional_id?: string;
 }
-
-// Mock data - will be replaced with Firestore data
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    type: 'Fisioterapia',
-    professional: 'Dr. Silva',
-    date: new Date(Date.now() + 86400000), // Tomorrow
-    status: 'confirmed',
-    notes: 'Trazer exames anteriores',
-  },
-  {
-    id: '2',
-    type: 'Avaliacao',
-    professional: 'Dra. Santos',
-    date: new Date(Date.now() + 86400000 * 7), // Next week
-    status: 'scheduled',
-  },
-  {
-    id: '3',
-    type: 'Fisioterapia',
-    professional: 'Dr. Silva',
-    date: new Date(Date.now() - 86400000 * 2), // 2 days ago
-    status: 'completed',
-  },
-];
 
 export default function AppointmentsScreen() {
   const colors = useColors();
+  const { user } = useAuthStore();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past'>('upcoming');
 
-  const onRefresh = () => {
+  useEffect(() => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    // Fetch appointments
+    const appointmentsRef = collection(db, 'users', user.id, 'appointments');
+    const q = query(
+      appointmentsRef,
+      orderBy('date', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const appointmentsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.date, // Keep as Firestore Timestamp
+        } as Appointment;
+      });
+      setAppointments(appointmentsData);
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching appointments:', error);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, [user?.id]);
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    // Force refresh by re-subscribing
+    setRefreshing(false);
   };
 
-  const upcomingAppointments = mockAppointments.filter(
-    a => a.date >= new Date() && a.status !== 'cancelled'
+  const now = new Date();
+  const upcomingAppointments = appointments.filter(
+    a => a.date?.toDate() >= now && a.status !== 'cancelled' && a.status !== 'completed'
   );
-  const pastAppointments = mockAppointments.filter(
-    a => a.date < new Date() || a.status === 'completed'
+  const pastAppointments = appointments.filter(
+    a => a.date?.toDate() < now || a.status === 'completed' || a.status === 'cancelled'
   );
 
   const getStatusColor = (status: Appointment['status']) => {
@@ -88,7 +111,7 @@ export default function AppointmentsScreen() {
       case 'scheduled':
         return 'Agendado';
       case 'completed':
-        return 'Concluido';
+        return 'Concluído';
       case 'cancelled':
         return 'Cancelado';
       default:
@@ -96,61 +119,77 @@ export default function AppointmentsScreen() {
     }
   };
 
-  const renderAppointment = (appointment: Appointment) => (
-    <Card key={appointment.id} style={styles.appointmentCard}>
-      <View style={styles.appointmentHeader}>
-        <View style={[styles.appointmentIcon, { backgroundColor: colors.primary }]}>
-          <Ionicons name="medical" size={24} color="#FFFFFF" />
-        </View>
-        <View style={styles.appointmentInfo}>
-          <Text style={[styles.appointmentType, { color: colors.text }]}>
-            {appointment.type}
-          </Text>
-          <Text style={[styles.appointmentProfessional, { color: colors.textSecondary }]}>
-            {appointment.professional}
-          </Text>
-        </View>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(appointment.status) + '20' },
-          ]}
-        >
-          <Text
-            style={[styles.statusText, { color: getStatusColor(appointment.status) }]}
+  const renderAppointment = (appointment: Appointment) => {
+    const appointmentDate = appointment.date?.toDate() || new Date();
+    return (
+      <Card key={appointment.id} style={styles.appointmentCard}>
+        <View style={styles.appointmentHeader}>
+          <View style={[styles.appointmentIcon, { backgroundColor: colors.primary }]}>
+            <Ionicons name="medical" size={24} color="#FFFFFF" />
+          </View>
+          <View style={styles.appointmentInfo}>
+            <Text style={[styles.appointmentType, { color: colors.text }]}>
+              {appointment.type}
+            </Text>
+            <Text style={[styles.appointmentProfessional, { color: colors.textSecondary }]}>
+              {appointment.professional_name}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(appointment.status) + '20' },
+            ]}
           >
-            {getStatusLabel(appointment.status)}
-          </Text>
+            <Text
+              style={[styles.statusText, { color: getStatusColor(appointment.status) }]}
+            >
+              {getStatusLabel(appointment.status)}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <View style={[styles.appointmentDetails, { borderTopColor: colors.border }]}>
-        <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-            {format(appointment.date, "EEEE, d 'de' MMMM", { locale: ptBR })}
-          </Text>
+        <View style={[styles.appointmentDetails, { borderTopColor: colors.border }]}>
+          <View style={styles.detailRow}>
+            <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>
+              {format(appointmentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+            </Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>
+              {appointment.time}
+            </Text>
+          </View>
         </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-            {format(appointment.date, 'HH:mm')}
-          </Text>
-        </View>
-      </View>
 
-      {appointment.notes && (
-        <View style={[styles.notesContainer, { backgroundColor: colors.surface }]}>
-          <Ionicons name="document-text-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.notesText, { color: colors.textSecondary }]}>
-            {appointment.notes}
+        {appointment.notes && (
+          <View style={[styles.notesContainer, { backgroundColor: colors.surface }]}>
+            <Ionicons name="document-text-outline" size={16} color={colors.textSecondary} />
+            <Text style={[styles.notesText, { color: colors.textSecondary }]}>
+              {appointment.notes}
+            </Text>
+          </View>
+        )}
+      </Card>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Carregando consultas...
           </Text>
         </View>
-      )}
-    </Card>
-  );
+      </SafeAreaView>
+    );
+  }
 
-  const appointments = selectedTab === 'upcoming' ? upcomingAppointments : pastAppointments;
+  const displayAppointments = selectedTab === 'upcoming' ? upcomingAppointments : pastAppointments;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
@@ -169,7 +208,7 @@ export default function AppointmentsScreen() {
               { color: selectedTab === 'upcoming' ? '#FFFFFF' : colors.textSecondary },
             ]}
           >
-            Proximas
+            Próximas ({upcomingAppointments.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -185,7 +224,7 @@ export default function AppointmentsScreen() {
               { color: selectedTab === 'past' ? '#FFFFFF' : colors.textSecondary },
             ]}
           >
-            Anteriores
+            Anteriores ({pastAppointments.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -196,7 +235,7 @@ export default function AppointmentsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {appointments.length === 0 ? (
+        {displayAppointments.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={64} color={colors.textMuted} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
@@ -204,12 +243,12 @@ export default function AppointmentsScreen() {
             </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {selectedTab === 'upcoming'
-                ? 'Voce nao tem consultas agendadas'
-                : 'Voce ainda nao teve consultas'}
+                ? 'Você não tem consultas agendadas'
+                : 'Você ainda não teve consultas'}
             </Text>
           </View>
         ) : (
-          appointments.map(renderAppointment)
+          displayAppointments.map(renderAppointment)
         )}
       </ScrollView>
     </SafeAreaView>
@@ -219,6 +258,15 @@ export default function AppointmentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -243,6 +291,7 @@ const styles = StyleSheet.create({
   },
   appointmentCard: {
     marginBottom: 16,
+    padding: 16,
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -304,6 +353,7 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
+    paddingHorizontal: 32,
   },
   emptyTitle: {
     fontSize: 18,

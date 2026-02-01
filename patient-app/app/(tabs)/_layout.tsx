@@ -1,9 +1,15 @@
+import { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
+import { useNotificationResponse, useNotificationReceived } from '@/lib/notificationsSystem';
 
 export default function TabsLayout() {
   const colors = useColors();
+
+  // Set up notification listeners
+  useNotificationResponse();
+  useNotificationReceived();
 
   return (
     <Tabs

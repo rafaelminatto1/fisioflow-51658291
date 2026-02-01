@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,96 +6,223 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
-import { Card } from '@/components';
+import { useAuthStore } from '@/store/auth';
+import { Card, VideoModal, SyncIndicator } from '@/components';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  updateDoc,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface Exercise {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   sets: number;
   reps: number;
+  hold_time?: number;
+  rest_time?: number;
   completed: boolean;
-  videoUrl?: string;
+  completed_at?: Date;
+  video_url?: string;
+  image_url?: string;
 }
 
-// Mock data - will be replaced with Firestore data
-const mockExercises: Exercise[] = [
-  {
-    id: '1',
-    name: 'Alongamento Cervical',
-    description: 'Incline a cabeca para cada lado mantendo por 30 segundos',
-    sets: 3,
-    reps: 10,
-    completed: true,
-  },
-  {
-    id: '2',
-    name: 'Fortalecimento Lombar',
-    description: 'Deite de barriga para cima e eleve o quadril',
-    sets: 2,
-    reps: 15,
-    completed: true,
-  },
-  {
-    id: '3',
-    name: 'Mobilidade de Quadril',
-    description: 'Faca circulos com os joelhos em posicao de quatro apoios',
-    sets: 2,
-    reps: 12,
-    completed: false,
-  },
-  {
-    id: '4',
-    name: 'Prancha Abdominal',
-    description: 'Mantenha a posicao de prancha por 30 segundos',
-    sets: 3,
-    reps: 1,
-    completed: false,
-  },
-  {
-    id: '5',
-    name: 'Agachamento',
-    description: 'Agache mantendo os joelhos alinhados com os pes',
-    sets: 3,
-    reps: 12,
-    completed: false,
-  },
-];
+interface ExercisePlan {
+  id: string;
+  name: string;
+  description?: string;
+  exercises: Exercise[];
+  start_date: Date;
+  end_date?: Date;
+  created_at: Date;
+}
 
 export default function ExercisesScreen() {
   const colors = useColors();
-  const [exercises, setExercises] = useState(mockExercises);
+  const { user } = useAuthStore();
+  const [exercisePlan, setExercisePlan] = useState<ExercisePlan | null>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [completingExercise, setCompletingExercise] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<{ uri: string; title: string; description?: string } | null>(null);
+  const {isOnline, queueOperation} = useOfflineSync();
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
+  useEffect(() => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
-  const toggleExercise = (id: string) => {
-    setExercises(prev =>
-      prev.map(ex =>
-        ex.id === id ? { ...ex, completed: !ex.completed } : ex
-      )
+    // Fetch active exercise plan
+    const plansRef = collection(db, 'users', user.id, 'exercise_plans');
+    const q = query(
+      plansRef,
+      where('status', '==', 'active'),
+      orderBy('created_at', 'desc')
     );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const planDoc = snapshot.docs[0];
+        const planData = planDoc.data();
+        setExercisePlan({
+          id: planDoc.id,
+          ...planData,
+          start_date: planData.start_date?.toDate() || new Date(),
+          end_date: planData.end_date?.toDate(),
+          created_at: planData.created_at?.toDate() || new Date(),
+        } as ExercisePlan);
+      } else {
+        setExercisePlan(null);
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching exercise plan:', error);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, [user?.id]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Force refresh by re-subscribing
+    setRefreshing(false);
   };
 
+  const toggleExercise = async (exercise: Exercise) => {
+    if (!exercisePlan || !user?.id) return;
+
+    setCompletingExercise(exercise.id);
+
+    try {
+      const newCompletedState = !exercise.completed;
+
+      // Update local state immediately for responsiveness
+      const updatedExercises = exercisePlan.exercises.map((ex: Exercise) =>
+        ex.id === exercise.id
+          ? { ...ex, completed: newCompletedState, completed_at: newCompletedState ? new Date() : null }
+          : ex
+      );
+
+      setExercisePlan({
+        ...exercisePlan,
+        exercises: updatedExercises,
+      });
+
+      if (isOnline) {
+        // Online: sync directly to Firestore
+        const planRef = doc(db, 'users', user.id, 'exercise_plans', exercisePlan.id);
+        await updateDoc(planRef, { exercises: updatedExercises });
+      } else {
+        // Offline: queue the operation
+        await queueOperation('complete_exercise', {
+          planId: exercisePlan.id,
+          exerciseId: exercise.id,
+          completed: newCompletedState,
+        });
+
+        Alert.alert(
+          'Salvo Localmente',
+          'As alterações serão sincronizadas quando você reconectar.'
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling exercise:', error);
+      Alert.alert('Erro', 'Nao foi possível atualizar o exercício.');
+    } finally {
+      setCompletingExercise(null);
+    }
+  };
+
+  const openVideo = (exercise: Exercise) => {
+    if (exercise.video_url) {
+      setSelectedVideo({
+        uri: exercise.video_url,
+        title: exercise.name,
+        description: exercise.description,
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Carregando exercícios...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!exercisePlan) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.emptyState}>
+            <Ionicons name="barbell-outline" size={64} color={colors.textMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Nenhum exercício ainda
+            </Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Seu fisioterapeuta irá prescrever exercícios em breve
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  const exercises = exercisePlan.exercises || [];
   const completedCount = exercises.filter(e => e.completed).length;
   const totalCount = exercises.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+      {/* Sync Indicator */}
+      <SyncIndicator />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Plan Info Card */}
+        <Card style={styles.planInfoCard}>
+          <Text style={[styles.planName, { color: colors.text }]}>
+            {exercisePlan.name}
+          </Text>
+          {exercisePlan.description && (
+            <Text style={[styles.planDescription, { color: colors.textSecondary }]}>
+              {exercisePlan.description}
+            </Text>
+          )}
+        </Card>
+
         {/* Progress Card */}
         <Card style={styles.progressCard}>
           <View style={styles.progressHeader}>
@@ -110,27 +237,28 @@ export default function ExercisesScreen() {
             <View
               style={[
                 styles.progressFill,
-                { backgroundColor: colors.primary, width: `${progress}%` },
+                { backgroundColor: progress === 100 ? colors.success : colors.primary, width: `${progress}%` },
               ]}
             />
           </View>
           <Text style={[styles.progressText, { color: colors.textSecondary }]}>
             {progress === 100
-              ? 'Parabens! Voce completou todos os exercicios!'
-              : `Faltam ${totalCount - completedCount} exercicios`}
+              ? 'Parabéns! Você completou todos os exercícios!'
+              : `Faltam ${totalCount - completedCount} exercício${totalCount - completedCount !== 1 ? 's' : ''}`}
           </Text>
         </Card>
 
         {/* Exercise List */}
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Meus Exercicios
+          Meus Exercícios
         </Text>
 
-        {exercises.map((exercise) => (
+        {exercises.map((exercise, index) => (
           <TouchableOpacity
             key={exercise.id}
-            onPress={() => toggleExercise(exercise.id)}
+            onPress={() => toggleExercise(exercise)}
             activeOpacity={0.7}
+            disabled={completingExercise === exercise.id}
           >
             <Card
               style={[
@@ -157,35 +285,73 @@ export default function ExercisesScreen() {
                   )}
                 </View>
                 <View style={styles.exerciseInfo}>
-                  <Text
-                    style={[
-                      styles.exerciseName,
-                      { color: colors.text },
-                      exercise.completed && styles.completedText,
-                    ]}
-                  >
-                    {exercise.name}
-                  </Text>
-                  <Text style={[styles.exerciseSets, { color: colors.textSecondary }]}>
-                    {exercise.sets} series x {exercise.reps} repeticoes
-                  </Text>
+                  <View style={styles.exerciseNumber}>
+                    <Text style={[styles.exerciseNumberText, { color: colors.primary }]}>
+                      {index + 1}
+                    </Text>
+                  </View>
+                  <View style={styles.exerciseDetails}>
+                    <Text
+                      style={[
+                        styles.exerciseName,
+                        { color: colors.text },
+                        exercise.completed && styles.completedText,
+                      ]}
+                    >
+                      {exercise.name}
+                    </Text>
+                    <Text style={[styles.exerciseSets, { color: colors.textSecondary }]}>
+                      {exercise.sets} séries × {exercise.reps} reps
+                      {exercise.hold_time && ` • ${exercise.hold_time}s descenso`}
+                      {exercise.rest_time && ` • ${exercise.rest_time}s descanso`}
+                    </Text>
+                  </View>
                 </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={colors.textMuted}
-                />
+                {completingExercise === exercise.id ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Ionicons
+                    name={exercise.completed ? "checkmark-circle" : "ellipse-outline"}
+                    size={24}
+                    color={exercise.completed ? colors.success : colors.textMuted}
+                  />
+                )}
               </View>
-              <Text
-                style={[styles.exerciseDescription, { color: colors.textSecondary }]}
-                numberOfLines={2}
-              >
-                {exercise.description}
-              </Text>
+              {exercise.description && (
+                <Text
+                  style={[styles.exerciseDescription, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
+                  {exercise.description}
+                </Text>
+              )}
+              {exercise.video_url && (
+                <TouchableOpacity
+                  style={[styles.videoIndicator, { backgroundColor: colors.surface }]}
+                  onPress={() => openVideo(exercise)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="play-circle" size={16} color={colors.primary} />
+                  <Text style={[styles.videoIndicatorText, { color: colors.textSecondary }]}>
+                    Ver vídeo
+                  </Text>
+                  <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
             </Card>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Video Modal */}
+      <VideoModal
+        visible={!!selectedVideo}
+        onClose={() => setSelectedVideo(null)}
+        videoUri={selectedVideo?.uri || ''}
+        title={selectedVideo?.title}
+        description={selectedVideo?.description}
+        autoPlay={true}
+      />
     </SafeAreaView>
   );
 }
@@ -194,11 +360,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
   scrollContent: {
     padding: 16,
   },
+  planInfoCard: {
+    marginBottom: 16,
+    padding: 16,
+  },
+  planName: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  planDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
   progressCard: {
     marginBottom: 24,
+    padding: 16,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -233,11 +422,11 @@ const styles = StyleSheet.create({
   },
   exerciseCard: {
     marginBottom: 12,
+    padding: 12,
   },
   exerciseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
   },
   checkbox: {
     width: 24,
@@ -250,10 +439,29 @@ const styles = StyleSheet.create({
   },
   exerciseInfo: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  exerciseNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  exerciseNumberText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  exerciseDetails: {
+    flex: 1,
   },
   exerciseName: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 2,
   },
   completedText: {
     textDecorationLine: 'line-through',
@@ -265,5 +473,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginLeft: 36,
+    marginTop: 8,
+  },
+  videoIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 36,
+    marginTop: 8,
+    gap: 6,
+  },
+  videoIndicatorText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

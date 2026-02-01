@@ -126,9 +126,30 @@ export default function LoginScreen() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-              Nao tem uma conta? Entre em contato com sua clinica.
-            </Text>
+            <View style={styles.footerRow}>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                Não tem uma conta?
+              </Text>
+              <Link href="/register" asChild>
+                <TouchableOpacity>
+                  <Text style={[styles.footerLink, { color: colors.primary }]}>
+                    Criar conta
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+            <View style={styles.footerRow}>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                Já tem conta?
+              </Text>
+              <Link href="/link-professional" asChild>
+                <TouchableOpacity>
+                  <Text style={[styles.footerLink, { color: colors.primary }]}>
+                    Vincular profissional
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -198,9 +219,19 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
+    gap: 8,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
   },
   footerText: {
     fontSize: 14,
-    textAlign: 'center',
+  },
+  footerLink: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

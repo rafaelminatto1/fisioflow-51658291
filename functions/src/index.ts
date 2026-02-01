@@ -45,7 +45,7 @@ setGlobalOptions({
 
 // Import init for local usage in Triggers, but DO NOT EXPORT complex objects
 // which confuse the firebase-functions loader.
-import { adminDb, CORS_ORIGINS } from './init';
+import { adminDb } from './init';
 
 // Initialize Sentry for error tracking (side effect import)
 import './lib/sentry';
@@ -64,7 +64,7 @@ export const deletePatient = apiPatients.deletePatient;
 
 // API de Agendamentos
 import * as apiAppointments from './api/appointments';
-export const listAppointments = apiAppointments.listAppointments;
+export const listAppointments = apiAppointments.listAppointmentsHttp; // Use HTTP version for CORS fix
 export const createAppointment = apiAppointments.createAppointment;
 export const updateAppointment = apiAppointments.updateAppointment;
 export const getAppointment = apiAppointments.getAppointment;
@@ -162,6 +162,63 @@ export { soapGeneration as aiSoapGeneration } from './ai/soap-generation';
 export { clinicalAnalysis as aiClinicalAnalysis } from './ai/clinical-analysis';
 export { movementAnalysis as aiMovementAnalysis } from './ai/movement-analysis';
 
+// New AI Functions (Clinical Assistant)
+export {
+    aiClinicalChat,
+    aiExerciseRecommendationChat,
+    aiSoapNoteChat,
+    aiGetSuggestions
+} from './ai/clinical-chat';
+
+// ============================================================================
+// WEBHOOK MANAGEMENT
+// ============================================================================
+
+import * as webhooks from './webhooks/index';
+export const subscribeWebhook = webhooks.subscribeWebhook;
+export const unsubscribeWebhook = webhooks.unsubscribeWebhook;
+export const listWebhooks = webhooks.listWebhooks;
+export const testWebhook = webhooks.testWebhook;
+export const getWebhookEventTypes = webhooks.getWebhookEventTypes;
+
+// ============================================================================
+// EXPORT/IMPORT FUNCTIONS
+// ============================================================================
+
+import * as exportImport from './export-import/index';
+export const exportPatients = exportImport.exportPatients;
+export const importPatients = exportImport.importPatients;
+export const downloadExport = exportImport.downloadExport;
+
+// ============================================================================
+// MONITORING & OBSERVABILITY
+// ============================================================================
+
+import * as errorDashboard from './monitoring/error-dashboard';
+export const getErrorStats = errorDashboard.getErrorStats;
+export const getRecentErrors = errorDashboard.getRecentErrors;
+export const resolveError = errorDashboard.resolveError;
+export const getErrorDetails = errorDashboard.getErrorDetails;
+export const errorStream = errorDashboard.errorStream;
+export const getErrorTrends = errorDashboard.getErrorTrends;
+export const cleanupOldErrors = errorDashboard.cleanupOldErrors;
+
+import * as performanceTracing from './monitoring/performance-tracing';
+export const getPerformanceStats = performanceTracing.getPerformanceStats;
+export const getSlowRequests = performanceTracing.getSlowRequests;
+export const getTraceTimeline = performanceTracing.getTraceTimeline;
+export const getPerformanceTrends = performanceTracing.getPerformanceTrends;
+export const performanceStream = performanceTracing.performanceStream;
+export const cleanupOldTraces = performanceTracing.cleanupOldTraces;
+
+import * as aiReports from './monitoring/ai-reports';
+export const generateAIReport = aiReports.generateAIReport;
+export const listReports = aiReports.listReports;
+export const getReport = aiReports.getReport;
+export const downloadReport = aiReports.downloadReport;
+export const scheduledDailyReport = aiReports.scheduledDailyReport;
+export const scheduledWeeklyReport = aiReports.scheduledWeeklyReport;
+
 // ============================================================================
 // REALTIME FUNCTIONS
 // ============================================================================
@@ -174,7 +231,7 @@ export const realtimePublish = realtimePublisher.realtimePublish;
 // ============================================================================
 
 export const apiRouter = functions.https.onRequest({
-    cors: CORS_ORIGINS,
+    cors: true,
 }, async (req, res) => {
     // Router principal para endpoints HTTP
     const { path } = req;
