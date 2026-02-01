@@ -214,8 +214,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     };
   }, []);
 
-  // TEMPORARILY DISABLED FOR DEBUGGING - removing watch() calls
-  // const watchedPatientId = watch('patient_id');
+  const watchedPatientId = watch('patient_id');
 
   useEffect(() => {
     if (!isOpen) {
@@ -245,8 +244,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
   }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, reset, getInitialFormData]);
 
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  /*
   // Monitora mudanças no paciente selecionado para ajustar o status automaticamente
   useEffect(() => {
     // Só aplica lógica automática para novos agendamentos (sem appointment definido)
@@ -266,19 +263,16 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       }
     }
   }, [watchedPatientId, isOpen, appointment, currentMode]);
-  */
 
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  // const watchedDateStr = watch('appointment_date');
-  // const watchedTime = watch('appointment_time');
-  // const watchedDuration = watch('duration');
-  // const watchPaymentStatus = watch('payment_status');
-  // const watchPaymentMethod = watch('payment_method');
-  // const watchPaymentAmount = watch('payment_amount');
-  // const watchedStatus = watch('status');
+  // Watch form values for reactive updates
+  const watchedDateStr = watch('appointment_date');
+  const watchedTime = watch('appointment_time');
+  const watchedDuration = watch('duration');
+  const watchPaymentStatus = watch('payment_status');
+  const watchPaymentMethod = watch('payment_method');
+  const watchPaymentAmount = watch('payment_amount');
+  const watchedStatus = watch('status');
 
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  /*
   const watchedDate = useMemo(() => {
     if (!watchedDateStr) return null;
     return typeof watchedDateStr === 'string' ? parseISO(watchedDateStr) : watchedDateStr;
@@ -298,20 +292,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   }, [watchedDate, watchedTime, watchedDuration, appointment?.id]);
 
   const { timeSlots: slotInfo, isDayClosed } = useAvailableTimeSlots(watchedDate);
-  */
 
-  // Default values for debugging
-  const watchedDate = null;
-  const watchedTime = '';
-  const watchedDuration = 60;
-  const timeSlots: string[] = [];
-  const watchPaymentStatus = 'pending';
-  const watchPaymentMethod = '';
-  const watchPaymentAmount = 0;
-  const watchedStatus = 'agendado';
-
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  /*
   const timeSlots = useMemo(() => {
     if (slotInfo.length === 0 && !isDayClosed) {
       const slots: string[] = [];
@@ -324,7 +305,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
     return slotInfo.map(s => s.time);
   }, [slotInfo, isDayClosed]);
-  */
 
   const handleSave = async (data: AppointmentFormData) => {
     // Validar campos obrigatórios que podem ter passado pelo hook-form se a schema for muito permissiva
