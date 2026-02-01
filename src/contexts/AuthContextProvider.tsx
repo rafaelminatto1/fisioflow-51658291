@@ -202,7 +202,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       mounted = false;
       unsubscribe();
     };
-  }, [fetchProfile]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - fetchProfile is stable (useCallback with no deps)
 
   const signIn = async (email: string, password: string, _remember?: boolean): Promise<{ error?: AuthError | null }> => {
     try {
