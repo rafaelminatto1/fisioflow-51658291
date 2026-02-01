@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,11 +16,33 @@ import { router } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
+import { usePatientNotifications } from '@/lib/notificationsSystem';
+import * as Notifications from 'expo-notifications';
 
 export default function ProfileScreen() {
   const colors = useColors();
   const { user, signOut } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(true);
+
+  // Check notification permission status on mount
+  useEffect(() => {
+    checkNotificationStatus();
+  }, []);
+
+  const checkNotificationStatus = async () => {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      setNotificationsEnabled(status === 'granted');
+    } catch (error) {
+      console.error('Error checking notification status:', error);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  const { permission, loading, requestPermission } = usePatientNotifications();
 
   const handleLogout = () => {
     Alert.alert(
@@ -45,15 +69,34 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleToggleNotifications = async (value: boolean) => {
+    if (value) {
+      const granted = await requestPermission();
+      if (granted) {
+        setNotificationsEnabled(true);
+        Alert.alert(
+          'Notificações Ativadas',
+          'Você receberá lembretes de exercícios e consultas.'
+        );
+      } else {
+        Alert.alert(
+          'Permissão Necessária',
+          'Para receber notificações, você precisa permitir o acesso nas configurações do dispositivo.'
+        );
+      }
+    } else {
+      setNotificationsEnabled(false);
+      Alert.alert(
+        'Notificações Desativadas',
+        'Você não receberá mais lembretes.'
+      );
+    }
+  };
+
   const menuItems = [
     {
       icon: 'person-outline' as const,
       label: 'Dados Pessoais',
-      onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
-    },
-    {
-      icon: 'notifications-outline' as const,
-      label: 'Notificacoes',
       onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
     },
     {
@@ -111,7 +154,7 @@ export default function ProfileScreen() {
           <Card style={styles.statCard}>
             <Text style={[styles.statValue, { color: colors.success }]}>48</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Exercicios
+              Exercícios
             </Text>
           </Card>
           <Card style={styles.statCard}>
@@ -121,6 +164,39 @@ export default function ProfileScreen() {
             </Text>
           </Card>
         </View>
+
+        {/* Notification Settings Card */}
+        <Card style={styles.settingsCard}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Configurações
+          </Text>
+
+          <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
+            <View style={styles.settingItemLeft}>
+              <View style={[styles.settingIcon, { backgroundColor: colors.primary + '20' }]}>
+                <Ionicons name="notifications" size={20} color={colors.primary} />
+              </View>
+              <View>
+                <Text style={[styles.settingLabel, { color: colors.text }]}>
+                  Notificações Push
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  Lembretes de exercícios e consultas
+                </Text>
+              </View>
+            </View>
+            {loadingNotifications ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={handleToggleNotifications}
+                trackColor={{ false: colors.border, true: colors.primary + '80' }}
+                thumbColor={notificationsEnabled ? colors.primary : colors.textMuted}
+              />
+            )}
+          </View>
+        </Card>
 
         {/* Menu */}
         <Card style={styles.menuCard} padding="none">
@@ -219,6 +295,43 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
+  },
+  settingsCard: {
+    marginBottom: 24,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  settingItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  settingDescription: {
+    fontSize: 13,
   },
   menuCard: {
     marginBottom: 24,
