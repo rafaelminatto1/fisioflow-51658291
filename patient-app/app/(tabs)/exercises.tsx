@@ -13,7 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Card, VideoModal, SyncIndicator } from '@/components';
+import { Card, VideoModal, SyncIndicator, ExerciseFeedbackModal } from '@/components';
+import { ExerciseFeedback } from '@/components';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import {
   collection,
@@ -24,6 +25,7 @@ import {
   updateDoc,
   doc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -59,6 +61,8 @@ export default function ExercisesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [completingExercise, setCompletingExercise] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<{ uri: string; title: string; description?: string } | null>(null);
+  const [feedbackExercise, setFeedbackExercise] = useState<Exercise | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const {isOnline, queueOperation} = useOfflineSync();
 
   useEffect(() => {
@@ -107,6 +111,13 @@ export default function ExercisesScreen() {
   const toggleExercise = async (exercise: Exercise) => {
     if (!exercisePlan || !user?.id) return;
 
+    // If completing (not uncompleting), show feedback modal first
+    if (!exercise.completed) {
+      setFeedbackExercise(exercise);
+      setShowFeedbackModal(true);
+      return;
+    }
+
     setCompletingExercise(exercise.id);
 
     try {
@@ -146,6 +157,67 @@ export default function ExercisesScreen() {
       Alert.alert('Erro', 'Nao foi possível atualizar o exercício.');
     } finally {
       setCompletingExercise(null);
+    }
+  };
+
+  const handleFeedbackSubmit = async (feedback: ExerciseFeedback) => {
+    if (!feedbackExercise || !exercisePlan || !user?.id) return;
+
+    setCompletingExercise(feedbackExercise.id);
+
+    try {
+      // Update local state
+      const updatedExercises = exercisePlan.exercises.map((ex: Exercise) =>
+        ex.id === feedbackExercise!.id
+          ? { ...ex, completed: true, completed_at: new Date() }
+          : ex
+      );
+
+      setExercisePlan({
+        ...exercisePlan,
+        exercises: updatedExercises,
+      });
+
+      if (isOnline) {
+        // Online: sync directly to Firestore
+        const planRef = doc(db, 'users', user.id, 'exercise_plans', exercisePlan.id);
+        await updateDoc(planRef, { exercises: updatedExercises });
+
+        // Save feedback
+        const feedbackRef = doc(
+          db,
+          'users',
+          user.id,
+          'exercise_plans',
+          exercisePlan.id,
+          'feedback',
+          feedbackExercise.id
+        );
+        await setDoc(feedbackRef, {
+          ...feedback,
+          created_at: new Date(),
+          exercise_name: feedbackExercise.name,
+        });
+      } else {
+        // Offline: queue both operations
+        await queueOperation('complete_exercise', {
+          planId: exercisePlan.id,
+          exerciseId: feedbackExercise.id,
+          completed: true,
+        });
+
+        await queueOperation('submit_feedback', {
+          exerciseId: feedbackExercise.id,
+          planId: exercisePlan.id,
+          ...feedback,
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      Alert.alert('Erro', 'Nao foi possível salvar o feedback.');
+    } finally {
+      setCompletingExercise(null);
+      setFeedbackExercise(null);
     }
   };
 
@@ -351,6 +423,17 @@ export default function ExercisesScreen() {
         title={selectedVideo?.title}
         description={selectedVideo?.description}
         autoPlay={true}
+      />
+
+      {/* Feedback Modal */}
+      <ExerciseFeedbackModal
+        visible={showFeedbackModal}
+        onClose={() => {
+          setShowFeedbackModal(false);
+          setFeedbackExercise(null);
+        }}
+        onSubmit={handleFeedbackSubmit}
+        exerciseName={feedbackExercise?.name || ''}
       />
     </SafeAreaView>
   );
