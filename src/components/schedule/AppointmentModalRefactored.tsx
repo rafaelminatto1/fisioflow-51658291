@@ -11,13 +11,12 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger
 } from '@/components/ui/tabs';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
-} from '@/components/ui/dialog';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle
+} from '@/components/ui/custom-modal';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle
-} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -537,25 +536,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         }
       });
     }
-  };
+ };
 
-  const ModalComponent = isMobile ? Sheet : Dialog;
-  const ModalContent = isMobile ? SheetContent : DialogContent;
-  const ModalHeader = isMobile ? SheetHeader : DialogHeader;
-  const ModalTitle = isMobile ? SheetTitle : DialogTitle;
-
-  const contentProps = isMobile
-    ? { side: "bottom" as const, className: "h-[95dvh] p-0 flex flex-col" }
-    : { className: "fixed left-[50%] top-[50%] z-50 transform !-translate-x-1/2 !-translate-y-1/2 w-full max-w-[95vw] sm:max-w-[600px] max-h-[80vh] h-auto flex flex-col p-0 shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl" };
-
+  // Use CustomModal instead of Dialog/Sheet to avoid React Error #185
   return (
-    <ModalComponent open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <ModalContent {...contentProps}>
-        <ModalHeader className="px-4 sm:px-6 py-4 border-b shrink-0">
-          <ModalTitle className="text-xl font-semibold text-left">
-            {currentMode === 'view' ? 'Detalhes do Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Novo Agendamento'}
-          </ModalTitle>
-        </ModalHeader>
+    <CustomModal
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      isMobile={isMobile}
+    >
+      <CustomModalHeader onClose={onClose}>
+        <CustomModalTitle>
+          {currentMode === 'view' ? 'Detalhes do Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Novo Agendamento'}
+        </CustomModalTitle>
+      </CustomModalHeader>
 
         <FormProvider {...methods}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
@@ -842,7 +836,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             />
           )
         }
-      </ModalContent >
-    </ModalComponent >
+    </CustomModal>
   );
 };
