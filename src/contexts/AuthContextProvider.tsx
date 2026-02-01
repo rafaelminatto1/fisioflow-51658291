@@ -87,16 +87,17 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (profile) {
         // Sync organization logic (kept from original)
-        profileApi.getCurrent().then(pgProfile => {
-          if (!pgProfile || !profile) return;
+        profileApi.getCurrent().then((resp: unknown) => {
+          if (!profile) return;
+          const pgProfile = (resp as { data?: { organization_id?: string } })?.data ?? resp;
+          const pgOrgId = pgProfile && typeof pgProfile === 'object' && 'organization_id' in pgProfile ? pgProfile.organization_id : undefined;
+          if (!pgOrgId) return;
 
-          const hasOrgChanged = pgProfile.organization_id &&
-            (!profile.organization_id || profile.organization_id !== pgProfile.organization_id);
-
+          const hasOrgChanged = !profile.organization_id || profile.organization_id !== pgOrgId;
           if (hasOrgChanged) {
             const profileRef = doc(db, 'profiles', firebaseUser.uid);
             updateDoc(profileRef, {
-              organization_id: pgProfile.organization_id,
+              organization_id: pgOrgId,
               updated_at: new Date().toISOString()
             }).catch(err => logger.error('Failed to update profile organization_id', err, 'AuthContextProvider'));
           }
@@ -104,15 +105,46 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         return profile;
       } else {
-        // Profile not found yet. If this is a new registration, it might take a moment.
-        // Retry a few times with delay
+        // Profile not found in Firestore. Retry a few times, then try Cloud SQL fallback.
         if (attempt < 5) {
-          logger.info(`Profile not found, retrying... (${attempt}/5)`, null, 'AuthContextProvider');
+          logger.info(`Profile not found in Firestore, retrying... (${attempt}/5)`, null, 'AuthContextProvider');
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
           return fetchProfile(firebaseUser, attempt + 1);
         }
 
-        logger.warn('Profile not found after retries. Backend trigger might be slow or failed.', null, 'AuthContextProvider');
+        // Fallback: buscar perfil no Cloud SQL (quando usuário existe só lá)
+        try {
+          logger.info('Profile not in Firestore, trying Cloud SQL fallback', null, 'AuthContextProvider');
+          const response = await profileApi.getCurrent();
+          const pgProfile = (response as { data?: Record<string, unknown> })?.data ?? response;
+          if (pgProfile && typeof pgProfile === 'object' && pgProfile.user_id) {
+            const mapped: Profile = {
+              id: String(pgProfile.id ?? firebaseUser.uid),
+              user_id: String(pgProfile.user_id),
+              full_name: String(pgProfile.full_name ?? firebaseUser.displayName ?? firebaseUser.email ?? 'Usuário'),
+              organization_id: pgProfile.organization_id ? String(pgProfile.organization_id) : undefined,
+              role: (pgProfile.role as Profile['role']) ?? 'fisioterapeuta',
+              phone: pgProfile.phone ? String(pgProfile.phone) : undefined,
+              avatar_url: pgProfile.avatar_url ? String(pgProfile.avatar_url) : undefined,
+              onboarding_completed: Boolean(pgProfile.onboarding_completed),
+              is_active: pgProfile.is_active !== false,
+              created_at: String(pgProfile.created_at ?? new Date().toISOString()),
+              updated_at: String(pgProfile.updated_at ?? new Date().toISOString()),
+            };
+            // Sincronizar para Firestore para próximas cargas
+            try {
+              const profileRef = doc(db, 'profiles', firebaseUser.uid);
+              await setDoc(profileRef, { ...mapped, updated_at: new Date().toISOString() }, { merge: true });
+            } catch {
+              // Ignorar erro de sync - perfil já está em memória
+            }
+            return mapped;
+          }
+        } catch (pgErr) {
+          logger.warn('Cloud SQL fallback failed', pgErr, 'AuthContextProvider');
+        }
+
+        logger.warn('Profile not found after retries and Cloud SQL fallback.', null, 'AuthContextProvider');
         return null;
       }
     } catch (err) {

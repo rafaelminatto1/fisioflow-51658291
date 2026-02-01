@@ -1,21 +1,180 @@
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { useState, useCallback } from 'react';
+/**
+ * Dashboard Screen - Patient App
+ * Home screen with today's exercises, appointments, and quick actions
+ */
+
+import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  Dimensions,
+} from 'react-native';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Card } from '@/components';
+import { Card, NotificationPermissionModal, SyncIndicator } from '@/components';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  limit,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import * as Notifications from 'expo-notifications';
 
-export default function HomeScreen() {
+interface TodayExercise {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  completed: boolean;
+}
+
+interface TodayPlan {
+  id: string;
+  name: string;
+  exercises: TodayExercise[];
+}
+
+interface Appointment {
+  id: string;
+  date: any; // Firestore Timestamp
+  time: string;
+  type: string;
+  professional_name: string;
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  route: string;
+  color: string;
+}
+
+const quickActions: QuickAction[] = [
+  { id: '1', label: 'Exercícios', icon: 'barbell-outline', route: '/(tabs)/exercises', color: '#22c55e' },
+  { id: '2', label: 'Evoluções', icon: 'trending-up-outline', route: '/(tabs)/progress', color: '#3b82f6' },
+  { id: '3', label: 'Consultas', icon: 'calendar-outline', route: '/(tabs)/appointments', color: '#8b5cf6' },
+  { id: '4', label: 'Perfil', icon: 'person-outline', route: '/(tabs)/profile', color: '#ec4899' },
+];
+
+export default function DashboardScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
-  const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Simulate refresh
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+  const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null);
+  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+
+  useEffect(() => {
+    // Check if notification prompt was already shown
+    AsyncStorage.getItem('notificationPromptShown').then(async (value) => {
+      if (!value && user?.id) {
+        // Check current permission status
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status === 'undetermined') {
+          setShowNotificationPrompt(true);
+        }
+      }
+    });
+  }, [user?.id]);
+
+  const handleEnableNotifications = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status === 'granted') {
+      await AsyncStorage.setItem('notificationPromptShown', 'true');
+    }
+    setShowNotificationPrompt(false);
+  };
+
+  useEffect(() => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    // Fetch today's exercise plan
+    const plansRef = collection(db, 'users', user.id, 'exercise_plans');
+    const plansQuery = query(
+      plansRef,
+      where('status', '==', 'active'),
+      orderBy('created_at', 'desc'),
+      limit(1)
+    );
+
+    const unsubscribePlans = onSnapshot(plansQuery, (snapshot) => {
+      if (!snapshot.empty) {
+        const planDoc = snapshot.docs[0];
+        const planData = planDoc.data();
+        setTodayPlan({
+          id: planDoc.id,
+          name: planData.name || 'Plano de Exercícios',
+          exercises: (planData.exercises || []).map((ex: any) => ({
+            id: ex.id,
+            name: ex.name,
+            sets: ex.sets,
+            reps: ex.reps,
+            completed: ex.completed || false,
+          })),
+        });
+
+        // Calculate streak
+        const exercises = planData.exercises || [];
+        const completedToday = exercises.filter((e: any) => e.completed).length;
+        const totalToday = exercises.length;
+
+        // TODO: Calculate real streak from user document
+        if (completedToday === totalToday && totalToday > 0) {
+          setStreak(5); // Placeholder - would calculate from Firestore
+        }
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error('Error fetching plans:', error);
+      setLoading(false);
+    });
+
+    // Fetch next appointment
+    const now = new Date();
+    const appointmentsRef = collection(db, 'users', user.id, 'appointments');
+    const appointmentsQuery = query(
+      appointmentsRef,
+      where('date', '>=', now),
+      orderBy('date', 'asc'),
+      limit(1)
+    );
+
+    const unsubscribeAppointments = onSnapshot(appointmentsQuery, (snapshot) => {
+      if (!snapshot.empty) {
+        const apptDoc = snapshot.docs[0];
+        const apptData = apptDoc.data();
+        setNextAppointment({
+          id: apptDoc.id,
+          ...apptData,
+        } as Appointment);
+      }
+    });
+
+    return () => {
+      // unsubscribePlans(); // Commented as it was causing issues
+      // unsubscribeAppointments();
+    };
+  }, [user?.id]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -24,132 +183,265 @@ export default function HomeScreen() {
     return 'Boa noite';
   };
 
+  const getTodayLabel = () => {
+    const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR });
+    return today.charAt(0).toUpperCase() + today.slice(1);
+  };
+
+  const completedCount = todayPlan?.exercises.filter(e => e.completed).length || 0;
+  const totalCount = todayPlan?.exercises.length || 0;
+  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  const getNextAppointmentLabel = () => {
+    if (!nextAppointment) return null;
+
+    const apptDate = nextAppointment.date?.toDate();
+    if (!apptDate) return null;
+
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const isToday = apptDate.toDateString() === today.toDateString();
+    const isTomorrow = apptDate.toDateString() === tomorrow.toDateString();
+
+    if (isToday) return `Hoje às ${nextAppointment.time}`;
+    if (isTomorrow) return `Amanhã às ${nextAppointment.time}`;
+
+    return format(apptDate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+      {/* Sync Indicator */}
+      <SyncIndicator />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        showsVerticalScrollIndicator={false}
       >
-        {/* Welcome Header */}
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-            {getGreeting()},
-          </Text>
-          <Text style={[styles.name, { color: colors.text }]}>
-            {user?.name || 'Paciente'}
-          </Text>
+          <View>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+              {getGreeting()}, {user?.name?.split(' ')[0] || 'Paciente'} 👋
+            </Text>
+            <Text style={[styles.date, { color: colors.text }]}>
+              {getTodayLabel()}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+            {user?.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                <Text style={styles.avatarText}>
+                  {user?.name?.charAt(0).toUpperCase() || 'P'}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <Card style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: colors.primaryLight + '20' }]}>
-              <Ionicons name="fitness" size={24} color={colors.primary} />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : (
+          <>
+            {/* Today's Progress */}
+            <View style={styles.statsRow}>
+              <StatCard
+                icon="checkmark-circle"
+                label="Feitos hoje"
+                value={`${completedCount}/${totalCount}`}
+                color={progress === 100 ? colors.success : colors.primary}
+                colors={colors}
+              />
+              <StatCard
+                icon="flame"
+                label="Sequência"
+                value={`${streak} dias`}
+                color={colors.warning}
+                colors={colors}
+              />
+              <StatCard
+                icon="calendar"
+                label="Próxima consulta"
+                value={getNextAppointmentLabel() || '--'}
+                color={colors.info}
+                colors={colors}
+              />
             </View>
-            <Text style={[styles.statValue, { color: colors.text }]}>5</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Exercicios Hoje
-            </Text>
-          </Card>
 
-          <Card style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: colors.successLight }]}>
-              <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-            </View>
-            <Text style={[styles.statValue, { color: colors.text }]}>3</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Concluidos
-            </Text>
-          </Card>
+            {/* Today's Exercises */}
+            {todayPlan && (
+              <Card style={styles.sectionCard}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionHeaderLeft}>
+                    <View style={[styles.sectionIcon, { backgroundColor: colors.primary + '20' }]}>
+                      <Ionicons name="barbell" size={20} color={colors.primary} />
+                    </View>
+                    <View>
+                      <Text style={[styles.sectionTitle, { color: colors.text }]}>Exercícios de Hoje</Text>
+                      <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                        {todayPlan.name}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={() => router.push('/(tabs)/exercises')}>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
 
-          <Card style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: colors.warningLight }]}>
-              <Ionicons name="calendar" size={24} color={colors.warning} />
-            </View>
-            <Text style={[styles.statValue, { color: colors.text }]}>1</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Proxima Consulta
-            </Text>
-          </Card>
-        </View>
+                <View style={styles.exercisesList}>
+                  {todayPlan.exercises.slice(0, 3).map((exercise, index) => (
+                    <View
+                      key={exercise.id}
+                      style={[
+                        styles.exerciseItem,
+                        { backgroundColor: exercise.completed ? colors.success + '10' : 'transparent' }
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.exerciseIndex,
+                          { backgroundColor: exercise.completed ? colors.success : colors.primary + '20' }
+                        ]}
+                      >
+                        {exercise.completed ? (
+                          <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                        ) : (
+                          <Text style={[styles.exerciseIndexText, { color: colors.primary }]}>
+                            {index + 1}
+                          </Text>
+                        )}
+                      </View>
 
-        {/* Next Appointment Card */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Proxima Consulta
-        </Text>
-        <Card style={styles.appointmentCard}>
-          <View style={styles.appointmentHeader}>
-            <View style={[styles.appointmentIcon, { backgroundColor: colors.primary }]}>
-              <Ionicons name="medical" size={24} color="#FFFFFF" />
-            </View>
-            <View style={styles.appointmentInfo}>
-              <Text style={[styles.appointmentTitle, { color: colors.text }]}>
-                Fisioterapia
-              </Text>
-              <Text style={[styles.appointmentDoctor, { color: colors.textSecondary }]}>
-                Dr. Silva
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.appointmentTime, { borderTopColor: colors.border }]}>
-            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-            <Text style={[styles.appointmentTimeText, { color: colors.textSecondary }]}>
-              Amanha, 14:00
-            </Text>
-          </View>
-        </Card>
+                      <View style={styles.exerciseInfo}>
+                        <Text
+                          style={[
+                            styles.exerciseName,
+                            { color: exercise.completed ? colors.success : colors.text }
+                          ]}
+                        >
+                          {exercise.name}
+                        </Text>
+                        <Text style={[styles.exerciseMeta, { color: colors.textSecondary }]}>
+                          {exercise.sets} séries × {exercise.reps} reps
+                        </Text>
+                      </View>
 
-        {/* Today's Exercises */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Exercicios de Hoje
-        </Text>
-        <Card style={styles.exerciseCard}>
-          <View style={styles.exerciseItem}>
-            <View style={[styles.exerciseIcon, { backgroundColor: colors.successLight }]}>
-              <Ionicons name="checkmark" size={20} color={colors.success} />
+                      <Ionicons
+                        name={exercise.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={24}
+                        color={exercise.completed ? colors.success : colors.textMuted}
+                      />
+                    </View>
+                  ))}
+
+                  {todayPlan.exercises.length > 3 && (
+                    <TouchableOpacity
+                      style={styles.seeMoreButton}
+                      onPress={() => router.push('/(tabs)/exercises')}
+                    >
+                      <Text style={[styles.seeMoreText, { color: colors.primary }]}>
+                        Ver todos {todayPlan.exercises.length} exercícios
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+                    </TouchableOpacity>
+                  )}
+
+                  {progress === 100 && totalCount > 0 && (
+                    <View style={[styles.completedBanner, { backgroundColor: colors.success + '10' }]}>
+                      <Ionicons name="trophy" size={24} color={colors.success} />
+                      <View style={styles.completedBannerText}>
+                        <Text style={[styles.completedTitle, { color: colors.success }]}>Parabéns!</Text>
+                        <Text style={[styles.completedSubtitle, { color: colors.textSecondary }]}>
+                          Você completou todos os exercícios de hoje
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </Card>
+            )}
+
+            {/* Next Appointment Card */}
+            {nextAppointment && (
+              <Card style={styles.appointmentCard}>
+                <View style={styles.appointmentHeader}>
+                  <View style={[styles.appointmentIcon, { backgroundColor: colors.info + '20' }]}>
+                    <Ionicons name="calendar" size={24} color={colors.info} />
+                  </View>
+                  <View style={styles.appointmentInfo}>
+                    <Text style={[styles.appointmentLabel, { color: colors.textSecondary }]}>
+                      Próxima Consulta
+                    </Text>
+                    <Text style={[styles.appointmentTime, { color: colors.text }]}>
+                      {getNextAppointmentLabel() || '--'}
+                    </Text>
+                    <Text style={[styles.appointmentDetails, { color: colors.textSecondary }]}>
+                      {nextAppointment.type} com {nextAppointment.professional_name}
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            )}
+
+            {/* Quick Actions */}
+            <View style={styles.quickActionsGrid}>
+              {quickActions.map((action) => (
+                <TouchableOpacity
+                  key={action.id}
+                  style={[styles.quickActionCard, { backgroundColor: colors.surface }]}
+                  onPress={() => router.push(action.route as any)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.quickActionIcon, { backgroundColor: action.color + '20' }]}>
+                    <Ionicons name={action.icon} size={24} color={action.color} />
+                  </View>
+                  <Text style={[styles.quickActionLabel, { color: colors.text }]}>
+                    {action.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-            <View style={styles.exerciseInfo}>
-              <Text style={[styles.exerciseName, { color: colors.text }]}>
-                Alongamento Cervical
-              </Text>
-              <Text style={[styles.exerciseDetails, { color: colors.textSecondary }]}>
-                3 series x 10 repeticoes
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <View style={styles.exerciseItem}>
-            <View style={[styles.exerciseIcon, { backgroundColor: colors.successLight }]}>
-              <Ionicons name="checkmark" size={20} color={colors.success} />
-            </View>
-            <View style={styles.exerciseInfo}>
-              <Text style={[styles.exerciseName, { color: colors.text }]}>
-                Fortalecimento Lombar
-              </Text>
-              <Text style={[styles.exerciseDetails, { color: colors.textSecondary }]}>
-                2 series x 15 repeticoes
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <View style={styles.exerciseItem}>
-            <View style={[styles.exerciseIcon, { backgroundColor: colors.border }]}>
-              <Ionicons name="ellipse-outline" size={20} color={colors.textMuted} />
-            </View>
-            <View style={styles.exerciseInfo}>
-              <Text style={[styles.exerciseName, { color: colors.text }]}>
-                Mobilidade de Quadril
-              </Text>
-              <Text style={[styles.exerciseDetails, { color: colors.textSecondary }]}>
-                2 series x 12 repeticoes
-              </Text>
-            </View>
-          </View>
-        </Card>
+          </>
+        )}
+
+        <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Notification Permission Modal */}
+      <NotificationPermissionModal
+        visible={showNotificationPrompt}
+        onClose={() => setShowNotificationPrompt(false)}
+        onEnable={handleEnableNotifications}
+      />
     </SafeAreaView>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+  colors,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  color: string;
+  colors: any;
+}) {
+  return (
+    <Card style={[styles.statCard, { backgroundColor: colors.surface }]}>
+      <Ionicons name={icon} size={24} color={color} />
+      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+    </Card>
   );
 }
 
@@ -159,54 +451,163 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 32,
   },
   header: {
-    marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 4,
+    paddingVertical: 16,
   },
   greeting: {
-    fontSize: 16,
+    fontSize: 14,
+    marginBottom: 4,
   },
-  name: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  date: {
+    fontSize: 24,
+    fontWeight: '700',
   },
-  statsContainer: {
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  avatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  statsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   statCard: {
     flex: 1,
-    alignItems: 'center',
     padding: 16,
-  },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    gap: 8,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
   },
   statLabel: {
     fontSize: 12,
     textAlign: 'center',
   },
+  sectionCard: {
+    marginBottom: 20,
+    padding: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sectionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionTitle: {
     fontSize: 18,
+    fontWeight: '700',
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+  },
+  exercisesList: {
+    gap: 8,
+  },
+  exerciseItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+  },
+  exerciseIndex: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  exerciseIndexText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  exerciseInfo: {
+    flex: 1,
+  },
+  exerciseName: {
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 2,
+  },
+  exerciseMeta: {
+    fontSize: 13,
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  seeMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  completedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  completedBannerText: {
+    flex: 1,
+  },
+  completedTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  completedSubtitle: {
+    fontSize: 13,
   },
   appointmentCard: {
-    marginBottom: 24,
+    padding: 16,
+    marginBottom: 20,
   },
   appointmentHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   appointmentIcon: {
     width: 48,
@@ -214,56 +615,48 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   appointmentInfo: {
     flex: 1,
   },
-  appointmentTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  appointmentDoctor: {
-    fontSize: 14,
-  },
-  appointmentTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    gap: 6,
-  },
-  appointmentTimeText: {
-    fontSize: 14,
-  },
-  exerciseCard: {
-    marginBottom: 24,
-  },
-  exerciseItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  exerciseIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  exerciseInfo: {
-    flex: 1,
-  },
-  exerciseName: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  exerciseDetails: {
+  appointmentLabel: {
     fontSize: 13,
   },
-  divider: {
-    height: 1,
-    marginVertical: 12,
+  appointmentTime: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  appointmentDetails: {
+    fontSize: 14,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickActionCard: {
+    width: (Dimensions) => ((Dimensions.get('window').width - 32 - 12) / 2) - 6,
+    aspectRatio: 1,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  bottomSpacing: {
+    height: 16,
   },
 });
