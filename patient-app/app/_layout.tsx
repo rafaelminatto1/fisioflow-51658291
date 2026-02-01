@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
+import { initializeNotifications } from '@/lib/notificationsSystem';
 import * as SplashScreen from 'expo-splash-screen';
 
 // Prevent the splash screen from auto-hiding
@@ -16,6 +17,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     const unsubscribe = initialize();
+
+    // Initialize notifications system
+    initializeNotifications();
 
     // Hide splash screen when auth state is determined
     if (!isLoading) {
