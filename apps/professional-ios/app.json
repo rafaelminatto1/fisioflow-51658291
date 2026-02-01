@@ -1,0 +1,100 @@
+{
+  "expo": {
+    "name": "FisioFlow Profissionais",
+    "slug": "fisioflow-professional",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fisioflow.professional",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Necessário para análise de movimento e captura de exercícios",
+        "NSPhotoLibraryUsageDescription": "Necessário para selecionar fotos de exercícios e documentos",
+        "NSMicrophoneUsageDescription": "Necessário para gravação de vídeos de exercícios",
+        "NSFaceIDUsageDescription": "Use Face ID para autenticar seu acesso ao app",
+        "UIFileSharingEnabled": true,
+        "UISupportsDocumentBrowser": true,
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      },
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "YOUR_RESERVED_CLIENT_ID"
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.fisioflow.professional",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "VIBRATE",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2563eb",
+          "sounds": ["./assets/notification.wav"]
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que o FisioFlow acesse sua câmera para análise de movimento?",
+          "microphonePermission": "Permitir que o FisioFlow acesse seu microfone para gravar vídeos?",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-face-detector",
+        {
+          "faceDetectorPermission": "Permitir que o FisioFlow detecte sua face para autenticação?"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "fisioflow-professional-ios"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fisioflow-professional-ios"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}

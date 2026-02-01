@@ -5,8 +5,11 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { registerPushToken, clearPushToken } from '@/lib/notificationsSystem';
+import { getOfflineManager } from '@/lib/offlineManager';
+import Constants from 'expo-constants';
 
 export interface User {
   id: string;
@@ -110,6 +113,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     set({ isLoading: true });
     try {
+      const { user } = get();
+      if (user) {
+        // Clear push token on logout
+        await clearPushToken(user.id);
+        // Clear offline queue on logout
+        const offlineManager = getOfflineManager();
+        await offlineManager.clearQueue();
+        await offlineManager.clearCache();
+      }
       await firebaseSignOut(auth);
       set({
         user: null,
@@ -148,6 +160,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               isAuthenticated: true,
               isLoading: false,
             });
+
+            // Register push token for notifications
+            const appVersion = Constants.expoConfig?.version || '1.0.0';
+            registerPushToken(firebaseUser.uid, appVersion).catch(err => {
+              console.warn('Failed to register push token:', err);
+            });
           } else {
             const user: User = {
               id: firebaseUser.uid,
@@ -161,6 +179,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               firebaseUser,
               isAuthenticated: true,
               isLoading: false,
+            });
+
+            // Register push token for new users
+            const appVersion = Constants.expoConfig?.version || '1.0.0';
+            registerPushToken(firebaseUser.uid, appVersion).catch(err => {
+              console.warn('Failed to register push token:', err);
             });
           }
         } catch (error) {

@@ -13,8 +13,11 @@ export default function AuthLayout() {
         },
       }}
     >
+      <Stack.Screen name="index" redirect="login" />
       <Stack.Screen name="login" />
+      <Stack.Screen name="register" options={{ presentation: 'card' }} />
       <Stack.Screen name="forgot-password" />
+      <Stack.Screen name="link-professional" options={{ presentation: 'card' }} />
     </Stack>
   );
 }
