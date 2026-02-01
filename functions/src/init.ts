@@ -35,6 +35,8 @@ export const CORS_ORIGINS = [
   'http://localhost:8083',
   'https://fisioflow-migration.web.app',
   'https://fisioflow.web.app',
+  'https://moocafisio.com.br',
+  'https://www.moocafisio.com.br',
   '*' // fallback for other origins
 ];
 
