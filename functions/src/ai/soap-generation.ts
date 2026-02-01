@@ -11,7 +11,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
-import { CORS_ORIGINS } from '../init';
 import { withIdempotency } from '../lib/idempotency';
 
 const firestore = admin.firestore();
@@ -90,7 +89,7 @@ const RATE_LIMITS = {
 // ============================================================================
 
 export const soapGeneration = onCall({
-  cors: CORS_ORIGINS,
+  cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
   cpu: 1,
