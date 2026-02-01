@@ -114,9 +114,15 @@ service cloud.firestore {
     // ORGANIZATIONS COLLECTION (ADDED)
     // ============================================================================================
 
+    match /organizations {
+      // Listagem: usuários autenticados podem listar organizações
+      allow list: if isAuthenticated();
+    }
+
     match /organizations/{organizationId} {
-      // Leitura: apenas admin ou profissionais podem ver
-      allow read: if isAdmin() || isProfessional();
+      // Leitura: usuários autenticados podem ver organizações
+      // Isso permite que o frontend busque informações da clínica
+      allow read: if isAuthenticated();
 
       // Criação/Atualização: apenas admin ou profissionais
       allow write: if isAdmin() || isProfessional();
