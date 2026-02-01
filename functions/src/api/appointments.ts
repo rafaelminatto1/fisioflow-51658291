@@ -42,14 +42,33 @@ function setCorsHeaders(res: any) {
 
 /**
  * Helper to get organization ID from user ID
+ * Tries PostgreSQL first, then falls back to Firestore
  */
 async function getOrganizationId(userId: string): Promise<string> {
-  const pool = getPool();
-  const result = await pool.query('SELECT organization_id FROM profiles WHERE user_id = $1', [userId]);
-  if (result.rows.length === 0) {
-    throw new HttpsError('not-found', 'Perfil não encontrado');
+  // First try PostgreSQL
+  try {
+    const pool = getPool();
+    const result = await pool.query('SELECT organization_id FROM profiles WHERE user_id = $1', [userId]);
+    if (result.rows.length > 0) {
+      return result.rows[0].organization_id;
+    }
+  } catch (error) {
+    logger.info('PostgreSQL query failed, trying Firestore:', error);
   }
-  return result.rows[0].organization_id;
+
+  // Fallback to Firestore
+  try {
+    const profileDoc = await admin.firestore().collection('profiles').doc(userId).get();
+    if (profileDoc.exists) {
+      const profile = profileDoc.data();
+      // Use organizationId or activeOrganizationId or first from organizationIds
+      return profile?.organizationId || profile?.activeOrganizationId || profile?.organizationIds?.[0] || 'default';
+    }
+  } catch (error) {
+    logger.info('Firestore query failed:', error);
+  }
+
+  throw new HttpsError('not-found', 'Perfil não encontrado em PostgreSQL nem Firestore');
 }
 
 /**

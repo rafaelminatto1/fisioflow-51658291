@@ -12,11 +12,24 @@ service cloud.firestore {
     }
 
     // Verificadores de papel (Role checkers) com proteção de existência
-    // Fallback: Se o profile não existir em Firestore, permite leitura mas não escrita
+    // Nota: hasRole pode causar dependência circular quando usado em regras da coleção profiles
+    // Use getRole() que retorna null se o perfil não existir, em vez de hasRole()
     function hasRole(role) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
+    }
+
+    // Obter o role do usuário sem causar erro se perfil não existir
+    function getRole() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    // Verificar se o usuário tem role específico (versão segura para evitar dependência circular)
+    function hasRoleSafe(role) {
+      return getRole() == role;
     }
 
     // Verificar se o usuário tem perfil no Firestore
@@ -114,11 +127,19 @@ service cloud.firestore {
     // ============================================================================================
     
     match /profiles/{userId} {
-      // Leitura: admin, profissionais, ou próprio usuário
-      allow read: if isAdmin() || isProfessional() || (isAuthenticated() && request.auth.uid == userId);
+      // Leitura: qualquer usuário autenticado pode ler perfis (com restrições de aplicação)
+      // Isso evita dependência circular com hasRole()
+      allow read: if isAuthenticated();
 
-      // Criação/Atualização: apenas o próprio usuário ou admin
-      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      // Criação: qualquer usuário autenticado pode criar seu próprio perfil
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidSize();
+
+      // Atualização: apenas o próprio usuário ou admin
+      // Admin pode atualizar qualquer perfil
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
     }
     
     // ============================================================================================

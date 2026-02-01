@@ -5,8 +5,10 @@
 
 import { getAuth } from 'firebase-admin/auth';
 import { getApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
 const auth = () => getAuth(getApp());
+const firestore = () => getFirestore(getApp());
 import { Pool } from 'pg';
 import { HttpsError } from 'firebase-functions/v2/https';
 
@@ -104,6 +106,7 @@ export async function verifyToken(token: string): Promise<DecodedToken> {
 
 /**
  * Busca os dados do profile no banco de dados
+ * Tenta PostgreSQL primeiro, depois Firestore como fallback
  *
  * @param userId - UID do Firebase Auth
  * @returns Dados do profile
@@ -113,6 +116,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
   const pool = getPool();
 
   try {
+    // First try PostgreSQL
     let result = await pool.query<ProfileData>(
       `SELECT id, user_id, organization_id, role, full_name, email, is_active
        FROM profiles
@@ -120,63 +124,75 @@ async function getProfile(userId: string): Promise<ProfileData> {
       [userId]
     );
 
-    if (result.rows.length === 0) {
-      // [AUTO-FIX] Create default org and profile for the first user (Single-Clinic Mode)
-      logger.info(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
-
-      // Generate a deterministic UUID based on user ID for the organization
-      // This ensures the same user always gets the same organization
-      const organizationId = `org-${userId.substring(0, 8)}-${userId.substring(8, 16)}-${userId.substring(16, 24)}-${userId.substring(24, 32)}`;
-
-      // Generate slug from user email or use a default
-      const orgSlug = `clinica-${userId.substring(0, 8).toLowerCase()}`;
-
-      // 1. Ensure Organization exists with unique slug
-      try {
-        await pool.query(
-          `INSERT INTO organizations (id, name, slug, active, email)
-             VALUES ($1, 'Clínica Principal', $2, true, $3)
-             ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug`,
-          [organizationId, orgSlug, 'admin@fisioflow.com.br']
-        );
-        logger.info(`[Auth Middleware] Created/updated organization: ${organizationId} with slug: ${orgSlug}`);
-      } catch (orgError: any) {
-        // If organization already exists but slug conflicts, generate a unique one
-        if (orgError.code === '23505') { // unique_violation
-          const uniqueSlug = `${orgSlug}-${Date.now().toString(36)}`;
-          await pool.query(
-            `UPDATE organizations SET slug = $1 WHERE id = $2`,
-            [uniqueSlug, organizationId]
-          );
-          logger.info(`[Auth Middleware] Updated organization slug to: ${uniqueSlug}`);
-        } else {
-          throw orgError;
-        }
+    if (result.rows.length > 0) {
+      const profile = result.rows[0];
+      if (!profile.is_active) {
+        throw new HttpsError('permission-denied', 'Este usuário está desativado');
       }
-
-      // 2. Create Profile with user's email if available
-      const newProfile = await pool.query<ProfileData>(
-        `INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id, user_id, organization_id, role, full_name, email, is_active`,
-        [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com.br', true]
-      );
-
-      logger.info(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);
-      return newProfile.rows[0];
+      return profile;
     }
-
-    const profile = result.rows[0];
-
-    if (!profile.is_active) {
-      throw new HttpsError('permission-denied', 'Este usuário está desativado');
-    }
-
-    return profile;
   } catch (error) {
-    // If database connection fails, provide a more helpful error
+    logger.info('[Auth Middleware] PostgreSQL query failed, trying Firestore:', error);
+  }
+
+  // Fallback to Firestore
+  try {
+    const profileDoc = await firestore().collection('profiles').doc(userId).get();
+
+    if (profileDoc.exists) {
+      const data = profileDoc.data();
+      if (data) {
+        // Convert Firestore profile to ProfileData format
+        const organizationId = data.organizationId || data.organization_ids?.[0] || data.activeOrganizationId || 'default';
+        return {
+          id: userId,
+          user_id: userId,
+          organization_id: organizationId,
+          role: data.role || 'user',
+          full_name: data.displayName || data.name || data.full_name || '',
+          email: data.email || '',
+          is_active: data.isActive !== false,
+        };
+      }
+    }
+  } catch (firestoreError) {
+    logger.info('[Auth Middleware] Firestore query failed:', firestoreError);
+  }
+
+  // If not found in either database, create default in PostgreSQL
+  try {
+    logger.info(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
+
+    const organizationId = `org-${userId.substring(0, 8)}-${userId.substring(8, 16)}-${userId.substring(16, 24)}-${userId.substring(24, 32)}`;
+    const orgSlug = `clinica-${userId.substring(0, 8).toLowerCase()}`;
+
+    try {
+      await pool.query(
+        `INSERT INTO organizations (id, name, slug, active, email)
+           VALUES ($1, 'Clínica Principal', $2, true, $3)
+           ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug`,
+        [organizationId, orgSlug, 'admin@fisioflow.com.br']
+      );
+      logger.info(`[Auth Middleware] Created/updated organization: ${organizationId}`);
+    } catch (orgError: any) {
+      if (orgError.code === '23505') {
+        const uniqueSlug = `${orgSlug}-${Date.now().toString(36)}`;
+        await pool.query(`UPDATE organizations SET slug = $1 WHERE id = $2`, [uniqueSlug, organizationId]);
+      }
+    }
+
+    const newProfile = await pool.query<ProfileData>(
+      `INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, user_id, organization_id, role, full_name, email, is_active`,
+      [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com.br', true]
+    );
+
+    logger.info(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);
+    return newProfile.rows[0];
+  } catch (error) {
     if (error instanceof Error) {
-      if (error.message.includes('connect') || error.message.includes('ECONNREFUSED')) {
+      if (error.message.includes('connect') || error.message.includes('ECONNREFUSED') || error.message.includes('ETIMEDOUT')) {
         logger.error('[Auth Middleware] Database connection error:', error.message);
         throw new HttpsError(
           'internal',
