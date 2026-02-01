@@ -6,7 +6,7 @@
  */
 
 import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
-import { app } from './app';
+import { app, getFirebaseAuth } from './app';
 
 // ============================================================================
 // CONSTANTS
@@ -106,6 +106,69 @@ export async function callFunctionWithResponse<TRequest, TData>(
   options?: CallFunctionOptions
 ): Promise<FunctionResponse<TData>> {
   const response = await callFunction<TRequest, FunctionResponse<TData>>(
+    functionName,
+    data,
+    options
+  );
+
+  if (response.error && !response.data) {
+    throw new FunctionCallError(functionName, response.error);
+  }
+
+  return response;
+}
+
+/**
+ * HTTP call with Bearer token for functions that use onRequest
+ * This fixes CORS and authentication issues with Firebase Functions v2
+ */
+export async function callFunctionHttp<TRequest, TResponse>(
+  functionName: string,
+  data: TRequest,
+  options?: CallFunctionOptions
+): Promise<TResponse> {
+  const auth = getFirebaseAuth();
+  const token = await auth.currentUser?.getIdToken();
+
+  if (!token) {
+    throw new FunctionCallError(functionName, 'No authentication token available');
+  }
+
+  const region = DEFAULT_REGION;
+  const projectId = app.options.projectId;
+  const url = `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result as TResponse;
+  } catch (error) {
+    throw new FunctionCallError(functionName, error);
+  }
+}
+
+/**
+ * Wrapper para chamadas HTTP com tratamento de erro
+ */
+export async function callFunctionHttpWithResponse<TRequest, TData>(
+  functionName: string,
+  data: TRequest,
+  options?: CallFunctionOptions
+): Promise<FunctionResponse<TData>> {
+  const response = await callFunctionHttp<TRequest, FunctionResponse<TData>>(
     functionName,
     data,
     options
@@ -601,7 +664,7 @@ export const appointmentsApi = {
    * Lista agendamentos com filtros opcionais
    */
   list: (params: AppointmentApi.ListParams = {}): Promise<FunctionResponse<AppointmentApi.Appointment[]>> =>
-    callFunctionWithResponse('listAppointments', params),
+    callFunctionHttpWithResponse('listAppointments', params),
 
   /**
    * Obtém um agendamento por ID
@@ -642,13 +705,13 @@ export const profileApi = {
    * Obtém o perfil do usuário atual
    */
   getCurrent: (): Promise<ProfileApi.Profile> =>
-    callFunction('getProfile', {}),
+    callFunctionHttp('getProfile', {}),
 
   /**
    * Atualiza o perfil do usuário atual
    */
   update: (updates: ProfileApi.UpdateData): Promise<ProfileApi.Profile> =>
-    callFunction('updateProfile', updates),
+    callFunctionHttp('updateProfile', updates),
 };
 
 // ============================================================================
