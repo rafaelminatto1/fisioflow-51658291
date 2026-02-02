@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions';
-import { getAdminDb } from '../init';
+import { getAdminDb, getPool } from '../init';
 // import { sendNotification } from '../workflows/notifications';
 
 // Use v1 trigger for now as v2 onUserCreated is still in preview/beta in some regions
@@ -19,6 +19,7 @@ export const onUserCreated = functions
     .auth.user()
     .onCreate(async (user: functions.auth.UserRecord) => {
         const db = getAdminDb();
+        const pool = getPool();
         const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
         const ADMIN_EMAIL = 'rafael.minatto@yahoo.com.br';
 
@@ -47,11 +48,45 @@ export const onUserCreated = functions
             }
 
             const now = new Date().toISOString();
+            const fullName = user.displayName || 'Novo Usuário';
+
+            // 1.1 Sync to PostgreSQL (Critical for V2 API)
+            try {
+                await pool.query(
+                    `INSERT INTO profiles (
+                        user_id,
+                        organization_id,
+                        full_name,
+                        email,
+                        role,
+                        email_verified,
+                        is_active,
+                        avatar_url,
+                        created_at,
+                        updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                    ON CONFLICT (user_id) DO NOTHING`,
+                    [
+                        user.uid,
+                        organizationId,
+                        fullName,
+                        user.email,
+                        'pending', // Default role
+                        user.emailVerified || false,
+                        true, // is_active
+                        user.photoURL || null
+                    ]
+                );
+                logger.info(`[onUserCreated] Profile synced to PostgreSQL for ${user.uid}`);
+            } catch (sqlError) {
+                logger.error(`[onUserCreated] Failed to sync profile to PostgreSQL:`, sqlError);
+                // Don't throw here to ensure Firestore write still happens/completes
+            }
 
             if (!profileSnap.exists) {
                 await profileRef.set({
                     user_id: user.uid,
-                    full_name: user.displayName || 'Novo Usuário',
+                    full_name: fullName,
                     email: user.email,
                     role: 'pending', // DEFAULT ROLE IS NOW PENDING
                     email_verified: user.emailVerified || false,
@@ -62,33 +97,12 @@ export const onUserCreated = functions
                     updated_at: now,
                     onboarding_completed: false
                 });
-                logger.info(`[onUserCreated] Profile created for ${user.uid} with role 'pending'`);
+                logger.info(`[onUserCreated] Profile created in Firestore for ${user.uid}`);
             } else {
-                logger.info(`[onUserCreated] Profile already exists for ${user.uid}, skipping creation.`);
+                logger.info(`[onUserCreated] Profile already exists in Firestore for ${user.uid}, skipping creation.`);
             }
 
             // 2. Notify Admin
-            // invoking the sendNotification workflow directly via internal call or queue
-            // Since sendNotification is a Callable, we can't "call" it directly easily as a function
-            // reusing the logic would be better, but for now we will just create a notification document
-            // which triggers the actual email sending if we had a trigger on 'notifications' collection.
-            // BUT, looking at notifications.ts, 'sendNotification' writes to 'notifications' collection
-            // and then calls 'sendNotificationByType'. 
-
-            // We will act as if we are the system and just insert into notifications collection
-            // IF there is a trigger that watches it. 
-            // Wait, notifications.ts has 'processNotificationQueue' (PubSub) and 'sendNotification' (Callable).
-            // It does NOT have a Firestore trigger on 'notifications' collection to send emails.
-
-            // So we should manually trigger the email logic or just log it for now if email integration isn't fully ready.
-            // The user request implies "I receive an email".
-            // Use a simpler approach: Log IT and assume the "sendNotification" callable logic is accessible?
-            // No, 'sendNotification' is an export.
-
-            // Let's create a notification in Firestore for the admin to see in the UI (if they had one)
-            // And actually send the email if possible.
-
-            // For now, robust implementation:
             const notificationRef = db.collection('notifications').doc();
             await notificationRef.set({
                 user_id: 'SYSTEM', // System notification
@@ -104,14 +118,6 @@ export const onUserCreated = functions
                 created_at: now,
                 channel: 'email'
             });
-
-            // We can publish to the notification-queue topic if we want to actually send it async
-            // BUT the `processNotificationQueue` function in notifications.ts is defined but logic is empty/commented out:
-            // "// Process notification from queue // This would handle the actual sending..."
-
-            // So for THIS task, I should probably ensure the Admin knows. 
-            // Given constraints, I will rely on the Cloud Function logs and the Firestore document creation.
-            // I'll add a TODO to wire up the actual email provider (SendGrid/Resend) later if not present.
 
             logger.info(`[onUserCreated] Admin notification queued for ${ADMIN_EMAIL}`);
 

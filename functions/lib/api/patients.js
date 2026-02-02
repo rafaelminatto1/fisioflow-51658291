@@ -429,6 +429,19 @@ exports.createPatientHttp = (0, https_1.onRequest)({
             }
         }
         const patient = result.rows[0];
+        // [SYNC] Write to Firestore for legacy frontend compatibility
+        try {
+            const db = admin.firestore();
+            await db.collection('patients').doc(patient.id).set({
+                ...patient,
+                created_at: new Date(),
+                updated_at: new Date()
+            });
+            logger_1.logger.info(`[createPatientHttp] Patient ${patient.id} synced to Firestore`);
+        }
+        catch (fsError) {
+            logger_1.logger.error(`[createPatientHttp] Failed to sync patient ${patient.id} to Firestore:`, fsError);
+        }
         // Publicar no Ably
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
@@ -512,6 +525,18 @@ exports.updatePatientHttp = (0, https_1.onRequest)({
         values.push(patientId, organizationId);
         const result = await pool.query(`UPDATE patients SET ${setClauses.join(', ')} WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2} RETURNING *`, values);
         const patient = result.rows[0];
+        // [SYNC] Write to Firestore for legacy frontend compatibility
+        try {
+            const db = admin.firestore();
+            await db.collection('patients').doc(patientId).set({
+                ...patient,
+                updated_at: new Date()
+            }, { merge: true });
+            logger_1.logger.info(`[updatePatientHttp] Patient ${patientId} synced to Firestore`);
+        }
+        catch (fsError) {
+            logger_1.logger.error(`[updatePatientHttp] Failed to sync patient ${patientId} to Firestore:`, fsError);
+        }
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
             await realtime.publishPatientEvent(organizationId, { event: 'UPDATE', new: patient, old: existing.rows[0] });
@@ -568,6 +593,18 @@ exports.deletePatientHttp = (0, https_1.onRequest)({
         if (result.rows.length === 0) {
             res.status(404).json({ error: 'Paciente não encontrado' });
             return;
+        }
+        // [SYNC] Sync soft-delete to Firestore
+        try {
+            const db = admin.firestore();
+            await db.collection('patients').doc(patientId).update({
+                is_active: false,
+                updated_at: new Date()
+            });
+            logger_1.logger.info(`[deletePatientHttp] Patient ${patientId} soft-deleted in Firestore`);
+        }
+        catch (fsError) {
+            logger_1.logger.error(`[deletePatientHttp] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
         }
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
@@ -838,6 +875,19 @@ exports.createPatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
             }
         }
         const patient = result.rows[0];
+        // [SYNC] Write to Firestore for legacy frontend compatibility
+        try {
+            const db = admin.firestore();
+            await db.collection('patients').doc(patient.id).set({
+                ...patient,
+                created_at: new Date(),
+                updated_at: new Date()
+            });
+            logger_1.logger.info(`[createPatient] Patient ${patient.id} synced to Firestore`);
+        }
+        catch (fsError) {
+            logger_1.logger.error(`[createPatient] Failed to sync patient ${patient.id} to Firestore:`, fsError);
+        }
         logger_1.logger.debug('[createPatient] Patient created:', JSON.stringify({
             id: patient.id,
             name: patient.name,
@@ -932,6 +982,18 @@ exports.updatePatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
     `;
         const result = await pool.query(query, values);
         const patient = result.rows[0];
+        // [SYNC] Write to Firestore for legacy frontend compatibility
+        try {
+            const db = admin.firestore();
+            await db.collection('patients').doc(patientId).set({
+                ...patient,
+                updated_at: new Date()
+            }, { merge: true });
+            logger_1.logger.info(`[updatePatient] Patient ${patientId} synced to Firestore`);
+        }
+        catch (fsError) {
+            logger_1.logger.error(`[updatePatient] Failed to sync patient ${patientId} to Firestore:`, fsError);
+        }
         // Publicar no Ably
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
@@ -977,6 +1039,18 @@ exports.deletePatient = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
        RETURNING *`, [patientId, auth.organizationId]);
         if (result.rows.length === 0) {
             throw new https_1.HttpsError('not-found', 'Paciente não encontrado');
+        }
+        // [SYNC] Sync soft-delete to Firestore
+        try {
+            const db = admin.firestore();
+            await db.collection('patients').doc(patientId).update({
+                is_active: false,
+                updated_at: new Date()
+            });
+            logger_1.logger.info(`[deletePatient] Patient ${patientId} soft-deleted in Firestore`);
+        }
+        catch (fsError) {
+            logger_1.logger.error(`[deletePatient] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
         }
         // Publicar no Ably
         try {
