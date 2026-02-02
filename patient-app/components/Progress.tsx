@@ -3,9 +3,9 @@
  * Linear and circular progress indicators
  */
 
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
-import { Dimensions } from 'react-native';
 
 export type ProgressSize = 'small' | 'medium' | 'large' | number;
 
@@ -280,6 +280,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     zIndex: 1,
   },
+  stepError: {},
+  stepCompleted: {},
+  stepCurrent: {},
   stepNumber: {
     fontSize: 14,
     fontWeight: '600',

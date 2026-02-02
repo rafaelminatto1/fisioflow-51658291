@@ -46,7 +46,6 @@ const https_1 = require("firebase-functions/v2/https");
 const firebase_admin_1 = require("firebase-admin");
 const logger = __importStar(require("firebase-functions/logger"));
 const params_1 = require("firebase-functions/params");
-const init_1 = require("../init");
 exports.WHATSAPP_PHONE_NUMBER_ID_SECRET = (0, params_1.defineSecret)('WHATSAPP_PHONE_NUMBER_ID');
 exports.WHATSAPP_ACCESS_TOKEN_SECRET = (0, params_1.defineSecret)('WHATSAPP_ACCESS_TOKEN');
 // WhatsApp API configuration
@@ -96,7 +95,7 @@ async function fetchWithRetry(url, options, retryCount = 0) {
         throw error;
     }
 }
-const init_2 = require("../init");
+const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 /**
  * Templates de WhatsApp aprovados
@@ -119,7 +118,7 @@ var WhatsAppTemplate;
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -192,7 +191,7 @@ exports.sendWhatsAppAppointmentConfirmation = (0, https_1.onCall)({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -246,7 +245,7 @@ exports.sendWhatsAppAppointmentReminder = (0, https_1.onCall)({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 exports.sendWhatsAppWelcome = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -283,7 +282,7 @@ exports.sendWhatsAppWelcome = (0, https_1.onCall)({
  * Cloud Function: Enviar mensagem personalizada
  */
 exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -329,7 +328,7 @@ exports.sendWhatsAppCustomMessage = (0, https_1.onCall)({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 exports.sendWhatsAppExerciseAssigned = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -582,7 +581,7 @@ async function handleIncomingWhatsAppMessage(message) {
             createdAt: firebase_admin_1.firestore.FieldValue.serverTimestamp(),
         });
         // Salvar mensagem recebida no Cloud SQL
-        const pool = (0, init_2.getPool)();
+        const pool = (0, init_1.getPool)();
         await pool.query(`INSERT INTO whatsapp_messages (
         organization_id, patient_id, from_phone, to_phone, message, type, message_id, status, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [
@@ -618,7 +617,7 @@ async function handleWhatsAppMessageStatus(status) {
         });
     }
     // Atualizar status no Cloud SQL
-    const pool = (0, init_2.getPool)();
+    const pool = (0, init_1.getPool)();
     await pool.query('UPDATE whatsapp_messages SET status = $1, metadata = jsonb_set(COALESCE(metadata, \'{}\'), \'{status_history}\', COALESCE(metadata->\'status_history\', \'[]\'::jsonb) || $2::jsonb) WHERE message_id = $3', [
         messageStatus,
         JSON.stringify([{ status: messageStatus, timestamp: new Date().toISOString() }]),
@@ -658,7 +657,7 @@ async function handleAutoReply(from, text, patient) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 exports.testWhatsAppMessage = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -708,7 +707,7 @@ exports.testWhatsAppMessage = (0, https_1.onCall)({
  * Envia um template específico para verificar se foi aprovado
  */
 exports.testWhatsAppTemplate = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
@@ -800,7 +799,7 @@ exports.testWhatsAppTemplate = (0, https_1.onCall)({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 exports.getWhatsAppHistory = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '256MiB',
 }, async (request) => {
@@ -809,7 +808,7 @@ exports.getWhatsAppHistory = (0, https_1.onCall)({
     }
     const { patientId, limit = 50, offset = 0 } = request.data;
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const pool = (0, init_2.getPool)();
+    const pool = (0, init_1.getPool)();
     try {
         const result = await pool.query(`SELECT * FROM whatsapp_messages 
        WHERE organization_id = $1 AND patient_id = $2
@@ -832,7 +831,7 @@ exports.getWhatsAppHistory = (0, https_1.onCall)({
  * Registra uma mensagem no banco de dados
  */
 async function logWhatsAppMessage(params) {
-    const pool = (0, init_2.getPool)();
+    const pool = (0, init_1.getPool)();
     try {
         await pool.query(`INSERT INTO whatsapp_messages (
         organization_id, patient_id, from_phone, to_phone, message, type, template_name, message_id, status

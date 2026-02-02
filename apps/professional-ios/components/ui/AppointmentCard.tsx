@@ -30,11 +30,12 @@ export function AppointmentCard({
   style,
 }: AppointmentCardProps) {
   const { colors } = useTheme();
+  const [actionsPressed, setActionsPressed] = React.useState(false);
 
   const getStatusInfo = () => {
     switch (appointment.status) {
       case 'agendado':
-        return { label: 'Agendado', color: '#3b82f6' as const, variant: 'default' as const };
+        return { label: 'Agendado', color: colors.primary as const, variant: 'default' as const };
       case 'confirmado':
         return { label: 'Confirmado', color: '#22c55e' as const, variant: 'success' as const };
       case 'em_andamento':
@@ -56,7 +57,15 @@ export function AppointmentCard({
   const isTodayAppointment = isToday(appointmentDate);
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, style]}>
+    <Pressable
+      onPress={() => {
+        if (!actionsPressed && onPress) {
+          onPress();
+        }
+      }}
+      onPressIn={() => setActionsPressed(false)}
+      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, style]}
+    >
       <Card
         variant={isPastAppointment ? 'default' : 'elevated'}
         style={[
@@ -115,6 +124,7 @@ export function AppointmentCard({
               {onStartSession && appointment.status !== 'concluido' && (
                 <Button
                   size="xs"
+                  onPressIn={() => setActionsPressed(true)}
                   onPress={() => {
                     HapticFeedback.light();
                     onStartSession();
@@ -127,6 +137,7 @@ export function AppointmentCard({
                 <Button
                   size="xs"
                   variant="outline"
+                  onPressIn={() => setActionsPressed(true)}
                   onPress={() => {
                     HapticFeedback.light();
                     onStartEvaluation();

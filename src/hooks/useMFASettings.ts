@@ -7,6 +7,8 @@ import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestore
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
 
 const auth = getFirebaseAuth();
@@ -173,18 +175,21 @@ export function useMFASettings() {
       const firebaseUser = auth.currentUser;
       if (!firebaseUser || !firebaseUser.email) throw new Error("Usuário não autenticado");
 
-      // This would normally call a Firebase Cloud Function
-      // For now, we'll simulate it by storing the OTP request
-      throw new Error("Função de envio de OTP requer Cloud Function implementada");
+      // Call Firebase Cloud Function to send MFA OTP
+      const functions = getFirebaseFunctions();
+      const sendMFAOtp = httpsCallable(functions, 'sendMFAOtp');
+      const result = await sendMFAOtp({ userId: firebaseUser.uid, email: firebaseUser.email });
 
-      // TODO: Implement Firebase Cloud Function for sending MFA OTP
-      // const functions = getFunctions();
-      // const sendMFAOtp = httpsCallable(functions, 'sendMFAOtp');
-      // const result = await sendMFAOtp({ userId: firebaseUser.uid, email: firebaseUser.email });
-      // return result.data;
+      if (result.data?.error) {
+        throw new Error(result.data.error);
+      }
+
+      return result.data;
     },
-    onSuccess: () => {
-      toast.success("Código enviado para seu email");
+    onSuccess: (result) => {
+      if (result?.success) {
+        toast.success("Código enviado para seu email");
+      }
     },
     onError: (error) => {
       logger.error("Erro ao enviar OTP", error, 'useMFASettings');

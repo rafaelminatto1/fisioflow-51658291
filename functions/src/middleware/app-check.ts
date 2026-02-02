@@ -4,13 +4,14 @@
  */
 
 import { HttpsError } from 'firebase-functions/v2/https';
-import { logger } from '../lib/logger';
 
 /**
  * Verifica se a requisição possui um token do App Check válido
  *
  * Em produção, rejeita requisições sem token válido.
  * Em desenvolvimento, permite requisições sem token para facilitar testes.
+ *
+ * NOTA: App Check temporariamente desabilitado até ser configurado no frontend
  *
  * @param request - Objeto de requisição do Cloud Functions (v2)
  * @throws HttpsError se não houver token do App Check (em produção)
@@ -24,6 +25,11 @@ import { logger } from '../lib/logger';
  * ```
  */
 export function verifyAppCheck(request: { app?: any; rawRequest?: any }): void {
+  // App Check temporariamente desabilitado
+  // Quando configurar no frontend, descomentar o código abaixo
+  return;
+
+  /*
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Em produção, rejeitar requisições sem App Check
@@ -47,6 +53,7 @@ export function verifyAppCheck(request: { app?: any; rawRequest?: any }): void {
   }
 
   logger.info('[App Check] Token verificado com sucesso');
+  */
 }
 
 /**

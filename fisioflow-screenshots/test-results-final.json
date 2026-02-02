@@ -1,0 +1,295 @@
+[
+  {
+    "id": "admin",
+    "name": "Rafael Minatto (Admin)",
+    "email": "rafael.minatto@yahoo.com.br",
+    "password": "Yukari30@",
+    "expectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes",
+      "Prontuário"
+    ],
+    "notExpectedFeatures": [],
+    "success": false,
+    "loginStatus": "unknown",
+    "screenshot": "/tmp/fisioflow-screenshots/admin.png",
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n02:03:53\nVer detalhes completos",
+      "h1": [],
+      "h2": [],
+      "h3": [
+        "Ops! Algo deu errado"
+      ],
+      "navLinks": [],
+      "allButtons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ],
+      "errors": [],
+      "localStorageKeys": [
+        "firestore_online_state_firestore/[DEFAULT]/fisioflow-migration/",
+        "app_deployment_version",
+        "firestore_sequence_number_firestore/[DEFAULT]/fisioflow-migration/",
+        "last_build_time",
+        "firestore_clients_firestore/[DEFAULT]/fisioflow-migration/_z7fcsDe6KktUSpsREZhb",
+        "app_version",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_4",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_2"
+      ],
+      "hasUser": false
+    },
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "type": "request-failed",
+        "text": "net::ERR_ABORTED - https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=c7ZhqmO2KPgYAT__1L3XEeMUkl4l6NdHjfjgXdmu7-fTbOJ40na4Kg&VER=8&database=projects%2Ffisioflow-migration%2Fdatabases%2F(default)&RID=rpc&SID=YRaiWmDMDrt2-43pu-YhiA&AID=0&CI=0&TYPE=xmlhttp&zx=adyune6hwfrp&t=1",
+        "timestamp": 1769922233220
+      }
+    ],
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes",
+      "Prontuário"
+    ],
+    "unexpectedFeatures": []
+  },
+  {
+    "id": "recepcionista",
+    "name": "Fernanda (Recepcionista)",
+    "email": "fernanda@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [
+      "Agenda",
+      "Pacientes"
+    ],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Prontuário"
+    ],
+    "success": false,
+    "loginStatus": "unknown",
+    "screenshot": "/tmp/fisioflow-screenshots/recepcionista.png",
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n02:04:09\nVer detalhes completos",
+      "h1": [],
+      "h2": [],
+      "h3": [
+        "Ops! Algo deu errado"
+      ],
+      "navLinks": [],
+      "allButtons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ],
+      "errors": [],
+      "localStorageKeys": [
+        "firestore_online_state_firestore/[DEFAULT]/fisioflow-migration/",
+        "app_deployment_version",
+        "firestore_sequence_number_firestore/[DEFAULT]/fisioflow-migration/",
+        "last_build_time",
+        "app_version",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_4",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_2",
+        "firestore_clients_firestore/[DEFAULT]/fisioflow-migration/_NiL95UTK2vZwEbwQpSB1"
+      ],
+      "hasUser": false
+    },
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "type": "request-failed",
+        "text": "net::ERR_ABORTED - https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=giZSyaHq5L9NlXwo8SLdULSazPKOHAs4-hBS9bNZtkLgjoYILuPYfA&VER=8&database=projects%2Ffisioflow-migration%2Fdatabases%2F(default)&RID=rpc&SID=WAYtPYudkrVzicaNFW21_w&AID=0&CI=0&TYPE=xmlhttp&zx=rjkhtp995qf8&t=1",
+        "timestamp": 1769922249402
+      }
+    ],
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Agenda",
+      "Pacientes"
+    ],
+    "unexpectedFeatures": []
+  },
+  {
+    "id": "fisioterapeuta",
+    "name": "Dr. Carlos Silva (Fisioterapeuta)",
+    "email": "carlos.silva@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [
+      "Pacientes",
+      "Prontuário",
+      "Exercícios"
+    ],
+    "notExpectedFeatures": [
+      "Financeiro",
+      "Administração"
+    ],
+    "success": false,
+    "loginStatus": "unknown",
+    "screenshot": "/tmp/fisioflow-screenshots/fisioterapeuta.png",
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n02:04:35\nVer detalhes completos",
+      "h1": [],
+      "h2": [],
+      "h3": [
+        "Ops! Algo deu errado"
+      ],
+      "navLinks": [],
+      "allButtons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ],
+      "errors": [],
+      "localStorageKeys": [
+        "firestore_online_state_firestore/[DEFAULT]/fisioflow-migration/",
+        "app_deployment_version",
+        "firestore_sequence_number_firestore/[DEFAULT]/fisioflow-migration/",
+        "last_build_time",
+        "app_version",
+        "firestore_clients_firestore/[DEFAULT]/fisioflow-migration/_3mu5jWVcQbVPP9rv4qbR",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_4",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_2"
+      ],
+      "hasUser": false
+    },
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "type": "request-failed",
+        "text": "net::ERR_ABORTED - https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=6JN2MaJyYPKw-IkWDh5DvfWrTNOA0koVXwhXIjKO818bAgMn064U5Q&VER=8&database=projects%2Ffisioflow-migration%2Fdatabases%2F(default)&RID=rpc&SID=55q828pJs6StOPZQY6PUhg&AID=0&CI=0&TYPE=xmlhttp&zx=y4xkpa6fnfue&t=1",
+        "timestamp": 1769922272689
+      }
+    ],
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Pacientes",
+      "Prontuário",
+      "Exercícios"
+    ],
+    "unexpectedFeatures": []
+  },
+  {
+    "id": "estagiario",
+    "name": "Lucas Mendes (Estagiário)",
+    "email": "lucas.mendes@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro"
+    ],
+    "success": false,
+    "loginStatus": "unknown",
+    "screenshot": "/tmp/fisioflow-screenshots/estagiario.png",
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n02:04:52\nVer detalhes completos",
+      "h1": [],
+      "h2": [],
+      "h3": [
+        "Ops! Algo deu errado"
+      ],
+      "navLinks": [],
+      "allButtons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ],
+      "errors": [],
+      "localStorageKeys": [
+        "firestore_online_state_firestore/[DEFAULT]/fisioflow-migration/",
+        "app_deployment_version",
+        "firestore_sequence_number_firestore/[DEFAULT]/fisioflow-migration/",
+        "last_build_time",
+        "firestore_clients_firestore/[DEFAULT]/fisioflow-migration/_1v3lcy443hEXO1c53J2U",
+        "app_version",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_4",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_2"
+      ],
+      "hasUser": false
+    },
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "type": "request-failed",
+        "text": "net::ERR_ABORTED - https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=jOmDPBVFAdTvkkxwpdZdsycdkmFf8L8YKDos59yHeRQ1-Kimgsgz9A&VER=8&database=projects%2Ffisioflow-migration%2Fdatabases%2F(default)&RID=rpc&SID=CWxQe8r8dMA_KhVu507UVw&AID=0&CI=0&TYPE=xmlhttp&zx=buthrv50ko1b&t=1",
+        "timestamp": 1769922292040
+      }
+    ],
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": []
+  },
+  {
+    "id": "paciente",
+    "name": "Roberto Almeida (Paciente)",
+    "email": "roberto.almeida@gmail.com",
+    "password": "Fisio123!",
+    "expectedFeatures": [],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes"
+    ],
+    "success": false,
+    "loginStatus": "unknown",
+    "screenshot": "/tmp/fisioflow-screenshots/paciente.png",
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n02:05:08\nVer detalhes completos",
+      "h1": [],
+      "h2": [],
+      "h3": [
+        "Ops! Algo deu errado"
+      ],
+      "navLinks": [],
+      "allButtons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ],
+      "errors": [],
+      "localStorageKeys": [
+        "firestore_online_state_firestore/[DEFAULT]/fisioflow-migration/",
+        "app_deployment_version",
+        "firestore_sequence_number_firestore/[DEFAULT]/fisioflow-migration/",
+        "last_build_time",
+        "firestore_clients_firestore/[DEFAULT]/fisioflow-migration/_m3pL7VrChDQgaMM4ukPu",
+        "app_version",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_4",
+        "firestore_targets_firestore/[DEFAULT]/fisioflow-migration/_2"
+      ],
+      "hasUser": false
+    },
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "type": "request-failed",
+        "text": "net::ERR_ABORTED - https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?gsessionid=7fK0Ocbt7EfG7EVphCfyNFDnLaZjfsc1PZRRmrRMlYACggwsJ2K4Zg&VER=8&database=projects%2Ffisioflow-migration%2Fdatabases%2F(default)&RID=rpc&SID=63lkbveRonnW7hrB5v_SQw&AID=0&CI=0&TYPE=xmlhttp&zx=egwijfuv6hpq&t=1",
+        "timestamp": 1769922308496
+      }
+    ],
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": []
+  }
+]

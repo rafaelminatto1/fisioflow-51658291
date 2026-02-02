@@ -120,8 +120,8 @@ export default defineConfig(({ mode }) => {
   return {
     server: {
       host: "::",
-      port: 8083,
-      strictPort: false, // Tenta portas alternativas se 8083 estiver em uso
+      port: 8084,
+      strictPort: false, // Tenta portas alternativas se 8084 estiver em uso
       headers: {
         "Cross-Origin-Embedder-Policy": "credentialless",
         "Cross-Origin-Opener-Policy": "same-origin",
