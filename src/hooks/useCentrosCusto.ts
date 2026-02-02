@@ -1,14 +1,7 @@
 /**
  * useCentrosCusto - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('centros_custo') → Firestore collection 'centros_custo'
- * - supabase.select() → getDocs()
- * - supabase.insert() → addDoc()
- * - supabase.update() → updateDoc()
- * - supabase.delete() → deleteDoc()
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';

@@ -1,10 +1,7 @@
 /**
  * useChecklist - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('checklist_items') → Firestore collection 'checklist_items'
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';

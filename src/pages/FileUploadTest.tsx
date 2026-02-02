@@ -1,10 +1,5 @@
 /**
  * File Upload Test Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Storage:
- * - supabase.auth.getUser() → useAuth() from AuthContext
- * - supabase.storage.from().upload() → Firebase Storage uploadBytes()
- * - supabase.storage.from().getPublicUrl() → getDownloadURL()
  */
 
 import React, { useState, useCallback } from 'react';

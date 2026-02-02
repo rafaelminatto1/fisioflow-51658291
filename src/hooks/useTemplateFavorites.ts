@@ -1,9 +1,5 @@
 /**
  * useTemplateFavorites - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
- * - Optimistic updates preserved
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,9 +9,6 @@ import { db } from '@/integrations/firebase/app';
 
 
 
-/**
- * Hook para gerenciar favoritos de templates
- */
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
 
@@ -62,9 +55,6 @@ export function useToggleFavorite() {
   });
 }
 
-/**
- * Hook para listar apenas templates favoritos
- */
 export function useFavoriteTemplates() {
   return useQuery({
     queryKey: ['evaluation-forms', 'favorites'],

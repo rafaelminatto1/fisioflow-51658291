@@ -126,6 +126,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   // evita definir o status múltiplas vezes para o mesmo paciente
   const lastStatusPatientIdRef = useRef<string | null>(null);
 
+  // Quando true, salva o agendamento sem navegar para a tela de avaliação (botão "Agendar")
+  const scheduleOnlyRef = useRef(false);
+
   const methods = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
@@ -409,10 +412,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         }
       }
 
-      if (appointmentData.status === 'avaliacao' && appointmentId) {
+      if (appointmentData.status === 'avaliacao' && appointmentId && !scheduleOnlyRef.current) {
         const navPath = `/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointmentId}`;
         navigate(navPath);
       }
+      scheduleOnlyRef.current = false;
 
       onClose();
 
@@ -743,11 +747,34 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
             </Button>
 
+            {currentMode !== 'view' && watchedStatus === 'avaliacao' && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isCreating || isUpdating}
+                size="sm"
+                className="min-w-[80px] sm:min-w-[100px]"
+                onClick={() => {
+                  scheduleOnlyRef.current = true;
+                  handleSubmit(handleSave)();
+                }}
+              >
+                {(isCreating || isUpdating) ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-1" />
+                    Agendar
+                  </>
+                )}
+              </Button>
+            )}
             {currentMode !== 'view' && (
               <Button
                 type="submit"
                 form="appointment-form"
                 disabled={isCreating || isUpdating}
+                onClick={() => { scheduleOnlyRef.current = false; }}
                 className={cn(
                   "min-w-[80px] sm:min-w-[100px]",
                   watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white"

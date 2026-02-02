@@ -1,8 +1,5 @@
 /**
  * Mobile Header - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Auth:
- * - supabase.auth.signOut() → signOut() from Firebase Auth
  */
 
 import { Button } from '@/components/ui/button';

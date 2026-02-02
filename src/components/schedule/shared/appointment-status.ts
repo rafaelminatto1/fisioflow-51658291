@@ -260,6 +260,7 @@ export function getStatusConfig(status: string): AppointmentStatusConfig {
 
 /**
  * Get status color for React Native
+ * Based on Activity Fisioterapia logo - Baby Blue palette
  *
  * @param status - Appointment status
  * @returns Hex color code
@@ -267,14 +268,14 @@ export function getStatusConfig(status: string): AppointmentStatusConfig {
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     confirmado: '#10b981',
-    agendado: '#3b82f6',
-    avaliacao: '#8b5cf6',
+    agendado: '#0284C7', // Primary Baby Blue
+    avaliacao: '#5EB3E6', // Logo Blue (notification color)
     aguardando_confirmacao: '#f59e0b',
     em_andamento: '#eab308',
-    em_espera: '#6366f1',
-    atrasado: '#f97316',
+    em_espera: '#0284C7', // Primary Baby Blue
+    atrasado: '#f97316', // Accent Coral
     concluido: '#6b7280',
-    realizado: '#6366f1',
+    realizado: '#0284C7', // Primary Baby Blue
     remarcado: '#06b6d4',
     cancelado: '#ef4444',
     falta: '#ef4444',

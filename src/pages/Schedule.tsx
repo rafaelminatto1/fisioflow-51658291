@@ -1,9 +1,5 @@
 /**
  * Schedule Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - Uses useAppointments hook which is already migrated to Firebase
- * - No direct Supabase queries in this file
  */
 
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
@@ -619,33 +615,21 @@ const Schedule = () => {
           <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
-                {filteredAppointments.length === 0 && !loading ? (
-                  <div className="h-full flex items-center justify-center p-8">
-                    <EmptyState
-                      icon={Calendar}
-                      title="Agenda Livre"
-                      description="Nenhum atendimento encontrado para os critérios selecionados."
-                      actionLabel="Novo Agendamento"
-                      onAction={() => setIsModalOpen(true)}
-                    />
-                  </div>
-                ) : (
-                  <CalendarView
-                    appointments={filteredAppointments}
-                    currentDate={currentDate}
-                    onDateChange={setCurrentDate}
-                    viewType={viewType as CalendarViewType}
-                    onViewTypeChange={handleViewTypeChange}
-                    onAppointmentClick={handleAppointmentClick}
-                    onTimeSlotClick={handleTimeSlotClick}
-                    onAppointmentReschedule={handleAppointmentReschedule}
-                    onEditAppointment={handleEditAppointment}
-                    onDeleteAppointment={handleDeleteAppointment}
-                    selectionMode={isSelectionMode}
-                    selectedIds={selectedIds}
-                    onToggleSelection={toggleSelection}
-                  />
-                )}
+                <CalendarView
+                  appointments={filteredAppointments}
+                  currentDate={currentDate}
+                  onDateChange={setCurrentDate}
+                  viewType={viewType as CalendarViewType}
+                  onViewTypeChange={handleViewTypeChange}
+                  onAppointmentClick={handleAppointmentClick}
+                  onTimeSlotClick={handleTimeSlotClick}
+                  onAppointmentReschedule={handleAppointmentReschedule}
+                  onEditAppointment={handleEditAppointment}
+                  onDeleteAppointment={handleDeleteAppointment}
+                  selectionMode={isSelectionMode}
+                  selectedIds={selectedIds}
+                  onToggleSelection={toggleSelection}
+                />
               </Suspense>
             </div>
           </div>
