@@ -319,7 +319,11 @@
       "Bash(PGPASSWORD=\"EO85vLEcHDaTbj17lY5pPNYYv8QnP3\" psql:*)",
       "Bash(NODE_OPTIONS='--max-old-space-size=8192' npx vite build:*)",
       "Bash(PGPASSWORD=\"EO85vLEcHDaTbj17lY5pPNYYv8QnP3\" psql -h 34.39.144.143 -U \"fisioflow-migration\" -d fisioflow -c \"SELECT id, title FROM assessment_templates LIMIT 3;\")",
-      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 status src/integrations/firebase/functions.ts)"
+      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 status src/integrations/firebase/functions.ts)",
+      "Bash(SA=\"fisioflow-migration@appspot.gserviceaccount.com\")",
+      "Bash(SA=fisioflow-migration@appspot.gserviceaccount.com)",
+      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 add:*)",
+      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 commit:*)"
     ],
     "deny": [],
     "ask": [],

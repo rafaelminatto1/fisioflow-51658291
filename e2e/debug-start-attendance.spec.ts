@@ -67,8 +67,8 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
     await page.waitForTimeout(1000);
 
     // Fazer login (usar credenciais do teste existente ou variáveis de ambiente)
-    const email = process.env.TEST_EMAIL || 'REDACTED_EMAIL';
-    const password = process.env.TEST_PASSWORD || 'REDACTED';
+    const email = process.env.E2E_LOGIN_EMAIL || process.env.TEST_EMAIL;
+    const password = process.env.E2E_LOGIN_PASSWORD || process.env.TEST_PASSWORD;
     
     console.log('2. Fazendo login...');
     await page.fill('input[type="email"]', email);

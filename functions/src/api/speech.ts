@@ -11,7 +11,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getSpeechToTextClient } from '../lib/speech-to-text';
-import { fisioLogger as logger } from '../lib/errors/logger';
+import { logger } from '../lib/logger';
 
 // ============================================================================
 // TYPES
@@ -34,6 +34,7 @@ export const transcribeAudio = onRequest(
   {
     region: 'southamerica-east1',
     memory: '512MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
     cors: true,
   },
@@ -150,6 +151,7 @@ export const transcribeLongAudio = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 5,
     cors: true,
   },

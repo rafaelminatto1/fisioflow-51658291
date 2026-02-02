@@ -11,7 +11,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getTextToSpeechClient } from '../lib/text-to-speech';
-import { fisioLogger as logger } from '../lib/errors/logger';
+import { logger } from '../lib/logger';
 
 // ============================================================================
 // TYPES
@@ -34,6 +34,7 @@ export const synthesizeTTS = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
     cors: true,
   },
@@ -121,26 +122,3 @@ export const synthesizeTTS = onRequest(
   }
 );
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Validate TTS request
- */
-function validateRequest(body: TTSRequest): void {
-  if (body.type === 'exercise') {
-    if (!body.exerciseName) {
-      throw new HttpsError('invalid-argument', 'exerciseName is required for exercise type');
-    }
-    if (!body.instruction) {
-      throw new HttpsError('invalid-argument', 'instruction is required for exercise type');
-    }
-  }
-
-  if (body.type === 'accessibility' || !body.type) {
-    if (!body.text) {
-      throw new HttpsError('invalid-argument', 'text is required for accessibility type');
-    }
-  }
-}
