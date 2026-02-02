@@ -32,13 +32,6 @@ service firebase.storage {
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'estagiario';
     }
 
-    // Verificar se o usuário é paciente
-    function isPatient() {
-      return isAuthenticated() &&
-        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'paciente';
-    }
-
     // Verificar se é profissional (fisioterapeuta ou estagiário)
     function isProfessional() {
       return isPhysiotherapist() || isIntern();

@@ -1,6 +1,74 @@
 {
     "indexes": [
         {
+            "collectionGroup": "appointments",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "appointments",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "appointments",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "professional_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "evolutions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
             "collectionGroup": "notifications",
             "queryScope": "COLLECTION",
             "fields": [
@@ -10,6 +78,126 @@
                 },
                 {
                     "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patient_evolutions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patient_prescriptions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "start_date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patients",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patients",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patients",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "full_name",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organization_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "type",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "waiting_list",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "organizationId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
                     "order": "DESCENDING"
                 }
             ]

@@ -89,11 +89,13 @@ test.describe('Recepcionista Full Login - SetValue Comprehensive Check', () => {
 
     if (await emailInput.count() > 0 && await passwordInput.count() > 0) {
       // Use valid test credentials from fixtures
-      await emailInput.fill('REDACTED_EMAIL');
+      const email = process.env.E2E_LOGIN_EMAIL || process.env.TEST_EMAIL || '';
+      await emailInput.fill(email);
       console.log('✓ Email filled');
       await page.waitForTimeout(300);
 
-      await passwordInput.fill('REDACTED');
+      const password = process.env.E2E_LOGIN_PASSWORD || process.env.TEST_PASSWORD || '';
+      await passwordInput.fill(password);
       console.log('✓ Password filled');
       await page.waitForTimeout(300);
 
