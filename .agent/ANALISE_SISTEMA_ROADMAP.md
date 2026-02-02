@@ -145,54 +145,49 @@ fisioflow-51658291/
 
 ## 4. BUGS E PROBLEMAS CONHECIDOS
 
-### 4.1 CRITICOS (Corrigir Imediatamente)
+### 4.1 CRITICOS - TODOS CORRIGIDOS ✅
 
-#### #001 - React Error #185 em Agendamentos
+#### #001 - React Error #185 em Agendamentos ✅ CORRIGIDO
 ```
-Arquivo: src/components/schedule/AppointmentModalRefactored.tsx:225-236
-Problema: useEffect com dependencia instavel (checkPatientHasPreviousSessions)
-Impacto: Loop infinito ao criar agendamento
-
-CORRECAO:
-const checkPatientHasPreviousSessionsRef = useRef(checkPatientHasPreviousSessions);
-checkPatientHasPreviousSessionsRef.current = checkPatientHasPreviousSessions;
-
-useEffect(() => {
-  if (!appointment && isOpen && watchedPatientId && currentMode === 'create') {
-    const hasPreviousSessions = checkPatientHasPreviousSessionsRef.current(watchedPatientId);
-    // ...
-  }
-}, [watchedPatientId, isOpen, appointment, currentMode, setValue]);
+Arquivo: src/components/schedule/AppointmentModalRefactored.tsx
+Status: CORRIGIDO - Usa useRef para dependencias estaveis
 ```
 
-#### #002 - Dupla chamada em AppointmentQuickView
+#### #002 - Dupla chamada em AppointmentQuickView ✅ CORRIGIDO
 ```
-Arquivo: src/components/schedule/AppointmentQuickView.tsx:307-324
-Problema: onClick dentro do DrawerTrigger asChild duplica chamada
-
-CORRECAO: Remover onClick do span dentro do DrawerTrigger
+Arquivo: src/components/schedule/AppointmentQuickView.tsx
+Status: CORRIGIDO - DrawerTrigger sem onClick duplicado
 ```
 
-#### #005 - Migracao Incompleta Supabase -> Firebase
+#### #003 - CalendarAppointmentCard.tsx ✅ CORRIGIDO
 ```
-Arquivo: src/components/modals/NewPatientModal.tsx:192-196
-Problema: Ainda usa Supabase para criar pacientes
-CORRECAO: Migrar para Firebase conforme padrao do sistema
+Arquivo: src/components/schedule/CalendarAppointmentCard.tsx
+Status: CORRIGIDO - onOpenPopover tratado pelo AppointmentQuickView wrapper
 ```
 
-### 4.2 MEDIOS (Esta Semana)
+#### #004 - ProtocolCardEnhanced.tsx ✅ CORRIGIDO
+```
+Arquivo: src/components/protocols/ProtocolCardEnhanced.tsx
+Status: CORRIGIDO - onClick com stopPropagation nos DropdownMenuItems
+```
 
-| ID | Arquivo | Linha | Problema |
-|----|---------|-------|----------|
-| #003 | CalendarAppointmentCard.tsx | 415-427 | Dupla chamada onOpenPopover |
-| #004 | ProtocolCardEnhanced.tsx | 92, 159 | asChild + onClick incorreto |
-| #008 | SOAPFormPanel.tsx | 112-117 | Debounce + useEffect loop |
+#### #005 - Migracao Supabase -> Firebase ✅ CORRIGIDO
+```
+Arquivo: src/components/modals/NewPatientModal.tsx
+Status: CORRIGIDO - Usa Firebase (addDoc, collection, serverTimestamp)
+```
 
-### 4.3 BAIXOS (Otimizacao)
+#### #008 - SOAPFormPanel.tsx debounce ✅ CORRIGIDO
+```
+Arquivo: src/components/evolution/SOAPFormPanel.tsx
+Status: CORRIGIDO - SOAPField usa debounce com useRef e setTimeout
+```
 
-- Invalidation excessiva de queries
-- gcTime muito longo em useExerciseProtocols (24h -> 5-30min)
-- Testes ainda usando mocks de Supabase
+### 4.2 OTIMIZACOES PENDENTES (Baixa Prioridade)
+
+- Invalidation excessiva de queries em alguns hooks
+- gcTime longo em useExerciseProtocols (24h -> considerar 5-30min)
+- Alguns testes ainda usando mocks antigos
 
 ---
 
@@ -211,16 +206,16 @@ CORRECAO: Migrar para Firebase conforme padrao do sistema
 
 ## 6. ROADMAP DETALHADO
 
-### FASE 1: ESTABILIZACAO (Semanas 1-2)
-**Prioridade: CRITICA**
+### FASE 1: ESTABILIZACAO ✅ COMPLETA
+**Status: TODOS OS BUGS CRITICOS CORRIGIDOS**
 
 ```
-[ ] Corrigir React Error #185 em agendamentos
-[ ] Corrigir dupla chamada em AppointmentQuickView
-[ ] Migrar NewPatientModal para Firebase
-[ ] Corrigir CalendarAppointmentCard onClick
-[ ] Corrigir ProtocolCardEnhanced asChild
-[ ] Corrigir SOAPFormPanel debounce
+[x] Corrigir React Error #185 em agendamentos
+[x] Corrigir dupla chamada em AppointmentQuickView
+[x] Migrar NewPatientModal para Firebase
+[x] Corrigir CalendarAppointmentCard onClick
+[x] Corrigir ProtocolCardEnhanced asChild
+[x] Corrigir SOAPFormPanel debounce
 [ ] Atualizar testes para Firebase (remover Supabase mocks)
 [ ] Validar todos os fluxos CRUD:
     [ ] Criar paciente
