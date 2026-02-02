@@ -6,10 +6,24 @@ import "./index.css";
 import { initSentry } from "@/lib/sentry/config";
 import { initAppCheck } from "@/lib/firebase/app-check";
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { initMonitoring } from '@/lib/monitoring';
+import { initializeRemoteConfig } from '@/lib/firebase/remote-config';
 
 // Inicializar serviços globais
 initSentry();
 initAppCheck();
+
+// Inicializar Monitoring (Google Analytics 4)
+initMonitoring();
+
+// Inicializar Remote Config (feature flags)
+initializeRemoteConfig(
+  3600000,  // cacheDuration: 1 hora em produção
+  600000    // minimumFetchInterval: 10 minutos
+).catch((error) => {
+  logger.error('Failed to initialize Remote Config', error, 'main.tsx');
+  // Não bloquear inicialização da app se Remote Config falhar
+});
 
 // ============================================================================
 // ERROR HANDLERS
