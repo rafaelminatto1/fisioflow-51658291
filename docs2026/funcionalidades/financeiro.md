@@ -48,23 +48,22 @@ Sistema financeiro completo para controle de receitas, despesas, pagamentos e re
 - `FinancialDashboard` - Dashboard financeiro
 - `ReceiptGenerator` - Gerador de recibos
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /financial_transactions
-const { data } = await supabase
-  .from('financial_transactions')
-  .select('*')
-  .gte('created_at', startDate)
-  .lte('created_at', endDate);
+// GET financial_transactions
+const snapshot = await getDocs(
+  query(
+    collection(db, 'financial_transactions'),
+    where('created_at', '>=', startDate),
+    where('created_at', '<=', endDate)
+  )
+);
 
-// POST /financial_transactions
-const { data } = await supabase.from('financial_transactions').insert({
-  type: 'income',
-  amount: 150,
-  description: 'Consulta',
-  category: 'consulta',
-  payment_method: 'pix',
+// POST financial_transactions
+await addDoc(collection(db, 'financial_transactions'), {
+  type: 'income', amount: 150, description: 'Consulta',
+  category: 'consulta', payment_method: 'pix',
 });
 ```
 

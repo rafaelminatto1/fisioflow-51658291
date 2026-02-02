@@ -41,17 +41,17 @@ Sistema completo de gestão de pacientes com histórico médico, documentos e co
 - `PatientList` - Lista de pacientes
 - `PatientSearch` - Busca de pacientes
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /patients
-const { data } = await supabase.from('patients').select('*');
+// GET patients
+const snapshot = await getDocs(collection(db, 'patients'));
 
-// POST /patients
-const { data } = await supabase.from('patients').insert(patient);
+// POST patient
+const ref = await addDoc(collection(db, 'patients'), patient);
 
-// PATCH /patients/:id
-const { data } = await supabase.from('patients').update(changes).eq('id', id);
+// PATCH patient
+await updateDoc(doc(db, 'patients', id), changes);
 ```
 
 ## Veja Também

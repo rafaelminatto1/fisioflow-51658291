@@ -39,7 +39,7 @@ export function usePatients() {
   return useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const snapshot = await getDocs(
         .from('patients')
         .select('*')
         .order('created_at', { ascending: false });
@@ -55,7 +55,7 @@ export function usePatient(id: string) {
   return useQuery({
     queryKey: ['patient', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const snapshot = await getDocs(
         .from('patients')
         .select('*')
         .eq('id', id)
@@ -78,7 +78,7 @@ export function useCreatePatient() {
 
   return useMutation({
     mutationFn: async (patient: PatientInsert) => {
-      const { data, error } = await supabase
+      const snapshot = await getDocs(
         .from('patients')
         .insert(patient)
         .select()
@@ -263,7 +263,7 @@ export function useRealtimePatients() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const channel = supabase
+    const unsubscribe = onSnapshot(
       .channel('patients-changes')
       .on(
         'postgres_changes',
@@ -283,7 +283,7 @@ export function useRealtimePatients() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [queryClient]);
 }

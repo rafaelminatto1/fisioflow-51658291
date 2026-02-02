@@ -39,12 +39,17 @@ pnpm install
 cp .env.example .env
 ```
 
-Edite o arquivo `.env` com suas credenciais do Supabase:
+Edite o arquivo `.env` com suas credenciais do Firebase:
 
 ```env
-# Supabase
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-anonima
+# Firebase
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=...
 
 # Opcional: Analytics e Monitoring
 VITE_SENTRY_DSN=seu-sentry-dsn
@@ -96,7 +101,7 @@ fisioflow/
 ├── eslint.config.js        # Configuração ESLint
 ├── vitest.config.ts        # Configuração Vitest
 ├── playwright.config.ts    # Configuração Playwright
-├── vercel.json             # Configuração Vercel
+├── firebase.json           # Configuração Firebase Hosting/Functions
 └── components.json         # Config shadcn/ui
 ```
 
@@ -138,47 +143,32 @@ Crie ou edite `.vscode/settings.json`:
 }
 ```
 
-## 🔐 Configuração do Supabase
+## 🔐 Configuração do Firebase
 
 ### 1. Criar Projeto
 
-1. Acesse [supabase.com](https://supabase.com)
-2. Clique em "New Project"
+1. Acesse [Firebase Console](https://console.firebase.google.com)
+2. Clique em "Adicionar projeto" ou use um existente
 3. Configure:
    - **Nome**: `fisioflow-dev`
-   - **Database Password**: (salve em local seguro)
-   - **Region**: São Paulo (mais próximo do Brasil)
+   - **Região**: South America (São Paulo) quando aplicável
 
 ### 2. Obter Credenciais
 
-No dashboard do Supabase:
-1. Vá em **Settings → API**
-2. Copie:
-   - **Project URL**
-   - **anon public key**
+No projeto Firebase:
+1. Vá em **Configurações do projeto** (ícone de engrenagem) → **Configurações gerais**
+2. Em "Seus apps", adicione um app Web e copie o objeto `firebaseConfig`:
+   - **apiKey**, **authDomain**, **projectId**, **storageBucket**, **messagingSenderId**, **appId**, **measurementId** (opcional)
 
-### 3. Executar Migrations
+### 3. Firestore e Regras
 
-```bash
-# Instalar Supabase CLI
-npm install -g supabase
+1. No console Firebase, crie o banco Firestore (modo Produção ou Teste).
+2. Configure as **Regras de segurança** em Firestore Database → Regras (conforme `firestore.rules` do projeto).
+3. Para desenvolvimento local, use os emuladores: `firebase emulators:start --only auth,firestore,storage`.
 
-# Linkar ao projeto
-supabase link --project-ref seu-project-id
+### 4. Regras de Segurança
 
-# Push das migrations
-supabase db push
-
-# OU executar manualmente no SQL Editor do dashboard
-```
-
-### 4. Configurar RLS Policies
-
-As migrations já incluem as RLS policies. Verifique em:
-
-```
-Supabase Dashboard → Authentication → Policies
-```
+As regras do Firestore garantem acesso por organização e role. Edite em Firebase Console → Firestore → Regras ou via arquivo `firestore.rules` no projeto.
 
 ## 🐛 Debugging
 
@@ -314,12 +304,12 @@ pnpm install
 pnpm dev --port 3000
 ```
 
-### Problema: Erro de CORS no Supabase
+### Problema: Erro de CORS no Firebase
 
 Verifique se:
-1. As credenciais no `.env` estão corretas
-2. RLS policies estão configuradas
-3. O origin `http://localhost:8080` está permitido
+1. As credenciais do Firebase no `.env` estão corretas
+2. As regras do Firestore e Auth estão configuradas
+3. O domínio `localhost` está em Authorized domains no Firebase Auth (se aplicável)
 
 ### Problema: Build falha com "Out of memory"
 
@@ -332,12 +322,12 @@ NODE_OPTIONS='--max-old-space-size=4096' pnpm build
 
 - [Estrutura do Projeto](./04-estrutura-projeto.md) - Entenda a organização do código
 - [Guia de Início Rápido](./guias/inicio-rapido.md) - Setup completo passo a passo
-- [Configuração Supabase](./guias/configuracao-supabase.md) - Setup detalhado do Supabase
+- [Configuração Firebase](./guias/configuracao-firebase.md) - Setup detalhado do Firebase
 
 ## 🔗 Links Úteis
 
 - [Vite Documentation](https://vitejs.dev/)
 - [React Documentation](https://react.dev/)
-- [Supabase Documentation](https://supabase.com/docs)
+- [Firebase Documentation](https://firebase.google.com/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [shadcn/ui](https://ui.shadcn.com/)

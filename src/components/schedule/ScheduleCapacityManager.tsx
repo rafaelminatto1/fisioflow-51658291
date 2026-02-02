@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
+import { useScheduleCapacity, type CapacityGroup } from '@/hooks/useScheduleCapacity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
-import { Trash2, Plus, Clock, Loader2, Users, CheckCircle2, Info, Calendar, Copy, Zap } from 'lucide-react';
+import { Trash2, Plus, Minus, Clock, Loader2, Users, CheckCircle2, Info, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -21,6 +20,35 @@ const DAYS_OF_WEEK = [
   { value: 'saturday', label: 'Sábado', valueNum: 6 },
   { value: 'sunday', label: 'Domingo', valueNum: 0 },
 ];
+
+const DAY_SHORT_LABELS: Record<number, string> = {
+  0: 'Dom',
+  1: 'Seg',
+  2: 'Ter',
+  3: 'Qua',
+  4: 'Qui',
+  5: 'Sex',
+  6: 'Sáb',
+};
+
+function formatDaysLabel(days: number[]): string {
+  if (days.length === 0) return '';
+  const sorted = [...days].sort((a, b) => a - b);
+  const labels = sorted.map((d) => DAY_SHORT_LABELS[d] ?? '');
+  let runs: number[][] = [];
+  let run: number[] = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === run[run.length - 1] + 1) {
+      run.push(sorted[i]);
+    } else {
+      runs.push(run);
+      run = [sorted[i]];
+    }
+  }
+  runs.push(run);
+  const parts = runs.map((r) => (r.length >= 2 ? `${DAY_SHORT_LABELS[r[0]]} a ${DAY_SHORT_LABELS[r[r.length - 1]]}` : DAY_SHORT_LABELS[r[0]]));
+  return parts.join(', ');
+}
 
 const TIME_PRESETS = [
   { label: 'Manhã', start: '07:00', end: '12:00', icon: '☀️' },
@@ -37,10 +65,12 @@ const CAPACITY_PRESETS = [
 ];
 
 export function ScheduleCapacityManager() {
-  const { capacities, isLoading, createMultipleCapacities, updateCapacity, deleteCapacity, organizationId, isCreating, checkConflicts, authError } = useScheduleCapacity();
+  const { capacities, capacityGroups, isLoading, createMultipleCapacities, updateCapacityGroup, deleteCapacityGroup, organizationId, isCreating, checkConflicts, authError } = useScheduleCapacity();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [saved, setSaved] = useState(false);
+  /** Valor em edição por grupo (chave = ids.join(',')) */
+  const [editingCapacityValue, setEditingCapacityValue] = useState<Record<string, number>>({});
   const [newCapacity, setNewCapacity] = useState({
     selectedDays: [] as string[],
     start_time: '07:00',
@@ -118,13 +148,13 @@ export function ScheduleCapacityManager() {
     setNewCapacity({ selectedDays: [], start_time: '07:00', end_time: '13:00', max_patients: 3 });
   };
 
-  const handleUpdate = async (id: string, max_patients: number) => {
-    updateCapacity({ id, max_patients });
+  const handleUpdateGroup = (group: CapacityGroup, max_patients: number) => {
+    updateCapacityGroup({ ids: group.ids, max_patients });
     setSaved(false);
   };
 
-  const handleDelete = async (id: string) => {
-    deleteCapacity(id);
+  const handleDeleteGroup = (group: CapacityGroup) => {
+    deleteCapacityGroup(group.ids);
   };
 
   const applyTimePreset = (preset: typeof TIME_PRESETS[0]) => {
@@ -187,83 +217,100 @@ export function ScheduleCapacityManager() {
           </AlertDescription>
         </Alert>
 
-        {/* Lista de capacidades existentes */}
+        {/* Lista de configurações agrupadas */}
         <div className="space-y-4">
-          {/* Days with configuration */}
           <div className="space-y-3">
-            {DAYS_OF_WEEK.filter(day => capacities.some(c => c.day_of_week === day.valueNum)).map((day) => {
-              const dayCapacities = capacities.filter((c) => c.day_of_week === day.valueNum);
-              const dayTotal = dayCapacities.reduce((sum, c) => sum + c.max_patients, 0);
-
+            {capacityGroups.map((group, index) => {
+              const level = getCapacityLevel(group.max_patients);
+              const groupKey = group.ids.join(',');
+              const displayValue = editingCapacityValue[groupKey] ?? group.max_patients;
               return (
-                <div key={day.value} className="space-y-2">
-                  <div className="flex items-center gap-2 px-1">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <h4 className="font-semibold text-sm">{day.label}</h4>
-                    <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400">
-                      {dayCapacities.length} período{dayCapacities.length > 1 ? 's' : ''}
-                    </Badge>
+                <div
+                  key={groupKey}
+                  className={cn(
+                    'group flex flex-wrap items-center gap-3 p-4 rounded-xl border-2 transition-all hover:shadow-md',
+                    level.bg,
+                    'hover:scale-[1.01] active:scale-[0.99]'
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-fit">
+                    <div className={cn('w-3 h-3 rounded-full shadow-sm', level.color)} />
+                    <span className="text-sm font-semibold">
+                      Configuração {index + 1}: {formatDaysLabel(group.days)} · {group.start_time}–{group.end_time}
+                    </span>
                     <Badge variant="secondary" className="text-xs">
-                      {dayTotal} vagas
+                      {group.max_patients} vagas
                     </Badge>
                   </div>
-                  {dayCapacities.map((capacity) => {
-                    const level = getCapacityLevel(capacity.max_patients);
-                    return (
-                      <div
-                        key={capacity.id}
-                        className={cn(
-                          "group flex items-center gap-3 p-4 rounded-xl border-2 transition-all hover:shadow-md",
-                          level.bg,
-                          "hover:scale-[1.01] active:scale-[0.99]"
-                        )}
+
+                  <div className="flex items-center gap-3 flex-1 flex-wrap">
+                    <Label htmlFor={`capacity-group-${groupKey}`} className="text-sm">
+                      Capacidade:
+                    </Label>
+                    <div className="flex items-center gap-1 border rounded-md bg-background">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 shrink-0 rounded-r-none"
+                        onClick={() => handleUpdateGroup(group, Math.max(1, group.max_patients - 1))}
+                        disabled={group.max_patients <= 1}
+                        aria-label="Diminuir"
                       >
-                        <div className="flex items-center gap-2 min-w-fit">
-                          <div className={cn(
-                            "w-3 h-3 rounded-full shadow-sm",
-                            level.color
-                          )} />
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium tabular-nums">{capacity.start_time}</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="text-sm font-medium tabular-nums">{capacity.end_time}</span>
-                        </div>
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        id={`capacity-group-${groupKey}`}
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={displayValue}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === '') {
+                            setEditingCapacityValue((prev) => ({ ...prev, [groupKey]: 1 }));
+                            return;
+                          }
+                          const v = parseInt(raw, 10);
+                          if (!Number.isNaN(v))
+                            setEditingCapacityValue((prev) => ({ ...prev, [groupKey]: Math.min(20, Math.max(1, v)) }));
+                        }}
+                        onBlur={(e) => {
+                          const v = parseInt(e.target.value, 10);
+                          const safe = Number.isNaN(v) || v < 1 ? 1 : v > 20 ? 20 : v;
+                          setEditingCapacityValue((prev) => {
+                            const next = { ...prev };
+                            delete next[groupKey];
+                            return next;
+                          });
+                          if (safe !== group.max_patients) handleUpdateGroup(group, safe);
+                        }}
+                        className="h-8 w-12 text-center border-0 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 shrink-0 rounded-l-none"
+                        onClick={() => handleUpdateGroup(group, Math.min(20, group.max_patients + 1))}
+                        disabled={group.max_patients >= 20}
+                        aria-label="Aumentar"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <span className="text-xs text-muted-foreground">paciente{group.max_patients > 1 ? 's' : ''}</span>
+                  </div>
 
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Label htmlFor={`capacity-${capacity.id}`} className="text-sm cursor-pointer">
-                              Capacidade:
-                            </Label>
-                            <Badge variant="outline" className="font-bold min-w-[60px] justify-center">
-                              {capacity.max_patients}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">paciente{capacity.max_patients > 1 ? 's' : ''}</span>
-                          </div>
-                          <div className="flex-1 max-w-[150px]">
-                            <Slider
-                              id={`capacity-${capacity.id}`}
-                              value={[capacity.max_patients]}
-                              onValueChange={([value]) => handleUpdate(capacity.id, value)}
-                              min={1}
-                              max={10}
-                              step={1}
-                              className="cursor-pointer"
-                            />
-                          </div>
-                        </div>
-
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDelete(capacity.id)}
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600"
-                          aria-label="Remover configuração"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    );
-                  })}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDeleteGroup(group)}
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600"
+                    aria-label="Remover configuração"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               );
             })}
@@ -407,31 +454,52 @@ export function ScheduleCapacityManager() {
               </div>
             </div>
 
-            {/* Capacidade */}
+            {/* Capacidade: digitação manual ou incremento */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">
-                  Pacientes por Horário
-                </Label>
-                <Badge variant="outline" className="font-bold">
-                  {newCapacity.max_patients}
-                </Badge>
+              <Label className="text-sm font-medium">
+                Pacientes por Horário
+              </Label>
+              <div className="flex items-center gap-1 border rounded-md bg-background w-fit">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 shrink-0 rounded-r-none"
+                  onClick={() => setNewCapacity({ ...newCapacity, max_patients: Math.max(1, newCapacity.max_patients - 1) })}
+                  disabled={newCapacity.max_patients <= 1}
+                  aria-label="Diminuir"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={newCapacity.max_patients}
+                  onChange={(e) => {
+                    const v = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
+                    if (!Number.isNaN(v)) setNewCapacity({ ...newCapacity, max_patients: Math.min(20, Math.max(1, v)) });
+                  }}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (Number.isNaN(v) || v < 1) setNewCapacity({ ...newCapacity, max_patients: 1 });
+                    if (v > 20) setNewCapacity({ ...newCapacity, max_patients: 20 });
+                  }}
+                  className="h-9 w-14 text-center border-0 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 shrink-0 rounded-l-none"
+                  onClick={() => setNewCapacity({ ...newCapacity, max_patients: Math.min(20, newCapacity.max_patients + 1) })}
+                  disabled={newCapacity.max_patients >= 20}
+                  aria-label="Aumentar"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Slider
-                value={[newCapacity.max_patients]}
-                onValueChange={([value]) => setNewCapacity({ ...newCapacity, max_patients: value })}
-                min={1}
-                max={10}
-                step={1}
-                className="cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground px-1">
-                <span>1</span>
-                <span>3</span>
-                <span>5</span>
-                <span>8</span>
-                <span>10</span>
-              </div>
+              <p className="text-xs text-muted-foreground">Digite ou use os botões (− / +). Mín: 1, máx: 20.</p>
             </div>
 
             {/* Botões */}

@@ -23,14 +23,20 @@ Se você vai desenvolver ou contribuir:
 
 ### Para Administradores
 Se você vai configurar ou manter o sistema:
-1. [Configuração Supabase](./guias/configuracao-supabase.md)
-2. [Configuração Vercel](./guias/configuracao-vercel.md)
+1. [Configuração Firebase](./guias/configuracao-firebase.md) e [Firebase Hosting](./guias/configuracao-firebase-hosting.md)
+2. [Configuração Firebase Hosting](./guias/configuracao-firebase-hosting.md)
 3. [Deploy em Produção](./11-deploy-producao.md)
 
 ### Para Entender Funcionalidades
 Se você quer entender as funcionalidades disponíveis:
 1. [Funcionalidades](./funcionalidades/)
 2. [Roadmap](./13-roadmap.md) - Veja o que está por vir
+
+### Documentação Consolidada do Sistema
+Visão única de fluxos, requisitos funcionais e modelo de dados:
+1. [**Documentação Sistema Completa**](./DOCUMENTACAO_SISTEMA_COMPLETA.md) — Fluxos, funcionalidades, requisitos funcionais e entidades
+2. [**Entidades e Relacionamentos**](./ENTIDADES_E_RELACIONAMENTOS.md) — Diagrama ER, tabelas, FKs e tipos TypeScript
+3. [**Plano Firebase + GCP**](./PLANO_FIREBASE_GCP.md) — Infraestrutura 100% Firebase e Google Cloud (deploy, hosting, CI/CD, crons)
 
 ## 📑 Índice da Documentação
 
@@ -51,14 +57,17 @@ Se você quer entender as funcionalidades disponíveis:
 | [11. Deploy e Produção](./11-deploy-producao.md) | Deploy, monitoramento e backups | ✅ |
 | [12. Guia de Contribuição](./12-guia-contribuicao.md) | Como contribuir com o projeto | ✅ |
 | [13. Roadmap](./13-roadmap.md) | Futuro do projeto e melhorias | ✅ |
+| [**Documentação Sistema Completa**](./DOCUMENTACAO_SISTEMA_COMPLETA.md) | Fluxos, requisitos funcionais e entidades (consolidado) | ✅ |
+| [**Entidades e Relacionamentos**](./ENTIDADES_E_RELACIONAMENTOS.md) | Diagrama ER, tabelas, FKs e tipos | ✅ |
+| [**Plano Firebase + GCP**](./PLANO_FIREBASE_GCP.md) | Infraestrutura 100% Firebase + GCP (sem Vercel) | ✅ |
 
 ### 📘 Guias Práticos
 
 | Guia | Descrição | Link |
 |------|-----------|------|
 | Início Rápido | Setup rápido do ambiente | [Ver](./guias/inicio-rapido.md) |
-| Configuração Supabase | Setup completo do Supabase | [Ver](./guias/configuracao-supabase.md) |
-| Configuração Vercel | Deploy na Vercel | [Ver](./guias/configuracao-vercel.md) |
+| Configuração Firebase | Setup Firebase + Firestore + Auth | [Ver](./guias/configuracao-firebase.md) |
+| Firebase Hosting | Deploy e domínio (Firebase + GCP) | [Ver](./guias/configuracao-firebase-hosting.md) |
 | Desenvolvimento Local | Ambiente local completo | [Ver](./guias/desenvolvimento-local.md) |
 | Debug & Troubleshooting | Resolução de problemas | [Ver](./guias/debug-troubleshooting.md) |
 | Otimização de Performance | Melhorias de performance | [Ver](./guias/otimizacao-performance.md) |
@@ -94,9 +103,9 @@ Se você quer entender as funcionalidades disponíveis:
 ```
 Frontend:  React 18 + TypeScript + Vite
 UI:        shadcn/ui + Tailwind CSS
-Backend:   Supabase (PostgreSQL + Auth + Real-time + Storage)
-Deploy:    Vercel Pro
-Monitor:   Sentry + Vercel Analytics
+Backend:   Firebase (Firestore + Auth + Realtime + Storage + Cloud Functions)
+Deploy:    Firebase Hosting + Cloud Build (100% Firebase + GCP)
+Monitor:   Cloud Monitoring + Sentry
 Mobile:    Capacitor (iOS/Android)
 ```
 
