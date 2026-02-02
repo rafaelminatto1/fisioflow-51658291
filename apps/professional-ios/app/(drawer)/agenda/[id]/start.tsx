@@ -390,7 +390,7 @@ export default function StartSessionScreen() {
           icon="file-plus"
           title="Registrar Evolução SOAP"
           description="Adicione um registro completo de evolução do paciente"
-          color="#3b82f6"
+          color={colors.primary}
           onPress={handleGoToEvolution}
           colors={colors}
         />
@@ -399,7 +399,7 @@ export default function StartSessionScreen() {
           icon="video-camera"
           title="Análise de Movimento"
           description="Capture e analise os movimentos do paciente com IA"
-          color="#8b5cf6"
+          color={colors.notification}
           onPress={handleGoToMovementAnalysis}
           colors={colors}
         />

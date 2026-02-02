@@ -1,8 +1,10 @@
 /**
  * Inngest Serve Handler
  *
- * This file sets up the Inngest API route for Vercel.
+ * This file sets up the Inngest API route.
  * It registers all Inngest functions and handles incoming events.
+ *
+ * Works with Firebase Hosting or any Node.js server
  */
 
 import { serve } from 'inngest/next';
@@ -40,7 +42,7 @@ import {
   aiBatchInsightsWorkflow,
 } from '../../inngest/workflows/ai-insights.js';
 
-// Export the Inngest handler for Vercel
+// Export the Inngest handler (works with Firebase Hosting rewrite rules)
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [

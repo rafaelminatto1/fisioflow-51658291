@@ -1,15 +1,15 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createAdminUser = void 0;
+const init_1 = require("../init");
 /**
  * Admin Function: Create Firebase User
  * Executar uma vez para criar usuário inicial
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createAdminUser = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const auth_1 = require("firebase-admin/auth");
 const app_1 = require("firebase-admin/app");
 const app_2 = require("firebase-admin/app");
-const init_1 = require("../init");
 // Initialize Firebase Admin
 if (!(0, app_2.getApps)().length) {
     (0, app_1.initializeApp)();

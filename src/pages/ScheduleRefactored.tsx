@@ -570,6 +570,7 @@ const ScheduleRefactored = () => {
 
         {/* Modals */}
         <AppointmentModal
+          key={selectedAppointment ? `edit-${selectedAppointment.id}` : `create-${modalDefaultDate?.getTime() ?? 0}-${modalDefaultTime ?? ''}`}
           isOpen={isModalOpen}
           onClose={() => {
             handleModalClose();

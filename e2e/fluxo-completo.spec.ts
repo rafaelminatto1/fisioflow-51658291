@@ -13,7 +13,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:8083';
+const BASE_URL = 'http://localhost:8084';
 const CREDENTIALS = {
   email: 'teste.qa@fisioflow.com',
   password: 'Teste@12345'
