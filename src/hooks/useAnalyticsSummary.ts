@@ -1,12 +1,7 @@
 /**
  * useAnalyticsSummary - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - Count queries replaced with getDocs() and array length
- * - Client-side aggregation for revenue calculations
  */
-
 import { useQuery } from "@tanstack/react-query";
 import { collection, getDocs, query as firestoreQuery, where,  } from '@/integrations/firebase/app';
 import { startOfMonth, subMonths, endOfMonth } from 'date-fns';

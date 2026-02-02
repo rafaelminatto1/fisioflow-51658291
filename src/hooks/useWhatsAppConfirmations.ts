@@ -1,12 +1,7 @@
 /**
  * useWhatsAppConfirmations - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('whatsapp_messages') → Firestore collection 'whatsapp_messages'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - Joins with patients replaced with separate queries
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

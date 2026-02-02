@@ -25,7 +25,8 @@ import { ptBR } from 'date-fns/locale';
 
 // Mapeamento de fontes de dados para labels amigáveis
 const sourceLabels: Record<string, string> = {
-    supabase: 'Servidor',
+    firestore: 'Servidor',
+    firebase: 'Servidor',
     indexeddb: 'Cache Local',
     localstorage: 'Backup de Emergência',
     memory: 'Memória',
@@ -39,7 +40,7 @@ export interface OfflineIndicatorProps {
     /** Se os dados podem estar desatualizados */
     isStale?: boolean;
     /** Origem dos dados */
-    dataSource?: 'supabase' | 'indexeddb' | 'localstorage' | 'memory';
+    dataSource?: 'firestore' | 'firebase' | 'indexeddb' | 'localstorage' | 'memory';
     /** Se está verificando conexão */
     isChecking?: boolean;
     /** Se está tentando reconectar */

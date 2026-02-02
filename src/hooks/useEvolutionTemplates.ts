@@ -1,11 +1,7 @@
 /**
  * useEvolutionTemplates - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('evolution_templates') → Firestore collection 'evolution_templates'
- * - Preserved optimistic updates pattern
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

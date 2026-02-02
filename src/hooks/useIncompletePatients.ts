@@ -1,11 +1,7 @@
 /**
  * useIncompletePatients - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - Supabase Realtime → Firestore onSnapshot() for real-time updates
  */
-
 import { useState, useEffect } from 'react';
 import { collection, query as firestoreQuery, where, orderBy, onSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';

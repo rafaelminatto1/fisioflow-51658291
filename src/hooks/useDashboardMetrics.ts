@@ -1,17 +1,5 @@
 /**
  * Dashboard Metrics Hook - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('user_roles') → Firestore collection 'user_roles'
- * - supabase.from('contas_financeiras') → Firestore collection 'contas_financeiras'
- * - supabase.from('profiles') → Firestore collection 'profiles'
- * - Replaced all supabase queries with Firestore queries
- * - Removed supabase client dependency
- *
- * Hook otimizado para buscar métricas do dashboard
- * Usa Promise.all para paralelizar queries independentes
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -83,10 +71,6 @@ export interface DashboardMetrics {
   cancelamentosSemana: number;
 }
 
-/**
- * Hook otimizado para buscar métricas do dashboard
- * Usa Promise.all para paralelizar queries independentes
- */
 export const useDashboardMetrics = () => {
   const queryClient = useQueryClient();
 

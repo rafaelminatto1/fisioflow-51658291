@@ -179,20 +179,11 @@ const SessionDetailsModal: React.FC<{
           return;
         }
 
-        const { data, error } = await supabase
-          .from('treatment_sessions')
-          .select('exercises_performed')
-          .eq('appointment_id', session.appointment_id)
-          .maybeSingle();
-
-        if (error) {
-          logger.error('Erro ao buscar exercícios', error, 'EvolutionTimeline');
-          setSessionExercises([]);
-        } else if (data?.exercises_performed) {
-          setSessionExercises(data.exercises_performed);
-        } else {
-          setSessionExercises([]);
-        }
+        // TODO: Migrate to Firebase Functions
+        // Exercises from treatment_sessions need to be fetched via Firebase Functions
+        // For now, use session data if available
+        const exercises = session.exercises_performed || [];
+        setSessionExercises(exercises);
       } finally {
         setIsLoading(false);
       }

@@ -1,9 +1,5 @@
 /**
  * Goals Admin Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.auth.getSession() → Firebase Auth currentUser.getIdToken()
- * - Direct fetch() → Firebase Functions httpsCallable()
  */
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
@@ -38,9 +34,6 @@ interface FunctionsResponse<T> {
     error?: string;
 }
 
-/**
- * Helper to get auth token for Firebase Functions
- */
 async function getAuthToken(): Promise<string> {
     const user = auth.currentUser;
     if (!user) {
@@ -50,9 +43,6 @@ async function getAuthToken(): Promise<string> {
 }
 
 export const goalsAdminService = {
-    /**
-     * List all goal profiles
-     */
     async listProfiles(): Promise<ProfileListItem[]> {
         const token = await getAuthToken();
 

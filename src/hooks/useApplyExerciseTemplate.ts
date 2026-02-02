@@ -1,12 +1,5 @@
 /**
  * useApplyExerciseTemplate - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('exercise_templates') → Firestore collection 'exercise_templates'
- * - supabase.from('exercise_template_items') → Firestore collection 'exercise_template_items'
- * - supabase.from('exercise_plans') → Firestore collection 'exercise_plans'
- * - supabase.from('exercise_plan_items') → Firestore collection 'exercise_plan_items'
- * - Joins replaced with separate queries (Firestore limitation)
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';

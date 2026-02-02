@@ -1,10 +1,5 @@
 /**
  * Treatment Assistant Component - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.functions.invoke('ai-treatment-assistant') → Firebase Functions httpsCallable()
- * - Removed unused Supabase imports
- * - AI calls now use Firebase Cloud Functions
  */
 
 import { useState } from 'react';

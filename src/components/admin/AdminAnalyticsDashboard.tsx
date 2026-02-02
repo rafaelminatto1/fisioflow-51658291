@@ -56,6 +56,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
 
 // ============================================================================
 // TYPES
@@ -141,42 +142,89 @@ function useAdminAnalytics() {
       patients: PatientWithAnalytics[];
       metrics: ClinicMetrics;
     }> => {
-      // Get all patients with their session counts and recent activity
-      const { data: patients, error } = await supabase
-        .from('patients')
-        .select(`
-          id,
-          full_name,
-          email,
-          phone,
-          created_at
-        `)
-        .order('full_name', { ascending: true })
-        .limit(500);
-
-      if (error) throw error;
+      // Get all patients with their session counts and recent activity from Firebase
+      const patientsQuery = firestoreQuery(
+        collection(db, 'patients'),
+        fsOrderBy('full_name', 'asc'),
+        fsLimit(500)
+      );
+      const patientsSnap = await getDocs(patientsQuery);
+      const patients = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        full_name: doc.data().full_name || '',
+        email: doc.data().email,
+        phone: doc.data().phone,
+        created_at: doc.data().created_at || new Date().toISOString(),
+      }));
 
       // Get session counts per patient
-      const patientIds = patients?.map(p => p.id) || [];
+      const patientIds = patients.map(p => p.id);
 
-      // Get completed sessions count
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('patient_id, appointment_date, status')
-        .in('patient_id', patientIds.slice(0, 100));
+      // Get completed sessions count - batch queries for Firestore limit
+      const appointments: Array<{ patient_id: string; appointment_date: string; status: string }> = [];
+      const batchSize = 10;
+      for (let i = 0; i < patientIds.length; i += batchSize) {
+        const batch = patientIds.slice(i, i + batchSize);
+        const appointmentsQuery = firestoreQuery(
+          collection(db, 'appointments'),
+          where('patient_id', 'in', batch.slice(0, 10))
+        );
+        const appointmentsSnap = await getDocs(appointmentsQuery);
+        appointmentsSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.patient_id && data.appointment_date) {
+            appointments.push({
+              patient_id: data.patient_id,
+              appointment_date: data.appointment_date,
+              status: data.status || 'scheduled',
+            });
+          }
+        });
+      }
 
-      // Get risk scores
-      const { data: riskScores } = await supabase
-        .from('patient_risk_scores')
-        .select('*')
-        .in('patient_id', patientIds.slice(0, 100));
+      // Get risk scores - batch queries
+      const riskScores: Array<{ patient_id: string; dropout_risk_score: number; success_probability: number; calculated_at: string }> = [];
+      for (let i = 0; i < patientIds.length; i += batchSize) {
+        const batch = patientIds.slice(i, i + batchSize);
+        const riskQuery = firestoreQuery(
+          collection(db, 'patient_risk_scores'),
+          where('patient_id', 'in', batch.slice(0, 10))
+        );
+        const riskSnap = await getDocs(riskQuery);
+        riskSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.patient_id) {
+            riskScores.push({
+              patient_id: data.patient_id,
+              dropout_risk_score: data.dropout_risk_score || 0,
+              success_probability: data.success_probability || 0,
+              calculated_at: data.calculated_at || new Date().toISOString(),
+            });
+          }
+        });
+      }
 
-      // Get latest evolution for pathology
-      const { data: evolutions } = await supabase
-        .from('patient_evolution')
-        .select('patient_id, pathology')
-        .in('patient_id', patientIds.slice(0, 100))
-        .order('created_at', { ascending: false });
+      // Get latest evolution for pathology - batch queries
+      const evolutions: Array<{ patient_id: string; pathology: string; created_at: string }> = [];
+      for (let i = 0; i < patientIds.length; i += batchSize) {
+        const batch = patientIds.slice(i, i + batchSize);
+        const evolutionQuery = firestoreQuery(
+          collection(db, 'patient_evolution'),
+          where('patient_id', 'in', batch.slice(0, 10)),
+          fsOrderBy('created_at', 'desc')
+        );
+        const evolutionSnap = await getDocs(evolutionQuery);
+        evolutionSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.patient_id && data.pathology) {
+            evolutions.push({
+              patient_id: data.patient_id,
+              pathology: data.pathology,
+              created_at: data.created_at || new Date().toISOString(),
+            });
+          }
+        });
+      }
 
       // Process data
       const patientMap = new Map<string, number>();

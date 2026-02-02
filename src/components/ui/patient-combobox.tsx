@@ -72,25 +72,40 @@ export function PatientCombobox({
     if (!inputValue || inputValue.trim() === '') return patients;
 
     const searchTerm = inputValue.trim().toLowerCase();
+    const normalizedDigits = searchTerm.replace(/\D/g, '');
 
-    // Check if it's a direct partial match first (optimization)
-    const directMatches = patients.filter(p =>
+    const matchName = (p: Patient) =>
       (p.name && p.name.toLowerCase().includes(searchTerm)) ||
-      (p.cpf && p.cpf.includes(searchTerm)) ||
-      (p.phone && p.phone.includes(searchTerm))
-    );
+      (p.full_name && p.full_name.toLowerCase().includes(searchTerm));
 
-    // If we have good direct matches, use them (often faster/better for simple constraints)
-    // Otherwise fallback to fuzzy for typos
-    if (directMatches.length > 0) return directMatches;
+    const matchCpf = (p: Patient) => {
+      if (!p.cpf) return false;
+      if (p.cpf.toLowerCase().includes(searchTerm)) return true;
+      if (normalizedDigits.length >= 2 && p.cpf.replace(/\D/g, '').includes(normalizedDigits)) return true;
+      return false;
+    };
+
+    const matchPhone = (p: Patient) => {
+      if (!p.phone) return false;
+      if (p.phone.includes(searchTerm) || p.phone.replace(/\D/g, '').includes(searchTerm)) return true;
+      if (normalizedDigits.length >= 2 && p.phone.replace(/\D/g, '').includes(normalizedDigits)) return true;
+      return false;
+    };
+
+    const directMatches = patients.filter(p => matchName(p) || matchCpf(p) || matchPhone(p));
 
     const results = fuse.search(searchTerm);
     const mapped = results
       .sort((a, b) => (a.score || 0) - (b.score || 0))
       .map(result => result.item);
 
+    const resultList = directMatches.length > 0 ? directMatches : mapped;
     logger.debug('PatientCombobox filtering', { searchTerm, direct: directMatches.length, fuzzy: mapped.length }, 'PatientCombobox');
-    return mapped;
+    // #region agent log
+    const first = patients[0];
+    if (typeof fetch !== 'undefined' && searchTerm && patients.length > 0) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'patient-combobox.tsx:filteredPatients',message:'combobox filter',data:{patientsLength:patients.length,searchTerm,inputValue,firstPatientName:first?.name,firstPatientFullName:(first as {full_name?:string})?.full_name,directCount:directMatches.length,resultCount:resultList.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2,H4,H5'})}).catch(()=>{});
+    // #endregion
+    return resultList;
   }, [fuse, inputValue, patients]);
 
   const handleSelect = (patientId: string) => {

@@ -1,9 +1,5 @@
 /**
  * Telemedicine Room Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('telemedicine_rooms') → Firestore collection 'telemedicine_rooms'
- * - Joins with patients and profiles replaced with separate queries
  */
 
 import React, { useState, useEffect, useRef } from 'react';

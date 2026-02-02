@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, collection, addDoc } from '@/integrations/firebase/app';
 
 interface CreateTemplateFromSelectionModalProps {
     open: boolean;
@@ -66,11 +67,10 @@ export function CreateTemplateFromSelectionModal({
                     repetitions: 10
                 }));
 
-                const { error } = await supabase
-                    .from('exercise_template_items')
-                    .insert(items);
-
-                if (error) throw error;
+                // Insert items into Firebase
+                await Promise.all(
+                    items.map(item => addDoc(collection(db, 'exercise_template_items'), item))
+                );
 
                 toast.success('Template criado com sucesso!');
                 onOpenChange(false);

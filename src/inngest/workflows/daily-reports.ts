@@ -1,15 +1,7 @@
 /**
  * Daily Reports Workflow - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - createClient(supabase) → Firebase Admin SDK
- * - supabase.from().select() → firestore.collection().get()
- * - .eq() → .where()
- * - .gte().lt() → .where() with date range
- *
- * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';

@@ -1,10 +1,7 @@
 /**
  * useRecibos - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('recibos') → Firestore collection 'recibos'
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

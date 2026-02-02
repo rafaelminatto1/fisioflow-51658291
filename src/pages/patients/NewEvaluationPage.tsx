@@ -13,18 +13,6 @@ import {
     AddCustomFieldDialog,
     SaveAsTemplateDialog,
 } from '@/components/evaluation';
-/**
- * New Evaluation Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - supabase.from('patient_goals') → Firestore collection 'patient_goals'
- * - supabase.from('patient_pathologies') → Firestore collection 'patient_pathologies'
- * - supabase.from('patient_surgeries') → Firestore collection 'patient_surgeries'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('patient_evaluation_responses') → Firestore collection 'patient_evaluation_responses'
- * - Joins replaced with separate queries
- */
 
 import type { EvaluationTemplate, TemplateField } from '@/components/evaluation';
 import { Button } from '@/components/ui/button';
