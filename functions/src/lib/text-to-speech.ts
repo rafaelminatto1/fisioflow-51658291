@@ -7,7 +7,7 @@
  * @module lib/text-to-speech
  */
 
-import { protos } from '@google-cloud/text-to-speech';
+import { TextToSpeechClient as GoogleTTSClient, protos } from '@google-cloud/text-to-speech';
 import { getLogger } from './logger';
 
 const logger = getLogger('text-to-speech');
@@ -52,10 +52,10 @@ export interface SynthesisResult {
  * Cloud Text-to-Speech Client
  */
 export class TextToSpeechClient {
-  private client: protos.google.cloud.texttospeech.v1.TextToSpeechClient;
+  private client: GoogleTTSClient;
 
   constructor() {
-    this.client = new protos.google.cloud.texttospeech.v1.TextToSpeechClient({
+    this.client = new GoogleTTSClient({
       projectId: PROJECT_ID,
     });
     logger.info('Text-to-Speech client initialized');
@@ -99,7 +99,6 @@ export class TextToSpeechClient {
       pitch = 0.0,
       volumeGainDb = 0.0,
       audioEncoding = 'MP3',
-      enableTimepoints = false,
     } = options;
 
     try {
@@ -121,9 +120,6 @@ export class TextToSpeechClient {
           speakingRate,
           pitch,
           volumeGainDb,
-          enableTimepointing: enableTimepoints
-            ? [protos.google.cloud.texttospeech.v1.SynthesizeSpeechRequest.AudioConfigEnableTimepointing.SSML_MARK]
-            : undefined,
         },
       };
 
@@ -137,8 +133,9 @@ export class TextToSpeechClient {
         audioContent: Buffer.from(response.audioContent),
       };
 
-      if (response.timepoints && response.timepoints.length > 0) {
-        result.timepoints = response.timepoints.map((tp) => ({
+      const timepoints = (response as { timepoints?: Array<{ tagName?: string | null; timeSeconds?: number | null }> }).timepoints;
+      if (timepoints && timepoints.length > 0) {
+        result.timepoints = timepoints.map((tp: { tagName?: string | null; timeSeconds?: number | null }) => ({
           tagName: tp.tagName || '',
           timeSeconds: tp.timeSeconds || 0,
         }));
@@ -287,7 +284,7 @@ export class TextToSpeechClient {
       });
 
       return (
-        response.voices?.map((voice) => ({
+        response.voices?.map((voice: { name?: string | null; ssmlGenderName?: string | null; languageCodes?: string[] | null }) => ({
           name: voice.name || '',
           gender: voice.ssmlGenderName || '',
           languageCodes: voice.languageCodes || [],

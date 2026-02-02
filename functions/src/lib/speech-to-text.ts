@@ -7,7 +7,7 @@
  * @module lib/speech-to-text
  */
 
-import { protos } from '@google-cloud/speech';
+import { SpeechClient, protos } from '@google-cloud/speech';
 import { getLogger } from './logger';
 
 const logger = getLogger('speech-to-text');
@@ -82,10 +82,10 @@ export type AudioEncoding =
   | 'FLAC'
   | 'MP3'
   | 'OGG_OPUS'
+  | 'WEBM_OPUS'
   | 'SPEEX_WITH_HEADER_BYTE'
   | 'AMR'
-  | 'AMR_WB'
-  | 'OGG_OPUS';
+  | 'AMR_WB';
 
 export type SpeechContext = 'medical' | 'general' | 'technical';
 
@@ -125,10 +125,10 @@ export interface TranscriptionResult {
  * Cloud Speech-to-Text Client
  */
 export class SpeechToTextClient {
-  private client: protos.google.cloud.speech.v1.SpeechClient;
+  private client: SpeechClient;
 
   constructor() {
-    this.client = new protos.google.cloud.speech.v1.SpeechClient({
+    this.client = new SpeechClient({
       projectId: PROJECT_ID,
     });
     logger.info('Speech-to-Text client initialized');
@@ -138,8 +138,8 @@ export class SpeechToTextClient {
    * Get audio encoding from MIME type
    */
   private getEncodingFromMimeType(mimeType: string): AudioEncoding {
-    const encodingMap: Record<string, AudioEncoding> = {
-      'audio/webm': 'WEBM_OPUS',
+      const encodingMap: Record<string, AudioEncoding> = {
+      'audio/webm': 'OGG_OPUS',
       'audio/ogg': 'OGG_OPUS',
       'audio/flac': 'FLAC',
       'audio/wav': 'LINEAR16',
@@ -254,7 +254,7 @@ export class SpeechToTextClient {
         transcription: best.transcript,
         confidence: best.confidence || 0,
         languageCode,
-        alternatives: alternatives.slice(1).map((alt) => ({
+        alternatives: alternatives.slice(1).map((alt: { transcript?: string | null; confidence?: number | null }) => ({
           transcription: alt.transcript || '',
           confidence: alt.confidence || 0,
         })),
@@ -264,8 +264,8 @@ export class SpeechToTextClient {
       if (best.words && best.words.length > 0) {
         transcriptionResult.words = best.words.map((word) => ({
           word: word.word || '',
-          startTime: this.convertTime(word.startTime),
-          endTime: this.convertTime(word.endTime),
+          startTime: this.convertTime(word.startTime as { seconds?: number; nanos?: number } | undefined),
+          endTime: this.convertTime(word.endTime as { seconds?: number; nanos?: number } | undefined),
           confidence: word.confidence || 0,
         }));
       }
@@ -335,7 +335,7 @@ export class SpeechToTextClient {
 
       // Combine all results
       const transcript = response.results
-        .map((result) => result.alternatives?.[0]?.transcript || '')
+        .map((result: { alternatives?: Array<{ transcript?: string | null }> | null }) => result.alternatives?.[0]?.transcript || '')
         .join(' ');
 
       const confidence = response.results[0]?.alternatives?.[0]?.confidence || 0;
@@ -355,22 +355,11 @@ export class SpeechToTextClient {
    * Stream audio for real-time transcription
    */
   async *streamTranscription(
-    audioStream: AsyncIterable<Buffer>,
-    mimeType: string,
-    languageCode: string = 'pt-BR'
+    _audioStream: AsyncIterable<Buffer>,
+    _mimeType: string,
+    _languageCode: string = 'pt-BR'
   ): AsyncGenerator<string> {
     logger.info('Starting streaming transcription');
-
-    const request = {
-      config: {
-        encoding: this.getEncodingFromMimeType(mimeType) as any,
-        sampleRateHertz: this.getSampleRate(mimeType),
-        languageCode,
-        enableAutomaticPunctuation: true,
-        interimResults: true,
-      },
-    };
-
     // Note: Streaming requires a different client setup
     // This is a placeholder for future implementation
     yield '';

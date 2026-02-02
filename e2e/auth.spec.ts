@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
+const loginEmail = process.env.E2E_LOGIN_EMAIL || testUsers.admin.email;
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || testUsers.admin.password;
+
 test.describe('Autenticação', () => {
   test('deve fazer login com credenciais válidas', async ({ page }) => {
     await page.goto('/auth', { waitUntil: 'domcontentloaded' });
 
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[type="email"]', loginEmail);
+    await page.fill('input[type="password"]', loginPassword);
     await page.click('button[type="submit"]');
 
     await expect(page).toHaveURL(/\/$/);
@@ -25,8 +28,8 @@ test.describe('Autenticação', () => {
   test('deve fazer logout', async ({ page }) => {
     // Login primeiro
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[type="email"]', loginEmail);
+    await page.fill('input[type="password"]', loginPassword);
     await page.click('button[type="submit"]');
 
     await page.waitForURL(/\/$/);
@@ -45,8 +48,8 @@ test.describe('Autenticação', () => {
 
   test('deve carregar profile após login', async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[type="email"]', loginEmail);
+    await page.fill('input[type="password"]', loginPassword);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/$/, { timeout: 10000 });
 

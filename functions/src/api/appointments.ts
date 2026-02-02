@@ -40,6 +40,27 @@ function setCorsHeaders(res: any) {
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
+/** DB enum session_type é ('individual','dupla','grupo'). Frontend envia 'group' → normalizar para 'grupo'. */
+function normalizeSessionType(value: string | undefined): 'individual' | 'dupla' | 'grupo' {
+  if (!value) return 'individual';
+  if (value === 'group') return 'grupo';
+  if (value === 'individual' || value === 'dupla' || value === 'grupo') return value;
+  return 'individual';
+}
+
+/** DB enum appointment_status é ('agendado','confirmado','em_atendimento','concluido','cancelado','paciente_faltou'). Frontend envia 'avaliacao', etc. */
+type DbAppointmentStatus = 'agendado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado' | 'paciente_faltou';
+function normalizeAppointmentStatus(value: string | undefined): DbAppointmentStatus {
+  if (!value) return 'agendado';
+  const v = value.toLowerCase();
+  if (['agendado', 'confirmado', 'em_atendimento', 'concluido', 'cancelado', 'paciente_faltou'].includes(v)) return v as DbAppointmentStatus;
+  if (v === 'avaliacao' || v === 'aguardando_confirmacao' || v === 'remarcado' || v === 'reagendado') return 'agendado';
+  if (v === 'em_andamento' || v === 'atrasado') return 'em_atendimento';
+  if (v === 'falta' || v === 'faltou') return 'paciente_faltou';
+  if (v === 'atendido') return 'concluido';
+  return 'agendado';
+}
+
 /**
  * Helper to get organization ID from user ID
  * Tries PostgreSQL first, then falls back to Firestore
@@ -225,8 +246,8 @@ export const createAppointmentHttp = onRequest(
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
         [
           data.patientId, therapistId, data.date, data.startTime, data.endTime,
-          data.type || data.session_type || 'individual',
-          data.notes || null, data.status || 'agendado', organizationId, userId
+          normalizeSessionType(data.type || data.session_type),
+          data.notes || null, normalizeAppointmentStatus(data.status), organizationId, userId
         ]
       );
       const appointment = result.rows[0];
@@ -273,17 +294,24 @@ export const updateAppointmentHttp = onRequest(
         });
         if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
       }
-      const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'notes'];
-      const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id' };
+      const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'session_type', 'notes'];
+      const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id', type: 'session_type' };
       const setClauses: string[] = [];
       const values: (string | number | boolean | Date | null)[] = [];
+      const seenFields = new Set<string>();
       let paramCount = 0;
       for (const key of Object.keys(updates)) {
         const dbField = fieldMap[key] || key;
-        if (allowedFields.includes(dbField)) {
+        if (allowedFields.includes(dbField) && !seenFields.has(dbField)) {
+          seenFields.add(dbField);
           paramCount++;
           setClauses.push(`${dbField} = $${paramCount}`);
-          values.push(updates[key]);
+          const raw = updates[key];
+          values.push(
+            (dbField === 'session_type' && typeof raw === 'string') ? normalizeSessionType(raw) :
+            (dbField === 'status' && typeof raw === 'string') ? normalizeAppointmentStatus(raw) :
+            raw
+          );
         }
       }
       if (setClauses.length === 0) { res.status(400).json({ error: 'Nenhum campo para atualizar' }); return; }
@@ -638,9 +666,9 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
         data.date,
         data.startTime,
         data.endTime,
-        data.type || data.session_type || 'individual',
+        normalizeSessionType(data.type || data.session_type),
         data.notes || null,
-        data.status || 'agendado',
+        normalizeAppointmentStatus(data.status),
         auth.organizationId,
         auth.userId,
       ]
@@ -751,7 +779,8 @@ export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<Update
       if (allowedFields.includes(dbField)) {
         paramCount++;
         setClauses.push(`${dbField} = $${paramCount}`);
-        values.push(updates[key]);
+        const raw = updates[key];
+        values.push(dbField === 'status' && typeof raw === 'string' ? normalizeAppointmentStatus(raw) : raw);
       }
     }
 

@@ -6,7 +6,7 @@
  * @module lib/cloud-logging
  */
 
-import { Logging, LogEntry as CloudLogEntry } from '@google-cloud/logging';
+import { Logging } from '@google-cloud/logging';
 import { getLogger, LogLevel } from './logger';
 
 const logger = getLogger('cloud-logging');
@@ -70,16 +70,18 @@ export async function writeLog(options: CloudLogOptions): Promise<void> {
     const client = getLoggingClient();
     const log = client.log('functions');
 
-    // Build metadata with labels
+    // Build metadata with labels (only string values for labels)
+    const labels: Record<string, string> = {
+      function_name: process.env.FUNCTION_NAME || 'unknown',
+      region: process.env.FUNCTION_REGION || 'southamerica-east1',
+      ...options.labels,
+    };
+    if (process.env.FUNCTION_INVOCATION_ID) {
+      labels.invocation_id = process.env.FUNCTION_INVOCATION_ID;
+    }
     const metadata = {
       severity: options.severity,
-      labels: {
-        function_name: process.env.FUNCTION_NAME || 'unknown',
-        region: process.env.FUNCTION_REGION || 'southamerica-east1',
-        invocation_id: process.env.FUNCTION_INVOCATION_ID || undefined,
-        ...options.labels,
-      },
-      // Link traces for distributed tracing
+      labels,
       trace: options.traceId
         ? `projects/${PROJECT_ID}/traces/${options.traceId}`
         : undefined,
@@ -87,7 +89,7 @@ export async function writeLog(options: CloudLogOptions): Promise<void> {
     };
 
     // Build the log entry
-    const logEntry: CloudLogEntry = log.entry(metadata, {
+    const logEntry = log.entry(metadata, {
       message: options.message,
       timestamp: new Date().toISOString(),
       ...options.jsonPayload,
@@ -111,13 +113,17 @@ export async function writeLogBatch(entries: CloudLogOptions[]): Promise<void> {
     const log = client.log('functions');
 
     const logEntries = entries.map((entry) => {
+      const entryLabels: Record<string, string> = {
+        function_name: process.env.FUNCTION_NAME || 'unknown',
+        region: process.env.FUNCTION_REGION || 'southamerica-east1',
+        ...entry.labels,
+      };
+      if (process.env.FUNCTION_INVOCATION_ID) {
+        entryLabels.invocation_id = process.env.FUNCTION_INVOCATION_ID;
+      }
       const metadata = {
         severity: entry.severity,
-        labels: {
-          function_name: process.env.FUNCTION_NAME || 'unknown',
-          region: process.env.FUNCTION_REGION || 'southamerica-east1',
-          ...entry.labels,
-        },
+        labels: entryLabels,
         trace: entry.traceId
           ? `projects/${PROJECT_ID}/traces/${entry.traceId}`
           : undefined,

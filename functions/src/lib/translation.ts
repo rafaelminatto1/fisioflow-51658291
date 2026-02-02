@@ -7,8 +7,13 @@
  * @module lib/translation
  */
 
-import { v2 } from '@google-cloud/translate';
+import { TranslationServiceClient, protos } from '@google-cloud/translate';
 import { getLogger } from './logger';
+
+type ITranslateTextRequest = protos.google.cloud.translation.v3.ITranslateTextRequest;
+type IDetectLanguageRequest = protos.google.cloud.translation.v3.IDetectLanguageRequest;
+type IGetSupportedLanguagesRequest = protos.google.cloud.translation.v3.IGetSupportedLanguagesRequest;
+type ITranslateDocumentRequest = protos.google.cloud.translation.v3.ITranslateDocumentRequest;
 
 const logger = getLogger('translation');
 
@@ -91,13 +96,13 @@ export interface DetectedLanguage {
 // ============================================================================
 
 /**
- * Cloud Translation API Client (v2)
+ * Cloud Translation API Client (v3)
  */
 export class TranslationClient {
-  private client: v2.TranslationServiceClient;
+  private client: TranslationServiceClient;
 
   constructor() {
-    this.client = new v2.TranslationServiceClient({
+    this.client = new TranslationServiceClient({
       projectId: PROJECT_ID,
     });
     logger.info('Translation client initialized');
@@ -111,11 +116,7 @@ export class TranslationClient {
     targetLanguage: string,
     options: TranslationOptions = {}
   ): Promise<TranslationResult | TranslationResult[]> {
-    const {
-      format = 'text',
-      model = 'nmt',
-      mimeType = 'text/plain',
-    } = options;
+    const { model = 'nmt', mimeType = 'text/plain' } = options;
 
     try {
       const parent = `projects/${PROJECT_ID}/locations/${LOCATION}`;
@@ -127,7 +128,7 @@ export class TranslationClient {
         totalChars: texts.join('').length,
       });
 
-      const request: v2.protos.google.cloud.translation.v2.ITranslateTextRequest = {
+      const request: ITranslateTextRequest = {
         parent,
         contents: texts,
         mimeType,
@@ -145,7 +146,7 @@ export class TranslationClient {
 
       // Process results
       if (Array.isArray(text)) {
-        return response.translations.map((t) => ({
+        return response.translations.map((t: { translatedText?: string | null; detectedLanguageCode?: string | null }) => ({
           translation: t.translatedText || '',
           detectedLanguageCode: t.detectedLanguageCode || undefined,
         }));
@@ -178,7 +179,7 @@ export class TranslationClient {
         glossaryId,
       });
 
-      const request: v2.protos.google.cloud.translation.v2.ITranslateTextRequest = {
+      const request: ITranslateTextRequest = {
         parent,
         contents: [text],
         mimeType: 'text/plain',
@@ -212,7 +213,7 @@ export class TranslationClient {
     try {
       const parent = `projects/${PROJECT_ID}/locations/${LOCATION}`;
 
-      const request: v2.protos.google.cloud.translation.v2.IDetectLanguageRequest = {
+      const request: IDetectLanguageRequest = {
         parent,
         content: text,
       };
@@ -248,7 +249,7 @@ export class TranslationClient {
     try {
       const parent = `projects/${PROJECT_ID}/locations/${LOCATION}`;
 
-      const request: v2.protos.google.cloud.translation.v2.IGetSupportedLanguagesRequest = {
+      const request: IGetSupportedLanguagesRequest = {
         parent,
         displayLanguageCode,
       };
@@ -256,7 +257,7 @@ export class TranslationClient {
       const [response] = await this.client.getSupportedLanguages(request);
 
       return (
-        response.languages?.map((lang) => ({
+        response.languages?.map((lang: { languageCode?: string | null; displayName?: string | null; supportSource?: boolean | null; supportTarget?: boolean | null }) => ({
           languageCode: lang.languageCode || '',
           displayName: lang.displayName || '',
           supportSource: lang.supportSource || false,
@@ -287,7 +288,7 @@ export class TranslationClient {
         targetLanguage,
       });
 
-      const request: v2.protos.google.cloud.translation.v2.ITranslateDocumentRequest = {
+      const request: ITranslateDocumentRequest = {
         parent,
         targetLanguageCode: targetLanguage,
         documentInputConfig: {
@@ -297,16 +298,13 @@ export class TranslationClient {
         },
         documentOutputConfig: {
           gcsDestination: {
-            outputUri,
+            outputUriPrefix: outputUri,
           },
         },
         sourceLanguageCode: sourceLanguage,
       };
 
-      const [operation] = await this.client.translateDocument(request);
-
-      // Wait for operation to complete
-      await operation.promise();
+      await this.client.translateDocument(request);
 
       logger.info('Document translation completed');
     } catch (error) {
@@ -499,5 +497,8 @@ export function getMedicalTermTranslation(
   term: string,
   targetLanguage: string
 ): string | undefined {
-  return MEDICAL_TERNS[term.toLowerCase()]?.[targetLanguage.split('-')[0]];
+  const key = term.toLowerCase();
+  const lang = targetLanguage.split('-')[0];
+  const entry = (MEDICAL_TERNS as Record<string, { en: string; es: string }>)[key];
+  return entry?.[lang as 'en' | 'es'];
 }

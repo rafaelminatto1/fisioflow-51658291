@@ -5,6 +5,7 @@ import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 import { AppError } from '@/lib/errors/AppError';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { agentIngest } from '@/lib/debug/agentIngest';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
 import type { UnknownError } from '@/types/common';
@@ -158,8 +159,8 @@ export class AppointmentService {
                 status: data.status || 'agendado',
                 notes: data.notes || null,
             };
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'appointmentService.ts:createAppointment',message:'createAppointment payload',data:payload,timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+            // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
+            agentIngest({ location: 'appointmentService.ts:createAppointment', message: 'createAppointment payload', hypothesisId: 'H1', data: payload });
             // #endregion
 
             const response = await appointmentsApi.create(payload);
@@ -193,9 +194,17 @@ export class AppointmentService {
 
             return appointment;
         } catch (error) {
-            // #region agent log
-            const err = error as { code?: string; message?: string; details?: unknown };
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'appointmentService.ts:createAppointment catch',message:'createAppointment error',data:{code:err?.code,message:err?.message,details:err?.details},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+            // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
+            agentIngest({
+              location: 'appointmentService.ts:createAppointment catch',
+              message: 'createAppointment error',
+              hypothesisId: 'H2',
+              data: {
+                code: (error as { code?: string })?.code,
+                message: (error as { message?: string })?.message,
+                details: (error as { details?: unknown })?.details,
+              },
+            });
             // #endregion
             throw AppError.from(error, 'AppointmentService.createAppointment');
         }

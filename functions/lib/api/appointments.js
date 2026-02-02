@@ -68,6 +68,32 @@ function setCorsHeaders(res) {
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
+/** DB enum session_type é ('individual','dupla','grupo'). Frontend envia 'group' → normalizar para 'grupo'. */
+function normalizeSessionType(value) {
+    if (!value)
+        return 'individual';
+    if (value === 'group')
+        return 'grupo';
+    if (value === 'individual' || value === 'dupla' || value === 'grupo')
+        return value;
+    return 'individual';
+}
+function normalizeAppointmentStatus(value) {
+    if (!value)
+        return 'agendado';
+    const v = value.toLowerCase();
+    if (['agendado', 'confirmado', 'em_atendimento', 'concluido', 'cancelado', 'paciente_faltou'].includes(v))
+        return v;
+    if (v === 'avaliacao' || v === 'aguardando_confirmacao' || v === 'remarcado' || v === 'reagendado')
+        return 'agendado';
+    if (v === 'em_andamento' || v === 'atrasado')
+        return 'em_atendimento';
+    if (v === 'falta' || v === 'faltou')
+        return 'paciente_faltou';
+    if (v === 'atendido')
+        return 'concluido';
+    return 'agendado';
+}
 /**
  * Helper to get organization ID from user ID
  * Tries PostgreSQL first, then falls back to Firestore
@@ -295,8 +321,8 @@ exports.createAppointmentHttp = (0, https_1.onRequest)({ region: 'southamerica-e
         const result = await pool.query(`INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`, [
             data.patientId, therapistId, data.date, data.startTime, data.endTime,
-            data.type || data.session_type || 'individual',
-            data.notes || null, data.status || 'agendado', organizationId, userId
+            normalizeSessionType(data.type || data.session_type),
+            data.notes || null, normalizeAppointmentStatus(data.status), organizationId, userId
         ]);
         const appointment = result.rows[0];
         try {
@@ -366,17 +392,22 @@ exports.updateAppointmentHttp = (0, https_1.onRequest)({ region: 'southamerica-e
                 return;
             }
         }
-        const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'notes'];
-        const fieldMap = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id' };
+        const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'session_type', 'notes'];
+        const fieldMap = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id', type: 'session_type' };
         const setClauses = [];
         const values = [];
+        const seenFields = new Set();
         let paramCount = 0;
         for (const key of Object.keys(updates)) {
             const dbField = fieldMap[key] || key;
-            if (allowedFields.includes(dbField)) {
+            if (allowedFields.includes(dbField) && !seenFields.has(dbField)) {
+                seenFields.add(dbField);
                 paramCount++;
                 setClauses.push(`${dbField} = $${paramCount}`);
-                values.push(updates[key]);
+                const raw = updates[key];
+                values.push((dbField === 'session_type' && typeof raw === 'string') ? normalizeSessionType(raw) :
+                    (dbField === 'status' && typeof raw === 'string') ? normalizeAppointmentStatus(raw) :
+                        raw);
             }
         }
         if (setClauses.length === 0) {
@@ -662,9 +693,9 @@ exports.createAppointment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, a
             data.date,
             data.startTime,
             data.endTime,
-            data.type || data.session_type || 'individual',
+            normalizeSessionType(data.type || data.session_type),
             data.notes || null,
-            data.status || 'agendado',
+            normalizeAppointmentStatus(data.status),
             auth.organizationId,
             auth.userId,
         ]);
@@ -743,7 +774,8 @@ exports.updateAppointment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, a
             if (allowedFields.includes(dbField)) {
                 paramCount++;
                 setClauses.push(`${dbField} = $${paramCount}`);
-                values.push(updates[key]);
+                const raw = updates[key];
+                values.push(dbField === 'status' && typeof raw === 'string' ? normalizeAppointmentStatus(raw) : raw);
             }
         }
         if (setClauses.length === 0) {

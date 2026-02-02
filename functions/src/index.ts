@@ -176,17 +176,11 @@ export { generateUploadToken, confirmUpload, deleteFile as deleteStorageFile, li
 // GOOGLE CLOUD SERVICES API ENDPOINTS
 // ============================================================================
 
-// Cloud Text-to-Speech API
 import { synthesizeTTS } from './api/tts';
-export { synthesizeTTS };
-
-// Cloud Speech-to-Text API
 import { transcribeAudio, transcribeLongAudio } from './api/speech';
-export { transcribeAudio, transcribeLongAudio };
-
-// Cloud Translation API
 import { translate, detectLanguage, getSupportedLanguages, translateExercise } from './api/translation';
-export { translate, detectLanguage, getSupportedLanguages, translateExercise };
+
+export { synthesizeTTS, transcribeAudio, transcribeLongAudio, translate, detectLanguage, getSupportedLanguages, translateExercise };
 
 // Admin Functions
 import { createAdminUser } from './admin/create-user';
@@ -468,35 +462,7 @@ export { listUsers, updateUserRole };
 // GOOGLE CLOUD SERVICES EXPORTS
 // ============================================================================
 
-// Export library functions for external use (if needed)
-export * from './lib/cloud-logging';
-export * from './lib/secret-manager';
-export * from './lib/crashlytics';
-export * from './lib/performance';
-export * from './lib/speech-to-text';
-export * from './lib/text-to-speech';
-export * from './lib/translation';
-
-// Export helper functions
-export {
-  getLoggingClient,
-  writeLog,
-  createCloudLoggingSink,
-  extractTraceId,
-} from './lib/cloud-logging';
-
-export {
-  accessSecret,
-  accessSecretRequired,
-  getCachedSecret,
-  createSecret,
-  updateSecret,
-  deleteSecret,
-  listSecrets,
-  withSecret,
-  withSecrets,
-} from './lib/secret-manager';
-
+// Export helper functions (lib) - avoid re-exporting names already exported from api/
 export {
   initCrashlytics,
   recordError,
@@ -516,25 +482,3 @@ export {
   startHttpTrace,
   withPerformanceTracing,
 } from './lib/performance';
-
-export {
-  transcribeConsultationAudio,
-  transcribeAudio,
-  isSpeechToTextEnabled,
-} from './lib/speech-to-text';
-
-export {
-  synthesizeForExercise,
-  synthesizeForAccessibility,
-  synthesizeCountdown,
-  isTextToSpeechEnabled,
-} from './lib/text-to-speech';
-
-export {
-  translateToPortuguese,
-  translateFromPortuguese,
-  translateMedicalText,
-  detectLanguage,
-  getSupportedLanguages,
-  isTranslationEnabled,
-} from './lib/translation';

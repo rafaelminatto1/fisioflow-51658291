@@ -27,29 +27,42 @@ declare global {
 /**
  * Initialize Google Analytics 4
  * Call this once when the app loads
+ * Fails gracefully if measurementId is missing or script is blocked (e.g. by CSP)
  */
 export function initGoogleAnalytics(measurementId: string): void {
   if (typeof window === 'undefined') return;
+  if (!measurementId || typeof measurementId !== 'string') {
+    if (import.meta.env.DEV) {
+      logger.debug('GA4 skipped: VITE_GA_MEASUREMENT_ID not configured', {}, 'Monitoring');
+    }
+    return;
+  }
 
-  // Load gtag.js script
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-  document.head.appendChild(script);
+  try {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
 
-  // Initialize dataLayer
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag() {
-    window.dataLayer?.push(arguments);
-  };
+    script.onerror = () => {
+      logger.warn('GA4 script failed to load (possible CSP block)', { measurementId }, 'Monitoring');
+    };
 
-  // Configure GA4
-  window.gtag('js', new Date());
-  window.gtag('config', measurementId, {
-    send_page_view: false, // We'll track page views manually
-  });
+    document.head.appendChild(script);
 
-  logger.info('Google Analytics 4 initialized', { measurementId }, 'Monitoring');
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function gtag() {
+      window.dataLayer?.push(arguments);
+    };
+
+    window.gtag('js', new Date());
+    window.gtag('config', measurementId, {
+      send_page_view: false,
+    });
+
+    logger.info('Google Analytics 4 initialized', { measurementId }, 'Monitoring');
+  } catch (error) {
+    logger.warn('GA4 initialization failed', error, 'Monitoring');
+  }
 }
 
 /**

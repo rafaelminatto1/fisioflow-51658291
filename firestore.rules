@@ -13,23 +13,10 @@ service cloud.firestore {
 
     // Verificadores de papel (Role checkers) com proteção de existência
     // Nota: hasRole pode causar dependência circular quando usado em regras da coleção profiles
-    // Use getRole() que retorna null se o perfil não existir, em vez de hasRole()
     function hasRole(role) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == role;
-    }
-
-    // Obter o role do usuário sem causar erro se perfil não existir
-    function getRole() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
-        ? get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role
-        : null;
-    }
-
-    // Verificar se o usuário tem role específico (versão segura para evitar dependência circular)
-    function hasRoleSafe(role) {
-      return getRole() == role;
     }
 
     // Verificar se o usuário tem perfil no Firestore
