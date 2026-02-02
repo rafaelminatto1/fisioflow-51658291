@@ -15,6 +15,7 @@
 import { useState, useEffect } from 'react';
 import type { Metric } from 'web-vitals';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { getRating, getRatingColor, THRESHOLDS } from './web-vitals-ratings';
 
 // Extend Window interface for analytics globals
 declare global {
@@ -38,47 +39,6 @@ export interface WebVitalsMetrics {
   ttfb?: Metric;
   url: string;
   userAgent: string;
-}
-
-// Tipos para ratings
-export type Rating = 'good' | 'needs-improvement' | 'poor';
-
-// Thresholds para cada métrica (baseados no Google Core Web Vitals)
-const THRESHOLDS = {
-  fcp: { good: 1800, poor: 3000 }, // ms
-  lcp: { good: 2500, poor: 4000 }, // ms
-  fid: { good: 100, poor: 300 }, // ms (legado)
-  inp: { good: 200, poor: 500 }, // ms (substitui FID)
-  cls: { good: 0.1, poor: 0.25 }, // score
-  ttfb: { good: 800, poor: 1800 }, // ms
-} as const;
-
-/**
- * Obtém o rating de uma métrica
- */
-export function getRating(
-  metricName: keyof typeof THRESHOLDS,
-  value: number
-): Rating {
-  const threshold = THRESHOLDS[metricName];
-
-  if (value <= threshold.good) return 'good';
-  if (value <= threshold.poor) return 'needs-improvement';
-  return 'poor';
-}
-
-/**
- * Obtém a cor baseada no rating (WCAG AA compliant - 4.5:1 contrast with white)
- */
-export function getRatingColor(rating: Rating): string {
-  switch (rating) {
-    case 'good':
-      return '#047857'; // emerald-700 (contrast 7.1:1 with white)
-    case 'needs-improvement':
-      return '#b45309'; // amber-700 (contrast 4.7:1 with white)
-    case 'poor':
-      return '#b91c1c'; // red-600 (contrast 4.5:1 with white)
-  }
 }
 
 /**

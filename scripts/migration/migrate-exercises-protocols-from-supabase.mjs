@@ -5,6 +5,9 @@
  * Uso:
  *   node scripts/migration/migrate-exercises-protocols-from-supabase.mjs
  *   node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --dry-run
+ *   node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --only-protocols   # só protocolos
+ *
+ * .env necessário: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FIREBASE_SERVICE_ACCOUNT_KEY_PATH
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -23,6 +26,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 const isDryRun = process.argv.includes('--dry-run');
 const retrySupabaseUrls = process.argv.includes('--retry-supabase-urls');
 const clearFailedUrls = process.argv.includes('--clear-failed-urls');
+const onlyProtocols = process.argv.includes('--only-protocols');
 const BUCKET_MEDIA_PREFIX = 'exercise-media';
 const BATCH_SIZE = 100;
 
@@ -407,11 +411,15 @@ async function main() {
   console.log('╚════════════════════════════════════════════════════════════╝\n');
   if (isDryRun) console.log('⚠️  DRY-RUN: nenhuma alteração será feita.\n');
   if (retrySupabaseUrls) console.log('🔄 Modo: --retry-supabase-urls (apenas exercícios com URL Supabase no Firestore)\n');
+  if (onlyProtocols) console.log('📋 Modo: --only-protocols (apenas exercise_protocols)\n');
 
-  let r1, r2;
+  let r1 = { migrated: 0, errors: 0 };
+  let r2 = { migrated: 0, errors: 0 };
+
   if (retrySupabaseUrls) {
     r1 = await retryExercisesWithSupabaseUrls();
-    r2 = { migrated: 0, errors: 0 };
+  } else if (onlyProtocols) {
+    r2 = await migrateProtocols();
   } else {
     r1 = await migrateExercises();
     console.log('');

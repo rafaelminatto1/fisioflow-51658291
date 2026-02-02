@@ -125,7 +125,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 feat(patients): add filter by name
 fix(auth): resolve token refresh issue
 docs(readme): update installation instructions
-refactor(supabase): extract api calls to separate file
+refactor(firebase): extract api calls to separate file
 ```
 
 ### Checklist para PR
@@ -151,7 +151,7 @@ interface Patient {
 }
 
 async function getPatient(id: string): Promise<Patient> {
-  const { data } = await supabase
+  const snapshot = await getDocs(
     .from('patients')
     .select('*')
     .eq('id', id)
@@ -162,7 +162,7 @@ async function getPatient(id: string): Promise<Patient> {
 
 // ❌ Ruim
 async function getPatient(id) {
-  return await supabase
+  return await getDocs(
     .from('patients')
     .select('*')
     .eq('id', id)

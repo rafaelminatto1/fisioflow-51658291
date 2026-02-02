@@ -51,29 +51,27 @@ Biblioteca completa de exercícios fisioterapêuticos com mais de 500 exercício
 - `ExerciseFilter` - Filtros de busca
 - `PrescriptionForm` - Formulário de prescrição
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /exercises
-const { data } = await supabase
-  .from('exercises')
-  .select('*')
-  .eq('category', category)
-  .eq('difficulty', difficulty);
+// GET exercises
+const snapshot = await getDocs(
+  query(
+    collection(db, 'exercises'),
+    where('category', '==', category),
+    where('difficulty', '==', difficulty)
+  )
+);
 
-// POST /prescriptions
-const { data } = await supabase.from('prescriptions').insert({
-  patient_id,
-  exercises: [
-    { exercise_id, sets: 3, reps: 12, rest_seconds: 60 }
-  ],
+// POST prescription
+await addDoc(collection(db, 'prescriptions'), {
+  patient_id, exercises: [{ exercise_id, sets: 3, reps: 12, rest_seconds: 60 }],
 });
 
-// GET /prescriptions/:id/logs
-const { data } = await supabase
-  .from('prescription_logs')
-  .select('*')
-  .eq('prescription_id', id);
+// GET prescription logs
+const logs = await getDocs(
+  query(collection(db, 'prescription_logs'), where('prescription_id', '==', id))
+);
 ```
 
 ## Veja Também

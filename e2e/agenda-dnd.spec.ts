@@ -15,24 +15,19 @@ test('agenda drag and drop', async ({ page }) => {
 
     console.log('Filling credentials...');
     await page.waitForSelector('input[type="email"]', { timeout: 10000 });
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[type="email"]', testUsers.rafael.email);
+    await page.fill('input[type="password"]', testUsers.rafael.password);
 
     console.log('Submitting login...');
     await page.click('button[type="submit"]');
 
-    console.log('Waiting for redirect to schedule...');
-    await page.waitForURL('/schedule', { timeout: 20000 }).catch(async (e) => {
-        console.log('Login timeout. Current URL:', page.url());
-        // Try forcing navigation if we are stuck but logged in?
-        // Or maybe we landed on dashboard?
-        throw e;
-    });
+    // Wait for redirect after login (Schedule is at / or /schedule)
+    console.log('Waiting for redirect after login...');
+    await page.waitForURL((u) => u.pathname === '/' || u.pathname.startsWith('/schedule') || u.pathname.startsWith('/dashboard'), { timeout: 25000 });
 
-    // Force navigation just in case we are on dashboard
-    if (!page.url().includes('/schedule')) {
-        console.log('Redirecting to /schedule manually');
-        await page.goto('/schedule');
+    // Ensure we are on schedule page (root "/" is Schedule)
+    if (page.url().includes('/dashboard')) {
+        await page.goto('/');
     }
 
     // 2. Wait for appointments to load
