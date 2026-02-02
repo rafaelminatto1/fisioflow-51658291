@@ -8,6 +8,8 @@ import { initAppCheck } from "@/lib/firebase/app-check";
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { initMonitoring } from '@/lib/monitoring';
 import { initializeRemoteConfig } from '@/lib/firebase/remote-config';
+import { initCrashlytics } from '@/lib/firebase/crashlytics';
+import { initPerformanceMonitoring } from '@/lib/firebase/performance';
 
 // Inicializar serviços globais
 initSentry();
@@ -23,6 +25,16 @@ initializeRemoteConfig(
 ).catch((error) => {
   logger.error('Failed to initialize Remote Config', error, 'main.tsx');
   // Não bloquear inicialização da app se Remote Config falhar
+});
+
+// Inicializar Firebase Crashlytics (crash reporting)
+initCrashlytics().catch((error) => {
+  logger.error('Failed to initialize Crashlytics', error, 'main.tsx');
+});
+
+// Inicializar Firebase Performance Monitoring
+initPerformanceMonitoring().catch((error) => {
+  logger.error('Failed to initialize Performance Monitoring', error, 'main.tsx');
 });
 
 // ============================================================================
