@@ -4,9 +4,6 @@ import { getPool } from '../init';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Exercise } from '../types/models';
 import { logger } from '../lib/logger';
-import * as admin from 'firebase-admin';
-
-const firebaseAuth = admin.auth();
 
 function setCorsHeaders(res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -32,7 +29,7 @@ export const listExercisesHttp = onRequest({ region: 'southamerica-east1', memor
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
     const pool = getPool();
     let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,thumbnail_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;
@@ -58,7 +55,7 @@ export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { exerciseId, query: searchQuery, limit = 10 } = parseBody(req);
     if (!exerciseId && !searchQuery) { res.status(400).json({ error: 'exerciseId ou query é obrigatório' }); return; }
     const pool = getPool();
@@ -83,7 +80,7 @@ export const getExerciseHttp = onRequest({ region: 'southamerica-east1', memory:
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { exerciseId } = parseBody(req);
     if (!exerciseId) { res.status(400).json({ error: 'exerciseId é obrigatório' }); return; }
     const pool = getPool();
@@ -102,7 +99,7 @@ export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const pool = getPool();
     const result = await pool.query('SELECT DISTINCT category FROM exercises WHERE is_active = true ORDER BY category');
     res.json({ data: result.rows.map((r: { category: string }) => ({ id: r.category.toLowerCase().replace(/\s+/g, '-'), name: r.category })) });
