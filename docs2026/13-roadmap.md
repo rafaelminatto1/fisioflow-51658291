@@ -219,7 +219,7 @@
 
 ## 💡 Novas Funcionalidades Sugeridas
 
-### 🔥 Alta Prioridade (Vercel Pro + Supabase Pro)
+### 🔥 Alta Prioridade (Firebase + GCP)
 
 #### 1. Sistema de Backup Automático
 
@@ -231,7 +231,7 @@
 - Peace of mind
 
 **Implementação:**
-- Supabase Pro já tem backups automáticos
+- Firebase/Firestore: exportação e backups conforme documentação Google Cloud
 - Criar UI para restore
 - Adicionar retenção customizável
 
@@ -249,7 +249,7 @@
 **Implementação:**
 ```typescript
 // Edge function para image optimization
-import { ImageOptimizer } from '@vercel/og';
+// Geração de imagens: use libs como @vercel/og em self-host ou Cloud Function com sharp/puppeteer
 
 export async function GET(req: Request) {
   const optimizer = new ImageOptimizer();

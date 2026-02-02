@@ -3,11 +3,12 @@
  *
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
 import { db } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 
 
@@ -31,6 +32,15 @@ export interface ScheduleCapacity {
   updated_at: string;
 }
 
+/** Grupo de capacidades com mesmo horário e vagas (para exibição agrupada) */
+export interface CapacityGroup {
+  start_time: string;
+  end_time: string;
+  max_patients: number;
+  ids: string[];
+  days: number[];
+}
+
 // Helper to convert doc
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): ScheduleCapacity => ({ id: doc.id, ...doc.data() } as ScheduleCapacity);
 
@@ -43,6 +53,9 @@ export function useScheduleCapacity() {
   const isValidUserId = !!user?.uid;
 
   const organizationId = profile?.organization_id;
+
+  // Cache por 2 min para evitar refetch ao trocar de aba
+  const STALE_TIME_MS = 2 * 60 * 1000;
 
   const { data: capacities, isLoading } = useQuery({
     queryKey: ['schedule-capacity', organizationId],
@@ -60,6 +73,7 @@ export function useScheduleCapacity() {
       return snapshot.docs.map(convertDoc);
     },
     enabled: !!organizationId,
+    staleTime: STALE_TIME_MS,
   });
 
   const createCapacity = useMutation({
@@ -68,7 +82,27 @@ export function useScheduleCapacity() {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
 
+      // Garantir que o perfil no Firestore tenha organization_id e role para as regras de segurança
+      if (user?.uid) {
+        logger.debug('[useScheduleCapacity] Syncing profile to Firestore before save', { uid: user.uid, organizationId, role: profile?.role }, 'useScheduleCapacity');
+        try {
+          await setDoc(
+            doc(db, 'profiles', user.uid),
+            {
+              organization_id: organizationId,
+              role: profile?.role ?? 'fisioterapeuta',
+              updated_at: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+          logger.debug('[useScheduleCapacity] Profile synced successfully', {}, 'useScheduleCapacity');
+        } catch (profileErr) {
+          logger.warn('[useScheduleCapacity] Profile sync failed (continuing with addDoc)', { error: profileErr }, 'useScheduleCapacity');
+        }
+      }
+
       const validated = capacitySchema.parse(formData);
+      logger.debug('[useScheduleCapacity] Adding capacity doc to Firestore', { organization_id: organizationId, day_of_week: validated.day_of_week }, 'useScheduleCapacity');
 
       const docRef = await addDoc(collection(db, 'schedule_capacity_config'), {
         day_of_week: validated.day_of_week,
@@ -90,7 +124,8 @@ export function useScheduleCapacity() {
         description: 'A capacidade de horário foi configurada com sucesso.',
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error & { code?: string }) => {
+      logger.error('[useScheduleCapacity] createCapacity failed', { message: error.message, code: error.code, stack: error.stack }, 'useScheduleCapacity');
       toast({
         title: 'Erro ao salvar configuração',
         description: error.message,
@@ -106,6 +141,26 @@ export function useScheduleCapacity() {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
 
+      // Garantir que o perfil no Firestore tenha organization_id e role para as regras de segurança
+      if (user?.uid) {
+        logger.debug('[useScheduleCapacity] createMultiple: syncing profile', { uid: user.uid, organizationId }, 'useScheduleCapacity');
+        try {
+          await setDoc(
+            doc(db, 'profiles', user.uid),
+            {
+              organization_id: organizationId,
+              role: profile?.role ?? 'fisioterapeuta',
+              updated_at: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+          logger.debug('[useScheduleCapacity] createMultiple: profile synced', {}, 'useScheduleCapacity');
+        } catch (profileErr) {
+          logger.warn('[useScheduleCapacity] createMultiple: profile sync failed', { error: profileErr }, 'useScheduleCapacity');
+        }
+      }
+
+      logger.debug('[useScheduleCapacity] createMultiple: adding capacity docs', { count: formDataArray.length }, 'useScheduleCapacity');
       const promises = formDataArray.map(async formData => {
         const validated = capacitySchema.parse(formData);
         const docRef = await addDoc(collection(db, 'schedule_capacity_config'), {
@@ -131,7 +186,8 @@ export function useScheduleCapacity() {
         description: `${count} configuração(ões) de capacidade foram salvas com sucesso.`,
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error & { code?: string }) => {
+      logger.error('[useScheduleCapacity] createMultipleCapacities failed', { message: error.message, code: error.code }, 'useScheduleCapacity');
       toast({
         title: 'Erro ao salvar configurações',
         description: error.message,
@@ -172,6 +228,55 @@ export function useScheduleCapacity() {
       }
 
       await deleteDoc(doc(db, 'schedule_capacity_config', id));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
+      toast({
+        title: 'Configuração removida',
+        description: 'A configuração foi removida com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao remover configuração',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateCapacityGroup = useMutation({
+    mutationFn: async ({ ids, max_patients }: { ids: string[]; max_patients: number }) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada. Tente novamente.');
+      }
+      const updated_at = new Date().toISOString();
+      await Promise.all(
+        ids.map((id) => updateDoc(doc(db, 'schedule_capacity_config', id), { max_patients, updated_at }))
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
+      toast({
+        title: 'Configuração atualizada',
+        description: 'As alterações foram salvas com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar configuração',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteCapacityGroup = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada. Tente novamente.');
+      }
+      await Promise.all(ids.map((id) => deleteDoc(doc(db, 'schedule_capacity_config', id))));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
@@ -288,8 +393,38 @@ export function useScheduleCapacity() {
     { value: 6, label: 'Sábado' },
   ];
 
+  // Agrupa capacidades por (start_time, end_time, max_patients); ordenado por horário e dias
+  const capacityGroups: CapacityGroup[] = (() => {
+    const list = capacities || [];
+    if (list.length === 0) return [];
+    const key = (c: ScheduleCapacity) => `${c.start_time}|${c.end_time}|${c.max_patients}`;
+    const map = new Map<string, ScheduleCapacity[]>();
+    for (const c of list) {
+      const k = key(c);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(c);
+    }
+    const groups: CapacityGroup[] = Array.from(map.entries()).map(([, items]) => ({
+      start_time: items[0].start_time,
+      end_time: items[0].end_time,
+      max_patients: items[0].max_patients,
+      ids: items.map((i) => i.id),
+      days: [...new Set(items.map((i) => i.day_of_week))].sort((a, b) => a - b),
+    }));
+    groups.sort((a, b) => {
+      const tA = timeToMinutes(a.start_time);
+      const tB = timeToMinutes(b.start_time);
+      if (tA !== tB) return tA - tB;
+      const dA = a.days[0] ?? 0;
+      const dB = b.days[0] ?? 0;
+      return dA - dB;
+    });
+    return groups;
+  })();
+
   return {
     capacities: capacities || [],
+    capacityGroups,
     isLoading,
     daysOfWeek,
     organizationId,
@@ -297,11 +432,13 @@ export function useScheduleCapacity() {
     createMultipleCapacities: createMultipleCapacities.mutate,
     updateCapacity: updateCapacity.mutate,
     deleteCapacity: deleteCapacity.mutate,
+    updateCapacityGroup: updateCapacityGroup.mutate,
+    deleteCapacityGroup: deleteCapacityGroup.mutate,
     getCapacityForTime,
     checkConflicts,
     isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
-    isUpdating: updateCapacity.isPending,
-    isDeleting: deleteCapacity.isPending,
+    isUpdating: updateCapacity.isPending || updateCapacityGroup.isPending,
+    isDeleting: deleteCapacity.isPending || deleteCapacityGroup.isPending,
     authError: !isValidUserId ? 'Sessão de usuário inválida' : null,
   };
 }

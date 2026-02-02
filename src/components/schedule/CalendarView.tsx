@@ -57,17 +57,20 @@ export const CalendarView = memo(({
   const [optimisticAppointments, setOptimisticAppointments] = useState<Appointment[]>([]);
   const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<{ id: string; originalDate: string; originalTime: string } | null>(null);
 
-  // Use optimistic appointments when there's a pending update, otherwise use original appointments
+  // Use optimistic appointments when there's a pending update, otherwise use original appointments (filter out null/undefined to avoid "reading 'id'" on drag)
   const displayAppointments = useMemo(() => {
-    if (pendingOptimisticUpdate && optimisticAppointments.length > 0) {
-      return optimisticAppointments;
-    }
-    return appointments;
+    const base = pendingOptimisticUpdate && optimisticAppointments.length > 0 ? optimisticAppointments : appointments;
+    return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
   }, [appointments, optimisticAppointments, pendingOptimisticUpdate]);
 
   // Optimistic update handlers
   const handleOptimisticUpdate = useCallback((appointmentId: string, newDate: Date, newTime: string) => {
-    const appointment = appointments.find(a => a.id === appointmentId);
+    const safeAppointments = (appointments || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
+    // #region agent log
+    const hasUndefined = (appointments || []).some((a, i) => a == null);
+    if (hasUndefined) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CalendarView.tsx:handleOptimisticUpdate',message:'appointments has null/undefined',data:{len:appointments?.length,appointmentId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
+    const appointment = safeAppointments.find(a => a.id === appointmentId);
     if (!appointment) return;
 
     // Save original values for potential revert
@@ -86,7 +89,7 @@ export const CalendarView = memo(({
 
     // Update local state immediately (optimistic)
     setOptimisticAppointments(
-      appointments.map(a => a.id === appointmentId ? updatedAppointment : a)
+      safeAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
     );
   }, [appointments]);
 

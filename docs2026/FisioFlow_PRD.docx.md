@@ -376,8 +376,8 @@ Os requisitos não-funcionais completos estão detalhados no documento 'FisioFlo
 | API | tRPC | 11 | End-to-end type safety |
 | Auth | Clerk | 5.x | UI pronta, RBAC |
 | Cache | Upstash Redis | Serverless | Rate limiting, sessions |
-| Storage | Vercel Blob | Serverless | S3-compatible |
-| Hosting | Vercel Pro | Edge | Global CDN, cron jobs |
+| Storage | Firebase Storage | Serverless | Arquivos e mídia |
+| Hosting | Firebase Hosting | CDN | 100% Firebase + GCP |
 
 ## **9.2 Integrações Externas**
 
@@ -393,11 +393,11 @@ Os requisitos não-funcionais completos estão detalhados no documento 'FisioFlo
 
 | Serviço | Plano | Custo Mensal |
 | ----- | ----- | ----- |
-| Vercel | Pro | R$ 100 |
+| Firebase / GCP | Blaze (pay-as-you-go) | Conforme uso |
 | Neon | Launch | R$ 95 |
 | Clerk | Free (até 10k MAU) | R$ 0 |
 | Upstash | Pay-as-you-go | R$ 15 |
-| Vercel Blob | Incluído \+ uso | R$ 10 |
+| Firebase Storage | Incluído + uso | Conforme uso |
 | WhatsApp API | \~1.200 msgs | R$ 8\* |
 | Sentry | Free | R$ 0 |
 | Resend | Free (3k emails) | R$ 0 |

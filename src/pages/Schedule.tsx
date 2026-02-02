@@ -15,7 +15,7 @@ import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare, Calendar, Sparkles } from 'lucide-react';
+import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare, Calendar, Sparkles, Trash2 } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -26,6 +26,19 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
+import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { AppointmentService } from '@/services/appointmentService';
+import { getUserOrganizationId } from '@/utils/userHelpers';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { format, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
@@ -115,6 +128,8 @@ const Schedule = () => {
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showCancelAllTodayDialog, setShowCancelAllTodayDialog] = useState(false);
+  const [isCancellingAllToday, setIsCancellingAllToday] = useState(false);
 
   // ===================================================================
   // HOOKS
@@ -244,12 +259,20 @@ const Schedule = () => {
         title: '✅ Reagendado com sucesso',
         description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
       });
-    } catch {
-      toast({
-        title: '❌ Erro ao reagendar',
-        description: 'Não foi possível reagendar o atendimento.',
-        variant: 'destructive'
-      });
+    } catch (error) {
+      if (isAppointmentConflictError(error)) {
+        toast({
+          title: APPOINTMENT_CONFLICT_TITLE,
+          description: APPOINTMENT_CONFLICT_MESSAGE,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: '❌ Erro ao reagendar',
+          description: 'Não foi possível reagendar o atendimento.',
+          variant: 'destructive'
+        });
+      }
       throw new Error('Failed to reschedule appointment');
     }
   }, [rescheduleAppointment]);
@@ -289,6 +312,49 @@ const Schedule = () => {
     setModalDefaultDate(currentDate);
     setIsModalOpen(true);
   }, [currentDate]);
+
+  const handleCancelAllToday = useCallback(async () => {
+    const organizationId = await getUserOrganizationId();
+    if (!organizationId) {
+      toast({
+        title: 'Erro',
+        description: 'Organização não encontrada. Faça login novamente.',
+        variant: 'destructive',
+      });
+      setShowCancelAllTodayDialog(false);
+      return;
+    }
+    const dateStr = formatDateToLocalISO(currentDate);
+    setIsCancellingAllToday(true);
+    try {
+      const { cancelled, errors } = await AppointmentService.cancelAllAppointmentsForDate(organizationId, dateStr);
+      setShowCancelAllTodayDialog(false);
+      await refetch();
+      if (errors > 0) {
+        toast({
+          title: 'Concluído com ressalvas',
+          description: `${cancelled} agendamento(s) cancelado(s). ${errors} falha(s).`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Agendamentos cancelados',
+          description: cancelled === 0
+            ? 'Nenhum agendamento encontrado para esta data.'
+            : `${cancelled} agendamento(s) de ${formatDateToBrazilian(currentDate)} cancelado(s).`,
+        });
+      }
+    } catch (err) {
+      logger.error('Erro ao cancelar agendamentos do dia', err, 'Schedule');
+      toast({
+        title: 'Erro ao cancelar',
+        description: 'Não foi possível cancelar os agendamentos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCancellingAllToday(false);
+    }
+  }, [currentDate, refetch]);
 
   // ===================================================================
   // EFFECTS
@@ -493,6 +559,18 @@ const Schedule = () => {
                 >
                   Hoje
                 </Button>
+
+                {/* Cancel all appointments for selected date */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCancelAllTodayDialog(true)}
+                  className="h-9 px-4 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium transition-all"
+                  title="Cancelar todos os agendamentos da data exibida"
+                >
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  Cancelar todos
+                </Button>
               </div>
 
               {/* Right Section - View Switcher, Filters, Actions */}
@@ -676,6 +754,31 @@ const Schedule = () => {
           open={showKeyboardShortcuts}
           onOpenChange={setShowKeyboardShortcuts}
         />
+
+        <AlertDialog open={showCancelAllTodayDialog} onOpenChange={setShowCancelAllTodayDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancelar todos os agendamentos</AlertDialogTitle>
+              <AlertDialogDescription>
+                Deseja cancelar todos os agendamentos de <strong>{formatDateToBrazilian(currentDate)}</strong>?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isCancellingAllToday}>Voltar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleCancelAllToday();
+                }}
+                disabled={isCancellingAllToday}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              >
+                {isCancellingAllToday ? 'Cancelando…' : 'Cancelar todos'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
       </div>
     </MainLayout>

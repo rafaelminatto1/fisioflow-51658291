@@ -55,6 +55,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
+import { getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { PatientService } from '@/services/patientService';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
@@ -246,12 +247,14 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         });
       }
 
-      // Mensagem de erro mais descritiva
-      const errorMessage = error.message.includes('duplicate')
-        ? 'Já existe um agendamento neste horário.'
-        : error.message.includes('permission')
-          ? 'Você não tem permissão para alterar este agendamento.'
-          : 'Erro ao atualizar agendamento. Tente novamente.';
+      // Mensagem de erro mais descritiva (inclui 409 do backend)
+      const errorMessage =
+        getAppointmentConflictUserMessage(error) ??
+        (error.message.includes('duplicate')
+          ? 'Já existe um agendamento neste horário.'
+          : error.message.includes('permission')
+            ? 'Você não tem permissão para alterar este agendamento.'
+            : 'Erro ao atualizar agendamento. Tente novamente.');
 
       toast.error(errorMessage);
     },

@@ -380,6 +380,7 @@ const CalendarAppointmentCardBase = ({
                 {!isMobile && isHovered && draggable && !isDragging && !selectionMode && (
                     <AnimatePresence>
                         <motion.div
+                            key="edit-action"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="absolute top-0.5 right-0.5 flex flex-col gap-0.5"
@@ -396,6 +397,7 @@ const CalendarAppointmentCardBase = ({
                             </div>
                         </motion.div>
                         <motion.div
+                            key="drag-handle"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="absolute bottom-0.5 right-0.5 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing backdrop-blur-[1px] p-0.5 rounded-sm"
