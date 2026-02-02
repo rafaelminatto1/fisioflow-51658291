@@ -639,11 +639,11 @@ export default function CalendarSettings() {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 font-mono text-sm">
-                      <span className="flex-1 truncate">{import.meta.env.VITE_SUPABASE_URL}/auth/v1/callback</span>
+                      <span className="flex-1 truncate">{window.location.origin}/__/auth/handler</span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleCopyToClipboard(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/callback`)}
+                        onClick={() => handleCopyToClipboard(`${window.location.origin}/__/auth/handler`)}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>

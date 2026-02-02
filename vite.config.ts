@@ -214,15 +214,6 @@ export default defineConfig(({ mode }) => {
       //     cacheId: `fisioflow-v${appVersion}`,
       //     runtimeCaching: [
       //       {
-      //         urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-      //         handler: 'NetworkFirst',
-      //         options: {
-      //           cacheName: 'supabase-cache',
-      //           expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
-      //           cacheableResponse: { statuses: [0, 200] }
-      //         }
-      //       },
-      //       {
       //         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
       //         handler: 'CacheFirst',
       //         options: {
@@ -418,8 +409,6 @@ export default defineConfig(({ mode }) => {
         'react-grid-layout',
         'react-draggable',
         'react-resizable',
-        // Supabase
-
       ],
       exclude: [
         '@cornerstonejs/dicom-image-loader',
