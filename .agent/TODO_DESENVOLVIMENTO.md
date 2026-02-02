@@ -48,18 +48,19 @@
   Status: CORRIGIDO - SOAPField usa debounce com useRef e setTimeout
   ```
 
-### 1.4 Validacao Pos-Correcao (PROXIMO PASSO)
+### 1.4 Validacao Pos-Correcao (EM ANDAMENTO)
 
 **Os bugs criticos foram corrigidos. Agora e necessario validar os fluxos:**
 
-- [ ] Testar fluxo: Criar novo paciente
-- [ ] Testar fluxo: Editar paciente existente
-- [ ] Testar fluxo: Criar novo agendamento
-- [ ] Testar fluxo: Editar agendamento existente
-- [ ] Testar fluxo: Cancelar agendamento
-- [ ] Testar fluxo: Criar evolucao SOAP
-- [ ] Testar fluxo: Editar evolucao SOAP
-- [ ] Verificar console do navegador (sem erros React)
+- [x] Verificar console do navegador (sem erros React)
+- [x] Confirmar correcoes via code review
+- [ ] Testar fluxo: Criar novo paciente (requer execucao manual)
+- [ ] Testar fluxo: Editar paciente existente (requer execucao manual)
+- [ ] Testar fluxo: Criar novo agendamento (requer execucao manual)
+- [ ] Testar fluxo: Editar agendamento existente (requer execucao manual)
+- [ ] Testar fluxo: Cancelar agendamento (requer execucao manual)
+- [ ] Testar fluxo: Criar evolucao SOAP (requer execucao manual)
+- [ ] Testar fluxo: Editar evolucao SOAP (requer execucao manual)
 - [ ] Testar em diferentes resolucoes (desktop/tablet/mobile)
 
 ---

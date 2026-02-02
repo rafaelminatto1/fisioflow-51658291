@@ -937,6 +937,22 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
       is_active: patient.is_active
     }));
 
+    // [SYNC] Write to Firestore for legacy frontend compatibility
+    try {
+      const db = admin.firestore();
+      await db.collection('patients').doc(patient.id).set({
+        ...patient,
+        // Ensure dates are converted to strings or Timestamps if needed, but simple spread usually works for JSON-like objects
+        // Postgres returns Date objects for timestamps, Firestore handles them fine
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+      logger.info(`[createPatient] Patient ${patient.id} synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[createPatient] Failed to sync patient ${patient.id} to Firestore:`, fsError);
+      // Non-blocking error
+    }
+
     // Publicar no Ably para atualização em tempo real
     try {
       const realtime = await import('../realtime/publisher');
@@ -1063,6 +1079,18 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     const result = await pool.query(query, values);
     const patient = result.rows[0];
 
+    // [SYNC] Write to Firestore for legacy frontend compatibility
+    try {
+      const db = admin.firestore();
+      await db.collection('patients').doc(patientId).set({
+        ...patient,
+        updated_at: new Date()
+      }, { merge: true });
+      logger.info(`[updatePatient] Patient ${patientId} synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[updatePatient] Failed to sync patient ${patientId} to Firestore:`, fsError);
+    }
+
     // Publicar no Ably
     try {
       const realtime = await import('../realtime/publisher');
@@ -1124,6 +1152,18 @@ export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientR
 
     if (result.rows.length === 0) {
       throw new HttpsError('not-found', 'Paciente não encontrado');
+    }
+
+    // [SYNC] Sync soft-delete to Firestore
+    try {
+      const db = admin.firestore();
+      await db.collection('patients').doc(patientId).update({
+        is_active: false,
+        updated_at: new Date()
+      });
+      logger.info(`[deletePatient] Patient ${patientId} soft-deleted in Firestore`);
+    } catch (fsError) {
+      logger.error(`[deletePatient] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
     }
 
     // Publicar no Ably
