@@ -3,6 +3,9 @@
  * Global mocks and configurations
  */
 
+// Set up global __DEV__ variable
+global.__DEV__ = true;
+
 // Mock native modules
 // Note: jest-expo preset handles most of these, but we can override/customize here
 
@@ -140,40 +143,50 @@ jest.mock('expo-notifications', () => ({
 // Mock Firebase
 jest.mock('firebase/app', () => ({
   initializeApp: jest.fn(),
+  getApps: jest.fn(() => []),
+  getApp: jest.fn(() => ({ name: '[DEFAULT]' })),
 }));
 
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(() => ({ currentUser: null })),
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
-  sendPasswordResetEmail: jest.fn(),
-  onAuthStateChanged: jest.fn(),
-  updateProfile: jest.fn(),
-}));
+jest.mock('firebase/auth', () => {
+  const authMock = {
+    currentUser: null,
+    onAuthStateChanged: jest.fn(),
+  };
+  return {
+    getAuth: jest.fn(() => authMock),
+    signInWithEmailAndPassword: jest.fn(),
+    createUserWithEmailAndPassword: jest.fn(),
+    signOut: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
+    onAuthStateChanged: jest.fn(),
+    updateProfile: jest.fn(),
+    initializeAuth: jest.fn(() => authMock),
+    getReactNativePersistence: jest.fn(() => ({})),
+  };
+});
 
 jest.mock('firebase/firestore', () => ({
-  getFirestore: jest.fn(),
-  collection: jest.fn(),
-  doc: jest.fn(),
+  getFirestore: jest.fn(() => ({})),
+  collection: jest.fn(() => ({})),
+  doc: jest.fn(() => ({})),
   getDoc: jest.fn(),
-  getDocs: jest.fn(),
+  getDocs: jest.fn(() => ({ empty: true, docs: [] })),
   setDoc: jest.fn(),
   updateDoc: jest.fn(),
   deleteDoc: jest.fn(),
-  onSnapshot: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  orderBy: jest.fn(),
-  limit: jest.fn(),
+  onSnapshot: jest.fn(() => jest.fn()),
+  query: jest.fn(() => ({})),
+  where: jest.fn(() => ({})),
+  orderBy: jest.fn(() => ({})),
+  limit: jest.fn(() => ({})),
   addDoc: jest.fn(),
   runTransaction: jest.fn(),
   serverTimestamp: jest.fn(() => ({ seconds: 1234567890, nanoseconds: 0 })),
 }));
 
 jest.mock('firebase/storage', () => ({
-  getStorage: jest.fn(),
-  ref: jest.fn(),
+  getStorage: jest.fn(() => ({})),
+  ref: jest.fn(() => ({})),
   uploadBytes: jest.fn(),
   getDownloadURL: jest.fn(),
   deleteObject: jest.fn(),

@@ -179,9 +179,7 @@ const SessionDetailsModal: React.FC<{
           return;
         }
 
-        // TODO: Migrate to Firebase Functions
-        // Exercises from treatment_sessions need to be fetched via Firebase Functions
-        // For now, use session data if available
+        // Exercises are stored directly in the session document
         const exercises = session.exercises_performed || [];
         setSessionExercises(exercises);
       } finally {

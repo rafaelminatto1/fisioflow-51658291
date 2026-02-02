@@ -1,24 +1,28 @@
 /**
  * Cloud Cache Service
- * 
- * Uses Vercel Blob to store a snapshot of appointments for cross-device persistence.
+ *
+ * Uses Firebase Storage to store a snapshot of appointments for cross-device persistence.
  * This acts as a secondary cache layer when:
- * 1. Supabase is unreachable/slow
+ * 1. Firebase is unreachable/slow
  * 2. User switches devices (local IndexedDB is empty)
+ *
+ * Migrated from Vercel Blob to Firebase Storage
  */
-import { put, list } from '@vercel/blob';
+import { ref, uploadBytes, getDownloadURL, getBytes } from 'firebase/storage';
+import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import type { AppointmentBase } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-const BLOB_CACHE_PREFIX = 'cache/appointments/';
+const STORAGE_CACHE_PREFIX = 'cache/appointments/';
 
 export class CloudCacheService {
     /**
-     * Save appointments snapshot to Vercel Blob
+     * Save appointments snapshot to Firebase Storage
      */
     async saveSnapshot(userId: string, appointments: AppointmentBase[]): Promise<void> {
         try {
-            const filename = `${BLOB_CACHE_PREFIX}${userId}.json`;
+            const storage = getFirebaseStorage();
+            const filename = `${STORAGE_CACHE_PREFIX}${userId}.json`;
             const data = JSON.stringify({
                 timestamp: Date.now(),
                 userId,
@@ -26,11 +30,10 @@ export class CloudCacheService {
                 data: appointments,
             });
 
-            // Upload new snapshot (overwrites automatically if same name, but good to be explicit)
-            await put(filename, data, {
-                access: 'public',
-                addRandomSuffix: false, // Keep constant filename per user for easier retrieval
-            });
+            const storageRef = ref(storage, filename);
+            const blob = new Blob([data], { type: 'application/json' });
+
+            await uploadBytes(storageRef, blob);
 
             logger.info('Cloud snapshot saved', { userId, count: appointments.length });
         } catch (error) {
@@ -40,21 +43,18 @@ export class CloudCacheService {
     }
 
     /**
-     * Fetch appointments snapshot from Vercel Blob
+     * Fetch appointments snapshot from Firebase Storage
      */
     async getSnapshot(userId: string): Promise<AppointmentBase[] | null> {
         try {
-            // Find the user's cache file
-            const filename = `${BLOB_CACHE_PREFIX}${userId}.json`;
-            const { blobs } = await list({ prefix: filename, limit: 1 });
+            const storage = getFirebaseStorage();
+            const filename = `${STORAGE_CACHE_PREFIX}${userId}.json`;
+            const storageRef = ref(storage, filename);
 
-            if (blobs.length === 0) return null;
-
-            // Fetch content
-            const response = await fetch(blobs[0].url);
-            if (!response.ok) return null;
-
-            const snapshot = await response.json();
+            // Download the file content
+            const bytes = await getBytes(storageRef);
+            const text = new TextDecoder().decode(bytes);
+            const snapshot = JSON.parse(text);
 
             // Basic validation
             if (snapshot.userId !== userId) return null;

@@ -32,12 +32,12 @@ import { getInitials } from '@/lib/utils';
 type PatientStatus = 'all' | 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído';
 type SortOption = 'name' | 'recent' | 'progress';
 
-const STATUS_FILTERS: { value: PatientStatus; label: string; color: string }[] = [
-  { value: 'all', label: 'Todos', color: '#6b7280' },
-  { value: 'Em Tratamento', label: 'Em Tratamento', color: '#3b82f6' },
-  { value: 'Recuperação', label: 'Recuperação', color: '#f59e0b' },
-  { value: 'Inicial', label: 'Inicial', color: '#8b5cf6' },
-  { value: 'Concluído', label: 'Concluído', color: '#22c55e' },
+const getStatusFilters = (colors: any) => [
+  { value: 'all' as const, label: 'Todos', color: '#6b7280' },
+  { value: 'Em Tratamento' as const, label: 'Em Tratamento', color: colors.primary },
+  { value: 'Recuperação' as const, label: 'Recuperação', color: colors.warning },
+  { value: 'Inicial' as const, label: 'Inicial', color: colors.notification },
+  { value: 'Concluído' as const, label: 'Concluído', color: '#22c55e' },
 ];
 
 const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
@@ -193,7 +193,7 @@ export default function PatientsScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.statusFiltersScroll}
           >
-            {STATUS_FILTERS.map((filter) => (
+            {getStatusFilters(colors).map((filter) => (
               <Pressable
                 key={filter.value}
                 onPress={() => {

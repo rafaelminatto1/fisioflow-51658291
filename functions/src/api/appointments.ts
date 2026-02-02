@@ -79,6 +79,7 @@ export const listAppointmentsHttp = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 100,
+    cors: true,
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -124,6 +125,221 @@ export const listAppointmentsHttp = onRequest(
       logger.error('Error in listAppointments:', error);
       const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
       res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao listar agendamentos' });
+    }
+  }
+);
+
+/**
+ * HTTP version of getAppointment for CORS
+ */
+export const getAppointmentHttp = onRequest(
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationId(uid);
+      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+      const { appointmentId } = body;
+      if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
+      const pool = getPool();
+      const result = await pool.query(
+        `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
+         FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id
+         LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
+         WHERE a.id = $1 AND a.organization_id = $2`,
+        [appointmentId, organizationId]
+      );
+      if (result.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
+      res.json({ data: result.rows[0] });
+    } catch (error: unknown) {
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
+      logger.error('Error in getAppointmentHttp:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao buscar agendamento' });
+    }
+  }
+);
+
+/**
+ * HTTP version of checkTimeConflict for CORS
+ */
+export const checkTimeConflictHttp = onRequest(
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationId(uid);
+      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+      const { therapistId, date, startTime, endTime, excludeAppointmentId } = body;
+      if (!therapistId || !date || !startTime || !endTime) {
+        res.status(400).json({ error: 'terapeuta, data, horário início e fim são obrigatórios' });
+        return;
+      }
+      const pool = getPool();
+      const hasConflict = await checkTimeConflictHelper(pool, { date, startTime, endTime, therapistId, excludeAppointmentId, organizationId });
+      res.json({ hasConflict, conflictingAppointments: [] });
+    } catch (error: unknown) {
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
+      logger.error('Error in checkTimeConflictHttp:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao verificar conflito' });
+    }
+  }
+);
+
+/**
+ * HTTP version of createAppointment for CORS
+ */
+export const createAppointmentHttp = onRequest(
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationId(uid);
+      const pool = getPool();
+      const userId = uid;
+      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+      const data = body;
+      const requiredFields = ['patientId', 'date', 'startTime', 'endTime'];
+      for (const field of requiredFields) {
+        if (!data[field]) {
+          if (field === 'type' && data.session_type) continue;
+          res.status(400).json({ error: `Campo obrigatório faltando: ${field}` });
+          return;
+        }
+      }
+      const therapistId = (data.therapistId && String(data.therapistId).trim()) ? String(data.therapistId).trim() : userId;
+      const hasConflict = await checkTimeConflictHelper(pool, {
+        date: data.date, startTime: data.startTime, endTime: data.endTime, therapistId, organizationId
+      });
+      if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
+      const result = await pool.query(
+        `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+        [
+          data.patientId, therapistId, data.date, data.startTime, data.endTime,
+          data.type || data.session_type || 'individual',
+          data.notes || null, data.status || 'agendado', organizationId, userId
+        ]
+      );
+      const appointment = result.rows[0];
+      try {
+        const realtime = await import('../realtime/publisher');
+        await realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment, old: null });
+      } catch (err) { logger.error('Erro Ably:', err); }
+      res.status(201).json({ data: appointment });
+    } catch (error: unknown) {
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
+      logger.error('Error in createAppointmentHttp:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao criar agendamento' });
+    }
+  }
+);
+
+/**
+ * HTTP version of updateAppointment for CORS
+ */
+export const updateAppointmentHttp = onRequest(
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationId(uid);
+      const pool = getPool();
+      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+      const { appointmentId, ...updates } = body;
+      if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
+      const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, organizationId]);
+      if (current.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
+      const currentAppt = current.rows[0];
+      if (updates.date || updates.startTime || updates.endTime || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id)) {
+        const hasConflict = await checkTimeConflictHelper(pool, {
+          date: updates.date || currentAppt.date,
+          startTime: updates.startTime || currentAppt.start_time,
+          endTime: updates.endTime || currentAppt.end_time,
+          therapistId: updates.therapistId || currentAppt.therapist_id,
+          excludeAppointmentId: appointmentId,
+          organizationId
+        });
+        if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
+      }
+      const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'notes'];
+      const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id' };
+      const setClauses: string[] = [];
+      const values: (string | number | boolean | Date | null)[] = [];
+      let paramCount = 0;
+      for (const key of Object.keys(updates)) {
+        const dbField = fieldMap[key] || key;
+        if (allowedFields.includes(dbField)) {
+          paramCount++;
+          setClauses.push(`${dbField} = $${paramCount}`);
+          values.push(updates[key]);
+        }
+      }
+      if (setClauses.length === 0) { res.status(400).json({ error: 'Nenhum campo para atualizar' }); return; }
+      paramCount++;
+      setClauses.push(`updated_at = $${paramCount}`);
+      values.push(new Date());
+      values.push(appointmentId, organizationId);
+      const result = await pool.query(
+        `UPDATE appointments SET ${setClauses.join(', ')} WHERE id = $${paramCount + 1} AND organization_id = $${paramCount + 2} RETURNING *`,
+        values
+      );
+      const updatedAppt = result.rows[0];
+      try {
+        const realtime = await import('../realtime/publisher');
+        await realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt });
+      } catch (err) { logger.error('Erro Ably:', err); }
+      res.json({ data: updatedAppt });
+    } catch (error: unknown) {
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
+      logger.error('Error in updateAppointmentHttp:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao atualizar agendamento' });
+    }
+  }
+);
+
+/**
+ * HTTP version of cancelAppointment for CORS
+ */
+export const cancelAppointmentHttp = onRequest(
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  async (req, res) => {
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationId(uid);
+      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+      const { appointmentId, reason } = body;
+      if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
+      const pool = getPool();
+      const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, organizationId]);
+      if (current.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
+      await pool.query(
+        `UPDATE appointments SET status = 'cancelado', notes = notes || $1, updated_at = NOW() WHERE id = $2 AND organization_id = $3`,
+        [reason ? `\n[Cancelamento: ${reason}]` : '', appointmentId, organizationId]
+      );
+      try {
+        const realtime = await import('../realtime/publisher');
+        await realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] });
+      } catch (err) { logger.error('Erro Ably:', err); }
+      res.json({ success: true });
+    } catch (error: unknown) {
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
+      logger.error('Error in cancelAppointmentHttp:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao cancelar agendamento' });
     }
   }
 );
@@ -382,25 +598,26 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
   const auth = await authorizeRequest(request.auth.token);
   const data = request.data;
 
-  // Validar campos obrigatórios
-  const requiredFields = ['patientId', 'therapistId', 'date', 'startTime', 'endTime', 'type'];
+  // Validar campos obrigatórios (therapistId opcional)
+  const requiredFields = ['patientId', 'date', 'startTime', 'endTime', 'type'];
   for (const field of requiredFields) {
     if (!data[field as keyof CreateAppointmentRequest]) {
-      // Fallback check for session_type/type if needed
       if (field === 'type' && data.session_type) continue;
       throw new HttpsError('invalid-argument', `Campo obrigatório faltando: ${field}`);
     }
   }
+  // DB exige therapist_id NOT NULL: usar usuário logado quando não informado
+  const therapistId = (data.therapistId && String(data.therapistId).trim()) ? String(data.therapistId).trim() : auth.userId;
 
   const pool = getPool();
 
   try {
-    // Verificar conflitos
+    // Verificar conflitos (usar therapistId resolvido para checagem correta)
     const hasConflict = await checkTimeConflictHelper(pool, {
       date: data.date,
       startTime: data.startTime,
       endTime: data.endTime,
-      therapistId: data.therapistId,
+      therapistId,
       organizationId: auth.organizationId,
     });
 
@@ -417,7 +634,7 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
       RETURNING *`,
       [
         data.patientId,
-        data.therapistId,
+        therapistId,
         data.date,
         data.startTime,
         data.endTime,
@@ -448,6 +665,8 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
     logger.error('Error in createAppointment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar agendamento';
+    const errDetails = error instanceof Error ? error.stack : String(error);
+    logger.error('createAppointment internal error details', { errorMessage, errDetails });
     throw new HttpsError('internal', errorMessage);
   }
 });
