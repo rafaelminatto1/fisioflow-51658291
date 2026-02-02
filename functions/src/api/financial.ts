@@ -15,7 +15,7 @@ export const listTransactionsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { limit = 100, offset = 0 } = parseBody(req);
     const result = await getPool().query('SELECT * FROM transacoes WHERE organization_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3', [auth.organizationId, limit, offset]);
     res.json({ data: result.rows });
@@ -30,7 +30,7 @@ export const createTransactionHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const data = parseBody(req);
     if (!data.valor || !data.tipo) { res.status(400).json({ error: 'Valor e tipo são obrigatórios' }); return; }
     const result = await getPool().query('INSERT INTO transacoes (tipo, descricao, valor, status, metadata, organization_id, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [data.tipo, data.descricao || null, data.valor, data.status || 'pendente', data.metadata ? JSON.stringify(data.metadata) : null, auth.organizationId, auth.userId]);
@@ -46,7 +46,7 @@ export const updateTransactionHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { transactionId, ...updates } = parseBody(req);
     if (!transactionId) { res.status(400).json({ error: 'transactionId é obrigatório' }); return; }
     const pool = getPool();
@@ -72,7 +72,7 @@ export const deleteTransactionHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { transactionId } = parseBody(req);
     if (!transactionId) { res.status(400).json({ error: 'transactionId é obrigatório' }); return; }
     const result = await getPool().query('DELETE FROM transacoes WHERE id = $1 AND organization_id = $2 RETURNING id', [transactionId, auth.organizationId]);
@@ -89,7 +89,7 @@ export const findTransactionByAppointmentIdHttp = onRequest(httpOpts, async (req
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { appointmentId } = parseBody(req);
     if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
     const result = await getPool().query("SELECT * FROM transacoes WHERE organization_id = $1 AND metadata->>'appointment_id' = $2 LIMIT 1", [auth.organizationId, appointmentId]);
@@ -105,7 +105,7 @@ export const getEventReportHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { eventoId } = parseBody(req);
     if (!eventoId) { res.status(400).json({ error: 'eventoId é obrigatório' }); return; }
     const pool = getPool();

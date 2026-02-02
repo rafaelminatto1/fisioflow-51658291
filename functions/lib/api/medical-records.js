@@ -45,6 +45,7 @@ function parseBody(req) { return typeof req.body === 'string' ? (() => { try {
 catch {
     return {};
 } })() : (req.body || {}); }
+function getAuthHeader(req) { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
 const httpOpts = { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true };
 exports.getPatientRecordsHttp = (0, https_1.onRequest)(httpOpts, async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -58,7 +59,7 @@ exports.getPatientRecordsHttp = (0, https_1.onRequest)(httpOpts, async (req, res
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId, type, limit = 50 } = parseBody(req);
         if (!patientId) {
             res.status(400).json({ error: 'patientId é obrigatório' });
@@ -102,7 +103,7 @@ exports.createMedicalRecordHttp = (0, https_1.onRequest)(httpOpts, async (req, r
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId, type, title, content, recordDate } = parseBody(req);
         if (!patientId || !type || !title) {
             res.status(400).json({ error: 'patientId, type e title são obrigatórios' });
@@ -145,7 +146,7 @@ exports.updateMedicalRecordHttp = (0, https_1.onRequest)(httpOpts, async (req, r
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { recordId, ...updates } = parseBody(req);
         if (!recordId) {
             res.status(400).json({ error: 'recordId é obrigatório' });
@@ -199,7 +200,7 @@ exports.deleteMedicalRecordHttp = (0, https_1.onRequest)(httpOpts, async (req, r
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { recordId } = parseBody(req);
         if (!recordId) {
             res.status(400).json({ error: 'recordId é obrigatório' });
@@ -233,7 +234,7 @@ exports.listTreatmentSessionsHttp = (0, https_1.onRequest)(httpOpts, async (req,
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId, limit = 20 } = parseBody(req);
         if (!patientId) {
             res.status(400).json({ error: 'patientId é obrigatório' });
@@ -263,7 +264,7 @@ exports.createTreatmentSessionHttp = (0, https_1.onRequest)(httpOpts, async (req
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId, appointmentId, painLevelBefore, painLevelAfter, observations, evolution, nextGoals } = parseBody(req);
         if (!patientId) {
             res.status(400).json({ error: 'patientId é obrigatório' });
@@ -303,7 +304,7 @@ exports.getPainRecordsHttp = (0, https_1.onRequest)(httpOpts, async (req, res) =
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId } = parseBody(req);
         if (!patientId) {
             res.status(400).json({ error: 'patientId é obrigatório' });
@@ -339,7 +340,7 @@ exports.savePainRecordHttp = (0, https_1.onRequest)(httpOpts, async (req, res) =
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId, painLevel, recordDate, notes } = parseBody(req);
         if (!patientId || painLevel === undefined) {
             res.status(400).json({ error: 'patientId e painLevel são obrigatórios' });
