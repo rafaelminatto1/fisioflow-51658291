@@ -56,7 +56,13 @@ import './lib/sentry';
 
 // API de Pacientes
 import * as apiPatients from './api/patients';
-export const listPatients = apiPatients.listPatients;
+export const listPatientsV2 = apiPatients.listPatientsHttp; // HTTP version - new name to avoid conflict
+export const getPatientHttp = apiPatients.getPatientHttp; // HTTP version for web
+export const getPatientStatsV2 = apiPatients.getPatientStatsHttp; // HTTP version - CORS fix
+export const createPatientV2 = apiPatients.createPatientHttp; // HTTP version - CORS fix
+export const updatePatientV2 = apiPatients.updatePatientHttp; // HTTP version - CORS fix
+export const deletePatientV2 = apiPatients.deletePatientHttp; // HTTP version - CORS fix
+export const listPatients = apiPatients.listPatients; // Original callable - TODO: remove after migration
 export const createPatient = apiPatients.createPatient;
 export const updatePatient = apiPatients.updatePatient;
 export const getPatient = apiPatients.getPatient;
@@ -65,6 +71,11 @@ export const deletePatient = apiPatients.deletePatient;
 // API de Agendamentos
 import * as apiAppointments from './api/appointments';
 export const listAppointments = apiAppointments.listAppointmentsHttp; // Use HTTP version for CORS fix
+export const getAppointmentV2 = apiAppointments.getAppointmentHttp; // HTTP version - CORS fix
+export const createAppointmentV2 = apiAppointments.createAppointmentHttp; // HTTP version - CORS fix
+export const updateAppointmentV2 = apiAppointments.updateAppointmentHttp; // HTTP version - CORS fix
+export const cancelAppointmentV2 = apiAppointments.cancelAppointmentHttp; // HTTP version - CORS fix
+export const checkTimeConflictV2 = apiAppointments.checkTimeConflictHttp; // HTTP version - CORS fix
 export const createAppointment = apiAppointments.createAppointment;
 export const updateAppointment = apiAppointments.updateAppointment;
 export const getAppointment = apiAppointments.getAppointment;
@@ -73,6 +84,16 @@ export const checkTimeConflict = apiAppointments.checkTimeConflict;
 
 // API de Exercícios
 import * as apiExercises from './api/exercises';
+export const listExercisesV2 = apiExercises.listExercisesHttp;
+export const getExerciseV2 = apiExercises.getExerciseHttp;
+export const searchSimilarExercisesV2 = apiExercises.searchSimilarExercisesHttp;
+export const getExerciseCategoriesV2 = apiExercises.getExerciseCategoriesHttp;
+export const getPrescribedExercisesV2 = apiExercises.getPrescribedExercisesHttp;
+export const logExerciseV2 = apiExercises.logExerciseHttp;
+export const createExerciseV2 = apiExercises.createExerciseHttp;
+export const updateExerciseV2 = apiExercises.updateExerciseHttp;
+export const deleteExerciseV2 = apiExercises.deleteExerciseHttp;
+export const mergeExercisesV2 = apiExercises.mergeExercisesHttp;
 export const listExercises = apiExercises.listExercises;
 export const getExercise = apiExercises.getExercise;
 export const searchSimilarExercises = apiExercises.searchSimilarExercises;
@@ -108,6 +129,12 @@ export const listPayments = apiPayments.listPayments;
 export const createPayment = apiPayments.createPayment;
 // API Financeira (Transações)
 import * as apiFinancial from './api/financial';
+export const listTransactionsV2 = apiFinancial.listTransactionsHttp;
+export const createTransactionV2 = apiFinancial.createTransactionHttp;
+export const updateTransactionV2 = apiFinancial.updateTransactionHttp;
+export const deleteTransactionV2 = apiFinancial.deleteTransactionHttp;
+export const findTransactionByAppointmentIdV2 = apiFinancial.findTransactionByAppointmentIdHttp;
+export const getEventReportV2 = apiFinancial.getEventReportHttp;
 export const listTransactions = apiFinancial.listTransactions;
 export const createTransaction = apiFinancial.createTransaction;
 export const updateTransaction = apiFinancial.updateTransaction;
@@ -117,6 +144,14 @@ export const getEventReport = apiFinancial.getEventReport;
 
 // API de Prontuários
 import * as apiMedicalRecords from './api/medical-records';
+export const getPatientRecordsV2 = apiMedicalRecords.getPatientRecordsHttp;
+export const createMedicalRecordV2 = apiMedicalRecords.createMedicalRecordHttp;
+export const updateMedicalRecordV2 = apiMedicalRecords.updateMedicalRecordHttp;
+export const deleteMedicalRecordV2 = apiMedicalRecords.deleteMedicalRecordHttp;
+export const listTreatmentSessionsV2 = apiMedicalRecords.listTreatmentSessionsHttp;
+export const createTreatmentSessionV2 = apiMedicalRecords.createTreatmentSessionHttp;
+export const getPainRecordsV2 = apiMedicalRecords.getPainRecordsHttp;
+export const savePainRecordV2 = apiMedicalRecords.savePainRecordHttp;
 export const getPatientRecords = apiMedicalRecords.getPatientRecords;
 export const getPainRecords = apiMedicalRecords.getPainRecords;
 export const savePainRecord = apiMedicalRecords.savePainRecord;

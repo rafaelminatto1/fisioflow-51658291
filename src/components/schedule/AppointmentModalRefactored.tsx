@@ -577,11 +577,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     }}
                   />
 
-                  <div style={{ padding: '20px' }}>
-                    <p>Modo de depuração: Modal simplificado</p>
-                    <p>isOpen: {String(isOpen)}</p>
-                  </div>
-                  {/* TEMPORARILY DISABLED FOR DEBUGGING
                   <DateTimeSection
                     disabled={currentMode === 'view'}
                     timeSlots={timeSlots}
@@ -665,7 +660,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                       }
                     }}
                   />
-                  */}
 
                   <TypeAndStatusSection disabled={currentMode === 'view'} />
 

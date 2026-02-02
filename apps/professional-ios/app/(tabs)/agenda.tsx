@@ -38,13 +38,13 @@ const VIEW_OPTIONS: { value: CalendarView; label: string }[] = [
   { value: 'month', label: 'Mês' },
 ];
 
-const STATUS_FILTERS: { value: AppointmentStatus | 'all'; label: string; color: string }[] = [
-  { value: 'all', label: 'Todos', color: '#6b7280' },
-  { value: 'agendado', label: 'Agendados', color: '#3b82f6' },
-  { value: 'confirmado', label: 'Confirmados', color: '#22c55e' },
-  { value: 'em_andamento', label: 'Em Andamento', color: '#f59e0b' },
-  { value: 'concluido', label: 'Concluídos', color: '#10b981' },
-  { value: 'cancelado', label: 'Cancelados', color: '#ef4444' },
+const getStatusFilters = (colors: any) => [
+  { value: 'all' as const, label: 'Todos', color: '#6b7280' },
+  { value: 'agendado' as const, label: 'Agendados', color: colors.primary },
+  { value: 'confirmado' as const, label: 'Confirmados', color: '#22c55e' },
+  { value: 'em_andamento' as const, label: 'Em Andamento', color: '#f59e0b' },
+  { value: 'concluido' as const, label: 'Concluídos', color: '#10b981' },
+  { value: 'cancelado' as const, label: 'Cancelados', color: '#ef4444' },
 ];
 
 const TYPE_FILTERS: { value: AppointmentType | 'all'; label: string }[] = [
@@ -242,7 +242,7 @@ export default function AgendaScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersScroll}
           >
-            {STATUS_FILTERS.map((filter) => (
+            {getStatusFilters(colors).map((filter) => (
               <FilterChip
                 key={filter.value}
                 label={filter.label}

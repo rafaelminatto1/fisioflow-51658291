@@ -47,7 +47,6 @@ exports.movementAnalysis = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
-const init_1 = require("../init");
 const firestore = admin.firestore();
 // ============================================================================
 // RATE LIMITING CONFIG
@@ -60,7 +59,7 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.movementAnalysis = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '2GiB',
     cpu: 1,

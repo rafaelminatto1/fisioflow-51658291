@@ -46,7 +46,6 @@ exports.exerciseSuggestion = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const admin = __importStar(require("firebase-admin"));
 const logger = __importStar(require("firebase-functions/logger"));
-const init_1 = require("../init");
 const idempotency_1 = require("../lib/idempotency");
 const firestore = admin.firestore();
 // ============================================================================
@@ -60,7 +59,7 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 exports.exerciseSuggestion = (0, https_1.onCall)({
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,

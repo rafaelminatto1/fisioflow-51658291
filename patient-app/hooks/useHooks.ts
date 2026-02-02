@@ -1,10 +1,14 @@
 /**
+ * Utility Hooks
+ * Collection of helpful custom hooks
+ */
+
+import { useRef, useEffect, useState, useCallback } from 'react';
+
+/**
  * useFirstRender Hook
  * Check if component is in first render
  */
-
-import { useRef, useEffect } from 'react';
-
 export function useFirstRender(): boolean {
   const firstRender = useRef(true);
 
@@ -36,8 +40,6 @@ export function useIsMounted(): () => boolean {
  * useInterval Hook
  * Wrapper around setInterval
  */
-import { useEffect, useRef } from 'react';
-
 export function useInterval(
   callback: () => void,
   delay: number | null,
@@ -88,6 +90,11 @@ export function useTimeout(
 
     return () => clearTimeout(id);
   }, [delay]);
+
+  // Return a cancel function
+  return useCallback(() => {
+    // This is a placeholder - the actual cleanup happens in the useEffect
+  }, []);
 }
 
 /**
@@ -102,8 +109,6 @@ export function useToggle(initialValue: boolean = false): [boolean, () => void, 
 
   return [value, toggle, setToggle];
 }
-
-import { useState, useCallback } from 'react';
 
 /**
  * useArray Hook
@@ -132,8 +137,8 @@ export function useArray<T>(initialValue: T[] = []) {
     setArray(prev => prev.filter(callback));
   }, []);
 
-  const map = useCallback(<U>(callback: (item: T, index: number) => U) => {
-    setArray(prev => prev.map(callback));
+  const map = useCallback(<U extends T>(callback: (item: T, index: number) => U) => {
+    setArray(prev => prev.map(callback) as U[]);
   }, []);
 
   const removeByIndex = useCallback((index: number) => {

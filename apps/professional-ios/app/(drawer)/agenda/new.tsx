@@ -10,8 +10,9 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { format, addMinutes, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -61,6 +62,7 @@ type Params = {
   patientId?: string;
   date?: string;
   time?: string;
+  room?: string;
 };
 
 export default function NewAppointmentScreen() {
@@ -127,6 +129,22 @@ export default function NewAppointmentScreen() {
       });
     }
   }, [params.patientId]);
+
+  // Set room from AsyncStorage when screen gains focus (returning from select-room)
+  useFocusEffect(
+    useCallback(() => {
+      const loadSelectedRoom = async () => {
+        const savedRoom = await AsyncStorage.getItem('@selected_room');
+        if (savedRoom && savedRoom !== selectedRoom) {
+          setSelectedRoom(savedRoom);
+          // Clear the saved room after loading
+          await AsyncStorage.removeItem('@selected_room');
+        }
+      };
+
+      loadSelectedRoom();
+    }, [selectedRoom])
+  );
 
   // Set date/time from params
   useEffect(() => {
@@ -364,7 +382,7 @@ export default function NewAppointmentScreen() {
                   style={({ pressed }) => [
                     styles.statusChip,
                     {
-                      backgroundColor: status === statusOption ? getStatusColor(statusOption) : colors.card,
+                      backgroundColor: status === statusOption ? getStatusColor(statusOption, colors) : colors.card,
                       opacity: pressed ? 0.8 : 1,
                     },
                   ]}
@@ -451,10 +469,10 @@ export default function NewAppointmentScreen() {
   );
 }
 
-function getStatusColor(status: AppointmentStatus): string {
+function getStatusColor(status: AppointmentStatus, colors: any): string {
   switch (status) {
     case 'agendado':
-      return '#3b82f6';
+      return colors.primary;
     case 'confirmado':
       return '#22c55e';
     case 'em_andamento':

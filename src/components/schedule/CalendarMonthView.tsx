@@ -10,6 +10,7 @@ interface CalendarMonthViewProps {
     currentDate: Date;
     appointments: Appointment[];
     onDateChange: (date: Date) => void;
+    onTimeSlotClick?: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
     // Helpers
@@ -23,6 +24,7 @@ interface CalendarMonthViewProps {
 const CalendarMonthView = memo(({
     currentDate,
     onDateChange,
+    onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
     getAppointmentsForDate,
@@ -74,7 +76,12 @@ const CalendarMonthView = memo(({
                                         !isCurrentMonth && "bg-muted/30 text-muted-foreground",
                                         isCurrentMonth && "hover:bg-primary/5 active:bg-primary/10"
                                     )}
-                                    onClick={() => onDateChange(day)}
+                                    onClick={() => {
+                                        if (onTimeSlotClick) {
+                                            onTimeSlotClick(day, '08:00');
+                                        }
+                                        onDateChange(day);
+                                    }}
                                     role="gridcell"
                                     aria-label={`${dayString}${isToday(day) ? ' (Hoje)' : ''}${!isCurrentMonth ? ' - Outro mês' : ''}`}
                                     aria-current={isToday(day) ? 'date' : undefined}

@@ -27,7 +27,7 @@ export function useTheme(): Theme & {
   return {
     ...theme,
     setTheme,
-    colorWithOpacity: ThemeUtils.withOpacity,
+    colorWithOpacity: ThemeUtils.colorWithOpacity,
     darken: ThemeUtils.darken,
     lighten: ThemeUtils.lighten,
     getContrastColor: ThemeUtils.getContrastColor,

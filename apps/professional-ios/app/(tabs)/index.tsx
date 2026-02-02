@@ -33,10 +33,10 @@ type QuickAction = {
 };
 
 const quickActions: QuickAction[] = [
-  { id: '1', label: 'Novo Paciente', icon: 'user-plus', route: '/patients/new', color: '#3b82f6' },
-  { id: '2', label: 'Agendar', icon: 'calendar-plus', route: '/agenda/new', color: '#22c55e' },
-  { id: '3', label: 'Avaliação', icon: 'clipboard-list', route: '/evaluations/new', color: '#f59e0b' },
-  { id: '4', label: 'Evolução', icon: 'file-text', route: '/evolutions/new', color: '#8b5cf6' },
+  { id: '1', label: 'Novo Paciente', icon: 'user-plus', route: '/patients/new', color: '' }, // Will use theme primary
+  { id: '2', label: 'Agendar', icon: 'calendar-plus', route: '/agenda/new', color: '' }, // Will use theme success
+  { id: '3', label: 'Avaliação', icon: 'clipboard-list', route: '/evaluations/new', color: '' }, // Will use theme warning
+  { id: '4', label: 'Evolução', icon: 'file-text', route: '/evolutions/new', color: '' }, // Will use theme notification
 ];
 
 export default function DashboardScreen() {
@@ -146,7 +146,7 @@ export default function DashboardScreen() {
             title="Taxa de Ocupação"
             value={`${stats.occupancyRate}%`}
             icon="trending-up"
-            color="#3b82f6"
+            color={colors.primary}
             trend={{ value: '+12%', positive: true }}
             style={styles.statCard}
           />
@@ -169,16 +169,20 @@ export default function DashboardScreen() {
             Ações Rápidas
           </Text>
           <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => (
-              <QuickActionCard
-                key={action.id}
-                label={action.label}
-                icon={action.icon}
-                color={action.color}
-                onPress={() => handleQuickAction(action)}
-                style={styles.quickActionCard}
-              />
-            ))}
+            {quickActions.map((action, index) => {
+              // Use theme colors for quick actions
+              const actionColors = [colors.primary, colors.success, colors.warning, colors.notification];
+              return (
+                <QuickActionCard
+                  key={action.id}
+                  label={action.label}
+                  icon={action.icon}
+                  color={actionColors[index]}
+                  onPress={() => handleQuickAction(action)}
+                  style={styles.quickActionCard}
+                />
+              );
+            })}
           </View>
         </Animated.View>
 
@@ -216,7 +220,7 @@ export default function DashboardScreen() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        onPress={() => router.push(`/appointments/${stats.nextPatient!.id}/start`)}
+                        onPress={() => router.push(`/agenda/${stats.nextPatient!.id}/start`)}
                       >
                         Iniciar
                       </Button>

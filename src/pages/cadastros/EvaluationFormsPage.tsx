@@ -84,6 +84,10 @@ export default function EvaluationFormsPage() {
   const { data: stats } = useTemplateStats();
 
   const importMutation = useImportEvaluationForm();
+  const createMutation = useCreateEvaluationForm();
+  const updateMutation = useUpdateEvaluationForm();
+  const deleteMutation = useDeleteEvaluationForm();
+  const duplicateMutation = useDuplicateEvaluationForm();
 
   const [formData, setFormData] = useState<EvaluationFormFormData>({
     nome: '',

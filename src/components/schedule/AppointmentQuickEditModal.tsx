@@ -56,6 +56,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
 import { PatientService } from '@/services/patientService';
+import { AppointmentService } from '@/services/appointmentService';
+import { getUserOrganizationId } from '@/utils/userHelpers';
 import { db, collection, query as firestoreQuery, where, getDocs } from '@/integrations/firebase/app';
 import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
 
@@ -135,14 +137,34 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
   // Query para buscar agendamentos (verificação de conflitos)
   const { data: appointments = [] } = useQuery<AppointmentBase[]>({
-    queryKey: ['appointments-for-conflict', open],
+    queryKey: ['appointments-for-conflict', open, appointment?.date],
     queryFn: async () => {
-      // TODO: Implement via Firebase Functions or use the appointment actions hook
-      // For now, return empty to avoid errors
-      return [];
+      if (!appointment?.date) return [];
+      const appointmentDate = appointment.date.toISOString().split('T')[0];
+
+      const q = firestoreQuery(
+        collection(db, 'appointments'),
+        where('appointment_date', '==', appointmentDate),
+        where('status', 'in', ['agendado', 'confirmado', 'em_andamento'])
+      );
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          patientId: data.patient_id,
+          patientName: data.patient_name || 'Desconhecido',
+          date: data.appointment_date ? new Date(data.appointment_date) : new Date(),
+          time: data.appointment_time || '00:00',
+          duration: data.duration || 60,
+          status: data.status || 'agendado',
+          therapistId: data.therapist_id,
+        } as AppointmentBase;
+      });
     },
     staleTime: 30000,
-    enabled: open, // Só busca quando o modal está aberto
+    enabled: open && !!appointment?.date,
   });
 
   // Mutation para atualizar agendamento com atualização otimista completa
@@ -158,10 +180,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         therapist_id: string | null;
       };
     }) => {
-      // Use the appointment actions hook for the actual update
-      const { updateAppointment } = useAppointmentActions();
-      // TODO: Implement proper update via Firebase Functions
-      throw new Error('Appointment update via modal needs Firebase Functions integration');
+      const organizationId = await getUserOrganizationId();
+      return await AppointmentService.updateAppointment(appointmentId, updates, organizationId);
     },
     onMutate: async ({ appointmentId, updates }) => {
       // Cancela qualquer refetch em andamento para evitar sobrescrever nossa atualização otimista

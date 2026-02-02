@@ -33,6 +33,10 @@ export const DB_HOST_IP_PUBLIC_SECRET = defineSecret('DB_HOST_IP_PUBLIC');
 export const CORS_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:8083',
+  'http://localhost:8084',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:8083',
+  'http://127.0.0.1:8084',
   'https://fisioflow-migration.web.app',
   'https://fisioflow.web.app',
   'https://moocafisio.com.br',

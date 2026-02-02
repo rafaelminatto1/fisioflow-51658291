@@ -9,11 +9,13 @@ import { AsyncStorage } from '@/lib/storage';
 
 /**
  * Theme colors for light mode
+ * Based on Activity Fisioterapia logo - Baby Blue palette
  */
 const lightColors = {
-  primary: '#22c55e',
-  primaryLight: '#86efac',
-  primaryDark: '#16a34a',
+  // Primary - Baby Blue (cor principal da marca)
+  primary: '#0284C7',
+  primaryLight: '#7DD3FC',
+  primaryDark: '#0369A1',
 
   success: '#22c55e',
   successLight: '#86efac',
@@ -27,9 +29,15 @@ const lightColors = {
   errorLight: '#fca5a5',
   errorDark: '#dc2626',
 
-  info: '#3b82f6',
-  infoLight: '#93c5fd',
-  infoDark: '#2563eb',
+  // Secondary - Logo Original Blue (Activity brand color)
+  info: '#5EB3E6',
+  infoLight: '#7DD3FC',
+  infoDark: '#0284C7',
+
+  // Accent - Coral (cor quente para destaque)
+  accent: '#F97316',
+  accentLight: '#FDBA74',
+  accentDark: '#EA580C',
 
   background: '#FFFFFF',
   surface: '#F3F4F6',
@@ -68,11 +76,13 @@ const lightColors = {
 
 /**
  * Theme colors for dark mode
+ * Based on Activity Fisioterapia logo - Baby Blue palette
  */
 const darkColors = {
-  primary: '#22c55e',
-  primaryLight: '#4ade80',
-  primaryDark: '#16a34a',
+  // Primary - Baby Blue (adapted for dark mode)
+  primary: '#38BDF8',
+  primaryLight: '#7DD3FC',
+  primaryDark: '#0284C7',
 
   success: '#22c55e',
   successLight: '#4ade80',
@@ -86,9 +96,15 @@ const darkColors = {
   errorLight: '#f87171',
   errorDark: '#b91c1c',
 
-  info: '#3b82f6',
-  infoLight: '#60a5fa',
-  infoDark: '#1d4ed8',
+  // Secondary - Logo Original Blue (adapted for dark mode)
+  info: '#7DD3FC',
+  infoLight: '#BAE6FD',
+  infoDark: '#0284C7',
+
+  // Accent - Coral (adapted for dark mode)
+  accent: '#FB923C',
+  accentLight: '#FDBA74',
+  accentDark: '#EA580C',
 
   background: '#111827',
   surface: '#1F2937',

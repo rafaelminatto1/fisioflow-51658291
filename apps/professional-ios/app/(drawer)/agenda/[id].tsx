@@ -26,13 +26,13 @@ import type { Appointment } from '@/types';
 
 type AppointmentStatus = 'agendado' | 'confirmado' | 'em_andamento' | 'concluido' | 'cancelado' | 'faltou';
 
-const STATUS_OPTIONS: { value: AppointmentStatus; label: string; color: string }[] = [
-  { value: 'agendado', label: 'Agendado', color: '#3b82f6' },
-  { value: 'confirmado', label: 'Confirmado', color: '#22c55e' },
-  { value: 'em_andamento', label: 'Em Andamento', color: '#f59e0b' },
-  { value: 'concluido', label: 'Concluído', color: '#10b981' },
-  { value: 'cancelado', label: 'Cancelado', color: '#ef4444' },
-  { value: 'faltou', label: 'Faltou', color: '#8b5cf6' },
+const getStatusOptions = (colors: any) => [
+  { value: 'agendado' as const, label: 'Agendado', color: colors.primary },
+  { value: 'confirmado' as const, label: 'Confirmado', color: '#22c55e' },
+  { value: 'em_andamento' as const, label: 'Em Andamento', color: '#f59e0b' },
+  { value: 'concluido' as const, label: 'Concluído', color: '#10b981' },
+  { value: 'cancelado' as const, label: 'Cancelado', color: '#ef4444' },
+  { value: 'faltou' as const, label: 'Faltou', color: colors.notification },
 ];
 
 export default function AppointmentDetailScreen() {

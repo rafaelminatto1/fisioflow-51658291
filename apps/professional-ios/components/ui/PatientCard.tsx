@@ -32,15 +32,15 @@ export function PatientCard({
   const getStatusColor = () => {
     switch (patient.status) {
       case 'Em Tratamento':
-        return '#3b82f6';
+        return colors.primary;
       case 'Recuperação':
-        return '#f59e0b';
+        return colors.warning;
       case 'Inicial':
-        return '#8b5cf6';
+        return colors.notification;
       case 'Concluído':
-        return '#22c55e';
+        return colors.success;
       default:
-        return '#6b7280';
+        return colors.textSecondary;
     }
   };
 

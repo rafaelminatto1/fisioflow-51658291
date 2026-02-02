@@ -2,7 +2,7 @@
 
 ## Overview
 
-Inngest is now integrated into FisioFlow for reliable background job processing, workflow orchestration, and scheduled tasks.
+Inngest is integrated into FisioFlow for reliable background job processing, workflow orchestration, and scheduled tasks.
 
 ## Features
 
@@ -10,7 +10,7 @@ Inngest is now integrated into FisioFlow for reliable background job processing,
 - **Cron Scheduling**: Built-in scheduling for recurring tasks
 - **Idempotent Operations**: Safe to run workflows multiple times
 - **Real-time Monitoring**: Track workflow execution in the Inngest dashboard
-- **Preview Environments**: Full support for Vercel preview deployments
+- **Firebase Cloud Functions Compatible**: Works seamlessly with Firebase deployment
 
 ## Workflows
 
@@ -87,7 +87,7 @@ await inngest.send({
 Add these to your `.env` file:
 
 ```bash
-# Inngest Configuration (automatically set by Vercel integration)
+# Inngest Configuration
 INNGEST_KEY=your-inngest-key
 INNGEST_EVENT_KEY=your-inngest-event-key
 INNGEST_SIGNING_KEY=your-inngest-signing-key
@@ -122,27 +122,40 @@ pnpm dev
 
 Inngest will connect directly to the cloud using `INNGEST_KEY`. No local setup needed.
 
-## Vercel Integration
+## Firebase Deployment
 
-After installing the Inngest integration from the Vercel marketplace:
+### Configure Firebase Hosting Rewrite
 
-1. The `INNGEST_KEY` is automatically set in your environment
-2. Your workflows are automatically deployed
-3. The Inngest dashboard is available at `https://app.inngest.com`
+Add to `firebase.json`:
+
+```json
+{
+  "hosting": {
+    "rewrites": [
+      {
+        "source": "/api/inngest",
+        "function": "api"
+      }
+    ]
+  }
+}
+```
+
+### Deploy with Firebase
+
+```bash
+# Deploy the entire app
+firebase deploy
+
+# Deploy only hosting
+firebase deploy --only hosting
+```
 
 ## Monitoring
 
 View your workflows at:
 - Development: `http://localhost:8288` (when using dev server)
 - Production: `https://app.inngest.com`
-
-## Migration from Old Cron Routes
-
-The old Vercel cron routes in `/api/crons/*` are still active but can be gradually migrated:
-
-1. Remove the cron entry from `vercel.json`
-2. Delete the old route file
-3. The Inngest workflow will handle the scheduling
 
 ## File Structure
 
@@ -152,7 +165,7 @@ src/
 │   ├── client.ts       # Inngest client configuration
 │   ├── types.ts        # Event types and interfaces
 │   ├── helpers.ts      # Convenience functions
-│   ├── serve.ts        # API route handler
+│   ├── serve.ts        # API route handler (Firebase compatible)
 │   └── README.md       # This file
 └── inngest/workflows/  # Workflow implementations
     ├── cleanup.ts

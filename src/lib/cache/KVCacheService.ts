@@ -1,14 +1,17 @@
 /**
- * Vercel KV Cache Service
+ * Firebase Realtime Database Cache Service
  *
- * Distributed Redis-based caching layer using Vercel KV
- * Replaces in-memory caching with persistent, shared cache across deployments
+ * Distributed caching layer using Firebase Realtime Database
+ * Replaces Vercel KV with Google Firebase solution
  *
- * @version 2.0.0 - Enhanced with monitoring, smart invalidation, and health checks
+ * @version 3.0.0 - Migrated to Firebase Realtime Database
  */
 
-import { kv } from '@vercel/kv';
+import { getDatabase, ref, set, get, remove, child, update, onValue, off } from 'firebase/database';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { firebaseApp } from '@/integrations/firebase/app';
+
+const db = getDatabase(firebaseApp);
 
 export interface CacheOptions {
   /**
@@ -108,11 +111,19 @@ export async function getCache<T>(
 ): Promise<T | null> {
   try {
     const fullKey = getKey(key, options?.prefix);
-    const value = await kv.get<T>(fullKey);
+    const cacheRef = ref(db, fullKey);
+    const snapshot = await get(cacheRef);
 
-    if (value !== null) {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      // Check if TTL has expired
+      if (data && data._expires && Date.now() > data._expires) {
+        await remove(cacheRef);
+        stats.misses++;
+        return null;
+      }
       stats.hits++;
-      return value;
+      return data.value;
     }
 
     stats.misses++;
@@ -125,7 +136,7 @@ export async function getCache<T>(
 }
 
 /**
- * Set a value in cache
+ * Set a value in cache with TTL
  */
 export async function setCache<T>(
   key: string,
@@ -134,7 +145,16 @@ export async function setCache<T>(
 ): Promise<boolean> {
   try {
     const fullKey = getKey(key, options?.prefix);
-    await kv.set(fullKey, value, { ex: options?.ttl || 3600 });
+    const ttl = options?.ttl || CACHE_TTL.DEFAULT;
+    const cacheRef = ref(db, fullKey);
+
+    const dataToStore = {
+      value,
+      _expires: Date.now() + (ttl * 1000),
+      _created: Date.now(),
+    };
+
+    await set(cacheRef, dataToStore);
     stats.sets++;
     return true;
   } catch (error) {
@@ -153,7 +173,8 @@ export async function deleteCache(
 ): Promise<boolean> {
   try {
     const fullKey = getKey(key, options?.prefix);
-    await kv.del(fullKey);
+    const cacheRef = ref(db, fullKey);
+    await remove(cacheRef);
     stats.deletes++;
     return true;
   } catch (error) {
@@ -165,485 +186,347 @@ export async function deleteCache(
 
 /**
  * Invalidate multiple cache keys by pattern
- * Note: KV doesn't support pattern matching, so we track keys
+ * Note: Firebase Realtime Database doesn't support pattern matching natively
  */
 export async function invalidatePattern(
   pattern: string,
   options?: CacheOptions
 ): Promise<void> {
   try {
-    // Get all keys with prefix
-    const prefix = getKey('', options?.prefix).slice(0, -1);
-    const keys = await kv.keys(`${prefix}*`);
+    const prefix = getKey('', options?.prefix);
+    const cacheRef = ref(db, prefix);
 
-    // Filter by pattern
-    const matchingKeys = keys.filter(key => key.includes(pattern));
+    // Get all keys at this prefix level
+    const snapshot = await get(cacheRef);
+    if (snapshot.exists()) {
+      const keys = Object.keys(snapshot.val() || {});
 
-    // Delete all matching keys
-    if (matchingKeys.length > 0) {
-      await kv.del(...matchingKeys);
-    }
-  } catch (error) {
-    logger.error('Cache invalidate pattern error', error, 'KVCacheService');
-  }
-}
-
-/**
- * Cache wrapper for Supabase queries
- * Automatically caches results and invalidates on mutations
- */
-export function cachedQuery<T>(
-  key: string,
-  queryFn: () => Promise<T>,
-  options?: CacheOptions
-) {
-  return {
-    async execute(): Promise<T> {
-      // Try cache first
-      const cached = await getCache<T>(key, options);
-      if (cached !== null) {
-        return cached;
+      for (const key of keys) {
+        if (key.includes(pattern)) {
+          await remove(child(cacheRef, key));
+        }
       }
-
-      // Execute query
-      const result = await queryFn();
-
-      // Cache result
-      await setCache(key, result, options);
-
-      return result;
-    },
-  };
-}
-
-/**
- * Cache health status
- */
-export type CacheHealthStatus = 'healthy' | 'degraded' | 'unhealthy';
-
-export interface CacheHealthResult {
-  status: CacheHealthStatus;
-  hitRate: number;
-  errorRate: number;
-  recommendations: string[];
-}
-
-/**
- * Get cache health status
- */
-export async function getCacheHealth(): Promise<CacheHealthResult> {
-  const currentStats = getCacheStats();
-  const total = currentStats.hits + currentStats.misses;
-  const totalOperations = total + currentStats.sets + currentStats.deletes;
-
-  const hitRate = currentStats.rate;
-  const errorRate = totalOperations > 0 ? currentStats.errors / totalOperations : 0;
-
-  const status: CacheHealthStatus =
-    errorRate > 0.05 ? 'unhealthy' :
-    hitRate < 0.5 ? 'degraded' :
-    'healthy';
-
-  const recommendations: string[] = [];
-
-  if (hitRate < 0.5) {
-    recommendations.push('Low cache hit rate - consider increasing TTL values or caching more data');
-  }
-
-  if (errorRate > 0.01) {
-    recommendations.push('High error rate detected - check Vercel KV connectivity');
-  }
-
-  if (currentStats.sets > currentStats.hits * 10) {
-    recommendations.push('High set-to-hit ratio - cache may be expiring too quickly');
-  }
-
-  return {
-    status,
-    hitRate,
-    errorRate,
-    recommendations,
-  };
-}
-
-/**
- * Smart cache invalidation based on entity type
- */
-export async function smartInvalidate(
-  entityType: 'patient' | 'appointment' | 'session' | 'exercise' | 'protocol',
-  entityId?: string,
-  options?: CacheOptions
-): Promise<void> {
-  const prefix = options?.prefix || 'fisioflow';
-
-  try {
-    switch (entityType) {
-      case 'patient':
-        // Invalidate patient data and related appointments/sessions
-        await deleteCache(`${entityType}:${entityId}`, { prefix });
-        await invalidatePattern(`appointment:patient:${entityId}`, { prefix });
-        await invalidatePattern(`session:patient:${entityId}`, { prefix });
-        break;
-
-      case 'appointment':
-        // Invalidate appointment and patient's appointment list
-        if (entityId) {
-          await deleteCache(`${entityType}:${entityId}`, { prefix });
-        }
-        await invalidatePattern(`${entityType}:patient:*`, { prefix });
-        break;
-
-      case 'session':
-        // Invalidate session and patient's session list
-        if (entityId) {
-          await deleteCache(`${entityType}:${entityId}`, { prefix });
-        }
-        await invalidatePattern(`${entityType}:patient:*`, { prefix });
-        break;
-
-      case 'exercise':
-      case 'protocol':
-        // Invalidate specific entity and "all" cache
-        if (entityId) {
-          await deleteCache(`${entityType}:${entityId}`, { prefix });
-        }
-        await deleteCache(`${entityType}:all`, { prefix });
-        break;
     }
   } catch (error) {
-    logger.error(`Smart invalidation error for ${entityType}`, error, 'KVCacheService');
+    logger.error(`Cache invalidate pattern error for ${pattern}`, error, 'KVCacheService');
   }
 }
 
 /**
- * Warm up cache with frequently accessed data
+ * Check cache health
+ */
+export async function healthCheck(): Promise<{
+  healthy: boolean;
+  stats: CacheStats;
+  message: string;
+}> {
+  try {
+    const cacheRef = ref(db, getKey('_health'));
+    await set(cacheRef, { timestamp: Date.now() });
+    return {
+      healthy: true,
+      stats: getCacheStats(),
+      message: 'Firebase Realtime Database cache is healthy',
+    };
+  } catch (error) {
+    return {
+      healthy: false,
+      stats: getCacheStats(),
+      message: error instanceof Error ? error.message : 'Cache health check failed',
+    };
+  }
+}
+
+/**
+ * Warm up cache with multiple keys
  */
 export async function warmUpCache(
-  dataLoaders: Record<string, () => Promise<unknown>>,
+  keys: string[],
+  dataProvider: (key: string) => Promise<unknown>,
   options?: CacheOptions
-): Promise<void> {
+): Promise<{ success: number; failed: number }> {
   const results = await Promise.allSettled(
-    Object.entries(dataLoaders).map(async ([key, loader]) => {
+    keys.map(async (key) => {
       try {
-        const data = await loader();
-        await setCache(key, data, options);
+        const cachedValue = await getCache(key, options);
+        if (cachedValue !== null) {
+          return { status: 'fulfilled' as const, key };
+        }
+
+        const data = await dataProvider(key);
+        if (data !== null) {
+          await setCache(key, data, options);
+          return { status: 'fulfilled' as const, key };
+        }
+
+        return { status: 'rejected' as const, key };
       } catch (error) {
         logger.error(`Cache warm-up failed for ${key}`, error, 'KVCacheService');
-      }
-    })
+        return { status: 'rejected' as const, key };
+      })
   );
 
+  const successful = results.filter(r => r.status === 'fulfilled').length;
   const failed = results.filter(r => r.status === 'rejected').length;
-  logger.info(`Cache warm-up completed: ${results.length - failed}/${results.length} successful`, undefined, 'KVCacheService');
-}
 
-/**
- * Batch get multiple cache keys
- */
-export async function batchGet<T>(
-  keys: string[],
-  options?: CacheOptions
-): Promise<Map<string, T>> {
-  const result = new Map<string, T>();
-
-  await Promise.all(
-    keys.map(async key => {
-      const value = await getCache<T>(key, options);
-      if (value !== null) {
-        result.set(key, value);
-      }
-    })
+  logger.info(
+    `Cache warm-up completed: ${successful}/${results.length} successful`,
+    { successful, failed },
+    'KVCacheService'
   );
 
-  return result;
+  return { success: successful, failed };
 }
 
-/**
- * Batch set multiple cache keys
- */
-export async function batchSet<T>(
-  entries: Array<{ key: string; value: T }>,
-  options?: CacheOptions
-): Promise<void> {
-  await Promise.all(
-    entries.map(({ key, value }) => setCache(key, value, options))
-  );
+// ==============================================================================
+// RATE LIMITING (using Firebase instead of Vercel KV)
+// ==============================================================================
+
+interface RateLimitInfo {
+  count: number;
+  reset: number; // timestamp when count resets
 }
 
-/**
- * Batch delete multiple cache keys
- */
-export async function batchDelete(
-  keys: string[],
-  options?: CacheOptions
-): Promise<void> {
-  await Promise.all(keys.map(key => deleteCache(key, options)));
-}
-
-/**
- * Specific cache helpers for FisioFlow entities
- */
-
-export class PatientCache {
-  private static readonly prefix = 'patient';
-  private static readonly defaultTTL = 3600; // 1 hour
-
-  static async get(patientId: string) {
-    return getCache<unknown>(`${this.prefix}:${patientId}`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async set(patientId: string, data: unknown) {
-    return setCache(`${this.prefix}:${patientId}`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async invalidate(patientId: string) {
-    return deleteCache(`${this.prefix}:${patientId}`, {
-      prefix: 'fisioflow',
-    });
-  }
-
-  static async invalidateAll() {
-    return invalidatePattern(this.prefix, { prefix: 'fisioflow' });
-  }
-}
-
-export class AppointmentCache {
-  private static readonly prefix = 'appointment';
-  private static readonly defaultTTL = 1800; // 30 minutes
-
-  static async get(appointmentId: string) {
-    return getCache<unknown>(`${this.prefix}:${appointmentId}`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async set(appointmentId: string, data: unknown) {
-    return setCache(`${this.prefix}:${appointmentId}`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async getByPatient(patientId: string) {
-    return getCache<unknown[]>(`${this.prefix}:patient:${patientId}`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async setByPatient(patientId: string, data: unknown[]) {
-    return setCache(`${this.prefix}:patient:${patientId}`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async invalidate(appointmentId: string) {
-    return deleteCache(`${this.prefix}:${appointmentId}`, {
-      prefix: 'fisioflow',
-    });
-  }
-
-  static async invalidatePatient(patientId: string) {
-    return deleteCache(`${this.prefix}:patient:${patientId}`, {
-      prefix: 'fisioflow',
-    });
-  }
-
-  static async invalidateAll() {
-    return invalidatePattern(this.prefix, { prefix: 'fisioflow' });
-  }
-}
-
-export class ExerciseCache {
-  private static readonly prefix = 'exercise';
-  private static readonly defaultTTL = 7200; // 2 hours
-
-  static async get(exerciseId: string) {
-    return getCache<unknown>(`${this.prefix}:${exerciseId}`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async set(exerciseId: string, data: unknown) {
-    return setCache(`${this.prefix}:${exerciseId}`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async getAll() {
-    return getCache<unknown[]>(`${this.prefix}:all`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async setAll(data: unknown[]) {
-    return setCache(`${this.prefix}:all`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async invalidate(exerciseId?: string) {
-    if (exerciseId) {
-      return deleteCache(`${this.prefix}:${exerciseId}`, {
-        prefix: 'fisioflow',
-      });
-    }
-    // Invalidate all
-    await deleteCache(`${this.prefix}:all`, { prefix: 'fisioflow' });
-    return invalidatePattern(this.prefix, { prefix: 'fisioflow' });
-  }
-}
-
-export class ProtocolCache {
-  private static readonly prefix = 'protocol';
-  private static readonly defaultTTL = 7200; // 2 hours
-
-  static async get(protocolId: string) {
-    return getCache<unknown>(`${this.prefix}:${protocolId}`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async set(protocolId: string, data: unknown) {
-    return setCache(`${this.prefix}:${protocolId}`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async getAll() {
-    return getCache<unknown[]>(`${this.prefix}:all`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async setAll(data: unknown[]) {
-    return setCache(`${this.prefix}:all`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
-
-  static async invalidate(protocolId?: string) {
-    if (protocolId) {
-      return deleteCache(`${this.prefix}:${protocolId}`, {
-        prefix: 'fisioflow',
-      });
-    }
-    await deleteCache(`${this.prefix}:all`, { prefix: 'fisioflow' });
-    return invalidatePattern(this.prefix, { prefix: 'fisioflow' });
-  }
-}
-
-/**
- * Rate limiting using Vercel KV
- */
-export interface RateLimitResult {
-  success: boolean;
+export interface RateLimitConfig {
   limit: number;
-  remaining: number;
-  reset: number;
+  window: number; // in seconds
+  prefix?: string;
 }
 
 export async function rateLimit(
   identifier: string,
-  limit: number = 100,
-  window: number = 60
-): Promise<RateLimitResult> {
-  const key = getKey(`ratelimit:${identifier}`, 'ratelimit');
+  config: RateLimitConfig
+): Promise<{ allowed: boolean; remaining: number; reset: number }> {
+  const key = getKey(`ratelimit:${identifier}`, config.prefix || 'fisioflow');
   const now = Date.now();
-  const windowStart = now - window * 1000;
+  const windowStart = now - config.window * 1000;
 
-  try {
-    // Get current requests
-    const requests = await kv.lrange(key, 0, -1);
+  const cacheRef = ref(db, key);
+  const snapshot = await get(cacheRef);
 
-    // Filter out expired requests
-    const validRequests = requests
-      .map(Number)
-      .filter(timestamp => timestamp > windowStart);
+  let info: RateLimitInfo;
 
-    // Check if limit exceeded
-    if (validRequests.length >= limit) {
-      // Get reset time (oldest request + window)
-      const oldestRequest = Math.min(...validRequests);
-      return {
-        success: false,
-        limit,
-        remaining: 0,
-        reset: oldestRequest + window * 1000,
-      };
+  if (snapshot.exists()) {
+    const data = snapshot.val() as RateLimitInfo;
+    if (data.reset > now) {
+      // Still within current window
+      info = data;
+    } else {
+      // Window expired, reset
+      info = { count: 0, reset: now + config.window * 1000 };
     }
+  } else {
+    info = { count: 0, reset: now + config.window * 1000 };
+  }
 
-    // Add current request
-    await kv.rpush(key, now.toString());
-
-    // Set expiration
-    await kv.expire(key, window);
-
+  if (info.count < config.limit) {
+    info.count++;
+    await set(cacheRef, info);
     return {
-      success: true,
-      limit,
-      remaining: limit - validRequests.length - 1,
-      reset: now + window * 1000,
-    };
-  } catch (error) {
-    logger.error('Rate limit error:', error, 'KVCacheService');
-    // Fail open - allow request if rate limiting fails
-    return {
-      success: true,
-      limit,
-      remaining: limit - 1,
-      reset: now + window * 1000,
+      allowed: true,
+      remaining: config.limit - info.count,
+      reset: info.reset,
     };
   }
+
+  return {
+    allowed: false,
+    remaining: 0,
+    reset: info.reset,
+  };
+}
+
+// ==============================================================================
+// SESSION STORAGE (using Firebase instead of Vercel KV)
+// ==============================================================================
+
+export interface SessionData {
+  userId: string;
+  data: Record<string, unknown>;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export async function getSession(sessionId: string): Promise<SessionData | null> {
+  try {
+    const sessionRef = ref(db, getKey(`session:${sessionId}`));
+    const snapshot = await get(sessionRef);
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      // Check session expiration (24 hours default)
+      if (Date.now() - data.updatedAt > 86400000) {
+        await remove(sessionRef);
+        return null;
+      }
+      return data;
+    }
+
+    return null;
+  } catch (error) {
+    logger.error('Session get error', error, 'KVCacheService');
+    return null;
+  }
+}
+
+export async function setSession(
+  sessionId: string,
+  userId: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  try {
+    const sessionRef = ref(db, getKey(`session:${sessionId}`));
+    const sessionData: SessionData = {
+      userId,
+      data,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    await set(sessionRef, sessionData);
+    logger.info('Session created', { sessionId, userId }, 'KVCacheService');
+  } catch (error) {
+    logger.error('Session set error', error, 'KVCacheService');
+  }
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  try {
+    const sessionRef = ref(db, getKey(`session:${sessionId}`));
+    await remove(sessionRef);
+    logger.info('Session deleted', { sessionId }, 'KVCacheService');
+  } catch (error) {
+    logger.error('Session delete error', error, 'KVCacheService');
+  }
+}
+
+// ==============================================================================
+// SPECIALIZED CACHES (Patient, Appointment, etc.)
+// ==============================================================================
+
+export interface PatientCacheEntry {
+  data: unknown;
+  lastModified: number;
+  source: 'server' | 'local';
 }
 
 /**
- * Session storage using Vercel KV
+ * Patient-specific cache with smart invalidation
  */
-export class SessionCache {
-  private static readonly prefix = 'session';
-  private static readonly defaultTTL = 86400; // 24 hours
+export const PatientCache = {
+  async get(patientId: string): Promise<PatientCacheEntry | null> {
+    return getCache<PatientCacheEntry>(`patient:${patientId}`, { ttl: CACHE_TTL.LONG });
+  },
 
-  static async get(sessionId: string) {
-    return getCache<unknown>(`${this.prefix}:${sessionId}`, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
+  async set(patientId: string, data: unknown): Promise<boolean> {
+    return setCache(`patient:${patientId}`, {
+      data,
+      lastModified: Date.now(),
+      source: 'server',
+    }, { ttl: CACHE_TTL.LONG });
+  },
 
-  static async set(sessionId: string, data: unknown) {
-    return setCache(`${this.prefix}:${sessionId}`, data, {
-      prefix: 'fisioflow',
-      ttl: this.defaultTTL,
-    });
-  }
+  async invalidate(patientId: string): Promise<void> {
+    await deleteCache(`patient:${patientId}`);
+  },
 
-  static async delete(sessionId: string) {
-    return deleteCache(`${this.prefix}:${sessionId}`, {
-      prefix: 'fisioflow',
-    });
-  }
+  async invalidatePattern(pattern: string): Promise<void> {
+    await invalidatePattern(`patient:${pattern}`);
+  },
+};
 
-  static async refresh(sessionId: string) {
-    const data = await this.get(sessionId);
-    if (data) {
-      await this.set(sessionId, data);
+/**
+ * Appointment-specific cache with time-based invalidation
+ */
+export const AppointmentCache = {
+  async get(appointmentId: string): Promise<PatientCacheEntry | null> {
+    return getCache<PatientCacheEntry>(`appointment:${appointmentId}`, { ttl: CACHE_TTL.MEDIUM });
+  },
+
+  async set(appointmentId: string, data: unknown): Promise<boolean> {
+    return setCache(`appointment:${appointmentId}`, {
+      data,
+      lastModified: Date.now(),
+      source: 'server',
+    }, { ttl: CACHE_TTL.MEDIUM });
+  },
+
+  async invalidate(appointmentId: string): Promise<void> {
+    await deleteCache(`appointment:${appointmentId}`);
+  },
+};
+
+// ==============================================================================
+// BATCH OPERATIONS
+// ==============================================================================
+
+export async function getMultiple<T>(
+  keys: string[],
+  options?: CacheOptions
+): Promise<Map<string, T>> {
+  const results = await Promise.all(
+    keys.map(async (key) => {
+      const value = await getCache<T>(key, options);
+      return { key, value };
+    })
+  );
+
+  const map = new Map<string, T>();
+  for (const { key, value } of results) {
+    if (value !== null) {
+      map.set(key, value);
     }
   }
+
+  return map;
 }
+
+export async function setMultiple<T>(
+  entries: Record<string, T>,
+  options?: CacheOptions
+): Promise<{ success: number; failed: number }> {
+  const results = await Promise.allSettled(
+    Object.entries(entries).map(([key, value]) =>
+      setCache(key, value, options)
+    )
+  );
+
+  const successful = results.filter(r => r.status === 'fulfilled').length;
+  const failed = results.filter(r => r.status === 'rejected').length;
+
+  return { success: successful, failed };
+}
+
+/**
+ * Invalidate all patient-related cache entries
+ */
+export async function invalidatePatientCache(patientId: string): Promise<void> {
+  await invalidatePattern(`patient:${patientId}*`);
+  await invalidatePattern(`appointment:*${patientId}*`);
+}
+
+/**
+ * Clear all cache (use with caution!)
+ */
+export async function clearAllCache(prefix?: string): Promise<void> {
+  try {
+    const cacheRef = ref(db, getKey('', prefix));
+    await remove(cacheRef);
+    resetCacheStats();
+    logger.info('All cache cleared', { prefix }, 'KVCacheService');
+  } catch (error) {
+    logger.error('Clear cache error', error, 'KVCacheService');
+  }
+}
+
+// Export common cache functions
+export const cache = {
+  get: getCache,
+  set: setCache,
+  delete: deleteCache,
+  invalidate: invalidatePattern,
+  stats: getCacheStats,
+  health: healthCheck,
+};
+
+// Export specialized caches
+export { PatientCache, AppointmentCache };

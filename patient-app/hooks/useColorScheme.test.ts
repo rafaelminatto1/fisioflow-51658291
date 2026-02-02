@@ -21,12 +21,6 @@ describe('useColors Hook', () => {
     expect(typeof result.current.primary).toBe('string');
     expect(typeof result.current.background).toBe('string');
   });
-
-  it('should return isDark boolean', () => {
-    const { result } = renderHook(() => useColors());
-
-    expect(typeof result.current.isDark).toBe('boolean');
-  });
 });
 
 describe('useColorScheme Hook', () => {

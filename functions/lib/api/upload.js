@@ -1,4 +1,7 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.listUserFiles = exports.deleteFile = exports.confirmUpload = exports.generateUploadToken = void 0;
+const init_1 = require("../init");
 /**
  * Upload API - Firebase Cloud Function
  *
@@ -7,11 +10,9 @@
  *
  * @version 1.1.0 - Firebase Functions v2 - Refactored for consistency
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.listUserFiles = exports.deleteFile = exports.confirmUpload = exports.generateUploadToken = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firebase_functions_1 = require("firebase-functions");
-const init_1 = require("../init");
+const init_2 = require("../init");
 // ============================================================================
 // CALLABLE FUNCTIONS
 // ============================================================================
@@ -41,7 +42,7 @@ exports.generateUploadToken = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS },
     }
     try {
         // Get user info (for verification)
-        const adminAuth = (0, init_1.getAdminAuth)();
+        const adminAuth = (0, init_2.getAdminAuth)();
         await adminAuth.getUser(auth.uid); // Verify user exists
         // Generate unique storage path
         const timestamp = Date.now();
@@ -50,7 +51,7 @@ exports.generateUploadToken = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS },
         const storageFilename = `${timestamp}-${random}.${extension}`;
         const storagePath = `${folder}/${auth.uid}/${storageFilename}`;
         // Get admin storage instance
-        const adminStorage = (0, init_1.getAdminStorage)();
+        const adminStorage = (0, init_2.getAdminStorage)();
         const bucket = adminStorage.bucket();
         const file = bucket.file(storagePath);
         // Generate signed URL for upload (valid for 15 minutes)
@@ -106,7 +107,7 @@ exports.confirmUpload = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
             throw new https_1.HttpsError('permission-denied', 'Token mismatch');
         }
         // Get the file from storage
-        const adminStorage = (0, init_1.getAdminStorage)();
+        const adminStorage = (0, init_2.getAdminStorage)();
         const bucket = adminStorage.bucket();
         const file = bucket.file(storagePath);
         // Check if file exists
@@ -159,7 +160,7 @@ exports.deleteFile = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (r
         if (!storagePath.includes(`/${auth.uid}/`) && !storagePath.startsWith(`${auth.uid}/`)) {
             throw new https_1.HttpsError('permission-denied', 'You can only delete your own files');
         }
-        const adminStorage = (0, init_1.getAdminStorage)();
+        const adminStorage = (0, init_2.getAdminStorage)();
         const bucket = adminStorage.bucket();
         const file = bucket.file(storagePath);
         await file.delete();
@@ -190,7 +191,7 @@ exports.listUserFiles = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
     }
     const { folder = 'uploads' } = data;
     try {
-        const adminStorage = (0, init_1.getAdminStorage)();
+        const adminStorage = (0, init_2.getAdminStorage)();
         const bucket = adminStorage.bucket();
         const prefix = `${folder}/${auth.uid}/`;
         const [files] = await bucket.getFiles({ prefix });

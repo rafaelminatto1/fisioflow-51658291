@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://127.0.0.1:8083',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:8084',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 15000,
@@ -46,8 +46,8 @@ export default defineConfig({
   // webServer configuration is disabled in CI to avoid issues
   // In CI, we expect the tests to run without a running dev server
   webServer: process.env.CI ? undefined : {
-    command: 'npm run dev -- --host 127.0.0.1',
-    url: 'http://127.0.0.1:8083',
+    command: 'VITE_DISABLE_ABLY=1 npm run dev -- --host 127.0.0.1',
+    url: 'http://127.0.0.1:8084',
     reuseExistingServer: true,
     timeout: 120000,
   },

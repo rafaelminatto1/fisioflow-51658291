@@ -7,11 +7,14 @@ import {
   Pressable,
   Alert,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { collection, query, where, getDocs, getCountFromServer } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -46,6 +49,61 @@ export default function ProfileScreen() {
   const { colors, colorScheme, setColorScheme } = useTheme();
   const { profile } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    patients: 0,
+    sessions: 0,
+    evaluations: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Load professional stats
+  useEffect(() => {
+    if (!profile?.uid) return;
+
+    const loadStats = async () => {
+      try {
+        setLoadingStats(true);
+
+        // Count patients
+        const patientsQuery = query(
+          collection(db, 'patients'),
+          where('created_by', '==', profile.uid)
+        );
+        const patientsSnapshot = await getDocs(patientsQuery);
+        const patientsCount = patientsSnapshot.size;
+
+        // Count completed sessions (evolutions)
+        const sessionsQuery = query(
+          collection(db, 'evolutions'),
+          where('created_by', '==', profile.uid)
+        );
+        const sessionsSnapshot = await getDocs(sessionsQuery);
+        const sessionsCount = sessionsSnapshot.size;
+
+        // Count evaluations
+        const evaluationsQuery = query(
+          collection(db, 'evaluations'),
+          where('created_by', '==', profile.uid)
+        );
+        const evaluationsSnapshot = await getDocs(evaluationsQuery);
+        const evaluationsCount = evaluationsSnapshot.size;
+
+        setStats({
+          patients: patientsCount,
+          sessions: sessionsCount,
+          evaluations: evaluationsCount,
+        });
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    loadStats();
+  }, [profile?.uid]);
 
   const handleSignOut = useCallback(() => {
     Alert.alert(
@@ -92,7 +150,7 @@ export default function ProfileScreen() {
           id: 'profile',
           label: 'Meu Perfil',
           icon: 'user',
-          iconColor: '#3b82f6',
+          iconColor: colors.primary,
           type: 'chevron',
           route: '/profile/edit',
         },
@@ -100,7 +158,7 @@ export default function ProfileScreen() {
           id: 'availability',
           label: 'Disponibilidade',
           icon: 'calendar-clock',
-          iconColor: '#22c55e',
+          iconColor: colors.success,
           type: 'chevron',
           route: '/profile/availability',
         },
@@ -108,7 +166,7 @@ export default function ProfileScreen() {
           id: 'clinics',
           label: 'Clínicas',
           icon: 'building-2',
-          iconColor: '#8b5cf6',
+          iconColor: colors.notification,
           type: 'chevron',
           route: '/profile/clinics',
         },
@@ -129,7 +187,7 @@ export default function ProfileScreen() {
           id: 'darkMode',
           label: 'Modo Escuro',
           icon: 'moon',
-          iconColor: '#6366f1',
+          iconColor: colors.primary,
           type: 'toggle',
           value: colorScheme === 'dark',
           onPress: () => {
@@ -183,7 +241,7 @@ export default function ProfileScreen() {
           id: 'backup',
           label: 'Backup de Dados',
           icon: 'download-cloud',
-          iconColor: '#3b82f6',
+          iconColor: colors.primary,
           type: 'chevron',
           route: '/profile/backup',
         },
@@ -265,18 +323,30 @@ export default function ProfileScreen() {
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: colors.card }]}>
             <Icon name="users" size={24} color={colors.primary} />
-            <Text style={[styles.statValue, { color: colors.text }]}>--</Text>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.patients}</Text>
+            )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pacientes</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card }]}>
             <Icon name="calendar-check" size={24} color={colors.success} />
-            <Text style={[styles.statValue, { color: colors.text }]}>--</Text>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={colors.success} />
+            ) : (
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.sessions}</Text>
+            )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessões</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.card }]}>
             <Icon name="star" size={24} color={colors.warning} />
-            <Text style={[styles.statValue, { color: colors.text }]}>--</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avaliação</Text>
+            {loadingStats ? (
+              <ActivityIndicator size="small" color={colors.warning} />
+            ) : (
+              <Text style={[styles.statValue, { color: colors.text }]}>{stats.evaluations}</Text>
+            )}
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avaliações</Text>
           </View>
         </View>
 

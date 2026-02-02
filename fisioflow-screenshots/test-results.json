@@ -1,0 +1,232 @@
+[
+  {
+    "id": "recepcionista",
+    "name": "Fernanda (Recepcionista)",
+    "email": "fernanda@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [
+      "Agenda",
+      "Pacientes"
+    ],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Prontuário"
+    ],
+    "success": true,
+    "screenshot": "/tmp/fisioflow-screenshots/recepcionista.png",
+    "menuItems": [],
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/pending-approval",
+      "headings": [
+        "Aprovação Pendente"
+      ],
+      "buttons": [
+        "Sair da conta"
+      ]
+    },
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "accessibilityFeatures": {
+      "hasNavigation": false,
+      "hasMain": false,
+      "hasHeader": false,
+      "hasSidebar": false,
+      "visibleButtons": 1,
+      "visibleLinks": 1,
+      "visibleInputs": 0
+    },
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Agenda",
+      "Pacientes"
+    ],
+    "unexpectedFeatures": [],
+    "notes": []
+  },
+  {
+    "id": "estagiario",
+    "name": "Lucas Mendes (Estagiário)",
+    "email": "lucas.mendes@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro"
+    ],
+    "notes": [],
+    "success": true,
+    "screenshot": "/tmp/fisioflow-screenshots/estagiario.png",
+    "menuItems": [],
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "headings": [
+        "Ops! Algo deu errado"
+      ],
+      "buttons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ]
+    },
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "accessibilityFeatures": {
+      "hasNavigation": false,
+      "hasMain": false,
+      "hasHeader": false,
+      "hasSidebar": false,
+      "visibleButtons": 4,
+      "visibleLinks": 0,
+      "visibleInputs": 0
+    },
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": []
+  },
+  {
+    "id": "paciente",
+    "name": "Roberto Almeida (Paciente)",
+    "email": "roberto.almeida@gmail.com",
+    "password": "Fisio123!",
+    "expectedFeatures": [],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes"
+    ],
+    "notes": [],
+    "success": true,
+    "screenshot": "/tmp/fisioflow-screenshots/paciente.png",
+    "menuItems": [],
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "headings": [
+        "Ops! Algo deu errado"
+      ],
+      "buttons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ]
+    },
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "accessibilityFeatures": {
+      "hasNavigation": false,
+      "hasMain": false,
+      "hasHeader": false,
+      "hasSidebar": false,
+      "visibleButtons": 4,
+      "visibleLinks": 0,
+      "visibleInputs": 0
+    },
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": []
+  },
+  {
+    "id": "fisioterapeuta",
+    "name": "Dr. Carlos Silva (Fisioterapeuta)",
+    "email": "carlos.silva@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [
+      "Pacientes",
+      "Prontuário",
+      "Exercises"
+    ],
+    "notExpectedFeatures": [
+      "Financeiro",
+      "Administração"
+    ],
+    "success": true,
+    "screenshot": "/tmp/fisioflow-screenshots/fisioterapeuta.png",
+    "menuItems": [],
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "headings": [
+        "Ops! Algo deu errado"
+      ],
+      "buttons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ]
+    },
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "accessibilityFeatures": {
+      "hasNavigation": false,
+      "hasMain": false,
+      "hasHeader": false,
+      "hasSidebar": false,
+      "visibleButtons": 4,
+      "visibleLinks": 0,
+      "visibleInputs": 0
+    },
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Pacientes",
+      "Prontuário",
+      "Exercises"
+    ],
+    "unexpectedFeatures": [],
+    "notes": []
+  },
+  {
+    "id": "admin",
+    "name": "Rafael Minatto (Admin)",
+    "email": "rafael.minatto@yahoo.com.br",
+    "password": "Yukari30@",
+    "expectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes",
+      "Prontuário"
+    ],
+    "notExpectedFeatures": [],
+    "success": true,
+    "screenshot": "/tmp/fisioflow-screenshots/admin.png",
+    "menuItems": [],
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "headings": [
+        "Ops! Algo deu errado"
+      ],
+      "buttons": [
+        "Recarregar Página",
+        "Voltar",
+        "Início",
+        "Ver detalhes completos"
+      ]
+    },
+    "consoleErrors": [],
+    "consoleWarnings": [],
+    "accessibilityFeatures": {
+      "hasNavigation": false,
+      "hasMain": false,
+      "hasHeader": false,
+      "hasSidebar": false,
+      "visibleButtons": 4,
+      "visibleLinks": 0,
+      "visibleInputs": 0
+    },
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes",
+      "Prontuário"
+    ],
+    "unexpectedFeatures": [],
+    "notes": []
+  }
+]

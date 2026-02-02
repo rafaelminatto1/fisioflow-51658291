@@ -18,7 +18,8 @@ const DEFAULT_REGION = 'southamerica-east1';
 /** Timeout padrão para chamadas de função (em segundos) */
 const DEFAULT_TIMEOUT = 60;
 
-const functionsInstance = getFunctions(app, DEFAULT_REGION);
+/** Firebase Functions instance (exported for callers that need the raw instance, e.g. httpsCallable) */
+export const functionsInstance = getFunctions(app, DEFAULT_REGION);
 
 /**
  * Get Firebase Functions instance
@@ -488,14 +489,19 @@ export const patientsApi = {
   /**
    * Atualiza um paciente existente
    */
-  update: (patientId: string, updates: PatientApi.UpdateData): Promise<PatientApi.Patient> =>
-    callFunction('updatePatient', { patientId, ...updates }),
+  update: async (patientId: string, updates: PatientApi.UpdateData): Promise<PatientApi.Patient> => {
+    const res = await callFunctionHttp<{ patientId: string } & PatientApi.UpdateData, { data: PatientApi.Patient }>(
+      'updatePatientV2',
+      { patientId, ...updates }
+    );
+    return res.data;
+  },
 
   /**
    * Remove um paciente
    */
   delete: (patientId: string): Promise<{ success: boolean }> =>
-    callFunction('deletePatient', { patientId }),
+    callFunctionHttp('deletePatientV2', { patientId }),
 
   /**
    * Obtém estatísticas de um paciente (usa HTTP para evitar CORS)
@@ -513,157 +519,100 @@ export const patientsApi = {
  * API de Exercícios no Firebase Functions
  */
 export const exercisesApi = {
-  /**
-   * Lista exercícios com filtros opcionais
-   */
   list: (params: ExerciseApi.ListParams = {}): Promise<FunctionResponse<ExerciseApi.Exercise[]>> =>
-    callFunctionWithResponse('listExercises', params),
-
-  /**
-   * Obtém um exercício por ID
-   */
-  get: (exerciseId: string): Promise<ExerciseApi.Exercise> =>
-    callFunction('getExercise', { exerciseId }),
-
-  /**
-   * Lista todas as categorias de exercícios
-   */
-  getCategories: (): Promise<ExerciseApi.Category[]> =>
-    callFunction('getExerciseCategories', {}),
-
-  /**
-   * Obtém exercícios prescritos para um paciente
-   */
-  getPrescribedExercises: (patientId: string): Promise<ExerciseApi.PrescribedExercise[]> =>
-    callFunction('getPrescribedExercises', { patientId }),
-
-  /**
-   * Registra a realização de um exercício
-   */
+    callFunctionHttpWithResponse('listExercisesV2', params),
+  get: async (exerciseId: string): Promise<ExerciseApi.Exercise> => {
+    const res = await callFunctionHttp<{ exerciseId: string }, { data: ExerciseApi.Exercise }>('getExerciseV2', { exerciseId });
+    return res.data;
+  },
+  searchSimilar: (params: { exerciseId?: string; query?: string; limit?: number }): Promise<ExerciseApi.Exercise[]> =>
+    callFunctionHttp('searchSimilarExercisesV2', params).then((r: { data: ExerciseApi.Exercise[] }) => r.data),
+  getCategories: async (): Promise<ExerciseApi.Category[]> => {
+    const res = await callFunctionHttp<{}, { data: ExerciseApi.Category[] }>('getExerciseCategoriesV2', {});
+    return res.data;
+  },
+  getPrescribedExercises: async (patientId: string): Promise<ExerciseApi.PrescribedExercise[]> => {
+    const res = await callFunctionHttp<{ patientId: string }, { data: ExerciseApi.PrescribedExercise[] }>('getPrescribedExercisesV2', { patientId });
+    return res.data;
+  },
   logExercise: (data: ExerciseApi.LogExerciseData): Promise<{ success: boolean; logId?: string }> =>
-    callFunction('logExercise', data),
-
-  /**
-   * Cria um novo exercício
-   */
-  create: (exercise: ExerciseApi.CreateData): Promise<ExerciseApi.Exercise> =>
-    callFunction('createExercise', exercise),
-
-  /**
-   * Atualiza um exercício existente
-   */
-  update: (id: string, updates: ExerciseApi.UpdateData): Promise<ExerciseApi.Exercise> =>
-    callFunction('updateExercise', { id, ...updates }),
-
-  /**
-   * Remove um exercício
-   */
+    callFunctionHttp('logExerciseV2', data),
+  create: async (exercise: ExerciseApi.CreateData): Promise<ExerciseApi.Exercise> => {
+    const res = await callFunctionHttp<ExerciseApi.CreateData, { data: ExerciseApi.Exercise }>('createExerciseV2', exercise);
+    return res.data;
+  },
+  update: async (id: string, updates: ExerciseApi.UpdateData): Promise<ExerciseApi.Exercise> => {
+    const res = await callFunctionHttp<{ id: string } & ExerciseApi.UpdateData, { data: ExerciseApi.Exercise }>('updateExerciseV2', { id, ...updates });
+    return res.data;
+  },
   delete: (id: string): Promise<{ success: boolean }> =>
-    callFunction('deleteExercise', { id }),
-
-  /**
-   * Mescla exercícios duplicados
-   */
+    callFunctionHttp('deleteExerciseV2', { id }),
   merge: (keepId: string, mergeIds: string[]): Promise<{ success: boolean; mergedCount?: number }> =>
-    callFunction('mergeExercises', { keepId, mergeIds }),
+    callFunctionHttp('mergeExercisesV2', { keepId, mergeIds }),
 };
 
 /**
  * API Financeira (Transações) no Firebase Functions
  */
 export const financialApi = {
-  /**
-   * Lista transações com paginação
-   */
   list: (limit?: number, offset?: number): Promise<FunctionResponse<FinancialApi.Transaction[]>> =>
-    callFunctionWithResponse('listTransactions', { limit, offset }),
-
-  /**
-   * Cria uma nova transação
-   */
-  create: (transaction: FinancialApi.CreateData): Promise<FinancialApi.Transaction> =>
-    callFunction('createTransaction', transaction),
-
-  /**
-   * Atualiza uma transação existente
-   */
-  update: (transactionId: string, updates: FinancialApi.UpdateData): Promise<FinancialApi.Transaction> =>
-    callFunction('updateTransaction', { transactionId, ...updates }),
-
-  /**
-   * Remove uma transação
-   */
+    callFunctionHttpWithResponse('listTransactionsV2', { limit, offset }),
+  create: async (transaction: FinancialApi.CreateData): Promise<FinancialApi.Transaction> => {
+    const res = await callFunctionHttp<FinancialApi.CreateData, { data: FinancialApi.Transaction }>('createTransactionV2', transaction);
+    return res.data;
+  },
+  update: async (transactionId: string, updates: FinancialApi.UpdateData): Promise<FinancialApi.Transaction> => {
+    const res = await callFunctionHttp<{ transactionId: string } & FinancialApi.UpdateData, { data: FinancialApi.Transaction }>('updateTransactionV2', { transactionId, ...updates });
+    return res.data;
+  },
   delete: (transactionId: string): Promise<{ success: boolean }> =>
-    callFunction('deleteTransaction', { transactionId }),
-
-  /**
-   * Busca transação por agendamento
-   */
-  findByAppointment: (appointmentId: string): Promise<FinancialApi.Transaction | null> =>
-    callFunction('findTransactionByAppointmentId', { appointmentId }),
-
-  /**
-   * Obtém relatório de um evento
-   */
-  getEventReport: (eventoId: string): Promise<FinancialApi.EventReport> =>
-    callFunction('getEventReport', { eventoId }),
+    callFunctionHttp('deleteTransactionV2', { transactionId }),
+  findByAppointment: async (appointmentId: string): Promise<FinancialApi.Transaction | null> => {
+    const res = await callFunctionHttp<{ appointmentId: string }, { data: FinancialApi.Transaction | null }>('findTransactionByAppointmentIdV2', { appointmentId });
+    return res.data;
+  },
+  getEventReport: async (eventoId: string): Promise<FinancialApi.EventReport> => {
+    const res = await callFunctionHttp<{ eventoId: string }, { data: FinancialApi.EventReport }>('getEventReportV2', { eventoId });
+    return res.data;
+  },
 };
 
 /**
  * API Clínica (Prontuários e Sessões) no Firebase Functions
  */
 export const clinicalApi = {
-  /**
-   * Obtém prontuários de um paciente
-   */
   getPatientRecords: (
     patientId: string,
     type?: string,
     limit?: number
   ): Promise<FunctionResponse<ClinicalApi.MedicalRecord[]>> =>
-    callFunctionWithResponse('getPatientRecords', { patientId, type, limit }),
-
-  /**
-   * Cria um novo prontuário
-   */
-  createMedicalRecord: (data: ClinicalApi.CreateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> =>
-    callFunction('createMedicalRecord', data),
-
-  /**
-   * Atualiza um prontuário existente
-   */
-  updateMedicalRecord: (recordId: string, updates: ClinicalApi.UpdateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> =>
-    callFunction('updateMedicalRecord', { recordId, ...updates }),
-
-  /**
-   * Remove um prontuário
-   */
+    callFunctionHttpWithResponse('getPatientRecordsV2', { patientId, type, limit }),
+  createMedicalRecord: async (data: ClinicalApi.CreateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> => {
+    const res = await callFunctionHttp<ClinicalApi.CreateMedicalRecordData, { data: ClinicalApi.MedicalRecord }>('createMedicalRecordV2', data);
+    return res.data;
+  },
+  updateMedicalRecord: async (recordId: string, updates: ClinicalApi.UpdateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> => {
+    const res = await callFunctionHttp<{ recordId: string } & ClinicalApi.UpdateMedicalRecordData, { data: ClinicalApi.MedicalRecord }>('updateMedicalRecordV2', { recordId, ...updates });
+    return res.data;
+  },
   deleteMedicalRecord: (recordId: string): Promise<{ success: boolean }> =>
-    callFunction('deleteMedicalRecord', { recordId }),
-
-  /**
-   * Lista sessões de tratamento de um paciente
-   */
-  listTreatmentSessions: (patientId: string, limit?: number): Promise<ClinicalApi.TreatmentSession[]> =>
-    callFunction('listTreatmentSessions', { patientId, limit }),
-
-  /**
-   * Cria uma nova sessão de tratamento
-   */
-  createTreatmentSession: (data: ClinicalApi.CreateTreatmentSessionData): Promise<ClinicalApi.TreatmentSession> =>
-    callFunction('createTreatmentSession', data),
-
-  /**
-   * Obtém registros de dor de um paciente
-   */
-  getPainRecords: (patientId: string): Promise<ClinicalApi.PainRecord[]> =>
-    callFunction('getPainRecords', { patientId }),
-
-  /**
-   * Salva um registro de dor
-   */
-  savePainRecord: (data: ClinicalApi.SavePainRecordData): Promise<ClinicalApi.PainRecord> =>
-    callFunction('savePainRecord', data),
+    callFunctionHttp('deleteMedicalRecordV2', { recordId }),
+  listTreatmentSessions: async (patientId: string, limit?: number): Promise<ClinicalApi.TreatmentSession[]> => {
+    const res = await callFunctionHttp<{ patientId: string; limit?: number }, { data: ClinicalApi.TreatmentSession[] }>('listTreatmentSessionsV2', { patientId, limit });
+    return res.data;
+  },
+  createTreatmentSession: async (data: ClinicalApi.CreateTreatmentSessionData): Promise<ClinicalApi.TreatmentSession> => {
+    const res = await callFunctionHttp<ClinicalApi.CreateTreatmentSessionData, { data: ClinicalApi.TreatmentSession }>('createTreatmentSessionV2', data);
+    return res.data;
+  },
+  getPainRecords: async (patientId: string): Promise<ClinicalApi.PainRecord[]> => {
+    const res = await callFunctionHttp<{ patientId: string }, { data: ClinicalApi.PainRecord[] }>('getPainRecordsV2', { patientId });
+    return res.data;
+  },
+  savePainRecord: async (data: ClinicalApi.SavePainRecordData): Promise<ClinicalApi.PainRecord> => {
+    const res = await callFunctionHttp<ClinicalApi.SavePainRecordData, { data: ClinicalApi.PainRecord }>('savePainRecordV2', data);
+    return res.data;
+  },
 };
 
 /**
@@ -679,32 +628,47 @@ export const appointmentsApi = {
   /**
    * Obtém um agendamento por ID
    */
-  get: (appointmentId: string): Promise<AppointmentApi.Appointment> =>
-    callFunction('getAppointment', { appointmentId }),
+  get: async (appointmentId: string): Promise<AppointmentApi.Appointment> => {
+    const res = await callFunctionHttp<{ appointmentId: string }, { data: AppointmentApi.Appointment }>(
+      'getAppointmentV2',
+      { appointmentId }
+    );
+    return res.data;
+  },
 
   /**
    * Cria um novo agendamento
    */
-  create: (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> =>
-    callFunction('createAppointment', appointment),
+  create: async (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> => {
+    const res = await callFunctionHttp<AppointmentApi.CreateData, { data: AppointmentApi.Appointment }>(
+      'createAppointmentV2',
+      appointment
+    );
+    return res.data;
+  },
 
   /**
    * Atualiza um agendamento existente
    */
-  update: (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> =>
-    callFunction('updateAppointment', { appointmentId, ...updates }),
+  update: async (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> => {
+    const res = await callFunctionHttp<{ appointmentId: string } & AppointmentApi.UpdateData, { data: AppointmentApi.Appointment }>(
+      'updateAppointmentV2',
+      { appointmentId, ...updates }
+    );
+    return res.data;
+  },
 
   /**
    * Cancela um agendamento
    */
   cancel: (appointmentId: string, reason?: string): Promise<{ success: boolean }> =>
-    callFunction('cancelAppointment', { appointmentId, reason }),
+    callFunctionHttp('cancelAppointmentV2', { appointmentId, reason }),
 
   /**
    * Verifica conflitos de horário
    */
   checkTimeConflict: (params: AppointmentApi.CheckConflictParams): Promise<AppointmentApi.ConflictResult> =>
-    callFunction('checkTimeConflict', params),
+    callFunctionHttp('checkTimeConflictV2', params),
 };
 
 /**

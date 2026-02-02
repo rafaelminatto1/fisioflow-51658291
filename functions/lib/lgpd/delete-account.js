@@ -45,7 +45,6 @@ exports.executeAccountDeletion = exports.cancelDeletionRequest = exports.request
 const firebase_admin_1 = require("firebase-admin");
 const https_1 = require("firebase-functions/v2/https");
 const logger = __importStar(require("firebase-functions/logger"));
-const init_1 = require("../init");
 /**
  * Níveis de retenção de dados conforme LGPD e leis brasileiras
  */
@@ -104,7 +103,7 @@ exports.requestAccountDeletion = (0, https_1.onCall)({
     region: 'southamerica-east1',
     memory: '512MiB',
     maxInstances: 10,
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
 }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -170,7 +169,7 @@ exports.cancelDeletionRequest = (0, https_1.onCall)({
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
 }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -213,7 +212,7 @@ exports.executeAccountDeletion = (0, https_1.onCall)({
     memory: '1GiB',
     maxInstances: 1,
     timeoutSeconds: 540,
-    cors: init_1.CORS_ORIGINS,
+    cors: true,
 }, async (request) => {
     // Verificar se é admin (para deleção manual)
     if (request.auth) {

@@ -1,11 +1,78 @@
 /**
  * Monitoring and Analytics utilities
- * 
+ *
  * Tracks metrics, errors, and user interactions
+ * Uses Google Analytics 4 (GA4) for analytics
+ *
+ * @see https://developers.google.com/analytics/devguides/collection/ga4
  */
 
 import { logger } from './errors/logger';
-import { track } from '@vercel/analytics';
+
+// ============================================================================
+// GOOGLE ANALYTICS 4 (GA4) SETUP
+// ============================================================================
+
+declare global {
+  interface Window {
+    gtag?: (
+      command: 'config' | 'event' | 'js' | 'set',
+      targetId: string,
+      config?: Record<string, unknown> | Date
+    ) => void;
+    dataLayer?: unknown[];
+  }
+}
+
+/**
+ * Initialize Google Analytics 4
+ * Call this once when the app loads
+ */
+export function initGoogleAnalytics(measurementId: string): void {
+  if (typeof window === 'undefined') return;
+
+  // Load gtag.js script
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+  document.head.appendChild(script);
+
+  // Initialize dataLayer
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag() {
+    window.dataLayer?.push(arguments);
+  };
+
+  // Configure GA4
+  window.gtag('js', new Date());
+  window.gtag('config', measurementId, {
+    send_page_view: false, // We'll track page views manually
+  });
+
+  logger.info('Google Analytics 4 initialized', { measurementId }, 'Monitoring');
+}
+
+/**
+ * Track event with Google Analytics 4
+ */
+function trackGA4Event(eventName: string, parameters?: Record<string, unknown>): void {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  try {
+    if (import.meta.env.PROD) {
+      window.gtag('event', eventName, parameters);
+    }
+  } catch (error) {
+    logger.warn('GA4 event tracking failed', error, 'Monitoring');
+  }
+}
+
+/**
+ * Get GA4 measurement ID from environment
+ */
+function getMeasurementId(): string | undefined {
+  return import.meta.env.VITE_GA_MEASUREMENT_ID || import.meta.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+}
 
 export interface MetricData {
   value: number;
@@ -24,20 +91,17 @@ export const METRICS = {
 } as const;
 
 /**
- * Track a metric with Vercel Analytics or custom analytics
+ * Track a metric with Google Analytics 4 or custom analytics
  */
 export const trackMetric = (metric: string, data: number | MetricData) => {
   const value = typeof data === 'number' ? Math.round(data) : Math.round(data.value);
   const metadata = typeof data === 'object' ? data.metadata : undefined;
 
-  // Vercel Analytics - use official track() function
-  try {
-    if (import.meta.env.PROD) {
-      track(metric, { value, ...metadata });
-    }
-  } catch {
-    // Silently ignore analytics errors to prevent app crashes
-  }
+  // Google Analytics 4 - send custom event
+  trackGA4Event(metric, {
+    value,
+    ...metadata,
+  });
 
   // Log in development
   if (import.meta.env.DEV) {
@@ -73,7 +137,7 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
 };
 
 /**
- * Track page load performance
+ * Track page load performance with Google Analytics 4
  */
 export const trackPageLoad = () => {
   if (typeof window === 'undefined') return;
@@ -89,11 +153,15 @@ export const trackPageLoad = () => {
         // Sanitize value to avoid negative numbers
         const safeDuration = Math.max(0, Math.round(duration));
 
-        // Limit properties to avoid 400 errors (Vercel Hobby limit: 2 properties)
-        trackMetric(METRICS.PAGE_LOAD, {
-          value: safeDuration
-          // Removed extra metadata to comply with Vercel limits
+        // Track page load with GA4
+        trackGA4Event('page_load_time', {
+          value: safeDuration,
+          page_title: document.title,
+          page_location: window.location.href,
         });
+
+        // Track Web Vitals with GA4
+        trackWebVitals();
       }
     }, 0);
   };
@@ -104,6 +172,74 @@ export const trackPageLoad = () => {
   return () => {
     window.removeEventListener('load', loadHandler);
   };
+};
+
+/**
+ * Track Core Web Vitals with Google Analytics 4
+ */
+function trackWebVitals(): void {
+  if (typeof window === 'undefined') return;
+
+  // Track Largest Contentful Paint (LCP)
+  try {
+    const lcpObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const lastEntry = entries[entries.length - 1] as { startTime: number };
+      trackGA4Event('web_vital_lcp', {
+        value: Math.round(lastEntry.startTime),
+        page_location: window.location.href,
+      });
+    });
+    lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+
+    // Track First Input Delay (FID)
+    const fidObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      for (const entry of entries) {
+        const fidEntry = entry as { processingStart: number; startTime: number };
+        const fid = fidEntry.processingStart - fidEntry.startTime;
+        trackGA4Event('web_vital_fid', {
+          value: Math.round(fid),
+          page_location: window.location.href,
+        });
+      }
+    });
+    fidObserver.observe({ entryTypes: ['first-input'] });
+
+    // Track Cumulative Layout Shift (CLS)
+    let clsValue = 0;
+    const clsObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const clsEntry = entry as { value: number; startTime: number };
+        if (!clsEntry.hadRecentInput) {
+          clsValue += clsEntry.value;
+        }
+      }
+      trackGA4Event('web_vital_cls', {
+        value: Math.round(clsValue * 1000) / 1000,
+        page_location: window.location.href,
+      });
+    });
+    clsObserver.observe({ entryTypes: ['layout-shift'] });
+  } catch (error) {
+    logger.warn('Web Vitals tracking not supported', error, 'Monitoring');
+  }
+}
+
+/**
+ * Track page view with Google Analytics 4
+ */
+export const trackPageView = (pagePath?: string, pageTitle?: string): void => {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  const measurementId = getMeasurementId();
+  if (!measurementId) return;
+
+  window.gtag('event', 'page_view', {
+    page_path: pagePath || window.location.pathname,
+    page_title: pageTitle || document.title,
+    page_location: window.location.href,
+  });
 };
 
 /**
@@ -169,12 +305,18 @@ export const trackOfflineUsage = (action: string) => {
 };
 
 /**
- * Initialize monitoring com cleanup adequado
- * @returns Função de cleanup para remover todos os event listeners
+ * Initialize monitoring with Google Analytics 4
+ * @returns Cleanup function to remove all event listeners
  */
 export const initMonitoring = () => {
-  // Track page load - Disabled to prevent 400 errors in Vercel Analytics (Hobby Plan)
-  // const cleanupPageLoad = trackPageLoad();
+  // Initialize Google Analytics 4 if measurement ID is available
+  const measurementId = getMeasurementId();
+  if (measurementId) {
+    initGoogleAnalytics(measurementId);
+  }
+
+  // Track page load
+  const cleanupPageLoad = trackPageLoad();
 
   // Track unhandled errors
   const errorHandler = (event: ErrorEvent) => {
@@ -215,7 +357,7 @@ export const initMonitoring = () => {
 
   // Retornar função de cleanup
   return () => {
-    // cleanupPageLoad?.();
+    cleanupPageLoad?.();
     window.removeEventListener('error', errorHandler);
     window.removeEventListener('unhandledrejection', rejectionHandler);
     window.removeEventListener('appinstalled', appInstalledHandler);

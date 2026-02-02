@@ -1,0 +1,283 @@
+[
+  {
+    "id": "recepcionista",
+    "name": "Fernanda (Recepcionista)",
+    "email": "fernanda@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [
+      "Agenda",
+      "Pacientes"
+    ],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Prontuário"
+    ],
+    "success": false,
+    "screenshot": "/tmp/fisioflow-screenshots/recepcionista.png",
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n01:44:37\nVer detalhes completos",
+      "links": [],
+      "buttons": [
+        {
+          "text": "Recarregar Página",
+          "disabled": false
+        },
+        {
+          "text": "Voltar",
+          "disabled": false
+        },
+        {
+          "text": "Início",
+          "disabled": false
+        },
+        {
+          "text": "Ver detalhes completos",
+          "disabled": false
+        }
+      ],
+      "headings": {
+        "h1": [],
+        "h2": [],
+        "h3": [
+          "Ops! Algo deu errado"
+        ]
+      },
+      "errors": [],
+      "navItems": [],
+      "sidebarItems": []
+    },
+    "consoleMessages": [],
+    "visibleFeatures": [],
+    "missingFeatures": [
+      "Agenda",
+      "Pacientes"
+    ],
+    "unexpectedFeatures": [],
+    "loginStatus": "unknown-state",
+    "pageErrors": []
+  },
+  {
+    "id": "estagiario",
+    "name": "Lucas Mendes (Estagiário)",
+    "email": "lucas.mendes@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro"
+    ],
+    "notes": "Limited read access",
+    "success": false,
+    "screenshot": null,
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n01:45:06\nVer detalhes completos",
+      "links": [],
+      "buttons": [
+        {
+          "text": "Recarregar Página",
+          "disabled": false
+        },
+        {
+          "text": "Voltar",
+          "disabled": false
+        },
+        {
+          "text": "Início",
+          "disabled": false
+        },
+        {
+          "text": "Ver detalhes completos",
+          "disabled": false
+        }
+      ],
+      "headings": {
+        "h1": [],
+        "h2": [],
+        "h3": [
+          "Ops! Algo deu errado"
+        ]
+      },
+      "errors": [],
+      "navItems": [],
+      "sidebarItems": []
+    },
+    "consoleMessages": [],
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": [],
+    "loginStatus": "no-login-form",
+    "pageErrors": []
+  },
+  {
+    "id": "paciente",
+    "name": "Roberto Almeida (Paciente)",
+    "email": "roberto.almeida@gmail.com",
+    "password": "Fisio123!",
+    "expectedFeatures": [],
+    "notExpectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes"
+    ],
+    "notes": "Should only see own data",
+    "success": false,
+    "screenshot": null,
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n01:45:15\nVer detalhes completos",
+      "links": [],
+      "buttons": [
+        {
+          "text": "Recarregar Página",
+          "disabled": false
+        },
+        {
+          "text": "Voltar",
+          "disabled": false
+        },
+        {
+          "text": "Início",
+          "disabled": false
+        },
+        {
+          "text": "Ver detalhes completos",
+          "disabled": false
+        }
+      ],
+      "headings": {
+        "h1": [],
+        "h2": [],
+        "h3": [
+          "Ops! Algo deu errado"
+        ]
+      },
+      "errors": [],
+      "navItems": [],
+      "sidebarItems": []
+    },
+    "consoleMessages": [],
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": [],
+    "loginStatus": "no-login-form",
+    "pageErrors": []
+  },
+  {
+    "id": "fisioterapeuta",
+    "name": "Dr. Carlos Silva (Fisioterapeuta)",
+    "email": "carlos.silva@clinicaprincipal.com.br",
+    "password": "Fisio123!",
+    "expectedFeatures": [
+      "Pacientes",
+      "Prontuário",
+      "Exercícios"
+    ],
+    "notExpectedFeatures": [
+      "Financeiro",
+      "Administração"
+    ],
+    "success": false,
+    "screenshot": null,
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n01:45:23\nVer detalhes completos",
+      "links": [],
+      "buttons": [
+        {
+          "text": "Recarregar Página",
+          "disabled": false
+        },
+        {
+          "text": "Voltar",
+          "disabled": false
+        },
+        {
+          "text": "Início",
+          "disabled": false
+        },
+        {
+          "text": "Ver detalhes completos",
+          "disabled": false
+        }
+      ],
+      "headings": {
+        "h1": [],
+        "h2": [],
+        "h3": [
+          "Ops! Algo deu errado"
+        ]
+      },
+      "errors": [],
+      "navItems": [],
+      "sidebarItems": []
+    },
+    "consoleMessages": [],
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": [],
+    "loginStatus": "no-login-form",
+    "pageErrors": []
+  },
+  {
+    "id": "admin",
+    "name": "Rafael Minatto (Admin)",
+    "email": "rafael.minatto@yahoo.com.br",
+    "password": "Yukari30@",
+    "expectedFeatures": [
+      "Administração",
+      "Financeiro",
+      "Pacientes",
+      "Prontuário"
+    ],
+    "notExpectedFeatures": [],
+    "success": false,
+    "screenshot": null,
+    "pageInfo": {
+      "title": "FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia",
+      "url": "https://fisioflow-migration.web.app/",
+      "bodyText": "Ops! Algo deu errado\n\nNão se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.\n\nRecarregar Página\nVoltar\nInício\nINFO DEV\nmsg:\nCannot access 'setValue' before initialization\nurl:\nhttps://fisioflow-migration.web.app/\ntime:\n01:45:31\nVer detalhes completos",
+      "links": [],
+      "buttons": [
+        {
+          "text": "Recarregar Página",
+          "disabled": false
+        },
+        {
+          "text": "Voltar",
+          "disabled": false
+        },
+        {
+          "text": "Início",
+          "disabled": false
+        },
+        {
+          "text": "Ver detalhes completos",
+          "disabled": false
+        }
+      ],
+      "headings": {
+        "h1": [],
+        "h2": [],
+        "h3": [
+          "Ops! Algo deu errado"
+        ]
+      },
+      "errors": [],
+      "navItems": [],
+      "sidebarItems": []
+    },
+    "consoleMessages": [],
+    "visibleFeatures": [],
+    "missingFeatures": [],
+    "unexpectedFeatures": [],
+    "loginStatus": "no-login-form",
+    "pageErrors": []
+  }
+]

@@ -1,6 +1,6 @@
-import { exercisesApi } from "@/integrations/firebase/functions";
 import { Exercise } from "@/types";
 import { NO_EQUIPMENT_GROUP_ID, EQUIPMENT, HOME_EQUIPMENT_GROUP } from '@/lib/constants/exerciseConstants';
+import { exercisesFirestore } from './exercisesFirestore';
 
 export interface ExerciseFilters {
     category?: string;
@@ -13,7 +13,7 @@ export interface ExerciseFilters {
 }
 
 export const exerciseService = {
-    async getExercises(filters?: ExerciseFilters) {
+    async getExercises(filters?: ExerciseFilters): Promise<Exercise[]> {
         // Expand equipment filters if needed (handling special group "Sem Equipamento")
         let equipment = filters?.equipment;
         if (equipment && equipment.includes(NO_EQUIPMENT_GROUP_ID)) {
@@ -25,40 +25,33 @@ export const exerciseService = {
             equipment = Array.from(expanded);
         }
 
-        const response = await exercisesApi.list({
-            category: filters?.category,
-            difficulty: filters?.difficulty,
-            search: filters?.searchTerm,
-            limit: 1000
-            // Note: Cloud function uses "search" instead of "searchTerm"
-            // Note: pathologies and bodyParts filters are NOT yet implemented in the basic listExercises cloud function, 
-            // but we pass them if we update the function later.
+        return exercisesFirestore.getExercises({
+            ...filters,
+            equipment,
         });
-
-        return response.data as Exercise[];
     },
 
-    async getExerciseById(id: string) {
-        const response = await exercisesApi.get(id);
-        return response.data as Exercise;
+    async getExerciseById(id: string): Promise<Exercise> {
+        const exercise = await exercisesFirestore.getExerciseById(id);
+        if (!exercise) {
+            throw new Error('Exercício não encontrado');
+        }
+        return exercise;
     },
 
-    async createExercise(exercise: Omit<Exercise, 'id'>) {
-        const response = await exercisesApi.create(exercise);
-        return response.data;
+    async createExercise(exercise: Omit<Exercise, 'id'>): Promise<Exercise> {
+        return exercisesFirestore.createExercise(exercise);
     },
 
-    async updateExercise(id: string, exercise: Partial<Exercise>) {
-        const response = await exercisesApi.update(id, exercise);
-        return response.data;
+    async updateExercise(id: string, exercise: Partial<Exercise>): Promise<Exercise> {
+        return exercisesFirestore.updateExercise(id, exercise);
     },
 
-    async deleteExercise(id: string) {
-        await exercisesApi.delete(id);
+    async deleteExercise(id: string): Promise<void> {
+        await exercisesFirestore.deleteExercise(id);
     },
 
-    async mergeExercises(keepId: string, mergeIds: string[]) {
-        const response = await exercisesApi.merge(keepId, mergeIds);
-        return response;
+    async mergeExercises(keepId: string, mergeIds: string[]): Promise<{ success: boolean; deletedCount: number }> {
+        return exercisesFirestore.mergeExercises(keepId, mergeIds);
     }
 };

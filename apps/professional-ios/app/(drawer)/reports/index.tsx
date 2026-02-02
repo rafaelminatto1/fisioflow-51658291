@@ -266,14 +266,14 @@ function OverviewTab({ reportData, colors }: { reportData: ReportData; colors: a
           title="Sessões"
           value={reportData.completedSessions}
           icon="check-circle"
-          color="#3b82f6"
+          color={colors.primary}
           subtitle="Concluídas"
         />
         <StatCard
           title="Pacientes Ativos"
           value={reportData.activePatients}
           icon="users"
-          color="#8b5cf6"
+          color={colors.notification}
         />
         <StatCard
           title="Taxa de Ocupação"
@@ -286,7 +286,7 @@ function OverviewTab({ reportData, colors }: { reportData: ReportData; colors: a
       {/* Weekly Sessions Chart */}
       <WeeklyChart
         data={weekSessionsData}
-        color="#3b82f6"
+        color={colors.primary}
         title="Sessões Esta Semana"
         subtitle="Número de sessões realizadas por dia"
         colors={colors}
@@ -354,7 +354,7 @@ function FinancialTab({ reportData, formatCurrency, colors }: any) {
           title="Sessões Cobradas"
           value={reportData.completedSessions}
           icon="check-circle"
-          color="#3b82f6"
+          color={colors.primary}
         />
       </View>
 
@@ -370,7 +370,7 @@ function FinancialTab({ reportData, formatCurrency, colors }: any) {
       {/* Weekly Sessions Chart */}
       <WeeklyChart
         data={weekSessionsData}
-        color="#3b82f6"
+        color={colors.primary}
         title="Sessões da Semana"
         subtitle="Número de sessões cobradas por dia"
         colors={colors}
@@ -396,7 +396,7 @@ function PatientsTab({ reportData, colors }: any) {
           title="Pacientes Ativos"
           value={reportData.activePatients}
           icon="users"
-          color="#3b82f6"
+          color={colors.primary}
           subtitle="Em tratamento"
         />
         <StatCard
@@ -461,7 +461,7 @@ function PerformanceTab({ reportData, colors }: any) {
       {/* Weekly Completion Chart */}
       <WeeklyChart
         data={weekCompletionData}
-        color="#3b82f6"
+        color={colors.primary}
         title="Sessões Concluídas"
         subtitle="Número de sessões por dia"
         colors={colors}

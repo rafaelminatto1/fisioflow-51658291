@@ -3,6 +3,13 @@
  *
  * Provides AI-powered clinical insights and recommendations
  * using Vercel AI SDK with streaming support.
+ *
+ * Note: The Vercel AI SDK (@ai-sdk/react) is an open-source library
+ * that works independently of Vercel hosting. It provides a unified
+ * interface for multiple AI providers (OpenAI, Google, Anthropic, etc.)
+ * and can be used with any backend.
+ *
+ * @see https://sdk.vercel.ai/docs
  */
 
 import { useCompletion, useChat } from '@ai-sdk/react';

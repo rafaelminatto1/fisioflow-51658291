@@ -37,8 +37,10 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.createPayment = exports.listPayments = exports.getPatientStats = exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = void 0;
-exports.updateUserRole = exports.listUsers = exports.onUserCreated = exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.runPerformanceIndexes = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = void 0;
+exports.updateProfile = exports.getProfile = exports.getAssessmentTemplate = exports.listAssessmentTemplates = exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.logExercise = exports.getPrescribedExercises = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.mergeExercisesV2 = exports.deleteExerciseV2 = exports.updateExerciseV2 = exports.createExerciseV2 = exports.logExerciseV2 = exports.getPrescribedExercisesV2 = exports.getExerciseCategoriesV2 = exports.searchSimilarExercisesV2 = exports.getExerciseV2 = exports.listExercisesV2 = exports.checkTimeConflict = exports.cancelAppointment = exports.getAppointment = exports.updateAppointment = exports.createAppointment = exports.checkTimeConflictV2 = exports.cancelAppointmentV2 = exports.updateAppointmentV2 = exports.createAppointmentV2 = exports.getAppointmentV2 = exports.listAppointments = exports.deletePatient = exports.getPatient = exports.updatePatient = exports.createPatient = exports.listPatients = exports.deletePatientV2 = exports.updatePatientV2 = exports.createPatientV2 = exports.getPatientStatsV2 = exports.getPatientHttp = exports.listPatientsV2 = void 0;
+exports.aiSoapNoteChat = exports.aiExerciseRecommendationChat = exports.aiClinicalChat = exports.aiMovementAnalysis = exports.aiClinicalAnalysis = exports.aiSoapGeneration = exports.aiExerciseSuggestion = exports.setupMonitoring = exports.runPerformanceIndexes = exports.createPerformanceIndexes = exports.runMigrationHttp = exports.runMigration = exports.createAdminUser = exports.listUserFiles = exports.deleteStorageFile = exports.confirmUpload = exports.generateUploadToken = exports.healthCheck = exports.apiEvaluate = exports.updateTreatmentSession = exports.createTreatmentSession = exports.listTreatmentSessions = exports.updateMedicalRecord = exports.createMedicalRecord = exports.savePainRecord = exports.getPainRecords = exports.getPatientRecords = exports.savePainRecordV2 = exports.getPainRecordsV2 = exports.createTreatmentSessionV2 = exports.listTreatmentSessionsV2 = exports.deleteMedicalRecordV2 = exports.updateMedicalRecordV2 = exports.createMedicalRecordV2 = exports.getPatientRecordsV2 = exports.getEventReport = exports.findTransactionByAppointmentId = exports.deleteTransaction = exports.updateTransaction = exports.createTransaction = exports.listTransactions = exports.getEventReportV2 = exports.findTransactionByAppointmentIdV2 = exports.deleteTransactionV2 = exports.updateTransactionV2 = exports.createTransactionV2 = exports.listTransactionsV2 = exports.createPayment = exports.listPayments = exports.getPatientStats = void 0;
+exports.testWhatsAppTemplate = exports.testWhatsAppMessage = exports.patientReactivation = exports.onAppointmentUpdatedWorkflow = exports.onAppointmentCreatedWorkflow = exports.appointmentReminders = exports.emailWebhook = exports.processNotificationQueue = exports.sendNotificationBatch = exports.sendNotification = exports.dataIntegrity = exports.cleanup = exports.birthdays = exports.expiringVouchers = exports.weeklySummary = exports.dailyReports = exports.dailyReminders = exports.onAppointmentUpdated = exports.onAppointmentCreated = exports.onPatientCreated = exports.apiRouter = exports.realtimePublish = exports.scheduledWeeklyReport = exports.scheduledDailyReport = exports.downloadReport = exports.getReport = exports.listReports = exports.generateAIReport = exports.cleanupOldTraces = exports.performanceStream = exports.getPerformanceTrends = exports.getTraceTimeline = exports.getSlowRequests = exports.getPerformanceStats = exports.cleanupOldErrors = exports.getErrorTrends = exports.errorStream = exports.getErrorDetails = exports.resolveError = exports.getRecentErrors = exports.getErrorStats = exports.downloadExport = exports.importPatients = exports.exportPatients = exports.getWebhookEventTypes = exports.testWebhook = exports.listWebhooks = exports.unsubscribeWebhook = exports.subscribeWebhook = exports.aiGetSuggestions = void 0;
+exports.updateUserRole = exports.listUsers = exports.onUserCreated = void 0;
 const functions = __importStar(require("firebase-functions/v2"));
 const v2_1 = require("firebase-functions/v2");
 const init_1 = require("./init");
@@ -76,14 +78,25 @@ require("./lib/sentry");
 // ============================================================================
 // API de Pacientes
 const apiPatients = __importStar(require("./api/patients"));
-exports.listPatients = apiPatients.listPatients;
+exports.listPatientsV2 = apiPatients.listPatientsHttp; // HTTP version - new name to avoid conflict
+exports.getPatientHttp = apiPatients.getPatientHttp; // HTTP version for web
+exports.getPatientStatsV2 = apiPatients.getPatientStatsHttp; // HTTP version - CORS fix
+exports.createPatientV2 = apiPatients.createPatientHttp; // HTTP version - CORS fix
+exports.updatePatientV2 = apiPatients.updatePatientHttp; // HTTP version - CORS fix
+exports.deletePatientV2 = apiPatients.deletePatientHttp; // HTTP version - CORS fix
+exports.listPatients = apiPatients.listPatients; // Original callable - TODO: remove after migration
 exports.createPatient = apiPatients.createPatient;
 exports.updatePatient = apiPatients.updatePatient;
 exports.getPatient = apiPatients.getPatient;
 exports.deletePatient = apiPatients.deletePatient;
 // API de Agendamentos
 const apiAppointments = __importStar(require("./api/appointments"));
-exports.listAppointments = apiAppointments.listAppointments;
+exports.listAppointments = apiAppointments.listAppointmentsHttp; // Use HTTP version for CORS fix
+exports.getAppointmentV2 = apiAppointments.getAppointmentHttp; // HTTP version - CORS fix
+exports.createAppointmentV2 = apiAppointments.createAppointmentHttp; // HTTP version - CORS fix
+exports.updateAppointmentV2 = apiAppointments.updateAppointmentHttp; // HTTP version - CORS fix
+exports.cancelAppointmentV2 = apiAppointments.cancelAppointmentHttp; // HTTP version - CORS fix
+exports.checkTimeConflictV2 = apiAppointments.checkTimeConflictHttp; // HTTP version - CORS fix
 exports.createAppointment = apiAppointments.createAppointment;
 exports.updateAppointment = apiAppointments.updateAppointment;
 exports.getAppointment = apiAppointments.getAppointment;
@@ -91,6 +104,16 @@ exports.cancelAppointment = apiAppointments.cancelAppointment;
 exports.checkTimeConflict = apiAppointments.checkTimeConflict;
 // API de Exercícios
 const apiExercises = __importStar(require("./api/exercises"));
+exports.listExercisesV2 = apiExercises.listExercisesHttp;
+exports.getExerciseV2 = apiExercises.getExerciseHttp;
+exports.searchSimilarExercisesV2 = apiExercises.searchSimilarExercisesHttp;
+exports.getExerciseCategoriesV2 = apiExercises.getExerciseCategoriesHttp;
+exports.getPrescribedExercisesV2 = apiExercises.getPrescribedExercisesHttp;
+exports.logExerciseV2 = apiExercises.logExerciseHttp;
+exports.createExerciseV2 = apiExercises.createExerciseHttp;
+exports.updateExerciseV2 = apiExercises.updateExerciseHttp;
+exports.deleteExerciseV2 = apiExercises.deleteExerciseHttp;
+exports.mergeExercisesV2 = apiExercises.mergeExercisesHttp;
 exports.listExercises = apiExercises.listExercises;
 exports.getExercise = apiExercises.getExercise;
 exports.searchSimilarExercises = apiExercises.searchSimilarExercises;
@@ -122,6 +145,12 @@ exports.listPayments = apiPayments.listPayments;
 exports.createPayment = apiPayments.createPayment;
 // API Financeira (Transações)
 const apiFinancial = __importStar(require("./api/financial"));
+exports.listTransactionsV2 = apiFinancial.listTransactionsHttp;
+exports.createTransactionV2 = apiFinancial.createTransactionHttp;
+exports.updateTransactionV2 = apiFinancial.updateTransactionHttp;
+exports.deleteTransactionV2 = apiFinancial.deleteTransactionHttp;
+exports.findTransactionByAppointmentIdV2 = apiFinancial.findTransactionByAppointmentIdHttp;
+exports.getEventReportV2 = apiFinancial.getEventReportHttp;
 exports.listTransactions = apiFinancial.listTransactions;
 exports.createTransaction = apiFinancial.createTransaction;
 exports.updateTransaction = apiFinancial.updateTransaction;
@@ -130,6 +159,14 @@ exports.findTransactionByAppointmentId = apiFinancial.findTransactionByAppointme
 exports.getEventReport = apiFinancial.getEventReport;
 // API de Prontuários
 const apiMedicalRecords = __importStar(require("./api/medical-records"));
+exports.getPatientRecordsV2 = apiMedicalRecords.getPatientRecordsHttp;
+exports.createMedicalRecordV2 = apiMedicalRecords.createMedicalRecordHttp;
+exports.updateMedicalRecordV2 = apiMedicalRecords.updateMedicalRecordHttp;
+exports.deleteMedicalRecordV2 = apiMedicalRecords.deleteMedicalRecordHttp;
+exports.listTreatmentSessionsV2 = apiMedicalRecords.listTreatmentSessionsHttp;
+exports.createTreatmentSessionV2 = apiMedicalRecords.createTreatmentSessionHttp;
+exports.getPainRecordsV2 = apiMedicalRecords.getPainRecordsHttp;
+exports.savePainRecordV2 = apiMedicalRecords.savePainRecordHttp;
 exports.getPatientRecords = apiMedicalRecords.getPatientRecords;
 exports.getPainRecords = apiMedicalRecords.getPainRecords;
 exports.savePainRecord = apiMedicalRecords.savePainRecord;
@@ -175,6 +212,53 @@ var clinical_analysis_1 = require("./ai/clinical-analysis");
 Object.defineProperty(exports, "aiClinicalAnalysis", { enumerable: true, get: function () { return clinical_analysis_1.clinicalAnalysis; } });
 var movement_analysis_1 = require("./ai/movement-analysis");
 Object.defineProperty(exports, "aiMovementAnalysis", { enumerable: true, get: function () { return movement_analysis_1.movementAnalysis; } });
+// New AI Functions (Clinical Assistant)
+var clinical_chat_1 = require("./ai/clinical-chat");
+Object.defineProperty(exports, "aiClinicalChat", { enumerable: true, get: function () { return clinical_chat_1.aiClinicalChat; } });
+Object.defineProperty(exports, "aiExerciseRecommendationChat", { enumerable: true, get: function () { return clinical_chat_1.aiExerciseRecommendationChat; } });
+Object.defineProperty(exports, "aiSoapNoteChat", { enumerable: true, get: function () { return clinical_chat_1.aiSoapNoteChat; } });
+Object.defineProperty(exports, "aiGetSuggestions", { enumerable: true, get: function () { return clinical_chat_1.aiGetSuggestions; } });
+// ============================================================================
+// WEBHOOK MANAGEMENT
+// ============================================================================
+const webhooks = __importStar(require("./webhooks/index"));
+exports.subscribeWebhook = webhooks.subscribeWebhook;
+exports.unsubscribeWebhook = webhooks.unsubscribeWebhook;
+exports.listWebhooks = webhooks.listWebhooks;
+exports.testWebhook = webhooks.testWebhook;
+exports.getWebhookEventTypes = webhooks.getWebhookEventTypes;
+// ============================================================================
+// EXPORT/IMPORT FUNCTIONS
+// ============================================================================
+const exportImport = __importStar(require("./export-import/index"));
+exports.exportPatients = exportImport.exportPatients;
+exports.importPatients = exportImport.importPatients;
+exports.downloadExport = exportImport.downloadExport;
+// ============================================================================
+// MONITORING & OBSERVABILITY
+// ============================================================================
+const errorDashboard = __importStar(require("./monitoring/error-dashboard"));
+exports.getErrorStats = errorDashboard.getErrorStats;
+exports.getRecentErrors = errorDashboard.getRecentErrors;
+exports.resolveError = errorDashboard.resolveError;
+exports.getErrorDetails = errorDashboard.getErrorDetails;
+exports.errorStream = errorDashboard.errorStream;
+exports.getErrorTrends = errorDashboard.getErrorTrends;
+exports.cleanupOldErrors = errorDashboard.cleanupOldErrors;
+const performanceTracing = __importStar(require("./monitoring/performance-tracing"));
+exports.getPerformanceStats = performanceTracing.getPerformanceStats;
+exports.getSlowRequests = performanceTracing.getSlowRequests;
+exports.getTraceTimeline = performanceTracing.getTraceTimeline;
+exports.getPerformanceTrends = performanceTracing.getPerformanceTrends;
+exports.performanceStream = performanceTracing.performanceStream;
+exports.cleanupOldTraces = performanceTracing.cleanupOldTraces;
+const aiReports = __importStar(require("./monitoring/ai-reports"));
+exports.generateAIReport = aiReports.generateAIReport;
+exports.listReports = aiReports.listReports;
+exports.getReport = aiReports.getReport;
+exports.downloadReport = aiReports.downloadReport;
+exports.scheduledDailyReport = aiReports.scheduledDailyReport;
+exports.scheduledWeeklyReport = aiReports.scheduledWeeklyReport;
 // ============================================================================
 // REALTIME FUNCTIONS
 // ============================================================================
@@ -184,7 +268,7 @@ exports.realtimePublish = realtimePublisher.realtimePublish;
 // HTTP FUNCTIONS
 // ============================================================================
 exports.apiRouter = functions.https.onRequest({
-    cors: init_2.CORS_ORIGINS,
+    cors: true,
 }, async (req, res) => {
     // Router principal para endpoints HTTP
     const { path } = req;

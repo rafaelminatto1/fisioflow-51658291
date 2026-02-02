@@ -1,11 +1,14 @@
 /**
- * Vercel Edge Config Feature Flags
+ * Firebase Remote Config Feature Flags
  *
  * Dynamic feature flags without redeployment
  * Supports A/B testing, rollbacks, and gradual rollouts
+ *
+ * Migrated from Vercel Edge Config to Firebase Remote Config
  */
 
-import { get } from '@vercel/edge-config';
+import { getRemoteConfig, getValue, fetchAndActivate, getAll } from 'firebase/remote-config';
+import { firebaseApp } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface FeatureFlagConfig {
@@ -44,31 +47,112 @@ export interface FeatureFlags {
   beta_features: boolean;
 }
 
+// Default feature flags
+const DEFAULT_FLAGS: Partial<FeatureFlags> = {
+  new_dashboard: false,
+  ai_transcription: true,
+  ai_chatbot: true,
+  ai_exercise_suggestions: true,
+  digital_prescription: true,
+  pain_map_v2: false,
+  soap_records_v2: false,
+  advanced_analytics: true,
+  patient_reports_v2: false,
+  whatsapp_notifications: true,
+  google_calendar_sync: true,
+  maintenance_mode: false,
+  beta_features: false,
+};
+
 /**
- * Get all feature flags from Edge Config
+ * Get Firebase Remote Config instance
+ */
+function getRemoteConfigInstance() {
+  const remoteConfig = getRemoteConfig(firebaseApp);
+
+  // Set minimum fetch interval (in seconds)
+  // For development: 0 (always fetch)
+  // For production: 3600 (1 hour) or more
+  if (import.meta.env.DEV) {
+    remoteConfig.settings.minimumFetchIntervalMillis = 0;
+  } else {
+    remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour
+  }
+
+  // Set fetch timeout (in milliseconds)
+  remoteConfig.settings.fetchTimeoutMillis = 60000; // 1 minute
+
+  return remoteConfig;
+}
+
+/**
+ * Fetch and activate Remote Config
+ */
+export async function fetchRemoteConfig(): Promise<boolean> {
+  try {
+    const remoteConfig = getRemoteConfigInstance();
+    return await fetchAndActivate(remoteConfig);
+  } catch (error) {
+    logger.error('Failed to fetch remote config', error, 'edgeConfig');
+    return false;
+  }
+}
+
+/**
+ * Get all feature flags from Firebase Remote Config
  */
 export async function getFeatureFlags(): Promise<Partial<FeatureFlags>> {
   try {
-    const flags = await get('features');
-    return (flags as Partial<FeatureFlags>) || {};
+    // Try to fetch latest config (non-blocking)
+    fetchRemoteConfig().catch(() => {
+      // Silently fail - we'll use cached values
+    });
+
+    const remoteConfig = getRemoteConfigInstance();
+    const allValues = getAll(remoteConfig);
+
+    const flags: Partial<FeatureFlags> = {};
+    for (const [key, value] of Object.entries(allValues)) {
+      if (value.getSource() === 'remote') {
+        const strValue = value.asString();
+        flags[key as keyof FeatureFlags] = strValue === 'true' ? true :
+          strValue === 'false' ? false :
+          JSON.parse(strValue);
+      }
+    }
+
+    // Merge with defaults
+    return { ...DEFAULT_FLAGS, ...flags };
   } catch (error) {
     logger.error('Failed to fetch feature flags', error, 'edgeConfig');
-    // Return default flags if Edge Config is not available
-    return {
-      new_dashboard: false,
-      ai_transcription: true,
-      ai_chatbot: true,
-      ai_exercise_suggestions: true,
-      digital_prescription: true,
-      pain_map_v2: false,
-      soap_records_v2: false,
-      advanced_analytics: true,
-      patient_reports_v2: false,
-      whatsapp_notifications: true,
-      google_calendar_sync: true,
-      maintenance_mode: false,
-      beta_features: false,
-    };
+    return DEFAULT_FLAGS;
+  }
+}
+
+/**
+ * Get a single feature flag value
+ */
+function getFlagValue(feature: keyof FeatureFlags): boolean | number | FeatureFlagConfig {
+  try {
+    const remoteConfig = getRemoteConfigInstance();
+    const value = getValue(remoteConfig, feature);
+
+    if (value.getSource() === 'static') {
+      return DEFAULT_FLAGS[feature] ?? false;
+    }
+
+    const strValue = value.asString();
+
+    // Try to parse as JSON first (for complex configs)
+    try {
+      return JSON.parse(strValue);
+    } catch {
+      // If not JSON, treat as boolean
+      return strValue === 'true';
+    }
+  } catch (error) {
+    logger.error(`Failed to get flag value for ${feature}`, error, 'edgeConfig');
+    return DEFAULT_FLAGS[feature] ?? false;
   }
 }
 
@@ -81,22 +165,21 @@ export async function isFeatureEnabled(
   userRole?: string
 ): Promise<boolean> {
   try {
-    const flags = await getFeatureFlags();
-    const flagConfig = flags[feature];
+    const flagValue = getFlagValue(feature);
 
-    // If flag doesn't exist, default to false
-    if (flagConfig === undefined) {
-      return false;
+    // If flag doesn't exist, check defaults
+    if (flagValue === undefined) {
+      return DEFAULT_FLAGS[feature] ?? false;
     }
 
     // Simple boolean flag
-    if (typeof flagConfig === 'boolean') {
-      return flagConfig;
+    if (typeof flagValue === 'boolean') {
+      return flagValue;
     }
 
-    // Complex flag config (future enhancement)
-    if (typeof flagConfig === 'object') {
-      const config = flagConfig as FeatureFlagConfig;
+    // Complex flag config
+    if (typeof flagValue === 'object') {
+      const config = flagValue as FeatureFlagConfig;
 
       // Check maintenance mode first
       if (feature !== 'maintenance_mode') {
@@ -131,7 +214,7 @@ export async function isFeatureEnabled(
     return false;
   } catch (error) {
     logger.error(`Failed to check feature flag ${feature}`, error, 'edgeConfig');
-    return false;
+    return DEFAULT_FLAGS[feature] ?? false;
   }
 }
 
@@ -242,7 +325,14 @@ export async function getABTestVariant(
   userId: string
 ): Promise<string | null> {
   try {
-    const variants = await get(`ab_test:${testName}`);
+    const remoteConfig = getRemoteConfigInstance();
+    const value = getValue(remoteConfig, `ab_test:${testName}`);
+
+    if (value.getSource() === 'static') {
+      return null;
+    }
+
+    const variants = JSON.parse(value.asString());
     if (!variants) return null;
 
     const hash = hashUserId(userId);

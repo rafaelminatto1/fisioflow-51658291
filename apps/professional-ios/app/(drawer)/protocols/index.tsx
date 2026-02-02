@@ -279,7 +279,7 @@ export default function ProtocolTemplatesScreen() {
                     <View style={styles.exercisesListFull}>
                       {selectedProtocol.exercises.map((exercise, index) => (
                         <View key={index} style={styles.exerciseItem}>
-                          <View style={styles.exerciseIndex}>
+                          <View style={[styles.exerciseIndex, { backgroundColor: `${colors.primary}15` }]}>
                             <Text style={[styles.exerciseIndexText, { color: colors.primary }]}>
                               {index + 1}
                             </Text>
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   exerciseIndexText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#3b82f6',
+    // Color will be set dynamically
   },
   exerciseDetails: {
     flex: 1,

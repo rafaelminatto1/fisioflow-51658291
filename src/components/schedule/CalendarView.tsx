@@ -518,6 +518,7 @@ export const CalendarView = memo(({
                   currentDate={currentDate}
                   appointments={appointments}
                   onDateChange={onDateChange}
+                  onTimeSlotClick={onTimeSlotClick}
                   onEditAppointment={onEditAppointment}
                   onDeleteAppointment={onDeleteAppointment}
                   getAppointmentsForDate={getAppointmentsForDate}

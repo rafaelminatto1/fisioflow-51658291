@@ -8,16 +8,19 @@
  * 4. Verificar se o paciente aparece no autocomplete
  */
 
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
+import { disableAblyForTest } from './fixtures/disable-ably';
 
-const BASE_URL = 'http://localhost:8083';
+const BASE_URL = 'http://localhost:8084';
 
 // Configure test for Chromium only with extended timeout
 test.use({ browserName: 'chromium' });
 test.setTimeout(120000);
 
 test('criação rápida de paciente e autocomplete no modal de agendamento', async ({ page }) => {
+  await disableAblyForTest(page);
+
   // Capture console logs
   page.on('console', msg => {
     if (msg.type() === 'error' || msg.type() === 'warn') {

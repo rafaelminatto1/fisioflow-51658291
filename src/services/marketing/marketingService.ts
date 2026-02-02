@@ -2,7 +2,7 @@
  * Marketing Service - Migrated to Firebase
  */
 
-import { db, collection, addDoc } from '@/integrations/firebase/app';
+import { db, collection, addDoc, doc, getDoc } from '@/integrations/firebase/app';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -20,16 +20,12 @@ export interface MarketingExportParams {
 
 // 1. Check Consent
 export const checkMarketingConsent = async (patientId: string): Promise<boolean> => {
-    // In real app, query Firestore collection 'conssent_records'
-    // For now, we use a mock implementation:
+    // Query Firestore collection 'consent_records'
     logger.info(`[MarketingService] Checking consent for patient ${patientId}`, { patientId }, 'marketingService');
 
-    // TODO: Implement actual Firestore query
-    // const consentRef = doc(db, 'consent_records', patientId);
-    // const consentSnap = await getDoc(consentRef);
-    // return consentSnap.exists() ? consentSnap.data().marketing_enabled : false;
-
-    return new Promise(resolve => setTimeout(() => resolve(true), 500));
+    const consentRef = doc(db, 'consent_records', patientId);
+    const consentSnap = await getDoc(consentRef);
+    return consentSnap.exists() ? (consentSnap.data().marketing_enabled ?? false) : false;
 };
 
 // 2. Log Export
