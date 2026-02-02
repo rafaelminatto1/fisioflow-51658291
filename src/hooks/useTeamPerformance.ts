@@ -96,9 +96,8 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
 
       // Get therapists (users with role admin or fisioterapeuta)
       // In Firestore, roles might be in 'user_roles' collection or on 'profiles'.
-      // Assuming 'user_roles' collection structure similar to Supabase table
+      // Assuming 'user_roles' collection structure similar to previous database
       // Or we can query profiles directly if they have roles.
-      // Based on previous code: supabase.from('user_roles').in('role', ...)
 
       const rolesQ = firestoreQuery(
         collection(db, 'user_roles'),

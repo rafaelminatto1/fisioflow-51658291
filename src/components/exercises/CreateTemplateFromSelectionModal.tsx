@@ -33,13 +33,12 @@ export function CreateTemplateFromSelectionModal({
     // We need a way to add items, but hook requires templateId.
     // Actually, useTemplateItems hook depends on templateId query key.
     // We can't really use it easily here without mounting it for the new template ID.
-    // Better approach: Create a specialized service function or use direct supabase call here for efficiency.
+    // Better approach: Create a specialized service function or use direct Firebase call here for efficiency.
     // OR: Refactor useTemplateItems to not require templateId for the mutation itself, or use a separate hook.
-    // For simplicity and speed given constraints: I'll use direct supabase call for batch insert of items.
+    // For simplicity and speed given constraints: I'll use direct Firebase call for batch insert of items.
 
-    // Actually, looking at useExerciseTemplates structure, I can just use supabase client directly for items 
+    // Actually, looking at useExerciseTemplates structure, I can just use Firebase client directly for items
     // to avoid complex hook orchestration in this modal.
-    // Let's import supabase.
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
