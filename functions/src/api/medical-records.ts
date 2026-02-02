@@ -14,7 +14,7 @@ export const getPatientRecordsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { patientId, type, limit = 50 } = parseBody(req);
     if (!patientId) { res.status(400).json({ error: 'patientId é obrigatório' }); return; }
     const pool = getPool();
@@ -38,7 +38,7 @@ export const createMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { patientId, type, title, content, recordDate } = parseBody(req);
     if (!patientId || !type || !title) { res.status(400).json({ error: 'patientId, type e title são obrigatórios' }); return; }
     const pool = getPool();
@@ -58,7 +58,7 @@ export const updateMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { recordId, ...updates } = parseBody(req);
     if (!recordId) { res.status(400).json({ error: 'recordId é obrigatório' }); return; }
     const pool = getPool();
@@ -81,7 +81,7 @@ export const deleteMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { recordId } = parseBody(req);
     if (!recordId) { res.status(400).json({ error: 'recordId é obrigatório' }); return; }
     const result = await getPool().query('DELETE FROM medical_records WHERE id = $1 AND organization_id = $2 RETURNING id', [recordId, auth.organizationId]);
@@ -98,7 +98,7 @@ export const listTreatmentSessionsHttp = onRequest(httpOpts, async (req, res) =>
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { patientId, limit = 20 } = parseBody(req);
     if (!patientId) { res.status(400).json({ error: 'patientId é obrigatório' }); return; }
     const result = await getPool().query(`SELECT ts.*, p.name as patient_name, prof.full_name as therapist_name, a.date as appointment_date FROM treatment_sessions ts LEFT JOIN patients p ON ts.patient_id=p.id LEFT JOIN profiles prof ON ts.therapist_id=prof.user_id LEFT JOIN appointments a ON ts.appointment_id=a.id WHERE ts.patient_id=$1 AND ts.organization_id=$2 ORDER BY ts.session_date DESC, ts.created_at DESC LIMIT $3`, [patientId, auth.organizationId, limit]);
@@ -114,7 +114,7 @@ export const createTreatmentSessionHttp = onRequest(httpOpts, async (req, res) =
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { patientId, appointmentId, painLevelBefore, painLevelAfter, observations, evolution, nextGoals } = parseBody(req);
     if (!patientId) { res.status(400).json({ error: 'patientId é obrigatório' }); return; }
     const pool = getPool();
@@ -136,7 +136,7 @@ export const getPainRecordsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { patientId } = parseBody(req);
     if (!patientId) { res.status(400).json({ error: 'patientId é obrigatório' }); return; }
     const pool = getPool();
@@ -155,7 +155,7 @@ export const savePainRecordHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
-    const auth = await authorizeRequest(extractBearerToken(req.headers.authorization || req.headers.Authorization));
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { patientId, painLevel, recordDate, notes } = parseBody(req);
     if (!patientId || painLevel === undefined) { res.status(400).json({ error: 'patientId e painLevel são obrigatórios' }); return; }
     const pool = getPool();

@@ -13,6 +13,7 @@ function parseBody(req) { return typeof req.body === 'string' ? (() => { try {
 catch {
     return {};
 } })() : (req.body || {}); }
+function getAuthHeader(req) { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
 const httpOpts = { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true };
 exports.listTransactionsHttp = (0, https_1.onRequest)(httpOpts, async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -26,7 +27,7 @@ exports.listTransactionsHttp = (0, https_1.onRequest)(httpOpts, async (req, res)
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { limit = 100, offset = 0 } = parseBody(req);
         const result = await (0, init_2.getPool)().query('SELECT * FROM transacoes WHERE organization_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3', [auth.organizationId, limit, offset]);
         res.json({ data: result.rows });
@@ -52,7 +53,7 @@ exports.createTransactionHttp = (0, https_1.onRequest)(httpOpts, async (req, res
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const data = parseBody(req);
         if (!data.valor || !data.tipo) {
             res.status(400).json({ error: 'Valor e tipo são obrigatórios' });
@@ -82,7 +83,7 @@ exports.updateTransactionHttp = (0, https_1.onRequest)(httpOpts, async (req, res
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { transactionId, ...updates } = parseBody(req);
         if (!transactionId) {
             res.status(400).json({ error: 'transactionId é obrigatório' });
@@ -137,7 +138,7 @@ exports.deleteTransactionHttp = (0, https_1.onRequest)(httpOpts, async (req, res
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { transactionId } = parseBody(req);
         if (!transactionId) {
             res.status(400).json({ error: 'transactionId é obrigatório' });
@@ -171,7 +172,7 @@ exports.findTransactionByAppointmentIdHttp = (0, https_1.onRequest)(httpOpts, as
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { appointmentId } = parseBody(req);
         if (!appointmentId) {
             res.status(400).json({ error: 'appointmentId é obrigatório' });
@@ -201,7 +202,7 @@ exports.getEventReportHttp = (0, https_1.onRequest)(httpOpts, async (req, res) =
     }
     setCorsHeaders(res);
     try {
-        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { eventoId } = parseBody(req);
         if (!eventoId) {
             res.status(400).json({ error: 'eventoId é obrigatório' });
