@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mergeExercises = exports.deleteExercise = exports.updateExercise = exports.createExercise = exports.getPrescribedExercises = exports.logExercise = exports.getExerciseCategories = exports.searchSimilarExercises = exports.getExercise = exports.listExercises = exports.mergeExercisesHttp = exports.deleteExerciseHttp = exports.updateExerciseHttp = exports.createExerciseHttp = exports.logExerciseHttp = exports.getPrescribedExercisesHttp = exports.getExerciseCategoriesHttp = exports.getExerciseHttp = exports.searchSimilarExercisesHttp = exports.listExercisesHttp = void 0;
 const init_1 = require("../init");
@@ -39,25 +6,14 @@ const https_1 = require("firebase-functions/v2/https");
 const init_2 = require("../init");
 const auth_1 = require("../middleware/auth");
 const logger_1 = require("../lib/logger");
-const admin = __importStar(require("firebase-admin"));
-const firebaseAuth = admin.auth();
 function setCorsHeaders(res) {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
-async function verifyAuthHeader(req) {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
-    if (!authHeader?.startsWith('Bearer '))
-        throw new https_1.HttpsError('unauthenticated', 'No authorization header');
-    const token = authHeader.split('Bearer ')[1];
-    try {
-        const decoded = await firebaseAuth.verifyIdToken(token);
-        return { uid: decoded.uid };
-    }
-    catch {
-        throw new https_1.HttpsError('unauthenticated', 'Invalid token');
-    }
+function getAuthHeader(req) {
+    const h = req.headers?.authorization || req.headers?.Authorization;
+    return Array.isArray(h) ? h[0] : h;
 }
 function parseBody(req) {
     return typeof req.body === 'string' ? (() => { try {
@@ -82,7 +38,7 @@ exports.listExercisesHttp = (0, https_1.onRequest)({ region: 'southamerica-east1
     }
     setCorsHeaders(res);
     try {
-        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
         const pool = (0, init_2.getPool)();
         let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,thumbnail_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;
@@ -130,7 +86,7 @@ exports.searchSimilarExercisesHttp = (0, https_1.onRequest)({ region: 'southamer
     }
     setCorsHeaders(res);
     try {
-        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { exerciseId, query: searchQuery, limit = 10 } = parseBody(req);
         if (!exerciseId && !searchQuery) {
             res.status(400).json({ error: 'exerciseId ou query é obrigatório' });
@@ -172,7 +128,7 @@ exports.getExerciseHttp = (0, https_1.onRequest)({ region: 'southamerica-east1',
     }
     setCorsHeaders(res);
     try {
-        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { exerciseId } = parseBody(req);
         if (!exerciseId) {
             res.status(400).json({ error: 'exerciseId é obrigatório' });
@@ -207,7 +163,7 @@ exports.getExerciseCategoriesHttp = (0, https_1.onRequest)({ region: 'southameri
     }
     setCorsHeaders(res);
     try {
-        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const pool = (0, init_2.getPool)();
         const result = await pool.query('SELECT DISTINCT category FROM exercises WHERE is_active = true ORDER BY category');
         res.json({ data: result.rows.map((r) => ({ id: r.category.toLowerCase().replace(/\s+/g, '-'), name: r.category })) });
@@ -233,7 +189,7 @@ exports.getPrescribedExercisesHttp = (0, https_1.onRequest)({ region: 'southamer
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId } = parseBody(req);
         if (!patientId) {
             res.status(400).json({ error: 'patientId é obrigatório' });
@@ -270,7 +226,7 @@ exports.logExerciseHttp = (0, https_1.onRequest)({ region: 'southamerica-east1',
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         const { patientId, prescriptionId, difficulty, notes } = parseBody(req);
         if (!patientId || !prescriptionId) {
             res.status(400).json({ error: 'patientId e prescriptionId são obrigatórios' });
@@ -306,7 +262,7 @@ exports.createExerciseHttp = (0, https_1.onRequest)({ region: 'southamerica-east
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         if (auth.role !== 'admin' && auth.role !== 'fisioterapeuta') {
             res.status(403).json({ error: 'Permissão insuficiente' });
             return;
@@ -337,7 +293,7 @@ exports.updateExerciseHttp = (0, https_1.onRequest)({ region: 'southamerica-east
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         if (auth.role !== 'admin' && auth.role !== 'fisioterapeuta') {
             res.status(403).json({ error: 'Permissão insuficiente' });
             return;
@@ -388,7 +344,7 @@ exports.deleteExerciseHttp = (0, https_1.onRequest)({ region: 'southamerica-east
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         if (auth.role !== 'admin') {
             res.status(403).json({ error: 'Apenas administradores podem excluir' });
             return;
@@ -427,7 +383,7 @@ exports.mergeExercisesHttp = (0, https_1.onRequest)({ region: 'southamerica-east
     }
     setCorsHeaders(res);
     try {
-        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(req.headers.authorization || req.headers.Authorization));
+        const auth = await (0, auth_1.authorizeRequest)((0, auth_1.extractBearerToken)(getAuthHeader(req)));
         if (auth.role !== 'admin') {
             res.status(403).json({ error: 'Apenas administradores podem unir' });
             return;
