@@ -67,7 +67,10 @@ const SmartAI = () => {
     setLoading(true);
 
     try {
-      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+      // Use Firebase Functions HTTP endpoint
+      const REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
+      const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+      const CHAT_URL = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/aiClinicalChat`;
 
       const response = await fetch(CHAT_URL, {
         method: 'POST',
