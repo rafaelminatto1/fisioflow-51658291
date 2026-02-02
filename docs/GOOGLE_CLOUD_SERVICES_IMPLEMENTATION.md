@@ -4,6 +4,24 @@
 
 This document summarizes the implementation of free Google Cloud services for FisioFlow.
 
+**Status**: ✅ **All services deployed and tested**
+
+**Deployment Date**: 2026-02-02
+
+**Region**: southamerica-east1 (São Paulo)
+
+## Deployed Endpoints
+
+| Service | Endpoint | CPU | Memory |
+|---------|----------|-----|--------|
+| detectLanguage | `https://detectlanguage-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 256MiB |
+| getSupportedLanguages | `https://getsupportedlanguages-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 256MiB |
+| translate | `https://translate-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 256MiB |
+| translateExercise | `https://translateexercise-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 256MiB |
+| transcribeAudio | `https://transcribeaudio-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 512MiB |
+| transcribeLongAudio | `https://transcribelongaudio-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 256MiB |
+| synthesizeTTS | `https://synthesizetts-tfecm5cqoq-rj.a.run.app` | 0.125 vCPU | 256MiB |
+
 ## Implemented Services
 
 ### Phase 1: Monitoring & Security ✅
@@ -233,9 +251,59 @@ firebase deploy --only hosting
 
 ## Testing
 
+### Test Results (2026-02-02)
+
+#### ✅ detectLanguage
+```bash
+curl -X POST https://detectlanguage-tfecm5cqoq-rj.a.run.app \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Olá, tudo bem?"}'
+```
+**Response**:
+```json
+{"languageCode":"pt","confidence":0.6670859456062317}
+```
+
+#### ✅ getSupportedLanguages
+```bash
+curl -X GET https://getsupportedlanguages-tfecm5cqoq-rj.a.run.app
+```
+**Response**: Returns 200+ supported languages
+
+#### ✅ translate
+```bash
+curl -X POST https://translate-tfecm5cqoq-rj.a.run.app \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello, how are you?","targetLanguage":"pt-BR"}'
+```
+**Response**:
+```json
+{
+  "translation": "Olá, como vai?",
+  "detectedLanguageCode": "en",
+  "charCount": 19,
+  "targetLanguage": "pt-BR"
+}
+```
+
+#### ✅ translateExercise
+```bash
+curl -X POST https://translateexercise-tfecm5cqoq-rj.a.run.app \
+  -H "Content-Type: application/json" \
+  -d '{"exerciseName":"Shoulder Press","instructions":"Lift the weights overhead","targetLanguage":"pt-BR"}'
+```
+**Response**:
+```json
+{
+  "exerciseName": "Desenvolvimento de ombros",
+  "instructions": "Levante os pesos acima da cabeça.",
+  "targetLanguage": "pt-BR"
+}
+```
+
 ### Test Speech-to-Text
 ```bash
-curl -X POST https://southamerica-east1-fisioflow-migration.cloudfunctions.net/transcribeAudio \
+curl -X POST https://transcribeaudio-tfecm5cqoq-rj.a.run.app \
   -H "Content-Type: application/json" \
   -d '{
     "audioData": "base64-encoded-audio",
@@ -246,7 +314,7 @@ curl -X POST https://southamerica-east1-fisioflow-migration.cloudfunctions.net/t
 
 ### Test Text-to-Speech
 ```bash
-curl -X POST https://southamerica-east1-fisioflow-migration.cloudfunctions.net/synthesizeTTS \
+curl -X POST https://synthesizetts-tfecm5cqoq-rj.a.run.app \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Olá, bem-vindo ao FisioFlow",
@@ -254,16 +322,6 @@ curl -X POST https://southamerica-east1-fisioflow-migration.cloudfunctions.net/s
     "languageCode": "pt-BR"
   }' \
   --output speech.mp3
-```
-
-### Test Translation
-```bash
-curl -X POST https://southamerica-east1-fisioflow-migration.cloudfunctions.net/translate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Fisioterapia",
-    "targetLanguage": "en-US"
-  }'
 ```
 
 ## Monitoring
