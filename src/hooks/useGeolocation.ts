@@ -1,6 +1,8 @@
 import { Geolocation, Position, PositionOptions } from '@capacitor/geolocation';
 import { useCallback, useState } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { collection, addDoc } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 
 export interface LocationData {
   latitude: number;
@@ -156,8 +158,8 @@ export function useCheckIn() {
       checkedAt: new Date(location.timestamp).toISOString(),
     };
 
-    // TODO: Enviar para Supabase
-    // await supabase.from('appointment_checkins').insert(checkInData);
+    // TODO: Enviar para Firebase
+    // await addDoc(collection(db, 'appointment_checkins'), checkInData);
 
     return checkInData;
   }, [getCurrentPosition]);
