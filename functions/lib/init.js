@@ -38,12 +38,21 @@ exports.DB_NAME_SECRET = (0, params_1.defineSecret)('DB_NAME');
 exports.CLOUD_SQL_CONNECTION_NAME_SECRET = (0, params_1.defineSecret)('CLOUD_SQL_CONNECTION_NAME');
 exports.DB_HOST_IP_SECRET = (0, params_1.defineSecret)('DB_HOST_IP');
 exports.DB_HOST_IP_PUBLIC_SECRET = (0, params_1.defineSecret)('DB_HOST_IP_PUBLIC');
+// Firebase Functions v2 CORS - explicitly list allowed origins
+// Using 'cors: true' should work but has known issues in v2
+// Explicitly listing origins is the recommended workaround
 exports.CORS_ORIGINS = [
-    'https://moocafisio.com.br',
-    'https://fisioflow-migration.web.app',
-    'https://fisioflow-migration.firebaseapp.com',
     'http://localhost:5173',
-    'http://localhost:5000'
+    'http://localhost:8083',
+    'http://localhost:8084',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:8083',
+    'http://127.0.0.1:8084',
+    'https://fisioflow-migration.web.app',
+    'https://fisioflow.web.app',
+    'https://moocafisio.com.br',
+    'https://www.moocafisio.com.br',
+    '*' // fallback for other origins
 ];
 // ============================================================================
 // SINGLETON INSTANCES
@@ -139,31 +148,37 @@ function getAdminMessaging() {
 function getPool() {
     if (!poolInstance) {
         // Retrieve values from secrets or environment variables with safety
-        const dbUser = process.env.FUNCTIONS_EMULATOR === 'true'
+        // trim() removes trailing newlines that Secret Manager may add
+        const rawDbUser = process.env.FUNCTIONS_EMULATOR === 'true'
             ? (process.env.DB_USER || 'fisioflow')
             : (exports.DB_USER_SECRET.value() || process.env.DB_USER);
-        const dbPass = process.env.FUNCTIONS_EMULATOR === 'true'
+        const dbUser = typeof rawDbUser === 'string' ? rawDbUser.trim() : String(rawDbUser || '').trim();
+        const rawDbPass = process.env.FUNCTIONS_EMULATOR === 'true'
             ? (process.env.DB_PASS || 'fisioflow2024')
             : (exports.DB_PASS_SECRET.value() || process.env.DB_PASS);
-        const dbName = process.env.FUNCTIONS_EMULATOR === 'true'
+        const dbPass = typeof rawDbPass === 'string' ? rawDbPass.trim() : String(rawDbPass || '').trim();
+        const rawDbName = process.env.FUNCTIONS_EMULATOR === 'true'
             ? (process.env.DB_NAME || 'fisioflow')
             : (exports.DB_NAME_SECRET.value() || process.env.DB_NAME);
+        const dbName = typeof rawDbName === 'string' ? rawDbName.trim() : String(rawDbName || '').trim();
         if (!process.env.FUNCTIONS_EMULATOR && (!dbUser || !dbPass || !dbName)) {
             logger_1.logger.error('[Pool] Critical: Missing database credentials in production environment.');
             logger_1.logger.error('[Pool] Please set the following secrets: DB_USER, DB_PASS, DB_NAME');
         }
-        // Local helper for safe secret access
+        // Local helper for safe secret access (trim to remove trailing newlines from Secret Manager)
         const getSecretValue = (secret) => {
             try {
-                return secret.value();
+                const v = secret.value();
+                return typeof v === 'string' ? v.trim() : v;
             }
             catch (e) {
                 return null;
             }
         };
-        const connectionName = process.env.FUNCTIONS_EMULATOR === 'true'
+        const rawConnectionName = process.env.FUNCTIONS_EMULATOR === 'true'
             ? process.env.CLOUD_SQL_CONNECTION_NAME
             : (getSecretValue(exports.CLOUD_SQL_CONNECTION_NAME_SECRET) || process.env.CLOUD_SQL_CONNECTION_NAME || process.env.DB_HOST);
+        const connectionName = rawConnectionName ? String(rawConnectionName).trim() : '';
         // Pool configuration optimized for Cloud Functions serverless
         // Each function instance gets its own pool, so keep it small
         const config = {
@@ -184,7 +199,8 @@ function getPool() {
         // Prefer Public IP if available (as it's now authorized)
         let dbHostIp = null;
         if (process.env.FUNCTIONS_EMULATOR !== 'true') {
-            dbHostIp = getSecretValue(exports.DB_HOST_IP_PUBLIC_SECRET) || getSecretValue(exports.DB_HOST_IP_SECRET) || process.env.DB_HOST_IP;
+            const ipValue = getSecretValue(exports.DB_HOST_IP_PUBLIC_SECRET) || getSecretValue(exports.DB_HOST_IP_SECRET) || process.env.DB_HOST_IP;
+            dbHostIp = ipValue ? ipValue.trim() : null;
         }
         if (process.env.FUNCTIONS_EMULATOR === 'true') {
             // EMULADOR: Usar configuração local para teste
@@ -194,7 +210,8 @@ function getPool() {
         }
         else if (dbHostIp) {
             // PRODUÇÃO: Usar IP do Cloud SQL com SSL (Prioridade agora que autorizamos 0.0.0.0/0)
-            config.host = dbHostIp;
+            // trim() removes trailing newlines that Secret Manager may add (causes ENOTFOUND)
+            config.host = typeof dbHostIp === 'string' ? dbHostIp.trim() : String(dbHostIp).trim();
             config.port = 5432;
             config.ssl = {
                 rejectUnauthorized: false, // Cloud SQL usa certificados auto-assinados

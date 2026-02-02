@@ -19,8 +19,8 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 // Extend Window interface for analytics globals
 declare global {
   interface Window {
-    va?: (event: string, payload: Record<string, unknown>) => void;
-    gtag?: (event: string, action: string, payload: Record<string, unknown>) => void;
+    gtag?: (command: 'event' | 'config', targetId: string, config?: Record<string, unknown>) => void;
+    dataLayer?: unknown[];
     Sentry?: {
       addBreadcrumb: (breadcrumb: { category: string; message: string; level: string; data?: Record<string, unknown> }) => void;
       captureMessage: (message: string, options: { level: string; extra?: Record<string, unknown> }) => void;
@@ -83,25 +83,10 @@ export function getRatingColor(rating: Rating): string {
 
 /**
  * Envia métricas para analytics com error handling
- * Silenciosamente falha se analytics não estiver disponível
+ * Envia para Google Analytics 4 (GA4)
  */
 export function sendToAnalytics(metrics: WebVitalsMetrics) {
   try {
-    // Enviar para Vercel Analytics (apenas em produção ou se explicitamente habilitado)
-    if (import.meta.env.PROD && typeof window !== 'undefined' && window.va) {
-      try {
-        window.va('event', 'web-vitals', {
-          event_category: 'Web Vitals',
-          event_label: metrics.lcp?.name || 'LCP',
-          value: Math.round(metrics.lcp?.value || 0),
-          non_interaction: true,
-        });
-      } catch (e) {
-        // Silenciosamente ignorar erros do Vercel Analytics
-        logger.debug('[WebVitals] Vercel Analytics error', e, 'web-vitals');
-      }
-    }
-
     // Enviar para Google Analytics 4
     if (typeof window !== 'undefined' && window.gtag) {
       try {
@@ -125,7 +110,7 @@ export function sendToAnalytics(metrics: WebVitalsMetrics) {
     }
 
     // Enviar para console em development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.table({
         'FCP': metrics.fcp?.value,
         'LCP': metrics.lcp?.value,

@@ -133,9 +133,12 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     }
   };
 
+  const [defaultOrderIndex, setDefaultOrderIndex] = useState(0);
+
   const handleAddTask = (status: TarefaStatus) => {
     setSelectedTarefa(null);
     setDefaultStatus(status);
+    setDefaultOrderIndex(groupedTarefas[status]?.length ?? 0);
     setModalOpen(true);
   };
 
@@ -190,6 +193,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
           onOpenChange={setModalOpen}
           tarefa={selectedTarefa}
           defaultStatus={defaultStatus}
+          defaultOrderIndex={defaultOrderIndex}
           defaultProjectId={projectId}
         />
       </>

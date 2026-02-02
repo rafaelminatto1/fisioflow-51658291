@@ -34,8 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateAssessment = exports.createAssessment = exports.getAssessment = exports.listAssessments = exports.getAssessmentTemplate = exports.listAssessmentTemplates = void 0;
-const https_1 = require("firebase-functions/v2/https");
 const init_1 = require("../init");
+const https_1 = require("firebase-functions/v2/https");
+const init_2 = require("../init");
 const auth_1 = require("../middleware/auth");
 const logger_1 = require("../lib/logger");
 exports.listAssessmentTemplates = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async (request) => {
@@ -43,7 +44,7 @@ exports.listAssessmentTemplates = (0, https_1.onCall)({ cors: init_1.CORS_ORIGIN
         throw new https_1.HttpsError('unauthenticated', 'Requisita autenticação.');
     }
     const auth = await (0, auth_1.authorizeRequest)(request.auth.token);
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         const result = await pool.query(`SELECT
         id, name, description, category,
@@ -72,7 +73,7 @@ exports.getAssessmentTemplate = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS 
     if (!templateId) {
         throw new https_1.HttpsError('invalid-argument', 'templateId é obrigatório');
     }
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         // Buscar template
         const templateResult = await pool.query(`SELECT * FROM assessment_templates
@@ -125,7 +126,7 @@ exports.listAssessments = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, asy
     if (!patientId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId é obrigatório');
     }
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         let query = `
       SELECT
@@ -166,7 +167,7 @@ exports.getAssessment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, async
     if (!assessmentId) {
         throw new https_1.HttpsError('invalid-argument', 'assessmentId é obrigatório');
     }
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         // Buscar avaliação
         const assessmentResult = await pool.query(`SELECT * FROM patient_assessments
@@ -209,7 +210,7 @@ exports.createAssessment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, as
     if (!patientId || !templateId) {
         throw new https_1.HttpsError('invalid-argument', 'patientId e templateId são obrigatórios');
     }
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         // Verificar se template existe
         const templateCheck = await pool.query(`SELECT id FROM assessment_templates
@@ -286,7 +287,7 @@ exports.updateAssessment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, as
     if (!assessmentId) {
         throw new https_1.HttpsError('invalid-argument', 'assessmentId é obrigatório');
     }
-    const pool = (0, init_1.getPool)();
+    const pool = (0, init_2.getPool)();
     try {
         // Verificar se avaliação existe
         const existing = await pool.query('SELECT * FROM patient_assessments WHERE id = $1 AND organization_id = $2', [assessmentId, auth.organizationId]);

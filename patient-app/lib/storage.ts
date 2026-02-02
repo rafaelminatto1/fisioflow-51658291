@@ -77,7 +77,7 @@ export const Storage = {
    */
   async getAllKeys(): Promise<string[]> {
     try {
-      return await AsyncStorage.getAllKeys();
+      return [...(await AsyncStorage.getAllKeys())];
     } catch (error) {
       log.error('STORAGE', 'Failed to get all keys', error);
       return [];
@@ -275,7 +275,7 @@ export const StorageSize = {
    * Get human-readable storage size
    */
   async getReadableSize(): Promise<string> {
-    const bytes = await Storage.getSize();
+    const bytes = await StorageSize.getSize();
 
     if (bytes < 1024) {
       return `${bytes} B`;
