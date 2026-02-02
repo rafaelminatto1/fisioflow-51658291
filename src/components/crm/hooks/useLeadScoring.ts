@@ -1,10 +1,5 @@
 /**
  * Lead Scoring Hook - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('leads') → Firestore collection 'leads'
- * - supabase.from('lead_interacoes') → Firestore collection 'lead_interacoes'
- * - supabase.from('lead_scoring_regras') → Firestore collection 'lead_scoring_regras'
  */
 
 import { useMutation } from '@tanstack/react-query';

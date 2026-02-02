@@ -1,8 +1,5 @@
 /**
  * MainLayout - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Auth:
- * - supabase.auth.signOut() → signOut() from firebase/auth
  */
 
 import React from 'react';

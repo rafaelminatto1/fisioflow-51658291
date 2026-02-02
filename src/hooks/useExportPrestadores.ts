@@ -1,8 +1,5 @@
 /**
  * useExportPrestadores - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('prestadores') → Firestore collection 'prestadores'
  */
 
 import { useMutation } from '@tanstack/react-query';

@@ -57,16 +57,12 @@ export const TEMPLATE_KEYS = {
 } as const;
 
 /**
- * NOTE: This service uses Supabase Edge Functions for WhatsApp messaging.
- * For Firebase, you need to implement Firebase Cloud Functions to:
- * 1. Send messages via WhatsApp Business API
- * 2. Handle message templates
- * 3. Track delivery status
+ * NOTE: This service uses Firebase Cloud Functions for WhatsApp messaging.
  *
  * The current implementation logs to console and stores metrics in Firestore.
  *
  * TODO: Implement Firebase Cloud Functions for:
- * - send-whatsapp → Replace supabase.functions.invoke('send-whatsapp')
+ * - send-whatsapp → Call Firebase Cloud Function to send WhatsApp messages
  */
 export class WhatsAppService {
   private static MAX_RETRIES = 3;

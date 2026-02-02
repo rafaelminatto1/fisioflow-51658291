@@ -1,10 +1,5 @@
 /**
  * useEventoTemplates - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('evento_templates') → Firestore collection 'evento_templates'
- * - supabase.from('eventos') → Firestore collection 'eventos'
- * - supabase.from('checklist_items') → Firestore collection 'checklist_items'
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

@@ -2,13 +2,7 @@
  * Query utility functions for Firebase/Firestore
  * Reusable helpers for common query patterns
  *
- * Migration from Supabase to Firebase:
- * - PostgrestQueryBuilder → Firestore Query
- * - Supabase-specific filters → Firestore where clauses
- *
- * @module lib/utils/query-helpers
  */
-
 import { db, query as firestoreQuery, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -16,10 +10,6 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 // TIMEOUT & RETRY HELPERS
 // ==============================================================================
 
-/**
- * Wrap a promise with a timeout
- * @throws Error if timeout is exceeded
- */
 export function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
@@ -29,9 +19,6 @@ export function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Prom
   ]);
 }
 
-/**
- * Retry a function with exponential backoff
- */
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   options: {
@@ -68,9 +55,6 @@ export async function retryWithBackoff<T>(
   throw lastError;
 }
 
-/**
- * Network error types that should trigger a retry
- */
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
@@ -92,9 +76,6 @@ export function isNetworkError(error: unknown): boolean {
 // FIRESTORE QUERY BUILDERS
 // ==============================================================================
 
-/**
- * Apply common filters to a Firestore query
- */
 export function applyFilters<T>(
   query: Query<T>,
   filters: {
@@ -149,16 +130,10 @@ export function applyFilters<T>(
 // TYPE HELPERS
 // ==============================================================================
 
-/**
- * Check if data is empty (null, undefined, or empty array)
- */
 export function isEmpty<T>(data: T[] | null | undefined): data is null | undefined | [] {
   return !data || data.length === 0;
 }
 
-/**
- * Type guard for Firebase error
- */
 export function isFirebaseError(error: unknown): error is { message: string; code?: string; details?: unknown } {
   return (
     typeof error === 'object' &&
@@ -167,9 +142,6 @@ export function isFirebaseError(error: unknown): error is { message: string; cod
   );
 }
 
-/**
- * Extract error message from various error types
- */
 export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error instanceof Error) return error.message;
@@ -181,16 +153,10 @@ export function getErrorMessage(error: unknown): string {
 // OFFLINE HELPERS
 // ==============================================================================
 
-/**
- * Check if the browser is online
- */
 export function isOnline(): boolean {
   return navigator.onLine;
 }
 
-/**
- * Check if the browser is offline
- */
 export function isOffline(): boolean {
   return !navigator.onLine;
 }
@@ -199,9 +165,6 @@ export function isOffline(): boolean {
 // QUERY RESULT HELPERS
 // ==============================================================================
 
-/**
- * Transform a query result with error handling
- */
 export async function safeQuery<T>(
   queryFn: () => Promise<T>,
   fallback: T,
@@ -215,9 +178,6 @@ export async function safeQuery<T>(
   }
 }
 
-/**
- * Paginate array data in memory (for client-side pagination)
- */
 export function paginateArray<T>(
   data: T[],
   page: number,
@@ -244,9 +204,6 @@ export function paginateArray<T>(
 // PERFORMANCE HELPERS
 // ==============================================================================
 
-/**
- * Debounce function for search inputs
- */
 export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
@@ -264,9 +221,6 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   };
 }
 
-/**
- * Throttle function for scroll events
- */
 export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
@@ -295,9 +249,6 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
 // FIRESTORE-SPECIFIC HELPERS
 // ==============================================================================
 
-/**
- * Create a paginated query with cursor-based pagination
- */
 export function createPaginatedQuery<T>(
   collectionRef: CollectionReference<T>,
   options: {
@@ -335,9 +286,6 @@ export function createPaginatedQuery<T>(
   return q;
 }
 
-/**
- * Convert Firestore snapshot to array with IDs
- */
 export function snapshotToArray<T>(snapshot: { docs: Array<{ id: string; data: () => T }> }): Array<T & { id: string }> {
   return snapshot.docs.map(doc => ({
     id: doc.id,

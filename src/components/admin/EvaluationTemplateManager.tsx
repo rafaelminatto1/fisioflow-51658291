@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { db, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, orderBy as fsOrderBy } from '@/integrations/firebase/app';
 
 interface Template {
     id: string;
@@ -48,13 +49,12 @@ export const EvaluationTemplateManager = () => {
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ['evaluation-templates-admin'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('evaluation_templates')
-                .select('*')
-                .order('category', { ascending: true });
-
-            if (error) throw error;
-            return data;
+            const q = firestoreQuery(
+                collection(db, 'evaluation_templates'),
+                fsOrderBy('category', 'asc')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
     });
 
@@ -70,20 +70,16 @@ export const EvaluationTemplateManager = () => {
                 description: data.description,
                 category: data.category,
                 content: contentJson,
-                is_active: true
+                is_active: true,
+                updated_at: new Date().toISOString(),
             };
 
             if (editingTemplate) {
-                const { error } = await supabase
-                    .from('evaluation_templates')
-                    .update(payload)
-                    .eq('id', editingTemplate.id);
-                if (error) throw error;
+                const docRef = doc(db, 'evaluation_templates', editingTemplate.id);
+                await updateDoc(docRef, payload);
             } else {
-                const { error } = await supabase
-                    .from('evaluation_templates')
-                    .insert(payload);
-                if (error) throw error;
+                payload.created_at = new Date().toISOString();
+                await addDoc(collection(db, 'evaluation_templates'), payload);
             }
         },
         onSuccess: () => {
@@ -99,11 +95,8 @@ export const EvaluationTemplateManager = () => {
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            const { error } = await supabase
-                .from('evaluation_templates')
-                .delete()
-                .eq('id', id);
-            if (error) throw error;
+            const docRef = doc(db, 'evaluation_templates', id);
+            await deleteDoc(docRef);
         },
         onSuccess: () => {
             toast.success('Template removido.');

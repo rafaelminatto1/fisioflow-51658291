@@ -1,13 +1,7 @@
 /**
  * useCRM - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - crm_tarefas -> crm_tarefas
- * - crm_campanhas -> crm_campanhas
- * - crm_automacoes -> crm_automacoes
- * - crm_pesquisas_nps -> crm_pesquisas_nps
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

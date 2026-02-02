@@ -1,11 +1,5 @@
 /**
  * useTherapistOccupancy - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('user_roles') → Firestore collection 'user_roles'
- * - supabase.from('profiles') → Firestore collection 'profiles'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - Joins replaced with separate queries
  */
 
 import { useQuery } from '@tanstack/react-query';
