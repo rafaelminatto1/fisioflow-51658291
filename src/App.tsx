@@ -167,13 +167,6 @@ const App = () => {
                     <Suspense fallback={<PageLoadingFallback />}>
                       <AppRoutes />
                       <VersionManager />
-                      {/* Vercel Analytics - Disabled to prevent 400 errors
-                    {Analytics && (
-                      <ErrorBoundary fallback={null}>
-                        <Analytics />
-                      </ErrorBoundary>
-                    )}
-                    */}
 
                       <WebVitalsIndicator />
 

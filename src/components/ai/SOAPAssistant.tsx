@@ -226,24 +226,11 @@ export function SOAPAssistant({
     try {
       setProgress(30);
 
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-      formData.append('patientId', patient.id);
-      formData.append('language', language);
-
       setProgress(50);
 
-      // Call transcription endpoint
-      const response = await fetch('/api/ai/soap/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao transcrever áudio');
-      }
-
-      const { transcription } = await response.json();
+      // Firebase - transcrever áudio
+      const { transcribeAudioBlob } = await import('@/services/ai/firebaseAIService');
+      const { transcription } = await transcribeAudioBlob(audioBlob, 'audio/webm');
 
       setConsultationText(prev => prev.replace('\n\n[Transcrevendo áudio...]', transcription));
 
@@ -293,37 +280,37 @@ export function SOAPAssistant({
     try {
       setProgress(30);
 
-      const payload = {
-        patient: {
-          id: patient.id,
-          name: patient.name,
-          age: patient.age,
-          gender: patient.gender,
-          mainCondition: patient.mainCondition,
-          medicalHistory: patient.medicalHistory,
-        },
-        previousSOAP: previousSOAP.slice(-2),
-        sessionNumber,
-        sessionType,
-        language,
-        consultationText: inputText,
-      };
-
       setProgress(50);
 
-      const response = await fetch('/api/ai/soap/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      // Firebase Cloud Functions - aiSoapNoteChat
+      const { generateSOAPNote } = await import('@/services/ai/firebaseAIService');
+      const result = await generateSOAPNote({
+        patientContext: {
+          patientName: patient.name,
+          condition: patient.mainCondition ?? '',
+          sessionNumber,
+        },
+        subjective: inputText,
+        assistantNeeded: 'full',
       });
 
-      if (!response.ok) {
+      if (!result.success || !result.soapNote) {
         throw new Error('Falha ao gerar nota SOAP');
       }
 
       setProgress(80);
 
-      const data: SOAPGenerationResult = await response.json();
+      // Adaptar resposta: aiSoapNoteChat retorna texto, componente espera estrutura
+      const data: SOAPGenerationResult = {
+        soap: {
+          subjective: result.soapNote,
+          assessment: '',
+          plan: {},
+        },
+        keyFindings: [],
+        recommendations: [],
+        redFlags: [],
+      };
 
       setProgress(100);
 

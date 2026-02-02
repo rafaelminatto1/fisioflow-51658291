@@ -134,7 +134,7 @@ export default defineConfig(({ mode }) => {
 
   // Gerar versão única para cada build
   const buildTime = Date.now().toString();
-  const appVersion = process.env.VERCEL_GIT_COMMIT_SHA || buildTime;
+  const appVersion = process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime;
 
   return {
     server: {

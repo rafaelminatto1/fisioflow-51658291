@@ -125,27 +125,26 @@ React Router 6.30     // Client-side routing
 
 ### Backend
 ```yaml
-Serviço: Supabase Pro
-  - PostgreSQL 15+    # Banco de dados
-  - Auth             # Autenticação JWT
-  - Realtime         # WebSockets
+Serviço: Firebase
+  - Firestore        # Banco de dados NoSQL
+  - Auth             # Autenticação (email/senha, Google, etc.)
+  - Realtime         # Listeners em tempo real
   - Storage          # Armazenamento de arquivos
-  - Edge Functions   # Serverless functions
-  - Row Level Security # RLS policies
+  - Cloud Functions  # Serverless functions
+  - Security Rules   # Regras de acesso por organização/role
 ```
 
 ### Deploy e Infraestrutura
 ```yaml
-Deploy: Vercel Pro
-  - Edge Network      # CDN global
-  - Analytics         # Métricas de uso
-  - Speed Insights    # Performance
-  - KV Store          # Cache distribuído
-  - Cron Jobs         # Tarefas agendadas
+Deploy: Firebase Hosting + GCP
+  - Firebase Hosting  # CDN global (SPA estático)
+  - Cloud Build      # CI/CD
+  - Cloud Scheduler  # Tarefas agendadas (crons)
+  - Cloud Functions  # Backend serverless
 
 Monitoramento:
   - Sentry           # Error tracking
-  - Vercel Analytics # Analytics
+  - Cloud Monitoring # Logs e métricas GCP
   - Web Vitals       # Core Web Vitals
 ```
 
@@ -197,7 +196,7 @@ Arquitetura moderna com React 18, TypeScript, e as melhores práticas de desenvo
 Build otimizado com Vite, lazy loading, e cache inteligente para carregamento instantâneo.
 
 ### 5. Segurança
-RLS (Row Level Security), autenticação JWT, criptografia de dados sensíveis.
+Firestore Security Rules, Firebase Auth, criptografia de dados sensíveis.
 
 ### 6. Acessibilidade
 Componentes WCAG 2.1 AA compatíveis, navegação por teclado, suporte a screen readers.
@@ -206,7 +205,7 @@ Componentes WCAG 2.1 AA compatíveis, navegação por teclado, suporte a screen 
 Funciona em desktop, tablet e mobile, com app nativo para iOS e Android.
 
 ### 8. Real-time
-Atualizações em tempo real usando Supabase Realtime subscriptions.
+Atualizações em tempo real usando Firestore listeners e Realtime Database quando aplicável.
 
 ### 9. Escalável
 Arquitetura preparada para crescer de pequenas clínicas a grandes redes.

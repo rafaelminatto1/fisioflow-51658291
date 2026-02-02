@@ -296,39 +296,11 @@ export function MovementAnalysis({
         message: language === 'pt-BR' ? 'Analisando movimento com IA...' : 'Analyzing movement with AI...',
       });
 
-      const response = await fetch('/api/ai/movement/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(language === 'pt-BR' ? 'Falha na análise' : 'Analysis failed');
-      }
-
-      setAnalysisProgress({
-        stage: 'processing',
-        progress: 80,
-        message: language === 'pt-BR' ? 'Processando resultados...' : 'Processing results...',
-      });
-
-      const result: MovementAnalysisResult = await response.json();
-
-      setAnalysisProgress({
-        stage: 'complete',
-        progress: 100,
-        message: language === 'pt-BR' ? 'Análise concluída!' : 'Analysis complete!',
-      });
-
-      setAnalysisResult(result);
-
-      onAnalysisComplete?.(result);
-
-      toast({
-        title: language === 'pt-BR' ? 'Análise concluída!' : 'Analysis complete!',
-        description: language === 'pt-BR'
-          ? `Pontuação geral: ${result.formQuality.overall}/100`
-          : `Overall score: ${result.formQuality.overall}/100`,
-      });
+      // Firebase aiMovementAnalysis requer patientVideoUrl (vídeo em Firebase Storage)
+      // TODO: Implementar upload do vídeo para Storage e obter URL antes de chamar
+      throw new Error(language === 'pt-BR'
+        ? 'Análise de movimento: integração com Firebase Storage em desenvolvimento.'
+        : 'Movement analysis: Firebase Storage integration in development.');
     } catch (err) {
       logger.error('[MovementAnalysis] Error', err, 'MovementAnalysis');
       const errorMessage = err instanceof Error ? err.message : language === 'pt-BR'

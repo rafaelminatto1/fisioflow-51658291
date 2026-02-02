@@ -159,12 +159,15 @@ function getTherapistName(
  * Schema base correspondente à estrutura do banco de dados.
  * Inclui campos novos e legados para compatibilidade durante migração.
  */
+/** Aceita UUID ou Firebase Auth UID (profiles.user_id pode não ser UUID) */
+const idOrUid = () => z.string().min(1).nullable();
+
 export const AppointmentSchema = z.object({
     // Identificadores
     id: z.string().uuid(),
     patient_id: z.string().uuid().nullable(),
-    therapist_id: z.string().uuid().nullable(),
-    organization_id: z.string().uuid().optional(),
+    therapist_id: idOrUid(),
+    organization_id: z.string().min(1).optional().nullable(),
 
     // Campos legados (mantidos para compatibilidade durante transição)
     appointment_date: z.string().nullable().optional(),

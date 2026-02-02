@@ -158,20 +158,23 @@ export function ExerciseAI({
 
       setProgress(50);
 
-      // Call AI function (this would integrate with Firebase AI Logic or edge function)
-      const response = await fetch('/api/ai/exercise-suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      // Firebase Cloud Functions - aiExerciseSuggestion
+      const { getExerciseSuggestions } = await import('@/services/ai/firebaseAIService');
+      const result = await getExerciseSuggestions({
+        patientId: patient.id,
+        goals: goals ?? [],
+        availableEquipment: availableEquipment ?? [],
+        treatmentPhase,
+        painMap,
       });
 
-      if (!response.ok) {
-        throw new Error('Falha ao gerar recomendações');
+      if (!result.success || !result.data) {
+        throw new Error(result.error ?? 'Falha ao gerar recomendações');
       }
 
       setProgress(80);
 
-      const data: ExerciseProgramResponse = await response.json();
+      const data: ExerciseProgramResponse = result.data as unknown as ExerciseProgramResponse;
 
       setProgress(100);
 

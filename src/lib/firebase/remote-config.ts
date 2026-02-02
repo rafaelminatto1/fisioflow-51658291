@@ -244,11 +244,15 @@ class RemoteConfigManager {
         fetchTimeoutMillis: 60000, // 1 minute
       };
 
-      // Set log level based on environment
-      if (import.meta.env.DEV) {
-        setLogLevel('debug');
-      } else {
-        setLogLevel('silent');
+      // Set log level based on environment (Firebase SDK pode não ter logger interno em alguns builds)
+      try {
+        if (import.meta.env.DEV) {
+          setLogLevel('debug');
+        } else {
+          setLogLevel('silent');
+        }
+      } catch {
+        // Ignorar se setLogLevel falhar (ex.: Cannot set properties of undefined 'logLevel')
       }
 
       // Set default values (Firebase best practice)

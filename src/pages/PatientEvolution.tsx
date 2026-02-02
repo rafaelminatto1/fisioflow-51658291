@@ -51,8 +51,6 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
-import { fisioLogger as logger } from '@/lib/errors/logger';
-
 // Componentes de Evolução
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
 import { GoalsTracker } from '@/components/evolution/GoalsTracker';
