@@ -14,7 +14,7 @@ import {
   getTranslationClient,
   detectLanguage as detectLang,
 } from '../lib/translation';
-import { fisioLogger as logger } from '../lib/errors/logger';
+import { logger } from '../lib/logger';
 
 // ============================================================================
 // TYPES
@@ -32,10 +32,6 @@ interface DetectLanguageRequest {
   text: string;
 }
 
-interface SupportedLanguagesRequest {
-  displayLanguage?: string;
-}
-
 // ============================================================================
 // MAIN FUNCTION
 // ============================================================================
@@ -44,6 +40,7 @@ export const translate = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
     cors: true,
   },
@@ -146,6 +143,7 @@ export const detectLanguage = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
     cors: true,
   },
@@ -204,6 +202,7 @@ export const getSupportedLanguages = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
     cors: true,
   },
@@ -268,6 +267,7 @@ export const translateExercise = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
+    cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
     cors: true,
   },
