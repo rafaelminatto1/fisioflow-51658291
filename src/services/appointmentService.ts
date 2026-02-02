@@ -94,6 +94,15 @@ export class AppointmentService {
                         session_package_id: item.session_package_id,
                     });
                 } else {
+                    // Log detalhado do erro de validação para debug
+                    logger.error(`Appointment validation failed for ID ${item.id}`, {
+                        id: item.id,
+                        patient_name: item.patient_name,
+                        date: item.date,
+                        start_time: item.start_time,
+                        appointment_time: item.appointment_time,
+                        validationError: validation.error?.issues || 'Unknown error'
+                    }, 'AppointmentService');
                     validationErrors.push({ id: item.id, error: validation.error });
                 }
             });
@@ -164,12 +173,23 @@ export class AppointmentService {
             // appointmentsApi.create() already returns res.data (the appointment), not { data: appointment }
             const newAppointment = response as AppointmentApiItem;
 
+            // Helper to parse date string as local date (avoiding timezone issues)
+            // new Date("2026-02-05") is parsed as UTC midnight, which becomes previous day in Brazil (UTC-3)
+            const parseResponseDate = (dateStr: string | null | undefined): Date => {
+                if (!dateStr) return new Date();
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return new Date(dateStr);
+                const [year, month, day] = parts.map(Number);
+                // Use noon local time to avoid DST issues
+                return new Date(year, month - 1, day, 12, 0, 0);
+            };
+
             const appointment: AppointmentBase = {
                 id: newAppointment.id,
                 patientId: newAppointment.patient_id,
                 patientName: newAppointment.patient_name || 'Desconhecido',
                 phone: newAppointment.patient_phone || '',
-                date: new Date(newAppointment.date || newAppointment.appointment_date),
+                date: parseResponseDate(newAppointment.date || newAppointment.appointment_date),
                 time: newAppointment.start_time || newAppointment.appointment_time,
                 duration: newAppointment.duration,
                 type: newAppointment.type as AppointmentType,
@@ -237,12 +257,22 @@ export class AppointmentService {
             // API retorna o appointment diretamente (res.data), não { data: appointment }
             const fetchedUpdatedAppointment = response;
 
+            // Helper to parse date string as local date (avoiding timezone issues)
+            const parseResponseDate = (dateStr: string | null | undefined): Date => {
+                if (!dateStr) return new Date();
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return new Date(dateStr);
+                const [year, month, day] = parts.map(Number);
+                // Use noon local time to avoid DST issues
+                return new Date(year, month - 1, day, 12, 0, 0);
+            };
+
             const updatedAppointment: AppointmentBase = {
                 id: fetchedUpdatedAppointment.id,
                 patientId: fetchedUpdatedAppointment.patient_id,
                 patientName: fetchedUpdatedAppointment.patient_name || 'Desconhecido',
                 phone: fetchedUpdatedAppointment.patient_phone || '',
-                date: new Date(fetchedUpdatedAppointment.date || fetchedUpdatedAppointment.appointment_date),
+                date: parseResponseDate(fetchedUpdatedAppointment.date || fetchedUpdatedAppointment.appointment_date),
                 time: fetchedUpdatedAppointment.start_time || fetchedUpdatedAppointment.appointment_time,
                 duration: fetchedUpdatedAppointment.duration,
                 type: fetchedUpdatedAppointment.type as AppointmentType,
