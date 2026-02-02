@@ -481,6 +481,19 @@ export const createPatientHttp = onRequest(
 
       const patient = result.rows[0];
 
+      // [SYNC] Write to Firestore for legacy frontend compatibility
+      try {
+        const db = admin.firestore();
+        await db.collection('patients').doc(patient.id).set({
+          ...patient,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+        logger.info(`[createPatientHttp] Patient ${patient.id} synced to Firestore`);
+      } catch (fsError) {
+        logger.error(`[createPatientHttp] Failed to sync patient ${patient.id} to Firestore:`, fsError);
+      }
+
       // Publicar no Ably
       try {
         const realtime = await import('../realtime/publisher');
@@ -549,6 +562,19 @@ export const updatePatientHttp = onRequest(
         values
       );
       const patient = result.rows[0];
+
+      // [SYNC] Write to Firestore for legacy frontend compatibility
+      try {
+        const db = admin.firestore();
+        await db.collection('patients').doc(patientId).set({
+          ...patient,
+          updated_at: new Date()
+        }, { merge: true });
+        logger.info(`[updatePatientHttp] Patient ${patientId} synced to Firestore`);
+      } catch (fsError) {
+        logger.error(`[updatePatientHttp] Failed to sync patient ${patientId} to Firestore:`, fsError);
+      }
+
       try {
         const realtime = await import('../realtime/publisher');
         await realtime.publishPatientEvent(organizationId, { event: 'UPDATE', new: patient, old: existing.rows[0] });
@@ -588,6 +614,19 @@ export const deletePatientHttp = onRequest(
         [patientId, organizationId]
       );
       if (result.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
+
+      // [SYNC] Sync soft-delete to Firestore
+      try {
+        const db = admin.firestore();
+        await db.collection('patients').doc(patientId).update({
+          is_active: false,
+          updated_at: new Date()
+        });
+        logger.info(`[deletePatientHttp] Patient ${patientId} soft-deleted in Firestore`);
+      } catch (fsError) {
+        logger.error(`[deletePatientHttp] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
+      }
+
       try {
         const realtime = await import('../realtime/publisher');
         await realtime.publishPatientEvent(organizationId, { event: 'DELETE', new: null, old: result.rows[0] });
@@ -930,6 +969,19 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
 
     const patient = result.rows[0];
 
+    // [SYNC] Write to Firestore for legacy frontend compatibility
+    try {
+      const db = admin.firestore();
+      await db.collection('patients').doc(patient.id).set({
+        ...patient,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+      logger.info(`[createPatient] Patient ${patient.id} synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[createPatient] Failed to sync patient ${patient.id} to Firestore:`, fsError);
+    }
+
     logger.debug('[createPatient] Patient created:', JSON.stringify({
       id: patient.id,
       name: patient.name,
@@ -1063,6 +1115,18 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     const result = await pool.query(query, values);
     const patient = result.rows[0];
 
+    // [SYNC] Write to Firestore for legacy frontend compatibility
+    try {
+      const db = admin.firestore();
+      await db.collection('patients').doc(patientId).set({
+        ...patient,
+        updated_at: new Date()
+      }, { merge: true });
+      logger.info(`[updatePatient] Patient ${patientId} synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[updatePatient] Failed to sync patient ${patientId} to Firestore:`, fsError);
+    }
+
     // Publicar no Ably
     try {
       const realtime = await import('../realtime/publisher');
@@ -1124,6 +1188,18 @@ export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientR
 
     if (result.rows.length === 0) {
       throw new HttpsError('not-found', 'Paciente não encontrado');
+    }
+
+    // [SYNC] Sync soft-delete to Firestore
+    try {
+      const db = admin.firestore();
+      await db.collection('patients').doc(patientId).update({
+        is_active: false,
+        updated_at: new Date()
+      });
+      logger.info(`[deletePatient] Patient ${patientId} soft-deleted in Firestore`);
+    } catch (fsError) {
+      logger.error(`[deletePatient] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
     }
 
     // Publicar no Ably
