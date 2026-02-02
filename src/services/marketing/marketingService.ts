@@ -1,9 +1,5 @@
 /**
  * Marketing Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.storage.from('exports').upload() → Firebase Storage uploadBytes()
- * - supabase.from('marketing_exports').insert() → Firestore addDoc()
  */
 
 import { db, collection, addDoc } from '@/integrations/firebase/app';

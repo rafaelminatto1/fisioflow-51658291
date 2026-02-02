@@ -7,9 +7,13 @@ import * as Ably from 'ably';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const ABLY_KEY = import.meta.env.VITE_ABLY_API_KEY;
+const DISABLE_ABLY =
+  import.meta.env.VITE_DISABLE_ABLY === '1' ||
+  import.meta.env.VITE_E2E === '1' ||
+  (typeof window !== 'undefined' && !!(window as { __E2E__?: boolean }).__E2E__);
 
-// Track if Ably is available
-let isAblyAvailable = !!ABLY_KEY && ABLY_KEY !== 'your_ably_api_key_here';
+// Track if Ably is available (desabilitado em E2E para evitar 410 Gone)
+let isAblyAvailable = !DISABLE_ABLY && !!ABLY_KEY && ABLY_KEY !== 'your_ably_api_key_here';
 let ablyClient: Ably.Realtime | null = null;
 
 /**
@@ -37,7 +41,11 @@ export function resetAblyClient() {
 export function getAblyClient(): Ably.Realtime {
     if (!ablyClient) {
         if (!isAblyAvailable) {
-            logger.warn('[Ably] VITE_ABLY_API_KEY não configurada. Realtime desativado (usando mock).', undefined, 'ably-client');
+            if (DISABLE_ABLY) {
+                logger.info('[Ably] Desativado para E2E/testes (VITE_DISABLE_ABLY ou VITE_E2E).', undefined, 'ably-client');
+            } else {
+                logger.warn('[Ably] VITE_ABLY_API_KEY não configurada. Realtime desativado (usando mock).', undefined, 'ably-client');
+            }
             // Create a mock client that doesn't connect but provides the same interface
             ablyClient = new Ably.Realtime({
                 key: 'mock:mock',

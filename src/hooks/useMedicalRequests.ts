@@ -1,11 +1,5 @@
 /**
  * useMedicalRequests - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - medical_requests -> medical_requests collection
- * - medical_request_files -> medical_request_files collection
- * - Firebase Storage for file uploads
- * - Auth through useAuth() from AuthContext
  */
 
 import { useState, useEffect, useCallback } from 'react';

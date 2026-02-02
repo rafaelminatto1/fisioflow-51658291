@@ -1,8 +1,5 @@
 /**
  * useReports - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - All Supabase queries migrated to Firestore collections
  */
 
 import { useQuery } from '@tanstack/react-query';

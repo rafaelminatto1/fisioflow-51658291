@@ -311,10 +311,12 @@ export function isValidPatientColumn(column: string): column is PatientColumn {
 
 /**
  * Get a safe patient name with fallback
+ * Supports both DB field full_name and API field name (e.g. listPatientsV2 returns name)
  */
-export function getPatientName(patient: { full_name?: string | null; phone?: string | null } | null | undefined): string {
+export function getPatientName(patient: { full_name?: string | null; name?: string | null; phone?: string | null } | null | undefined): string {
   if (!patient) return 'Paciente';
-  return patient.full_name || (patient.phone ? `Paciente (${patient.phone})` : 'Paciente sem nome');
+  const p = patient as Record<string, unknown>;
+  return patient.full_name || (p?.name != null ? String(p.name) : (patient.phone ? `Paciente (${patient.phone})` : 'Paciente sem nome'));
 }
 
 /**

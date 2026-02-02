@@ -1,8 +1,5 @@
 /**
  * Report Export Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.from('audit_logs').insert() → Firestore addDoc()
  */
 
 import { db, collection, addDoc } from '@/integrations/firebase/app';

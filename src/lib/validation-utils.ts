@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import type { UnknownError, getErrorMessage, asError } from '@/types';
+import type { UnknownError } from '@/types';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**

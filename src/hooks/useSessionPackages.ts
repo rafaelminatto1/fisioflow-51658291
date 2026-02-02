@@ -1,9 +1,5 @@
 /**
  * useSessionPackages - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('session_packages') → Firestore collection 'session_packages'
- * - supabase.rpc('use_package_session') → Client-side transaction + Cloud Function (pending)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

@@ -1,10 +1,5 @@
 /**
  * useWaitlist - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('waitlist') → Firestore collection 'waitlist'
- * - supabase.from('waitlist_offers') → Firestore collection 'waitlist_offers'
- * - Joins com patients são feitos client-side
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

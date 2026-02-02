@@ -104,7 +104,7 @@ export async function retryWithBackoff<T>(
  * @example
  * ```ts
  * const result = await executeWithRetry(
- *   () => supabase.from('appointments').select('*'),
+ *   () => getDocs(query(collection(db, 'appointments'))),
  *   { timeoutMs: 10000, maxRetries: 3 }
  * );
  * ```

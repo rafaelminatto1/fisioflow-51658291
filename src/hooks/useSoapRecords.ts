@@ -1,12 +1,7 @@
 /**
  * useSoapRecords - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('soap_records') → Firestore collection 'soap_records'
- * - supabase.storage → Firebase Storage
- * - supabase.auth.getUser() → getFirebaseAuth().currentUser
  */
-
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, QueryConstraint, serverTimestamp, Timestamp } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';

@@ -2,14 +2,7 @@
  * Hooks para recomendações inteligentes com IA - Migrated to Firebase
  * @module hooks/useAIRecommendations
  *
- * Migration from Supabase to Firebase Firestore:
- * - patients -> patients collection
- * - appointments -> appointments collection
- * - patient_evolutions -> patient_evolutions collection
- * - patient_goals -> patient_goals collection
- * - Auth through useAuth() from AuthContext
  */
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit as queryLimit,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
@@ -84,9 +77,6 @@ const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: 
 // PATIENT RECOMMENDATIONS
 // =====================================================================
 
-/**
- * Hook para obter recomendações de um paciente específico
- */
 export function usePatientRecommendations(patientId: string) {
   return useQuery({
     queryKey: AI_KEYS.patientRecommendations(patientId),
@@ -139,9 +129,6 @@ export function usePatientRecommendations(patientId: string) {
   });
 }
 
-/**
- * Hook para obter recomendações de todos os pacientes
- */
 export function useAllPatientRecommendations(options?: {
   status?: 'active' | 'all';
   limit?: number;
@@ -216,9 +203,6 @@ interface ScheduleRecommendationsOptions {
   urgency?: 'low' | 'medium' | 'high';
 }
 
-/**
- * Hook para obter recomendações de horário para agendamento
- */
 export function useScheduleRecommendations(options: ScheduleRecommendationsOptions) {
   return useQuery({
     queryKey: AI_KEYS.scheduleRecommendations(options),
@@ -260,9 +244,6 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
 // TREATMENT INSIGHTS
 // =====================================================================
 
-/**
- * Hook para obter insights sobre o tratamento do paciente
- */
 export function useTreatmentInsights(patientId: string) {
   return useQuery({
     queryKey: AI_KEYS.treatmentInsights(patientId),
@@ -316,9 +297,6 @@ export function useTreatmentInsights(patientId: string) {
 // NEXT APPOINTMENT SUGGESTION
 // =====================================================================
 
-/**
- * Hook para obter sugestão de próximo agendamento
- */
 export function useNextAppointmentSuggestion(patientId: string) {
   return useQuery({
     queryKey: AI_KEYS.nextAppointment(patientId),
@@ -346,9 +324,6 @@ export function useNextAppointmentSuggestion(patientId: string) {
 // DISMISS RECOMMENDATION
 // =====================================================================
 
-/**
- * Hook para descartar uma recomendação
- */
 export function useDismissRecommendation() {
   const queryClient = useQueryClient();
 
