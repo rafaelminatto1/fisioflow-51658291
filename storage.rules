@@ -14,22 +14,22 @@ service firebase.storage {
     // Verificar se o usuário é admin
     function isAdmin() {
       return isAuthenticated() &&
-        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        firestore.exists(/databases/(default)/documents/profiles/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Verificar se o usuário é fisioterapeuta
     function isPhysiotherapist() {
       return isAuthenticated() &&
-        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'fisioterapeuta';
+        firestore.exists(/databases/(default)/documents/profiles/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.role == 'fisioterapeuta';
     }
 
     // Verificar se o usuário é estagiário
     function isIntern() {
       return isAuthenticated() &&
-        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'estagiario';
+        firestore.exists(/databases/(default)/documents/profiles/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/profiles/$(request.auth.uid)).data.role == 'estagiario';
     }
 
     // Verificar se é profissional (fisioterapeuta ou estagiário)

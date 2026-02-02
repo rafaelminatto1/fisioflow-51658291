@@ -32,9 +32,8 @@ service cloud.firestore {
 
     // Acesso emergencial para o email do proprietário
     function isBootstrapAdmin() {
-      return isAuthenticated() && 
-        (request.auth.token.email == 'rafael.minatto@yahoo.com.br' || 
-         request.auth.token.email == 'rafael.minatto@yahoo.cpm.br' ||
+      return isAuthenticated() &&
+        (request.auth.token.email == 'rafael.minatto@yahoo.com.br' ||
          request.auth.uid == 'sj9b11xOjPT8Q34pPHBMUIPzvQQ2');
     }
 
@@ -369,9 +368,9 @@ service cloud.firestore {
         || (request.resource != null && request.resource.data.organization_id != null && canAccessScheduleByOrg(request.resource.data.organization_id));
     }
     // Capacidade por horário (Configurações da Agenda > Capacidade)
-    // Regra mínima: só auth (isValidSize removido para testar)
     match /schedule_capacity_config/{docId} {
-      allow read, write: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow write: if canManageSchedule();
     }
     // Horários de funcionamento (Configurações da Agenda > Horários)
     match /schedule_business_hours/{docId} {
