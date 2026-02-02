@@ -179,20 +179,27 @@ export const ErrorHandler = {
     },
 
     /**
-     * Check if error is a Supabase error
+     * Check if error is a Firebase error
      */
-    isSupabaseError(error: Error): boolean {
+    isFirebaseError(error: Error): boolean {
         const message = error.message.toLowerCase();
         return (
-            message.includes('supabase') ||
-            message.includes('postgres') ||
-            message.includes('database') ||
-            message.includes('constraint') ||
-            message.includes('duplicate key') ||
-            message.includes('foreign key') ||
-            message.includes('null constraint') ||
-            error.name === 'PostgresError'
+            message.includes('firebase') ||
+            message.includes('firestore') ||
+            message.includes('cloud functions') ||
+            message.includes('permission-denied') ||
+            message.includes('not-found') ||
+            message.includes('already-exists') ||
+            message.includes('unauthenticated') ||
+            error.name === 'FirebaseError'
         );
+    },
+
+    /**
+     * Check if error is a database error (legacy compatibility)
+     */
+    isSupabaseError(error: Error): boolean {
+        return this.isFirebaseError(error);
     },
 
     /**

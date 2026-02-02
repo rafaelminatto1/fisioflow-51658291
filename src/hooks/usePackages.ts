@@ -1,12 +1,7 @@
 /**
  * usePackages - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - session_packages -> session_packages
- * - patient_packages -> patient_packages
- * - package_usage -> package_usage
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

@@ -1,12 +1,7 @@
 /**
  * useSatisfactionSurveys - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('satisfaction_surveys') → Firestore collection 'satisfaction_surveys'
- * - Joins with patients, appointments replaced with separate queries
- * - Therapist names from Firestore profiles
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

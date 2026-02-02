@@ -2,7 +2,7 @@
  * Database Schema Documentation
  *
  * This file contains documentation for the database schema.
- * Keep this in sync with the actual Supabase migrations.
+ * The app now uses Firebase Firestore as the primary database.
  *
  * @module database/schema
  */
@@ -19,12 +19,16 @@
  *
  * @example
  * ```typescript
- * // Query active patients
- * const { data } = await supabase
- *   .from('patients')
- *   .select('*')
- *   .eq('organization_id', orgId)
- *   .in('status', [PATIENT_STATUS.ACTIVE]);
+ * // Query active patients from Firestore
+ * import { collection, query, where, getDocs } from '@/integrations/firebase/app';
+ *
+ * const q = query(
+ *   collection(db, 'patients'),
+ *   where('organization_id', '==', orgId),
+ *   where('status', '==', 'active')
+ * );
+ * const snapshot = await getDocs(q);
+ * const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
  * ```
  */
 export const PATIENTS_TABLE_SCHEMA = {
@@ -72,12 +76,16 @@ export const PATIENTS_TABLE_SCHEMA = {
  *
  * @example
  * ```typescript
- * // Query upcoming confirmed appointments
- * const { data } = await supabase
- *   .from('appointments')
- *   .select('*')
- *   .gte('date', new Date().toISOString())
- *   .in('status', [APPOINTMENT_STATUS.AGENDADO, APPOINTMENT_STATUS.CONFIRMADO]);
+ * // Query upcoming confirmed appointments from Firestore
+ * import { collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+ *
+ * const q = query(
+ *   collection(db, 'appointments'),
+ *   where('date', '>=', new Date().toISOString().split('T')[0]),
+ *   where('status', 'in', ['agendado', 'confirmado']),
+ *   orderBy('date', 'asc')
+ * );
+ * const snapshot = await getDocs(q);
  * ```
  */
 export const APPOINTMENTS_TABLE_SCHEMA = {
@@ -126,12 +134,15 @@ export const APPOINTMENTS_TABLE_SCHEMA = {
  *
  * @example
  * ```typescript
- * // Query completed sessions
- * const { data } = await supabase
- *   .from('sessions')
- *   .select('*')
- *   .eq('patient_id', patientId)
- *   .eq('status', SESSION_STATUS.COMPLETED);
+ * // Query completed sessions from Firestore
+ * import { collection, query, where, getDocs } from '@/integrations/firebase/app';
+ *
+ * const q = query(
+ *   collection(db, 'sessions'),
+ *   where('patient_id', '==', patientId),
+ *   where('status', '==', 'completed')
+ * );
+ * const snapshot = await getDocs(q);
  * ```
  */
 export const SESSIONS_TABLE_SCHEMA = {
@@ -174,12 +185,15 @@ export const SESSIONS_TABLE_SCHEMA = {
  *
  * @example
  * ```typescript
- * // Query active pathologies
- * const { data } = await supabase
- *   .from('patient_pathologies')
- *   .select('*')
- *   .eq('patient_id', patientId)
- *   .eq('status', PATHOLOGY_STATUS.EM_TRATAMENTO);
+ * // Query active pathologies from Firestore
+ * import { collection, query, where, getDocs } from '@/integrations/firebase/app';
+ *
+ * const q = query(
+ *   collection(db, 'patient_pathologies'),
+ *   where('patient_id', '==', patientId),
+ *   where('status', '==', 'em_tratamento')
+ * );
+ * const snapshot = await getDocs(q);
  * ```
  */
 export const PATIENT_PATHOLOGIES_TABLE_SCHEMA = {
@@ -216,12 +230,15 @@ export const PATIENT_PATHOLOGIES_TABLE_SCHEMA = {
  *
  * @example
  * ```typescript
- * // Query paid payments
- * const { data } = await supabase
- *   .from('payments')
- *   .select('*')
- *   .eq('status', PAYMENT_STATUS.PAID)
- *   .gte('paid_at', startDate);
+ * // Query paid payments from Firestore
+ * import { collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+ *
+ * const q = query(
+ *   collection(db, 'payments'),
+ *   where('status', '==', 'paid'),
+ *   orderBy('paid_at', 'desc')
+ * );
+ * const snapshot = await getDocs(q);
  * ```
  */
 export const PAYMENTS_TABLE_SCHEMA = {

@@ -1,113 +1,108 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+/**
+ * Medical Record Helpers
+ *
+ * Helper functions for saving medical record data
+ * Migrated from Supabase to Firebase Functions
+ */
+
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
+export interface Surgery {
+  name: string;
+  date: string;
+  surgeon: string;
+  hospital: string;
+  notes?: string;
+}
+
+export interface Goal {
+  description: string;
+  targetDate: string;
+}
+
+export interface Pathology {
+  name: string;
+  status: 'active' | 'treated';
+  diagnosedAt: string;
+}
+
+/**
+ * Save surgeries for a medical record
+ * @param recordId - Medical record ID
+ * @param newSurgeries - Array of surgeries to save
+ */
 export const saveSurgeries = async (
-    supabase: SupabaseClient,
-    recordId: string,
-    newSurgeries: Array<{ name: string; date: string; surgeon: string; hospital: string; notes?: string }>
+  recordId: string,
+  newSurgeries: Surgery[]
 ) => {
-    // First delete existing surgeries for this record to avoid duplicates/handle updates
-    const { error: deleteError } = await supabase
-        .from('surgeries')
-        .delete()
-        .eq('medical_record_id', recordId);
+  try {
+    const saveSurgeriesFn = httpsCallable(getFirebaseFunctions(), 'saveSurgeries');
+    const result = await saveSurgeriesFn({
+      recordId,
+      surgeries: newSurgeries,
+    });
 
-    if (deleteError) {
-        logger.error("Error deleting existing surgeries", deleteError, 'medicalRecordHelpers');
-        toast.error("Erro ao atualizar cirurgias");
-        throw new Error("Failed to update surgeries");
+    if (result.data?.error) {
+      throw new Error(result.data.error);
     }
-
-    const validSurgeries = newSurgeries.filter(s => s.name);
-    if (validSurgeries.length === 0) return;
-
-    const { error } = await supabase.from('surgeries').insert(
-        validSurgeries.map(s => ({
-            medical_record_id: recordId,
-            name: s.name,
-            surgery_date: s.date || null,
-            surgeon: s.surgeon,
-            hospital: s.hospital,
-            notes: s.notes
-        }))
-    );
-
-    if (error) {
-        logger.error("Error saving surgeries", error, 'medicalRecordHelpers');
-        toast.error("Erro ao salvar cirurgias");
-        throw new Error("Failed to save surgeries");
-    }
+  } catch (error) {
+    logger.error('Error saving surgeries', error, 'medicalRecordHelpers');
+    toast.error('Erro ao salvar cirurgias');
+    throw error;
+  }
 };
 
+/**
+ * Save goals for a medical record
+ * @param recordId - Medical record ID
+ * @param newGoals - Array of goals to save
+ */
 export const saveGoals = async (
-    supabase: SupabaseClient,
-    recordId: string,
-    newGoals: Array<{ description: string; targetDate: string }>
+  recordId: string,
+  newGoals: Goal[]
 ) => {
-    // First delete existing goals for this record
-    const { error: deleteError } = await supabase
-        .from('goals')
-        .delete()
-        .eq('medical_record_id', recordId);
+  try {
+    const saveGoalsFn = httpsCallable(getFirebaseFunctions(), 'saveGoals');
+    const result = await saveGoalsFn({
+      recordId,
+      goals: newGoals,
+    });
 
-    if (deleteError) {
-        logger.error("Error deleting existing goals", deleteError, 'medicalRecordHelpers');
-        toast.error("Erro ao atualizar objetivos");
-        throw new Error("Failed to update goals");
+    if (result.data?.error) {
+      throw new Error(result.data.error);
     }
-
-    const validGoals = newGoals.filter(g => g.description);
-    if (validGoals.length === 0) return;
-
-    const { error } = await supabase.from('goals').insert(
-        validGoals.map(g => ({
-            medical_record_id: recordId,
-            description: g.description,
-            target_date: g.targetDate || null,
-            status: 'active'
-        }))
-    );
-
-    if (error) {
-        logger.error("Error saving goals", error, 'medicalRecordHelpers');
-        toast.error("Erro ao salvar objetivos");
-        throw new Error("Failed to save goals");
-    }
+  } catch (error) {
+    logger.error('Error saving goals', error, 'medicalRecordHelpers');
+    toast.error('Erro ao salvar objetivos');
+    throw error;
+  }
 };
 
+/**
+ * Save pathologies for a medical record
+ * @param recordId - Medical record ID
+ * @param newPathologies - Array of pathologies to save
+ */
 export const savePathologies = async (
-    supabase: SupabaseClient,
-    recordId: string,
-    newPathologies: Array<{ name: string; status: 'active' | 'treated'; diagnosedAt: string }>
+  recordId: string,
+  newPathologies: Pathology[]
 ) => {
-    // First delete existing pathologies for this record
-    const { error: deleteError } = await supabase
-        .from('pathologies')
-        .delete()
-        .eq('medical_record_id', recordId);
+  try {
+    const savePathologiesFn = httpsCallable(getFirebaseFunctions(), 'savePathologies');
+    const result = await savePathologiesFn({
+      recordId,
+      pathologies: newPathologies,
+    });
 
-    if (deleteError) {
-        logger.error("Error deleting existing pathologies", deleteError, 'medicalRecordHelpers');
-        toast.error("Erro ao atualizar patologias");
-        throw new Error("Failed to update pathologies");
+    if (result.data?.error) {
+      throw new Error(result.data.error);
     }
-
-    const validPathologies = newPathologies.filter(p => p.name);
-    if (validPathologies.length === 0) return;
-
-    const { error } = await supabase.from('pathologies').insert(
-        validPathologies.map(p => ({
-            medical_record_id: recordId,
-            name: p.name,
-            status: p.status,
-            diagnosed_at: p.diagnosedAt || null,
-        }))
-    );
-
-    if (error) {
-        logger.error("Error saving pathologies", error, 'medicalRecordHelpers');
-        toast.error("Erro ao salvar patologias");
-        throw new Error("Failed to save pathologies");
-    }
+  } catch (error) {
+    logger.error('Error saving pathologies', error, 'medicalRecordHelpers');
+    toast.error('Erro ao salvar patologias');
+    throw error;
+  }
 };

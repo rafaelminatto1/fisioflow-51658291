@@ -1,9 +1,5 @@
 /**
  * CRM Campaigns Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('email_campanhas') → Firestore collection 'email_campanhas'
- * - Uses deleteDoc() for deletion
  */
 
 import { useState } from 'react';

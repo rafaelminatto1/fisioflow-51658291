@@ -1,8 +1,5 @@
 /**
  * DICOM Web Client - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.functions.invoke() → Firebase Functions httpsCallable()
  */
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
@@ -22,9 +19,6 @@ export interface DicomStudy {
 }
 
 export const dicomWebClient = {
-    /**
-     * Search for Studies (QIDO-RS)
-     */
     searchStudies: async (filters: Record<string, string> = {}): Promise<DicomStudy[]> => {
         try {
             const functions = getFirebaseFunctions();
@@ -53,7 +47,6 @@ export const dicomWebClient = {
         }
     },
 
-    /**
      * Get WADO-URI compatible URL for the Proxy
      * Used by Cornerstone Image Loaders
      */
@@ -86,7 +79,6 @@ export const dicomWebClient = {
         return '/dicom-proxy'; // Fallback to relative path
     },
 
-    /**
      * Store Instances (STOW-RS)
      * Uploads DICOM files
      */

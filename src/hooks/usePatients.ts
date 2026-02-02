@@ -141,6 +141,11 @@ export const useActivePatients = () => {
           organizationId,
         }, 'usePatients');
         logger.info('useActivePatients: successfully fetched patients', { count: validPatients.length }, 'usePatients');
+        // #region agent log
+        const rawFirst = Array.isArray(data) ? data[0] : null;
+        const mappedFirst = validPatients[0];
+        if (typeof fetch !== 'undefined' && (rawFirst || mappedFirst)) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'usePatients.ts:queryFn',message:'API vs mapped first patient',data:{rawKeys:rawFirst?Object.keys(rawFirst):[],rawName:(rawFirst as {name?:string})?.name,rawFullName:(rawFirst as {full_name?:string})?.full_name,mappedName:mappedFirst?.name,count:validPatients.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1,H3'})}).catch(()=>{});
+        // #endregion
 
         // Save to cache for offline use
         if (validPatients.length > 0) {
@@ -184,8 +189,7 @@ export const useActivePatients = () => {
             queryClient.prefetchQuery({
               queryKey: ['patient-stats', patient.id],
               queryFn: async () => {
-                const response = await patientsApi.getStats(patient.id);
-                return response.data;
+                return patientsApi.getStats(patient.id);
               },
               staleTime: PATIENT_QUERY_CONFIG.staleTime,
             });

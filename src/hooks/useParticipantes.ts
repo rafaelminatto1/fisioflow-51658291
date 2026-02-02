@@ -1,8 +1,5 @@
 /**
  * useParticipantes - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('participantes') → Firestore collection 'participantes'
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

@@ -1,11 +1,7 @@
 /**
  * useStandardForms - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
- * - supabase.from('evaluation_form_fields') → Firestore collection 'evaluation_form_fields'
  */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, query as firestoreQuery, where, limit } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

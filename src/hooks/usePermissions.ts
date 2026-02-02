@@ -33,8 +33,8 @@ export function usePermissions(): PermissionsResult {
   };
 
   const canDelete = (_resource: string): boolean => {
-    // Apenas admins e fisioterapeutas seniores podem deletar (exemplo)
-    return isAdmin || isFisio;
+    // Admins, fisioterapeutas e estagiarios podem deletar
+    return isAdmin || isFisio || isEstagiario;
   };
 
   return {

@@ -1,10 +1,7 @@
 /**
  * useProjects - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - projects -> Firestore collection 'projects'
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

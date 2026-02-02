@@ -1,12 +1,7 @@
 /**
  * useAttendanceReport - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('user_roles') → Firestore collection 'user_roles'
- * - Joins with patients replaced with separate queries
  */
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';

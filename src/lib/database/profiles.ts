@@ -1,25 +1,10 @@
 /**
  * ensureProfile - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore for profile management.
- * - supabase.from('profiles') → Firestore collection 'profiles'
- * - supabase.from('user_roles') → Firestore collection 'user_roles'
  */
-
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db, doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from '@/integrations/firebase/app';
 
-/**
- * Ensure a profile exists in the database for a user.
- * This is a defensive utility to recover from cases where the database trigger might have failed.
- *
- * Migrated from Supabase to Firebase Firestore.
- *
- * @param userId - Firebase Auth user ID
- * @param email - User email
- * @param fullName - User full name
- * @returns Profile ID or null if failed
- */
 export const ensureProfile = async (userId: string, email?: string, fullName?: string): Promise<string | null> => {
   try {
     // 1. Check if profile exists in Firestore
@@ -66,9 +51,6 @@ export const ensureProfile = async (userId: string, email?: string, fullName?: s
   }
 };
 
-/**
- * Fetch a profile by user ID
- */
 export const fetchProfile = async (userId: string): Promise<any | null> => {
   try {
     const profileRef = doc(db, 'profiles', userId);
@@ -85,9 +67,6 @@ export const fetchProfile = async (userId: string): Promise<any | null> => {
   }
 };
 
-/**
- * Update profile data
- */
 export const updateProfile = async (userId: string, updates: Record<string, unknown>): Promise<boolean> => {
   try {
     const profileRef = doc(db, 'profiles', userId);

@@ -1,10 +1,5 @@
 /**
  * Offline Sync Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('exercises') → Firestore collection 'exercises'
- * - Uses IndexedDB for offline caching
  */
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
@@ -27,9 +22,6 @@ interface PayloadWithId {
   [key: string]: unknown;
 }
 
-/**
- * Configuration options for the sync service
- */
 export interface SyncConfig {
   /** Milliseconds between sync attempts when online (default: 60000 = 1 minute) */
   syncInterval?: number;
@@ -45,9 +37,6 @@ export interface SyncConfig {
   showNotifications?: boolean;
 }
 
-/**
- * Queued offline action
- */
 export interface QueuedAction {
   /** Unique action identifier */
   id: string;
@@ -63,9 +52,6 @@ export interface QueuedAction {
   retryCount: number;
 }
 
-/**
- * Sync statistics
- */
 export interface SyncStats {
   /** Total actions in storage */
   totalActions: number;
@@ -81,14 +67,8 @@ export interface SyncStats {
   lastSyncSuccess?: boolean;
 }
 
-/**
- * Sync event types
- */
 export type SyncEventType = 'sync_start' | 'sync_complete' | 'sync_error' | 'action_success' | 'action_failure';
 
-/**
- * Sync event payload
- */
 export interface SyncEvent {
   /** Event type */
   type: SyncEventType;
@@ -103,9 +83,6 @@ export interface SyncEvent {
   };
 }
 
-/**
- * Sync event listener callback
- */
 export type SyncEventListener = (event: SyncEvent) => void;
 
 // ============================================================================
@@ -146,12 +123,6 @@ export const ACTION_TYPES = {
 // SERVICE CLASS
 // ============================================================================
 
-/**
- * Offline Sync Service
- *
- * Manages background synchronization of offline actions.
- * Singleton pattern - use getOfflineSyncService() to get the instance.
- */
 class OfflineSyncService {
   private config: SyncConfig;
   private syncTimer: ReturnType<typeof setInterval> | null = null;
@@ -178,9 +149,6 @@ class OfflineSyncService {
   // INITIALIZATION
   // ========================================================================
 
-  /**
-   * Initializes the sync service
-   */
   private async init(): Promise<void> {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       this.startPeriodicSync();

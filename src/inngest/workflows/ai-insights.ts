@@ -1,13 +1,7 @@
 /**
  * AI Patient Insights Workflow - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - createClient(supabase) → Firebase Admin SDK
- * - Nested selects → Optimized query
- *
- * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { generateObject } from 'ai';
@@ -162,9 +156,6 @@ Please provide:
   }
 );
 
-/**
- * Batch AI insights workflow for multiple patients
- */
 export const aiBatchInsightsWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-ai-batch-insights',

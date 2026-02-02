@@ -1,9 +1,5 @@
 /**
  * NFSe Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('nfse_config').upsert() → setDoc() with merge option
- * - Uses setDoc with { merge: true } to emulate upsert behavior
  */
 
 import { useState } from 'react';

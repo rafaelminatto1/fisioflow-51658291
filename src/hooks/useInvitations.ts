@@ -1,12 +1,7 @@
 /**
  * useInvitations - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('user_invitations') → Firestore collection 'user_invitations'
- * - supabase.rpc('revoke_invitation') → Client-side update + Cloud Function (pending)
- * - supabase.rpc('create_user_invitation') → Client-side create + Cloud Function (pending)
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';

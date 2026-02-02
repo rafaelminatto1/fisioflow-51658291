@@ -1,10 +1,5 @@
 /**
  * useLeaderboard - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
- * - supabase.from('achievements_log') → Firestore collection 'achievements_log'
- * - Client-side filtering for complex queries
  */
 
 import { useEffect, useState } from 'react';
@@ -50,9 +45,6 @@ const DEFAULT_FILTERS: LeaderboardFilters = {
 // HOOK
 // ============================================================================
 
-/**
- * Hook for leaderboard with filtering, sorting, and pagination
- */
 export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): UseLeaderboardResult => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -271,9 +263,6 @@ export interface UseEngagementDataResult {
   setDays: (days: number) => void;
 }
 
-/**
- * Hook for engagement data with configurable time range
- */
 export const useEngagementData = (defaultDays: number = 30): UseEngagementDataResult => {
   const [days, setDays] = useState(defaultDays);
 

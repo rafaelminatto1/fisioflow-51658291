@@ -1,11 +1,7 @@
 /**
  * useLeads - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - leads -> leads
- * - lead_historico -> lead_historico
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

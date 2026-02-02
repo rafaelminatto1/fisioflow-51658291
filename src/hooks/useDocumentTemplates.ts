@@ -1,9 +1,5 @@
 /**
  * useDocumentTemplates - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('atestado_templates') → Firestore collection 'atestado_templates'
- * - supabase.from('contrato_templates') → Firestore collection 'contrato_templates'
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

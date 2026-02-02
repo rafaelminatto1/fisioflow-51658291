@@ -1,11 +1,7 @@
 /**
  * useAIPredictions - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - Firebase Functions for AI predictions
- * - Auth through useAuth() from AuthContext
  */
-
 import { useMutation } from '@tanstack/react-query';
 import { httpsCallable } from 'firebase/functions';
 import { getFunctions } from 'firebase/functions';

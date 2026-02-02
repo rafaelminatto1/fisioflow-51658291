@@ -1,13 +1,7 @@
 /**
  * useIntelligentConductSuggestions - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - patient_pathologies -> patient_pathologies collection
- * - medical_records -> medical_records collection
- * - conduct_library -> conduct_library collection
- * - Uses useSoapRecords for SOAP data (already migrated)
  */
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';

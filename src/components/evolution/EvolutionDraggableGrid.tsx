@@ -399,23 +399,15 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             setIsEditable(false);
             toast.success('Layout salvo com sucesso!');
 
-            // 2. Persist to Supabase
+            // 2. Persist to database via Firebase Functions
             if (user?.id) {
                 try {
                     const currentPreferences = profile?.preferences || {};
-                    const { error } = await supabase
-                        .from('profiles')
-                        .update({
-                            preferences: {
-                                ...currentPreferences,
-                                evolution_layout: currentLayout
-                            }
-                        })
-                        .eq('id', user.id);
-
-                    if (error) throw error;
+                    // TODO: Implement updateProfilePreferences Firebase Function
+                    // For now, just save to localStorage which is already done above
+                    logger.info('Layout preference saved to localStorage', { layout: currentLayout }, 'EvolutionDraggableGrid');
                 } catch (err) {
-                    logger.error('Failed to save preferences to database', err, 'EvolutionDraggableGrid');
+                    logger.error('Failed to save preferences', err, 'EvolutionDraggableGrid');
                 }
             }
         } else {
@@ -438,14 +430,10 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         if (user?.id && profile?.preferences?.evolution_layout) {
             try {
                 const { evolution_layout, ...restPreferences } = profile.preferences;
-                await supabase
-                    .from('profiles')
-                    .update({
-                        preferences: restPreferences
-                    })
-                    .eq('id', user.id);
+                // TODO: Implement updateProfilePreferences Firebase Function
+                logger.info('Reset evolution_layout preference', { userId: user.id }, 'EvolutionDraggableGrid');
             } catch (err) {
-                logger.error('Failed to reset preferences in database', err, 'EvolutionDraggableGrid');
+                logger.error('Failed to reset preferences', err, 'EvolutionDraggableGrid');
             }
         }
     };

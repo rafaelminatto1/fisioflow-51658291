@@ -2,10 +2,20 @@
  * Exemplos de uso do KVCacheService
  *
  * Este arquivo mostra como integrar o cache distribuído nas suas chamadas de API
+ * Migrated from Supabase to Firebase Functions
  */
 
 import { PatientCache, AppointmentCache, getCache, setCache } from './KVCacheService';
-import { supabase } from '../supabase/client';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import type { DocumentData } from 'firebase/firestore';
+
+// Helper function to call Firebase Functions
+async function callFunction<T>(functionName: string, data: unknown): Promise<T> {
+  const fn = httpsCallable(getFirebaseFunctions(), functionName);
+  const result = await fn(data);
+  return result.data as T;
+}
 
 // ========================================
 // EXEMPLO 1: Buscar paciente com cache
@@ -21,14 +31,12 @@ export async function getPatientWithCache(patientId: string) {
   }
 
   console.log('❌ Cache MISS - Buscando do banco');
-  // Cache miss - buscar do banco
-  const { data, error } = await supabase
-    .from('patients')
-    .select('*')
-    .eq('id', patientId)
-    .single();
+  // Cache miss - buscar do banco via Firebase Functions
+  const data = await callFunction<DocumentData>('getPatient', { patientId });
 
-  if (error) throw error;
+  if (!data) {
+    throw new Error('Patient not found');
+  }
 
   // Salvar no cache para próximas requisições
   await PatientCache.set(patientId, data);
@@ -51,13 +59,8 @@ export async function getExercisesWithCache(organizationId: string) {
     return cached as typeof cached;
   }
 
-  // Buscar do banco
-  const { data, error } = await supabase
-    .from('exercises')
-    .select('*')
-    .eq('organization_id', organizationId);
-
-  if (error) throw error;
+  // Buscar do banco via Firebase Functions
+  const data = await callFunction<DocumentData[]>('listExercises', { organizationId });
 
   // Salvar no cache por 2 horas
   await setCache(cacheKey, data, { ttl: 7200 });
@@ -70,15 +73,11 @@ export async function getExercisesWithCache(organizationId: string) {
 // ========================================
 
 export async function updatePatient(patientId: string, updates: Record<string, unknown>) {
-  // Atualizar no banco
-  const { data, error } = await supabase
-    .from('patients')
-    .update(updates)
-    .eq('id', patientId)
-    .select()
-    .single();
-
-  if (error) throw error;
+  // Atualizar no banco via Firebase Functions
+  const data = await callFunction<DocumentData>('updatePatient', {
+    patientId,
+    updates,
+  });
 
   // Invalidar cache do paciente
   await PatientCache.invalidate(patientId);
@@ -101,14 +100,8 @@ export async function getPatientAppointments(patientId: string) {
     return cached;
   }
 
-  // Buscar do banco
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('patient_id', patientId)
-    .order('date', { ascending: true });
-
-  if (error) throw error;
+  // Buscar do banco via Firebase Functions
+  const data = await callFunction<DocumentData[]>('listAppointments', { patientId });
 
   // Salvar no cache (30 minutos)
   await AppointmentCache.setByPatient(patientId, data);
@@ -121,20 +114,14 @@ export async function getPatientAppointments(patientId: string) {
 // ========================================
 
 export async function createAppointment(appointment: Record<string, unknown>) {
-  const { data, error } = await supabase
-    .from('appointments')
-    .insert(appointment)
-    .select()
-    .single();
-
-  if (error) throw error;
+  const data = await callFunction<DocumentData>('createAppointment', { appointment });
 
   // Invalidar caches relacionados
-  await AppointmentCache.invalidatePatient(data.patient_id);
-  await AppointmentCache.invalidate(data.id);
+  await AppointmentCache.invalidatePatient(data.patient_id as string);
+  await AppointmentCache.invalidate(data.id as string);
 
   // Também invalidar cache do paciente (força refresh de dados completos)
-  await PatientCache.invalidate(data.patient_id);
+  await PatientCache.invalidate(data.patient_id as string);
 
   console.log('✅ Appointment criado, caches invalidados');
 
@@ -164,7 +151,7 @@ export function useExercises(organizationId: string) {
 }
 
 // ========================================
-// EXEMPLO 7: Busca semântica com cache
+// EXEMPLO 7: Busca de exercícios com cache
 // ========================================
 
 export async function searchExercisesWithCache(
@@ -177,31 +164,20 @@ export async function searchExercisesWithCache(
   const cached = await getCache<unknown[]>(cacheKey);
 
   if (cached) {
-    console.log('✅ Cache HIT - Busca semântica');
+    console.log('✅ Cache HIT - Busca de exercícios');
     return cached as typeof cached;
   }
 
-  // Buscar usando Supabase Vector
-  const { data, error } = await supabase.rpc('search_exercises_semantic', {
-    query_embedding: await generateEmbedding(query),
-    match_threshold: 0.75,
-    match_count: 10,
-    organization_id_param: organizationId,
+  // Buscar via Firebase Functions (semântica ou texto)
+  const data = await callFunction<DocumentData[]>('searchExercises', {
+    query,
+    organizationId,
   });
-
-  if (error) throw error;
 
   // Salvar no cache por 1 hora
   await setCache(cacheKey, data, { ttl: 3600 });
 
   return data;
-}
-
-// Helper function para gerar embedding
-async function generateEmbedding(_text: string): Promise<number[]> {
-  // Implementação da função de embedding
-  // Pode usar OpenAI ou outro serviço
-  return [];
 }
 
 // ========================================
@@ -240,37 +216,21 @@ export async function getDashboardData(organizationId: string) {
 }
 
 async function getPatientsFromDB(organizationId: string) {
-  const { data, error } = await supabase
-    .from('patients')
-    .select('*')
-    .eq('organization_id', organizationId);
-
-  if (error) throw error;
+  const data = await callFunction<DocumentData[]>('listPatients', { organizationId });
 
   await setCache(`patients:${organizationId}`, data, { ttl: 1800 });
   return data;
 }
 
 async function getAppointmentsFromDB(organizationId: string) {
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('organization_id', organizationId)
-    .gte('date', new Date().toISOString());
-
-  if (error) throw error;
+  const data = await callFunction<DocumentData[]>('listAppointments', { organizationId });
 
   await setCache(`appointments:${organizationId}`, data, { ttl: 600 });
   return data;
 }
 
 async function getProtocolsFromDB(organizationId: string) {
-  const { data, error } = await supabase
-    .from('protocols')
-    .select('*')
-    .eq('organization_id', organizationId);
-
-  if (error) throw error;
+  const data = await callFunction<DocumentData[]>('listProtocols', { organizationId });
 
   await setCache(`protocols:${organizationId}`, data, { ttl: 7200 });
   return data;
@@ -324,6 +284,6 @@ export async function getCachedOrFetch<T>(
 // Uso:
 // const patient = await getCachedOrFetch(
 //   `patient:${patientId}`,
-//   () => supabase.from('patients').select('*').eq('id', patientId).single(),
+//   () => callFunction('getPatient', { patientId }),
 //   3600
 // );

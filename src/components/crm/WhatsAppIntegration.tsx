@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useWhatsAppIntegration } from './hooks/useWhatsAppIntegration';
+import { db, collection, getDocs, getDoc, doc, query as firestoreQuery, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
 
 interface WhatsAppMessage {
   id: string;
@@ -68,13 +69,13 @@ export default function WhatsAppIntegration() {
   const { data: mensagens = [], isLoading } = useQuery({
     queryKey: ['whatsapp-messages'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('whatsapp_messages')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data as WhatsAppMessage[];
+      const q = firestoreQuery(
+        collection(db, 'whatsapp_messages'),
+        fsOrderBy('created_at', 'desc'),
+        fsLimit(50)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WhatsAppMessage[];
     },
   });
 
@@ -94,11 +95,12 @@ export default function WhatsAppIntegration() {
   const { data: config } = useQuery({
     queryKey: ['whatsapp-config'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('whatsapp_config')
-        .select('*')
-        .single();
-      return data as WhatsAppConfig | null;
+      const configRef = doc(db, 'whatsapp_config', 'default');
+      const configSnap = await getDoc(configRef);
+      if (!configSnap.exists()) {
+        return null;
+      }
+      return configSnap.data() as WhatsAppConfig;
     },
   });
 

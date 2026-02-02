@@ -1,12 +1,5 @@
 /**
  * useServicos - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('servicos') → Firestore collection 'servicos'
- * - supabase.select() → getDocs()
- * - supabase.insert() → addDoc()
- * - supabase.update() → updateDoc()
- * - supabase.delete() → deleteDoc()
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

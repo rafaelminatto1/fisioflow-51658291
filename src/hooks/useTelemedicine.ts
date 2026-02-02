@@ -1,10 +1,5 @@
 /**
  * useTelemedicine - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - telemedicine_rooms -> telemedicine_rooms collection
- * - Auth through useAuth() from AuthContext
- * - Manual joins for patients and profiles data
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

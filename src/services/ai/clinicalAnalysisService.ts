@@ -1,8 +1,5 @@
 /**
  * Clinical Analysis Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Functions:
- * - supabase.functions.invoke('analysis-ai') → Firebase Functions httpsCallable()
  */
 
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';

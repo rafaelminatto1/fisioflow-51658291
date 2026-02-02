@@ -1,13 +1,7 @@
 /**
  * useMFASettings - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('mfa_settings') → Firestore collection 'mfa_settings'
- * - supabase.rpc('log_security_event') → Firestore collection 'security_events' (pending)
- * - supabase.functions.invoke('send-mfa-otp') → Firebase Cloud Function (pending)
- * - supabase.rpc('verify_mfa_otp') → Client-side verification + Cloud Function (pending)
  */
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, setDoc } from '@/integrations/firebase/app';
 import { toast } from "sonner";

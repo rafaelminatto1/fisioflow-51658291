@@ -1,12 +1,7 @@
 /**
  * useNotifications - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.auth.getUser() → getFirebaseAuth().currentUser
- * - supabase.from('notifications') → Firestore collection 'notifications'
- * - supabase.realtime → Firestore onSnapshot
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, onSnapshot, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { useEffect, useState } from 'react';

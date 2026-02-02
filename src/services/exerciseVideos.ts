@@ -1,10 +1,5 @@
 /**
  * Exercise Videos Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.from('exercise_videos') → Firestore collection 'exercise_videos'
- * - supabase.storage.from('exercise-videos') → Firebase Storage
- * - supabase.auth.getUser() → Firebase Auth
  */
 
 import { db } from '@/integrations/firebase/app';
@@ -133,18 +128,11 @@ export const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi'] as con
 // SERVICE
 // ============================================================================
 
-/**
- * Exercise Videos Service
- * Handles video storage, upload, and playback for exercise demonstrations
- */
 export const exerciseVideosService = {
   // ------------------------------------------------------------------------
   // READ OPERATIONS
   // ------------------------------------------------------------------------
 
-  /**
-   * Get all exercise videos with optional filters
-   */
   async getVideos(filters?: VideoFilterOptions): Promise<ExerciseVideo[]> {
     try {
       const constraints: QueryConstraint[] = [

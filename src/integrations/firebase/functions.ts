@@ -461,24 +461,29 @@ export namespace ProfileApi {
  */
 export const patientsApi = {
   /**
-   * Lista pacientes com filtros opcionais
+   * Lista pacientes com filtros opcionais (uses HTTP V2 to avoid App Check issues)
    */
   list: (params: PatientApi.ListParams = {}): Promise<FunctionResponse<PatientApi.Patient[]>> =>
-    callFunctionWithResponse('listPatients', params),
+    callFunctionHttpWithResponse('listPatientsV2', params),
 
   /**
-   * Obtém um paciente por ID
+   * Obtém um paciente por ID (uses HTTP to avoid CORS issues)
    */
   get: (idOrParams: string | PatientApi.GetParams): Promise<PatientApi.Patient> => {
     const data = typeof idOrParams === 'string' ? { patientId: idOrParams } : idOrParams;
-    return callFunction('getPatient', data);
+    return callFunctionHttp('getPatientHttp', data);
   },
 
   /**
    * Cria um novo paciente
    */
-  create: (patient: PatientApi.CreateData): Promise<PatientApi.Patient> =>
-    callFunction('createPatient', patient),
+  create: async (patient: PatientApi.CreateData): Promise<PatientApi.Patient> => {
+    const res = await callFunctionHttp<PatientApi.CreateData, { data: PatientApi.Patient }>(
+      'createPatientV2',
+      patient
+    );
+    return res.data;
+  },
 
   /**
    * Atualiza um paciente existente
@@ -493,10 +498,15 @@ export const patientsApi = {
     callFunction('deletePatient', { patientId }),
 
   /**
-   * Obtém estatísticas de um paciente
+   * Obtém estatísticas de um paciente (usa HTTP para evitar CORS)
    */
-  getStats: (patientId: string): Promise<PatientApi.Stats> =>
-    callFunction('getPatientStats', { patientId }),
+  getStats: async (patientId: string): Promise<PatientApi.Stats> => {
+    const res = await callFunctionHttp<{ patientId: string }, { data: PatientApi.Stats }>(
+      'getPatientStatsV2',
+      { patientId }
+    );
+    return res.data;
+  },
 };
 
 /**

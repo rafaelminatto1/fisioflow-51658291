@@ -1,9 +1,5 @@
 /**
  * Booking Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.functions.invoke() → Firebase Functions httpsCallable()
- * - Firestore queries for profiles already implemented
  */
 
 import React, { useState, useEffect } from 'react';

@@ -23,6 +23,9 @@ import { Save, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TemplateField } from './EvaluationTemplateSelector';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, collection, addDoc, doc, setDoc } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
 interface SaveAsTemplateDialogProps {
     open: boolean;
@@ -59,40 +62,27 @@ export function SaveAsTemplateDialog({
 
     const saveTemplateMutation = useMutation({
         mutationFn: async () => {
-            // First, create the evaluation form
-            const { data: form, error: formError } = await supabase
-                .from('evaluation_forms')
-                .insert({
-                    nome: formData.nome,
-                    descricao: formData.descricao || null,
-                    tipo: formData.tipo,
-                    ativo: true,
-                })
-                .select()
-                .single();
-
-            if (formError) throw formError;
-
-            // Then, create all the fields
-            if (fields.length > 0) {
-                const fieldsToInsert = fields.map((field, index) => ({
-                    form_id: form.id,
+            // Use Firebase callable function to create evaluation template
+            const saveTemplateFn = httpsCallable(getFirebaseFunctions(), 'saveEvaluationTemplate');
+            const result = await saveTemplateFn({
+                nome: formData.nome,
+                descricao: formData.descricao || null,
+                tipo: formData.tipo,
+                campos: fields.map((field, index) => ({
                     label: field.label,
                     tipo_campo: field.tipo_campo,
                     placeholder: field.placeholder,
-                    opcoes: field.opcoes ? JSON.stringify(field.opcoes) : null,
+                    opcoes: field.opcoes || null,
                     ordem: index + 1,
                     obrigatorio: field.obrigatorio,
-                }));
+                })),
+            });
 
-                const { error: fieldsError } = await supabase
-                    .from('evaluation_form_fields')
-                    .insert(fieldsToInsert);
-
-                if (fieldsError) throw fieldsError;
+            if (result.data?.error) {
+                throw new Error(result.data.error);
             }
 
-            return form;
+            return result.data;
         },
         onSuccess: (form) => {
             queryClient.invalidateQueries({ queryKey: ['evaluation-templates-with-fields'] });
@@ -103,7 +93,7 @@ export function SaveAsTemplateDialog({
             setFormData({ nome: '', descricao: '', tipo: 'geral' });
             onOpenChange(false);
 
-            if (onSuccess) {
+            if (onSuccess && form?.id) {
                 onSuccess(form.id);
             }
         },

@@ -1,9 +1,5 @@
 /**
  * useExerciseProtocols - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('exercise_protocols') → Firestore collection 'exercise_protocols'
- * - Preserved offline caching logic with indexedDB
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

@@ -1,13 +1,7 @@
 /**
  * usePatientExams - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - supabase.from('patient_exams') → Firestore collection 'patient_exams'
- * - supabase.from('patient_exam_files') → Firestore collection 'patient_exam_files'
- * - supabase.storage.from('patient-exams') → Firebase Storage 'patient-exams'
- * - Joins replaced with separate queries
  */
-
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

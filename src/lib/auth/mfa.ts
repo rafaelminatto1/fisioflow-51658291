@@ -1,12 +1,7 @@
 /**
  * Firebase Multi-Factor Authentication (MFA) Implementation
  *
- * Migration from Supabase to Firebase:
- * - Supabase Auth MFA → Firebase Auth Multi-Factor Authentication
- * - Supabase profiles table → Firestore collection 'profiles'
- * - MFA enrollment and verification using Firebase TOTP
  */
-
 import { getFirebaseAuth, db, doc, getDoc, updateDoc, query as firestoreQuery, where, getDocs, collection } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -113,13 +108,6 @@ export class MFAService {
     }
   }
 
-  /**
-   * Verifies TOTP code using proper time-based validation
-   * NOTE: This is a simplified implementation. For production, use a proper TOTP library
-   * like 'otplib' which handles time windows, secret decoding, and HMAC verification
-   *
-   * @see https://github.com/guybrush/totpify for a secure implementation
-   */
   private verifyTOTPCode(secret: string, code: string): boolean {
     // Basic format validation - but this is NOT cryptographically secure
     // Real TOTP verification requires:

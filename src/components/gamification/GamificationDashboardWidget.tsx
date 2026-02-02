@@ -7,6 +7,7 @@ import { RecentAchievementsWidget } from './widgets/RecentAchievementsWidget';
 import { DailyQuestsWidget } from './widgets/DailyQuestsWidget';
 import { GamificationTriggerService, type LevelCalculationResult } from '@/lib/services/gamificationTriggers';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, doc, getDoc, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
 
 interface GamificationDashboardWidgetProps {
   patientId: string;
@@ -41,8 +42,10 @@ interface GamificationData {
 
 interface AchievementLog {
   id: string;
+  patient_id: string;
   unlocked_at: string;
-  achievements?: {
+  achievement_id?: string;
+  achievement_data?: {
     title?: string;
     description?: string;
     xp_reward?: number;
@@ -71,16 +74,10 @@ export function GamificationDashboardWidget({
       setError(null);
 
       try {
-        // Load profile
-        const { data: profile, error: profileError } = await supabase
-          .from('patient_gamification')
-          .select('*')
-          .eq('patient_id', patientId)
-          .maybeSingle();
-
-        if (profileError && profileError.code !== 'PGRST116') {
-          throw profileError;
-        }
+        // Load profile from Firebase
+        const profileRef = doc(db, 'patient_gamification', patientId);
+        const profileSnap = await getDoc(profileRef);
+        const profile = profileSnap.exists() ? { id: profileSnap.id, ...profileSnap.data() } : null;
 
         // Calculate level info
         let levelCalculation: LevelCalculationResult | null = null;
@@ -88,16 +85,11 @@ export function GamificationDashboardWidget({
           levelCalculation = await GamificationTriggerService.calculateLevelAsync(profile.total_points || 0);
         }
 
-        // Load daily quests
+        // Load daily quests from Firebase
         const today = new Date().toISOString().split('T')[0];
-        const { data: questsData } = await supabase
-          .from('daily_quests')
-          .select('quests_data')
-          .eq('patient_id', patientId)
-          .eq('date', today)
-          .maybeSingle();
-
-        const dailyQuests = questsData?.quests_data as Array<{
+        const questRef = doc(db, 'daily_quests', `${patientId}_${today}`);
+        const questSnap = await getDoc(questRef);
+        const dailyQuests = questSnap.data()?.quests_data as Array<{
           id: string;
           title: string;
           description: string;
@@ -106,22 +98,26 @@ export function GamificationDashboardWidget({
           icon?: string;
         }> || [];
 
-        // Load unlocked achievements
-        const { data: achievementsData } = await supabase
-          .from('achievements_log')
-          .select('*, achievements(*)')
-          .eq('patient_id', patientId)
-          .order('unlocked_at', { ascending: false })
-          .limit(10);
+        // Load unlocked achievements from Firebase
+        const achievementsQuery = firestoreQuery(
+          collection(db, 'achievements_log'),
+          where('patient_id', '==', patientId),
+          fsOrderBy('unlocked_at', 'desc'),
+          fsLimit(10)
+        );
+        const achievementsSnap = await getDocs(achievementsQuery);
 
-        const unlockedAchievements = (achievementsData || []).map((log: AchievementLog) => ({
-          id: log.id,
-          title: log.achievements?.title || 'Conquista',
-          description: log.achievements?.description || '',
-          xp_reward: log.achievements?.xp_reward || 0,
-          icon: log.achievements?.icon || 'Award',
-          unlocked_at: log.unlocked_at,
-        }));
+        const unlockedAchievements = achievementsSnap.docs.map((doc) => {
+          const log = { id: doc.id, ...doc.data() } as AchievementLog & { achievement_data?: any };
+          return {
+            id: log.id,
+            title: log.achievement_data?.title || 'Conquista',
+            description: log.achievement_data?.description || '',
+            xp_reward: log.achievement_data?.xp_reward || 0,
+            icon: log.achievement_data?.icon || 'Award',
+            unlocked_at: log.unlocked_at,
+          };
+        });
 
         setData({
           profile,

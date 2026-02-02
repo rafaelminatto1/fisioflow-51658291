@@ -1,12 +1,7 @@
 /**
  * useCommunications - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('communication_logs') → Firestore collection 'communication_logs'
- * - Joins with patients replaced with separate queries
- * - Enums preserved as TypeScript types
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

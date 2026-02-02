@@ -1,10 +1,7 @@
 /**
  * useContasFinanceiras - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('contas_financeiras') → Firestore collection 'contas_financeiras'
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, getDocs } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

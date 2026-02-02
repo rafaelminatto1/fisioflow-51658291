@@ -1,10 +1,5 @@
 /**
  * useEventosStats - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from("eventos") → Firestore collection 'eventos'
- * - supabase.from("pagamentos") → Firestore collection 'pagamentos'
- * - supabase.from("participantes") → Firestore collection 'participantes'
  */
 
 import { useQuery } from "@tanstack/react-query";

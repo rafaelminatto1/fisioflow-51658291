@@ -42,6 +42,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -460,56 +461,72 @@ export function CohortComparison({
   const { data: patients, isLoading, error } = useQuery({
     queryKey: ['admin-cohort-patients', timeRange],
     queryFn: async (): Promise<PatientWithCohortData[]> => {
-      let query = supabase
-        .from('patients')
-        .select('id, full_name, created_at, birth_date');
+      // Build query for Firebase
+      let patientsQuery = firestoreQuery(
+        collection(db, 'patients'),
+        fsLimit(500)
+      );
 
-      // Apply time range filter
-      if (timeRange !== 'all') {
-        const startDate = subMonths(new Date(), TIME_RANGE_CONFIGS[timeRange].months);
-        query = query.gte('created_at', startDate.toISOString());
+      // Apply time range filter - note: Firestore doesn't support >= on strings without indexes
+      // We'll filter client-side for now
+      const startDate = timeRange !== 'all' ? subMonths(new Date(), TIME_RANGE_CONFIGS[timeRange].months) : null;
+
+      const patientsSnap = await getDocs(patientsQuery);
+      let data = patientsSnap.docs.map(doc => ({
+        id: doc.id,
+        full_name: doc.data().full_name || '',
+        created_at: doc.data().created_at || new Date().toISOString(),
+        birth_date: doc.data().birth_date,
+      }));
+
+      // Filter by time range client-side
+      if (startDate) {
+        data = data.filter(p => new Date(p.created_at) >= startDate);
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
 
       // Fetch analytics data for each patient in parallel
       const patientsWithAnalytics = await Promise.all(
-        (data || []).map(async (p) => {
+        data.map(async (p) => {
           // Get session count
-          const { data: appointments } = await supabase
-            .from('appointments')
-            .select('id')
-            .eq('patient_id', p.id)
-            .in('status', ['atendido', 'confirmado']);
+          const appointmentsQuery = firestoreQuery(
+            collection(db, 'appointments'),
+            where('patient_id', '==', p.id),
+            where('status', 'in', ['atendido', 'confirmado'])
+          );
+          const appointmentsSnap = await getDocs(appointmentsQuery);
+          const totalSessions = appointmentsSnap.size;
 
           // Get latest risk score
-          const { data: riskScore } = await supabase
-            .from('patient_risk_scores')
-            .select('dropout_risk_score, overall_progress_percentage')
-            .eq('patient_id', p.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          const riskQuery = firestoreQuery(
+            collection(db, 'patient_risk_scores'),
+            where('patient_id', '==', p.id),
+            fsOrderBy('calculated_at', 'desc'),
+            fsLimit(1)
+          );
+          const riskSnap = await getDocs(riskQuery);
+          const riskScore = riskSnap.docs[0]?.data();
+          const overallProgress = riskScore?.overall_progress_percentage || 0;
+          const dropoutRisk = riskScore?.dropout_risk_score || 50;
 
           // Get pathology from latest evolution
-          const { data: evolution } = await supabase
-            .from('patient_evolution')
-            .select('pathology')
-            .eq('patient_id', p.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          const evolutionQuery = firestoreQuery(
+            collection(db, 'patient_evolution'),
+            where('patient_id', '==', p.id),
+            fsOrderBy('created_at', 'desc'),
+            fsLimit(1)
+          );
+          const evolutionSnap = await getDocs(evolutionQuery);
+          const pathology = evolutionSnap.docs[0]?.data()?.pathology || 'Não especificado';
 
           return {
             id: p.id,
             full_name: p.full_name,
             created_at: p.created_at,
-            pathology: evolution?.pathology || 'Não especificado',
+            pathology,
             birth_date: p.birth_date,
-            total_sessions: appointments?.length || 0,
-            overall_progress: riskScore?.overall_progress_percentage || 0,
-            dropout_risk: riskScore?.dropout_risk_score || 50,
+            total_sessions: totalSessions,
+            overall_progress: overallProgress,
+            dropout_risk: dropoutRisk,
             status: 'active',
           };
         })

@@ -11,6 +11,9 @@ import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { db, doc, getDoc, updateDoc } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -64,14 +67,14 @@ export const EditPatientModal: React.FC<{
     queryFn: async () => {
       if (!patientId) return null;
 
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', patientId)
-        .single();
+      const patientRef = doc(db, 'patients', patientId);
+      const patientSnap = await getDoc(patientRef);
 
-      if (error) throw error;
-      return data;
+      if (!patientSnap.exists()) {
+        return null;
+      }
+
+      return { id: patientSnap.id, ...patientSnap.data() };
     },
     enabled: open && !!patientId
   });
@@ -102,15 +105,17 @@ export const EditPatientModal: React.FC<{
     mutationFn: async (data: PatientFormData) => {
       if (!patientId) throw new Error('Patient ID is required');
 
-      const { error } = await supabase
-        .from('patients')
-        .update({
-          ...data,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', patientId);
+      const updatePatientFn = httpsCallable(getFirebaseFunctions(), 'updatePatient');
+      const result = await updatePatientFn({
+        patientId,
+        ...data,
+      });
 
-      if (error) throw error;
+      if (result.data?.error) {
+        throw new Error(result.data.error);
+      }
+
+      return result.data;
     },
     onSuccess: () => {
       toast({

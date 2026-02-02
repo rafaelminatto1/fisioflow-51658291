@@ -1,11 +1,7 @@
 /**
  * useAppointmentData - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('patients') → Firestore collection 'patients'
  */
-
 import { useQuery } from '@tanstack/react-query';
 import { doc, getDoc } from '@/integrations/firebase/app';
 import {

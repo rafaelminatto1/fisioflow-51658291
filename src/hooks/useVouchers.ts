@@ -1,11 +1,5 @@
 /**
  * useVouchers - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('vouchers') → Firestore collection 'vouchers'
- * - supabase.from('user_vouchers') → Firestore collection 'user_vouchers'
- * - supabase.auth.getUser() → Firebase Auth context
- * - supabase.rpc() → Direct Firestore operations
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

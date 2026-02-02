@@ -1,10 +1,5 @@
 /**
  * Audio Transcription Component - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.functions.invoke('ai-transcribe-session') → Firebase Functions httpsCallable()
- * - Audio processing remains client-side
- * - Removed unused Supabase imports
  */
 
 import React, { useState, useRef } from 'react';

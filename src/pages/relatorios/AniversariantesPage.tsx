@@ -1,9 +1,5 @@
 /**
  * Aniversariantes Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - Client-side filtering by month and birth_date
  */
 
 import { useState } from 'react';

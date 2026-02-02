@@ -1,13 +1,6 @@
 /**
  * Hooks para analytics e métricas da clínica - Migrated to Firebase
  * @module hooks/useClinicAnalytics
- *
- * Migration from Supabase to Firebase Firestore:
- * - appointments -> appointments collection
- * - patients -> patients collection
- * - payments -> payments collection
- * - profiles -> profiles collection (already on Firestore)
- * - Auth through useAuth() from AuthContext
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -106,9 +99,6 @@ interface DashboardMetricsOptions {
   endDate?: Date;
 }
 
-/**
- * Hook para obter métricas do dashboard
- */
 export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
   const { period = 'month', startDate, endDate } = options;
 
@@ -214,9 +204,6 @@ interface TrendsOptions {
   groupBy?: 'day' | 'week' | 'month';
 }
 
-/**
- * Hook para obter tendências de agendamentos
- */
 export function useAppointmentTrends(options: TrendsOptions = {}) {
   const { period = 'month', groupBy = 'day' } = options;
 
@@ -267,9 +254,6 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
 // HOOK: REVENUE TRENDS
 // =====================================================================
 
-/**
- * Hook para obter tendências de receita
- */
 export function useRevenueTrends(options: TrendsOptions = {}) {
   const { period = 'month', groupBy = 'day' } = options;
 
@@ -319,9 +303,6 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
 // HOOK: PATIENT TRENDS
 // =====================================================================
 
-/**
- * Hook para obter tendências de pacientes
- */
 export function usePatientTrends(options: TrendsOptions = {}) {
   const { period = 'month', groupBy = 'day' } = options;
 
@@ -376,9 +357,6 @@ interface ComparisonMetricsOptions {
   currentPeriod: PeriodType;
 }
 
-/**
- * Hook para comparar métricas entre períodos
- */
 export function useComparisonMetrics(options: ComparisonMetricsOptions) {
   const { currentPeriod = 'month' } = options;
 
@@ -471,9 +449,6 @@ interface TopPerformer {
   label: string;
 }
 
-/**
- * Hook para obter top performers
- */
 export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointments') {
   return useQuery({
     queryKey: ['analytics', 'top-performers', metric],

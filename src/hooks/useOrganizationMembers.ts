@@ -1,11 +1,7 @@
 /**
  * useOrganizationMembers - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('organization_members') → Firestore collection 'organization_members'
- * - Joins with profiles replaced with separate queries
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

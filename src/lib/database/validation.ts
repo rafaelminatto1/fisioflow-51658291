@@ -2,7 +2,7 @@
  * Database Validation Utilities
  *
  * Provides runtime validation functions for database operations.
- * Use these to validate data before sending to Supabase.
+ * Use these to validate data before sending to Firebase Firestore.
  */
 
 import type {
@@ -53,7 +53,7 @@ export class DatabaseValidationError extends Error {
  * ```typescript
  * try {
  *   validatePatientStatus(newStatus);
- *   await supabase.from('patients').update({ status: newStatus });
+ *   await updateDoc(doc(db, 'patients', patientId), { status: newStatus });
  * } catch (error) {
  *   if (error instanceof DatabaseValidationError) {
  *     toast.error(error.message);

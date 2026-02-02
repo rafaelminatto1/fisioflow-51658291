@@ -1,9 +1,5 @@
 /**
  * useTarefas - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('tarefas') → Firestore collection 'tarefas'
- * - supabase.auth.getUser() → Firebase Auth currentUser
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -98,10 +94,6 @@ export function useTarefas() {
   });
 }
 
-/**
- * Hook otimizado para buscar tarefas de um projeto específico
- * Filtra no backend para reduzir transferência de dados
- */
 export function useProjectTarefas(projectId: string | undefined) {
   return useQuery({
     queryKey: ['tarefas', 'project', projectId],

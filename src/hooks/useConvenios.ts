@@ -1,8 +1,5 @@
 /**
  * useConvenios - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('convenios') → Firestore collection 'convenios'
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

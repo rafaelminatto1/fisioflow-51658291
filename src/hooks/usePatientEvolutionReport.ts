@@ -1,12 +1,5 @@
 /**
  * usePatientEvolutionReport - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('soap_records') → Firestore collection 'soap_records'
- * - supabase.from('evolution_measurements') → Firestore collection 'evolution_measurements'
- * - supabase.from('session_packages') → Firestore collection 'session_packages'
- * - supabase.from('pain_maps') → Firestore collection 'pain_maps'
- * - Joins with profiles replaced with separate queries
  */
 
 import { useQuery } from "@tanstack/react-query";

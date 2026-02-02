@@ -1,12 +1,7 @@
 /**
  * usePatientDocuments - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - supabase.from('patient_documents') → Firestore collection 'patient_documents'
- * - supabase.storage.from('patient-documents') → Firebase Storage 'patient-documents'
- * - supabase.auth.getUser() → getFirebaseAuth().currentUser
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';

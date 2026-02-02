@@ -1,12 +1,7 @@
 /**
  * useTemplateStats - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('evaluation_forms') → Firestore collection 'evaluation_forms'
- * - supabase.rpc() → Direct Firestore operations
- * - Client-side aggregation for statistics
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit as limitFn,  } from '@/integrations/firebase/app';
 import { EvaluationForm } from '@/types/clinical-forms';
@@ -14,9 +9,6 @@ import { db } from '@/integrations/firebase/app';
 
 
 
-/**
- * Hook para obter estatísticas gerais dos templates
- */
 export function useTemplateStats() {
   return useQuery({
     queryKey: ['template-stats'],
@@ -62,10 +54,6 @@ export function useTemplateStats() {
   });
 }
 
-/**
- * Hook para incrementar o contador de uso de um template
- * Deve ser chamado quando uma avaliação é criada usando o template
- */
 export function useIncrementTemplateUsage() {
   const queryClient = useQueryClient();
 
@@ -96,9 +84,6 @@ export function useIncrementTemplateUsage() {
   });
 }
 
-/**
- * Hook para obter templates mais usados
- */
 export function useMostUsedTemplates(limitNum = 10) {
   return useQuery({
     queryKey: ['evaluation-forms', 'most-used', limitNum],
@@ -127,9 +112,6 @@ export function useMostUsedTemplates(limitNum = 10) {
   });
 }
 
-/**
- * Hook para obter templates recentemente usados
- */
 export function useRecentlyUsedTemplates(limitNum = 6) {
   return useQuery({
     queryKey: ['evaluation-forms', 'recently-used', limitNum],

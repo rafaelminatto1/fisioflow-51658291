@@ -1,10 +1,7 @@
 /**
  * useWearables - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - wearable_data -> wearable_data
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, addDoc, query as firestoreQuery, where, orderBy, getDocs, getDoc, doc } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

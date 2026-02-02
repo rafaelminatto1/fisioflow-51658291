@@ -2,7 +2,7 @@
  * Dashboard Widgets Hook - Firebase Compatible
  *
  * This hook is already compatible with Firebase as it:
- * - Uses useAuth() from '@/contexts/AuthContext' (not supabase.auth)
+ * - Uses useAuth() from '@/contexts/AuthContext'
  * - Stores widget preferences in localStorage
  * - No database queries required
  *

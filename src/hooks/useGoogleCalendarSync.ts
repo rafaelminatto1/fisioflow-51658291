@@ -2,10 +2,7 @@
  * Hook para gerenciar sincronização com Google Calendar
  * @module hooks/useGoogleCalendarSync
  *
- * Migration from Supabase to Firebase Firestore:
- * - user_google_tokens -> Firestore collection 'user_google_tokens' (docId = userId)
  */
-
 import { useState, useCallback } from 'react';
 import { doc, getDoc, setDoc, deleteDoc, updateDoc } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,9 +36,6 @@ const GOOGLE_SYNC_KEYS = {
 // HOOK TO CHECK CONNECTION STATUS
 // =====================================================================
 
-/**
- * Hook para verificar se há conexão ativa com Google Calendar
- */
 export function useGoogleCalendarConnection() {
   const { user } = useAuth();
 
@@ -74,9 +68,6 @@ export function useGoogleCalendarConnection() {
 // HOOK TO GET AUTH URL
 // =====================================================================
 
-/**
- * Hook para obter URL de autenticação OAuth
- */
 export function useGoogleCalendarAuthUrl() {
   return useMutation({
     mutationFn: async (state?: string): Promise<string> => {
@@ -90,9 +81,6 @@ export function useGoogleCalendarAuthUrl() {
 // HOOK TO HANDLE OAUTH CALLBACK
 // =====================================================================
 
-/**
- * Hook para processar callback do OAuth
- */
 export function useGoogleCalendarOAuth() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -159,9 +147,6 @@ export function useGoogleCalendarOAuth() {
 // HOOK TO SYNC SINGLE APPOINTMENT
 // =====================================================================
 
-/**
- * Hook para sincronizar um appointment para o Google Calendar
- */
 export function useSyncToGoogle() {
   const { user } = useAuth();
 
@@ -246,9 +231,6 @@ export function useSyncToGoogle() {
 // HOOK TO DISCONNECT GOOGLE CALENDAR
 // =====================================================================
 
-/**
- * Hook para desconectar Google Calendar
- */
 export function useDisconnectGoogleCalendar() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -282,9 +264,6 @@ interface UseGoogleCalendarSyncOptions {
   autoSync?: boolean;
 }
 
-/**
- * Hook principal para gerenciar sincronização com Google Calendar
- */
 export function useGoogleCalendarSync(options: UseGoogleCalendarSyncOptions = {}) {
   const { autoSync = false } = options;
 
@@ -294,16 +273,12 @@ export function useGoogleCalendarSync(options: UseGoogleCalendarSyncOptions = {}
   const { mutate: syncToGoogle, isPending: syncing } = useSyncToGoogle();
   const { mutate: disconnect, isPending: disconnecting } = useDisconnectGoogleCalendar();
 
-  /**
-   * Conectar ao Google Calendar
-   */
   const connect = useCallback(async () => {
     const authUrl = await getAuthUrl('connect-calendar');
     // Redirecionar para OAuth
     window.location.href = authUrl;
   }, [getAuthUrl]);
 
-  /**
    * Sincronizar um appointment
    */
   const syncAppointment = useCallback(async (appointment: Appointment) => {

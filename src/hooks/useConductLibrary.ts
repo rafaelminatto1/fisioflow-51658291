@@ -1,11 +1,7 @@
 /**
  * useConductLibrary - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('conduct_library') → Firestore collection 'conduct_library'
- * - supabase.auth.getUser() → Firebase Auth (imported from contexts/AuthContext)
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';

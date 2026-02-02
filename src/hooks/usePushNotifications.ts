@@ -5,12 +5,8 @@ import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
-/**
  * usePushNotifications - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - push_subscriptions -> Firestore collection 'push_subscriptions'
- */
 
 
 

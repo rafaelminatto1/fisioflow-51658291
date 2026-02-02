@@ -1,11 +1,5 @@
 /**
  * useRecurringAppointments - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('recurring_appointment_series') → Firestore collection 'recurring_appointment_series'
- * - supabase.from('recurring_appointment_occurrences') → Firestore collection 'recurring_appointment_occurrences'
- * - supabase.auth.getUser() → Firebase Auth context
- * - Joins replaced with separate queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -60,9 +54,6 @@ export const RECURRING_QUERY_KEYS = {
 // FETCH FUNCTIONS
 // =====================================================================
 
-/**
- * Busca todas as séries recorrentes
- */
 async function fetchRecurringSeries(params?: {
   organization_id?: string;
   patient_id?: string;
@@ -127,9 +118,6 @@ async function fetchRecurringSeries(params?: {
   })) as RecurringAppointmentSeries[];
 }
 
-/**
- * Busca uma série específica com estatísticas
- */
 async function fetchRecurringSeriesById(
   id: string
 ): Promise<RecurringAppointmentSeries | null> {
@@ -169,9 +157,6 @@ async function fetchRecurringSeriesById(
   return seriesData as RecurringAppointmentSeries;
 }
 
-/**
- * Busca ocorrências de uma série
- */
 async function fetchSeriesOccurrences(
   seriesId: string
 ): Promise<RecurringAppointmentOccurrence[]> {
@@ -189,9 +174,6 @@ async function fetchSeriesOccurrences(
 // GENERATE OCCURRENCES
 // =====================================================================
 
-/**
- * Gera previews de ocorrências para uma série recorrente
- */
 export function generateOccurrencesPreview(
   formData: RecurringAppointmentFormData
 ): OccurrencePreview[] {
@@ -247,9 +229,6 @@ export function generateOccurrencesPreview(
   return occurrences;
 }
 
-/**
- * Verifica se uma data deve ser incluída na recorrência
- */
 function shouldIncludeDate(date: Date, recurrence: RecurringAppointmentFormData['recurrence']): boolean {
   // Para recorrência semanal, verificar dia da semana
   if (recurrence.type === 'weekly' && recurrence.daysOfWeek) {
@@ -268,9 +247,6 @@ function shouldIncludeDate(date: Date, recurrence: RecurringAppointmentFormData[
 // HOOKS
 // =====================================================================
 
-/**
- * Hook para buscar séries recorrentes
- */
 export function useRecurringSeries(params?: {
   organization_id?: string;
   patient_id?: string;
@@ -282,9 +258,6 @@ export function useRecurringSeries(params?: {
   });
 }
 
-/**
- * Hook para buscar uma série específica
- */
 export function useRecurringSeries(id: string) {
   return useQuery({
     queryKey: RECURRING_QUERY_KEYS.seriesById(id),
@@ -293,9 +266,6 @@ export function useRecurringSeries(id: string) {
   });
 }
 
-/**
- * Hook para buscar ocorrências de uma série
- */
 export function useSeriesOccurrences(seriesId: string) {
   return useQuery({
     queryKey: RECURRING_QUERY_KEYS.occurrences(seriesId),
@@ -304,9 +274,6 @@ export function useSeriesOccurrences(seriesId: string) {
   });
 }
 
-/**
- * Hook para criar uma nova série recorrente
- */
 export function useCreateRecurringSeries() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -394,9 +361,6 @@ export function useCreateRecurringSeries() {
   });
 }
 
-/**
- * Hook para atualizar uma série recorrente
- */
 export function useUpdateRecurringSeries() {
   const queryClient = useQueryClient();
 
@@ -437,9 +401,6 @@ export function useUpdateRecurringSeries() {
   });
 }
 
-/**
- * Hook para cancelar uma série recorrente
- */
 export function useCancelRecurringSeries() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -479,9 +440,6 @@ export function useCancelRecurringSeries() {
   });
 }
 
-/**
- * Hook para cancelar uma ocorrência específica
- */
 export function useCancelOccurrence() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -529,9 +487,6 @@ export function useCancelOccurrence() {
   });
 }
 
-/**
- * Hook para modificar uma ocorrência individual
- */
 export function useModifyOccurrence() {
   const queryClient = useQueryClient();
 

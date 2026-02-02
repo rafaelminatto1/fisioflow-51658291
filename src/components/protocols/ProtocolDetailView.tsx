@@ -25,6 +25,7 @@ import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useQuery } from '@tanstack/react-query';
 import { ClipboardCheck } from 'lucide-react';
+import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 
 interface ProtocolDetailViewProps {
     protocol: ExerciseProtocol;
@@ -62,13 +63,26 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
             const testIds = protocol.clinical_tests || [];
             if (testIds.length === 0) return [];
 
-            const { data, error } = await supabase
-                .from('clinical_test_templates')
-                .select('id, name, target_joint, category')
-                .in('id', testIds);
+            // Firestore doesn't support 'in' queries with more than 10 items, so we need to batch
+            const batchSize = 10;
+            const results: LinkedClinicalTest[] = [];
 
-            if (error) throw error;
-            return data;
+            for (let i = 0; i < testIds.length; i += batchSize) {
+                const batch = testIds.slice(i, i + batchSize);
+                const q = firestoreQuery(
+                    collection(db, 'clinical_test_templates'),
+                    where('__name__', 'in', batch)
+                );
+                const snapshot = await getDocs(q);
+                results.push(...snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    name: doc.data().name,
+                    target_joint: doc.data().target_joint,
+                    category: doc.data().category,
+                })));
+            }
+
+            return results;
         },
         enabled: !!protocol.clinical_tests && protocol.clinical_tests.length > 0
     });

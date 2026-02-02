@@ -1,19 +1,7 @@
 /**
  * useConnectionStatus - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - Connectivity check now uses Firestore instead of Supabase
- * - Lightweight query to organizations collection for health check
- *
- * Hook para monitorar status de conexão
- * Detecta online/offline com verificação real de conectividade (ping)
- *
- * Melhorias:
- * - Verificação real de conectividade (não apenas navigator.onLine)
- * - Ping ao Firestore para confirmar conexão
- * - Estados mais granulares (checking, online, offline, reconnecting)
- * - Debounce para evitar flickering
  */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, getDocs, limit, query as firestoreQuery } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -43,9 +31,6 @@ interface UseConnectionStatusOptions {
     pingOnFocus?: boolean;
 }
 
-/**
- * Verifica conectividade real fazendo ping ao Firestore
- */
 async function checkRealConnectivity(): Promise<boolean> {
     // Primeiro, verificar navigator.onLine
     if (!navigator.onLine) {

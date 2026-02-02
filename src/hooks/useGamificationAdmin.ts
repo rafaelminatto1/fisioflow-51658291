@@ -1,15 +1,7 @@
 /**
  * useGamificationAdmin - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
- * - supabase.from('xp_transactions') → Firestore collection 'xp_transactions'
- * - supabase.from('achievements_log') → Firestore collection 'achievements_log'
- * - supabase.from('achievements') → Firestore collection 'achievements'
- * - supabase.from('gamification_settings') → Firestore collection 'gamification_settings'
- * - Parallel queries preserved using Promise.all
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, differenceInDays } from 'date-fns';
@@ -78,9 +70,6 @@ export interface UseGamificationAdminResult {
 // HOOKS
 // ============================================================================
 
-/**
- * Hook for gamification administration - statistics, analytics, and management
- */
 export const useGamificationAdmin = (days: number = 30): UseGamificationAdminResult => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -581,9 +570,6 @@ function useUpdateLevelSettings() {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Calculate level curve based on progression type
- */
 export const calculateLevelCurve = (
   progressionType: ProgressionType,
   baseXp: number,

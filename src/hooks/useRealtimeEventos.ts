@@ -1,9 +1,5 @@
 /**
  * useRealtimeEventos - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.channel('eventos-changes') → Firestore onSnapshot for real-time updates
- * - supabase.postgres_changes → Firestore onSnapshot
  */
 
 import { useEffect } from 'react';
@@ -15,10 +11,6 @@ import { db } from '@/integrations/firebase/app';
 
 
 
-/**
- * Hook para inscrições Realtime na tabela eventos
- * Migrated from Supabase Realtime to Firestore onSnapshot
- */
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();
   const { toast } = useToast();

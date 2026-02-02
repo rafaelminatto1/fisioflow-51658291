@@ -1,20 +1,7 @@
 /**
  * useInnovations - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - patient_levels -> patient_levels
- * - gamification_rewards -> gamification_rewards
- * - patient_achievements -> patient_achievements
- * - achievements_log -> achievements_log
- * - clinic_inventory -> clinic_inventory
- * - inventory_movements -> inventory_movements
- * - staff_performance_metrics -> staff_performance_metrics
- * - appointment_predictions -> appointment_predictions
- * - revenue_forecasts -> revenue_forecasts
- * - whatsapp_exercise_queue -> whatsapp_exercise_queue
- * - patient_self_assessments -> patient_self_assessments
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy, limit, setDoc, writeBatch } from '@/integrations/firebase/app';
 import { toast } from 'sonner';

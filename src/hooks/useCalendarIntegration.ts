@@ -1,10 +1,5 @@
 /**
  * useCalendarIntegration - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('calendar_integrations') → Firestore collection 'calendar_integrations'
- * - supabase.from('calendar_sync_logs') → Firestore collection 'calendar_sync_logs'
- * - supabase.auth.signInWithOAuth() → Firebase Auth signInWithPopup (Google Provider)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

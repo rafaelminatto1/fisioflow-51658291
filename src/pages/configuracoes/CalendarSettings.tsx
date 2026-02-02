@@ -615,14 +615,14 @@ export default function CalendarSettings() {
                       5
                     </div>
                     <div className="space-y-2">
-                      <h4 className="font-medium">Configure no Supabase</h4>
+                      <h4 className="font-medium">Configure no Firebase</h4>
                       <p className="text-sm text-muted-foreground">
-                        Copie o CLIENT_ID e CLIENT_SECRET e configure no painel do Supabase em Authentication → Providers → Google.
+                        Copie o CLIENT_ID e CLIENT_SECRET e configure no painel do Firebase Console em Authentication → Sign-in method → Google.
                       </p>
                       <Button variant="outline" size="sm" asChild>
-                        <a href="https://supabase.com/dashboard/project/ycvbtjfrchcyvmkvuocu/auth/providers" target="_blank" rel="noopener noreferrer">
+                        <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="mr-2 h-4 w-4" />
-                          Abrir Configurações Supabase
+                          Abrir Firebase Console
                         </a>
                       </Button>
                     </div>

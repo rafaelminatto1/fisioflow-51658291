@@ -1,9 +1,5 @@
 /**
  * useAssetAnnotations - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - asset_annotations -> asset_annotations collection
- * - Auth through useAuth() from AuthContext
  */
 
 import { useState, useEffect, useCallback } from 'react';

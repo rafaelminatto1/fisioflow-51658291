@@ -1,9 +1,5 @@
 /**
  * usePurchaseVoucher - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.functions.invoke() → Firebase Functions (httpsCallable)
- * - Voucher payment processing via Firebase Functions
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';

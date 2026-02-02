@@ -1,11 +1,5 @@
 /**
  * useDataExport - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('medical_records') → Firestore collection 'medical_records'
- * - supabase.from('prescribed_exercises') → Firestore collection 'prescribed_exercises'
  */
 
 import { useState } from 'react';

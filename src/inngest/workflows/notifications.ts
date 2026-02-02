@@ -1,15 +1,7 @@
 /**
  * Notification Workflow - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - createClient(supabase) → Firebase Admin SDK
- * - supabase.from('notification_history') → firestore.collection('notification_history')
- * - insert() → addDoc()
- * - update().where().eq() → updateDoc() with query
- *
- * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';
@@ -17,9 +9,6 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 
 type NotificationResult = { sent: boolean; channel: string; error?: string };
 
-/**
- * Send a single notification
- */
 export const sendNotificationWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-send-notification',
@@ -145,9 +134,6 @@ export const sendNotificationWorkflow = inngest.createFunction(
   }
 );
 
-/**
- * Send notifications in batch
- */
 export const sendNotificationBatchWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-send-notification-batch',

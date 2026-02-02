@@ -1,14 +1,7 @@
 /**
  * useTeamPerformance - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - user_roles -> user_roles collection
- * - profiles -> profiles collection (already on Firestore)
- * - appointments -> appointments collection
- * - crm_pesquisas_nps -> crm_pesquisas_nps collection
- * - Auth through useAuth() from AuthContext
  */
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, doc, getDoc } from '@/integrations/firebase/app';
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';

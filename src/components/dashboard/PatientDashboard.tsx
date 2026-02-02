@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { StatCard } from './StatCard';
 import { ChartWidget } from './ChartWidget';
 import { toast } from '@/hooks/use-toast';
-import { useRealtime } from '@/contexts/RealtimeContext';
+import { useRealtime, type Appointment } from '@/contexts/RealtimeContext';
 import { Profile } from '@/types/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,8 +31,8 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
   const { appointments, metrics } = useRealtime();
 
   // Estado local para dados específicos (opcional)
-  const [upcomingAppointments, setUpcomingAppointments] = useState(5);
-  const [todayExercises, setTodayExercises] = useState(5);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [todayExercises, setTodayExercises] = useState<Array<{ date: string; value: number }>>([]);
   const [progressData, setProgressData] = useState<Array<{ date: string, value: number }>>([]);
   const [messages, setMessages] = useState<Array<{ type: 'success' | 'error', text: string }>>([]);
 
@@ -84,8 +84,8 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
   }, [appointments, metrics, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => ({
-    nextAppointments: Math.min(upcomingAppointments, 5),
-    todayExercises,
+    nextAppointments: Math.min(upcomingAppointments.length, 5),
+    todayExercises: todayExercises.length,
     treatmentProgress: progressData.length > 0
       ? Math.round(progressData.reduce((sum, p) => sum + p.value, 0) / progressData.length)
       : 0,
@@ -116,36 +116,40 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
         <StatCard
           title="Próximas Consultas"
           value={stats.nextAppointments}
-          change={stats.nextAppointments > 0 ? 'positive' : 'neutral'}
+          change={stats.nextAppointments > 0 ? 'positivo' : undefined}
+          changeType={stats.nextAppointments > 0 ? 'positive' : 'neutral'}
           icon={<Calendar className="w-5 h-5 text-primary" />}
-          gradient="from-blue-500 to-blue-600"
+          gradient
           loading={false}
         />
 
         <StatCard
           title="Exercícios Hoje"
           value={stats.todayExercises}
-          change={`${stats.todayExercises > 0 ? 'completed' : 'neutral'}`}
+          change={stats.todayExercises > 0 ? 'concluído' : undefined}
+          changeType={stats.todayExercises > 0 ? 'positive' : 'neutral'}
           icon={<Activity className="w-5 h-5 text-secondary" />}
-          gradient="from-green-500 to-green-600"
+          gradient
           loading={false}
         />
 
         <StatCard
           title="Progresso do Tratamento"
           value={`${stats.treatmentProgress}%`}
-          change={stats.treatmentProgress >= 80 ? 'positive' : stats.treatmentProgress >= 50 ? 'neutral' : 'negative'}
+          change={stats.treatmentProgress >= 80 ? 'positivo' : stats.treatmentProgress >= 50 ? 'estável' : 'atenção'}
+          changeType={stats.treatmentProgress >= 80 ? 'positive' : stats.treatmentProgress >= 50 ? 'neutral' : 'negative'}
           icon={<TrendingUp className="w-5 h-5 text-orange-500" />}
-          gradient={stats.treatmentProgress >= 80 ? 'from-orange-500 to-orange-600' : 'from-yellow-500 to-yellow-600'}
+          gradient
           loading={false}
         />
 
         <StatCard
           title="Mensagens"
           value={stats.totalMessages}
-          change="neutral"
+          change="neutro"
+          changeType="neutral"
           icon={<MessageSquare className="w-5 h-5 text-blue-500" />}
-          gradient="from-purple-500 to-purple-600"
+          gradient
           loading={false}
         />
       </div>
@@ -203,7 +207,8 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
             </CardHeader>
             <CardContent>
               <ChartWidget
-                data={progressData}
+                title="Evolução do Progresso"
+                data={progressData.map((p) => ({ name: p.date, value: p.value }))}
                 height={200}
               />
             </CardContent>

@@ -1,12 +1,7 @@
 /**
  * useOnlineUsers - Migrated to Firebase Presence
  *
- * Migration from Supabase Realtime Presence to Firebase Firestore Presence:
- * - supabase.channel() → FirebasePresence class
- * - presence.track() → presence.track()
- * - presence.on('sync') → presence.subscribe()
  */
-
 import { useState, useEffect } from 'react';
 import { doc, getDoc } from '@/integrations/firebase/app';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -65,15 +60,6 @@ class FirebasePresence {
   }
 }
 
-/**
- * Hook para rastrear usuários online em tempo real
- *
- * Migrado de Supabase Presence para Firebase Firestore Presence.
- *
- * @param channelName - Nome do canal de presença (default: 'online-users')
- *
- * @returns {PresenceState} Estado de presença com usuários online
- */
 export function useOnlineUsers(channelName: string = 'online-users') {
   const [state, setState] = useState<PresenceState>({
     onlineUsers: [],
@@ -123,8 +109,17 @@ export function useOnlineUsers(channelName: string = 'online-users') {
           // Criar gerenciador de presença
           presence = new FirebasePresence(channelName);
 
-          // Rastrear presença do usuário atual
-          await presence.track(user);
+          // Rastrear presença do usuário atual (falha silenciosa se regras Firestore negarem)
+          try {
+            await presence.track(user);
+          } catch (err) {
+            const code = (err as { code?: string })?.code;
+            if (code === 'permission-denied' || (err as Error)?.message?.includes('permission')) {
+              logger.warn('Presence: escrita em Firestore não permitida pelas regras (ignorando)', { userId: user.userId }, 'useOnlineUsers');
+            } else {
+              logger.error('Erro ao rastrear presença', err, 'useOnlineUsers');
+            }
+          }
 
           // Inscrever em mudanças de presença
           presence.subscribe((newState) => {
@@ -162,21 +157,10 @@ export function useOnlineUsers(channelName: string = 'online-users') {
   };
 }
 
-/**
- * Hook para rastrear presença em canais customizados
- *
- * Uso:
- * ```ts
- * const { onlineUsers } = usePresence('appointment-123');
- * ```
- */
 export function usePresence(channelName: string) {
   return useOnlineUsers(channelName);
 }
 
-/**
- * Hook para rastrear presença global (todos os usuários online)
- */
 export function useGlobalPresence() {
   return useOnlineUsers('global-online-users');
 }

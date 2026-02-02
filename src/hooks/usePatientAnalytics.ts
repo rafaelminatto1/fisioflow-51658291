@@ -1,17 +1,5 @@
 /**
  * usePatientAnalytics - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patient_lifecycle_events') → Firestore collection 'patient_lifecycle_events'
- * - supabase.from('patient_outcome_measures') → Firestore collection 'patient_outcome_measures'
- * - supabase.from('patient_session_metrics') → Firestore collection 'patient_session_metrics'
- * - supabase.from('patient_predictions') → Firestore collection 'patient_predictions'
- * - supabase.from('patient_risk_scores') → Firestore collection 'patient_risk_scores'
- * - supabase.from('patient_goal_tracking') → Firestore collection 'patient_goal_tracking'
- * - supabase.from('patient_insights') → Firestore collection 'patient_insights'
- * - supabase.from('clinical_benchmarks') → Firestore collection 'clinical_benchmarks'
- * - supabase.auth.getUser() → getFirebaseAuth().currentUser
- * - supabase.rpc() → Cloud Functions (need to be implemented separately)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

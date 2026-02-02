@@ -1,18 +1,7 @@
 /**
  * Analytics Export Hook - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('patient_risk_scores') → Firestore collection 'patient_risk_scores'
- * - Removed supabase client dependency
- *
- * Provides functionality to export patient analytics data
- * in various formats (PDF, CSV, JSON, Excel).
- *
- * @module useAnalyticsExport
  */
-
 import { useState } from 'react';
 import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -116,9 +105,6 @@ const SUCCESS_THRESHOLDS = {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Sanitizes a filename by removing special characters
- */
 function sanitizeFileName(name: string): string {
   return name
     .normalize('NFD')
@@ -128,9 +114,6 @@ function sanitizeFileName(name: string): string {
     .replace(/^_|_$/g, '');
 }
 
-/**
- * Gets risk level label and color
- */
 function getRiskInfo(value: number): { label: string; color: typeof PDF_COLORS[keyof typeof PDF_COLORS] } {
   if (value < RISK_THRESHOLDS.low) {
     return { label: 'Baixo', color: PDF_COLORS.success };
@@ -141,18 +124,12 @@ function getRiskInfo(value: number): { label: string; color: typeof PDF_COLORS[k
   return { label: 'Alto', color: PDF_COLORS.danger };
 }
 
-/**
- * Gets success level label
- */
 function getSuccessLevel(value: number): string {
   if (value < SUCCESS_THRESHOLDS.low) return 'Baixo';
   if (value < SUCCESS_THRESHOLDS.medium) return 'Médio';
   return 'Alto';
 }
 
-/**
- * Downloads a blob as a file
- */
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -167,9 +144,6 @@ function downloadBlob(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
-/**
- * Adds BOM to CSV for proper UTF-8 encoding in Excel
- */
 function addBOMToCSV(csv: string): string {
   return '\uFEFF' + csv;
 }
@@ -178,9 +152,6 @@ function addBOMToCSV(csv: string): string {
 // PDF EXPORT
 // ============================================================================
 
-/**
- * Generates a PDF report from analytics data
- */
 function generatePDF(data: AnalyticsExportData, patientName: string, options: ExportOptions): ExportResult {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -378,9 +349,6 @@ function generatePDF(data: AnalyticsExportData, patientName: string, options: Ex
   return { format: 'pdf', fileName, timestamp };
 }
 
-/**
- * Formats goal status for display
- */
 function formatGoalStatus(status: string): string {
   const statusMap: Record<string, string> = {
     not_started: 'Não Iniciado',
@@ -396,9 +364,6 @@ function formatGoalStatus(status: string): string {
 // EXCEL EXPORT
 // ============================================================================
 
-/**
- * Generates an Excel workbook from analytics data
- */
 function generateExcel(data: AnalyticsExportData, patientName: string, options: ExportOptions): ExportResult {
   const timestamp = format(new Date(), 'yyyyMMdd_HHmm', { locale: ptBR });
   const sanitizedName = sanitizeFileName(patientName);
@@ -562,9 +527,6 @@ function getGoalState(progress: number, status: string): string {
 // CSV EXPORT
 // ============================================================================
 
-/**
- * Converts analytics data to CSV format
- */
 function convertToCSV(data: AnalyticsExportData, options: ExportOptions): string {
   const rows: string[][] = [];
 
@@ -640,9 +602,6 @@ function convertToCSV(data: AnalyticsExportData, options: ExportOptions): string
 // HOOKS
 // ============================================================================
 
-/**
- * Hook for exporting single patient analytics
- */
 export function useAnalyticsExport() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);

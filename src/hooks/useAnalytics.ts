@@ -1,11 +1,5 @@
 /**
  * useAnalytics - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from("patient_activity_summary") → Firestore collection 'patient_activity_summary'
- * - supabase.from("financial_summary") → Firestore collection 'financial_summary'
- * - supabase.from("new_patients_by_period") → Firestore collection 'new_patients_by_period'
- * - supabase.from("daily_metrics") → Firestore collection 'daily_metrics'
  */
 
 import { useQuery } from "@tanstack/react-query";

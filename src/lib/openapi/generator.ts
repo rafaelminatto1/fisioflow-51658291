@@ -95,12 +95,12 @@ export function generateOpenAPISpec(): OpenAPISpec {
     },
     servers: [
       {
-        url: 'https://ycvbtjfrchcyvmkvuocu.supabase.co/functions/v1',
-        description: 'Produção',
+        url: 'https://us-central1-fisioflow-51658291.cloudfunctions.net',
+        description: 'Produção (Firebase Functions)',
       },
       {
-        url: 'http://localhost:54321/functions/v1',
-        description: 'Desenvolvimento Local',
+        url: 'http://localhost:5001/fisioflow-51658291/us-central1',
+        description: 'Desenvolvimento Local (Firebase Functions)',
       },
     ],
     paths: {

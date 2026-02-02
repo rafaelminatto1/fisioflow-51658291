@@ -1,9 +1,5 @@
 /**
  * Patient Evolution Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - Uses migrated hooks (usePatientEvolution, useSoapRecords, etc.)
- * - No direct Supabase queries in this file
  */
 
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
@@ -91,20 +87,6 @@ export interface PainScaleData {
   character?: string;
 }
 
-/**
- * Página de Evolução do Paciente
- *
- * Funcionalidades principais:
- * - Registro SOAP (Subjetivo, Objetivo, Avaliação, Plano)
- * - Escala de dor (EVA)
- * - Medições e testes obrigatórios
- * - Exercícios da sessão
- * - Metas e patologias
- * - Histórico de evoluções
- * - Assistente de IA
- * - Integração WhatsApp
- * - Gamificação
- */
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();

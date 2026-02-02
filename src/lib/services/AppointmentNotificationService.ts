@@ -3,16 +3,16 @@ import { inngest } from '@/lib/inngest/client';
 import { Events } from '@/lib/inngest/types';
 
 /**
- * NOTE: This service uses Supabase Edge Functions for appointment notifications.
+ * NOTE: This service uses Firebase Cloud Functions for appointment notifications.
  * For Firebase, you need to implement Firebase Cloud Functions to:
  * 1. Schedule notifications for appointments
  * 2. Send notifications via FCM or other channels
  * 3. Handle reschedule and cancellation notifications
  *
- * The current implementation logs to console.
+ * The current implementation uses Inngest for scheduling.
  *
  * TODO: Implement Firebase Cloud Functions for:
- * - schedule-notifications → Replace supabase.functions.invoke('schedule-notifications')
+ * - schedule-notifications → Call Firebase Cloud Function for notifications
  */
 export class AppointmentNotificationService {
   /**

@@ -1,14 +1,7 @@
 /**
  * useFeriados - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('feriados') → Firestore collection 'feriados'
- * - supabase.select() → getDocs()
- * - supabase.insert() → addDoc()
- * - supabase.update() → updateDoc()
- * - supabase.delete() → deleteDoc()
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';

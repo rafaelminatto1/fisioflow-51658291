@@ -1,14 +1,7 @@
 /**
  * useEmpresasParceiras - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('empresas_parceiras') → Firestore collection 'empresas_parceiras'
- * - supabase.select() → getDocs()
- * - supabase.insert() → addDoc()
- * - supabase.update() → updateDoc()
- * - supabase.delete() → deleteDoc()
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';

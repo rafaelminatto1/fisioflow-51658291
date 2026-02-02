@@ -1,9 +1,5 @@
 /**
  * useSmartWaitlist - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('waitlist') → Firestore collection 'waitlist'
- * - Joins replaced with separate queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,9 +35,6 @@ interface UseSmartWaitlistOptions {
   candidatesPerSlot?: number;
 }
 
-/**
- * Hook para obter recomendações inteligentes de vagas
- */
 export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
   const { daysAhead = 14, candidatesPerSlot = 3 } = options;
   const [selectedDateRange, setSelectedDateRange] = useState({
@@ -83,9 +76,6 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
 // HOOK: BEST SLOT FOR PATIENT
 // =====================================================================
 
-/**
- * Hook para encontrar a melhor vaga para um paciente específico
- */
 export function useBestSlotForPatient(entry: WaitlistEntry | null) {
   const [scheduledAppointments, setScheduledAppointments] = useState<Array<{
     date: string;
@@ -126,9 +116,6 @@ export function useBestSlotForPatient(entry: WaitlistEntry | null) {
 // HOOK: WAITLIST ANALYTICS
 // =====================================================================
 
-/**
- * Hook para obter analytics da lista de espera
- */
 export function useWaitlistAnalytics() {
   const { data: waitlist = [] } = useWaitlist();
 
@@ -145,9 +132,6 @@ export function useWaitlistAnalytics() {
 // HOOK: WAITLIST ANOMALIES
 // =====================================================================
 
-/**
- * Hook para detectar anomalias na lista de espera
- */
 export function useWaitlistAnomalies() {
   const { data: waitlist = [] } = useWaitlist();
 
@@ -164,9 +148,6 @@ export function useWaitlistAnomalies() {
 // HOOK: AUTO OFFER SLOTS
 // =====================================================================
 
-/**
- * Hook para oferecer vagas automaticamente para candidatos via WhatsApp
- */
 export function useAutoOfferSlots() {
   const queryClient = useQueryClient();
 
@@ -253,9 +234,6 @@ export function useAutoOfferSlots() {
 // HOOK: OPTIMIZE ALLOCATIONS
 // =====================================================================
 
-/**
- * Hook para otimizar distribuição de vagas
- */
 export function useOptimizeAllocations() {
   const [startDate] = useState(() => new Date());
   const [daysAhead] = useState(14);
@@ -291,9 +269,6 @@ interface SmartWaitlistManagerOptions {
   candidatesPerSlot?: number;
 }
 
-/**
- * Hook principal que combina todas as funcionalidades inteligentes
- */
 export function useSmartWaitlistManager(options: SmartWaitlistManagerOptions = {}) {
   const { daysAhead = 14, candidatesPerSlot = 3 } = options;
 

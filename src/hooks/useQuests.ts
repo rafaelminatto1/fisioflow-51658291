@@ -1,11 +1,5 @@
 /**
  * useQuests - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patient_quests') → Firestore collection 'patient_quests'
- * - supabase.from('quest_definitions') → Firestore collection 'quest_definitions'
- * - supabase.rpc() → Cloud Functions (pendente)
- * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

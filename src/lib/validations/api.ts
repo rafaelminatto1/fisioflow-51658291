@@ -203,32 +203,35 @@ export const patientSchemas = {
 };
 
 /**
+ * Appointment status schema - defined separately to avoid "before initialization" error
+ * when referenced by base and formData within appointmentSchemas
+ */
+const appointmentStatusSchema = z.enum([
+  'agendado',
+  'confirmado',
+  'em_atendimento',
+  'concluido',
+  'cancelado',
+  'nao_compareceu',
+  'remarcado',
+  'aguardando_confirmacao',
+  'bloqueado',
+  'disponivel',
+  'avaliacao',
+  'retorno',
+  'encaixe',
+  'Confirmado',
+  'Pendente',
+  'Reagendado',
+  'Cancelado',
+  'Realizado',
+]);
+
+/**
  * Appointment validation schemas
  */
 export const appointmentSchemas = {
-  /**
-   * Appointment status
-   */
-  status: z.enum([
-    'agendado',
-    'confirmado',
-    'em_atendimento',
-    'concluido',
-    'cancelado',
-    'nao_compareceu',
-    'remarcado',
-    'aguardando_confirmacao',
-    'bloqueado',
-    'disponivel',
-    'avaliacao',
-    'retorno',
-    'encaixe',
-    'Confirmado',
-    'Pendente',
-    'Reagendado',
-    'Cancelado',
-    'Realizado',
-  ]),
+  status: appointmentStatusSchema,
 
   /**
    * Base appointment schema
@@ -259,7 +262,7 @@ export const appointmentSchemas = {
     start_time: z.string().optional(),
     end_time: z.string().optional(),
     duration: z.number().int().positive().optional(),
-    status: appointmentSchemas.status.optional(),
+    status: appointmentStatusSchema.optional(),
     payment_status: z.enum(['pending', 'partial', 'paid', 'overdue', 'cancelled']).optional(),
     session_type: z.enum(['individual', 'group']).optional(),
     notes: z.string().optional(),
@@ -281,7 +284,7 @@ export const appointmentSchemas = {
     duration: z.number().int().positive(),
     type: z.enum(['Consulta Inicial', 'Fisioterapia', 'Reavaliação', 'Consulta de Retorno']),
     notes: z.string().optional(),
-    status: appointmentSchemas.status.default('agendado'),
+    status: appointmentStatusSchema.default('agendado'),
   }),
 
   /**
@@ -297,12 +300,20 @@ export const appointmentSchemas = {
 };
 
 /**
+ * Exercise plan item schema - defined separately to avoid self-reference in exerciseSchemas
+ */
+const exercisePlanItemSchema = z.object({
+  exerciseId: commonSchemas.entityId,
+  sets: z.number().int().positive(),
+  reps: z.number().int().positive(),
+  restTime: z.number().int().nonnegative(),
+  notes: z.string().optional(),
+});
+
+/**
  * Exercise validation schemas
  */
 export const exerciseSchemas = {
-  /**
-   * Base exercise schema
-   */
   base: z.object({
     id: commonSchemas.entityId,
     name: z.string().min(1),
@@ -324,26 +335,14 @@ export const exerciseSchemas = {
     updated_at: z.string().optional(),
   }),
 
-  /**
-   * Exercise plan item
-   */
-  planItem: z.object({
-    exerciseId: commonSchemas.entityId,
-    sets: z.number().int().positive(),
-    reps: z.number().int().positive(),
-    restTime: z.number().int().nonnegative(),
-    notes: z.string().optional(),
-  }),
+  planItem: exercisePlanItemSchema,
 
-  /**
-   * Exercise plan
-   */
   plan: z.object({
     id: commonSchemas.entityId,
     name: z.string().min(1),
     description: z.string(),
     patientId: commonSchemas.entityId,
-    exercises: z.array(exerciseSchemas.planItem),
+    exercises: z.array(exercisePlanItemSchema),
     status: z.enum(['Ativo', 'Inativo', 'Concluído']),
     createdAt: commonSchemas.isoDate,
     updatedAt: commonSchemas.isoDate,
@@ -351,24 +350,23 @@ export const exerciseSchemas = {
 };
 
 /**
+ * Financial status schema - defined separately to avoid self-reference in financialSchemas
+ */
+const financialStatusSchema = z.enum(['pending', 'partial', 'paid', 'overdue', 'cancelled']);
+
+/**
  * Financial validation schemas
  */
 export const financialSchemas = {
-  /**
-   * Payment status
-   */
-  status: z.enum(['pending', 'partial', 'paid', 'overdue', 'cancelled']),
+  status: financialStatusSchema,
 
-  /**
-   * Payment schema
-   */
   payment: z.object({
     id: commonSchemas.entityId,
     patientId: commonSchemas.entityId,
     appointmentId: commonSchemas.entityId.optional(),
     amount: z.number().positive(),
     paidAmount: z.number().nonnegative().optional(),
-    status: financialSchemas.status,
+    status: financialStatusSchema,
     paymentMethod: z.enum(['cash', 'card', 'pix', 'transfer', 'check']).optional(),
     paymentDate: commonSchemas.isoDate.optional(),
     notes: z.string().optional(),
@@ -392,24 +390,23 @@ export const financialSchemas = {
 };
 
 /**
+ * User role schema - defined separately to avoid self-reference in userSchemas
+ */
+const userRoleSchema = z.enum(['admin', 'fisioterapeuta', 'estagiario', 'recepcionista', 'paciente', 'owner']);
+
+/**
  * User/Profile validation schemas
  */
 export const userSchemas = {
-  /**
-   * User role
-   */
-  role: z.enum(['admin', 'fisioterapeuta', 'estagiario', 'recepcionista', 'paciente', 'owner']),
+  role: userRoleSchema,
 
-  /**
-   * User profile schema
-   */
   profile: z.object({
     id: commonSchemas.entityId,
     uid: commonSchemas.entityId,
     email: commonSchemas.email,
     name: z.string().min(1),
     full_name: z.string().optional(),
-    role: userSchemas.role,
+    role: userRoleSchema,
     organization_id: commonSchemas.entityId.optional(),
     phone: commonSchemas.phone.optional(),
     specialization: z.string().optional(),

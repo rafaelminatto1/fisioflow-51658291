@@ -1,12 +1,7 @@
 /**
  * usePainMaps - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('pain_maps') → Firestore collection 'pain_maps'
- * - supabase.from('pain_map_points') → Firestore collection 'pain_map_points'
- * - supabase.from('sessions') → Firestore collection 'sessions'
  */
-
 import { useCallback } from 'react';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, delete as deleteDocs, writeBatch, documentId } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
