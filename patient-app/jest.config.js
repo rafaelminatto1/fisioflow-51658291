@@ -16,7 +16,7 @@ module.exports = {
     '/e2e/',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(@react-native|react-native|expo|@expo|react-native-reanimated|react-native-gesture-handler|expo-router|@react-native-async-storage|@react-native-community|@tanstack|date-fns|zustand|firebase)/)',
+    'node_modules/(?!(@react-native|react-native|expo|@expo|react-native-reanimated|react-native-gesture-handler|expo-router|@react-native-async-storage|@react-native-community|@tanstack|date-fns|zustand|firebase|@testing-library)/)',
   ],
   setupFiles: [
     '<rootDir>/jest.setup.js',

@@ -547,7 +547,8 @@ function EvaluationsSection({ evaluations, onView, onCreateNew, colors }: any) {
           {' '}Primeira Avaliação
         </Button>
       )}
-    </View  );
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -763,6 +764,33 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyButton: {
+    minWidth: 150,
+  },
+  evaluationCard: {
+    padding: 14,
+    marginBottom: 12,
+  },
+  evaluationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  evaluationTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  evaluationDate: {
+    fontSize: 12,
+  },
+  evaluationPreview: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  evaluationDiagnosis: {
+    fontWeight: '600',
+  },
+  createNewButton: {
     minWidth: 150,
   },
   bottomSpacing: {

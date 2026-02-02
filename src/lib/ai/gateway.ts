@@ -1,16 +1,22 @@
 /**
- * Vercel AI Gateway Integration
+ * AI Gateway Integration
  *
- * Centralizes AI model routing through Vercel AI Gateway
+ * Centralizes AI model routing through direct provider connections
  * Provides automatic fallback, rate limiting, and cost optimization
  *
- * Free tier benefits:
- * - $5 credit per month for AI usage
- * - Single endpoint for multiple providers
- * - Built-in caching and rate limiting
- * - Analytics and monitoring
+ * This implementation connects directly to AI providers without
+ * requiring Vercel AI Gateway. It supports:
+ * - OpenAI (GPT-4, GPT-3.5)
+ * - Google (Gemini 2.0 Flash, Gemini 1.5 Pro/Flash)
+ * - Anthropic (Claude 3.5 Sonnet/Haiku)
+ * - Grok (xAI)
  *
- * @see https://vercel.com/docs/ai-gateway
+ * For Google Cloud AI Platform integration, consider using:
+ * - Vertex AI API for enterprise-grade AI services
+ * - Cloud Functions for AI-powered endpoints
+ *
+ * @see https://cloud.google.com/vertex-ai
+ * @see https://sdk.vercel.ai/docs
  */
 
 import { createOpenAI } from '@ai-sdk/openai';
@@ -78,29 +84,32 @@ export interface AIStreamOptions extends AIRequestOptions {
 // ============================================================================
 
 
-const GATEWAY_BASE_URL = import.meta.env.VITE_VERCEL_AI_GATEWAY_URL || import.meta.env.NEXT_PUBLIC_VERCEL_AI_GATEWAY_URL || 'https://gateway.vercel.sh/api/v1';
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
 
 /**
  * Provider configuration with base URLs and model mappings
+ * Uses direct provider connections instead of Vercel AI Gateway
  */
 const PROVIDER_CONFIG = {
   openai: {
-    baseURL: `${GATEWAY_BASE_URL}/openai`,
+    baseURL: 'https://api.openai.com/v1',
     defaultModel: 'gpt-4o-mini',
     apiKey: import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.NEXT_PUBLIC_OPENAI_API_KEY,
   },
   google: {
-    baseURL: `${GATEWAY_BASE_URL}/google`,
+    baseURL: undefined, // Google SDK handles this automatically
     defaultModel: 'gemini-2.0-flash-exp',
     apiKey: import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY || import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY || import.meta.env.VITE_GOOGLE_AI_API_KEY,
   },
   grok: {
-    baseURL: `${GATEWAY_BASE_URL}/proxy/xai`,
+    baseURL: 'https://api.x.ai/v1',
     defaultModel: 'grok-2-1212',
-    apiKey: import.meta.env.VITE_VERCEL_AI_GATEWAY_KEY || import.meta.env.NEXT_PUBLIC_VERCEL_AI_GATEWAY_KEY || import.meta.env.VITE_XAI_API_KEY,
+    apiKey: import.meta.env.VITE_XAI_API_KEY || import.meta.env.NEXT_PUBLIC_XAI_API_KEY,
   },
   anthropic: {
-    baseURL: `${GATEWAY_BASE_URL}/anthropic`,
+    baseURL: 'https://api.anthropic.com/v1',
     defaultModel: 'claude-3-5-sonnet',
     apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || import.meta.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
   },
@@ -130,11 +139,12 @@ const MODEL_PROVIDER: Record<AIModel, AIProvider> = {
 
 /**
  * Cost per 1M tokens (approximate, for cost optimization)
+ * Google Gemini 2.0 Flash has generous free tier
  */
 const COST_PER_1M_TOKENS: Record<AIProvider, { input: number; output: number }> = {
   openai: { input: 2.5, output: 10 },      // gpt-4o-mini
   google: { input: 0.075, output: 0.3 },   // gemini-2.0-flash (FREE tier)
-  grok: { input: 0, output: 0 },           // FREE via Vercel
+  grok: { input: 0, output: 0 },           // Grok pricing varies
   anthropic: { input: 3, output: 15 },     // claude-3-5-sonnet
 };
 
@@ -151,6 +161,7 @@ const clients: Record<AIProvider, ReturnType<typeof createOpenAI> | ReturnType<t
 
 /**
  * Get or create AI client for a provider
+ * Uses direct provider connections (not through Vercel AI Gateway)
  */
 function getClient(provider: AIProvider) {
   if (!clients[provider]) {
@@ -158,8 +169,8 @@ function getClient(provider: AIProvider) {
 
     switch (provider) {
       case 'google':
+        // Google Generative AI SDK handles its own base URL
         clients[provider] = createGoogleGenerativeAI({
-          baseURL: config.baseURL,
           apiKey: config.apiKey,
         }) as ReturnType<typeof createGoogleGenerativeAI>;
         break;
@@ -168,9 +179,10 @@ function getClient(provider: AIProvider) {
       case 'grok':
       case 'anthropic':
       default:
+        // OpenAI-compatible clients (OpenAI, xAI/Grok, Anthropic via compatibility layer)
         clients[provider] = createOpenAI({
           baseURL: config.baseURL,
-          apiKey: config.apiKey || config.apiKey, // Use gateway key if provider key not set
+          apiKey: config.apiKey,
         });
         break;
     }
@@ -513,10 +525,11 @@ function _calculateCost(
 
 /**
  * Get cheapest available provider
+ * Google Gemini 2.0 Flash is the most cost-effective option
  */
 export function getCheapestProvider(): AIProvider {
   // Order by cost (cheapest first)
-  return 'grok'; // Grok is free via Vercel
+  return 'google'; // Google Gemini Flash is free with generous quota
 }
 
 /**

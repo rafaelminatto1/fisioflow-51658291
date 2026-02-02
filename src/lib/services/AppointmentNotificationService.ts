@@ -1,6 +1,8 @@
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { inngest } from '@/lib/inngest/client';
 import { Events } from '@/lib/inngest/types';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
 /**
  * NOTE: This service uses Firebase Cloud Functions for appointment notifications.
@@ -10,9 +12,6 @@ import { Events } from '@/lib/inngest/types';
  * 3. Handle reschedule and cancellation notifications
  *
  * The current implementation uses Inngest for scheduling.
- *
- * TODO: Implement Firebase Cloud Functions for:
- * - schedule-notifications → Call Firebase Cloud Function for notifications
  */
 export class AppointmentNotificationService {
   /**
@@ -79,16 +78,18 @@ export class AppointmentNotificationService {
 
       logger.info('Notificando reagendamento', { appointmentId, newDate, newTime }, 'AppointmentNotificationService');
 
-      // TODO: Implement Firebase Cloud Function call
-      logger.debug('[AppointmentNotificationService] notifyReschedule', {
+      // Call Firebase Cloud Function to send reschedule notification
+      const functions = getFirebaseFunctions();
+      const notifyRescheduleFn = httpsCallable(functions, 'notifyAppointmentReschedule');
+      await notifyRescheduleFn({
         appointmentId,
         patientId,
-        newDate: newDate.toLocaleDateString('pt-BR'),
+        newDate: newDate.toISOString(),
         newTime,
         patientName,
-      }, 'AppointmentNotificationService');
+      });
 
-      logger.info('Notificação de reagendamento enviada (placeholder)', { appointmentId }, 'AppointmentNotificationService');
+      logger.info('Notificação de reagendamento enviada', { appointmentId }, 'AppointmentNotificationService');
       return { success: true, appointmentId };
     } catch (error) {
       logger.error('Falha ao notificar reagendamento', error, 'AppointmentNotificationService');
@@ -115,16 +116,18 @@ export class AppointmentNotificationService {
 
       logger.info('Notificando cancelamento', { appointmentId }, 'AppointmentNotificationService');
 
-      // TODO: Implement Firebase Cloud Function call
-      logger.debug('[AppointmentNotificationService] notifyCancellation:', {
+      // Call Firebase Cloud Function to send cancellation notification
+      const functions = getFirebaseFunctions();
+      const notifyCancellationFn = httpsCallable(functions, 'notifyAppointmentCancellation');
+      await notifyCancellationFn({
         appointmentId,
         patientId,
-        date: date.toLocaleDateString('pt-BR'),
+        date: date.toISOString(),
         time,
         patientName,
-      }, 'AppointmentNotificationService');
+      });
 
-      logger.info('Notificação de cancelamento enviada (placeholder)', { appointmentId }, 'AppointmentNotificationService');
+      logger.info('Notificação de cancelamento enviada', { appointmentId }, 'AppointmentNotificationService');
       return { success: true, appointmentId };
     } catch (error) {
       logger.error('Falha ao notificar cancelamento', error, 'AppointmentNotificationService');

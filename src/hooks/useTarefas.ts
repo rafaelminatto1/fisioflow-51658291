@@ -79,9 +79,15 @@ export function useTarefas() {
       const user = auth.currentUser;
       if (!user) return [];
 
+      const organizationId = await getUserOrganizationId();
+      if (!organizationId) {
+        console.warn('[useTarefas] No organization_id found - returning empty array');
+        return [];
+      }
+
       const q = firestoreQuery(
         collection(db, 'tarefas'),
-        where('organization_id', '==', await getUserOrganizationId()),
+        where('organization_id', '==', organizationId),
         orderBy('order_index', 'asc')
       );
 
