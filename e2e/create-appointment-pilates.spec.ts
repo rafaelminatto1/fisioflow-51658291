@@ -11,10 +11,12 @@ test.describe('Criar agendamento Pilates (session_type group)', () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000);
     await page.goto('/auth');
+    await page.waitForLoadState('domcontentloaded');
     const email = process.env.E2E_LOGIN_EMAIL || process.env.TEST_EMAIL || '';
     const password = process.env.E2E_LOGIN_PASSWORD || process.env.TEST_PASSWORD || '';
-    await page.fill('input[name="email"], input[type="email"]', email);
-    await page.fill('input[name="password"], input[type="password"]', password);
+    await page.locator('#login-email').waitFor({ state: 'visible', timeout: 20000 });
+    await page.fill('#login-email', email);
+    await page.fill('#login-password', password);
     await page.click('button[type="submit"]');
     // Aguardar sair da tela de login (qualquer URL que não seja /auth)
     await page.waitForURL((u) => !u.pathname.includes('/auth'), { timeout: 45000 });

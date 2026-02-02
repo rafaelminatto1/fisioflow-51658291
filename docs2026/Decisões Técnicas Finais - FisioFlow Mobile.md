@@ -48,25 +48,25 @@
 
 ---
 
-## 📊 Migração de Supabase para Firebase
+## 📊 Backend: Firebase
 
 ### Mapeamento de Serviços
 
-| Supabase (Atual) | Firebase (Novo) | Observações |
-|------------------|-----------------|-------------|
-| Supabase Auth | Firebase Authentication | Suporta Google, Apple, Email/Password |
-| PostgreSQL | Cloud Firestore + Cloud SQL | Firestore para real-time, Cloud SQL para relacional |
-| Supabase Storage | Firebase Storage | Armazenamento de vídeos de exercícios |
-| Supabase Realtime | Firestore Real-time Listeners | Sincronização em tempo real |
-| Edge Functions | Cloud Functions | Serverless functions |
-| Vercel Hosting | Firebase Hosting | Hospedagem web |
+| Serviço | Firebase | Observações |
+|---------|----------|-------------|
+| Auth | Firebase Authentication | Suporta Google, Apple, Email/Password |
+| Database | Firestore (+ Cloud SQL se necessário) | Firestore para real-time |
+| Storage | Firebase Storage | Armazenamento de vídeos de exercícios |
+| Realtime | Firestore Real-time Listeners | Sincronização em tempo real |
+| Functions | Cloud Functions | Serverless functions |
+| Hosting | Firebase Hosting | Hospedagem web (100% Firebase + GCP) |
 
 ### Estratégia de Migração
 
 **Opção 1: Migração Gradual (Recomendado)**
-1. Manter sistema web atual no Supabase
+1. Manter sistema web atual no Firebase
 2. Criar apps mobile com Firebase
-3. Sincronizar dados entre Supabase e Firebase via Cloud Functions
+3. Sincronizar dados entre web e mobile via Cloud Functions quando necessário
 4. Migrar web para Firebase posteriormente
 
 **Opção 2: Migração Completa**

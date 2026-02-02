@@ -1,371 +1,420 @@
 [
   {
     "id": "TC001",
-    "title": "Patient Registration with Valid Data",
-    "description": "Verify that a receptionist can successfully register a patient with complete and valid information including CPF, phone, email, clinical history, and emergency contact.",
+    "title": "Patient Registration with Valid CPF",
+    "description": "Verify that a patient can be registered successfully when a valid CPF is provided, including mandatory fields and initial medical history.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to patient registration page."
+        "description": "Navigate to the patient registration page"
       },
       {
         "type": "action",
-        "description": "Input valid CPF, phone number, email, clinical history, and emergency contact."
+        "description": "Enter valid patient details including a correctly formatted and unique CPF"
       },
       {
         "type": "action",
-        "description": "Submit the registration form."
+        "description": "Fill in mandatory medical history fields"
+      },
+      {
+        "type": "action",
+        "description": "Submit the patient registration form"
       },
       {
         "type": "assertion",
-        "description": "Verify patient is successfully registered and confirmation is shown."
+        "description": "Patient record is created successfully with an assigned ID and displayed in patient list"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "Patient Registration with Invalid CPF",
-    "description": "Verify that the system prevents registration for patients with an invalid CPF, showing appropriate validation error.",
+    "title": "Patient Registration Rejected with Invalid CPF",
+    "description": "Ensure the system prevents patient registration when an invalid CPF number is entered.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to patient registration page."
+        "description": "Navigate to the patient registration page"
       },
       {
         "type": "action",
-        "description": "Input invalid CPF along with other valid patient data."
+        "description": "Input invalid CPF format"
       },
       {
         "type": "action",
-        "description": "Submit the registration form."
+        "description": "Complete other mandatory fields with valid data"
+      },
+      {
+        "type": "action",
+        "description": "Try to submit the registration form"
       },
       {
         "type": "assertion",
-        "description": "Verify an error message is displayed for invalid CPF and registration is blocked."
+        "description": "Form submission is blocked and an appropriate validation error message is shown indicating CPF is invalid"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Patient Search by Name and CPF with Fast Response",
-    "description": "Verify that searching for patients by name or CPF returns accurate results in less than 2 seconds.",
-    "category": "performance",
-    "priority": "High",
+    "title": "Patient Record Deactivation Without Data Loss",
+    "description": "Validate that a patient record can be deactivated without deleting or losing clinical history data.",
+    "category": "functional",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to patient search interface."
+        "description": "Locate an existing active patient record"
       },
       {
         "type": "action",
-        "description": "Enter a valid patient name and trigger search."
+        "description": "Deactivate the patient record via the interface"
       },
       {
         "type": "assertion",
-        "description": "Verify relevant patients are displayed within 2 seconds."
-      },
-      {
-        "type": "action",
-        "description": "Enter a valid CPF and trigger search."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the patient matching the CPF is displayed within 2 seconds."
+        "description": "Patient is marked as inactive but all previous clinical data remains accessible in the system"
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "Create Appointment Without Conflict",
-    "description": "Verify that a receptionist can schedule an appointment in a free time slot without conflicts and the system confirms the booking.",
+    "title": "Create Appointment with Conflict Validation",
+    "description": "Verify that when scheduling an appointment, the system detects conflicts such as overlapping appointments or missing availability.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Open the calendar appointment interface."
+        "description": "Open the scheduling calendar and select a date and time slot"
       },
       {
         "type": "action",
-        "description": "Select an available date and time slot for a specific physiotherapist."
+        "description": "Attempt to create an appointment for a professional already booked in that slot"
       },
       {
         "type": "action",
-        "description": "Enter appointment details and save the appointment."
+        "description": "Submit the appointment request"
       },
       {
         "type": "assertion",
-        "description": "Verify appointment is created and displayed on the calendar."
+        "description": "System prevents saving and displays a conflict warning message"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Prevent Appointment Scheduling with Time Conflict",
-    "description": "Ensure the system blocks scheduling an appointment if the selected time slot is already occupied for the same professional and notifies the user.",
-    "category": "error handling",
+    "title": "Drag-and-Drop Rescheduling with Capacity Validation",
+    "description": "Confirm that appointments can be rescheduled by drag-and-drop in the calendar interface and capacity rules are enforced.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Attempt to schedule an appointment in a time slot already booked for the same physiotherapist."
+        "description": "Locate an existing appointment on the calendar"
       },
       {
         "type": "action",
-        "description": "Submit the appointment request."
+        "description": "Drag the appointment to a new time slot that is available"
       },
       {
         "type": "assertion",
-        "description": "Verify that the system shows a conflict error and prevents appointment creation."
+        "description": "The appointment reschedules successfully and updates are reflected immediately"
+      },
+      {
+        "type": "action",
+        "description": "Try to drag the appointment to a fully booked time slot or beyond allowed scheduling hours"
+      },
+      {
+        "type": "assertion",
+        "description": "System rejects the reschedule action and alerts the user to the capacity or scheduling limit"
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Reschedule Appointment using Drag-and-Drop",
-    "description": "Verify that appointments can be rescheduled by dragging and dropping to a different valid time slot on the calendar, updating the appointment accordingly.",
+    "title": "Save SOAP Clinical Note with Attachments and Digital Signature",
+    "description": "Test saving a complete SOAP clinical note including subjective, objective, assessment, plan sections, attached documents, and applying a digital signature.",
     "category": "functional",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Open the calendar with existing appointments."
+        "description": "Open the clinical note editor for a patient's session"
       },
       {
         "type": "action",
-        "description": "Drag an existing appointment to a free, valid time slot."
+        "description": "Fill out all SOAP sections with valid data"
+      },
+      {
+        "type": "action",
+        "description": "Attach relevant supporting documents to the note"
+      },
+      {
+        "type": "action",
+        "description": "Apply digital signature to the note"
+      },
+      {
+        "type": "action",
+        "description": "Save the clinical note"
       },
       {
         "type": "assertion",
-        "description": "Confirm the appointment reflects the new date/time and no conflicts exist."
+        "description": "Clinical note is saved with all data, attachments, and signature intact and audit trail is created"
       }
     ]
   },
   {
     "id": "TC007",
-    "title": "Register Clinical Session with Complete SOAP Notes and Pain Map",
-    "description": "Verify physiotherapist can register a clinical session including structured SOAP notes, interact with pain map, record EVA pain scale, and attach documents.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to the patient's clinical session recording interface."
-      },
-      {
-        "type": "action",
-        "description": "Fill out structured SOAP notes."
-      },
-      {
-        "type": "action",
-        "description": "Mark points on the interactive pain map."
-      },
-      {
-        "type": "action",
-        "description": "Record pain level using the EVA pain scale."
-      },
-      {
-        "type": "action",
-        "description": "Attach relevant clinical documents to the session."
-      },
-      {
-        "type": "action",
-        "description": "Save the clinical session."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the clinical session is saved correctly with all data and attachments."
-      }
-    ]
-  },
-  {
-    "id": "TC008",
-    "title": "Manage and Notify Waitlist for Appointment Cancellations",
-    "description": "Verify that when an appointment is cancelled, the system automatically offers the slot to waitlisted patients and manages timeout for their confirmation.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Cancel an existing appointment in the system."
-      },
-      {
-        "type": "assertion",
-        "description": "Check that waitlisted patients receive notification of the available slot."
-      },
-      {
-        "type": "action",
-        "description": "Simulate waitlisted patient confirming acceptance within timeout period."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify appointment is allocated to waiting patient upon confirmation."
-      },
-      {
-        "type": "action",
-        "description": "Simulate waitlisted patient not responding within timeout."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify system revokes offer and moves to the next patient in the waitlist."
-      }
-    ]
-  },
-  {
-    "id": "TC009",
-    "title": "Sales Registration and Automatic Debit of Session Packages",
-    "description": "Verify that receptionist can register the sale of session packages, the system automatically debits sessions upon use, and alerts about package validity.",
-    "category": "functional",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Register a package sale for a patient including package type and sessions count."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the package is recorded in patient's financial records."
-      },
-      {
-        "type": "action",
-        "description": "Conduct a patient session and confirm that one session is debited automatically."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the package sessions count is decremented accurately."
-      },
-      {
-        "type": "action",
-        "description": "Approach package expiration date."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify that system alerts receptionist of package validity expiration."
-      }
-    ]
-  },
-  {
-    "id": "TC010",
-    "title": "Financial Integration with Stripe and Payment Alert Notifications",
-    "description": "Verify integration with Stripe for processing payments and that the system generates appropriate financial alerts and updates after transactions.",
-    "category": "integration",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Initiate a payment transaction using Stripe integration for a session package."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify payment is processed and recorded successfully."
-      },
-      {
-        "type": "assertion",
-        "description": "Check that the system displays alert notifications for successful or failed payment."
-      }
-    ]
-  },
-  {
-    "id": "TC011",
-    "title": "Exercise Library Browsing and Personalized Prescription",
-    "description": "Verify that users can browse the exercise library with videos and that physiotherapists can prescribe personalized exercises to patients with sending functionality.",
+    "title": "Auto-Save SOAP Clinical Notes",
+    "description": "Ensure SOAP clinical notes are periodically auto-saved during editing to prevent data loss.",
     "category": "functional",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Access the exercise library and browse through exercise videos."
-      },
-      {
-        "type": "assertion",
-        "description": "Verify video previews and exercise details are displayed properly."
+        "description": "Open a new SOAP note and begin entering data into various fields"
       },
       {
         "type": "action",
-        "description": "Create a personalized exercise prescription for a patient."
-      },
-      {
-        "type": "action",
-        "description": "Send the prescribed exercises to the patient through the system."
+        "description": "Wait for the auto-save interval to pass without manual saving"
       },
       {
         "type": "assertion",
-        "description": "Verify prescription is recorded and patient receives exercise details."
+        "description": "Data entered is saved automatically and can be recovered upon re-loading the note"
       }
     ]
   },
   {
-    "id": "TC012",
-    "title": "Dashboard Real-Time KPI Display and Export",
-    "description": "Verify that administrators can view real-time KPIs such as occupancy rate, no-show percentage, and revenue, with correct graphical representation and ability to export reports in Excel and PDF.",
+    "id": "TC008",
+    "title": "Exercise Prescription Filtering and Protocol Application",
+    "description": "Verify that physiotherapists can filter exercises by category and apply evidence-based protocols to personalize patient prescriptions.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as administrator and navigate to the dashboard."
-      },
-      {
-        "type": "assertion",
-        "description": "Confirm real-time KPIs are displayed correctly with graphs."
+        "description": "Open the exercise library interface"
       },
       {
         "type": "action",
-        "description": "Click options to export reports as Excel and PDF files."
+        "description": "Apply various filters such as body region, difficulty, or type"
       },
       {
         "type": "assertion",
-        "description": "Verify exported files contain accurate and complete KPI data."
+        "description": "Filtered exercise list matches the selected criteria accurately"
+      },
+      {
+        "type": "action",
+        "description": "Select a protocol and apply it to a patient exercise plan"
+      },
+      {
+        "type": "assertion",
+        "description": "Protocol exercises populate the prescription correctly with associated parameters"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Track Patient Progress on Prescribed Exercises",
+    "description": "Test that patient progress on prescribed exercises is tracked, updated, and can be reviewed in reports.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access a patient's prescribed exercise plan"
+      },
+      {
+        "type": "action",
+        "description": "Input progress metrics such as completion rate, pain level, or time spent"
+      },
+      {
+        "type": "action",
+        "description": "Save the updated progress"
+      },
+      {
+        "type": "assertion",
+        "description": "Progress updates are saved and reflected in exportable reports and patient records"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Validated Appointment Confirmation Rate Increase Workflow",
+    "description": "Verify appointment confirmation workflows are functional and confirmation rate metrics can be generated.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Schedule multiple appointments with different patients"
+      },
+      {
+        "type": "action",
+        "description": "Mark appointments as confirmed through available interface options"
+      },
+      {
+        "type": "assertion",
+        "description": "System updates and displays confirmation rates achieving above 85% when applicable"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Financial Management: Record Income and Expense Transactions",
+    "description": "Test the basic financial module for recording income and expense items, checking balance calculations and report accuracy.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to financial management section"
+      },
+      {
+        "type": "action",
+        "description": "Create income transaction (e.g. session payment)"
+      },
+      {
+        "type": "action",
+        "description": "Create expense transaction (e.g. equipment purchase)"
+      },
+      {
+        "type": "assertion",
+        "description": "Transactions are saved correctly and cash flow calculations update accordingly"
+      },
+      {
+        "type": "action",
+        "description": "Generate financial report showing income and expenses"
+      },
+      {
+        "type": "assertion",
+        "description": "Report data is accurate and reflects all recorded transactions"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Role-Based Access Control Validation",
+    "description": "Confirm that users with different roles (Admin, Receptionist, Physiotherapist, Patient) can access only authorized modules and features.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as an Admin user"
+      },
+      {
+        "type": "assertion",
+        "description": "Admin can access system administration, user management, and analytics"
+      },
+      {
+        "type": "action",
+        "description": "Log out and log in as Receptionist"
+      },
+      {
+        "type": "assertion",
+        "description": "Receptionist can access appointment scheduling but not system settings"
+      },
+      {
+        "type": "action",
+        "description": "Log out and log in as Physiotherapist"
+      },
+      {
+        "type": "assertion",
+        "description": "Physiotherapist can access SOAP notes and exercise prescription but not financial management"
+      },
+      {
+        "type": "action",
+        "description": "Log out and log in as Patient"
+      },
+      {
+        "type": "assertion",
+        "description": "Patient can view own clinical records and prescribed exercises only"
       }
     ]
   },
   {
     "id": "TC013",
-    "title": "System Performance Under Load - Page Load Below 2 Seconds",
-    "description": "Verify that the system maintains page load times under 2 seconds under standard operational load conditions.",
-    "category": "performance",
+    "title": "Audit Log Entry for Critical User Actions",
+    "description": "Ensure that critical actions such as user creation, patient record editing, and clinical note signing generate appropriate audit log entries.",
+    "category": "security",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Simulate typical user load on the system."
-      },
-      {
-        "type": "action",
-        "description": "Navigate through major pages including dashboard, patient registration, and appointment scheduling."
+        "description": "Perform critical action such as creating a new user"
       },
       {
         "type": "assertion",
-        "description": "Measure and confirm each page loads in under 2 seconds."
+        "description": "Audit log registers the creation event with user, timestamp, and details"
+      },
+      {
+        "type": "action",
+        "description": "Edit a patient clinical record"
+      },
+      {
+        "type": "assertion",
+        "description": "Audit log captures changes with before and after states"
+      },
+      {
+        "type": "action",
+        "description": "Apply digital signature on a SOAP note"
+      },
+      {
+        "type": "assertion",
+        "description": "Audit log records signature event linked to user and note"
       }
     ]
   },
   {
     "id": "TC014",
-    "title": "System Availability Smoke Test",
-    "description": "Perform basic smoke tests after deployment to confirm all critical features are accessible and working to maintain availability above 99.5%.",
-    "category": "smoke",
+    "title": "System Performance: Loading Patient List Under 2 Seconds",
+    "description": "Verify that loading the patient list page completes within 2 seconds to support operational efficiency.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the patient list page with a large dataset"
+      },
+      {
+        "type": "assertion",
+        "description": "Page fully loads and displays all patients within 2 seconds"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "UI Accessibility Compliance WCAG 2.1 AA",
+    "description": "Validate that key user interface components meet WCAG 2.1 AA accessibility standards including keyboard navigation, color contrast, and labels.",
+    "category": "ui",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Access login page and authenticate successfully."
-      },
-      {
-        "type": "action",
-        "description": "Navigate to patient registration, create a test patient, and verify success."
-      },
-      {
-        "type": "action",
-        "description": "Create an appointment and verify it is listed in the calendar."
+        "description": "Navigate through the main UI using keyboard only"
       },
       {
         "type": "assertion",
-        "description": "Confirm all operations performed without errors."
+        "description": "All interactive elements are reachable and usable without mouse"
+      },
+      {
+        "type": "action",
+        "description": "Check color contrast ratios for text and backgrounds against WCAG 2.1 AA requirements"
+      },
+      {
+        "type": "assertion",
+        "description": "Colors meet minimum contrast thresholds"
+      },
+      {
+        "type": "action",
+        "description": "Verify all form fields have descriptive labels and error messages"
+      },
+      {
+        "type": "assertion",
+        "description": "Labels are programmatically associated with inputs and errors are conveyed clearly"
       }
     ]
   }

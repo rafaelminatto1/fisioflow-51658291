@@ -1,6 +1,6 @@
 # 🏥 FisioFlow - Sistema de Gestão para Fisioterapia
 
-Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com React + TypeScript + Supabase.
+Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com React + TypeScript + Firebase.
 
 > **📚 Documentação Oficial**: [docs2026/](./docs2026/) - Documentação técnica completa do projeto
 
@@ -42,15 +42,15 @@ Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com Rea
 - **Frontend**: React 18 + TypeScript + Vite
 - **Mobile**: React Native + Expo
 - **UI Components**: shadcn/ui + Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
-- **Autenticação**: Supabase Auth com RLS
-- **Deploy**: Vercel / Netlify ready
+- **Backend**: Firebase (Firestore + Auth + Realtime + Storage + Cloud Functions)
+- **Autenticação**: Firebase Auth com Firestore Security Rules
+- **Deploy**: Firebase Hosting (100% Firebase + GCP)
 
 ## 📋 Requisitos do Sistema
 
 - Node.js 18+
 - npm ou yarn
-- Conta no Supabase
+- Conta no Firebase
 
 ## ⚡ Instalação e Configuração
 
@@ -69,10 +69,14 @@ npm install
 Renomeie `.env.example` para `.env` e configure:
 
 ```env
-# Supabase
-VITE_SUPABASE_URL=sua_url_do_supabase
-VITE_SUPABASE_ANON_KEY=sua_chave_anonima
-SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role (Apenas para Edge Functions)
+# Firebase
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=...
 
 # Google Calendar (Opcional)
 VITE_GOOGLE_CLIENT_ID=seu_client_id
@@ -85,10 +89,10 @@ WHATSAPP_PHONE_NUMBER_ID=id_numero_telefone
 WHATSAPP_BUSINESS_ACCOUNT_ID=id_conta_business
 ```
 
-### 4. Configure o banco de dados
-Execute as migrações SQL no Supabase:
-- Sincronize o schema local com `supabase db push` ou copie o SQL do diretório `supabase/migrations`.
-- Assegure-se de habilitar as extensões necessárias (pg_cron, etc).
+### 4. Configure o Firebase
+- Crie um projeto no [Firebase Console](https://console.firebase.google.com) e ative Auth, Firestore e Storage.
+- Configure as regras de segurança do Firestore conforme o arquivo `firestore.rules` do projeto.
+- Para desenvolvimento local, opcional: `firebase emulators:start --only auth,firestore,storage`.
 
 ### 5. Execute o projeto
 Inicie o frontend e o servidor de desenvolvimento do Inngest (para automações):
@@ -105,28 +109,24 @@ npx inngest-cli@latest dev
 Para funcionalidades críticas como reservas públicas e sync de calendário:
 
 ```bash
-npx supabase functions deploy public-booking --no-verify-jwt
-npx supabase functions deploy google-calendar-sync --no-verify-jwt
+firebase deploy --only functions
+# Ou deploy de funções específicas: firebase deploy --only functions:publicBooking,functions:googleCalendarSync
 ```
 
 ## 🚀 Deploy em Produção
 
-### Vercel
-1. Fork este repositório
-2. Conecte ao Vercel
-3. Configure as variáveis de ambiente
-4. Deploy automático!
+### Firebase Hosting + GCP
+1. Configure o projeto no [Firebase Console](https://console.firebase.google.com)
+2. Build: `pnpm build`
+3. Deploy: `firebase deploy --only hosting` (e `--only functions` para o backend)
+4. CI/CD: use Cloud Build ou GitHub Actions com Firebase (veja [Plano Firebase + GCP](docs2026/PLANO_FIREBASE_GCP.md))
 
-### Netlify
-1. Connect to Git
-2. Build command: `npm run build`
-3. Publish directory: `dist`
-4. Configure environment variables
+Para deploy contínuo (CI/CD), use **Cloud Build** ou **GitHub Actions** com Firebase. Veja [docs2026/PLANO_FIREBASE_GCP.md](docs2026/PLANO_FIREBASE_GCP.md) e [docs2026/11-deploy-producao.md](docs2026/11-deploy-producao.md).
 
 ## 🔐 Segurança e Conformidade
 
-- ✅ Autenticação segura com Supabase
-- ✅ Row Level Security (RLS) ativado
+- ✅ Autenticação segura com Firebase Auth
+- ✅ Firestore Security Rules ativadas
 - ✅ Criptografia de dados sensíveis
 - ✅ Conformidade com LGPD
 - ✅ Headers de segurança configurados
@@ -237,8 +237,8 @@ Leia o [CONTRIBUTING.md](./CONTRIBUTING.md) para detalhes sobre como contribuir.
 
 ⚠️ **IMPORTANTE**: Leia [SECURITY.md](./SECURITY.md) para políticas de segurança.
 
-- ✅ Autenticação segura com Supabase
-- ✅ Row Level Security (RLS) ativado
+- ✅ Autenticação segura com Firebase Auth
+- ✅ Firestore Security Rules ativadas
 - ✅ Criptografia de dados sensíveis
 - ✅ Conformidade com LGPD
 - ✅ Headers de segurança configurados

@@ -146,7 +146,11 @@ async function fetchProtocols(): Promise<ProtocolsQueryResult> {
     } else {
       logger.error('Critical error fetching protocols', error, 'useExerciseProtocols');
     }
-    const cacheResult = await protocolsCacheService.getFromCache();
+    const cacheResult = await protocolsCacheService.getFromCache<ExerciseProtocol>();
+    // Se o cache estiver vazio, propagar o erro para a UI poder exibir e permitir retry
+    if (!cacheResult.data || cacheResult.data.length === 0) {
+      throw error;
+    }
     return {
       data: cacheResult.data,
       isFromCache: true,
@@ -242,6 +246,7 @@ export const useExerciseProtocols = () => {
     protocols: finalProtocols,
     loading: effectiveLoading,
     error: protocolsQuery.error,
+    refetch: protocolsQuery.refetch,
     createProtocol: createMutation.mutate,
     updateProtocol: updateMutation.mutate,
     deleteProtocol: deleteMutation.mutate,

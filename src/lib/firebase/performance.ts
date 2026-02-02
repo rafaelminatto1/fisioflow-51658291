@@ -27,7 +27,7 @@ export interface TraceAttributes {
 // CONFIGURATION
 // ============================================================================
 
-const PERFORMANCE_ENABLED = import.meta.env.VITE_PERFORMANCE_MONITORING_ENABLED !== 'false';
+const PERFORMANCE_ENABLED = import.meta.env.VITE_PERFORMANCE_MONITORING_ENABLED === 'true';
 
 // ============================================================================
 // INITIALIZATION
@@ -51,7 +51,7 @@ export async function initPerformanceMonitoring(): Promise<void> {
 
   try {
     // Dynamically import Performance Monitoring to avoid errors if not available
-    const { getPerformance } = await import('@firebase/performance');
+    const { getPerformance } = await import('firebase/performance');
     const app = getApp();
     const perf = getPerformance(app);
 
@@ -84,7 +84,7 @@ export async function startTrace(name: string): Promise<PerformanceTrace> {
   }
 
   try {
-    const { getPerformance, trace } = await import('@firebase/performance');
+    const { getPerformance, trace } = await import('firebase/performance');
     const app = getApp();
     const perf = getPerformance(app);
     const t = trace(perf, name);

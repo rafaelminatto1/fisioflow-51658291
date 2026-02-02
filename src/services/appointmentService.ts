@@ -5,7 +5,6 @@ import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 import { AppError } from '@/lib/errors/AppError';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { agentIngest } from '@/lib/debug/agentIngest';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
 import type { UnknownError } from '@/types/common';
@@ -159,13 +158,11 @@ export class AppointmentService {
                 status: data.status || 'agendado',
                 notes: data.notes || null,
             };
-            // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
-            agentIngest({ location: 'appointmentService.ts:createAppointment', message: 'createAppointment payload', hypothesisId: 'H1', data: payload });
-            // #endregion
 
             const response = await appointmentsApi.create(payload);
 
-            const newAppointment = response.data;
+            // appointmentsApi.create() already returns res.data (the appointment), not { data: appointment }
+            const newAppointment = response as AppointmentApiItem;
 
             const appointment: AppointmentBase = {
                 id: newAppointment.id,
@@ -194,18 +191,6 @@ export class AppointmentService {
 
             return appointment;
         } catch (error) {
-            // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
-            agentIngest({
-              location: 'appointmentService.ts:createAppointment catch',
-              message: 'createAppointment error',
-              hypothesisId: 'H2',
-              data: {
-                code: (error as { code?: string })?.code,
-                message: (error as { message?: string })?.message,
-                details: (error as { details?: unknown })?.details,
-              },
-            });
-            // #endregion
             throw AppError.from(error, 'AppointmentService.createAppointment');
         }
     }
@@ -249,7 +234,8 @@ export class AppointmentService {
             if (Object.keys(updateData).length === 0) throw AppError.badRequest('Nenhum dado para atualizar');
 
             const response = await appointmentsApi.update(id, updateData);
-            const fetchedUpdatedAppointment = response.data;
+            // API retorna o appointment diretamente (res.data), não { data: appointment }
+            const fetchedUpdatedAppointment = response;
 
             const updatedAppointment: AppointmentBase = {
                 id: fetchedUpdatedAppointment.id,
@@ -269,8 +255,8 @@ export class AppointmentService {
             // We refetch details to complete information
             try {
                 const refreshed = await appointmentsApi.get(id);
-                if (refreshed && refreshed.data) {
-                    const r = refreshed.data;
+                if (refreshed) {
+                    const r = refreshed as { patient_name?: string; patient_phone?: string; patients?: { full_name?: string; phone?: string } };
                     updatedAppointment.patientName = r.patient_name || r.patients?.full_name || 'Desconhecido';
                     updatedAppointment.phone = r.patient_phone || r.patients?.phone || '';
                 }
@@ -313,6 +299,26 @@ export class AppointmentService {
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.deleteAppointment');
         }
+    }
+
+    /**
+     * Cancela todos os agendamentos de uma data (ex.: hoje).
+     * Lista agendamentos com dateFrom/dateTo e chama cancel para cada um.
+     */
+    static async cancelAllAppointmentsForDate(organizationId: string, date: string): Promise<{ cancelled: number; errors: number }> {
+        const raw = await appointmentsApi.list({ dateFrom: date, dateTo: date, limit: 500 });
+        const data = (raw?.data ?? []) as AppointmentApiItem[];
+        let cancelled = 0;
+        let errors = 0;
+        for (const appt of data) {
+            try {
+                await appointmentsApi.cancel(appt.id, 'Cancelados em lote (todos de hoje)');
+                cancelled++;
+            } catch {
+                errors++;
+            }
+        }
+        return { cancelled, errors };
     }
 
     /**

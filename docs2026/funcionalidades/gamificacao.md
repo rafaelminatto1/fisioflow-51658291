@@ -67,27 +67,21 @@ Sistema de gamificação para aumentar a adesão dos pacientes aos exercícios e
 - `Leaderboard` - Ranking de pacientes
 - `ProgressRing` - Anel de progresso
 
-## API
+## API (Firestore / Cloud Functions)
 
 ```typescript
-// GET /gamification/points
-const { data } = await supabase
-  .from('user_points')
-  .select('*')
-  .eq('user_id', userId);
+// GET user_points
+const snapshot = await getDocs(
+  query(collection(db, 'user_points'), where('user_id', '==', userId))
+);
 
-// POST /gamification/points
-const { data } = await supabase.rpc('add_points', {
-  user_id: userId,
-  points: 10,
-  reason: 'exercise_completed',
-});
+// add_points via Cloud Function
+await addPoints({ user_id: userId, points: 10, reason: 'exercise_completed' });
 
-// GET /gamification/achievements
-const { data } = await supabase
-  .from('achievements')
-  .select('*')
-  .eq('user_id', userId);
+// GET achievements
+const snap = await getDocs(
+  query(collection(db, 'achievements'), where('user_id', '==', userId))
+);
 ```
 
 ## Roadmap

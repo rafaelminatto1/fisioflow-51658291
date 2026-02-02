@@ -20,33 +20,27 @@ cd fisioflow
 pnpm install
 ```
 
-### 3. Configure o Supabase
+### 3. Configure o Firebase
 
-1. Acesse [supabase.com](https://supabase.com) e crie um projeto
-2. Vá em **Settings → API**
-3. Copie a URL e a anon key
-4. Crie o arquivo `.env`:
+1. Acesse [Firebase Console](https://console.firebase.google.com) e crie um projeto
+2. Vá em **Configurações do projeto** → **Seus apps** e adicione um app Web
+3. Copie o objeto `firebaseConfig` e crie o arquivo `.env`:
 
 ```env
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-anonima
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_MEASUREMENT_ID=...
 ```
 
-### 4. Execute as Migrations
+### 4. Firestore e Regras
 
-No **SQL Editor** do Supabase, execute:
-
-```sql
--- Execute todos os arquivos em supabase/migrations/
--- em ordem cronológica
-```
-
-Ou via CLI:
-
-```bash
-supabase link --project-ref seu-project-id
-supabase db push
-```
+1. No console Firebase, crie o banco Firestore (modo Produção ou Teste)
+2. Configure as **Regras de segurança** conforme o arquivo `firestore.rules` do projeto
+3. (Opcional) Para desenvolvimento local: `firebase emulators:start --only auth,firestore,storage`
 
 ### 5. Inicie o Servidor
 
@@ -58,19 +52,7 @@ Acesse: [http://localhost:8080](http://localhost:8080)
 
 ## 👤 Criar Usuário Admin
 
-No **SQL Editor** do Supabase:
-
-```sql
--- Crie um usuário admin
-insert into profiles (id, email, full_name, role, organization_id)
-values (
-  'seu-user-id-do-auth',
-  'admin@fisioflow.com',
-  'Administrador',
-  'admin',
-  gen_random_uuid()
-);
-```
+No Firebase Auth, crie um usuário (email/senha). Em seguida, no Firestore, crie um documento na coleção `profiles` com o mesmo `id` (uid do Auth), campos `email`, `full_name`, `role: 'admin'` e `organization_id` (crie uma organização primeiro na coleção `organizations`).
 
 ## 🎉 Pronto!
 
@@ -95,11 +77,11 @@ pnpm install
 pnpm dev --port 3000
 ```
 
-### Erro de CORS no Supabase
-Verifique se as credenciais no `.env` estão corretas e se o RLS está configurado.
+### Erro de CORS no Firebase
+Verifique se as credenciais no `.env` estão corretas e se o domínio está em Authorized domains no Firebase Auth.
 
 ## 🔗 Links Úteis
 
-- [Documentação Supabase](https://supabase.com/docs)
+- [Documentação Firebase](https://firebase.google.com/docs)
 - [Documentação Vite](https://vitejs.dev/)
 - [Documentação React](https://react.dev/)

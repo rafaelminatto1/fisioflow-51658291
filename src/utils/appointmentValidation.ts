@@ -6,6 +6,8 @@ interface ConflictCheckParams {
   time: string;
   duration: number;
   excludeId?: string;
+  /** Quando informado, conta apenas conflitos deste terapeuta (alinhado com a regra do backend) */
+  therapistId?: string;
   appointments: AppointmentBase[];
 }
 
@@ -14,22 +16,28 @@ export function checkAppointmentConflict({
   time,
   duration,
   excludeId,
+  therapistId,
   appointments
 }: ConflictCheckParams): { hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } {
-  // Convert time to minutes for easier comparison
+  // Convert time to minutes for easier comparison (aceita "HH:mm" ou "HH:mm:ss")
   const timeToMinutes = (timeStr: string | undefined | null): number => {
-    if (!timeStr) {
-      return 0;
-    }
-    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (!timeStr || typeof timeStr !== 'string') return 0;
+    const parts = timeStr.trim().split(':');
+    const hours = Number(parts[0]) || 0;
+    const minutes = Number(parts[1]) || 0;
     return hours * 60 + minutes;
   };
 
   const newStartTime = timeToMinutes(time);
   const newEndTime = newStartTime + duration;
 
+  // Filtrar por terapeuta quando informado (mesma regra do backend: conflito = mesmo terapeuta no mesmo horário)
+  const baseList = therapistId !== undefined
+    ? appointments.filter(apt => (apt.therapistId ?? '') === (therapistId ?? ''))
+    : appointments;
+
   // Get appointments for the same date and time
-  const sameDateTimeAppointments = appointments.filter(apt => {
+  const sameDateTimeAppointments = baseList.filter(apt => {
     // Skip the appointment we're editing
     if (excludeId && apt.id === excludeId) return false;
 
@@ -63,16 +71,18 @@ export function checkAppointmentConflict({
   };
 }
 
+/** Formata intervalo de horário (aceita "HH:mm" ou "HH:mm:ss"). */
 export function formatTimeRange(time: string | undefined | null, duration: number): string {
-  if (!time) {
-    return '';
-  }
-  const [hours, minutes] = time.split(':').map(Number);
+  if (!time || typeof time !== 'string') return '';
+  const parts = time.trim().split(':');
+  const hours = Number(parts[0]) || 0;
+  const minutes = Number(parts[1]) || 0;
   const startMinutes = hours * 60 + minutes;
   const endMinutes = startMinutes + duration;
 
   const endHours = Math.floor(endMinutes / 60);
   const endMins = endMinutes % 60;
+  const displayStart = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
-  return `${time} - ${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+  return `${displayStart} - ${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
 }

@@ -2,7 +2,7 @@
 
 ## Informações Gerais
 - **URL Produção**: https://www.moocafisio.com.br/
-- **Stack Tecnológico**: React 19.1.0 + TypeScript + Vite + Supabase
+- **Stack Tecnológico**: React 19.1.0 + TypeScript + Vite + Firebase
 - **UI Framework**: shadcn/ui + Radix UI + Tailwind CSS
 - **Gerenciador de Pacotes**: pnpm 9.15.0
 - **Node Version**: 24.x
@@ -18,11 +18,11 @@
 - **Forms**: React Hook Form 7.61.1 + Zod 3.25.76
 
 ### Backend/Database
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Firestore (Firebase)
 - **ORM**: Drizzle ORM 0.45.1
-- **Auth**: Supabase Auth com RLS
-- **Real-time**: Supabase Real-time subscriptions
-- **Storage**: Vercel Blob + Vercel KV
+- **Auth**: Firebase Auth
+- **Real-time**: Firestore listeners / Realtime
+- **Storage**: Firebase Storage (+ Firestore/Pub/Sub para filas)
 
 ### Mobile (Preparado)
 - **Framework**: Expo ~54.0.32
@@ -35,12 +35,12 @@
 - **IA/ML**: 
   - TensorFlow.js + MediaPipe para análise de movimento
   - OpenAI + Google Generative AI integrados
-  - Vercel AI SDK
+  - AI SDK (OpenAI/Google)
 - **Automação**: Inngest 3.49.1 para background jobs
 - **Análise de Imagens Médicas**: Cornerstone.js 4.15.5 (DICOM viewer)
 - **PDF Generation**: jsPDF, React PDF Renderer
 - **Monitoramento**: Sentry React 10.32.1
-- **Analytics**: Vercel Analytics + Speed Insights
+- **Analytics**: Firebase Analytics + Web Vitals
 
 ## Interface Atual (Observações da Tela de Agenda)
 
@@ -139,12 +139,12 @@
 ```
 
 ## Infraestrutura Atual
-- **Hosting**: Vercel (configurado)
-- **Database**: Supabase Pro
-- **Edge Functions**: Supabase Functions
+- **Hosting**: Firebase Hosting
+- **Database**: Firestore
+- **Cloud Functions**: Firebase Functions
 - **Cron Jobs**: Inngest para automações
 - **Email**: SendGrid + Resend
-- **Storage**: Vercel Blob
+- **Storage**: Firebase Storage
 
 ## Escala Atual
 - **600 atendimentos/mês**
@@ -158,7 +158,7 @@
 4. ✅ Autenticação e segurança robustas (RLS)
 5. ✅ Integração com IA (TensorFlow, OpenAI, Google AI)
 6. ✅ Sistema de análise de movimento (MediaPipe)
-7. ✅ Infraestrutura cloud preparada (Vercel + Supabase Pro)
+7. ✅ Infraestrutura cloud preparada (100% Firebase + GCP)
 8. ✅ Monitoramento e analytics configurados
 
 ## Áreas de Atenção

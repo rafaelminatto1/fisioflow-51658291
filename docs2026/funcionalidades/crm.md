@@ -64,28 +64,19 @@ Sistema CRM completo para gestão de leads, relacionamento com pacientes e marke
 - `PipelineKanban` - Pipeline Kanban
 - `CampaignBuilder` - Editor de campanhas (planejado)
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /crm/leads
-const { data } = await supabase
-  .from('leads')
-  .select('*')
-  .eq('status', 'new');
+// GET leads
+const snapshot = await getDocs(
+  query(collection(db, 'leads'), where('status', '==', 'new'))
+);
 
-// POST /crm/leads
-const { data } = await supabase.from('leads').insert({
-  name,
-  email,
-  phone,
-  source,
-});
+// POST leads
+await addDoc(collection(db, 'leads'), { name, email, phone, source });
 
-// PATCH /crm/leads/:id/convert
-const { data } = await supabase
-  .from('leads')
-  .update({ status: 'converted', patient_id })
-  .eq('id', id);
+// PATCH lead convert
+await updateDoc(doc(db, 'leads', id), { status: 'converted', patient_id });
 ```
 
 ## Roadmap

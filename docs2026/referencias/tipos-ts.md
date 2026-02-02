@@ -231,12 +231,11 @@ export interface Notification {
 }
 ```
 
-## Database Types (Supabase)
+## Database Types (Firestore)
 
 ```typescript
 // types/database.types.ts
-// Gerado automaticamente via Supabase CLI
-// supabase gen types typescript --local > src/types/database.types.ts
+// Tipos das coleções Firestore (definidos em src/types/*.ts)
 
 export type Json =
   | string

@@ -1,116 +1,125 @@
-# 11. Deploy e Produção
+# 11. Deploy e Produção (Firebase + Google Cloud)
 
 ## 🚀 Visão Geral
 
-O FisioFlow é deployado automaticamente na **Vercel Pro** com CI/CD via GitHub Actions, monitoramento com **Sentry**, e backups automáticos via **Supabase Pro**.
+O FisioFlow é deployado **100% em Firebase e Google Cloud (GCP)**:
 
-## 📦 Deploy na Vercel
+- **Frontend (SPA):** Firebase Hosting
+- **Backend / APIs:** Cloud Functions (Firebase)
+- **CI/CD:** Cloud Build (ou GitHub Actions com deploy Firebase)
+- **Crons:** Cloud Scheduler + Cloud Functions
+- **Monitoramento:** Cloud Monitoring, Sentry (opcional)
 
-### Configuração
+Não utilizamos Vercel nem Netlify. Veja o [Plano Firebase + GCP](./PLANO_FIREBASE_GCP.md) para a visão completa.
+
+## 📦 Deploy no Firebase Hosting
+
+### Configuração (firebase.json)
 
 ```json
-// vercel.json
 {
-  "buildCommand": "pnpm build",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "framework": "vite",
-  "outputDirectory": "dist",
-  "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
-  "env": {
-    "VITE_SUPABASE_URL": "@supabase-url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase-anon-key",
-    "VITE_SENTRY_DSN": "@sentry-dsn"
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [{ "key": "Cache-Control", "value": "max-age=31536000,immutable" }]
+      },
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "X-XSS-Protection", "value": "1; mode=block" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        ]
+      }
+    ]
   },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/daily-report",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron/expiring-vouchers",
-      "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/cron/birthday-reminders",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-summary",
-      "schedule": "0 9 * * 1"
-    },
-    {
-      "path": "/api/cron/cleanup",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/data-integrity",
-      "schedule": "0 1 * * *"
-    }
-  ]
+  "functions": {
+    "source": "functions",
+    "predeploy": ["npm run build"]
+  }
 }
 ```
 
-### Variáveis de Ambiente
+### Build e deploy manual
 
 ```bash
-# Vercel Dashboard → Settings → Environment Variables
+# Build do frontend
+pnpm build
 
-# Supabase
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-anonima
+# Deploy apenas do hosting
+firebase deploy --only hosting
 
-# Sentry (Error tracking)
-VITE_SENTRY_DSN=https://xxx@sentry.io/xxx
-SENTRY_AUTH_TOKEN=seu-token
+# Deploy das Cloud Functions
+firebase deploy --only functions
 
-# Analytics
-VITE_ENABLE_ANALYTICS=true
-
-# Feature Flags
-VITE_ENABLE_TELEMEDICINE=true
-VITE_ENABLE_GAMIFICATION=true
+# Deploy completo (hosting + functions)
+firebase deploy
 ```
 
-## 🔄 CI/CD (GitHub Actions)
+### Variáveis de ambiente (build)
+
+Para o frontend (Vite), as variáveis `VITE_*` precisam estar disponíveis no **momento do build**. Opções:
+
+1. **Cloud Build:** definir no passo de build (Secret Manager ou substituição).
+2. **Local / GitHub Actions:** arquivo `.env.production` ou secrets no CI.
+
+```bash
+# Exemplo .env.production (não commitar valores reais)
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_SENTRY_DSN=...
+VITE_ENABLE_ANALYTICS=true
+```
+
+## 🔄 CI/CD (Cloud Build)
+
+Exemplo de pipeline no Google Cloud Build:
+
+```yaml
+# cloudbuild.yaml (na raiz do projeto)
+steps:
+  - name: 'node:18'
+    entrypoint: pnpm
+    args: ['install', '--frozen-lockfile']
+  - name: 'node:18'
+    entrypoint: pnpm
+    args: ['run', 'build']
+    env:
+      - 'VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY}'
+      - 'VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID}'
+      # ... demais VITE_*
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'firebase'
+      - 'deploy'
+      - '--only'
+      - 'hosting,functions'
+      - '--token'
+      - '${_FIREBASE_TOKEN}'
+```
+
+Substituir `${_FIREBASE_TOKEN}` e `${_VITE_*}` por variáveis do Cloud Build (ou Secret Manager). Configurar trigger no repositório (GitHub, Cloud Source Repositories, etc.).
+
+### Alternativa: GitHub Actions + Firebase
+
+Se preferir manter o CI no GitHub:
 
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy
+name: Deploy Firebase
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 jobs:
@@ -120,39 +129,39 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 9.15.0
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Type check
-        run: pnpm tsc --noEmit
-
-      - name: Test
-        run: pnpm test:run
-
-      - name: E2E Test
-        run: pnpm test:e2e
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm tsc --noEmit
+      - run: pnpm test:run
 
   deploy:
     needs: test
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
+      - uses: pnpm/action-setup@v2
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          # ... demais secrets
+      - uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting,functions --token ${{ secrets.FIREBASE_TOKEN }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 ```
 
 ## 📊 Monitoramento
@@ -167,196 +176,48 @@ Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   integrations: [
     new Sentry.BrowserTracing({
-      tracePropagationTargets: ['localhost', 'fisioflow.com', /^\//],
+      tracePropagationTargets: ['localhost', /\.firebaseapp\.com$/, /\.web\.app$/],
     }),
-    new Sentry.Replay({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
+    new Sentry.Replay({ maskAllText: true, blockAllMedia: true }),
   ],
-  tracesSampleRate: 0.1,  // 10% das transações
-  replaysSessionSampleRate: 0.1,  // 10% das sessões
-  replaysOnErrorSampleRate: 1.0,  // 100% dos erros
+  tracesSampleRate: 0.1,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
   environment: import.meta.env.MODE,
-  beforeSend(event, hint) {
-    // Filtrar dados sensíveis
-    if (event.request?.headers) {
-      delete event.request.headers['cookie'];
-      delete event.request.headers['authorization'];
-    }
-    return event;
-  },
 });
 ```
 
-### Vercel Analytics
+### Firebase Analytics (opcional)
 
 ```typescript
-// App.tsx
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-
-function App() {
-  return (
-    <>
-      <Routes>{/* ... */}</Routes>
-      <Analytics />
-      <SpeedInsights />
-    </>
-  );
-}
+import { getAnalytics } from 'firebase/analytics';
+const analytics = getAnalytics(app);
+// usar logEvent(analytics, 'event_name', { ... }) onde necessário
 ```
 
 ### Web Vitals
 
-```typescript
-// lib/web-vitals.ts
-import { onCLS, onFID, onFCP, onLCP, onTTFB } from 'web-vitals';
-
-export function reportWebVitals() {
-  onCLS(console.log);
-  onFID(console.log);
-  onFCP(console.log);
-  onLCP(console.log);
-  onTTFB(console.log);
-}
-
-// main.tsx
-reportWebVitals();
-```
+Manter coleta de Web Vitals (lib existente) e enviar para Google Analytics, Sentry ou Cloud Monitoring conforme preferência.
 
 ## 💾 Backups
 
-### Supabase Automated Backups
-
-```yaml
-# Supabase Pro Features
-Backup Schedule: Daily
-Retention: 30 days
-Point-in-time Recovery: 7 days
-```
-
-### Backup Manual
-
-```bash
-# Via Supabase CLI
-supabase db dump -f backup_$(date +%Y%m%d).sql
-
-# Via pg_dump
-pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
-```
-
-### Restore
-
-```bash
-# Via Supabase Dashboard
-# Project → Database → Backups → Restore
-
-# Via CLI
-supabase db reset --db-url "postgresql://..."
-```
+- **Firestore:** exportação via `gcloud firestore export gs://SEU_BUCKET/backups`; agendar com Cloud Scheduler se desejar backups automáticos.
+- **Storage:** cópias periódicas do bucket (gsutil ou script em Cloud Function).
+- Restauração: Firebase Console ou `gcloud firestore import`.
 
 ## 🔄 Rollback
 
-### Vercel Rollback
-
-```bash
-# Via CLI
-vercel rollback
-
-# Via Dashboard
-# Deployments → Selecionar versão anterior → Promote to Production
-```
-
-### Database Rollback
-
-```sql
--- Supabase Dashboard
--- Database → Backups → Select backup → Restore
-```
+- **Firebase Hosting:** no Console, em Hosting → Histórico de versões, fazer rollback para uma versão anterior.
+- **Cloud Functions:** redeploy da versão anterior do código e `firebase deploy --only functions`.
 
 ## 🔐 Segurança em Produção
 
-### Headers de Segurança
-
-```json
-// vercel.json
-{
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';" }
-      ]
-    }
-  ]
-}
-```
-
-### Rate Limiting
-
-```typescript
-// lib/rate-limit.ts
-import { kv } from '@vercel/kv';
-
-export async function rateLimit(
-  identifier: string,
-  limit: number = 100,
-  window: number = 60000
-) {
-  const key = `ratelimit:${identifier}`;
-  const count = await kv.incr(key);
-
-  if (count === 1) {
-    await kv.expire(key, window / 1000);
-  }
-
-  return {
-    allowed: count <= limit,
-    remaining: Math.max(0, limit - count),
-    reset: Date.now() + window,
-  };
-}
-```
-
-## 📈 Performance
-
-### Otimizações Ativadas
-
-```typescript
-// vite.config.ts
-export default defineConfig({
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase': ['@supabase/supabase-js'],
-          'ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          'charts': ['recharts'],
-        },
-      },
-    },
-    chunkSizeWarningLimit: 1000,
-  },
-});
-```
-
-### Performance Budget
-
-```
-Target Lighthouse Scores:
-- Performance: >90
-- Accessibility: >90
-- Best Practices: >90
-- SEO: >90
-```
+- **Headers:** configurados em `firebase.json` (hosting.headers) conforme exemplo acima.
+- **Rate limiting:** implementar em Cloud Functions (por IP ou userId) com Firestore ou Memorystore para contagem; não usar Vercel KV.
 
 ## 🔗 Recursos Relacionados
 
-- [Ambiente de Desenvolvimento](./03-ambiente-desenvolvimento.md) - Setup local
-- [Configuração Vercel](./guias/configuracao-vercel.md) - Guia detalhado
-- [APIs e Integrações](./07-api-integracoes.md) - Webhooks
+- [Plano Firebase + GCP](./PLANO_FIREBASE_GCP.md) - Arquitetura e checklist completo
+- [Configuração Firebase](./guias/configuracao-firebase.md) - Setup do projeto
+- [Configuração Firebase Hosting](./guias/configuracao-firebase-hosting.md) - Deploy e domínio
+- [APIs e Integrações](./07-api-integracoes.md) - Cloud Functions

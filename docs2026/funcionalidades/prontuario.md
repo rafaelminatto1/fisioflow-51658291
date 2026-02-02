@@ -52,34 +52,27 @@ Sistema completo de prontuário eletrônico usando o método SOAP, com assinatur
 - `SignatureCanvas` - Assinatura digital
 - `EvolutionTimeline` - Timeline de evoluções
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /evolutions
-const { data } = await supabase
-  .from('evolutions')
-  .select('*, patients(*)')
-  .order('created_at', { ascending: false });
+// GET evolutions
+const snapshot = await getDocs(
+  query(
+    collection(db, 'sessions'),
+    where('patient_id', '==', patientId),
+    orderBy('created_at', 'desc')
+  )
+);
 
-// POST /evolutions
-const { data } = await supabase.from('evolutions').insert({
-  patient_id,
-  subjective,
-  objective,
-  assessment,
-  plan,
-  pain_level,
+// POST evolution
+const ref = await addDoc(collection(db, 'sessions'), {
+  patient_id, subjective, objective, assessment, plan, pain_level, ...
 });
 
-// PATCH /evolutions/:id/sign
-const { data } = await supabase
-  .from('evolutions')
-  .update({
-    status: 'signed',
-    signature_data,
-    signed_at: new Date(),
-  })
-  .eq('id', id);
+// PATCH sign
+await updateDoc(doc(db, 'sessions', id), {
+  status: 'signed', signature_data, signed_at: serverTimestamp()
+});
 ```
 
 ## Veja Também

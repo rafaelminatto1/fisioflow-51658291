@@ -59,10 +59,6 @@ export const useActivePatients = () => {
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
 
-  // DEBUG: Log profile and organizationId
-  logger.debug('[useActivePatients] Profile', { profile }, 'usePatients');
-  logger.debug('[useActivePatients] OrganizationId', { organizationId }, 'usePatients');
-
   const [retryCount, setRetryCount] = useState(0);
 
   // Setup realtime subscription via Ably

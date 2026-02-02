@@ -124,14 +124,15 @@ export const CalendarWeekView = memo(({
         return () => clearInterval(interval);
     }, [slotHeight]);
 
-    // Filter appointments for this week
+    // Filter appointments for this week (exclude null/undefined to avoid "reading 'id'" on drag)
     const weekAppointments = useMemo(() => {
         const start = startOfDay(weekDays[0]);
         const end = startOfDay(addDays(weekDays[5], 1)); // End at end of Saturday
 
-        return appointments.filter(apt => {
+        return (appointments || []).filter((apt): apt is Appointment => {
+            if (apt == null || typeof (apt as Appointment).id !== 'string') return false;
             const aptDate = parseAppointmentDate(apt.date);
-            return aptDate && aptDate >= start && aptDate < end;
+            return !!(aptDate && aptDate >= start && aptDate < end);
         });
     }, [appointments, weekDays]);
 
@@ -192,9 +193,9 @@ export const CalendarWeekView = memo(({
         const duration = apt.duration || 60;
         const heightInPixels = calculateAppointmentCardHeight(cardSize, duration, heightScale);
 
-        // Check for collisions
+        // Check for collisions (guard against undefined entries)
         const key = `${dayIndex}-${time}`;
-        const sameTimeAppointments = appointmentsByTimeSlot[key] || [];
+        const sameTimeAppointments = (appointmentsByTimeSlot[key] || []).filter((a): a is Appointment => a != null && typeof a.id === 'string');
         const index = sameTimeAppointments.findIndex(a => a.id === apt.id);
         const count = sameTimeAppointments.length;
 

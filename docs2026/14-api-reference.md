@@ -70,7 +70,7 @@ Versão de email do evento de reativação.
 
 ## Edge Functions
 
-As Edge Functions rodam no Supabase Edge Runtime para lógica segura e de alta performance.
+As Cloud Functions rodam no Firebase (Node.js) para lógica segura e de alta performance.
 
 ### `public-booking`
 Cria reservas públicas sem expor permissões de escrita direta no banco.

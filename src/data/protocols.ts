@@ -146,10 +146,24 @@ export function getProtocolCategory(conditionName: string): string {
     return 'all';
 }
 
-// Templates rápidos
+// Templates rápidos (valores de count são estáticos; a contagem real vem dos protocolos carregados)
 export const QUICK_TEMPLATES = [
     { name: 'Pós-Cirúrgico Ortopédico', icon: Calendar, color: 'from-blue-500 to-cyan-500', count: 8 },
     { name: 'Reabilitação Esportiva', icon: Zap, color: 'from-orange-500 to-amber-500', count: 5 },
     { name: 'Tratamento Conservador', icon: Heart, color: 'from-rose-500 to-pink-500', count: 12 },
     { name: 'Idosos e Geriatria', icon: Users, color: 'from-purple-500 to-violet-500', count: 4 },
+];
+
+/** Protocolos iniciais para seed quando a coleção estiver vazia (baseados em PROTOCOL_DETAILS) */
+export const SEED_PROTOCOLS_DATA: Array<{
+    name: string;
+    condition_name: string;
+    protocol_type: 'pos_operatorio' | 'patologia';
+    weeks_total?: number;
+    milestones: unknown[];
+    restrictions: unknown[];
+    progression_criteria: Record<string, unknown>;
+}> = [
+    { name: 'Reconstrução do LCA', condition_name: 'Reconstrução do LCA', protocol_type: 'pos_operatorio', weeks_total: 24, milestones: [], restrictions: [], progression_criteria: {} },
+    { name: 'Tendinopatia do Manguito Rotador', condition_name: 'Tendinopatia do Manguito Rotador', protocol_type: 'patologia', weeks_total: 12, milestones: [], restrictions: [], progression_criteria: {} },
 ];

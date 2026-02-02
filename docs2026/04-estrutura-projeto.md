@@ -16,7 +16,7 @@ fisioflow/
 │   │   └── ...                  # Outros componentes de domínio
 │   ├── hooks/                   # Custom React hooks
 │   ├── lib/                     # Utilitários e configurações
-│   │   ├── supabase.ts          # Cliente Supabase
+│   │   ├── firebase.ts          # Cliente Firebase
 │   │   └── utils.ts             # Funções utilitárias
 │   ├── pages/                   # Páginas (rotas)
 │   │   ├── cadastros/           # Páginas de cadastros
@@ -28,7 +28,7 @@ fisioflow/
 │   ├── types/                   # TypeScript types
 │   ├── App.tsx                  # Componente principal
 │   └── main.tsx                 # Entry point
-├── supabase/                    # Backend Supabase
+├── firebase/                    # Backend Firebase
 │   ├── migrations/              # Database migrations
 │   └── functions/               # Edge functions
 ├── e2e/                         # Testes E2E (Playwright)
@@ -142,7 +142,7 @@ pages/
 
 ```typescript
 lib/
-├── supabase.ts                  # Cliente Supabase configurado
+├── firebase.ts                  # Cliente Firebase configurado
 │
 ├── api/                         # Funções de API
 │   ├── patients.ts
@@ -166,7 +166,7 @@ lib/
 ```typescript
 types/
 ├── index.ts                     # Exportações centralizadas
-├── database.types.ts            # Tipos do Supabase (gerado)
+├── database.types.ts            # Tipos do Firebase (gerado)
 │
 ├── clinical-forms.ts            # Tipos de fichas clínicas
 │   ├── EvaluationForm
@@ -180,10 +180,10 @@ types/
 └── ...                          # Mais tipos
 ```
 
-### `/supabase`
+### `/firebase`
 
 ```
-supabase/
+firebase/
 ├── migrations/                  # Database migrations
 │   ├── 20240101000000_initial_schema.sql
 │   ├── 20250109000001_push_notifications_schema.sql

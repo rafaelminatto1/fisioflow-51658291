@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { createContext, useState, useCallback, useEffect, useRef } from 'react';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,20 +33,8 @@ interface RealtimeContextType {
   updateMetrics: () => Promise<void>;
 }
 
-// Criar o contexto
-const RealtimeContext = createContext<RealtimeContextType | null>(null);
-
-/**
- * Hook customizado para acessar o contexto de Realtime
- * @throws Error se usado fora do RealtimeProvider
- */
-export const useRealtime = () => {
-  const context = useContext(RealtimeContext);
-  if (!context) {
-    throw new Error('useRealtime deve ser usado dentro do RealtimeProvider');
-  }
-  return context;
-};
+// Criar o contexto (exportado para useRealtimeContext)
+export const RealtimeContext = createContext<RealtimeContextType | null>(null);
 
 /**
  * Provider central para gerenciar todas as subscrições realtime em um único lugar
@@ -322,3 +310,5 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </RealtimeContext.Provider>
   );
 };
+
+export { useRealtime } from '@/hooks/useRealtimeContext';

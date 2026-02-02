@@ -2,18 +2,15 @@
  * AI Insights Hook
  *
  * Provides AI-powered clinical insights and recommendations
- * using Vercel AI SDK with streaming support.
- *
- * Note: The Vercel AI SDK (@ai-sdk/react) is an open-source library
- * that works independently of Vercel hosting. It provides a unified
- * interface for multiple AI providers (OpenAI, Google, Anthropic, etc.)
- * and can be used with any backend.
- *
- * @see https://sdk.vercel.ai/docs
+ * via Firebase Cloud Functions (Vertex AI / Gemini).
  */
 
-import { useCompletion, useChat } from '@ai-sdk/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import {
+  getClinicalInsights,
+  getTreatmentRecommendations,
+  chatWithClinicalAssistant,
+} from '@/services/ai/firebaseAIService';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -164,10 +161,12 @@ function buildTreatmentRecommendationsPrompt(options: AIInsightOptions & {
 // ============================================================================
 
 /**
- * Hook for generating AI-powered clinical insights with streaming
+ * Hook for generating AI-powered clinical insights (Firebase Cloud Functions)
  */
 export function useAIInsights(options: AIInsightOptions) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [completion, setCompletion] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const prompt = useMemo(() => buildClinicalInsightsPrompt(options), [
     options.patientId,
@@ -176,37 +175,38 @@ export function useAIInsights(options: AIInsightOptions) {
     options.language,
   ]);
 
-  const completion = useCompletion({
-    api: '/api/ai/insights',
-    body: {
-      patientId: options.patientId,
-      patientName: options.patientName,
-      language: options.language || 'pt-BR',
-    },
-    onFinish: (_prompt, completion) => {
-      setIsGenerating(false);
-      logger.info('[AI Insights] Generation complete', { completionLength: completion.length }, 'useAIInsights');
-    },
-    onError: (error) => {
-      setIsGenerating(false);
-      logger.error('[AI Insights] Generation error', error, 'useAIInsights');
-    },
-  });
-
-  const generate = () => {
-    setIsGenerating(true);
-    completion.complete(prompt);
-  };
+  const generate = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getClinicalInsights(prompt, {
+        patientId: options.patientId,
+        patientName: options.patientName,
+        language: options.language,
+      });
+      setCompletion(result);
+      logger.info('[AI Insights] Generation complete', { completionLength: result.length }, 'useAIInsights');
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
+      logger.error('[AI Insights] Generation error', e, 'useAIInsights');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [prompt, options.patientId, options.patientName, options.language]);
 
   return {
-    ...completion,
+    completion,
+    complete: generate,
+    isLoading,
+    error,
     generate,
-    isGenerating: isGenerating || completion.isLoading,
+    isGenerating: isLoading,
   };
 }
 
 /**
- * Hook for generating AI-powered treatment recommendations with streaming
+ * Hook for generating AI-powered treatment recommendations (Firebase Cloud Functions)
  */
 export function useAITreatmentRecommendations(
   options: AIInsightOptions & {
@@ -215,93 +215,118 @@ export function useAITreatmentRecommendations(
     sessionCount?: number;
   }
 ) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [completion, setCompletion] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const prompt = buildTreatmentRecommendationsPrompt(options);
+  const prompt = useMemo(() => buildTreatmentRecommendationsPrompt(options), [
+    options.patientId,
+    options.patientName,
+    options.primaryComplaint,
+    options.diagnosis,
+    options.sessionCount,
+    options.analyticsData,
+    options.language,
+  ]);
 
-  const completion = useCompletion({
-    api: '/api/ai/recommendations',
-    body: {
-      patientId: options.patientId,
-      patientName: options.patientName,
-      diagnosis: options.diagnosis,
-      language: options.language || 'pt-BR',
-    },
-    onFinish: (_prompt, completion) => {
-      setIsGenerating(false);
-      logger.info('[AI Recommendations] Generation complete', { completionLength: completion.length }, 'useAIInsights');
-    },
-    onError: (error) => {
-      setIsGenerating(false);
-      logger.error('[AI Recommendations] Generation error', error, 'useAIInsights');
-    },
-  });
-
-  const generate = () => {
-    setIsGenerating(true);
-    completion.complete(prompt);
-  };
+  const generate = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getTreatmentRecommendations(prompt, {
+        patientId: options.patientId,
+        patientName: options.patientName,
+        diagnosis: options.diagnosis,
+        primaryComplaint: options.primaryComplaint,
+        sessionCount: options.sessionCount,
+        language: options.language,
+      });
+      setCompletion(result);
+      logger.info('[AI Recommendations] Generation complete', { completionLength: result.length }, 'useAIInsights');
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
+      logger.error('[AI Recommendations] Generation error', e, 'useAIInsights');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [prompt, options.patientId, options.patientName, options.diagnosis, options.primaryComplaint, options.sessionCount, options.language]);
 
   return {
-    ...completion,
+    completion,
+    complete: generate,
+    isLoading,
+    error,
     generate,
-    isGenerating: isGenerating || completion.isLoading,
+    isGenerating: isLoading,
   };
 }
 
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 /**
- * Hook for AI chat assistant for patient analysis
+ * Hook for AI chat assistant for patient analysis (Firebase Cloud Functions)
  */
 export function useAIPatientAssistant(patientId: string, patientName: string) {
-  const chat = useChat({
-    api: '/api/ai/chat/v2',
-    body: {
-      patientId,
-      patientName,
-    },
-    initialMessages: [
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: `Olá! Sou seu assistente de IA para análise do paciente ${patientName}. Posso ajudar com:\n\n` +
-          `📊 **Análise de progresso** - Avaliar evolução do paciente\n` +
-          `💡 **Recomendações** - Sugerir exercícios e tratamentos\n` +
-          `⚠️ **Alertas** - Identificar riscos de abandono\n` +
-          `📈 **Predições** - Estimar tempo de recuperação\n\n` +
-          `Como posso ajudar hoje?`,
-      },
-    ],
-    onError: (error) => {
-      logger.error('[AI Chat] Error', error, 'useAIInsights');
-    },
-  });
+  const welcomeMessage: ChatMessage = {
+    id: 'welcome',
+    role: 'assistant',
+    content: `Olá! Sou seu assistente de IA para análise do paciente ${patientName}. Posso ajudar com:\n\n` +
+      `📊 **Análise de progresso** - Avaliar evolução do paciente\n` +
+      `💡 **Recomendações** - Sugerir exercícios e tratamentos\n` +
+      `⚠️ **Alertas** - Identificar riscos de abandono\n` +
+      `📈 **Predições** - Estimar tempo de recuperação\n\n` +
+      `Como posso ajudar hoje?`,
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const append = useCallback(async (msg: { role: 'user' | 'assistant'; content: string }) => {
+    if (msg.role !== 'user') return;
+    const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: 'user', content: msg.content };
+    setMessages((prev) => [...prev, userMsg]);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const conversationHistory = [
+        ...messages.filter((m) => m.role !== 'system').map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        { role: 'user' as const, content: msg.content },
+      ];
+      const response = await chatWithClinicalAssistant({
+        message: msg.content,
+        context: { patientId, condition: patientName, sessionCount: 0 },
+        conversationHistory,
+      });
+      const assistantMsg: ChatMessage = { id: `assistant-${Date.now()}`, role: 'assistant', content: response };
+      setMessages((prev) => [...prev, assistantMsg]);
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
+      logger.error('[AI Chat] Error', e, 'useAIInsights');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [patientId, patientName, messages]);
 
   return {
-    ...chat,
-    // Helper to ask about specific aspects
-    askAboutProgress: () => {
-      chat.append({
-        role: 'user',
-        content: `Analise o progresso do paciente ${patientName} com base nos dados mais recentes.`,
-      });
-    },
-    askAboutRisks: () => {
-      chat.append({
-        role: 'user',
-        content: `Quais são os principais riscos para o paciente ${patientName}? Como podemos mitigá-los?`,
-      });
-    },
-    askAboutRecommendations: () => {
-      chat.append({
-        role: 'user',
-        content: `Quais recomendações você tem para melhorar os resultados do paciente ${patientName}?`,
-      });
-    },
+    messages,
+    append,
+    isLoading,
+    error,
+    askAboutProgress: () => append({ role: 'user', content: `Analise o progresso do paciente ${patientName} com base nos dados mais recentes.` }),
+    askAboutRisks: () => append({ role: 'user', content: `Quais são os principais riscos para o paciente ${patientName}? Como podemos mitigá-los?` }),
+    askAboutRecommendations: () => append({ role: 'user', content: `Quais recomendações você tem para melhorar os resultados do paciente ${patientName}?` }),
   };
 }
 
 /**
- * Hook for batch AI analysis of multiple patients
+ * Hook for batch AI analysis of multiple patients (Firebase - sequential calls)
  */
 export function useAIBatchInsights() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -314,35 +339,20 @@ export function useAIBatchInsights() {
     setResults([]);
 
     try {
-      const batchSize = 5; // Process 5 patients at a time
       const allResults: Array<{ patientId: string; insight: string }> = [];
 
-      for (let i = 0; i < patientIds.length; i += batchSize) {
-        const batch = patientIds.slice(i, i + batchSize);
-        const promises = batch.map(async (patientId) => {
-          const response = await fetch('/api/ai/batch-insights', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ patientIds: [patientId] }),
-          });
-
-          if (!response.ok) throw new Error(`Failed to analyze patient ${patientId}`);
-
-          const data = await response.json();
-          return { patientId, insight: data.insights?.[patientId] || '' };
-        });
-
-        const batchResults = await Promise.all(promises);
-        allResults.push(...batchResults);
-
+      for (const patientId of patientIds) {
+        const prompt = `Analise o paciente com ID ${patientId} e forneça insights clínicos gerais para fisioterapia em formato markdown.`;
+        const insight = await getClinicalInsights(prompt, { patientId });
+        allResults.push({ patientId, insight });
         setResults([...allResults]);
       }
 
       return allResults;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
-      setError(error);
-      throw error;
+      const e = err instanceof Error ? err : new Error('Unknown error');
+      setError(e);
+      throw e;
     } finally {
       setIsAnalyzing(false);
     }

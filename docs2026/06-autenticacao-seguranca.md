@@ -2,7 +2,7 @@
 
 ## 🔐 Visão Geral
 
-O FisioFlow implementa autenticação segura através do **Supabase Auth** com **Row Level Security (RLS)** para controle granular de acesso aos dados.
+O FisioFlow implementa autenticação segura através do **Firebase Auth** com **Firestore Security Rules** para controle de acesso por organização e role.
 
 ## 🛡️ Sistema de Autenticação
 
@@ -17,37 +17,33 @@ O FisioFlow implementa autenticação segura através do **Supabase Auth** com *
 ┌─────────────────────────────────────────────────────────┐
 │                    Frontend (React)                      │
 ├─────────────────────────────────────────────────────────┤
-│  supabase.auth.signInWithPassword({ email, password }) │
+│  signInWithEmailAndPassword(auth, email, password)      │
 └────────────────────┬────────────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────┐
-│                 Supabase Auth Service                   │
+│                 Firebase Auth Service                   │
 ├─────────────────────────────────────────────────────────┤
 │  1. Valida credenciais                                  │
-│  2. Gera JWT (access_token + refresh_token)            │
-│  3. Retorna user + tokens                              │
+│  2. Retorna user (uid, email, etc.)                     │
+│  3. Token gerenciado pelo SDK                            │
 └────────────────────┬────────────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────┐
-│                  Browser (localStorage)                  │
+│                  Browser (persistência Auth)             │
 ├─────────────────────────────────────────────────────────┤
-│  {                                                      │
-│    "access_token": "eyJhbGciOiJIUzI1...",              │
-│    "refresh_token": "eyJhbGciOiJIUzI1...",             │
-│    "user": { id, email, role, organization_id }        │
-│  }                                                      │
+│  Perfil (role, organization_id) em Firestore ou         │
+│  custom claims; acesso aos dados via Security Rules     │
 └────────────────────┬────────────────────────────────────┘
                      │
                      │ Requisições subsequentes
                      ▼
 ┌─────────────────────────────────────────────────────────┐
-│              PostgreSQL (RLS Policy Check)               │
+│              Firestore (Security Rules)                  │
 ├─────────────────────────────────────────────────────────┤
-│  SELECT * FROM patients                                 │
-│  WHERE organization_id = auth.jwt()->>'organization_id' │
-│  AND auth.jwt()->>'role' = 'physiotherapist'           │
+│  request.auth != null &&                                 │
+│  resource.data.organization_id == request.auth.token.organization_id │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -388,54 +384,39 @@ create trigger audit_patients
 export function useLGPD() {
   // 1. Direito de acesso
   const exportPersonalData = async (patientId: string) => {
-    const { data } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('id', patientId)
-      .single();
-
-    return data;
+    const snap = await getDoc(doc(db, 'patients', patientId));
+    return snap.data();
   };
 
   // 2. Direito de correção
   const updatePersonalData = async (patientId: string, updates: any) => {
-    const { data } = await supabase
-      .from('patients')
-      .update(updates)
-      .eq('id', patientId);
-
-    // Log de consentimento
+    await updateDoc(doc(db, 'patients', patientId), updates);
     await logDataProcessing(patientId, 'update', updates);
   };
 
   // 3. Direito de exclusão (anonimização)
   const deletePersonalData = async (patientId: string) => {
-    // Anonimiza em vez de deletar (preserva integridade referencial)
-    const { data } = await supabase
-      .from('patients')
-      .update({
-        full_name: 'Paciente Removido',
-        email: null,
-        phone: null,
-        cpf: null,
-        anonymous: true,
-      })
-      .eq('id', patientId);
+    await updateDoc(doc(db, 'patients', patientId), {
+      full_name: 'Paciente Removido',
+      email: null,
+      phone: null,
+      cpf: null,
+      anonymous: true,
+    });
   };
 
   // 4. Direito de portabilidade
   const exportDataPortability = async (patientId: string) => {
-    // Exporta em formato legível por máquina (JSON, XML, etc)
-    const [patient, appointments, evolutions] = await Promise.all([
-      supabase.from('patients').select('*').eq('id', patientId).single(),
-      supabase.from('appointments').select('*').eq('patient_id', patientId),
-      supabase.from('evolutions').select('*').eq('patient_id', patientId),
+    const [patientSnap, appointmentsSnap, evolutionsSnap] = await Promise.all([
+      getDoc(doc(db, 'patients', patientId)),
+      getDocs(query(collection(db, 'appointments'), where('patient_id', '==', patientId))),
+      getDocs(query(collection(db, 'sessions'), where('patient_id', '==', patientId))),
     ]);
 
     return {
-      patient: patient.data,
-      appointments: appointments.data,
-      evolutions: evolutions.data,
+      patient: patientSnap.data(),
+      appointments: appointmentsSnap.docs.map(d => d.data()),
+      evolutions: evolutionsSnap.docs.map(d => d.data()),
       exported_at: new Date().toISOString(),
     };
   };
@@ -469,7 +450,7 @@ create table consent_records (
 ### Edge Function Middleware
 
 ```typescript
-// supabase/functions/_shared/rate-limit.ts
+// functions/src/_shared/rate-limit.ts
 const rateLimiter = new Map<string, { count: number; reset: number }>();
 
 export async function rateLimit(

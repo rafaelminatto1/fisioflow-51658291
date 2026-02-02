@@ -2,13 +2,13 @@
 
 ## 🗄️ Visão Geral
 
-O FisioFlow utiliza **PostgreSQL 15+** através do Supabase, com **Row Level Security (RLS)** para controle de acesso granular.
+O FisioFlow utiliza **Firestore** (Firebase) como banco de dados principal, com **Security Rules** para controle de acesso por organização e role.
 
 ## 📊 Schema Principal
 
-### Tabelas Principais
+### Coleções Principais (Firestore)
 
-```sql
+```text
 -- Usuários e Autenticação
 profiles                      -- Perfis de usuários estendidos
 organizations                 -- Organizações (multi-tenancy)
@@ -73,204 +73,50 @@ erDiagram
     evaluation_forms ||--o{ evaluation_responses : "answered"
 ```
 
-## 📋 Estrutura das Tabelas Principais
+## 📋 Estrutura das Coleções Principais (Firestore)
 
-### profiles (Extensão de auth.users)
+Os documentos do Firestore seguem um modelo equivalente às entidades abaixo. Campos em camelCase ou snake_case conforme o código da aplicação.
 
-```sql
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  email text,
-  full_name text,
-  avatar_url text,
-  role text check (role in ('admin', 'physiotherapist', 'intern', 'patient')),
-  organization_id uuid references organizations(id),
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-```
+### profiles (coleção; vínculo com Firebase Auth uid)
+
+Campos: `id` (uid do Auth), `email`, `full_name`, `avatar_url`, `role` (admin, fisioterapeuta, estagiario, recepcionista, paciente, parceiro, pending), `organization_id`, `created_at`, `updated_at`.
 
 ### patients
 
-```sql
-create table public.patients (
-  id uuid default gen_random_uuid() primary key,
-  organization_id uuid references organizations(id),
-  full_name text not null,
-  email text,
-  phone text,
-  date_of_birth date,
-  gender text check (gender in ('male', 'female', 'other')),
-  address jsonb,
-  insurance_info jsonb,
-  medical_history jsonb,
-  allergies text[],
-  blood_type text,
-  emergency_contact jsonb,
-  active boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-```
+Campos: `organization_id`, `full_name`, `email`, `phone`, `date_of_birth`, `gender`, `address` (map), `insurance_info` (map), `medical_history`, `allergies` (array), `blood_type`, `emergency_contact` (map), `active`, `created_at`, `updated_at`.
 
 ### appointments
 
-```sql
-create table public.appointments (
-  id uuid default gen_random_uuid() primary key,
-  organization_id uuid references organizations(id),
-  patient_id uuid references patients(id),
-  therapist_id uuid references profiles(id),
-  room_id uuid references agenda_rooms(id),
-  title text not null,
-  description text,
-  start_time timestamp with time zone not null,
-  end_time timestamp with time zone not null,
-  status text check (status in ('scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show')),
-  type text check (type in ('initial', 'follow_up', 'evaluation', 'therapy', 'telemedicine')),
-  notes text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+Campos: `organization_id`, `patient_id`, `therapist_id`, `room_id`, `title`, `description`, `start_time`, `end_time`, `status`, `type`, `notes`, `created_at`, `updated_at`. Para consultas eficientes use índices compostos no Firestore (organization_id + start_time, etc.).
 
--- Índices para performance
-create index idx_appointments_org on appointments(organization_id);
-create index idx_appointments_patient on appointments(patient_id);
-create index idx_appointments_therapist on appointments(therapist_id);
-create index idx_appointments_start on appointments(start_time);
-create index idx_appointments_status on appointments(status);
-```
+### sessions / evolutions (SOAP)
 
-### evolutions (SOAP)
-
-```sql
-create table public.evolutions (
-  id uuid default gen_random_uuid() primary key,
-  organization_id uuid references organizations(id),
-  patient_id uuid references patients(id),
-  therapist_id uuid references profiles(id),
-  appointment_id uuid references appointments(id),
-
-  -- SOAP Notes
-  subjective text,
-  objective text,
-  assessment text,
-  plan text,
-
-  pain_level integer check (pain_level >= 0 and pain_level <= 10),
-  pain_location jsonb,
-
-  status text check (status in ('draft', 'final', 'signed')),
-  signature_data jsonb,
-  signed_at timestamp with time zone,
-
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-```
+Campos: `organization_id`, `patient_id`, `therapist_id`, `appointment_id`, `subjective`, `objective`, `assessment`, `plan`, `pain_level`, `pain_location`, `status`, `signature_data`, `signed_at`, `created_at`, `updated_at`.
 
 ### evaluation_forms
 
-```sql
-create table public.evaluation_forms (
-  id uuid default gen_random_uuid() primary key,
-  organization_id uuid references organizations(id),
-  created_by uuid references profiles(id),
-  nome text not null,
-  descricao text,
-  referencias text,              -- Referências científicas
-  tipo text,                     -- 'esportiva', 'ortopédica', etc
-  ativo boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+Campos: `organization_id`, `created_by`, `nome`, `descricao`, `referencias`, `tipo`, `ativo`, `created_at`, `updated_at`. Subcoleção ou coleção separada para `evaluation_form_fields` (form_id, tipo_campo, label, opcoes, ordem, obrigatorio, grupo, etc.).
 
--- Campos das fichas
-create table public.evaluation_form_fields (
-  id uuid default gen_random_uuid() primary key,
-  form_id uuid references evaluation_forms(id) on delete cascade,
-  tipo_campo text check (tipo_campo in ('texto_curto', 'texto_longo', 'opcao_unica', 'selecao', 'lista', 'escala', 'data', 'hora', 'info', 'numero')),
-  label text not null,
-  placeholder text,
-  opcoes jsonb,                  -- Array de opções para selects
-  ordem integer not null,
-  obrigatorio boolean default false,
-  grupo text,                    -- Seção do formulário
-  descricao text,                -- Texto de ajuda
-  minimo integer,                -- Para escalas/numeros
-  maximo integer,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+## 🔒 Firestore Security Rules
+
+As regras de segurança garantem que cada usuário acesse apenas dados da própria organização e conforme o role. Exemplo conceitual:
+
+```javascript
+// patients: leitura/escrita só da própria organização
+match /patients/{patientId} {
+  allow read, write if request.auth != null
+    && resource.data.organization_id == request.auth.token.organization_id;
+}
+// appointments, sessions, etc.: mesma lógica com organization_id e, quando aplicável, therapist_id
 ```
 
-## 🔒 Row Level Security (RLS)
+Consulte o arquivo `firestore.rules` do projeto e a documentação [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started).
 
-### Ativar RLS
+## 🔄 Estrutura e Seeds
 
-```sql
-alter table patients enable row level security;
-alter table appointments enable row level security;
-alter table evolutions enable row level security;
--- ... etc
-```
-
-### Exemplos de Policies
-
-```sql
--- Pacientes: ver só da própria organização
-create policy "patients_select_org" on patients
-  for select
-  using (organization_id = auth.jwt()->>'organization_id');
-
--- Pacientes: admin vê tudo
-create policy "patients_select_admin" on patients
-  for select
-  using (auth.jwt()->>'role' = 'admin');
-
--- Evoluções: terapeuta só vê suas
-create policy "evolutions_select_own" on evolutions
-  for select
-  using (
-    organization_id = auth.jwt()->>'organization_id'
-    and therapist_id = auth.uid()
-  );
-
--- Evoluções: atualizar só se for o terapeuta
-create policy "evolutions_update_own" on evolutions
-  for update
-  using (
-    therapist_id = auth.uid()
-    and status = 'draft'  -- Só pode editar draft
-  );
-```
-
-## 🔄 Migrations Importantes
-
-### 1. Schema Inicial
-
-```sql
--- 20240101000001_initial_schema.sql
--- Cria todas as tabelas principais
--- Configura RLS policies
-```
-
-### 2. Avaliações Templates
-
-```sql
--- 20260113220000_seed_evaluation_templates.sql
--- Insere 21 templates de avaliação
--- Avaliações esportivas (10)
--- Avaliações ortopédicas (10)
--- Avaliação padrão (1)
-```
-
-### 3. Notificações Push
-
-```sql
--- 20250109000001_push_notifications_schema.sql
--- Tabelas para push notifications
--- Integração com Vercel KV
-```
+- Coleções e subcoleções são criadas ao inserir o primeiro documento.
+- Dados iniciais (templates de avaliação, categorias, etc.) podem ser inseridos via scripts ou Cloud Functions.
+- Push notifications e integrações usam Cloud Functions e, se aplicável, Pub/Sub ou Firestore.
 
 ### 4. Agenda Pagamentos
 
@@ -282,68 +128,22 @@ create policy "evolutions_update_own" on evolutions
 
 ## 🚀 Performance
 
-### Índices
+### Índices (Firestore)
 
-```sql
--- Buscas comuns
-create index idx_patients_org_active on patients(organization_id, active);
-create index idx_appointments_date_range on appointments(start_time, end_time);
-create index idx_evolutions_patient_date on evolutions(patient_id, created_at desc);
+No Firestore, crie **índices compostos** no console ou via `firestore.indexes.json` para consultas comuns, por exemplo: `patients` (organization_id, active), `appointments` (organization_id, start_time), `sessions` (patient_id, created_at). Para busca por texto (nome, email), use Algolia, Typesense ou filtros client-side conforme a escala.
 
--- Full text search
-create index idx_patients_search on patients using gin(to_tsvector('portuguese', full_name || ' ' || coalesce(email, '')));
-```
+### Métricas de dashboard
 
-### Views Materializadas
-
-```sql
--- Dashboard metrics
-create materialized view organization_metrics as
-select
-  o.id as organization_id,
-  count(distinct p.id) as total_patients,
-  count(distinct a.id) filter (where a.status = 'completed') as completed_appointments,
-  sum(ft.amount) filter (where ft.type = 'income') as total_revenue
-from organizations o
-left join patients p on p.organization_id = o.id
-left join appointments a on a.organization_id = o.id
-left join financial_transactions ft on ft.organization_id = o.id
-group by o.id;
-
--- Refresh a cada hora
-create unique index on organization_metrics(organization_id);
-```
+Métricas agregadas (total de pacientes, consultas realizadas, receita) podem ser calculadas em **Cloud Functions** (agendadas ou on-demand) e armazenadas em um documento `organization_metrics/{orgId}` ou obtidas em tempo real com consultas e agregação no cliente.
 
 ## 💾 Backups e Restauração
 
-### Backup Automático (Supabase Pro)
-
-```yaml
-# Configurado no Supabase Dashboard
-Backup Schedule: Daily
-Retention: 30 days
-Point-in-time Recovery: 7 days
-```
-
-### Backup Manual via SQL
-
-```sql
--- Exportar schema
-pg_dump --schema-only --no-owner --no-acl > schema.sql
-
--- Exportar dados
-pg_dump --data-only --no-owner --no-acl > data.sql
-```
-
-### Restauração
-
-```sql
--- Via Supabase Dashboard
-# Project Settings → Database → Restore
-```
+- **Firestore:** exportação via `gcloud firestore export`; restauração via import. Backups automáticos conforme plano do Google Cloud.
+- **Storage:** cópias periódicas dos buckets conforme política da organização.
+- Consulte a documentação do Firebase/Google Cloud para retenção e point-in-time recovery.
 
 ## 🔗 Recursos Relacionados
 
-- [Autenticação e Segurança](./06-autenticacao-seguranca.md) - RLS policies detalhadas
-- [APIs e Integrações](./07-api-integracoes.md) - Edge Functions
-- [Configuração Supabase](./guias/configuracao-supabase.md) - Setup completo
+- [Autenticação e Segurança](./06-autenticacao-seguranca.md) - Regras e RBAC
+- [APIs e Integrações](./07-api-integracoes.md) - Cloud Functions
+- [Configuração Firebase](./guias/configuracao-firebase.md) - Setup completo

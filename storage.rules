@@ -91,6 +91,12 @@ service firebase.storage {
       allow write: if isProfessional() || isAdmin();
     }
 
+    // Mídia migrada do Supabase (exercise-media/{id}/image.ext, thumbnail.ext, video.ext)
+    match /exercise-media/{exerciseId}/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // ============================================================================================
     // DOCUMENTOS MÉDICOS (PDF, IMAGENS)
     // ============================================================================================

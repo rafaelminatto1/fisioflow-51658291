@@ -58,14 +58,16 @@ Sistema completo de relatórios e analytics com dashboards em tempo real e métr
 
 ```typescript
 // GET /analytics/dashboard
-const { data } = await supabase.rpc('get_dashboard_metrics', {
+// Cloud Function ou agregação client-side
+// getDashboardMetrics(orgId, startDate, endDate)
+const { data } = await getDashboardMetrics({
   organization_id: orgId,
   start_date: startDate,
   end_date: endDate,
 });
 
 // GET /reports/attendance
-const { data } = await supabase.rpc('get_attendance_report', {
+const { data } = await getAttendanceReport({
   start_date: startDate,
   end_date: endDate,
 });

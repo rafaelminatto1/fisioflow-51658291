@@ -8,16 +8,28 @@ import { StatusColorManager } from '@/components/schedule/settings/StatusColorMa
 import { CardSizeManager } from '@/components/schedule/settings/CardSizeManager';
 import { CalendarViewPresets } from '@/components/schedule/settings/CalendarViewPresets';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame, ArrowLeft, Info, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame, ArrowLeft, Info, Sparkles, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useScheduleSettings } from '@/hooks/useScheduleSettings';
+import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 
 export default function ScheduleSettings() {
   const [activeTab, setActiveTab] = useState('capacity');
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Pré-carrega dados uma vez na página para que as abas não mostrem "Carregando..." individualmente
+  const scheduleSettings = useScheduleSettings();
+  const scheduleCapacity = useScheduleCapacity();
+  const isInitialLoading =
+    scheduleSettings.isLoadingHours ||
+    scheduleSettings.isLoadingRules ||
+    scheduleSettings.isLoadingNotifications ||
+    scheduleSettings.isLoadingBlocked ||
+    scheduleCapacity.isLoading;
 
   // Track changes indicator
   useEffect(() => {

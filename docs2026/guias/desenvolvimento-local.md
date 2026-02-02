@@ -17,14 +17,11 @@ cd fisioflow
 pnpm install
 ```
 
-### 3. Configurar Supabase Local
+### 3. Configurar Firebase (emuladores opcional)
 
 ```bash
-# Iniciar Supabase local
-supabase start
-
-# Linkar ao projeto remoto
-supabase link --project-ref seu-project-id
+# Emuladores locais (Auth, Firestore, Storage, Functions)
+firebase emulators:start --only auth,firestore,storage,functions
 ```
 
 ### 4. Configurar Environment
@@ -59,11 +56,11 @@ code --install-extension ms-vscode.vscode-typescript-next
 2. **React DevTools**: Inspecione componentes
 3. **TanStack Query DevTools**: Cache e queries
 
-### Supabase Local GUI
+### Firebase Emulator UI
 
 ```bash
-supabase start
-# Acesse http://localhost:54323
+firebase emulators:start
+# Acesse a URL indicada no terminal (ex.: http://localhost:4000)
 ```
 
 ## Debugging
@@ -78,18 +75,9 @@ console.log('Debug:', { patient, appointment });
 ### API Calls
 
 ```typescript
-// Ativar logging do Supabase
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(url, key, {
-  global: {
-    headers: { 'x-my-header': 'fisioflow-app' },
-  },
-  db: { schema: 'public' },
-  auth: {
-    debug: true,  // Ativa logs de auth
-  },
-});
+// Firebase: use o console do navegador ou Firebase Debug View
+// Para Firestore, ative persistência e inspecione no DevTools
+import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 ```
 
 ### Performance
@@ -132,18 +120,18 @@ pnpm install
 pnpm dev
 ```
 
-### Supabase local
+### Emuladores Firebase
 
 ```bash
-# Reset database
-supabase db reset
+# Parar emuladores
+# Ctrl+C
 
-# Ver logs
-supabase status
+# Ver status
+firebase emulators:start --only firestore
 ```
 
 ## 🔗 Recursos
 
 - [Vite Dev Server](https://vitejs.dev/guide/dev-features.html)
 - [React Fast Refresh](https://react.dev/reference/react/react-dom#fast-refresh)
-- [Supabase CLI](https://supabase.com/docs/guides/cli)
+- [Firebase Emulators](https://firebase.google.com/docs/emulator-suite)

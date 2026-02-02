@@ -2,107 +2,64 @@
 
 ## 🌐 Visão Geral
 
-O FisioFlow utiliza **Supabase Edge Functions** (Deno runtime) para operações serverless e integrações com APIs externas.
+O FisioFlow utiliza **Firebase Cloud Functions** (Node.js) para operações serverless e integrações com APIs externas.
 
-## ⚡ Edge Functions
+## ⚡ Cloud Functions
 
 ### Estrutura
 
 ```
-supabase/functions/
-├── _shared/                    # Código compartilhado
-│   ├── cors.ts                # CORS middleware
-│   ├── rate-limit.ts          # Rate limiting
-│   └── auth.ts                # Validação de auth
-│
-├── prescribe-exercise/         # Prescrição de exercícios com IA
-│   └── index.ts
-│
-├── analyze-evolution/          # Análise de evolução com IA
-│   └── index.ts
-│
-├── send-notification/          # Envio de notificações
-│   └── index.ts
-│
-├── process-payment/            # Processamento de pagamento
-│   └── index.ts
-│
-└── webhook-handler/            # Handler de webhooks
-    └── index.ts
+functions/
+├── src/
+│   ├── index.ts               # Exporta todas as funções
+│   ├── prescribeExercise.ts   # Prescrição de exercícios com IA
+│   ├── analyzeEvolution.ts    # Análise de evolução com IA
+│   ├── sendNotification.ts    # Envio de notificações
+│   ├── processPayment.ts      # Processamento de pagamento
+│   └── webhookHandler.ts      # Handler de webhooks
+└── package.json
 ```
 
 ### Exemplo: Prescrição de Exercícios
 
 ```typescript
-// supabase/functions/prescribe-exercise/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// functions/src/prescribeExercise.ts
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 
-serve(async (req) => {
-  // CORS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      },
-    });
+export const prescribeExercise = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Não autenticado');
+
+  const { patientId, exerciseIds, injuryType } = data;
+  if (!patientId || !exerciseIds) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
   }
 
-  try {
-    const { patientId, exerciseIds, injuryType } = await req.json();
+  const db = admin.firestore();
 
-    // Validação
-    if (!patientId || !exerciseIds) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  // Busca informações do paciente
+  const patientSnap = await db.collection('patients').doc(patientId).get();
+  const patient = patientSnap.data();
 
-    // Inicializa Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+  // Busca exercícios
+  const exercisesSnap = await db.collection('exercises').get();
+  const exercises = exercisesSnap.docs
+    .filter(d => exerciseIds.includes(d.id))
+    .map(d => ({ id: d.id, ...d.data() }));
 
-    // Busca informações do paciente
-    const { data: patient } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('id', patientId)
-      .single();
+  // IA: Personaliza série/repetições baseado no paciente
+  const prescription = await personalizeWithAI(patient, exercises, injuryType);
 
-    // Busca exercícios
-    const { data: exercises } = await supabase
-      .from('exercises')
-      .select('*')
-      .in('id', exerciseIds);
+  // Cria prescrição
+  const createdPrescription = await db.collection('prescriptions').add({
+    patient_id: patientId,
+    therapist_id: context.auth.uid,
+    exercises: prescription,
+    status: 'active',
+    created_at: admin.firestore.FieldValue.serverTimestamp(),
+  });
 
-    // IA: Personaliza série/repetições baseado no paciente
-    const prescription = await personalizeWithAI(patient, exercises, injuryType);
-
-    // Cria prescrição
-    const { data: createdPrescription } = await supabase
-      .from('prescriptions')
-      .insert({
-        patient_id: patientId,
-        exercises: prescription,
-        status: 'active',
-      })
-      .select()
-      .single();
-
-    return new Response(JSON.stringify(createdPrescription), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  return { id: createdPrescription.id, ...prescription };
 });
 
 async function personalizeWithAI(patient: any, exercises: any[], injuryType?: string) {
@@ -344,7 +301,7 @@ export async function sendAppointmentReminder(
 ### Handler de Webhooks
 
 ```typescript
-// supabase/functions/webhook-handler/index.ts
+// functions/src/webhookHandler.ts
 serve(async (req) => {
   const signature = req.headers.get('x-webhook-signature');
   const payload = await req.json();

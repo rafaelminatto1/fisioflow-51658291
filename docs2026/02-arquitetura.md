@@ -2,7 +2,7 @@
 
 ## 📐 Visão Geral da Arquitetura
 
-O FisioFlow utiliza uma arquitetura **SPA (Single Page Application)** moderna, baseada em componentes, com backend serverless fornecido pelo Supabase.
+O FisioFlow utiliza uma arquitetura **SPA (Single Page Application)** moderna, baseada em componentes, com backend fornecido pelo **Firebase**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -21,23 +21,23 @@ O FisioFlow utiliza uma arquitetura **SPA (Single Page Application)** moderna, b
 └──────────────────────────────┼─────────────────────────────────┘
                                │
                     ┌──────────▼──────────┐
-                    │   Supabase Client   │
-                    │  (JS/TS Library)    │
+                    │  Firebase SDK      │
+                    │  (JS/TS Library)  │
                     └──────────┬──────────┘
                                │
 ┌──────────────────────────────┼─────────────────────────────────┐
-│                      SUPABASE (Backend)                         │
+│                      FIREBASE (Backend)                         │
 ├──────────────────────────────┼─────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────▼─────────┐  ┌─────────────────┐   │
-│  │  PostgreSQL │  │   Supabase Auth   │  │  Storage (S3)   │   │
-│  │  Database   │  │      (JWT)        │  │  File Upload    │   │
+│  │  Firestore │  │  Firebase Auth   │  │  Storage        │   │
+│  │  Database  │  │  (Email/Google)   │  │  File Upload    │   │
 │  └─────────────┘  └─────────┬─────────┘  └─────────────────┘   │
 │           │                  │                    │              │
 │           └──────────────────┴────────────────────┘              │
 │                              │                                   │
 │                    ┌─────────▼─────────┐                        │
-│                    │  Edge Functions   │                        │
-│                    │  (Deno Runtime)   │                        │
+│                    │  Cloud Functions   │                        │
+│                    │  (Node.js)        │                        │
 │                    └───────────────────┘                        │
 └─────────────────────────────────────────────────────────────────┘
                                │
@@ -99,11 +99,8 @@ export function usePatients() {
   return useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('*');
-      if (error) throw error;
-      return data;
+      const snapshot = await getDocs(collection(db, 'patients'));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
@@ -128,46 +125,35 @@ const methods = useForm({
 ### 3. Camada de Dados (Data Layer)
 
 ```typescript
-// lib/supabase.ts
-import { createClient } from '@supabase/supabase-js';
+// integrations/firebase/app.ts
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-);
+const app = initializeApp({ ... });
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 
-// lib/api/patients.ts
+// Serviços: patientsApi, appointmentsApi etc. usam
+// getDocs, getDoc, addDoc, updateDoc, deleteDoc do Firestore
 export const patientsApi = {
-  getAll: () => supabase.from('patients').select('*'),
-  getById: (id: string) => supabase.from('patients').select('*').eq('id', id).single(),
-  create: (data: PatientInsert) => supabase.from('patients').insert(data),
-  update: (id: string, data: PatientUpdate) => supabase.from('patients').update(data).eq('id', id),
-  delete: (id: string) => supabase.from('patients').delete().eq('id', id),
+  getAll: () => getDocs(collection(db, 'patients')),
+  getById: (id: string) => getDoc(doc(db, 'patients', id)),
+  create: (data) => addDoc(collection(db, 'patients'), data),
+  update: (id: string, data) => updateDoc(doc(db, 'patients', id), data),
+  delete: (id: string) => deleteDoc(doc(db, 'patients', id)),
 };
 ```
 
 ### 4. Camada de Serviços (Service Layer)
 
-#### Edge Functions (Supabase)
+#### Cloud Functions (Firebase)
 ```typescript
-// supabase/functions/prescribe-exercise/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
-serve(async (req) => {
-  const { patientId, exerciseIds } = await req.json();
-
-  // Lógica de IA para personalização
+// functions/src/index.ts
+export const prescribeExercise = functions.https.onCall(async (data, context) => {
+  const { patientId, exerciseIds } = data;
   const prescription = await generatePrescription(patientId, exerciseIds);
-
-  return new Response(JSON.stringify(prescription), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return prescription;
 });
 ```
 
@@ -177,7 +163,7 @@ serve(async (req) => {
 
 ```
 ┌─────────┐     Login      ┌─────────────┐     ┌──────────────┐
-│ Cliente │────────────────▶│ Supabase    │─────▶│ PostgreSQL   │
+│ Cliente │────────────────▶│ Firebase    │─────▶│ Firestore    │
 │         │◀────────────────│ Auth        │     │ (RLS Check)  │
 └─────────┘    JWT + User   └─────────────┘     └──────────────┘
      │
@@ -224,25 +210,13 @@ WITH CHECK (
 // hooks/useRealtimePatients.ts
 export function useRealtimePatients() {
   useEffect(() => {
-    const channel = supabase
-      .channel('patients-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'patients',
-        },
-        (payload) => {
-          // Atualiza cache do TanStack Query
-          queryClient.invalidateQueries(['patients']);
-        }
-      )
-      .subscribe();
+    const unsubscribe = onSnapshot(
+      collection(db, 'patients'),
+      () => queryClient.invalidateQueries(['patients']),
+      (err) => console.error(err)
+    );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => unsubscribe();
   }, []);
 }
 ```
@@ -258,7 +232,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase': ['@supabase/supabase-js'],
+          'firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
           'ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', /* ... */],
           'charts': ['recharts'],
           'forms': ['react-hook-form', 'zod', '@hookform/resolvers'],
@@ -387,8 +361,8 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
 });
 
-// Vercel Analytics
-import { Analytics } from '@vercel/analytics/react';
+// Firebase Analytics (opcional)
+// import { getAnalytics, logEvent } from 'firebase/analytics';
 ```
 
 ## 🧪 Testing Strategy

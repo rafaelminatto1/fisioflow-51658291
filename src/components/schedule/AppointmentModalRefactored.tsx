@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
+import { useAuth } from '@/contexts/AuthContext';
 import { useActivePatients } from '@/hooks/usePatients';
 import type { Patient } from '@/types';
 import {
@@ -38,6 +39,7 @@ import {
 } from '@/types/appointment';
 import { appointmentFormSchema } from '@/lib/validations/agenda';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
+import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -95,6 +97,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [pendingFormData, setPendingFormData] = useState<AppointmentFormData | null>(null);
   const [waitlistQuickAddOpen, setWaitlistQuickAddOpen] = useState(false);
 
+  const { user } = useAuth();
   const { mutateAsync: createAppointmentAsync, isPending: isCreating } = useCreateAppointment();
   const { mutateAsync: updateAppointmentAsync, isPending: isUpdating } = useUpdateAppointment();
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
@@ -281,6 +284,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return typeof watchedDateStr === 'string' ? parseISO(watchedDateStr) : watchedDateStr;
   }, [watchedDateStr]);
 
+  const watchedTherapistId = watch('therapist_id');
+  const effectiveTherapistId = (watchedTherapistId && String(watchedTherapistId).trim()) || user?.uid || '';
+
   useEffect(() => {
     if (watchedDate && watchedTime && watchedDuration) {
       const result = checkAppointmentConflict({
@@ -288,11 +294,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         time: watchedTime,
         duration: watchedDuration,
         excludeId: appointment?.id,
+        therapistId: effectiveTherapistId,
         appointments: appointmentsRef.current
       });
       setConflictCheck(result);
     }
-  }, [watchedDate, watchedTime, watchedDuration, appointment?.id]);
+  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, effectiveTherapistId]);
 
   const { timeSlots: slotInfo, isDayClosed } = useAvailableTimeSlots(watchedDate);
 
@@ -421,7 +428,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       onClose();
 
     } catch (error: unknown) {
-      ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave');
+      if (isAppointmentConflictError(error)) {
+        toast.error(APPOINTMENT_CONFLICT_MESSAGE);
+        ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave', { showNotification: false });
+      } else {
+        ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave');
+      }
     }
   };
 

@@ -51,24 +51,24 @@ Sistema de agendamento avançado com visualização diária, semanal e mensal, d
 - `AppointmentCard` - Card de agendamento
 - `ConflictDetector` - Detector de conflitos
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /appointments
-const { data } = await supabase
-  .from('appointments')
-  .select('*, patients(*), profiles(*)')
-  .gte('start_time', start)
-  .lte('end_time', end);
+// GET appointments
+const snapshot = await getDocs(
+  query(
+    collection(db, 'appointments'),
+    where('organization_id', '==', orgId),
+    where('start_time', '>=', start),
+    where('start_time', '<=', end)
+  )
+);
 
-// POST /appointments
-const { data } = await supabase.from('appointments').insert(appointment);
+// POST appointment
+const ref = await addDoc(collection(db, 'appointments'), appointment);
 
-// PATCH /appointments/:id
-const { data } = await supabase
-  .from('appointments')
-  .update(changes)
-  .eq('id', id);
+// PATCH appointment
+await updateDoc(doc(db, 'appointments', id), changes);
 ```
 
 ## Veja Também

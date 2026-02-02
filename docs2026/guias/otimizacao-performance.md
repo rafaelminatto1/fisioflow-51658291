@@ -32,7 +32,7 @@ const Schedule = lazy(() => import('./pages/Schedule'));
 // vite.config.ts
 manualChunks: {
   'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-  'supabase': ['@supabase/supabase-js'],
+  'firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
   'ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
 }
 ```
@@ -159,12 +159,10 @@ export default defineConfig({
 
 ## Monitoring
 
-### Vercel Speed Insights
+### Performance (Web Vitals / Firebase)
 
 ```tsx
-import { SpeedInsights } from '@vercel/speed-insights/react';
-
-<SpeedInsights />
+// Performance: use Web Vitals do projeto ou Firebase Performance Monitoring
 ```
 
 ### Web Vitals

@@ -17,9 +17,9 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Calendar, Check } from 'lucide-react';
+import { Clock, Users, Calendar, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useScheduleSettings, type BusinessHour } from '@/hooks/useScheduleSettings';
 
 interface ScheduleConfig {
     businessHours: {
@@ -72,10 +72,41 @@ interface QuickSettingsSheetProps {
     onOpenChange: (open: boolean) => void;
 }
 
+function configFromBusinessHours(hours: BusinessHour[]): ScheduleConfig {
+    const get = (day: number) => hours.find(h => h.day_of_week === day);
+    const mon = get(1);
+    const sat = get(6);
+    const sun = get(0);
+    return {
+        ...defaultConfig,
+        businessHours: {
+            weekdays: mon ? { start: mon.open_time, end: mon.close_time } : defaultConfig.businessHours.weekdays,
+            saturday: sat ? { start: sat.open_time, end: sat.close_time } : defaultConfig.businessHours.saturday,
+            sunday: sun ? { start: sun.open_time, end: sun.close_time } : defaultConfig.businessHours.sunday,
+        },
+        workingDays: {
+            monday: get(1)?.is_open ?? true,
+            tuesday: get(2)?.is_open ?? true,
+            wednesday: get(3)?.is_open ?? true,
+            thursday: get(4)?.is_open ?? true,
+            friday: get(5)?.is_open ?? true,
+            saturday: get(6)?.is_open ?? true,
+            sunday: get(0)?.is_open ?? false,
+        },
+    };
+}
+
 export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsSheetProps) => {
+    const { businessHours, upsertBusinessHours } = useScheduleSettings();
     const [config, setConfig] = useState<ScheduleConfig>(defaultConfig);
     const [hasChanges, setHasChanges] = useState(false);
     const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        if (open && businessHours && businessHours.length > 0) {
+            setConfig(configFromBusinessHours(businessHours));
+        }
+    }, [open, businessHours]);
 
     const handleTimeChange = (day: 'weekdays' | 'saturday' | 'sunday', field: 'start' | 'end', value: string) => {
         setConfig(prev => ({
@@ -116,12 +147,24 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
         setSaved(false);
     };
 
-    const handleSave = () => {
-        // TODO: Save to backend/supabase
-        logger.info('Saving config', { config }, 'QuickSettingsSheet');
-        setHasChanges(false);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+    const handleSave = async () => {
+        const hours: Partial<BusinessHour>[] = [
+            { day_of_week: 0, is_open: config.workingDays.sunday, open_time: config.businessHours.sunday.start, close_time: config.businessHours.sunday.end },
+            { day_of_week: 1, is_open: config.workingDays.monday, open_time: config.businessHours.weekdays.start, close_time: config.businessHours.weekdays.end },
+            { day_of_week: 2, is_open: config.workingDays.tuesday, open_time: config.businessHours.weekdays.start, close_time: config.businessHours.weekdays.end },
+            { day_of_week: 3, is_open: config.workingDays.wednesday, open_time: config.businessHours.weekdays.start, close_time: config.businessHours.weekdays.end },
+            { day_of_week: 4, is_open: config.workingDays.thursday, open_time: config.businessHours.weekdays.start, close_time: config.businessHours.weekdays.end },
+            { day_of_week: 5, is_open: config.workingDays.friday, open_time: config.businessHours.weekdays.start, close_time: config.businessHours.weekdays.end },
+            { day_of_week: 6, is_open: config.workingDays.saturday, open_time: config.businessHours.saturday.start, close_time: config.businessHours.saturday.end },
+        ];
+        try {
+            await upsertBusinessHours.mutateAsync(hours);
+            setHasChanges(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } catch {
+            // Erro já exibido pelo useScheduleSettings (toast)
+        }
     };
 
     const handleReset = () => {
@@ -369,19 +412,24 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                         variant="outline"
                         onClick={handleReset}
                         className="flex-1"
-                        disabled={!hasChanges}
+                        disabled={!hasChanges || upsertBusinessHours.isPending}
                     >
                         Resetar
                     </Button>
                     <Button
-                        onClick={handleSave}
-                        disabled={!hasChanges}
+                        onClick={() => void handleSave()}
+                        disabled={!hasChanges || upsertBusinessHours.isPending}
                         className={cn(
                             "flex-1 gap-2",
                             saved && "bg-emerald-600 hover:bg-emerald-700"
                         )}
                     >
-                        {saved ? (
+                        {upsertBusinessHours.isPending ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Salvando...
+                            </>
+                        ) : saved ? (
                             <>
                                 <Check className="w-4 h-4" />
                                 Salvo!

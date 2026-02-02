@@ -140,7 +140,7 @@
 - **Equipe**: Provavelmente familiarizada com JavaScript/TypeScript
 - **Objetivo**: 2 apps (Pacientes e Profissionais)
 - **Plataformas**: iOS (agora) + Android (futuro possível)
-- **Recursos**: Vercel Pro, Supabase Pro, Apple Developer Account
+- **Recursos**: Firebase + GCP, Apple Developer Account
 
 ### Análise
 
@@ -151,7 +151,7 @@
 3. **Custo**: Desenvolvimento mais econômico, um desenvolvedor pode trabalhar em ambos os apps
 4. **Flexibilidade futura**: Se decidir lançar no Android, 90% do código já estará pronto
 5. **Expo EAS**: Você pode compilar e submeter apps iOS sem ter um Mac, apenas com sua máquina Ubuntu
-6. **Ecossistema**: Supabase, TanStack Query, Zustand - tudo que você já usa funciona perfeitamente com React Native
+6. **Ecossistema**: Firebase, TanStack Query, Zustand - tudo que você já usa funciona perfeitamente com React Native
 
 **Quando Swift seria melhor**:
 - Se o app exigisse performance extrema (jogos 3D, edição de vídeo em tempo real)

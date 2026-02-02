@@ -7,7 +7,7 @@ Este documento captura observações, melhorias de fluxo de trabalho e novas ide
 
 **Ideia/Ajuste:**
 - **Reconhecimento Oficial:** Atualizar a documentação para oficializar a arquitetura híbrida. O Cloud SQL (PostgreSQL) é excelente para dados relacionais complexos (agendamentos, financeiro), enquanto o Firebase brilha em Auth, Storage e Realtime.
-- **Vantagem:** O "Free Tier" do Google Cloud oferece uma instância micro gratuita de Compute Engine, mas o Cloud SQL geralmente é pago. **Atenção aos custos:** Verificar se o projeto se qualifica para créditos ou se o custo do Cloud SQL está dentro do orçamento esperado para ferramentas "baretas/gratuitas". Se o custo for um problema, considerar migrar para Supabase (Postgres gerenciado com free tier generoso) ou manter o foco em Firestore se a complexidade relacional permitir.
+- **Vantagem:** O "Free Tier" do Google Cloud oferece uma instância micro gratuita de Compute Engine, mas o Cloud SQL geralmente é pago. **Atenção aos custos:** Verificar se o projeto se qualifica para créditos ou se o custo do Cloud SQL está dentro do orçamento esperado para ferramentas "baretas/gratuitas". Se o custo for um problema, manter o foco em Firestore e Cloud Functions; para dados fortemente relacionais, avaliar Cloud SQL ou outro banco gerenciado conforme necessidade.
 
 ## 2. Melhorias no Fluxo de Trabalho (Workflow)
 

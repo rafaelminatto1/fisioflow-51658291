@@ -23,7 +23,7 @@ O sistema FisioFlow atual é construído sobre uma base tecnológica de ponta, q
 | :--- | :--- | :--- |
 | **Frontend** | React 19.1.0 + TypeScript + Vite | Stack moderna, performática e alinhada com as melhores práticas. |
 | **UI/UX** | shadcn/ui + Tailwind CSS | Proporciona uma interface limpa, profissional e altamente customizável. |
-| **Backend & DB** | Supabase (PostgreSQL, Auth, Real-time) | Solução escalável e completa que já serve como backend para o app. |
+| **Backend & DB** | Firebase (Firestore, Auth, Realtime) | Solução escalável e completa que já serve como backend para o app. |
 | **ORM** | Drizzle ORM | ORM moderno e seguro para interações com o banco de dados. |
 | **Mobile (Setup)** | **Expo SDK 54 + React Native** | **O projeto já está pré-configurado para desenvolvimento mobile.** |
 
@@ -31,7 +31,7 @@ O sistema FisioFlow atual é construído sobre uma base tecnológica de ponta, q
 
 - **Pronto para Mobile**: O projeto já contém as dependências e configurações essenciais do Expo (`app.json`, `eas.json`), incluindo identificadores de app, permissões de câmera e saúde para iOS, e estrutura de componentes mobile. Isso não é apenas um plano, **o trabalho inicial já foi feito**.
 - **Stack Unificada**: A utilização de React e TypeScript tanto no web quanto no mobile (com React Native) permite um reaproveitamento massivo de código, lógica de negócios, hooks e até mesmo componentes visuais.
-- **Infraestrutura Robusta**: Com Vercel Pro e Supabase Pro, você possui uma infraestrutura cloud escalável e profissional, pronta para suportar o aumento de carga dos aplicativos móveis.
+- **Infraestrutura Robusta**: Com Firebase e Google Cloud, você possui uma infraestrutura cloud escalável e profissional, pronta para suportar o aumento de carga dos aplicativos móveis.
 - **UI/UX de Alta Qualidade**: A interface web atual é excelente e serve como uma base sólida para o design dos aplicativos, garantindo consistência visual e de experiência para o usuário.
 
 ## 3. Estratégia de Desenvolvimento Mobile
@@ -58,7 +58,7 @@ A questão entre desenvolver um app nativo (Swift) ou cross-platform (React Nati
 | **Reuso de Código** | ~80-90% com o web e entre iOS/Android | 0% | **React Native** |
 | **Necessidade de Mac** | **Não (graças ao Expo EAS Build)** | **Obrigatório** | **React Native** |
 | **Performance** | Excelente para este tipo de app | Ligeiramente superior, mas imperceptível aqui | React Native |
-| **Ecossistema** | Usa seu stack atual (React, TS, Supabase) | Requer aprendizado de um novo ecossistema | **React Native** |
+| **Ecossistema** | Usa seu stack atual (React, TS, Firebase) | Requer aprendizado de um novo ecossistema | **React Native** |
 
 > **Conclusão**: Desenvolver em Swift seria começar do zero, mais caro, mais demorado e te prenderia a um Mac. **React Native com Expo** aproveita tudo o que você já tem, é mais rápido, mais barato e oferece a flexibilidade de lançar para Android no futuro com mínimo esforço adicional.
 
@@ -85,7 +85,7 @@ Recomendo manter um **monorepo** (um único repositório Git) para todo o ecossi
 │   └── mobile-pro          # Ponto de entrada do app do profissional
 ├── packages
 │   ├── ui                  # Componentes React compartilhados (web e mobile)
-│   ├── api                 # Lógica de comunicação com Supabase
+│   ├── api                 # Lógica de comunicação com Firebase
 │   └── store               # Estado global (Zustand)
 └── ... (outras configurações)
 ```

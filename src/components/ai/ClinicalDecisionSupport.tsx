@@ -188,80 +188,35 @@ export function ClinicalDecisionSupport({
   }, [patient.id]);
 
   /**
-   * Analyze pain evolution
+   * Analyze pain evolution (Firebase Cloud Functions)
    */
   const analyzePainEvolution = useCallback(async (): Promise<PainAnalysisResult> => {
-    const response = await fetch('/api/ai/clinical/pain-analysis', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        patientId: patient.id,
-        currentPainLevel,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Falha na análise de dor');
-    }
-
-    return await response.json();
+    const { analyzePainEvolution: analyzePain } = await import('@/services/ai/firebaseAIService');
+    const data = await analyzePain(patient.id, currentPainLevel ?? 0);
+    return data as unknown as PainAnalysisResult;
   }, [patient.id, currentPainLevel]);
 
   /**
-   * Predict recovery timeline
+   * Predict recovery timeline (Firebase Cloud Functions)
    */
   const predictRecovery = useCallback(async (): Promise<RecoveryPrediction> => {
-    const response = await fetch('/api/ai/clinical/recovery-prediction', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        patientId: patient.id,
-        patientProfile: {
-          age: patient.age,
-          gender: patient.gender,
-          baselinePainLevel: currentPainLevel,
-          mainComplaint: patient.mainCondition,
-        },
-        currentCondition: {
-          primaryPathology: patient.mainCondition,
-          onsetDate: treatmentStartDate,
-          bodyParts: [],
-        },
-        treatmentContext: {
-          sessionsCompleted,
-          currentFrequency: treatmentFrequency,
-          treatmentType: 'fisioterapia',
-          techniquesUsed: [],
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Falha na predição de recuperação');
-    }
-
-    return await response.json();
+    const { predictRecovery: predict } = await import('@/services/ai/firebaseAIService');
+    const data = await predict(
+      patient.id,
+      { age: patient.age, gender: patient.gender, baselinePainLevel: currentPainLevel, mainComplaint: patient.mainCondition },
+      { primaryPathology: patient.mainCondition, onsetDate: treatmentStartDate, bodyParts: [] },
+      { sessionsCompleted, currentFrequency: treatmentFrequency, treatmentType: 'fisioterapia', techniquesUsed: [] }
+    );
+    return data as unknown as RecoveryPrediction;
   }, [patient, currentPainLevel, treatmentStartDate, sessionsCompleted, treatmentFrequency]);
 
   /**
-   * Evaluate treatment response
+   * Evaluate treatment response (Firebase Cloud Functions)
    */
   const evaluateTreatmentResponse = useCallback(async (): Promise<TreatmentResponse> => {
-    const response = await fetch('/api/ai/clinical/treatment-response', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        patientId: patient.id,
-        sessionsCompleted,
-        currentPainLevel,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Falha na avaliação de resposta');
-    }
-
-    return await response.json();
+    const { evaluateTreatmentResponse: evaluate } = await import('@/services/ai/firebaseAIService');
+    const data = await evaluate(patient.id, sessionsCompleted ?? 0, currentPainLevel ?? 0);
+    return data as unknown as TreatmentResponse;
   }, [patient.id, sessionsCompleted, currentPainLevel]);
 
   /**
