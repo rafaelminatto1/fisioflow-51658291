@@ -7,9 +7,9 @@ import * as admin from 'firebase-admin';
 
 const firebaseAuth = admin.auth();
 
-// ============================================================================
+// ============================================================================ 
 // HTTP VERSION (for frontend fetch calls with CORS fix)
-// ============================================================================
+// ============================================================================ 
 
 /**
  * Helper to verify Firebase ID token from Authorization header
@@ -242,8 +242,8 @@ export const createAppointmentHttp = onRequest(
       });
       if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
       const result = await pool.query(
-        `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+        `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)`
+         `VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
         [
           data.patientId, therapistId, data.date, data.startTime, data.endTime,
           normalizeSessionType(data.type || data.session_type),
@@ -251,6 +251,20 @@ export const createAppointmentHttp = onRequest(
         ]
       );
       const appointment = result.rows[0];
+
+      // [SYNC] Write to Firestore for legacy frontend compatibility
+      try {
+        const db = admin.firestore();
+        await db.collection('appointments').doc(appointment.id).set({
+          ...appointment,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+        logger.info(`[createAppointmentHttp] Appointment ${appointment.id} synced to Firestore`);
+      } catch (fsError) {
+        logger.error(`[createAppointmentHttp] Failed to sync appointment ${appointment.id} to Firestore:`, fsError);
+      }
+
       try {
         const realtime = await import('../realtime/publisher');
         await realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment, old: null });
@@ -324,6 +338,19 @@ export const updateAppointmentHttp = onRequest(
         values
       );
       const updatedAppt = result.rows[0];
+
+      // [SYNC] Write to Firestore for legacy frontend compatibility
+      try {
+        const db = admin.firestore();
+        await db.collection('appointments').doc(appointmentId).set({
+          ...updatedAppt,
+          updated_at: new Date()
+        }, { merge: true });
+        logger.info(`[updateAppointmentHttp] Appointment ${appointmentId} synced to Firestore`);
+      } catch (fsError) {
+        logger.error(`[updateAppointmentHttp] Failed to sync appointment ${appointmentId} to Firestore:`, fsError);
+      }
+
       try {
         const realtime = await import('../realtime/publisher');
         await realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt });
@@ -359,6 +386,19 @@ export const cancelAppointmentHttp = onRequest(
         `UPDATE appointments SET status = 'cancelado', notes = notes || $1, updated_at = NOW() WHERE id = $2 AND organization_id = $3`,
         [reason ? `\n[Cancelamento: ${reason}]` : '', appointmentId, organizationId]
       );
+
+      // [SYNC] Sync cancellation to Firestore
+      try {
+        const db = admin.firestore();
+        await db.collection('appointments').doc(appointmentId).update({
+          status: 'cancelado',
+          updated_at: new Date()
+        });
+        logger.info(`[cancelAppointmentHttp] Appointment ${appointmentId} cancellation synced to Firestore`);
+      } catch (fsError) {
+        logger.error(`[cancelAppointmentHttp] Failed to sync cancellation of ${appointmentId} to Firestore:`, fsError);
+      }
+
       try {
         const realtime = await import('../realtime/publisher');
         await realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] });
@@ -372,9 +412,9 @@ export const cancelAppointmentHttp = onRequest(
   }
 );
 
-// ============================================================================
+// ============================================================================ 
 // ORIGINAL CALLABLE VERSIONS (for other uses)
-// ============================================================================
+// ============================================================================ 
 
 /**
  * Lista agendamentos com filtros
@@ -676,6 +716,19 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
 
     const appointment = result.rows[0];
 
+    // [SYNC] Write to Firestore for legacy frontend compatibility
+    try {
+      const db = admin.firestore();
+      await db.collection('appointments').doc(appointment.id).set({
+        ...appointment,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+      logger.info(`[createAppointment] Appointment ${appointment.id} synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[createAppointment] Failed to sync appointment ${appointment.id} to Firestore:`, fsError);
+    }
+
     // Publicar Evento
     try {
       const realtime = await import('../realtime/publisher');
@@ -804,6 +857,18 @@ export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<Update
 
     const updatedAppt = result.rows[0];
 
+    // [SYNC] Write to Firestore for legacy frontend compatibility
+    try {
+      const db = admin.firestore();
+      await db.collection('appointments').doc(appointmentId).set({
+        ...updatedAppt,
+        updated_at: new Date()
+      }, { merge: true });
+      logger.info(`[updateAppointment] Appointment ${appointmentId} synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[updateAppointment] Failed to sync appointment ${appointmentId} to Firestore:`, fsError);
+    }
+
     // Publicar Evento
     try {
       const realtime = await import('../realtime/publisher');
@@ -863,10 +928,21 @@ export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<Cancel
     const result = await pool.query(
       `UPDATE appointments
        SET status = 'cancelado', notes = notes || $1, updated_at = NOW()
-       WHERE id = $2 AND organization_id = $3
-       RETURNING *`,
+       WHERE id = $2 AND organization_id = $3`,
       [reason ? `\n[Cancelamento: ${reason}]` : '', appointmentId, auth.organizationId]
     );
+
+    // [SYNC] Sync cancellation to Firestore
+    try {
+      const db = admin.firestore();
+      await db.collection('appointments').doc(appointmentId).update({
+        status: 'cancelado',
+        updated_at: new Date()
+      });
+      logger.info(`[cancelAppointment] Appointment ${appointmentId} cancellation synced to Firestore`);
+    } catch (fsError) {
+      logger.error(`[cancelAppointment] Failed to sync cancellation of ${appointmentId} to Firestore:`, fsError);
+    }
 
     // Publicar Evento
     try {
