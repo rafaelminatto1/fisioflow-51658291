@@ -1,12 +1,7 @@
 /**
  * useIntelligentReports - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - generated_reports -> generated_reports collection
- * - Firebase Functions for report generation
- * - Auth through useAuth() from AuthContext
  */
-
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, orderBy, limit,  } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';

@@ -1,14 +1,7 @@
 /**
  * Performance Monitoring Utilities for Firebase
  *
- * Migration from Supabase to Firebase:
- * - Supabase RPC functions → Firebase Cloud Functions (pending)
- * - PostgreSQL statistics → Firebase Analytics / Monitoring
- *
- * Note: Many of the PostgreSQL-specific features have been removed or simplified
- * since Firebase doesn't have the same database introspection capabilities.
  */
-
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db } from '@/integrations/firebase/app';
 
@@ -47,10 +40,6 @@ export interface PerformanceReport {
 const queryMetrics: QueryMetrics[] = [];
 const MAX_METRICS = 1000;
 
-/**
- * Track query performance with automatic logging
- * Use this wrapper around Firebase queries
- */
 export async function trackQuery<T>(
   queryName: string,
   queryFn: () => Promise<T>,
@@ -95,11 +84,6 @@ export async function trackQuery<T>(
 // PERFORMANCE REPORT
 // ============================================================================
 
-/**
- * Generate a comprehensive performance report
- * Note: Firebase doesn't have the same database introspection as PostgreSQL,
- * so this report is simplified compared to the Supabase version.
- */
 export async function generatePerformanceReport(): Promise<PerformanceReport> {
   const slowQueries: SlowQuery[] = [];
   const recommendations: string[] = [];
@@ -156,9 +140,6 @@ interface CacheEntry<T> {
 
 const queryCache = new Map<string, CacheEntry<unknown>>();
 
-/**
- * Cache-aware query wrapper
- */
 export async function cachedQuery<T>(
   cacheKey: string,
   queryFn: () => Promise<T>,
@@ -185,9 +166,6 @@ export async function cachedQuery<T>(
   return result;
 }
 
-/**
- * Clear specific cache entry or all cache
- */
 export function clearCache(cacheKey?: string): void {
   if (cacheKey) {
     queryCache.delete(cacheKey);
@@ -198,9 +176,6 @@ export function clearCache(cacheKey?: string): void {
   }
 }
 
-/**
- * Preload critical data into cache
- */
 export async function preloadCache(): Promise<void> {
   logger.info('Preloading query cache...', {}, 'PerformanceMonitor');
 
@@ -217,9 +192,6 @@ export async function preloadCache(): Promise<void> {
 // FIRESTORE-SPECIFIC PERFORMANCE HELPERS
 // ============================================================================
 
-/**
- * Create an optimized query with selective field loading
- */
 export function optimizedQuery(
   collectionPath: string,
   options: {

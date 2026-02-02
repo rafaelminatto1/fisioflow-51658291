@@ -1,10 +1,5 @@
 /**
  * useUserProfile - Migrated to Firebase Auth + Firestore
- *
- * Migration from Supabase to Firebase:
- * - supabase.auth → firebase/auth
- * - supabase.from('profiles') → firestore/profiles
- * - onAuthStateChange → onAuthStateChanged
  */
 
 import { useState, useEffect } from 'react';
@@ -33,21 +28,12 @@ export interface UserProfile {
   role?: UserRole;
 }
 
-/**
- * Hook de perfil de usuário migrado para Firebase
- *
- * Mantém a mesma interface do hook original Supabase para
- * compatibilidade com componentes existentes.
- */
 export const useUserProfile = () => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Garante que o perfil exista no Firestore (defensivo)
-   */
   const ensureProfile = async (userId: string, email: string | null, fullName?: string | null) => {
     try {
       const profileRef = doc(db, 'profiles', userId);

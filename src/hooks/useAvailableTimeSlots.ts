@@ -1,9 +1,5 @@
 /**
  * useAvailableTimeSlots - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('schedule_business_hours') → Firestore collection 'schedule_business_hours'
- * - supabase.from('schedule_blocked_times') → Firestore collection 'schedule_blocked_times'
  */
 
 import { useMemo } from 'react';

@@ -1,13 +1,7 @@
 /**
  * Reactivation Workflow - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - createClient(supabase) → Firebase Admin SDK
- * - Complex joins → Client-side data aggregation
- *
- * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';

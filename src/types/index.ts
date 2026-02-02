@@ -11,8 +11,6 @@ export type {
   ErrorHandler,
   AsyncErrorHandler,
   UnknownError,
-  getErrorMessage,
-  asError,
   IconComponent,
   LucideIconType,
   ValueChangeHandler,
@@ -449,9 +447,8 @@ export const PatientHelpers = {
   }
 };
 
-// Error handling utility exports (from common.ts)
-export { getErrorMessage, asError };
-export type { UnknownError };
+// Error handling utility exports (from common.ts) - value exports for runtime
+export { getErrorMessage, asError } from './common';
 
 // Appointment utility functions
 export function getPatientName(appointment: AppointmentUnified | { patient?: { name?: string; full_name?: string }; patientName?: string } | null | undefined): string {

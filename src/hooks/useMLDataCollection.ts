@@ -1,16 +1,5 @@
 /**
  * Patient ML Data Collection Hook - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - patients -> patients collection
- * - patient_session_metrics -> patient_session_metrics collection
- * - appointments -> appointments collection
- * - patient_pathologies -> patient_pathologies collection
- * - ml_training_data -> ml_training_data collection
- * - patient_predictions -> patient_predictions collection
- *
- * Automates the collection of anonymized patient data
- * for machine learning model training.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -89,9 +78,6 @@ function determineOutcomeCategory(
   return 'poor';
 }
 
-/**
- * Collect training data for a specific patient
- */
 export async function collectPatientTrainingData(patientId: string) {
   // Get patient basic data
   const patientRef = doc(db, 'patients', patientId);
@@ -185,9 +171,6 @@ export async function collectPatientTrainingData(patientId: string) {
   return trainingData;
 }
 
-/**
- * Hook to collect and save ML training data
- */
 export function useCollectPatientMLData() {
   const queryClient = useQueryClient();
 
@@ -221,9 +204,6 @@ export function useCollectPatientMLData() {
   });
 }
 
-/**
- * Hook to batch collect ML data for multiple patients
- */
 export function useBatchCollectMLData() {
   const queryClient = useQueryClient();
 
@@ -278,9 +258,6 @@ export function useBatchCollectMLData() {
   });
 }
 
-/**
- * Hook to get ML training data statistics
- */
 export function useMLTrainingDataStats() {
   return useQuery({
     queryKey: ['ml-training-data-stats'],
@@ -318,9 +295,6 @@ export function useMLTrainingDataStats() {
   });
 }
 
-/**
- * Hook to generate patient predictions based on ML models
- */
 export function useGeneratePatientPredictions() {
   const queryClient = useQueryClient();
 

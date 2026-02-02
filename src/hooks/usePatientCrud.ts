@@ -382,7 +382,7 @@ export const usePatientsPaginated = (params: PatientsQueryParams = {}): Patients
         count: response.total || 0,
       };
     },
-    enabled: true,
+    enabled: !!organizationId,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 

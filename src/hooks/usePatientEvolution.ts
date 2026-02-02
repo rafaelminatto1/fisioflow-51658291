@@ -1,15 +1,7 @@
 /**
  * usePatientEvolution - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patient_surgeries') → Firestore collection 'patient_surgeries'
- * - supabase.from('patient_goals') → Firestore collection 'patient_goals'
- * - supabase.from('patient_pathologies') → Firestore collection 'patient_pathologies'
- * - supabase.from('evolution_measurements') → Firestore collection 'evolution_measurements'
- * - supabase.from('treatment_sessions') → Firestore collection 'treatment_sessions'
- * - supabase.auth.getUser() → Firebase Auth currentUser
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';

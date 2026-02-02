@@ -1,10 +1,5 @@
 /**
  * usePrescriptions - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('exercise_prescriptions') → Firestore collection 'exercise_prescriptions'
- * - supabase.auth.getUser() → getFirebaseAuth().currentUser
- * - Joins com patients e profiles são feitos client-side
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

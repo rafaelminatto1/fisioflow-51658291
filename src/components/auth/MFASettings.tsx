@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
 import { mfaService } from '@/lib/auth/mfa';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, doc, updateDoc } from '@/integrations/firebase/app';
 
 interface MFASettingsProps {
   userId: string;
@@ -73,12 +74,10 @@ export function MFASettings({ userId }: MFASettingsProps) {
         setSecret('');
 
         // Update database
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ mfa_enabled: true })
-          .eq('id', userId);
-
-        if (updateError) {
+        try {
+          const profileRef = doc(db, 'profiles', userId);
+          await updateDoc(profileRef, { mfa_enabled: true });
+        } catch (updateError) {
           logger.error('Error updating MFA status', updateError, 'MFASettings');
         }
       } else {
@@ -110,12 +109,10 @@ export function MFASettings({ userId }: MFASettingsProps) {
       setSuccess('MFA desabilitado com sucesso');
 
       // Update database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ mfa_enabled: false })
-        .eq('id', userId);
-
-      if (updateError) {
+      try {
+        const profileRef = doc(db, 'profiles', userId);
+        await updateDoc(profileRef, { mfa_enabled: false });
+      } catch (updateError) {
         logger.error('Error updating MFA status', updateError, 'MFASettings');
       }
     } catch (err: unknown) {

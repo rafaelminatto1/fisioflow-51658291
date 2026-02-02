@@ -1,9 +1,5 @@
 /**
  * Auth Page - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('user_invitations') → Firestore collection 'user_invitations'
- * - supabase.auth.getUser() → useAuth() from AuthContext
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';

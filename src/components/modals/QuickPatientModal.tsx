@@ -86,8 +86,18 @@ const getErrorMessage = (error: { code?: string; message?: string; functionName?
     return errorMessages[code];
   }
 
-  // Erros do Firebase Functions
-  if (message.includes('FirebaseError') || message.includes('The project')) {
+  // Erro invalid-argument com [createPatient] = backend expondo mensagem real
+  if (code === 'functions/invalid-argument' && message.includes('[createPatient]')) {
+    return message.replace('[createPatient] ', '');
+  }
+
+  // Erro interno do backend (functions/internal) - não é erro de conexão
+  if (code === 'functions/internal' || message.includes('internal')) {
+    return 'Erro interno ao criar paciente. Tente novamente ou contate o suporte.';
+  }
+
+  // Erros do Firebase Functions (projeto, conexão real)
+  if (message.includes('FirebaseError') && message.includes('The project')) {
     return 'Erro de conexão com o servidor. Tente novamente.';
   }
 
@@ -200,9 +210,10 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
         }, 'QuickPatientModal');
 
         // Re-throw com contexto adicional para o getErrorMessage
+        const orig = (err as { originalError?: { code?: string } })?.originalError;
         const enhancedError = {
-          code: err?.code,
-          message: err?.message,
+          code: orig?.code ?? (err as { code?: string })?.code,
+          message: (err as Error)?.message,
           functionName: 'createPatient',
         };
         throw enhancedError;
@@ -233,7 +244,6 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
     },
     onError: (error: unknown) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
-
       // Melhorar o log para incluir FunctionCallError
       if (error.name === 'FunctionCallError') {
         logger.error('Detalhes do erro FunctionCallError', {

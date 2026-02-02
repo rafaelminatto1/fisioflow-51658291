@@ -1,14 +1,5 @@
 /**
  * useGamification - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patient_gamification') → Firestore collection 'patient_gamification'
- * - supabase.from('daily_quests') → Firestore collection 'daily_quests'
- * - supabase.from('achievements') → Firestore collection 'achievements'
- * - supabase.from('achievements_log') → Firestore collection 'achievements_log'
- * - supabase.from('xp_transactions') → Firestore collection 'xp_transactions'
- * - supabase.from('shop_items') → Firestore collection 'shop_items'
- * - supabase.from('user_inventory') → Firestore collection 'user_inventory'
  */
 
 import { useEffect, useCallback, useMemo, useRef } from 'react';
@@ -254,8 +245,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       }
 
       // 2. No quests found? Generate Smart Quests!
-      // Note: generateSmartQuests needs to be updated to accept Firebase db
-      const smartQuests: GeneratedQuest[] = await generateSmartQuests({ supabase: null, db }, patientId);
+      const smartQuests: GeneratedQuest[] = await generateSmartQuests(patientId);
 
       const newQuestsData: DailyQuestItem[] = smartQuests.map(q => ({
         id: q.id,
