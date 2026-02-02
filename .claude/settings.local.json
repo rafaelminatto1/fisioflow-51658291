@@ -323,7 +323,9 @@
       "Bash(SA=\"fisioflow-migration@appspot.gserviceaccount.com\")",
       "Bash(SA=fisioflow-migration@appspot.gserviceaccount.com)",
       "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 add:*)",
-      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 commit:*)"
+      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 commit:*)",
+      "Bash(do echo \"Enabling unauthenticated access for $service...\" gcloud run services add-iam-policy-binding \"$service\" --region=southamerica-east1 --member=\"allUsers\" --role=\"roles/run.invoker\")",
+      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 push origin main)"
     ],
     "deny": [],
     "ask": [],
