@@ -1,5 +1,7 @@
-import { db, collection, addDoc } from '@/integrations/firebase/app';
-rs/logger';
+import { db, collection, addDoc, getDocs, query as firestoreQuery } from '@/integrations/firebase/app';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface WhatsAppMessage {
   to: string;
@@ -60,9 +62,6 @@ export const TEMPLATE_KEYS = {
  * NOTE: This service uses Firebase Cloud Functions for WhatsApp messaging.
  *
  * The current implementation logs to console and stores metrics in Firestore.
- *
- * TODO: Implement Firebase Cloud Functions for:
- * - send-whatsapp → Call Firebase Cloud Function to send WhatsApp messages
  */
 export class WhatsAppService {
   private static MAX_RETRIES = 3;
@@ -70,17 +69,18 @@ export class WhatsAppService {
 
   /**
    * Test WhatsApp connection
-   * NOTE: Requires Firebase Cloud Function implementation
    */
   static async testConnection(): Promise<{ connected: boolean; error?: string }> {
     try {
-      // TODO: Call Firebase Cloud Function for WhatsApp test
-      logger.warn('WhatsAppService.testConnection: Needs Firebase Cloud Function implementation', {}, 'WhatsAppService');
+      const functions = getFirebaseFunctions();
+      const testConnectionFn = httpsCallable(functions, 'testWhatsAppConnection');
+      const result = await testConnectionFn();
 
-      // Placeholder: Log to console
-      logger.debug('[WhatsAppService] Test connection - needs Cloud Function', undefined, 'WhatsAppService');
+      if (result.data?.error) {
+        throw new Error(result.data.error);
+      }
 
-      return { connected: true };
+      return { connected: result.data?.connected ?? true };
     } catch (error) {
       return { connected: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
@@ -88,34 +88,58 @@ export class WhatsAppService {
 
   /**
    * Send message with retry logic
-   * NOTE: Requires Firebase Cloud Function implementation
    */
   static async sendMessage(params: WhatsAppMessage): Promise<SendResult> {
     const { to, message, templateKey, patientId, appointmentId } = params;
     let lastError: string | undefined;
 
-    // Placeholder: Log to console instead of sending via Cloud Function
-    logger.debug('[WhatsAppService] sendMessage', { to, message: message.substring(0, 100), templateKey }, 'WhatsAppService');
+    try {
+      // Call Firebase Cloud Function to send WhatsApp message
+      const functions = getFirebaseFunctions();
+      const sendWhatsAppFn = httpsCallable(functions, 'sendWhatsApp');
+      const result = await sendWhatsAppFn({
+        to,
+        message,
+        templateKey,
+        patientId,
+        appointmentId,
+      });
 
-    // TODO: Implement Firebase Cloud Function call
-    // const cloudFunction = getFunctions();
-    // const sendMessageFunction = httpsCallable(cloudFunction, 'send-whatsapp');
-    // await sendMessageFunction({ to, message });
+      if (result.data?.error) {
+        throw new Error(result.data.error);
+      }
 
-    // Log to metrics table
-    await this.logMessage({
-      phoneNumber: to,
-      patientId,
-      appointmentId,
-      templateKey,
-      messageId: `msg_${Date.now()}`,
-      status: 'enviado',
-      errorMessage: undefined,
-      retryCount: 0,
-    });
+      // Log to metrics table
+      await this.logMessage({
+        phoneNumber: to,
+        patientId,
+        appointmentId,
+        templateKey,
+        messageId: result.data?.messageId || `msg_${Date.now()}`,
+        status: 'enviado',
+        errorMessage: undefined,
+        retryCount: 0,
+      });
 
-    logger.info('Mensagem WhatsApp enviada (placeholder)', { to, templateKey }, 'WhatsAppService');
-    return { success: true, messageId: `msg_${Date.now()}` };
+      logger.info('Mensagem WhatsApp enviada', { to, templateKey }, 'WhatsAppService');
+      return { success: true, messageId: result.data?.messageId };
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : 'Unknown error';
+
+      // Log failed attempt
+      await this.logMessage({
+        phoneNumber: to,
+        patientId,
+        appointmentId,
+        templateKey,
+        messageId: `msg_${Date.now()}`,
+        status: 'falhou',
+        errorMessage: lastError,
+        retryCount: 0,
+      });
+
+      return { success: false, messageId: null, error: lastError };
+    }
   }
 
   /**
@@ -154,10 +178,26 @@ export class WhatsAppService {
    * Get templates from database
    */
   static async getTemplates(): Promise<WhatsAppTemplate[]> {
-    // NOTE: This needs proper implementation with Firestore query
-    // For now, return empty array
-    logger.warn('WhatsAppService.getTemplates: Needs Firestore query implementation', {}, 'WhatsAppService');
-    return [];
+    try {
+      const q = firestoreQuery(collection(db, 'whatsapp_templates'));
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          template_key: data.template_key,
+          name: data.name,
+          content: data.content,
+          language: data.language || 'pt_BR',
+          category: data.category,
+          active: data.active ?? true,
+        } as WhatsAppTemplate;
+      });
+    } catch (error) {
+      logger.error('Erro ao buscar templates WhatsApp', error, 'WhatsAppService');
+      return [];
+    }
   }
 
   /**
@@ -427,16 +467,43 @@ Bem-vindo! 💙`;
     responseRate: number;
     avgResponseTime: number;
   }> {
-    // TODO: Implement Firestore query for metrics
-    logger.warn('WhatsAppService.getMetrics: Needs Firestore query implementation', {}, 'WhatsAppService');
-    return {
-      totalSent: 0,
-      delivered: 0,
-      read: 0,
-      failed: 0,
-      responseRate: 0,
-      avgResponseTime: 0,
-    };
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const q = firestoreQuery(
+        collection(db, 'whatsapp_metrics'),
+        where('created_at', '>=', startDate.toISOString())
+      );
+      const snapshot = await getDocs(q);
+
+      const metrics = snapshot.docs.map(doc => doc.data());
+
+      const totalSent = metrics.length;
+      const delivered = metrics.filter(m => m.status === 'entregue' || m.status === 'enviado').length;
+      const read = metrics.filter(m => m.status === 'lido').length;
+      const failed = metrics.filter(m => m.status === 'falhou').length;
+      const responseRate = totalSent > 0 ? (read / totalSent) * 100 : 0;
+
+      return {
+        totalSent,
+        delivered,
+        read,
+        failed,
+        responseRate,
+        avgResponseTime: 0, // Would need timestamp data to calculate
+      };
+    } catch (error) {
+      logger.error('Erro ao buscar métricas WhatsApp', error, 'WhatsAppService');
+      return {
+        totalSent: 0,
+        delivered: 0,
+        read: 0,
+        failed: 0,
+        responseRate: 0,
+        avgResponseTime: 0,
+      };
+    }
   }
 
   private static delay(ms: number): Promise<void> {

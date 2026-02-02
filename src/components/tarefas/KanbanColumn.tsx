@@ -70,19 +70,10 @@ export function KanbanColumn({ status, tarefas, onAddTask, onEditTask, onDeleteT
               ))}
               {provided.placeholder}
               
-              {/* Empty State */}
+              {/* Empty State - o botão "+" no header já permite adicionar */}
               {tarefas.length === 0 && !snapshot.isDraggingOver && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-sm">Nenhuma tarefa</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => onAddTask(status)}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Adicionar
-                  </Button>
                 </div>
               )}
             </div>

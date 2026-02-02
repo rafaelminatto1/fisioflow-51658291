@@ -53,6 +53,7 @@ import {
   TarefaPrioridade,
   STATUS_LABELS,
   PRIORIDADE_LABELS,
+  useTarefas,
   useCreateTarefa,
   useUpdateTarefa
 } from '@/hooks/useTarefas';
@@ -93,10 +94,11 @@ interface TarefaModalProps {
   onOpenChange: (open: boolean) => void;
   tarefa?: Tarefa | null;
   defaultStatus?: TarefaStatus;
+  defaultOrderIndex?: number;
   defaultProjectId?: string;
 }
 
-export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZER', defaultProjectId }: TarefaModalProps) {
+export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZER', defaultOrderIndex = 0, defaultProjectId }: TarefaModalProps) {
   const createTarefa = useCreateTarefa();
   const updateTarefa = useUpdateTarefa();
   const { data: projects } = useProjects();
@@ -206,6 +208,7 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
       } else {
         await createTarefa.mutateAsync({
           ...data,
+          order_index: defaultOrderIndex,
           project_id: data.project_id || null,
           data_vencimento: data.data_vencimento?.toISOString().split('T')[0],
           start_date: data.start_date?.toISOString().split('T')[0],

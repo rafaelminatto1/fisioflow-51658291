@@ -17,8 +17,8 @@ export const inngest = new Inngest({
   id: 'fisioflow',
   name: 'FisioFlow',
   // The INNGEST_KEY is automatically detected by the SDK:
-  // - Development: Uses INNGEST_DEV_SERVER_URL if set
-  // - Production: Uses INNGEST_KEY (from Vercel integration)
+  // - Development: Uses INNGEST_DEV environment variable
+  // - Production: Uses INNGEST_KEY from environment variables
 });
 
 /**
