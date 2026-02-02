@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
 
 interface PatientInsightResponse {
     insight: string;
@@ -9,20 +10,12 @@ interface PatientInsightResponse {
 export function usePatientInsight() {
     return useMutation({
         mutationFn: async (patientData: Record<string, unknown>) => {
-            const response = await fetch('/api/ai/patient-insight', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ patientData }),
+            const prompt = `Analise os dados do paciente e forneça insights clínicos relevantes para fisioterapia: ${JSON.stringify(patientData)}`;
+            const response = await chatWithClinicalAssistant({
+                message: prompt,
+                context: { patientId: String(patientData.patientId ?? patientData.id ?? ''), sessionCount: 0 },
             });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to generate insight');
-            }
-
-            return (await response.json()) as PatientInsightResponse;
+            return { insight: response } as PatientInsightResponse;
         },
         onError: (error) => {
             logger.error('AI Insight Error', error, 'usePatientInsight');

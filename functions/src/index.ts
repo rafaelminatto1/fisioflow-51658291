@@ -33,8 +33,8 @@ setGlobalOptions({
     ],
     // Allow up to 100 concurrent instances per function (removed bottleneck)
     maxInstances: 100,
-    // Use full CPU vCPU for better performance
-    cpu: 1,
+    // 0.5 vCPU to stay within "total allowable CPU per project per region" quota during deploy
+    cpu: 0.5,
     // Set default memory for all functions
     memory: '512MiB',
 });

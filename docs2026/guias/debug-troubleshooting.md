@@ -12,12 +12,12 @@ pnpm install
 
 ### Erro: "Failed to fetch"
 
-**Causa:** Problema de CORS ou credenciais Supabase
+**Causa:** Problema de CORS ou credenciais Firebase
 
 **Solução:**
-1. Verifique `.env`
-2. Verifique RLS policies
-3. Verifique se Supabase está rodando
+1. Verifique `.env` (VITE_FIREBASE_*)
+2. Verifique Firestore Security Rules e Auth
+3. Verifique se o domínio está em Authorized domains no Firebase Auth
 
 ### Erro: "Invalid JWT"
 
@@ -25,11 +25,9 @@ pnpm install
 
 **Solução:**
 ```typescript
-// Adicionar refresh automático
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) {
-  await supabase.auth.refreshSession();
-}
+// Firebase Auth gerencia refresh automaticamente; verifique onAuthStateChanged
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+onAuthStateChanged(getAuth(), (user) => { ... });
 ```
 
 ### Performance: Build lenta
@@ -46,8 +44,8 @@ NODE_OPTIONS='--max-old-space-size=4096' pnpm build
 
 **Solução:**
 ```bash
-# Verificar no Vercel Dashboard
-vercel env ls
+# Verificar variáveis no Cloud Build ou no Firebase Console (Functions config)
+# Ou: firebase functions:config:get
 ```
 
 ## Debugging no Browser
@@ -75,47 +73,42 @@ console.table([patient1, patient2, patient3]);
 ### Network Tab
 
 Monitore:
-- Requisições Supabase
+- Requisições ao Firestore / Cloud Functions
 - Tempo de resposta
 - Status codes
 
-## Debugging Supabase
+## Debugging Firebase
 
-### Ver Queries
+### Ver Dados no Firestore
 
-```sql
--- No SQL Editor do Supabase
-SELECT * FROM patients LIMIT 10;
-```
+Use o **Firebase Console → Firestore** para inspecionar coleções e documentos.
 
-### Ver RLS Policies
+### Ver Regras de Segurança
 
-```sql
--- Ver policies de uma tabela
-SELECT * FROM pg_policies WHERE tablename = 'patients';
-```
+Edite e teste regras em **Firebase Console → Firestore → Regras** ou no arquivo `firestore.rules`.
 
 ### Testar Auth
 
 ```typescript
 // Verificar user atual
-const { data: { user } } = await supabase.auth.getUser();
-console.log('User:', user);
+import { getAuth } from 'firebase/auth';
+const user = getAuth().currentUser;
+console.log('User:', user?.uid, user?.email);
 ```
 
-## Debugging Edge Functions
+## Debugging Cloud Functions
 
 ### Logs
 
 ```typescript
-// supabase/functions/meu-func/index.ts
+// functions/src/index.ts
 console.log('Request:', req.method, req.url);
 ```
 
 ### Testar Localmente
 
 ```bash
-supabase functions serve meu-func
+firebase emulators:start --only functions
 ```
 
 ## Debugging Testes

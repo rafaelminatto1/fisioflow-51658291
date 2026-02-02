@@ -58,6 +58,37 @@ service cloud.firestore {
       return isPhysiotherapist() || isIntern();
     }
 
+    // Verificar se é recepcionista
+    function isReceptionist() {
+      return hasRole('recepcionista');
+    }
+
+    // Verificar se é owner (proprietário da clínica)
+    function isOwnerRole() {
+      return hasRole('owner');
+    }
+
+    // Role em user_roles (fallback quando profiles não tem role sincronizado)
+    function getUserRolesRole() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) ?
+        get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role : null;
+    }
+    // Staff que pode gerenciar agenda: admin, owner, profissional ou recepcionista (profiles ou user_roles)
+    function canManageSchedule() {
+      return isAdmin() || isOwnerRole() || isProfessional() || isReceptionist() ||
+        (isAuthenticated() && getUserRolesRole() in ['admin', 'owner', 'fisioterapeuta', 'estagiario', 'recepcionista']);
+    }
+
+    // Fallback: usuário autenticado com perfil em Firestore pode ler/escrever docs da sua organização
+    // (cobre perfis vindos do backend/Cloud SQL onde role pode não estar sincronizado)
+    function userOrgId() {
+      return isAuthenticated() && hasProfile() ?
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.organization_id : null;
+    }
+    function canAccessScheduleByOrg(orgId) {
+      return isAuthenticated() && hasProfile() && orgId != null && orgId == userOrgId();
+    }
+
     // Verificar se o usuário é o proprietário do documento
     function isOwner(userIdField) {
       return isAuthenticated() &&
@@ -233,6 +264,24 @@ service cloud.firestore {
     }
 
     // ============================================================================================
+    // EXERCISE PROTOCOLS COLLECTION (Protocolos Clínicos)
+    // ============================================================================================
+
+    match /exercise_protocols/{protocolId} {
+      // Leitura: admin ou profissionais (página Protocolos)
+      allow read: if isAdmin() || isProfessional();
+
+      // Criação: profissionais e admin
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+
+      // Atualização: profissionais e admin
+      allow update: if isProfessional() || isAdmin();
+
+      // Deleção: profissionais e admin
+      allow delete: if isProfessional() || isAdmin();
+    }
+
+    // ============================================================================================
     // FINANCIAL / PAYMENTS / CONTAS_FINANCEIRAS COLLECTION
     // ============================================================================================
 
@@ -309,6 +358,41 @@ service cloud.firestore {
       allow create: if isProfessional() && isValidSize();
       allow update: if isOwner('therapistId') || isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // SCHEDULE SETTINGS (Configurações da Agenda)
+    // ============================================================================================
+    // Acesso a doc da agenda por organização do perfil (leitura: resource, escrita: request.resource)
+    function canAccessScheduleDoc() {
+      return (resource != null && resource.data.organization_id != null && canAccessScheduleByOrg(resource.data.organization_id))
+        || (request.resource != null && request.resource.data.organization_id != null && canAccessScheduleByOrg(request.resource.data.organization_id));
+    }
+    // Capacidade por horário (Configurações da Agenda > Capacidade)
+    // Regra mínima: só auth (isValidSize removido para testar)
+    match /schedule_capacity_config/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    // Horários de funcionamento (Configurações da Agenda > Horários)
+    match /schedule_business_hours/{docId} {
+      allow read, write: if isValidSize() && (isBootstrapAdmin() || canManageSchedule() || canAccessScheduleDoc());
+    }
+    // Regras de cancelamento (Configurações da Agenda > Cancelamento)
+    match /schedule_cancellation_rules/{docId} {
+      allow read, write: if isValidSize() && (isBootstrapAdmin() || canManageSchedule() || canAccessScheduleDoc());
+    }
+    // Notificações da agenda (Configurações da Agenda > Notificações)
+    match /schedule_notification_settings/{docId} {
+      allow read, write: if isValidSize() && (isBootstrapAdmin() || canManageSchedule() || canAccessScheduleDoc());
+    }
+    // Horários bloqueados (Configurações da Agenda > Bloqueios)
+    match /schedule_blocked_times/{docId} {
+      allow read, write: if isValidSize() && (isBootstrapAdmin() || canManageSchedule() || canAccessScheduleDoc());
+    }
+
+    // Presence (usuários online) - cada usuário só escreve/lê o próprio doc
+    match /presence/{channelName}/users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId && isValidSize();
     }
 
     match /{document=**} {

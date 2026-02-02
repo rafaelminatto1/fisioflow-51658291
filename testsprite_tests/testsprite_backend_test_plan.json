@@ -1,43 +1,17 @@
-{
-  "requirements": [
-    {
-      "id": "REQ-BACK-001",
-      "name": "API de Autenticação",
-      "description": "Endpoints para autenticação de usuários",
-      "test_cases": [
-        {
-          "id": "TC-BACK-001",
-          "name": "Login API",
-          "description": "Testa o endpoint de login",
-          "steps": [
-            "Enviar POST para /auth/login",
-            "Validar resposta com token de sessão"
-          ],
-          "expected_result": "Retorna token de autenticação válido",
-          "priority": "high",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "REQ-BACK-002",
-      "name": "API de Pacientes",
-      "description": "Endpoints para gerenciamento de pacientes",
-      "test_cases": [
-        {
-          "id": "TC-BACK-002",
-          "name": "Listar Pacientes",
-          "description": "Testa o endpoint para listar pacientes",
-          "steps": [
-            "Fazer login e obter token",
-            "Enviar GET para /patients",
-            "Validar resposta com lista de pacientes"
-          ],
-          "expected_result": "Retorna lista de pacientes com dados completos",
-          "priority": "high",
-          "status": "pending"
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "id": "TC001",
+    "title": "post api ai chat endpoint",
+    "description": "Verify that the POST /api/ai/chat endpoint correctly processes chat requests, returns appropriate AI-generated clinical suggestions, and handles invalid input gracefully."
+  },
+  {
+    "id": "TC002",
+    "title": "post api ai insights endpoint",
+    "description": "Test the POST /api/ai/insights endpoint to ensure it returns accurate AI-generated insights for patients and handles error scenarios properly."
+  },
+  {
+    "id": "TC003",
+    "title": "post api ai recommendations endpoint",
+    "description": "Validate the POST /api/ai/recommendations endpoint to confirm it provides relevant AI-based recommendations for patients and manages invalid requests appropriately."
+  }
+]

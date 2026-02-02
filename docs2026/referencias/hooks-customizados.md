@@ -101,27 +101,25 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    const auth = getAuth();
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setUser(user ?? null);
       setLoading(false);
     });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsub();
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    try {
+      await signInWithEmailAndPassword(getAuth(), email, password);
+      return { error: null };
+    } catch (e) {
+      return { error: e };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await getAuth().signOut();
   };
 
   return { user, loading, signIn, signOut };
@@ -249,18 +247,12 @@ export function useRealtimePatients() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const channel = supabase
-      .channel('patients-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'patients',
-      }, () => {
-        queryClient.invalidateQueries(['patients']);
-      })
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
+    const unsubscribe = onSnapshot(
+      collection(db, 'patients'),
+      () => queryClient.invalidateQueries(['patients']),
+      (err) => console.error(err)
+    );
+    return () => unsubscribe();
   }, [queryClient]);
 }
 ```
