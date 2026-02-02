@@ -1,12 +1,5 @@
 /**
  * Bulk Actions Hook - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('appointments').delete() → Firestore batch delete
- * - supabase.from('appointments').update() → Firestore batch update
- * - Removed supabase client dependency
- *
- * Provides functionality for bulk operations on appointments
  */
 
 import { useState, useCallback } from 'react';

@@ -144,22 +144,25 @@ export class AppointmentService {
             const timeValidation = timeSchema.safeParse(rawTime);
             if (!timeValidation.success) throw AppError.badRequest(`Horário inválido: ${rawTime}`);
 
-            const response = await appointmentsApi.create({
-                patient_id: data.patient_id,
-                appointment_date: rawDate,
+            const endTime = calculateEndTime(rawTime, data.duration || 60);
+            const sessionType = data.type === 'Fisioterapia' || data.type === 'fisioterapia' ? 'individual' : 'group';
+
+            const payload = {
+                patientId: data.patient_id,
+                therapistId: data.therapist_id || '',
                 date: rawDate,
-                appointment_time: rawTime,
-                start_time: rawTime,
-                duration: data.duration || 60,
-                type: data.type || 'fisioterapia',
+                startTime: rawTime,
+                endTime,
+                type: sessionType,
+                session_type: sessionType,
                 status: data.status || 'agendado',
                 notes: data.notes || null,
-                therapist_id: data.therapist_id || null,
-                room: data.room || null,
-                organization_id: organizationId,
-                session_type: data.type || 'individual',
-                end_time: calculateEndTime(rawTime, data.duration || 60),
-            });
+            };
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'appointmentService.ts:createAppointment',message:'createAppointment payload',data:payload,timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+            // #endregion
+
+            const response = await appointmentsApi.create(payload);
 
             const newAppointment = response.data;
 
@@ -190,6 +193,10 @@ export class AppointmentService {
 
             return appointment;
         } catch (error) {
+            // #region agent log
+            const err = error as { code?: string; message?: string; details?: unknown };
+            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'appointmentService.ts:createAppointment catch',message:'createAppointment error',data:{code:err?.code,message:err?.message,details:err?.details},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+            // #endregion
             throw AppError.from(error, 'AppointmentService.createAppointment');
         }
     }

@@ -1,11 +1,7 @@
 /**
  * useNotificationPreferences - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('notification_preferences') → Firestore collection 'notification_preferences'
- * - supabase.auth.getUser() → getFirebaseAuth().currentUser
  */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, setDoc } from '@/integrations/firebase/app';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';

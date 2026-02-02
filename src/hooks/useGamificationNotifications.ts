@@ -1,10 +1,5 @@
 /**
  * useGamificationNotifications - Migrated to Firebase
- *
- * Migration from Supabase to Firebase:
- * - supabase.from() → firestore queries
- * - supabase.channel() → Firestore onSnapshot
- * - postgres_changes → onSnapshot
  */
 
 import { useEffect, useCallback, useRef } from 'react';
@@ -60,12 +55,6 @@ const NOTIFICATION_ICONS = {
   reward_unlocked: '🎁',
 };
 
-/**
- * Hook de notificações de gamificação migrado para Firebase
- *
- * Mantém a mesma interface do hook original Supabase para
- * compatibilidade com componentes existentes.
- */
 export const useGamificationNotifications = (patientId?: string): UseGamificationNotificationsResult => {
   const queryClient = useQueryClient();
   const { toast } = useToast();

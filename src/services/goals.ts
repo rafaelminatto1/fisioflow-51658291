@@ -1,13 +1,5 @@
 /**
  * Goals Service - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('goal_profiles') → Firestore collection 'goal_profiles'
- * - supabase.from('goal_targets') → Firestore collection 'goal_targets'
- * - supabase.from('goal_audit_logs') → Firestore collection 'goal_audit_logs'
- * - supabase.auth.getUser() → Firebase Auth or useAuth()
- * - supabase.rpc('publish_goal_profile') → Firebase Functions httpsCallable()
- * - Joins replaced with separate queries and manual merging
  */
 
 import { db } from '@/integrations/firebase/app';
@@ -72,10 +64,6 @@ const getCurrentUserId = async (): Promise<string | null> => {
 };
 
 export const GoalService = {
-    /**
-     * Fetch all profiles, optionally filtered by status.
-     * Joins with targets manually.
-     */
     async getProfiles(status?: GoalProfileStatus) {
         // Build query
         let q = query(
@@ -123,7 +111,6 @@ export const GoalService = {
         return filteredProfiles;
     },
 
-    /**
      * Fetch a single profile by ID w/ targets
      */
     async getProfileById(id: string) {
@@ -149,7 +136,6 @@ export const GoalService = {
         };
     },
 
-    /**
      * Internal helper to log audits
      */
     async logAudit(
@@ -173,7 +159,6 @@ export const GoalService = {
         });
     },
 
-    /**
      * Create a new DRAFT profile
      */
     async createProfile(profile: Partial<GoalProfile> & { id: string; name: string; description: string }) {
@@ -200,7 +185,6 @@ export const GoalService = {
         return data;
     },
 
-    /**
      * Update a DRAFT profile
      */
     async updateProfile(id: string, updates: Partial<GoalProfile>) {
@@ -225,7 +209,6 @@ export const GoalService = {
         return data;
     },
 
-    /**
      * Replace all targets for a profile (Delete + Insert transaction ideally, but via client we do sequential)
      * Note: For Firestore, we use batched operations for better atomicity
      */
@@ -266,7 +249,6 @@ export const GoalService = {
         return newTargets;
     },
 
-    /**
      * Publish a Draft profile via Firebase Function
      */
     async publishProfile(id: string) {

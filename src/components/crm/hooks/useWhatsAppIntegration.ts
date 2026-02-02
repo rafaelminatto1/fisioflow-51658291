@@ -1,9 +1,5 @@
 /**
  * WhatsApp Integration Hook - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('whatsapp_config') → Firestore collection 'whatsapp_config'
- * - supabase.from('whatsapp_messages') → Firestore collection 'whatsapp_messages'
  */
 
 import { useMutation } from '@tanstack/react-query';

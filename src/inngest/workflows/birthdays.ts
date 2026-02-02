@@ -1,20 +1,7 @@
 /**
  * Birthday Messages Workflow - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - createClient(supabase) → Firebase Admin SDK
- * - supabase.from().select().filter('date_of_birth', 'like') → Client-side date filtering
- * - .in('id', ids) → Batch fetch
- *
- * OPTIMIZATION NOTE: Firestore doesn't support LIKE queries on dates.
- * For production with large datasets, consider:
- * 1. Adding a birthday_MMDD field (e.g., "12-25") to each patient document
- * 2. Creating an index on this field
- * 3. Using .where('birthday_MMDD', '==', todayMMDD) for O(1) lookup
- *
- * @version 2.0.0 - Improved with centralized Admin SDK helper and optimizations
  */
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';

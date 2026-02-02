@@ -1,11 +1,5 @@
 /**
  * useDashboardStats - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('patients') → Firestore collection 'patients'
- * - supabase.from('appointments') → Firestore collection 'appointments'
- * - supabase.from('profiles') → Firestore collection 'profiles'
- * - supabase.realtime → Firestore onSnapshot
  */
 
 import { useState, useEffect, useCallback } from 'react';

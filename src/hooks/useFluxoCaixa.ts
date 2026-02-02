@@ -1,11 +1,7 @@
 /**
  * useFluxoCaixa - Migrated to Firebase
  *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('movimentacoes_caixa') → Firestore collection 'movimentacoes_caixa'
- * - supabase.from('fluxo_caixa_resumo') → Firestore collection 'fluxo_caixa_resumo'
  */
-
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';

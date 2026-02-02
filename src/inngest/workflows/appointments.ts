@@ -1,14 +1,7 @@
 /**
  * Appointment Reminder Workflow - Migrated to Firebase
  *
- * Migration from Supabase to Firebase:
- * - createClient(supabase) → Firebase Admin SDK
- * - supabase.from() → firestore queries
- * - select() → getDoc/getDocs
- *
- * @version 2.0.0 - Improved with centralized Admin SDK helper
  */
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
@@ -40,9 +33,6 @@ type AppointmentDocument = {
   therapist_id?: string;
 };
 
-/**
- * Helper para buscar appointments com relações no Firestore
- */
 async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Promise<AppointmentWithRelations[]> {
   const db = getAdminDb();
 
@@ -181,9 +171,6 @@ export const appointmentReminderWorkflow = inngest.createFunction(
   }
 );
 
-/**
- * Create appointment workflow (triggered when appointment is created)
- */
 export const appointmentCreatedWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-appointment-created',

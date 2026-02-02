@@ -164,6 +164,7 @@ export function AppRoutes() {
             <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/ocupacao-fisioterapeutas" element={<ProtectedRoute><TherapistOccupancy /></ProtectedRoute>} />
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+            <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
             <Route path="/schedule" element={<Navigate to="/" replace />} />
             <Route path="/agenda" element={<Navigate to="/" replace />} />
             <Route path="/goals" element={<Navigate to="/cadastros/objetivos" replace />} />

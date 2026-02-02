@@ -35,30 +35,38 @@ vi.mock('web-push', () => ({
   generateVAPIDKeys: vi.fn()
 }))
 
-// Mock environment variables
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getUser: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
-    },
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn(),
-      range: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis()
-    })),
-    rpc: vi.fn(),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn()
-    }))
+// Mock Firebase (replacing Supabase)
+vi.mock('@/integrations/firebase/auth', () => ({
+  auth: {
+    currentUser: null,
+    signInWithEmailAndPassword: vi.fn(),
+    signOut: vi.fn(),
+    onAuthStateChanged: vi.fn(),
+    onIdTokenChanged: vi.fn(),
   }
+}))
+
+vi.mock('@/integrations/firebase/functions', () => ({
+  httpsCallable: vi.fn(() => ({
+    data: null
+  }))
+}))
+
+vi.mock('@/integrations/firebase/app', () => ({
+  db: null,
+  collection: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  getDocs: vi.fn(),
+  addDoc: vi.fn(),
+  updateDoc: vi.fn(),
+  deleteDoc: vi.fn(),
+  setDoc: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  orderBy: vi.fn(),
+  limit: vi.fn(),
+  onSnapshot: vi.fn(),
 }))
 
 // Mock AI hooks

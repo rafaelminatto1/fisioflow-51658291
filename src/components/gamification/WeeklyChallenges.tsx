@@ -6,6 +6,7 @@ import { Zap, Clock, Trophy, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { differenceInDays, differenceInHours, parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy } from '@/integrations/firebase/app';
 
 interface WeeklyChallenge {
     id: string;
@@ -35,16 +36,15 @@ export default function WeeklyChallenges({ patientId }: WeeklyChallengesProps) {
         queryKey: ['active-challenges'],
         queryFn: async () => {
             const today = new Date().toISOString().split('T')[0];
-            const { data, error } = await supabase
-                .from('weekly_challenges')
-                .select('*')
-                .eq('is_active', true)
-                .lte('start_date', today)
-                .gte('end_date', today)
-                .order('end_date', { ascending: true });
-
-            if (error) throw error;
-            return data as WeeklyChallenge[];
+            const q = firestoreQuery(
+                collection(db, 'weekly_challenges'),
+                where('is_active', '==', true),
+                where('start_date', '<=', today),
+                where('end_date', '>=', today),
+                fsOrderBy('end_date', 'asc')
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WeeklyChallenge[];
         }
     });
 
@@ -52,13 +52,19 @@ export default function WeeklyChallenges({ patientId }: WeeklyChallengesProps) {
     const { data: patientProgress = [] } = useQuery({
         queryKey: ['patient-challenges', patientId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('patient_challenges')
-                .select('challenge_id, progress, completed')
-                .eq('patient_id', patientId);
-
-            if (error) throw error;
-            return data as PatientChallenge[];
+            const q = firestoreQuery(
+                collection(db, 'patient_challenges'),
+                where('patient_id', '==', patientId)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    challenge_id: data.challenge_id,
+                    progress: data.progress || 0,
+                    completed: data.completed || false,
+                };
+            }) as PatientChallenge[];
         },
         enabled: !!patientId
     });

@@ -1,12 +1,5 @@
 /**
  * useFornecedores - Migrated to Firebase
- *
- * Migration from Supabase to Firebase Firestore:
- * - supabase.from('fornecedores') → Firestore collection 'fornecedores'
- * - supabase.select() → getDocs()
- * - supabase.insert() → addDoc()
- * - supabase.update() → updateDoc()
- * - supabase.delete() → deleteDoc()
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
