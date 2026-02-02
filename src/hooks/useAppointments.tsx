@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
 import { AppointmentService } from '@/services/appointmentService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { isAppointmentConflictError } from '@/utils/appointmentErrors';
 
 // Query keys factory for better cache management
 export const appointmentKeys = {
@@ -407,7 +408,12 @@ export function useCreateAppointment() {
       );
     },
     onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useCreateAppointment');
+      // 409: toast amigável já é mostrado no modal; só suprimimos a notificação genérica
+      if (isAppointmentConflictError(error)) {
+        ErrorHandler.handle(error, 'useCreateAppointment', { showNotification: false });
+      } else {
+        ErrorHandler.handle(error, 'useCreateAppointment');
+      }
     }
   });
 }
@@ -433,7 +439,12 @@ export function useUpdateAppointment() {
       });
     },
     onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useUpdateAppointment');
+      // 409: toast amigável já é mostrado no modal ou no drag; só suprimimos a notificação genérica
+      if (isAppointmentConflictError(error)) {
+        ErrorHandler.handle(error, 'useUpdateAppointment', { showNotification: false });
+      } else {
+        ErrorHandler.handle(error, 'useUpdateAppointment');
+      }
     }
   });
 }

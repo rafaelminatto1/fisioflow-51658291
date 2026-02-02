@@ -1,11 +1,10 @@
 import React, { memo, useCallback } from 'react';
-import { Clock, MoreHorizontal } from 'lucide-react';
+import { AlertCircle, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { getStatusConfig, getInitials } from '../schedule/shared';
+import { getStatusConfig } from '../schedule/shared';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -77,7 +76,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
             <StatusIcon className={cn("w-3.5 h-3.5", statusConfig.iconColor)} />
           </div>
 
-          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">
             {appointment.patientName}
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
@@ -121,7 +120,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
           {/* Time and Duration Badge */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 text-base font-bold text-slate-700 dark:text-slate-200 font-mono">
-              <Clock className="w-4 h-4 text-slate-400" />
               <span>{appointment.time}</span>
               {appointment.duration && (
                 <span className="text-slate-400 font-normal text-sm">
@@ -142,26 +140,14 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
           </span>
         </div>
 
-        <div className="flex items-start gap-3">
-          <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
-            <AvatarFallback className={cn(
-              "text-sm font-bold",
-              statusConfig.badgeBg,
-              statusConfig.badgeText
-            )}>
-              {getInitials(appointment.patientName)}
-            </AvatarFallback>
-          </Avatar>
-
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight mb-1.5 truncate group-hover:text-primary transition-colors">
-              {appointment.patientName}
-            </h3>
-            <p className="text-base font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-              {appointment.type}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-1.5 line-clamp-3 group-hover:text-primary transition-colors">
+            {appointment.patientName}
+          </h3>
+          <p className="text-base font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+            {appointment.type}
+          </p>
         </div>
 
         {/* Footer Area - Notes & Actions */}

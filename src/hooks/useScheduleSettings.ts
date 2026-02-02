@@ -80,6 +80,9 @@ export function useScheduleSettings() {
 
   const organizationId = profile?.organization_id;
 
+  // Cache por 2 min para evitar refetch ao trocar de aba
+  const STALE_TIME_MS = 2 * 60 * 1000;
+
   // Business Hours
   const { data: businessHours, isLoading: isLoadingHours } = useQuery({
     queryKey: ['business-hours', organizationId],
@@ -94,6 +97,7 @@ export function useScheduleSettings() {
       return hours.sort((a, b) => a.day_of_week - b.day_of_week);
     },
     enabled: !!organizationId,
+    staleTime: STALE_TIME_MS,
   });
 
   const upsertBusinessHours = useMutation({
@@ -138,6 +142,7 @@ export function useScheduleSettings() {
       return convertDoc(snapshot) as CancellationRule;
     },
     enabled: !!organizationId,
+    staleTime: STALE_TIME_MS,
   });
 
   const upsertCancellationRules = useMutation({
@@ -164,6 +169,7 @@ export function useScheduleSettings() {
       return convertDoc(snapshot) as NotificationSettings;
     },
     enabled: !!organizationId,
+    staleTime: STALE_TIME_MS,
   });
 
   const upsertNotificationSettings = useMutation({
@@ -193,6 +199,7 @@ export function useScheduleSettings() {
       return snapshot.docs.map(convertDoc) as BlockedTime[];
     },
     enabled: !!organizationId,
+    staleTime: STALE_TIME_MS,
   });
 
   const createBlockedTime = useMutation({

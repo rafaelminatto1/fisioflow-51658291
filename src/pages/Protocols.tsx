@@ -27,15 +27,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
-import { PROTOCOL_CATEGORIES, MUSCULATURE_FILTERS, QUICK_TEMPLATES, getProtocolCategory } from '@/data/protocols';
+import { PROTOCOL_CATEGORIES, MUSCULATURE_FILTERS, QUICK_TEMPLATES, getProtocolCategory, SEED_PROTOCOLS_DATA } from '@/data/protocols';
 import { ProtocolCardEnhanced } from '@/components/protocols/ProtocolCardEnhanced';
 import { ProtocolDetailView } from '@/components/protocols/ProtocolDetailView';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export default function Protocols() {
-  const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols();
+  const { protocols, loading, error, refetch, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols();
   const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const {
     activeTemplate, setActiveTemplate,
@@ -92,6 +93,18 @@ export default function Protocols() {
       title: "Protocolo duplicado",
       description: "Uma cópia do protocolo foi criada com sucesso."
     });
+  };
+
+  const handleLoadSeedProtocols = () => {
+    setIsSeeding(true);
+    SEED_PROTOCOLS_DATA.forEach((seed) => {
+      createProtocol(seed as Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>);
+    });
+    toast({
+      title: "Protocolos de exemplo carregados",
+      description: `${SEED_PROTOCOLS_DATA.length} protocolos foram criados. Atualize a página se não aparecerem.`,
+    });
+    setIsSeeding(false);
   };
 
   if (selectedProtocol) {
@@ -302,7 +315,17 @@ export default function Protocols() {
 
           {/* Results Area */}
           <div className="mt-0">
-            {loading ? (
+            {error ? (
+              <div className="text-center py-16 bg-destructive/10 rounded-xl border border-destructive/30 animate-fade-in">
+                <h3 className="text-xl font-semibold mb-2 text-destructive">Erro ao carregar protocolos</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto mb-6">
+                  {error instanceof Error ? error.message : 'Falha na conexão com o servidor. Verifique se está logado como profissional e tente novamente.'}
+                </p>
+                <Button variant="outline" onClick={() => refetch()}>
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : loading ? (
               <div className={cn(
                 "grid gap-4",
                 viewMode === 'grid' ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
@@ -328,12 +351,20 @@ export default function Protocols() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Nenhum protocolo encontrado</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                  Não encontramos protocolos com os filtros atuais.
-                  <br />Tente buscar por outro termo ou limpe os filtros.
+                  {protocols.length === 0
+                    ? 'Ainda não há protocolos cadastrados. Crie um novo ou carregue os protocolos de exemplo.'
+                    : 'Não encontramos protocolos com os filtros atuais. Tente buscar por outro termo ou limpe os filtros.'}
                 </p>
-                <Button onClick={() => { setSearch(''); setCategoryFilter('all'); setMuscleFilter('all'); setActiveTemplate(null); }}>
-                  Limpar Filtros
-                </Button>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Button onClick={() => { setSearch(''); setCategoryFilter('all'); setMuscleFilter('all'); setActiveTemplate(null); }}>
+                    Limpar Filtros
+                  </Button>
+                  {protocols.length === 0 && (
+                    <Button variant="secondary" onClick={handleLoadSeedProtocols} disabled={isSeeding || isCreating}>
+                      {isSeeding || isCreating ? 'Carregando...' : 'Carregar protocolos de exemplo'}
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className={cn(

@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { isSameDay, startOfDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { toast } from 'sonner';
+import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 
 interface DragState {
     appointment: Appointment | null;
@@ -107,19 +109,29 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         e.preventDefault();
         e.stopPropagation();
 
-        const appointmentToMove = dragState.appointment;
+        let appointmentToMove = dragState.appointment;
 
         // Fallback: Tentar recuperar do dataTransfer se o state estiver vazio
         if (!appointmentToMove) {
             try {
                 const data = e.dataTransfer.getData('application/json');
                 if (data) {
-                    const parsed = JSON.parse(data);
-                    // Apenas logar aviso se precisarmos usar o fallback
-                    logger.debug('[useCalendarDrag] Using dataTransfer fallback', { parsed }, 'useCalendarDrag');
+                    const parsed = JSON.parse(data) as { id?: string; date?: string | Date; time?: string };
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useCalendarDrag.ts:handleDrop',message:'dataTransfer fallback parsed',data:{parsedId:parsed?.id,hasDate:!!parsed?.date},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+                    // #endregion
+                    if (parsed?.id != null && (parsed.date != null || parsed.time != null)) {
+                        appointmentToMove = {
+                            id: parsed.id,
+                            date: typeof parsed.date === 'string' ? parsed.date : (parsed.date instanceof Date ? parsed.date.toISOString().slice(0, 10) : ''),
+                            time: typeof parsed.time === 'string' ? parsed.time : (parsed.time ?? ''),
+                            patientName: '',
+                            status: 'agendado',
+                            duration: 60
+                        } as import('@/types/appointment').Appointment;
+                    }
                 }
             } catch (err) {
-                // Silently fail or minimal log
                 logger.warn('[useCalendarDrag] Failed to parse dataTransfer', err, 'useCalendarDrag');
             }
         }
@@ -164,6 +176,14 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         if (!pendingReschedule || !onAppointmentReschedule) return;
 
         const { appointment, newDate, newTime } = pendingReschedule;
+        // #region agent log
+        if (!appointment?.id) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useCalendarDrag.ts:handleConfirmReschedule',message:'pendingReschedule.appointment missing id',data:{hasAppointment:!!appointment},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+        // #endregion
+        if (!appointment?.id) {
+            setShowConfirmDialog(false);
+            setPendingReschedule(null);
+            return;
+        }
 
         // OPTIMISTIC UPDATE: Atualiza a UI imediatamente
         // 1. Fecha o diálogo instantaneamente para melhor UX
@@ -186,6 +206,10 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             setPendingReschedule(null);
         } catch (error) {
             logger.error('Erro ao reagendar', { error }, 'useCalendarDrag');
+
+            if (isAppointmentConflictError(error)) {
+                toast.error(APPOINTMENT_CONFLICT_MESSAGE);
+            }
 
             // 6. Reverte a atualização otimista em caso de erro
             if (onRevertUpdate) {

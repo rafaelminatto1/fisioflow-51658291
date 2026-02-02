@@ -73,27 +73,22 @@ Sistema completo de fichas de avaliação com 21+ templates validados cientifica
 - `DynamicFieldRenderer` - Renderer de campos
 - `EvaluationFormPreview` - Preview da ficha
 
-## API
+## API (Firestore)
 
 ```typescript
-// GET /evaluation_forms
-const { data } = await supabase
-  .from('evaluation_forms')
-  .select('*, evaluation_form_fields(*)')
-  .eq('tipo', tipo);
+// GET evaluation_forms
+const snapshot = await getDocs(
+  query(collection(db, 'evaluation_forms'), where('tipo', '==', tipo))
+);
 
-// POST /evaluation_forms
-const { data } = await supabase.from('evaluation_forms').insert({
-  nome: 'Minha Ficha',
-  tipo: 'ortopedica',
-  fields: [...],
+// POST evaluation_forms
+await addDoc(collection(db, 'evaluation_forms'), {
+  nome: 'Minha Ficha', tipo: 'ortopedica', fields: [...],
 });
 
-// POST /evaluation_responses
-const { data } = await supabase.from('evaluation_responses').insert({
-  form_id,
-  patient_id,
-  responses: {...},
+// POST evaluation_responses
+await addDoc(collection(db, 'evaluation_responses'), {
+  form_id, patient_id, responses: {...},
 });
 ```
 

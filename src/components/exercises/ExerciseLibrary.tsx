@@ -37,6 +37,7 @@ import { ExerciseFiltersPanel, type ExerciseFiltersState } from './ExerciseFilte
 import { MergeExercisesModal } from './MergeExercisesModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 
 interface ExerciseLibraryProps {
@@ -96,10 +97,12 @@ const ExerciseCard = React.memo(function ExerciseCard({
       {/* Image Section */}
       <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
         {exercise.image_url ? (
-          <img
+          <OptimizedImage
             src={exercise.image_url}
             alt={exercise.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="h-full w-full transition-transform duration-500 group-hover:scale-110"
+            aspectRatio="4:3"
+            fallback="/placeholder.svg"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
@@ -301,10 +304,12 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
         {/* Thumbnail */}
         <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50">
           {exercise.image_url ? (
-            <img
+            <OptimizedImage
               src={exercise.image_url}
               alt={exercise.name}
               className="w-full h-full object-cover"
+              aspectRatio="1:1"
+              fallback="/placeholder.svg"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
