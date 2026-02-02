@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import type { Patient } from "@/types";
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { agentIngest } from '@/lib/debug/agentIngest';
 
 interface PatientComboboxProps {
   patients: Patient[];
@@ -101,9 +102,24 @@ export function PatientCombobox({
 
     const resultList = directMatches.length > 0 ? directMatches : mapped;
     logger.debug('PatientCombobox filtering', { searchTerm, direct: directMatches.length, fuzzy: mapped.length }, 'PatientCombobox');
-    // #region agent log
-    const first = patients[0];
-    if (typeof fetch !== 'undefined' && searchTerm && patients.length > 0) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'patient-combobox.tsx:filteredPatients',message:'combobox filter',data:{patientsLength:patients.length,searchTerm,inputValue,firstPatientName:first?.name,firstPatientFullName:(first as {full_name?:string})?.full_name,directCount:directMatches.length,resultCount:resultList.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2,H4,H5'})}).catch(()=>{});
+    // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
+    if (searchTerm && patients.length > 0) {
+      const first = patients[0];
+      agentIngest({
+        location: 'patient-combobox.tsx:filteredPatients',
+        message: 'combobox filter',
+        hypothesisId: 'H2,H4,H5',
+        data: {
+          patientsLength: patients.length,
+          searchTerm,
+          inputValue,
+          firstPatientName: first?.name,
+          firstPatientFullName: (first as { full_name?: string })?.full_name,
+          directCount: directMatches.length,
+          resultCount: resultList.length,
+        },
+      });
+    }
     // #endregion
     return resultList;
   }, [fuse, inputValue, patients]);

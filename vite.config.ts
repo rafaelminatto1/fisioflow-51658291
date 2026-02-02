@@ -23,7 +23,7 @@ function htmlPlugin(appVersion: string, buildTime: string, isProduction: boolean
   };
 }
 
-// Plugin para mockar módulos mobile-only (expo-notifications, etc)
+// Plugin para mockar módulos mobile-only e opcionais (expo, @firebase/crashlytics)
 function mockMobileModules() {
   const mobileModules = [
     'expo-notifications',
@@ -36,14 +36,33 @@ function mockMobileModules() {
     'react-native-toast-message',
   ];
 
+  // Crashlytics pode não estar instalado ou é mobile-first; stub para build web
+  const crashlyticsStub = `
+export function getCrashlytics(_app) {
+  return {
+    setCrashlyticsCollectionEnabled: async () => {},
+    recordError: async () => {},
+    setUserId: async () => {},
+    setCustomKey: async () => {},
+    log: async () => {},
+  };
+}
+`;
+
   return {
     name: 'mock-mobile-modules',
     resolveId(id: string) {
+      if (id === '@firebase/crashlytics') {
+        return { id: '\0virtual-crashlytics-stub', external: false };
+      }
       if (mobileModules.some(m => id === m || id.includes(m))) {
         return { id: '/virtual-mobile-stub', external: false };
       }
     },
     load(id: string) {
+      if (id === '\0virtual-crashlytics-stub') {
+        return crashlyticsStub;
+      }
       if (id === '/virtual-mobile-stub') {
         return `
 // Mobile modules stubs for web build
