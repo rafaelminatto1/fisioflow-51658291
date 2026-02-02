@@ -12,7 +12,6 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  orderBy,
   limit,
   writeBatch,
 } from '@/integrations/firebase/app';
@@ -22,6 +21,13 @@ import type { ExerciseFilters } from './exercises';
 
 const COLLECTION = 'exercises';
 const MAX_LIST = 1000;
+
+/** Remove undefined values; Firestore does not accept undefined. */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as Record<string, unknown>;
+}
 
 function docToExercise(docSnap: { id: string; data: () => Record<string, unknown> }): Exercise {
   const data = docSnap.data();
@@ -75,13 +81,10 @@ function applyFilters(items: Exercise[], filters?: ExerciseFilters): Exercise[] 
 
 export const exercisesFirestore = {
   async getExercises(filters?: ExerciseFilters): Promise<Exercise[]> {
-    const q = query(
-      collection(db, COLLECTION),
-      orderBy('name'),
-      limit(MAX_LIST)
-    );
+    const q = query(collection(db, COLLECTION), limit(MAX_LIST));
     const snapshot = await getDocs(q);
     const list = snapshot.docs.map((d) => docToExercise(d));
+    list.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'pt'));
     return applyFilters(list, filters);
   },
 
@@ -94,11 +97,11 @@ export const exercisesFirestore = {
 
   async createExercise(payload: Omit<Exercise, 'id'>): Promise<Exercise> {
     const now = new Date().toISOString();
-    const data = {
+    const data = stripUndefined({
       ...payload,
       created_at: now,
       updated_at: now,
-    };
+    } as Record<string, unknown>);
     const ref = await addDoc(collection(db, COLLECTION), data);
     const snap = await getDoc(ref);
     if (!snap.exists()) throw new Error('Exercício não encontrado após criação');
@@ -108,10 +111,11 @@ export const exercisesFirestore = {
   async updateExercise(id: string, updates: Partial<Exercise>): Promise<Exercise> {
     const ref = doc(db, COLLECTION, id);
     const { id: _id, ...rest } = updates as Partial<Exercise> & { id?: string };
-    await updateDoc(ref, {
+    const payload = stripUndefined({
       ...rest,
       updated_at: new Date().toISOString(),
-    });
+    } as Record<string, unknown>);
+    await updateDoc(ref, payload);
     const snap = await getDoc(ref);
     if (!snap.exists()) throw new Error('Exercício não encontrado após atualização');
     return docToExercise(snap);
