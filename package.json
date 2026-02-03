@@ -22,6 +22,7 @@
     "build:prod": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
     "inngest:setup": "bash ./scripts/inngest-setup.sh",
     "inngest:dev": "inngest dev",
+    "configure:apple-signin": "node scripts/configure-firebase-apple-signin.mjs",
     "build:dev": "vite build --mode development",
     "build:analyze": "ANALYZE=true vite build",
     "lint": "eslint .",
@@ -65,6 +66,8 @@
     "migrate:exercises-protocols:protocols-only": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --only-protocols",
     "migrate:exercises-protocols:retry": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --retry-supabase-urls",
     "migrate:exercises-protocols:retry-clear": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --retry-supabase-urls --clear-failed-urls",
+    "migrate:clinical-tests": "node scripts/migration/migrate-clinical-tests-from-supabase.mjs",
+    "migrate:clinical-tests:dry": "node scripts/migration/migrate-clinical-tests-from-supabase.mjs --dry-run",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },

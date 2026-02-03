@@ -192,6 +192,7 @@ export function LoginForm({
           <Alert
             variant="destructive"
             className="animate-slide-up-fade"
+            data-testid="login-error"
           >
             <AlertDescription className="text-sm">
               {error || 'Por favor, corrija os erros no formulário.'}

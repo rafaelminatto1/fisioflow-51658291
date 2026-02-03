@@ -362,10 +362,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       return;
     }
 
-    if (!appointment && (!data.therapist_id || String(data.therapist_id).trim() === '')) {
-      toast.error('Escolha um fisioterapeuta no formulário.');
-      return;
-    }
+    // Fisioterapeuta é opcional; quando não informado, o backend pode usar o usuário logado.
 
     const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
     const currentCount = (conflictCheck?.conflictCount || 0);
