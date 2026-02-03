@@ -79,6 +79,22 @@ const RATE_LIMITS = {
 };
 
 // ============================================================================
+// AI CLIENT CACHE
+// ============================================================================
+
+let cachedVertexAI: any = null;
+
+async function getVertexAI() {
+  if (!cachedVertexAI) {
+    const { VertexAI } = await import('@google-cloud/vertexai');
+    cachedVertexAI = new VertexAI({
+      project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
+    });
+  }
+  return cachedVertexAI;
+}
+
+// ============================================================================
 // MAIN FUNCTION
 // ============================================================================
 
@@ -261,12 +277,7 @@ async function generateExerciseSuggestions(context: any): Promise<{
   error?: string;
 }> {
   try {
-    // Import Vertex AI SDK (already installed)
-    const { VertexAI } = await import('@google-cloud/vertexai');
-
-    const vertexAI = new VertexAI({
-      project: process.env.GCLOUD_PROJECT || 'fisioflow-migration',
-    });
+    const vertexAI = await getVertexAI();
 
     const generativeModel = vertexAI.getGenerativeModel({
       model: 'gemini-2.5-flash-lite',
