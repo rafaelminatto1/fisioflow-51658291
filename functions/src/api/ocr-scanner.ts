@@ -4,7 +4,9 @@ import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 
 const visionClient = new ImageAnnotatorClient();
-const httpOpts = { region: 'southamerica-east1' as const, memory: '1GiB' as const, maxInstances: 5, cors: true };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '1GiB' as const,
+  cpu: 1 as const,
+  maxInstances: 5, cors: true };
 
 /**
  * Scanner de Laudos: Transforma imagem de exame em texto

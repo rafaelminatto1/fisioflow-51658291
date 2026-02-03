@@ -33,8 +33,8 @@ setGlobalOptions({
     ],
     // Allow up to 100 concurrent instances per function
     maxInstances: 100,
-    // 0.25 vCPU is usually enough for CRUD/IO bound tasks and saves cost
-    cpu: 0.25,
+    // 0.5 vCPU is minimum for functions with 1GiB memory
+    cpu: 0.5,
     // Set default memory for all functions
     memory: '512MiB',
 });
