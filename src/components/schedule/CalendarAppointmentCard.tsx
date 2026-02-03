@@ -49,13 +49,13 @@ const getStatusStyles = (status: string) => {
             indicator: 'text-emerald-700'
         },
         agendado: {
-            border: 'border-cyan-500',
-            bg: 'bg-cyan-50/95 dark:bg-cyan-500/20',
-            hoverBg: 'hover:bg-cyan-100/95 dark:hover:bg-cyan-500/30',
-            text: 'text-cyan-900 dark:text-cyan-400',
-            subtext: 'text-cyan-800/90 dark:text-cyan-300/90',
-            accent: 'bg-cyan-600',
-            indicator: 'text-cyan-700'
+            border: 'border-sky-300',
+            bg: 'bg-sky-100/95 dark:bg-sky-200/30',
+            hoverBg: 'hover:bg-sky-200/95 dark:hover:bg-sky-300/40',
+            text: 'text-sky-900 dark:text-sky-300',
+            subtext: 'text-sky-800/90 dark:text-sky-400/90',
+            accent: 'bg-sky-400',
+            indicator: 'text-sky-700'
         },
         em_andamento: {
             border: 'border-amber-500',
