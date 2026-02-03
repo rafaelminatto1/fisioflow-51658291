@@ -65,6 +65,7 @@ export const generateAIReport = onCall(
   {
     region: 'southamerica-east1',
     memory: '1GiB',
+    cpu: 1,
     maxInstances: 5,
     timeoutSeconds: 180,
   },
