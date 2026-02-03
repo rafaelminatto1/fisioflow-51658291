@@ -24,7 +24,8 @@ import {
   MessageSquare,
   ShoppingCart,
   LogOut,
-  LayoutGrid
+  LayoutGrid,
+  Sparkles
 } from 'lucide-react';
 
 const menuItems = [
@@ -36,6 +37,7 @@ const menuItems = [
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
   { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas' },
+  { icon: Sparkles, label: 'Tarefas V2', href: '/tarefas-v2' },
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },

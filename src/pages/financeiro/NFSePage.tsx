@@ -29,7 +29,6 @@ import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, doc, getDoc, setDoc, query as firestoreQuery, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
-nizations';
 
 interface NFSe {
   id: string;

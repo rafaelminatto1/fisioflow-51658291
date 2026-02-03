@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db, collection, query as firestoreQuery, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
- from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface EmailCampaign {
