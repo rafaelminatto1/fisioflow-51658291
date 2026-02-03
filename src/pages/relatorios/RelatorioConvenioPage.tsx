@@ -21,7 +21,7 @@ import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
-nizations';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Activity } from 'lucide-react';
 
 // Registrar font para PDF

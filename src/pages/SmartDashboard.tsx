@@ -441,6 +441,19 @@ export default function SmartDashboard() {
           <ViewButton mode="month" label="Este Mês" />
         </div>
 
+        {/* Sem dados - quando métricas carregadas mas todas zeradas */}
+        {!isLoadingMetrics && metrics && (metrics.agendamentosHoje ?? 0) === 0 && (metrics.receitaMensal ?? 0) === 0 && (metrics.pacientesAtivos ?? 0) === 0 && (
+          <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-4">
+            <BarChart3 className="h-10 w-10 text-muted-foreground shrink-0" />
+            <div>
+              <h3 className="font-semibold text-foreground">Sem dados no período</h3>
+              <p className="text-sm text-muted-foreground">
+                Cadastre agendamentos, pacientes e receitas para ver o dashboard completo.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Warning Banner */}
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-4">
           <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-full">

@@ -495,6 +495,24 @@ pnpm deploy:all             # Deploy completo
 
 ---
 
-**Ultima atualizacao:** 2026-02-02
+## PENTE FINO - AUDIT PAGINAS (2026-02-03)
+
+### Concluido
+
+- [x] **Rotas novas:** NFSe (`/financeiro/nfse`), Recibos (`/financeiro/recibos`), Demonstrativo (`/financeiro/demonstrativo`), Relatorio Medico (`/relatorios/medico`), Relatorio Convenio (`/relatorios/convenio`), Campanhas CRM (`/crm/campanhas`)
+- [x] **Sidebar:** Eventos no submenu Operacionais; Financeiro (NFSe, Recibos, Demonstrativo); Relatorios (Relatorio Medico, Convenio); CRM (Campanhas); submenu "Mais" (Portal, Ocupacao, Testes Clinicos, Wiki, Time Tracking, Automacao, Integracoes)
+- [x] **MedicalRecord:** Previsao Q2 2026 na tela "Em breve"
+- [x] **PatientPortal:** Fetch de pain records via `PainMapService.getPainMapsByPatientId` (collection `pain_maps`)
+- [x] **SmartDashboard:** Banner "Sem dados no periodo" quando metricas zeradas
+- [x] **Wiki:** Firestore `wiki_pages` + `wikiService.listPages/listCategories/savePage`; query e salvamento implementados
+- [x] **Integrations:** handleSync com feedback (toast + estado syncing/synced)
+
+### Planejamento
+
+- Ver: `.agent/planning/PENTE_FINO_PAGINAS.md`
+
+---
+
+**Ultima atualizacao:** 2026-02-03
 **Validacao FASE 1:** ✅ COMPLETA via Playwright MCP
 **Testes E2E:** 1515 testes configurados, 9 passados na execucao

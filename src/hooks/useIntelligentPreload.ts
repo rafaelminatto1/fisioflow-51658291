@@ -9,9 +9,10 @@ export const useIntelligentPreload = () => {
     // Rotas prioritárias para preload (baseado em padrões de uso)
     const priorityRoutes = [
       '/schedule',
-      '/patients', 
+      '/patients',
       '/exercises',
       '/eventos',
+      '/tarefas',
     ];
 
     const preloadRoutes = () => {
