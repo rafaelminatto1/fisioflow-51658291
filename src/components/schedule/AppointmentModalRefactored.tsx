@@ -550,20 +550,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
         <FormProvider {...methods}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-            <div className="px-4 sm:px-6 py-1.5 border-b shrink-0">
-              <TabsList className="grid w-full grid-cols-3 h-8">
-                <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-2 text-xs">
-                  <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="px-5 sm:px-6 py-3 border-b shrink-0">
+              <TabsList className="grid w-full grid-cols-3 h-10">
+                <TabsTrigger value="info" className="flex items-center gap-2 text-xs sm:text-sm">
+                  <User className="h-4 w-4" />
                   <span className="hidden xs:inline">Informações</span>
                   <span className="xs:hidden">Info</span>
                 </TabsTrigger>
-                <TabsTrigger value="payment" className="flex items-center gap-1 sm:gap-2 text-xs">
-                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <TabsTrigger value="payment" className="flex items-center gap-2 text-xs sm:text-sm">
+                  <CreditCard className="h-4 w-4" />
                   <span className="hidden xs:inline">Pagamento</span>
                   <span className="xs:hidden">Pag.</span>
                 </TabsTrigger>
-                <TabsTrigger value="options" className="flex items-center gap-1 sm:gap-2 text-xs">
-                  <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <TabsTrigger value="options" className="flex items-center gap-2 text-xs sm:text-sm">
+                  <FileText className="h-4 w-4" />
                   <span className="hidden xs:inline">Opções</span>
                   <span className="xs:hidden">Opç.</span>
                 </TabsTrigger>
@@ -577,8 +577,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   logger.error('Form validation errors', { errors }, 'AppointmentModalRefactored');
                   toast.error('Verifique os campos obrigatórios do formulário');
                 })(e);
-              }} className="px-4 sm:px-6 py-3">
-                <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
+              }} className="px-5 sm:px-6 py-4">
+                <TabsContent value="info" className="mt-0 space-y-4 sm:space-y-4">
                   <PatientSelectionSection
                     patients={activePatients || []}
                     isLoading={patientsLoading}
@@ -675,14 +675,17 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
                   <TypeAndStatusSection disabled={currentMode === 'view'} />
 
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium">Observações</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                      Observações
+                    </Label>
                     <Textarea
                       {...methods.register('notes')}
                       placeholder="Informações importantes sobre o atendimento..."
                       rows={2}
                       disabled={currentMode === 'view'}
-                      className="resize-none text-sm min-h-[60px]"
+                      className="resize-none text-sm min-h-[70px]"
                     />
                   </div>
                 </TabsContent>
@@ -715,7 +718,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           </Tabs>
         </FormProvider>
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 px-4 sm:px-6 py-2.5 sm:py-3 border-t bg-background shrink-0">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 px-5 sm:px-6 py-4 border-t bg-background shrink-0">
           <div className="flex justify-center sm:justify-start">
             {currentMode === 'edit' && appointment && (
               <Button
@@ -723,7 +726,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 variant="ghost"
                 onClick={handleDelete}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                size="sm"
+                size="default"
               >
                 <X className="w-4 h-4 mr-1" />
                 Excluir
@@ -731,13 +734,13 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             )}
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-2 justify-end flex-wrap">
             {currentMode === 'view' && appointment && (
               <Button
                 type="button"
                 variant="default"
                 onClick={() => setCurrentMode('edit')}
-                size="sm"
+                size="default"
               >
                 Editar
               </Button>
@@ -748,7 +751,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               variant="outline"
               onClick={onClose}
               disabled={isCreating || isUpdating}
-              size="sm"
+              size="default"
             >
               {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
             </Button>
@@ -758,8 +761,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 type="button"
                 variant="outline"
                 disabled={isCreating || isUpdating}
-                size="sm"
-                className="min-w-[80px] sm:min-w-[100px]"
+                size="default"
+                className="min-w-[100px]"
                 onClick={() => {
                   scheduleOnlyRef.current = true;
                   handleSubmit(handleSave)();
@@ -782,10 +785,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 disabled={isCreating || isUpdating}
                 onClick={() => { scheduleOnlyRef.current = false; }}
                 className={cn(
-                  "min-w-[80px] sm:min-w-[100px]",
+                  "min-w-[100px]",
                   watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white"
                 )}
-                size="sm"
+                size="default"
               >
                 {(isCreating || isUpdating) ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

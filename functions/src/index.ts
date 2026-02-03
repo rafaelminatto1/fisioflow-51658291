@@ -215,6 +215,20 @@ export {
     aiGetSuggestions
 } from './ai/clinical-chat';
 
+import { getPatientAISummaryHttp } from './api/ai-assistant';
+import { getClinicalInsightsHttp } from './api/clinical-insights';
+import { scanMedicalReportHttp } from './api/ocr-scanner';
+import { migrateClinicalSchema } from './migrations/clinical-setup';
+import { dailyPatientDigest } from './crons/scheduled-tasks';
+
+export { 
+    getPatientAISummaryHttp, 
+    getClinicalInsightsHttp, 
+    scanMedicalReportHttp,
+    migrateClinicalSchema, 
+    dailyPatientDigest 
+};
+
 // ============================================================================
 // WEBHOOK MANAGEMENT
 // ============================================================================
