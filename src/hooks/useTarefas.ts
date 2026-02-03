@@ -11,57 +11,32 @@ import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 const auth = getFirebaseAuth();
 
-export interface Tarefa {
-  id: string;
-  titulo: string;
-  descricao?: string;
-  status: 'A_FAZER' | 'EM_PROGRESSO' | 'REVISAO' | 'CONCLUIDO';
-  prioridade: 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-  data_vencimento?: string;
-  hora_vencimento?: string;
-  start_date?: string; // For Gantt/Timeline
-  responsavel_id?: string;
-  lead_id?: string;
-  organization_id?: string;
-  created_by?: string;
-  project_id?: string;
-  parent_id?: string;
-  order_index: number;
-  tags: string[];
-  checklist?: { id: string; text: string; completed: boolean }[];
-  attachments?: { id: string; url: string; name: string; type: string }[];
-  dependencies?: string[]; // IDs of tasks that must be completed before this one
-  created_at: string;
-  updated_at: string;
-  responsavel?: {
-    full_name: string;
-    avatar_url?: string;
-  };
-}
+// Re-export types from centralized types file
+export type {
+  Tarefa,
+  TarefaStatus,
+  TarefaPrioridade,
+  TarefaTipo,
+  TeamMember,
+  TarefaAttachment,
+  TarefaReference,
+  TarefaChecklist,
+  TarefaChecklistItem,
+  TarefaComment,
+  TarefaActivity,
+  TarefaMention,
+} from '@/types/tarefas';
 
-export type TarefaStatus = Tarefa['status'];
-export type TarefaPrioridade = Tarefa['prioridade'];
+export {
+  STATUS_LABELS,
+  STATUS_COLORS,
+  PRIORIDADE_LABELS,
+  PRIORIDADE_COLORS,
+  TIPO_LABELS,
+  TIPO_COLORS,
+} from '@/types/tarefas';
 
-export const STATUS_LABELS: Record<TarefaStatus, string> = {
-  A_FAZER: 'A Fazer',
-  EM_PROGRESSO: 'Em Progresso',
-  REVISAO: 'Revisão',
-  CONCLUIDO: 'Concluído'
-};
-
-export const PRIORIDADE_LABELS: Record<TarefaPrioridade, string> = {
-  BAIXA: 'Baixa',
-  MEDIA: 'Média',
-  ALTA: 'Alta',
-  URGENTE: 'Urgente'
-};
-
-export const PRIORIDADE_COLORS: Record<TarefaPrioridade, string> = {
-  BAIXA: 'bg-muted text-muted-foreground',
-  MEDIA: 'bg-blue-500/20 text-blue-400',
-  ALTA: 'bg-orange-500/20 text-orange-400',
-  URGENTE: 'bg-red-500/20 text-red-400'
-};
+import type { Tarefa, TarefaStatus } from '@/types/tarefas';
 
 // Helper: Convert Firestore doc to Tarefa
 const convertDocToTarefa = (doc: { id: string; data: () => Record<string, unknown> }): Tarefa => {
@@ -136,6 +111,7 @@ export function useCreateTarefa() {
         descricao: tarefa.descricao,
         status: tarefa.status || 'A_FAZER',
         prioridade: tarefa.prioridade || 'MEDIA',
+        tipo: tarefa.tipo || 'TAREFA',
         data_vencimento: tarefa.data_vencimento,
         tags: tarefa.tags || [],
         order_index: tarefa.order_index || 0,
@@ -143,12 +119,12 @@ export function useCreateTarefa() {
         created_by: firebaseUser.uid,
         project_id: tarefa.project_id,
         parent_id: tarefa.parent_id,
-        checklist: tarefa.checklist,
-        attachments: tarefa.attachments,
-        dependencies: tarefa.dependencies,
+        checklists: tarefa.checklists || [],
+        attachments: tarefa.attachments || [],
+        references: tarefa.references || [],
+        dependencies: tarefa.dependencies || [],
         start_date: tarefa.start_date,
         responsavel_id: tarefa.responsavel_id,
-        lead_id: tarefa.lead_id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -172,14 +148,16 @@ export function useCreateTarefa() {
         descricao: newTarefa.descricao,
         status: newTarefa.status || 'A_FAZER',
         prioridade: newTarefa.prioridade || 'MEDIA',
+        tipo: newTarefa.tipo || 'TAREFA',
         data_vencimento: newTarefa.data_vencimento,
         start_date: newTarefa.start_date,
         project_id: newTarefa.project_id,
         order_index: newTarefa.order_index || 0,
         tags: newTarefa.tags || [],
-        checklist: newTarefa.checklist,
-        attachments: newTarefa.attachments,
-        dependencies: newTarefa.dependencies,
+        checklists: newTarefa.checklists || [],
+        attachments: newTarefa.attachments || [],
+        references: newTarefa.references || [],
+        dependencies: newTarefa.dependencies || [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
