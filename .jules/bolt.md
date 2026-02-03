@@ -9,3 +9,7 @@
 ## 2024-05-23 - [Test Environment & Build Memory]
 **Learning:** The local Vitest environment is unstable for component tests (JSDOM issues), making unit testing difficult. Additionally, the build process runs out of memory on standard settings.
 **Action:** Use `pnpm build:prod` (which increases memory) for builds, and rely on Playwright for reliable frontend verification when unit tests fail due to environment issues.
+
+## 2024-05-24 - [Prefetch Query Key Collision]
+**Learning:** `usePatients` was aggressively prefetching `['patient-stats', id]` using a Cloud Function (REST API), while `usePatientStats` fetched the same key using Firestore. This caused cache collisions where components received incompatible data structures, potentially causing crashes or display errors.
+**Action:** When prefetching, always ensure the fetcher function and returned data structure match exactly what the consuming hook expects. Avoid "blind" prefetching of keys managed by other hooks.

@@ -153,16 +153,6 @@ export function usePrefetchPatientData(
         },
         staleTime: 1000 * 60 * 5,
       });
-
-      // Prefetch estatísticas
-      queryClient.prefetchQuery({
-        queryKey: ['patient-stats', patientId],
-        queryFn: async () => {
-          const { data } = await fetch(`/api/patients/${patientId}/stats`).then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 10,
-      });
     };
 
     // Delay pequeno para não interferir com navegação
