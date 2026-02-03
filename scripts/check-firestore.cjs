@@ -3,16 +3,9 @@
  * Run with: node scripts/check-firestore.cjs
  */
 
-const admin = require('firebase-admin');
+const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 
-const serviceAccount = require('../functions/service-account-key.json');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  projectId: 'fisioflow-migration'
-});
-
-const db = admin.firestore();
+const { db } = getFirebaseAdmin();
 
 async function checkCollections() {
   try {
