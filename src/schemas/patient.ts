@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isValidCPF, isValidPhone, isValidEmail, isValidName } from '@/utils/validators';
+import { parseBrazilianDate, isValidCPF, isValidPhone, isValidEmail, isValidName } from '@/utils/validators';
 
 // ============================================================================
 // VALIDADORES BRASILEIROS

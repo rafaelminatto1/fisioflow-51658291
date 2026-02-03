@@ -259,7 +259,10 @@ export default function Auth() {
 
       const redirectUrl = `${window.location.origin}/`;
 
-      logger.info('Iniciando cadastro', { email: email.trim() }, 'Auth');
+      // Dado sensível removido: email completo mascarado para logs (LGPD)
+      const maskedEmail = email.trim();
+      const emailDomain = maskedEmail.split('@')[1];
+      logger.info('Iniciando cadastro', { email: `***@${emailDomain}` }, 'Auth');
 
       const { user: newUser, error: signUpError } = await signUp({
         email: email.trim(),
@@ -310,7 +313,10 @@ export default function Auth() {
       if (newUser) {
         // Placeholder for when we have Firebase equivalent for invitations
         // For now just logging that we created the user
-        logger.info('User created with invite token', { email: newUser.email, token: inviteToken });
+        // Dados sensíveis removidos: email e token completos mascarados para logs (LGPD)
+        const maskedEmail = newUser.email ? newUser.email.split('@')[0].substring(0, 3) + '***@' + newUser.email.split('@')[1] : '***';
+        const maskedToken = inviteToken ? inviteToken.substring(0, 8) + '...' : 'N/A';
+        logger.info('User created with invite token', { email: maskedEmail, token: maskedToken });
         // Note: In real app, we'd call a Cloud Function here to apply invitation logic
       }
 

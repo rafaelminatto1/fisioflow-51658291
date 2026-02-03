@@ -1,0 +1,16 @@
+# Mapeamento da tabela 'patients' existente no Cloud SQL
+type Patient @table(name: "patients") {
+  id: UUID! @default(expr: "uuidV4()")
+  organizationId: UUID! @col(name: "organization_id")
+  name: String!
+  email: String
+  phone: String
+  cpf: String
+  gender: String
+  address: String
+  birthDate: Date @col(name: "birth_date")
+  createdAt: Timestamp @col(name: "created_at")
+  updatedAt: Timestamp @col(name: "updated_at")
+  mainCondition: String @col(name: "main_condition")
+  medicalHistory: String @col(name: "medical_history")
+}

@@ -326,7 +326,13 @@
       "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 commit:*)",
       "Bash(do echo \"Enabling unauthenticated access for $service...\" gcloud run services add-iam-policy-binding \"$service\" --region=southamerica-east1 --member=\"allUsers\" --role=\"roles/run.invoker\")",
       "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 push origin main)",
-      "mcp__gemini__gemini-analyze-image"
+      "mcp__gemini__gemini-analyze-image",
+      "Bash(npm ls:*)",
+      "Bash(GOOGLE_APPLICATION_CREDENTIALS=\"\" node:*)",
+      "mcp__playwright__browser_install",
+      "mcp__playwright__browser_drag",
+      "Bash(nslookup:*)",
+      "Bash(whois:*)"
     ],
     "deny": [],
     "ask": [],

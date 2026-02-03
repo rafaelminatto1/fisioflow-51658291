@@ -270,6 +270,10 @@ async function getFromCacheWithMetadata(organizationId?: string): Promise<Appoin
   return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
 }
 
+import { useRealtimeAppointments } from './useRealtimeAppointments';
+
+// ... (imports remain)
+
 // Main hook to fetch appointments with Realtime support
 export function useAppointments() {
   const { toast } = useToast();
@@ -277,39 +281,9 @@ export function useAppointments() {
   const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
 
-  // Setup Realtime subscription using Firestore onSnapshot
-  useEffect(() => {
-    if (!organizationId || !db) return;
-
-    logger.info('Realtime (Firestore): Subscribing to appointments', { organizationId }, 'useAppointments');
-
-    const q = firestoreQuery(
-      collection(db, 'appointments'),
-      where('organization_id', '==', organizationId)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Invalidate query to trigger re-fetch from API
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      
-      snapshot.docChanges().forEach((change) => {
-        // Only show toast for external changes (added by others)
-        if (change.type === 'added' && !snapshot.metadata.hasPendingWrites) {
-          toast({
-            title: '🔄 Novo agendamento',
-            description: 'Um novo agendamento foi criado por outro usuário',
-          });
-        }
-      });
-    }, (error) => {
-      logger.error('Firestore snapshot error', error, 'useAppointments');
-    });
-
-    return () => {
-      logger.info('Realtime (Firestore): Unsubscribing from appointments', { organizationId }, 'useAppointments');
-      unsubscribe();
-    };
-  }, [toast, organizationId, queryClient]);
+  // Ativar listener do Realtime Database (Substitui Firestore onSnapshot)
+  // Quando o backend publica no RTDB, este hook invalida a query automaticamente
+  useRealtimeAppointments();
 
   const appointmentsQuery = useQuery({
     queryKey: appointmentKeys.list(organizationId),
