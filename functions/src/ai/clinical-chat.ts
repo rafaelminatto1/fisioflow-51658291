@@ -172,6 +172,7 @@ export const aiClinicalChat = onCall(
   {
     region: 'southamerica-east1',
     memory: '1GiB',
+    cpu: 1,
     maxInstances: 10,
     timeoutSeconds: 120,
   },
@@ -332,6 +333,7 @@ export const aiExerciseRecommendationChat = onCall(
   {
     region: 'southamerica-east1',
     memory: '1GiB',
+    cpu: 1,
     maxInstances: 10,
     timeoutSeconds: 120,
   },
@@ -398,6 +400,7 @@ export const aiSoapNoteChat = onCall(
   {
     region: 'southamerica-east1',
     memory: '1GiB',
+    cpu: 1,
     maxInstances: 10,
     timeoutSeconds: 120,
   },
@@ -462,6 +465,7 @@ export const aiGetSuggestions = onCall(
   {
     region: 'southamerica-east1',
     memory: '1GiB',
+    cpu: 1,
     maxInstances: 10,
     timeoutSeconds: 90,
   },
