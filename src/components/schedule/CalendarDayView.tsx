@@ -1,13 +1,20 @@
 import React, { memo } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, Calendar, Calendar as CalendarIcon } from 'lucide-react';
+import { Clock, Ban, Calendar, Calendar as CalendarIcon, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
+import {
+  calculateCardWidthPercent,
+  calculateCardOffsetPercent,
+  getStatusCardClasses,
+  shouldShowText,
+  MAX_CARDS_WITHOUT_BADGE
+} from '@/lib/calendar/dragPreview';
 
 interface CalendarDayViewProps {
     currentDate: Date;
@@ -26,6 +33,7 @@ interface CalendarDayViewProps {
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
     dragState: { appointment: Appointment | null; isDragging: boolean };
     dropTarget: { date: Date; time: string } | null;
+    targetAppointments?: Appointment[];
     handleDragStart: (e: React.DragEvent, appointment: Appointment) => void;
     handleDragEnd: () => void;
     handleDragOver: (e: React.DragEvent, date: Date, time: string) => void;
@@ -59,6 +67,7 @@ const CalendarDayView = memo(({
     onAppointmentReschedule,
     dragState,
     dropTarget,
+    targetAppointments = [],
     handleDragStart,
     handleDragEnd,
     handleDragOver,
@@ -192,7 +201,7 @@ const CalendarDayView = memo(({
                         </div>
 
                         {/* Time slots */}
-                        <div className="relative">
+                        <div className="relative" role="grid">
                             {timeSlots.map((time, slotIndex) => {
                         const hour = parseInt(time.split(':')[0]);
                         const isCurrentHour = hour === currentTime.getHours();
@@ -200,21 +209,34 @@ const CalendarDayView = memo(({
                         const blocked = isTimeBlocked(time);
                         const blockReason = getBlockReason(time);
 
+                        // Calcular preview cards para o drop target
+                        const showPreview = isDropTarget && !blocked && dragState.appointment;
+                        const previewCards = showPreview ? [...targetAppointments, dragState.appointment!] : [];
+                        const totalCards = previewCards.length;
+
+                        // Descrição acessível para screen readers
+                        const ariaLabel = blocked
+                            ? `Horário ${time} bloqueado`
+                            : showPreview
+                                ? `Horário ${time}, ${totalCards} paciente${totalCards !== 1 ? 's' : ''}. Solte para reagendar.`
+                                : `Horário ${time} disponível para agendamento`;
+
                         return (
                             <TooltipProvider key={time}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div
+                                            role="gridcell"
+                                            aria-label={ariaLabel}
+                                            aria-dropeffect={!blocked ? 'move' : 'none'}
                                             className={cn(
-                                                "calendar-time-slot group",
-                                                blocked
-                                                    ? "blocked"
-                                                    : "",
+                                                "calendar-time-slot group relative",
+                                                blocked && "blocked",
                                                 isCurrentHour && !blocked && "bg-primary/5",
-                                                // Enhanced drop target styles
+                                                // Drop target styles
                                                 isDropTarget && !blocked && cn(
                                                     "is-drop-target",
-                                                    "bg-primary/20 ring-inset ring-2 ring-primary/60 animate-pulse-subtle"
+                                                    "bg-primary/10 ring-inset ring-2 ring-primary/50"
                                                 ),
                                                 // Show drag hint when dragging
                                                 dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5"
@@ -226,10 +248,61 @@ const CalendarDayView = memo(({
                                             onDrop={(e) => !blocked && handleDrop(e, currentDate, time)}
                                         >
                                             {blocked ? (
-                                                <span className="absolute inset-0 flex items-center justify-center text-xs text-destructive/70">
+                                                <span className="absolute inset-0 flex items-center justify-center text-xs text-destructive/70" aria-hidden="true">
                                                     <Ban className="h-3 w-3 mr-1" />
                                                     Bloqueado
                                                 </span>
+                                            ) : showPreview ? (
+                                                // Preview dinâmica mostrando como os cards serão organizados
+                                                <div className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none" aria-hidden="true">
+                                                    {previewCards.map((apt, index) => {
+                                                        const cardWidthPercent = calculateCardWidthPercent(totalCards);
+                                                        const leftOffset = calculateCardOffsetPercent(index, totalCards);
+                                                        const isDraggedCard = apt.id === dragState.appointment?.id;
+                                                        const statusColors = getStatusCardClasses(apt.status);
+                                                        const showText = shouldShowText(cardWidthPercent, totalCards);
+
+                                                        return (
+                                                            <div
+                                                                key={apt.id}
+                                                                className={cn(
+                                                                    "absolute h-[calc(100%-8px)] rounded-md border-2 border-dashed",
+                                                                    "flex flex-col items-center justify-center transition-all duration-200",
+                                                                    "animate-in fade-in slide-in-from-bottom-1",
+                                                                    statusColors.bg,
+                                                                    statusColors.border,
+                                                                    isDraggedCard && "bg-primary/30 border-primary animate-pulse-subtle shadow-lg z-10"
+                                                                )}
+                                                                style={{
+                                                                    left: `calc(${leftOffset}% + 2px)`,
+                                                                    width: `calc(${cardWidthPercent}% - 4px)`,
+                                                                    top: '4px'
+                                                                }}
+                                                            >
+                                                                {/* Ícone sempre visível */}
+                                                                <UserPlus className={cn(
+                                                                    "w-4 h-4 flex-shrink-0",
+                                                                    isDraggedCard ? "text-primary" : "text-muted-foreground",
+                                                                    showText && "mb-1"
+                                                                )} />
+
+                                                                {/* Texto condicional baseado no espaço disponível */}
+                                                                {showText && (
+                                                                    <span className="text-[10px] font-medium text-muted-foreground truncate px-1 w-full text-center">
+                                                                        {isDraggedCard ? (apt.patientName || '') : ''}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+
+                                                    {/* Indicador de quantidade quando há muitos cards */}
+                                                    {totalCards > MAX_CARDS_WITHOUT_BADGE && (
+                                                        <div className="absolute bottom-1 right-1 bg-primary/80 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                            {totalCards}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <span className={cn(
                                                     "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground transition-all duration-200",

@@ -103,7 +103,7 @@ export const PatientService = {
         try {
             logger.info('PatientService: fetching patients from Firebase Functions', { organizationId }, 'PatientService');
             // TEMP: Removendo filtro de status para debug
-            const response = await patientsApi.list({ limit: 1000 });
+            const response = await patientsApi.list({ organizationId, limit: 1000 });
 
             logger.debug('📊 [PatientService] Raw response', { response }, 'PatientService');
             logger.debug('📊 [PatientService] response.data', { data: response.data }, 'PatientService');

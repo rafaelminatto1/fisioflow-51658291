@@ -4,6 +4,7 @@ import { Appointment } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { toast } from 'sonner';
 import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { createSimpleDragPreview } from '@/lib/calendar/dragPreview';
 
 interface DragState {
     appointment: Appointment | null;
@@ -20,6 +21,8 @@ interface UseCalendarDragProps {
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
     onOptimisticUpdate?: (appointmentId: string, newDate: Date, newTime: string) => void;
     onRevertUpdate?: (appointmentId: string) => void;
+    // Função para obter appointments em um determinado slot (para preview dinâmica)
+    getAppointmentsForSlot?: (date: Date, time: string) => Appointment[];
 }
 
 /**
@@ -46,11 +49,14 @@ const createLocalDate = (year: number, month: number, day: number): Date => {
     return new Date(year, month, day, 12, 0, 0); // Meio-dia para evitar edge cases
 };
 
-export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate }: UseCalendarDragProps) => {
+export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate, getAppointmentsForSlot }: UseCalendarDragProps) => {
     const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false, savingAppointmentId: null });
     const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [pendingReschedule, setPendingReschedule] = useState<{ appointment: Appointment; newDate: Date; newTime: string } | null>(null);
+
+    // Estado para armazenar appointments do destino atual (para preview dinâmica)
+    const [targetAppointments, setTargetAppointments] = useState<Appointment[]>([]);
 
     const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
         logger.info('[useCalendarDrag] handleDragStart chamado', {
@@ -72,19 +78,21 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         }));
         e.dataTransfer.effectAllowed = 'move';
 
-        // Criar imagem de preview customizada (opcional)
-        if (e.currentTarget instanceof HTMLElement) {
-            const rect = e.currentTarget.getBoundingClientRect();
-            e.dataTransfer.setDragImage(e.currentTarget, rect.width / 2, 20);
+        // Criar preview inicial simples (será atualizado dinamicamente no dragOver)
+        const previewCanvas = createSimpleDragPreview(appointment, 240, 64);
+        if (previewCanvas) {
+            e.dataTransfer.setDragImage(previewCanvas, 120, 32);
         }
 
         logger.info('[useCalendarDrag] Drag iniciado com sucesso', { appointmentId: appointment.id }, 'useCalendarDrag');
         setDragState({ appointment, isDragging: true, savingAppointmentId: null });
+        setTargetAppointments([]);
     }, [onAppointmentReschedule]);
 
     const handleDragEnd = useCallback(() => {
         setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
         setDropTarget(null);
+        setTargetAppointments([]);
     }, []);
 
     const handleDragOver = useCallback((e: React.DragEvent, date: Date, time: string) => {
@@ -92,7 +100,17 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         setDropTarget({ date, time });
-    }, [dragState.isDragging, onAppointmentReschedule]);
+
+        // Buscar appointments existentes no slot de destino para preview dinâmica
+        if (getAppointmentsForSlot) {
+            const existingApps = getAppointmentsForSlot(date, time);
+            // Filtrar o appointment sendo arrastado se ele já estiver no destino (movendo dentro do mesmo slot)
+            const otherApps = existingApps.filter(apt => apt.id !== dragState.appointment?.id);
+            setTargetAppointments(otherApps);
+        } else {
+            setTargetAppointments([]);
+        }
+    }, [dragState.isDragging, dragState.appointment, onAppointmentReschedule, getAppointmentsForSlot]);
 
     const handleDragLeave = useCallback((e?: React.DragEvent) => {
         // Verificar se realmente saiu do elemento (não para elemento filho)
@@ -103,6 +121,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             }
         }
         setDropTarget(null);
+        setTargetAppointments([]);
     }, []);
 
     const handleDrop = useCallback((e: React.DragEvent, targetDate: Date, time: string) => {
@@ -233,6 +252,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         dropTarget,
         showConfirmDialog,
         pendingReschedule,
+        targetAppointments,
         handleDragStart,
         handleDragEnd,
         handleDragOver,

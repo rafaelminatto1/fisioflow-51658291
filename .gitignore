@@ -56,6 +56,8 @@ coverage
 # OS generated files
 Thumbs.db
 ehthumbs.db
+__pycache__/
+.agent/
 
 # Backup files
 *.bak
@@ -123,6 +125,8 @@ temp/
 *.swp
 *.swo
 *~
+.claude/
+.firebase/
 
 # Logs
 lint_output.txt
@@ -158,6 +162,7 @@ xcuserdata/
 # CocoaPods
 ios/Pods/
 ios/Podfile.lock
+fisioflow-screenshots/
 
 # Carthage
 Carthage/Build/

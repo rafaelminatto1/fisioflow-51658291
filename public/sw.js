@@ -12,7 +12,7 @@
 
 const CONFIG = {
   // Nome do cache (versão)
-  CACHE_VERSION: 'v2.1.0',
+  CACHE_VERSION: 'v2.1.1',
   CACHE_PREFIX: 'fisioflow',
 
   // URLs para cache imediato (core resources)
@@ -200,30 +200,30 @@ async function networkFirst(request, cacheName) {
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
 
-  // Buscar cache em paralelo com rede
-  const cached = cache.match(request);
-  const network = fetch(request).then(response => {
-    // Atualizar cache em background
+  // Tentar pegar do cache
+  const cachedResponse = await cache.match(request);
+
+  // Iniciar requisição de rede
+  const networkPromise = fetch(request).then(response => {
+    // Atualizar cache se resposta válida
     if (response.ok) {
       cache.put(request, response.clone());
     }
     return response;
-  }).catch(error => {
-    console.warn('[SW] Network failed, using cache if available:', error);
   });
 
-  // Retornar cache imediatamente se disponível
-  if (cached) {
-    // Atualizar cache em background
-    network.then(() => {
-      console.log('[SW] Background update complete:', request.url);
-    });
+  // Se tiver cache, retorna ele e deixa a rede atualizar em background
+  if (cachedResponse) {
+    // Log apenas para debug
+    networkPromise
+      .then(() => console.log('[SW] Background update complete:', request.url))
+      .catch((err) => console.warn('[SW] Background update failed:', err));
 
-    return cached;
+    return cachedResponse;
   }
 
-  // Sem cache - esperar rede
-  return network;
+  // Se não tiver cache, aguarda a rede
+  return networkPromise;
 }
 
 /**
@@ -357,7 +357,12 @@ self.addEventListener('fetch', (event) => {
           }
 
           // Último recurso - offline page
-          return caches.match('/offline.html') || new Response('Offline', {
+          const offlinePage = await caches.match('/offline.html');
+          if (offlinePage) {
+            return offlinePage;
+          }
+
+          return new Response('Offline', {
             status: 503,
             statusText: 'Service Unavailable',
             headers: new Headers({

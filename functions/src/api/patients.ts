@@ -171,9 +171,45 @@ export const listPatientsHttp = onRequest(
 
       const countResult = await pool.query(countQuery, countParams);
 
+      // Fallback to Firestore if PostgreSQL returns no patients (migration support)
+      let data = result.rows as Patient[];
+      let total = parseInt(countResult.rows[0].total, 10);
+
+      if (data.length === 0) {
+        logger.info('[listPatientsHttp] No patients in PostgreSQL, checking Firestore...');
+        const firestoreSnap = await admin.firestore().collection('patients')
+          .where('organizationId', '==', organizationId)
+          .where('isActive', '==', true)
+          .limit(limit)
+          .get();
+
+        if (!firestoreSnap.empty) {
+          data = firestoreSnap.docs.map(doc => {
+            const p = doc.data();
+            return {
+              id: doc.id,
+              name: p.name || p.full_name || '',
+              cpf: p.cpf || '',
+              email: p.email || '',
+              phone: p.phone || '',
+              birth_date: p.birth_date || null,
+              gender: p.gender || '',
+              main_condition: p.main_condition || '',
+              status: p.status || 'active',
+              progress: p.progress || 0,
+              is_active: p.isActive !== false,
+              created_at: p.createdAt || new Date().toISOString(),
+              updated_at: p.updatedAt || new Date().toISOString(),
+            } as Patient;
+          });
+          total = firestoreSnap.size;
+          logger.info('[listPatientsHttp] Loaded ' + total + ' patients from Firestore fallback');
+        }
+      }
+
       res.json({
-        data: result.rows as Patient[],
-        total: parseInt(countResult.rows[0].total, 10),
+        data: data,
+        total: total,
         page: Math.floor(offset / limit) + 1,
         perPage: limit,
       });

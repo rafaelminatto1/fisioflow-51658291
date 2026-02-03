@@ -108,6 +108,29 @@ src/
 - Use useCallback para funções
 - Gerencie dependências corretamente
 
+## Agenda e agendamentos: API vs Firestore
+
+A **lista de agendamentos** exibida na agenda vem da **API** (Cloud Functions / PostgreSQL) via `AppointmentService.fetchAppointments` → `appointmentsApi.list()`. Todos os `appointment.id` na UI são **IDs da API**.
+
+### Regra de ouro
+**Operações de escrita** (excluir, atualizar status, confirmar, salvar evolução) a partir dessa lista **devem usar a API**, não Firestore direto.
+
+### Referência rápida
+
+| Ação | Onde | Usar |
+|------|------|------|
+| Excluir agendamento | Schedule, useBulkActions | `AppointmentService.deleteAppointment(id, orgId)` |
+| Atualizar status | useBulkActions, NewEvaluationPage, evolução (save) | `AppointmentService.updateStatus(id, status)` ou `appointmentsApi.update(id, { status, ... })` |
+| Confirmar / lembrete WhatsApp | useWhatsAppConfirmations | `appointmentsApi.update(id, { ... })` |
+| Carregar um agendamento por id | SessionEvolutionContainer, useSatisfactionSurveys | Firestore `getDoc`; se não existir, `appointmentsApi.get(id)` |
+| Salvar evolução (atualizar appointment) | SessionEvolutionContainer | Se carregou da API: `appointmentsApi.update`. Se do Firestore: `updateDoc(doc(db, 'appointments', id), ...)` |
+
+### Evolução de sessão (`/session-evolution/:id`)
+- Aceita IDs do Firestore ou da API: carrega primeiro do Firestore e, se não existir, da API.
+- Ao salvar, usa a mesma fonte em que o agendamento foi carregado (estado `appointmentLoadedFromApi`).
+- Paciente: se veio da API e não existir em Firestore, fallback para `PatientService.getPatientById`.
+- O número da sessão é calculado com base em atendimentos no Firestore; quando o agendamento veio da API, esse número pode ser aproximado.
+
 ## 🐛 Debug e Desenvolvimento
 
 ### Logs

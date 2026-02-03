@@ -24,6 +24,7 @@ interface CalendarWeekViewProps {
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
     dragState: { appointment: Appointment | null; isDragging: boolean };
     dropTarget: { date: Date; time: string } | null;
+    targetAppointments?: Appointment[];
     handleDragStart: (e: React.DragEvent, appointment: Appointment) => void;
     handleDragEnd: () => void;
     handleDragOver: (e: React.DragEvent, date: Date, time: string) => void;
@@ -75,6 +76,7 @@ export const CalendarWeekView = memo(({
     onAppointmentReschedule,
     dragState,
     dropTarget,
+    targetAppointments = [],
     handleDragStart,
     handleDragEnd,
     handleDragOver,
@@ -313,6 +315,15 @@ export const CalendarWeekView = memo(({
 
                                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
 
+                                        // Get target appointments for preview (excluding the dragged one)
+                                        // Filtra por data E horário para mostrar apenas os appointments do slot correto
+                                        const slotTargetAppointments = isDropTarget && dragState.appointment
+                                            ? targetAppointments.filter(apt => {
+                                                const aptDate = parseAppointmentDate(apt.date);
+                                                return aptDate && isSameDay(aptDate, day) && apt.time === time && apt.id !== dragState.appointment!.id;
+                                              })
+                                            : [];
+
                                         return (
                                             <TimeSlotCell
                                                 key={`cell-${colIndex}-${rowIndex}`}
@@ -327,6 +338,8 @@ export const CalendarWeekView = memo(({
                                                 handleDragOver={handleDragOver}
                                                 handleDragLeave={handleDragLeave}
                                                 handleDrop={handleDrop}
+                                                targetAppointments={slotTargetAppointments}
+                                                draggedAppointment={dragState.appointment}
                                             />
                                         );
                                     });

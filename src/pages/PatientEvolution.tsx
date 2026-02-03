@@ -50,6 +50,8 @@ import { useGamification } from '@/hooks/useGamification';
 import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+import { useTherapists } from '@/hooks/useTherapists';
+import { useAuth } from '@/contexts/AuthContext';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
 // Componentes de Evolução
@@ -119,7 +121,12 @@ const PatientEvolution = () => {
   // Exercícios da sessão
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
 
+  // Fisioterapeuta responsável pela sessão (dropdown + CREFITO no header)
+  const [selectedTherapistId, setSelectedTherapistId] = useState('');
+
   // ========== HOOKS ==========
+  const { user } = useAuth();
+  const { therapists } = useTherapists();
   // Ações de agendamento (completar atendimento)
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
@@ -481,9 +488,11 @@ const PatientEvolution = () => {
           }
         }
 
+        const therapistId = selectedTherapistId || user?.uid;
+        if (!therapistId) return;
         const sessionData = {
           patient_id: patientId,
-          therapist_id: user.uid,
+          therapist_id: therapistId,
           appointment_id: appointmentId || null,
           session_date: new Date().toISOString(),
           session_type: 'treatment',
@@ -745,6 +754,9 @@ const PatientEvolution = () => {
             toggleInsights={() => setShowInsights(!showInsights)}
             onShowTemplateModal={() => setShowApplyTemplate(true)}
             onShowKeyboardHelp={() => setShowKeyboardHelp(true)}
+            therapists={therapists}
+            selectedTherapistId={selectedTherapistId}
+            onTherapistChange={setSelectedTherapistId}
           />
 
           {/* Quick Stats Row */}

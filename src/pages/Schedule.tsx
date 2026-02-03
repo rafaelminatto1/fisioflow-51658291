@@ -22,7 +22,7 @@ import { EmptyState } from '@/components/ui';
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
@@ -42,7 +42,7 @@ import {
 import { format, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
-import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc, deleteDoc } from '@/integrations/firebase/app';
+import { db, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 // Lazy load CalendarView for better initial load performance
@@ -95,19 +95,26 @@ const roundToNextSlot = (date: Date): string => {
 
 const Schedule = () => {
   // ===================================================================
-  // STATE
+  // STATE (deep linking: view + date from URL)
   // ===================================================================
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
+
+  const viewFromUrl = searchParams.get('view');
+  const dateFromUrl = searchParams.get('date');
+  const validView = viewFromUrl === 'day' || viewFromUrl === 'week' || viewFromUrl === 'month' ? viewFromUrl : null;
+  const parsedDate = dateFromUrl ? (() => { const d = parseISO(dateFromUrl); return isNaN(d.getTime()) ? null : d; })() : null;
+
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [quickEditAppointment, setQuickEditAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(() => parsedDate || new Date());
 
-  // Detect mobile and default to day view on mobile
   const [viewType, setViewType] = useState<CalendarViewType | 'list'>(() => {
+    if (validView) return validView;
     if (typeof window !== 'undefined') {
       return window.innerWidth < 768 ? 'day' : 'week';
     }
@@ -249,6 +256,9 @@ const Schedule = () => {
   const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
     try {
       const formattedDate = formatDateToLocalISO(newDate);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Schedule.tsx:handleAppointmentReschedule',message:'reschedule payload',data:{appointmentId:appointment.id,formattedDate,newTime,therapistId:appointment.therapistId,duration:appointment.duration},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       await rescheduleAppointment({
         appointmentId: appointment.id,
         appointment_date: formattedDate,
@@ -284,8 +294,12 @@ const Schedule = () => {
 
   const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
     try {
-      // FIX: Migrated from Supabase to Firestore
-      await deleteDoc(doc(db, 'appointments', appointment.id));
+      const organizationId = await getUserOrganizationId();
+      if (!organizationId) {
+        toast({ title: 'Erro', description: 'Organização não encontrada.', variant: 'destructive' });
+        return;
+      }
+      await AppointmentService.deleteAppointment(appointment.id, organizationId);
 
       toast({
         title: '✅ Agendamento excluído',
@@ -376,6 +390,14 @@ const Schedule = () => {
     }
   }, [isMobile, viewType]);
 
+  // Deep linking: sync view + date to URL for sharing and back/forward
+  useEffect(() => {
+    setSearchParams(
+      { view: viewType, date: format(currentDate, 'yyyy-MM-dd') },
+      { replace: true }
+    );
+  }, [viewType, currentDate, setSearchParams]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -394,6 +416,10 @@ const Schedule = () => {
       const key = e.key.toLowerCase();
 
       switch (key) {
+        case 'a':
+          e.preventDefault();
+          toggleSelectionMode();
+          break;
         case KEYBOARD_SHORTCUTS.NEW_APPOINTMENT:
           e.preventDefault();
           handleCreateAppointment();
@@ -444,7 +470,8 @@ const Schedule = () => {
     isModalOpen,
     showKeyboardShortcuts,
     quickEditAppointment,
-    handleCreateAppointment
+    handleCreateAppointment,
+    toggleSelectionMode
   ]);
 
   if (error) {
@@ -464,6 +491,13 @@ const Schedule = () => {
   return (
     <MainLayout fullWidth noPadding showBreadcrumbs={false}>
       <div className="flex flex-col min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950">
+        {/* Skip link - visible on focus for keyboard users */}
+        <a
+          href="#calendar-grid"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-medium focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none"
+        >
+          Pular para o calendário
+        </a>
 
         {/* Offline Cache Indicator */}
         <OfflineIndicator
@@ -481,12 +515,12 @@ const Schedule = () => {
           dataSource={dataSource}
         />
 
-        {/* AI Assistant - Agenda Insight */}
-        <section className="px-4 sm:px-6 mt-6 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="bg-gradient-to-r from-blue-600/10 to-blue-400/5 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+        {/* AI Assistant - Agenda Insight (healthcare palette, low visual weight) */}
+        <section className="px-4 sm:px-6 mt-6 animate-in fade-in slide-in-from-top-4 duration-700 motion-reduce:animate-none motion-reduce:duration-0">
+          <div className="bg-cyan-50/80 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-blue-500/20 flex-shrink-0 flex items-center justify-center text-blue-600">
-                <Sparkles className="h-6 w-6 animate-pulse" />
+              <div className="h-12 w-12 rounded-full bg-cyan-100 dark:bg-cyan-900/40 flex-shrink-0 flex items-center justify-center text-cyan-700 dark:text-cyan-400">
+                <Sparkles className="h-6 w-6" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Assistente de Agenda Clinsight</h2>
@@ -494,8 +528,9 @@ const Schedule = () => {
               </div>
             </div>
             <Button
+              variant="outline"
               size="sm"
-              className="rounded-xl font-bold shadow-md hover:shadow-lg h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white transition-all group"
+              className="rounded-xl font-semibold h-10 px-6 border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 transition-all group"
               onClick={() => toast({ title: "IA Analisando...", description: "Verificando disponibilidade e padrões de agendamento." })}
             >
               <Sparkles className="mr-2 h-4 w-4 group-hover:rotate-12 transition-transform" />
@@ -510,9 +545,9 @@ const Schedule = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               {/* Left Section - Title, Navigation, Today Button */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
-                {/* Title with icon */}
+                {/* Title with icon (healthcare palette) */}
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm">
+                  <div className="p-2 bg-gradient-to-br from-cyan-600 to-cyan-700 rounded-xl shadow-sm">
                     <Calendar className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -525,13 +560,14 @@ const Schedule = () => {
                   </div>
                 </div>
 
-                {/* Navigation Controls - Enhanced */}
+                {/* Navigation Controls - Enhanced (44px touch targets on mobile) */}
                 <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setCurrentDate(date => addDays(date, -7))}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
+                    className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
+                    aria-label="Data anterior"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -544,18 +580,19 @@ const Schedule = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setCurrentDate(date => addDays(date, 7))}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
+                    className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
+                    aria-label="Próxima data"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {/* Today Button - Enhanced */}
+                {/* Today Button - Enhanced (44px touch on mobile) */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentDate(new Date())}
-                  className="h-9 px-4 rounded-lg border-slate-200 dark:border-slate-700 font-medium transition-all hover:shadow-md"
+                  className="min-h-[44px] sm:h-9 px-4 rounded-lg border-slate-200 dark:border-slate-700 font-medium transition-all hover:shadow-md"
                 >
                   Hoje
                 </Button>
@@ -565,8 +602,9 @@ const Schedule = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowCancelAllTodayDialog(true)}
-                  className="h-9 px-4 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium transition-all"
+                  className="min-h-[44px] sm:h-9 px-4 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium transition-all"
                   title="Cancelar todos os agendamentos da data exibida"
+                  aria-label="Cancelar todos os agendamentos da data exibida"
                 >
                   <Trash2 className="w-4 h-4 mr-1.5" />
                   Cancelar todos
@@ -575,13 +613,15 @@ const Schedule = () => {
 
               {/* Right Section - View Switcher, Filters, Actions */}
               <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-                {/* View Type Switcher - Enhanced Design */}
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                {/* View Type Switcher - Enhanced Design (44px touch on mobile) */}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl" role="group" aria-label="Visualização da agenda">
                   <Button
                     size="sm"
                     variant={viewType === 'day' ? 'white' : 'ghost'}
                     onClick={() => setViewType('day')}
-                    className="h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                    className="min-h-[44px] sm:h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                    aria-label="Visualizar por dia"
+                    aria-pressed={viewType === 'day'}
                   >
                     <Calendar className="w-3.5 h-3.5 mr-1.5" />
                     <span className="hidden sm:inline">Dia</span>
@@ -590,7 +630,9 @@ const Schedule = () => {
                     size="sm"
                     variant={viewType === 'week' ? 'white' : 'ghost'}
                     onClick={() => setViewType('week')}
-                    className="h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                    className="min-h-[44px] sm:h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                    aria-label="Visualizar por semana"
+                    aria-pressed={viewType === 'week'}
                   >
                     <Calendar className="w-3.5 h-3.5 mr-1.5" />
                     Semana
@@ -599,7 +641,9 @@ const Schedule = () => {
                     size="sm"
                     variant={viewType === 'month' ? 'white' : 'ghost'}
                     onClick={() => setViewType('month')}
-                    className="h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                    className="min-h-[44px] sm:h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                    aria-label="Visualizar por mês"
+                    aria-pressed={viewType === 'month'}
                   >
                     <Calendar className="w-3.5 h-3.5 mr-1.5" />
                     Mês
@@ -610,12 +654,14 @@ const Schedule = () => {
                 <Button
                   variant={isSelectionMode ? "default" : "outline"}
                   size="icon"
-                  className={`h-9 w-9 rounded-lg transition-all ${isSelectionMode
-                    ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                  className={`min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 rounded-lg transition-all ${isSelectionMode
+                    ? 'bg-cyan-600 hover:bg-cyan-700 shadow-md'
                     : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   onClick={toggleSelectionMode}
                   title="Modo de Seleção (atalho: A)"
+                  aria-label="Modo seleção de agendamentos"
+                  aria-pressed={isSelectionMode}
                 >
                   <CheckSquare className="w-4 h-4" />
                 </Button>
@@ -632,17 +678,18 @@ const Schedule = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                     title="Configurações da Agenda"
+                    aria-label="Configurações da Agenda"
                   >
                     <SettingsIcon className="w-4 h-4" />
                   </Button>
                 </Link>
 
-                {/* Primary CTA - Enhanced */}
+                {/* Primary CTA - Enhanced (44px touch on mobile) */}
                 <Button
                   onClick={handleCreateAppointment}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 shadow-md hover:shadow-lg rounded-lg px-4 transition-all"
+                  className="min-h-[44px] sm:h-9 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 shadow-md hover:shadow-lg rounded-lg px-4 transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   <span className="hidden sm:inline">{isMobile ? 'Novo' : 'Novo Agendamento'}</span>
@@ -652,12 +699,12 @@ const Schedule = () => {
             </div>
           </div>
 
-          {/* Quick Stats Bar - New Addition */}
+          {/* Quick Stats Bar (healthcare palette) */}
           <div className="px-4 sm:px-6 pb-3">
             <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span className="font-medium text-blue-900 dark:text-blue-100">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-800">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                <span className="font-medium text-cyan-900 dark:text-cyan-100">
                   {appointments.length} agendamentos
                 </span>
               </div>

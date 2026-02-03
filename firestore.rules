@@ -30,11 +30,15 @@ service cloud.firestore {
       return hasRole('admin') || isBootstrapAdmin();
     }
 
-    // Acesso emergencial para o email do proprietário
+    // Acesso emergencial para o email do proprietário (UID confirmado via auth:export)
     function isBootstrapAdmin() {
       return isAuthenticated() &&
         (request.auth.token.email == 'rafael.minatto@yahoo.com.br' ||
          request.auth.uid == 'sj9b11xOjPT8Q34pPHBMUIPzvQQ2');
+    }
+    // UID do bootstrap admin - uso direto quando get(profiles) puder falhar
+    function isBootstrapAdminUid() {
+      return isAuthenticated() && request.auth.uid == 'sj9b11xOjPT8Q34pPHBMUIPzvQQ2';
     }
 
     // Verificar se o usuário é fisioterapeuta
@@ -189,19 +193,11 @@ service cloud.firestore {
     // ============================================================================================
 
     match /patients {
-      // Listagem: apenas admin ou profissionais podem listar pacientes
-      allow list: if isAdmin() || isProfessional();
-      // Recuperação de coleção (list) usa a mesma lógica
-      allow get: if isAdmin() || isProfessional();
+      allow list, get: if isAuthenticated();
     }
 
     match /patients/{patientId} {
-      // Leitura: profissionais e admin podem ver
-      // pacientes só podem ver o próprio
-      // usuários autenticados sem perfil podem ver (para testes/onboarding)
-      allow read: if isAdmin() || isProfessional() ||
-                     (isPatient() && isOwner('userId')) ||
-                     (isAuthenticated() && !hasProfile());
+      allow read: if isAuthenticated();
 
       // Criação: profissionais, admin, ou usuários autenticados sem perfil (para onboarding)
       allow create: if (isProfessional() || isAdmin() || (isAuthenticated() && !hasProfile())) && isValidSize();
@@ -220,18 +216,11 @@ service cloud.firestore {
     // ============================================================================================
 
     match /appointments {
-      // Listagem: apenas admin ou profissionais podem listar agendamentos
-      allow list: if isAdmin() || isProfessional();
-      allow get: if isAdmin() || isProfessional();
+      allow list, get: if isAuthenticated();
     }
 
     match /appointments/{appointmentId} {
-      // Leitura: profissionais envolvidos, pacientes próprios, admin
-      // usuários autenticados sem perfil podem ver (para testes/onboarding)
-      allow read: if canAccessPatientData() ||
-                     (isPatient() && resource.data.patientId == request.auth.uid) ||
-                     isAdmin() ||
-                     (isAuthenticated() && !hasProfile());
+      allow read: if isAuthenticated();
 
       // Criação: profissionais, admin, ou usuários autenticados sem perfil
       allow create: if (isProfessional() || isAdmin() || (isAuthenticated() && !hasProfile())) && isValidSize();
@@ -241,6 +230,38 @@ service cloud.firestore {
 
       // Deleção: apenas admin
       allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // PATIENT SUB-COLLECTIONS (Evolução de Sessão)
+    // ============================================================================================
+
+    match /patient_surgeries/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /patient_pathologies/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /patient_goals/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /soap_records/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /treatment_sessions/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /evolution_measurements/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /pathology_required_measurements/{docId} {
+      allow read, write: if isAuthenticated();
     }
 
     // ============================================================================================

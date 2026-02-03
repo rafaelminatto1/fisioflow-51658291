@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, memo } from 'react';
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekView } from './CalendarWeekView';
 import { CalendarMonthView } from './CalendarMonthView';
+import { CalendarEmptyState } from './CalendarEmptyState';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
@@ -105,6 +106,7 @@ export const CalendarView = memo(({
     dropTarget,
     showConfirmDialog,
     pendingReschedule,
+    targetAppointments,
     handleDragStart,
     handleDragEnd,
     handleDragOver,
@@ -115,7 +117,10 @@ export const CalendarView = memo(({
   } = useCalendarDrag({
     onAppointmentReschedule,
     onOptimisticUpdate: handleOptimisticUpdate,
-    onRevertUpdate: handleRevertUpdate
+    onRevertUpdate: handleRevertUpdate,
+    getAppointmentsForSlot: useCallback((date: Date, time: string) => {
+      return getAppointmentsForDate(date).filter(apt => apt.time === time);
+    }, [getAppointmentsForDate])
   });
 
   useEffect(() => {
@@ -343,6 +348,25 @@ export const CalendarView = memo(({
     return dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
   }, [dayTimeSlotInfo, currentDate]);
 
+  const isEmptyDay = useMemo(() => getAppointmentsForDate(currentDate).length === 0, [currentDate, getAppointmentsForDate]);
+  const isEmptyWeek = useMemo(() => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
+    return weekDays.every((day) => getAppointmentsForDate(day).length === 0);
+  }, [currentDate, getAppointmentsForDate]);
+  const isEmptyMonth = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    return days.every((day) => getAppointmentsForDate(day).length === 0);
+  }, [currentDate, getAppointmentsForDate]);
+
+  const showEmptyState = (viewType === 'day' && isEmptyDay) || (viewType === 'week' && isEmptyWeek) || (viewType === 'month' && isEmptyMonth);
+  const handleEmptyStateCreate = useCallback(() => {
+    const firstSlot = memoizedTimeSlots[0] || '07:00';
+    onTimeSlotClick(currentDate, firstSlot);
+  }, [currentDate, memoizedTimeSlots, onTimeSlotClick]);
+
   return (
     <>
       <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]" role="region" aria-label="Calendário de agendamentos">
@@ -355,7 +379,8 @@ export const CalendarView = memo(({
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('prev')}
-                  className="h-8 w-8 p-0"
+                  className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0"
+                  aria-label="Navegar para anterior"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -368,7 +393,8 @@ export const CalendarView = memo(({
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('next')}
-                  className="h-8 w-8 p-0"
+                  className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0"
+                  aria-label="Navegar para próximo"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -381,7 +407,7 @@ export const CalendarView = memo(({
                     variant={viewType === type ? "default" : "ghost"}
                     size="sm"
                     onClick={() => onViewTypeChange(type)}
-                    className="capitalize text-[10px] px-1.5 py-1 h-7 min-w-[28px] touch-target"
+                    className="capitalize text-[10px] px-1.5 py-1 min-h-[44px] min-w-[44px] sm:h-7 sm:min-w-[28px] touch-target"
                     aria-pressed={viewType === type}
                     aria-label={`Visualizar por ${type === 'day' ? 'dia' : 'semana'}`}
                   >
@@ -399,7 +425,7 @@ export const CalendarView = memo(({
                     variant="ghost"
                     size="sm"
                     onClick={() => navigateCalendar('prev')}
-                    className="h-9 w-9 p-0 hover-scale touch-target"
+                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 p-0 hover-scale touch-target"
                     aria-label={`Navegar para ${viewType === 'day' ? 'ontem' : viewType === 'week' ? 'semana anterior' : 'mês anterior'}`}
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -408,7 +434,7 @@ export const CalendarView = memo(({
                     variant="ghost"
                     size="sm"
                     onClick={() => navigateCalendar('next')}
-                    className="h-9 w-9 p-0 hover-scale touch-target"
+                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 p-0 hover-scale touch-target"
                     aria-label={`Navegar para ${viewType === 'day' ? 'amanhã' : viewType === 'week' ? 'próxima semana' : 'próximo mês'}`}
                   >
                     <ChevronRight className="h-5 w-5" />
@@ -419,7 +445,7 @@ export const CalendarView = memo(({
                   variant="outline"
                   size="sm"
                   onClick={goToToday}
-                  className="hover-scale font-medium touch-target"
+                  className="min-h-[44px] sm:min-h-0 hover-scale font-medium touch-target"
                   aria-label="Ir para hoje"
                 >
                   Hoje
@@ -437,7 +463,7 @@ export const CalendarView = memo(({
                     variant={viewType === type ? "default" : "ghost"}
                     size="sm"
                     onClick={() => onViewTypeChange(type)}
-                    className="capitalize text-xs sm:text-sm px-2 sm:px-3 touch-target"
+                    className="capitalize text-xs sm:text-sm px-2 sm:px-3 min-h-[44px] sm:min-h-0 touch-target"
                     role="radio"
                     aria-checked={viewType === type}
                     aria-label={`Visualizar por ${type === 'day' ? 'dia' : type === 'week' ? 'semana' : 'mês'}`}
@@ -449,8 +475,15 @@ export const CalendarView = memo(({
             </div>
           </div>
 
-          <div className="flex-1 relative" id="calendar-grid" role="tabpanel" aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}>
-            {viewType === 'day' && (
+          <div className="flex-1 relative min-h-[400px]" id="calendar-grid" role="tabpanel" aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}>
+            {showEmptyState ? (
+              <CalendarEmptyState
+                viewType={viewType}
+                currentDate={currentDate}
+                onCreateAppointment={handleEmptyStateCreate}
+                className="min-h-[400px]"
+              />
+            ) : viewType === 'day' ? (
               <div key="day-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
                 <CalendarDayView
                   currentDate={currentDate}
@@ -467,6 +500,7 @@ export const CalendarView = memo(({
                   onAppointmentReschedule={onAppointmentReschedule}
                   dragState={dragState}
                   dropTarget={dropTarget}
+                  targetAppointments={targetAppointments}
                   handleDragStart={handleDragStart}
                   handleDragEnd={handleDragEnd}
                   handleDragOver={handleDragOver}
@@ -483,9 +517,7 @@ export const CalendarView = memo(({
                   onToggleSelection={onToggleSelection}
                 />
               </div>
-            )}
-
-            {viewType === 'week' && (
+            ) : viewType === 'week' ? (
               <div key="week-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
                 <CalendarWeekView
                   currentDate={currentDate}
@@ -497,6 +529,7 @@ export const CalendarView = memo(({
                   onAppointmentReschedule={onAppointmentReschedule}
                   dragState={dragState}
                   dropTarget={dropTarget}
+                  targetAppointments={targetAppointments}
                   handleDragStart={handleDragStart}
                   handleDragEnd={handleDragEnd}
                   handleDragOver={handleDragOver}
@@ -513,9 +546,7 @@ export const CalendarView = memo(({
                   onToggleSelection={onToggleSelection}
                 />
               </div>
-            )}
-
-            {viewType === 'month' && (
+            ) : (
               <div key="month-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
                 <CalendarMonthView
                   currentDate={currentDate}

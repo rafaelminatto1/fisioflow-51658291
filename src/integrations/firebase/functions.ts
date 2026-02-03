@@ -191,6 +191,7 @@ export async function callFunctionHttpWithResponse<TRequest, TData>(
  */
 export namespace PatientApi {
   export interface ListParams {
+    organizationId?: string;
     status?: string;
     search?: string;
     limit?: number;

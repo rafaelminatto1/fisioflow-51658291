@@ -1,14 +1,14 @@
 /**
- * Bulk Actions Hook - Migrated to Firebase
+ * Bulk Actions Hook - Agenda list comes from API; delete/update use API.
  */
 
 import { useState, useCallback } from 'react';
-import { collection, doc, writeBatch } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
 
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { AppointmentService } from '@/services/appointmentService';
+import { getUserOrganizationId } from '@/utils/userHelpers';
 
 export function useBulkActions() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -48,28 +48,37 @@ export function useBulkActions() {
     if (selectedIds.size === 0) return;
 
     try {
-      const batch = writeBatch(db);
-
-      // Firestore batch operations are limited to 500 operations
+      const organizationId = await getUserOrganizationId();
+      if (!organizationId) {
+        toast({ title: 'Erro', description: 'Organização não encontrada.', variant: 'destructive' });
+        return;
+      }
       const ids = Array.from(selectedIds);
-      const chunks = [];
-      for (let i = 0; i < ids.length; i += 500) {
-        chunks.push(ids.slice(i, i + 500));
+      if (ids.length > 5) {
+        toast({ title: 'Excluindo...', description: `${ids.length} agendamentos. Aguarde.` });
+      }
+      let errors = 0;
+      for (const id of ids) {
+        try {
+          await AppointmentService.deleteAppointment(id, organizationId);
+        } catch (err) {
+          logger.error('Erro ao excluir agendamento', { id, err }, 'useBulkActions');
+          errors++;
+        }
       }
 
-      for (const chunk of chunks) {
-        const chunkBatch = writeBatch(db);
-        chunk.forEach(id => {
-          const docRef = doc(db, 'appointments', id);
-          chunkBatch.delete(docRef);
+      if (errors > 0) {
+        toast({
+          title: 'Exclusão parcial',
+          description: `${ids.length - errors} excluídos, ${errors} falha(s).`,
+          variant: 'destructive',
         });
-        await chunkBatch.commit();
+      } else {
+        toast({
+          title: 'Sucesso',
+          description: `${selectedIds.size} agendamentos excluídos.`,
+        });
       }
-
-      toast({
-        title: 'Sucesso',
-        description: `${selectedIds.size} agendamentos excluídos.`,
-      });
 
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       clearSelection();
@@ -88,27 +97,32 @@ export function useBulkActions() {
     if (selectedIds.size === 0) return;
 
     try {
-
-      // Firestore batch operations are limited to 500 operations
       const ids = Array.from(selectedIds);
-      const chunks = [];
-      for (let i = 0; i < ids.length; i += 500) {
-        chunks.push(ids.slice(i, i + 500));
+      if (ids.length > 5) {
+        toast({ title: 'Atualizando...', description: `${ids.length} agendamentos. Aguarde.` });
+      }
+      let errors = 0;
+      for (const id of ids) {
+        try {
+          await AppointmentService.updateStatus(id, status);
+        } catch (err) {
+          logger.error('Erro ao atualizar status do agendamento', { id, err }, 'useBulkActions');
+          errors++;
+        }
       }
 
-      for (const chunk of chunks) {
-        const chunkBatch = writeBatch(db);
-        chunk.forEach(id => {
-          const docRef = doc(db, 'appointments', id);
-          chunkBatch.update(docRef, { status });
+      if (errors > 0) {
+        toast({
+          title: 'Atualização parcial',
+          description: `${ids.length - errors} atualizados, ${errors} falha(s).`,
+          variant: 'destructive',
         });
-        await chunkBatch.commit();
+      } else {
+        toast({
+          title: 'Sucesso',
+          description: `${selectedIds.size} agendamentos atualizados para ${status}.`,
+        });
       }
-
-      toast({
-        title: 'Sucesso',
-        description: `${selectedIds.size} agendamentos atualizados para ${status}.`,
-      });
 
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       clearSelection();

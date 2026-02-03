@@ -72,9 +72,10 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
           variant="outline"
           size="sm"
           className={cn(
-            'relative gap-2 animate-slide-up-fade',
+            'relative gap-2 animate-slide-up-fade min-h-[44px] sm:min-h-0',
             activeFiltersCount > 0 && 'border-primary'
           )}
+          aria-label={activeFiltersCount > 0 ? `Abrir filtros avançados (${activeFiltersCount} ativos)` : 'Abrir filtros avançados'}
         >
           <Filter className="h-4 w-4" />
           Filtros
@@ -98,7 +99,8 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={onClear}
-                className="h-8 text-xs"
+                className="h-8 text-xs min-h-[44px] sm:min-h-0"
+                aria-label="Limpar filtros"
               >
                 <X className="h-3.5 w-3.5 mr-1" />
                 Limpar

@@ -3,9 +3,10 @@
  *
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { db } from '@/integrations/firebase/app';
+import { appointmentsApi } from '@/integrations/firebase/functions';
 
 
 
@@ -119,13 +120,11 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
 
       await addDoc(collection(db, 'whatsapp_messages'), messageData);
 
-      // Atualizar appointment com timestamp do lembrete
+      // Atualizar appointment via API (agenda IDs são da API)
       const updateField = messageType === 'reminder_24h'
         ? 'reminder_sent_24h'
         : 'reminder_sent_2h';
-
-      const appointmentRef = doc(db, 'appointments', appointmentId);
-      await updateDoc(appointmentRef, {
+      await appointmentsApi.update(appointmentId, {
         [updateField]: new Date().toISOString()
       });
     },
@@ -147,8 +146,7 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
       appointmentId: string;
       method?: 'whatsapp' | 'phone' | 'email' | 'manual';
     }) => {
-      const appointmentRef = doc(db, 'appointments', appointmentId);
-      await updateDoc(appointmentRef, {
+      await appointmentsApi.update(appointmentId, {
         confirmation_status: 'confirmed',
         confirmed_at: new Date().toISOString(),
         confirmation_method: method,

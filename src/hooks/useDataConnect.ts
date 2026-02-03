@@ -29,7 +29,7 @@ export const usePatientsPostgres = (organizationId: string | undefined) => {
     queryKey: ['patients-postgres', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const result = await executeQuery(listPatientsByOrgRef(dc, { organizationId }));
+      const result = await executeQuery(listPatientsByOrgRef(dc(), { organizationId }));
       return result.data.patients.map(mapPatientFromPostgres);
     },
     enabled: !!organizationId,
@@ -69,7 +69,7 @@ export const usePatientPostgres = (patientId: string | undefined) => {
     queryKey: ['patient-postgres', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-      const result = await executeQuery(getPatientByIdRef(dc, { id: patientId }));
+      const result = await executeQuery(getPatientByIdRef(dc(), { id: patientId }));
       return result.data.patient;
     },
     enabled: !!patientId,

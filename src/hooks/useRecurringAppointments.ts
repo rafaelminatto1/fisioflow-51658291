@@ -16,6 +16,8 @@ import {
 } from '@/types/recurring-appointment';
 import { addDays, addWeeks, addMonths, addYears, startOfDay, isSameDay } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
+import { appointmentsApi } from '@/integrations/firebase/functions';
+import { AppointmentService } from '@/services/appointmentService';
 
 
 
@@ -458,13 +460,17 @@ export function useCancelOccurrence() {
       const docSnap = await getDoc(docRef);
       const occurrenceData = { id: occurrenceId, ...docSnap.data() };
 
-      // Se existe appointment vinculado, cancelar também
+      // Se existe appointment vinculado, cancelar também (Firestore primeiro; se id for da API, fallback)
       if (occurrenceData.appointment_id) {
-        const appointmentRef = doc(db, 'appointments', occurrenceData.appointment_id);
-        await updateDoc(appointmentRef, {
-          status: 'cancelado',
-          cancel_reason: reason || 'Cancelado via recorrência',
-        });
+        try {
+          const appointmentRef = doc(db, 'appointments', occurrenceData.appointment_id);
+          await updateDoc(appointmentRef, {
+            status: 'cancelado',
+            cancel_reason: reason || 'Cancelado via recorrência',
+          });
+        } catch {
+          await AppointmentService.updateStatus(occurrenceData.appointment_id, 'cancelado');
+        }
       }
 
       return occurrenceData;
@@ -511,14 +517,19 @@ export function useModifyOccurrence() {
       const docSnap = await getDoc(docRef);
       const data = { id: occurrenceId, ...docSnap.data() };
 
-      // Se existe appointment vinculado, atualizar também
+      // Se existe appointment vinculado, atualizar também (Firestore primeiro; se id for da API, fallback)
       if (data.appointment_id) {
-        const appointmentRef = doc(db, 'appointments', data.appointment_id);
-        await updateDoc(appointmentRef, {
+        const payload = {
           ...modifications,
           time: modifications.time || data.occurrence_time,
           duration: modifications.duration || data.modified_duration || 60,
-        });
+        };
+        try {
+          const appointmentRef = doc(db, 'appointments', data.appointment_id);
+          await updateDoc(appointmentRef, payload);
+        } catch {
+          await appointmentsApi.update(data.appointment_id, payload);
+        }
       }
 
       return data;

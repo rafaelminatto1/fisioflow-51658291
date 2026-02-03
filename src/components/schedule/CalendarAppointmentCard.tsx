@@ -1,16 +1,14 @@
 import React, { memo, useState } from 'react';
-import { Appointment, AppointmentStatus } from '@/types/appointment';
-import { STATUS_CONFIG, CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
+import { Appointment } from '@/types/appointment';
+import { CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { MoreVertical, GripVertical, CheckCircle2, Circle, Clock, Loader2 } from 'lucide-react';
+import { MoreVertical, GripVertical, CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useCardSize } from '@/hooks/useCardSize';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -37,88 +35,79 @@ const normalizeTime = (time: string | null | undefined): string => {
     return time.substring(0, 5);
 };
 
-const getInitials = (name: string) => {
-    return name
-        .split(' ')
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-};
-
 const getStatusStyles = (status: string) => {
-    // Vivid & Standardized Palette
+    // Healthcare palette: primary #0891B2, secondary #22D3EE, success #059669, bg #ECFEFF, text #164E63
+    // Contrast ≥ 4.5:1 for readability (ux-guidelines)
     const styles = {
         confirmado: {
             border: 'border-emerald-500',
-            bg: 'bg-emerald-100/90 dark:bg-emerald-500/20',
-            hoverBg: 'hover:bg-emerald-200/90 dark:hover:bg-emerald-500/30',
+            bg: 'bg-emerald-50/95 dark:bg-emerald-500/20',
+            hoverBg: 'hover:bg-emerald-100/95 dark:hover:bg-emerald-500/30',
             text: 'text-emerald-900 dark:text-emerald-400',
-            subtext: 'text-emerald-800/80 dark:text-emerald-300/80',
+            subtext: 'text-emerald-800/90 dark:text-emerald-300/90',
             accent: 'bg-emerald-600',
             indicator: 'text-emerald-700'
         },
         agendado: {
-            border: 'border-blue-500',
-            bg: 'bg-blue-100/90 dark:bg-blue-500/20',
-            hoverBg: 'hover:bg-blue-200/90 dark:hover:bg-blue-500/30',
-            text: 'text-blue-900 dark:text-blue-400',
-            subtext: 'text-blue-800/80 dark:text-blue-300/80',
-            accent: 'bg-blue-600',
-            indicator: 'text-blue-700'
+            border: 'border-cyan-500',
+            bg: 'bg-cyan-50/95 dark:bg-cyan-500/20',
+            hoverBg: 'hover:bg-cyan-100/95 dark:hover:bg-cyan-500/30',
+            text: 'text-cyan-900 dark:text-cyan-400',
+            subtext: 'text-cyan-800/90 dark:text-cyan-300/90',
+            accent: 'bg-cyan-600',
+            indicator: 'text-cyan-700'
         },
         em_andamento: {
             border: 'border-amber-500',
-            bg: 'bg-amber-100/90 dark:bg-amber-500/20',
-            hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
+            bg: 'bg-amber-50/95 dark:bg-amber-500/20',
+            hoverBg: 'hover:bg-amber-100/95 dark:hover:bg-amber-500/30',
             text: 'text-amber-900 dark:text-amber-400',
-            subtext: 'text-amber-800/80 dark:text-amber-300/80',
+            subtext: 'text-amber-800/90 dark:text-amber-300/90',
             accent: 'bg-amber-600',
             indicator: 'text-amber-700'
         },
-        // Combined Red for negative states
         cancelado: {
             border: 'border-red-500',
-            bg: 'bg-red-100/90 dark:bg-red-500/20',
-            hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
+            bg: 'bg-red-50/95 dark:bg-red-500/20',
+            hoverBg: 'hover:bg-red-100/95 dark:hover:bg-red-500/30',
             text: 'text-red-900 dark:text-red-400',
-            subtext: 'text-red-800/80 dark:text-red-300/80',
+            subtext: 'text-red-800/90 dark:text-red-300/90',
             accent: 'bg-red-600',
             indicator: 'text-red-700'
         },
         falta: {
-            border: 'border-red-500', // Same vibrant red
-            bg: 'bg-red-100/90 dark:bg-red-500/20',
-            hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
+            border: 'border-red-500',
+            bg: 'bg-red-50/95 dark:bg-red-500/20',
+            hoverBg: 'hover:bg-red-100/95 dark:hover:bg-red-500/30',
             text: 'text-red-900 dark:text-red-400',
-            subtext: 'text-red-800/80 dark:text-red-300/80',
+            subtext: 'text-red-800/90 dark:text-red-300/90',
             accent: 'bg-red-600',
             indicator: 'text-red-700'
         },
         concluido: {
-            border: 'border-indigo-500',
-            bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
-            hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
-            text: 'text-indigo-900 dark:text-indigo-400',
-            subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
-            accent: 'bg-indigo-600',
-            indicator: 'text-indigo-700'
+            border: 'border-teal-500',
+            bg: 'bg-teal-50/95 dark:bg-teal-500/20',
+            hoverBg: 'hover:bg-teal-100/95 dark:hover:bg-teal-500/30',
+            text: 'text-teal-900 dark:text-teal-400',
+            subtext: 'text-teal-800/90 dark:text-teal-300/90',
+            accent: 'bg-teal-600',
+            indicator: 'text-teal-700'
         },
         avaliacao: {
             border: 'border-violet-500',
-            bg: 'bg-violet-100/90 dark:bg-violet-500/20',
-            hoverBg: 'hover:bg-violet-200/90 dark:hover:bg-violet-500/30',
+            bg: 'bg-violet-50/95 dark:bg-violet-500/20',
+            hoverBg: 'hover:bg-violet-100/95 dark:hover:bg-violet-500/30',
             text: 'text-violet-900 dark:text-violet-400',
-            subtext: 'text-violet-800/80 dark:text-violet-300/80',
+            subtext: 'text-violet-800/90 dark:text-violet-300/90',
             accent: 'bg-violet-600',
             indicator: 'text-violet-700'
         },
         default: {
             border: 'border-slate-500',
-            bg: 'bg-slate-100/90 dark:bg-slate-500/20',
-            hoverBg: 'hover:bg-slate-200/90 dark:hover:bg-slate-500/30',
+            bg: 'bg-slate-50/95 dark:bg-slate-500/20',
+            hoverBg: 'hover:bg-slate-100/95 dark:hover:bg-slate-500/30',
             text: 'text-slate-900 dark:text-slate-300',
-            subtext: 'text-slate-700/80 dark:text-slate-400/80',
+            subtext: 'text-slate-700/90 dark:text-slate-400/90',
             accent: 'bg-slate-600',
             indicator: 'text-slate-700'
         }
@@ -152,8 +141,6 @@ const CalendarAppointmentCardBase = ({
 
     // Status visual config
     const statusStyles = getStatusStyles(appointment.status);
-    const config = STATUS_CONFIG[appointment.status as AppointmentStatus] || STATUS_CONFIG.agendado;
-    const StatusIcon = config.icon;
 
     // Get card size configuration
     const sizeConfig = CARD_SIZE_CONFIGS[cardSize];
@@ -161,7 +148,7 @@ const CalendarAppointmentCardBase = ({
     // Calculate scaled font sizes based on user preference
     const fontScale = fontPercentage / 100; // Convert percentage to multiplier (0.5 to 1.5)
     const scaledTimeFontSize = Math.round(sizeConfig.timeFontSize * fontScale);
-    const scaledNameFontSize = Math.round(sizeConfig.nameFontSize * fontScale);
+    const scaledNameFontSize = Math.max(14, Math.round(sizeConfig.nameFontSize * fontScale));
     const scaledTypeFontSize = Math.round(sizeConfig.typeFontSize * fontScale);
 
     const duration = appointment.duration || 60;
@@ -269,11 +256,13 @@ const CalendarAppointmentCardBase = ({
             aria-selected={isSelected}
             aria-pressed={isSelected}
         >
-            <div className={cn(
-                "flex flex-col h-full relative",
-                // Use dynamic padding based on card size, but still respect tiny cards
-                isTiny ? "p-0.5 justify-center items-center" : sizeConfig.padding
-            )}>
+            <div
+                className={cn(
+                    "flex flex-col h-full relative",
+                    isTiny && "p-0.5 justify-center items-center"
+                )}
+                style={isTiny ? undefined : { padding: `max(8px, ${sizeConfig.padding})`, paddingRight: '1.5rem' }}
+            >
                 {/* 1. Tiny View (< 30m): Minimal indicator */}
                 {isTiny ? (
                     <div className="flex items-center gap-1 w-full justify-center">
@@ -289,8 +278,8 @@ const CalendarAppointmentCardBase = ({
                     /* 2. Normal View (>= 30m) */
                     <>
                         {/* Header: Time & Status */}
-                        <div className="flex items-center justify-between gap-1 mb-0.5 w-full">
-                            <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1 w-full">
+                            <div className="flex items-center gap-2 min-w-0">
                                 {/* Accent Bar logic instead of dot for cleaner look */}
                                 <div className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
 
@@ -305,7 +294,7 @@ const CalendarAppointmentCardBase = ({
                                 </span>
                             </div>
 
-                            {/* Selection or Icon */}
+                            {/* Selection or loading indicator only; status icon removed per repagination */}
                             {isSaving ? (
                                 <div className="flex-shrink-0">
                                     <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
@@ -318,47 +307,33 @@ const CalendarAppointmentCardBase = ({
                                         <Circle className="w-3.5 h-3.5 opacity-40" />
                                     )}
                                 </div>
-                            ) : (
-                                sizeConfig.showStatusIcon && StatusIcon && (
-                                    <StatusIcon className={cn("w-3 h-3 opacity-50", statusStyles.indicator)} />
-                                )
-                            )}
+                            ) : null}
                         </div>
 
-                        {/* Patient Name & Details */}
-                        <div className="flex items-start gap-1.5 mt-0.5 min-h-0 w-full">
-                            {/* Avatar based on card size config */}
-                            {sizeConfig.showAvatar && (
-                                <div className="hidden sm:block shrink-0 mt-0.5">
-                                    <Avatar
-                                        className="border border-white/40 shadow-sm"
-                                        style={{ width: `${sizeConfig.avatarSize}px`, height: `${sizeConfig.avatarSize}px` }}
-                                    >
-                                        <AvatarFallback
-                                            className={cn("font-bold", statusStyles.accent, "text-white")}
-                                            style={{ fontSize: `${Math.round(sizeConfig.avatarSize * 0.4 * fontScale)}px` }}
-                                        >
-                                            {getInitials(appointment.patientName)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </div>
-                            )}
-
+                        {/* Patient Name & Details (tooltip for long names) */}
+                        <div className="flex flex-col mt-1 min-h-0 w-full">
                             <div className="min-w-0 flex-1">
-                                <span
-                                    className={cn(
-                                        "block font-bold leading-tight line-clamp-2 tracking-tight",
-                                        statusStyles.text,
-                                    )}
-                                    style={{ fontSize: `${scaledNameFontSize}px` }}
-                                >
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                        className={cn(
+                                            "block font-bold leading-tight line-clamp-2 tracking-tight",
+                                            statusStyles.text,
+                                        )}
+                                        style={{ fontSize: `${scaledNameFontSize}px` }}
+                                    >
+                                        {appointment.patientName}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[280px] break-words">
                                     {appointment.patientName}
-                                </span>
+                                  </TooltipContent>
+                                </Tooltip>
 
                                 {sizeConfig.showType && (
                                     <span
                                         className={cn(
-                                            "block truncate opacity-70 mt-0.5 font-medium",
+                                            "block truncate opacity-70 mt-1 font-medium",
                                             statusStyles.subtext
                                         )}
                                         style={{ fontSize: `${scaledTypeFontSize}px` }}

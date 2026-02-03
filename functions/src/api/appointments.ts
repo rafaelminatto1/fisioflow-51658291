@@ -302,19 +302,22 @@ export const updateAppointmentHttp = onRequest(
       const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, organizationId]);
       if (current.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
       const currentAppt = current.rows[0];
-      if (updates.date || updates.startTime || updates.endTime || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id)) {
-        const hasConflict = await checkTimeConflictHelper(pool, {
-          date: updates.date || currentAppt.date,
-          startTime: updates.startTime || currentAppt.start_time,
-          endTime: updates.endTime || currentAppt.end_time,
-          therapistId: updates.therapistId || currentAppt.therapist_id,
+      const newDate = updates.date ?? updates.appointment_date ?? currentAppt.date;
+      const newStartTime = updates.startTime ?? updates.start_time ?? updates.appointment_time ?? currentAppt.start_time;
+      const newEndTime = updates.endTime ?? updates.end_time ?? currentAppt.end_time;
+      const runConflictCheck = (updates.date || updates.appointment_date || updates.startTime || updates.start_time || updates.appointment_time || updates.endTime || updates.end_time) || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id);
+      if (runConflictCheck) {
+        const hasConflict = await checkTimeConflictByCapacity(pool, {
+          date: newDate,
+          startTime: newStartTime,
+          endTime: newEndTime,
           excludeAppointmentId: appointmentId,
           organizationId
         });
         if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
       }
       const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'session_type', 'notes'];
-      const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id', type: 'session_type' };
+      const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id', type: 'session_type', appointment_date: 'date', appointment_time: 'start_time' };
       const setClauses: string[] = [];
       const values: (string | number | boolean | Date | null)[] = [];
       const seenFields = new Set<string>();
@@ -584,8 +587,71 @@ interface CheckTimeConflictRequest {
   organizationId: string;
 }
 
+const DEFAULT_SLOT_CAPACITY = 4;
+
 /**
- * Verifica conflito de horário (Internal helper)
+ * Obtém capacidade do slot (max_patients) a partir do Firestore schedule_capacity_config.
+ * day_of_week: 0=domingo, 1=segunda, ..., 6=sábado.
+ */
+async function getSlotCapacity(organizationId: string, dateStr: string, startTime: string): Promise<number> {
+  try {
+    const d = new Date(dateStr + 'T12:00:00');
+    const dayOfWeek = d.getDay();
+    const db = admin.firestore();
+    const snap = await db.collection('schedule_capacity_config')
+      .where('organization_id', '==', organizationId)
+      .where('day_of_week', '==', dayOfWeek)
+      .get();
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      const start = (data.start_time as string) || '00:00';
+      const end = (data.end_time as string) || '23:59';
+      if (start <= startTime && startTime < end) {
+        const max = Number(data.max_patients);
+        return Number.isFinite(max) && max >= 1 ? max : DEFAULT_SLOT_CAPACITY;
+      }
+    }
+  } catch (e) {
+    logger.warn('[getSlotCapacity] Firestore read failed, using default', { organizationId, dateStr, startTime, error: e });
+  }
+  return DEFAULT_SLOT_CAPACITY;
+}
+
+/**
+ * Verifica conflito por capacidade: slot cheio quando count >= capacity.
+ * Não considera therapist_id; conta todos os agendamentos no horário da organização.
+ */
+async function checkTimeConflictByCapacity(
+  pool: any,
+  params: { date: string; startTime: string; endTime: string; excludeAppointmentId?: string; organizationId: string }
+): Promise<boolean> {
+  const { date, startTime, endTime, excludeAppointmentId, organizationId } = params;
+  const capacity = await getSlotCapacity(organizationId, date, startTime);
+
+  let query = `
+    SELECT id FROM appointments
+    WHERE organization_id = $1
+      AND date = $2
+      AND status NOT IN ('cancelado', 'remarcado', 'paciente_faltou')
+      AND (
+        (start_time <= $3 AND end_time > $3) OR
+        (start_time < $4 AND end_time >= $4) OR
+        (start_time >= $3 AND end_time <= $4)
+      )
+  `;
+  const sqlParams: (string | number)[] = [organizationId, date, startTime, endTime];
+  if (excludeAppointmentId) {
+    query += ` AND id != $5`;
+    sqlParams.push(excludeAppointmentId);
+  }
+  const result = await pool.query(query, sqlParams);
+  const count = result.rows.length;
+  logger.info('[checkTimeConflictByCapacity]', { organizationId, date, startTime, capacity, count, hasConflict: count >= capacity });
+  return count >= capacity;
+}
+
+/**
+ * Verifica conflito de horário (Internal helper) - legado: 1 agendamento por terapeuta por slot.
  */
 async function checkTimeConflictHelper(pool: any, params: CheckTimeConflictRequest): Promise<boolean> {
   const { date, startTime, endTime, therapistId, excludeAppointmentId, organizationId } = params;

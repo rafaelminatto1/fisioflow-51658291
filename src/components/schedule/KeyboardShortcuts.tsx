@@ -74,6 +74,7 @@ interface KeyboardShortcutsProps {
 const shortcuts = [
   { keys: ['N'], description: 'Novo agendamento', icon: '➕' },
   { keys: ['F'], description: 'Buscar paciente', icon: '🔍' },
+  { keys: ['A'], description: 'Ativar modo seleção', icon: '☑' },
   { keys: ['D', 'W', 'M'], description: 'Mudar visualização', icon: '📅' },
   { keys: ['T'], description: 'Ir para hoje', icon: '📆' },
   { keys: ['←', '→'], description: 'Navegar dias', icon: '⬅️' },

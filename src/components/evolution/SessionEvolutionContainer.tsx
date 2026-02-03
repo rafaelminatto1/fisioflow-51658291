@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, X, Loader2, AlertTriangle, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  useTherapists,
+  THERAPIST_SELECT_NONE,
+  THERAPIST_PLACEHOLDER,
+  getTherapistById,
+} from '@/hooks/useTherapists';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +38,8 @@ import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesP
 import { PatientHelpers } from '@/types';
 import { GamificationTriggerService } from '@/lib/services/gamificationTriggers';
 import { GamificationNotificationService } from '@/lib/services/gamificationNotifications';
+import { appointmentsApi } from '@/integrations/firebase/functions';
+import { PatientService } from '@/lib/services/PatientService';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -49,10 +65,12 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
 
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
+  const [appointmentLoadedFromApi, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState('evolution');
 
   // Patient data
@@ -80,51 +98,99 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   // Session number for test frequency
   const [sessionNumber, setSessionNumber] = useState(1);
 
-
+  // Fisioterapeuta responsável (dropdown + CREFITO)
+  const [selectedTherapistId, setSelectedTherapistId] = useState('');
+  const { therapists } = useTherapists();
 
   const loadData = React.useCallback(async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SessionEvolutionContainer.tsx:loadData',message:'loadData started',data:{appointmentId,hasDb:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    if (!auth.currentUser) {
+      setIsLoading(false);
+      setLoadError('Faça login para acessar esta página.');
+      return;
+    }
     setIsLoading(true);
+    setLoadError(null);
     try {
       let currentPatientId = propPatientId || '';
 
-      // Load appointment data
+      // Load appointment data (Firestore primeiro; se não existir, tenta API usada pela agenda)
       if (appointmentId) {
         const appointmentRef = doc(db, 'appointments', appointmentId);
         const appointmentSnap = await getDoc(appointmentRef);
 
-        if (!appointmentSnap.exists()) {
-          throw new Error('Appointment not found');
-        }
+        let appointmentData: Record<string, unknown> & { patient_id?: string; patientId?: string; notes?: string } = {};
+        let loadedFromApi = false;
 
-        const appointmentData = appointmentSnap.data();
-
-        // Load patient
-        if (appointmentData.patient_id) {
-          const patientRef = doc(db, 'patients', appointmentData.patient_id);
-          const patientSnap = await getDoc(patientRef);
-          if (patientSnap.exists()) {
-            setPatient({ id: patientSnap.id, ...patientSnap.data() });
-            currentPatientId = appointmentData.patient_id;
-            setPatientId(currentPatientId);
+        if (appointmentSnap.exists()) {
+          setAppointmentLoadedFromApi(false);
+          appointmentData = { ...appointmentSnap.data(), patient_id: appointmentSnap.data().patient_id };
+          setAppointment({ id: appointmentSnap.id, ...appointmentData });
+        } else {
+          // Agenda pode vir da API (Cloud Function); buscar por id
+          try {
+            const apiAppointment = await appointmentsApi.get(appointmentId);
+            loadedFromApi = true;
+            setAppointmentLoadedFromApi(true);
+            const pid = (apiAppointment as { patientId?: string; patient_id?: string }).patientId ?? (apiAppointment as { patient_id?: string }).patient_id;
+            appointmentData = {
+              id: apiAppointment.id,
+              patient_id: pid,
+              patientId: pid,
+              therapist_id: (apiAppointment as { therapist_id?: string }).therapist_id,
+              date: (apiAppointment as { date?: string }).date,
+              start_time: (apiAppointment as { startTime?: string }).startTime,
+              notes: (apiAppointment as { notes?: string }).notes,
+            };
+            setAppointment({ id: apiAppointment.id, ...appointmentData });
+            currentPatientId = pid || currentPatientId;
+            if (pid) setPatientId(pid);
+          } catch (apiErr) {
+            logger.warn('Appointment not in Firestore nor API', { appointmentId, err: apiErr }, 'SessionEvolutionContainer');
+            throw new Error('Appointment not found');
           }
         }
 
-        setAppointment({ id: appointmentSnap.id, ...appointmentData });
+        const patientIdFromApp = appointmentData.patient_id ?? appointmentData.patientId;
+        if (patientIdFromApp) {
+          currentPatientId = String(patientIdFromApp);
+          setPatientId(currentPatientId);
+          const patientRef = doc(db, 'patients', currentPatientId);
+          const patientSnap = await getDoc(patientRef);
+          if (patientSnap.exists()) {
+            setPatient({ id: patientSnap.id, ...patientSnap.data() });
+          } else if (loadedFromApi) {
+            try {
+              const apiPatient = await PatientService.getPatientById(currentPatientId);
+              if (apiPatient) {
+                // Normalizar para formato esperado pela UI (full_name, etc.)
+                setPatient({
+                  id: apiPatient.id,
+                  ...apiPatient,
+                  full_name: apiPatient.name ?? (apiPatient as Record<string, unknown>).full_name,
+                  patientName: apiPatient.name ?? (apiPatient as Record<string, unknown>).patientName,
+                });
+              }
+            } catch {
+              // Paciente não encontrado na API; seguir sem dados do paciente
+            }
+          }
+        }
 
-        // Load existing SOAP if any
-        if (appointmentData.notes) {
+        // Load existing SOAP if any (só quando veio do Firestore)
+        if (appointmentSnap.exists() && appointmentData.notes) {
           try {
-            const notes = JSON.parse(appointmentData.notes);
-            if (notes.soap) {
-              setSoapData(notes.soap);
-            }
-            if (notes.exercises) {
-              setSessionExercises(notes.exercises);
-            }
+            const notes = JSON.parse(String(appointmentData.notes));
+            if (notes.soap) setSoapData(notes.soap);
+            if (notes.exercises) setSessionExercises(notes.exercises);
           } catch {
             // Notes is plain text
           }
         }
+        const aptTherapistId = (appointmentData as { therapist_id?: string }).therapist_id;
+        setSelectedTherapistId(aptTherapistId || auth.currentUser?.uid || '');
       } else if (propPatientId) {
         // Load patient directly
         const patientRef = doc(db, 'patients', propPatientId);
@@ -136,11 +202,12 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
         setPatient({ id: patientSnap.id, ...patientSnap.data() });
         currentPatientId = propPatientId;
+        setSelectedTherapistId(auth.currentUser?.uid || '');
       }
 
       // Load patient related data
       if (currentPatientId) {
-        // Calculate session number
+        // Número da sessão: conta apenas atendimentos no Firestore (quando carregado da API pode ser aproximado)
         const appointmentsQuery = query(
           collection(db, 'appointments'),
           where('patient_id', '==', currentPatientId),
@@ -185,9 +252,19 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       }
     } catch (error) {
       logger.error('Erro ao carregar dados da sessão', error, 'SessionEvolutionContainer');
+      const err = error as { code?: string; message?: string };
+      const msg = String(err?.message ?? '');
+      const isPermissionDenied = err?.code === 'permission-denied' || msg.includes('permission') || msg.includes('insufficient permissions');
+      const isNotFound = err?.code === 'not-found' || msg.includes('not found') || msg.includes('Appointment not found') || msg.includes('Patient not found');
+      const description = isPermissionDenied
+        ? 'Sem permissão para acessar esta sessão. Verifique se seu perfil tem acesso a este atendimento ou entre em contato com o administrador.'
+        : isNotFound
+          ? 'Agendamento ou paciente não encontrado. Verifique se o link está correto.'
+          : 'Não foi possível carregar os dados da sessão. Tente novamente.';
+      setLoadError(description);
       toast({
         title: 'Erro ao carregar dados',
-        description: 'Não foi possível carregar os dados da sessão.',
+        description: isPermissionDenied ? 'Sem permissão para acessar esta sessão.' : isNotFound ? 'Agendamento não encontrado.' : 'Não foi possível carregar os dados da sessão.',
         variant: 'destructive'
       });
     } finally {
@@ -195,9 +272,28 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     }
   }, [appointmentId, propPatientId, testsCompleted, toast, db]);
 
+  // #region agent log
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SessionEvolutionContainer.tsx:mount',message:'SessionEvolutionContainer mounted',data:{appointmentId,hasDb:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+  }, []);
+  // #endregion
+  // Só carregar dados quando o usuário estiver autenticado (evita permission-denied por token ainda não disponível)
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const unsub = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Pequeno atraso para o SDK anexar o token às próximas requisições Firestore
+        timeoutId = setTimeout(() => loadData(), 100);
+      } else if (auth.currentUser === null) {
+        setIsLoading(false);
+        setLoadError('Faça login para acessar esta página.');
+      }
+    });
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      unsub();
+    };
+  }, [loadData, auth]);
 
   const handleSoapChange = (data: typeof soapData) => {
     setSoapData(data);
@@ -322,9 +418,10 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         }
       }
 
+      const therapistId = selectedTherapistId || user.uid;
       const sessionData = {
         patient_id: patientId,
-        therapist_id: user.uid,
+        therapist_id: therapistId,
         appointment_id: appointmentId || null,
         session_date: new Date().toISOString(),
         session_type: 'treatment',
@@ -346,12 +443,18 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         await addDoc(collection(db, 'treatment_sessions'), sessionData);
       }
 
-      // Update appointment status
+      // Update appointment: mesma fonte em que foi carregado (API ou Firestore)
       if (appointmentId) {
-        await updateDoc(doc(db, 'appointments', appointmentId), {
-          status: 'Realizado',
-          notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecordId, exercises: sessionExercises })
-        });
+        const notesPayload = JSON.stringify({ soap: soapData, soapRecordId: soapRecordId, exercises: sessionExercises });
+        const statusRealizado = 'Realizado'; // UI/agenda; API pode normalizar
+        if (appointmentLoadedFromApi) {
+          await appointmentsApi.update(appointmentId, { status: statusRealizado, notes: notesPayload });
+        } else {
+          await updateDoc(doc(db, 'appointments', appointmentId), {
+            status: statusRealizado,
+            notes: notesPayload
+          });
+        }
       }
 
       logger.info('Evolução salva com sucesso', { soapRecordId: soapRecordId, patientId }, 'SessionEvolutionContainer');
@@ -432,11 +535,34 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <AlertTriangle className="h-12 w-12 text-destructive" />
+              <h2 className="text-lg font-semibold">Não foi possível carregar a evolução</h2>
+              <p className="text-sm text-muted-foreground" data-testid="evolution-error">{loadError}</p>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => navigate('/')}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar para a Agenda
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const containerClass = mode === 'modal'
     ? 'fixed inset-0 z-50 bg-background'
     : mode === 'embedded'
       ? 'w-full h-full'
       : 'min-h-screen bg-background';
+  const selectedTherapistCrefito = getTherapistById(therapists, selectedTherapistId)?.crefito;
 
   return (
     <div className={containerClass}>
@@ -455,6 +581,43 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                 <p className="text-sm text-muted-foreground">
                   {PatientHelpers.getName(patient)} • Sessão #{sessionNumber}
                 </p>
+              )}
+              {therapists.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <UserCog className="h-3.5 w-3.5" />
+                    Fisioterapeuta
+                  </span>
+                  <Select
+                    value={selectedTherapistId || THERAPIST_SELECT_NONE}
+                    onValueChange={(v) => setSelectedTherapistId(v === THERAPIST_SELECT_NONE ? '' : v)}
+                    aria-label={THERAPIST_PLACEHOLDER}
+                  >
+                    <SelectTrigger className="h-8 w-[180px] text-xs">
+                      <SelectValue placeholder={THERAPIST_PLACEHOLDER} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={THERAPIST_SELECT_NONE}>
+                        {THERAPIST_PLACEHOLDER}
+                      </SelectItem>
+                      {selectedTherapistId && !getTherapistById(therapists, selectedTherapistId) && (
+                        <SelectItem value={selectedTherapistId}>
+                          Responsável atual
+                        </SelectItem>
+                      )}
+                      {therapists.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.crefito ? `${t.name} (${t.crefito})` : t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedTherapistCrefito && (
+                    <Badge variant="secondary" className="text-[10px] font-mono">
+                      CREFITO {selectedTherapistCrefito}
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
           </div>
