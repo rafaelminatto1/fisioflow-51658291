@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { KanbanCardV2 } from './KanbanCardV2';
+import { KanbanCardV2, KanbanCardContent } from './KanbanCardV2';
 import {
   Tarefa,
   TarefaStatus,
@@ -132,7 +132,24 @@ export function KanbanColumnV2({
       </div>
 
       {/* Droppable Area */}
-      <Droppable droppableId={status}>
+      <Droppable
+        droppableId={status}
+        getContainerForClone={() => document.body}
+        renderClone={(provided, _snapshot, rubric) => {
+          const tarefa = tarefas.find((t) => t.id === rubric.draggableId);
+          if (!tarefa) return null;
+          return (
+            <div
+              ref={provided.innerRef}
+              {...provided.draggableProps}
+              style={provided.draggableProps.style}
+              className="rounded-xl shadow-2xl border-2 border-primary bg-card opacity-95 cursor-grabbing ring-2 ring-primary/20 overflow-hidden w-[304px]"
+            >
+              <KanbanCardContent tarefa={tarefa} variant="ghost" />
+            </div>
+          );
+        }}
+      >
         {(provided, snapshot) => (
           <ScrollArea className="flex-1 h-[calc(100vh-300px)]">
             <div

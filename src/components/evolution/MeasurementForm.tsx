@@ -33,6 +33,7 @@ import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePati
 import { ClinicalTestCombobox, type ClinicalTest } from '@/components/ui/clinical-test-combobox';
 import { CustomFieldsConfig, DEFAULT_MEASUREMENT_FIELDS, type CustomField } from './CustomFieldsConfig';
 import { SaveMeasurementTemplateModal } from './SaveMeasurementTemplateModal';
+import { MeasurementDiagramYBalance, Y_BALANCE_KEYS, type YBalanceValues } from './MeasurementDiagramYBalance';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -228,32 +229,69 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
     handleUpdateMeasurement(index, 'unit', req.measurement_unit || '');
   };
 
+  /** Deriva value para gráficos quando há múltiplos campos em custom_data (média dos numéricos ou primeiro). */
+  const deriveValueFromCustomData = (custom_data: Record<string, string>): number => {
+    const nums = Object.values(custom_data)
+      .map(v => parseFloat(v))
+      .filter(n => !Number.isNaN(n));
+    if (nums.length === 0) return 0;
+    return nums.reduce((a, b) => a + b, 0) / nums.length;
+  };
+
+  const hasMultiFieldFromTemplate = (m: MeasurementInput) =>
+    m.selectedTest?.fields_definition && m.selectedTest.fields_definition.length >= 3 && m.selectedTest?.layout_type !== 'y_balance';
+
+  const isYBalanceTest = (test?: ClinicalTest) =>
+    test?.layout_type === 'y_balance' ||
+    (!!test?.name && /y\s*test|y\s*balance|ybt/i.test(test.name)) ||
+    (!!test?.tags && test.tags.some(t => /y\s*balance|y\s*test|ybt/i.test(String(t))));
+
+  const showYBalanceDiagram = (m: MeasurementInput) =>
+    isYBalanceTest(m.selectedTest) || (!!m.measurement_name && /y\s*test|y\s*balance|ybt/i.test(m.measurement_name));
+
+  const hasYBalanceValue = (m: MeasurementInput) =>
+    showYBalanceDiagram(m) && Y_BALANCE_KEYS.some(k => (m.custom_data[k] ?? '').trim() !== '');
+
+  const hasAnyValue = (m: MeasurementInput) =>
+    m.value ||
+    m.measurement_type === 'Personalizado' ||
+    m.measurement_type === 'Sinais Vitais' ||
+    (hasMultiFieldFromTemplate(m) && Object.values(m.custom_data).some(v => v !== '')) ||
+    hasYBalanceValue(m);
+
   const handleSave = async () => {
     let savedCount = 0;
     for (const measurement of measurements) {
-      if (measurement.measurement_name && (measurement.value || measurement.measurement_type === 'Personalizado' || measurement.measurement_type === 'Sinais Vitais')) {
+      if (measurement.measurement_name && hasAnyValue(measurement)) {
         try {
-          // Prepare payload
-          const payload: {
-            patient_id: string;
-            soap_record_id: string;
-            measurement_type: string;
-            measurement_name: string;
-            value: number;
-            unit?: string;
-            notes?: string;
-            measured_at: string;
-            custom_data?: Record<string, unknown>;
-          } = {
+          const isMultiField = hasMultiFieldFromTemplate(measurement);
+          const isYBalance = showYBalanceDiagram(measurement);
+          const custom_data: Record<string, unknown> =
+            measurement.measurement_type === 'Personalizado' ||
+            measurement.measurement_type === 'Sinais Vitais' ||
+            isMultiField ||
+            isYBalance
+              ? measurement.custom_data
+              : {};
+          const value =
+            (isMultiField || isYBalance) && !measurement.value
+              ? deriveValueFromCustomData(measurement.custom_data)
+              : measurement.value
+                ? parseFloat(measurement.value)
+                : (measurement.measurement_type === 'Personalizado' || measurement.measurement_type === 'Sinais Vitais'
+                  ? deriveValueFromCustomData(measurement.custom_data)
+                  : 0);
+
+          const payload = {
             patient_id: patientId,
             soap_record_id: soapRecordId,
             measurement_type: measurement.measurement_type,
             measurement_name: measurement.measurement_name,
-            value: measurement.value ? parseFloat(measurement.value) : 0,
+            value: Number.isNaN(value) ? 0 : value,
             unit: measurement.unit,
             notes: measurement.notes,
             measured_at: new Date().toISOString(),
-            custom_data: (measurement.measurement_type === 'Personalizado' || measurement.measurement_type === 'Sinais Vitais') ? measurement.custom_data : {}
+            custom_data,
           };
 
           await createMeasurement.mutateAsync(payload);
@@ -389,10 +427,12 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
               >
                 {measurements.length > 1 && (
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full"
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full focus:opacity-100 focus:ring-2 focus:ring-teal-400 focus:ring-offset-2"
                     onClick={() => handleRemoveMeasurement(index)}
+                    aria-label={`Remover medição ${index + 1}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -400,7 +440,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
 
                 {/* Como realizar: imagem do teste ou texto de execução */}
                 {measurement.selectedTest && (
-                  <div className="mb-4 rounded-xl border border-teal-100 bg-teal-50/30 overflow-hidden">
+                  <div className="mb-4 rounded-xl border border-teal-100 bg-teal-50/30 overflow-hidden" role="region" aria-label="Como realizar o teste">
                     <div className="flex items-center gap-2 px-3 py-2 border-b border-teal-100 bg-white/50">
                       <CheckSquare className="h-4 w-4 text-teal-600 shrink-0" aria-hidden />
                       <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Como realizar o teste</span>
@@ -457,7 +497,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                       <ClinicalTestCombobox
                         value={measurement.selectedTestId}
                         onValueChange={(testId, test) => handleSelectTest(index, testId, test)}
-                        placeholder="Pesquisar testes clincos..."
+                        placeholder="Pesquisar testes clínicos..."
                       />
                     </div>
 
@@ -489,17 +529,80 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                   {/* Name & Primary Values */}
                   <div className="lg:col-span-7 space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Medição</Label>
+                      <Label htmlFor={`measurement-name-${index}`} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Medição</Label>
                       <Input
+                        id={`measurement-name-${index}`}
                         value={measurement.measurement_name}
                         onChange={(e) => handleUpdateMeasurement(index, 'measurement_name', e.target.value)}
                         placeholder="Ex: Flexão do joelho direito"
-                        className="h-11 bg-white border-slate-200 font-bold text-slate-700"
+                        className="h-11 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100"
+                        aria-label="Nome da medição"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      {measurement.measurement_type === 'Personalizado' ? (
+                      {showYBalanceDiagram(measurement) ? (
+                        <div className="col-span-2">
+                          <MeasurementDiagramYBalance
+                            values={{
+                              anterior: measurement.custom_data.anterior ?? '',
+                              posteromedial: measurement.custom_data.posteromedial ?? '',
+                              posterolateral: measurement.custom_data.posterolateral ?? '',
+                            }}
+                            unit={measurement.unit || 'cm'}
+                            onChange={(key, value) => handleUpdateCustomData(index, key, value)}
+                            compositeLabel="Composto (média)"
+                            compositeValue={
+                              [measurement.custom_data.anterior, measurement.custom_data.posteromedial, measurement.custom_data.posterolateral].every(
+                                v => v !== '' && v != null
+                              )
+                                ? deriveValueFromCustomData(measurement.custom_data)
+                                : null
+                            }
+                          />
+                          <div className="mt-4 space-y-2">
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Anotações</Label>
+                            <Textarea
+                              value={measurement.notes}
+                              onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
+                              placeholder="Observações sobre esta medição..."
+                              className="bg-white border-slate-200 font-medium min-h-[60px]"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      ) : hasMultiFieldFromTemplate(measurement) ? (
+                        <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {(measurement.selectedTest!.fields_definition!).map((field) => (
+                            <div key={field.id} className="space-y-2 p-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:border-teal-200 transition-all">
+                              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                {field.label}
+                                {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1 rounded">({field.unit})</span>}
+                                {field.required && <span className="text-red-500 ml-0.5">*</span>}
+                              </Label>
+                              <Input
+                                type={field.type === 'number' ? 'number' : 'text'}
+                                step={field.type === 'number' ? '0.1' : undefined}
+                                value={measurement.custom_data[field.id] || ''}
+                                onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
+                                placeholder={field.description || field.unit ? `0` : '...'}
+                                className="h-11 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100"
+                                aria-label={field.label}
+                              />
+                            </div>
+                          ))}
+                          <div className="col-span-full space-y-2">
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Anotações</Label>
+                            <Textarea
+                              value={measurement.notes}
+                              onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
+                              placeholder="Observações sobre esta medição..."
+                              className="bg-white border-slate-200 font-medium min-h-[60px]"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      ) : measurement.measurement_type === 'Personalizado' ? (
                         <>
                           <AnimatePresence mode="poplayout">
                             {enabledFields.map((field) => {
@@ -688,9 +791,11 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
 
         <div className="pt-4 border-t border-slate-100">
           <Button
+            type="button"
             onClick={handleSave}
-            className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold text-base shadow-lg shadow-teal-100 rounded-xl group"
-            disabled={createMeasurement.isPending || measurements.every(m => !m.measurement_name || (!m.value && m.measurement_type !== 'Personalizado'))}
+            className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold text-base shadow-lg shadow-teal-100 rounded-xl group focus:ring-2 focus:ring-teal-400 focus:ring-offset-2"
+            disabled={createMeasurement.isPending || measurements.every(m => !m.measurement_name || !hasAnyValue(m))}
+            aria-label="Efetivar registros de medição"
           >
             {createMeasurement.isPending ? (
               <span className="flex items-center gap-2">

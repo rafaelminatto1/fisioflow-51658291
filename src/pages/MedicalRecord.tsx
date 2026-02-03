@@ -32,6 +32,9 @@ const MedicalRecord = () => {
             Estamos preparando um Prontuário Eletrônico revolucionário para você.
             Todas as ferramentas clínicas que você precisa estarão disponíveis em breve.
           </p>
+          <p className="text-sm text-muted-foreground/80">
+            Previsão de lançamento: Q2 2026
+          </p>
         </div>
 
         <div className="flex gap-4 pt-4">

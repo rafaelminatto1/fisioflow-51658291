@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { useToast } from '@/hooks/use-toast';
+import { TAREFAS_QUERY_KEY, fetchTarefas } from '@/hooks/useTarefas';
 import {
   LayoutDashboard,
   Users,
   Calendar,
+  CalendarDays,
   Activity,
   DollarSign,
   BarChart3,
@@ -44,6 +47,13 @@ import {
   Shield,
   Gift,
   Flame,
+  Receipt,
+  BookOpen,
+  Zap,
+  Plug,
+  FlaskConical,
+  UserCircle,
+  MoreHorizontal,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -66,7 +76,8 @@ const menuItems = [
   // GESTÃO E OPERAÇÕES
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
   { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
-  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas' },
+  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas', preload: () => import('@/pages/Tarefas') },
+  { icon: Sparkles, label: 'Tarefas V2', href: '/tarefas-v2', preload: () => import('@/pages/TarefasV2') },
 ];
 
 const avaliacoesSubmenu = [
@@ -77,8 +88,9 @@ const avaliacoesSubmenu = [
 
 
 
-// MÓDULOS OPERACIONAIS - Vendas, estoque e telemedicina
+// MÓDULOS OPERACIONAIS - Vendas, estoque, eventos e telemedicina
 const operacionaisSubmenu = [
+  { icon: CalendarDays, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos/Vouchers', href: '/vouchers' },
   { icon: Package, label: 'Estoque', href: '/inventory' },
   { icon: Video, label: 'Telemedicina', href: '/telemedicine' },
@@ -100,6 +112,9 @@ const financeiroSubmenu = [
   { icon: DollarSign, label: 'Dashboard', href: '/financial' },
   { icon: FileText, label: 'Contas', href: '/financeiro/contas' },
   { icon: TrendingUp, label: 'Fluxo de Caixa', href: '/financeiro/fluxo-caixa' },
+  { icon: Receipt, label: 'NFSe', href: '/financeiro/nfse' },
+  { icon: Receipt, label: 'Recibos', href: '/financeiro/recibos' },
+  { icon: FileText, label: 'Demonstrativo', href: '/financeiro/demonstrativo' },
 ];
 
 const relatoriosSubmenu = [
@@ -107,11 +122,14 @@ const relatoriosSubmenu = [
   { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
   { icon: TrendingUp, label: 'Taxa de Comparecimento', href: '/relatorios/comparecimento' },
   { icon: Trophy, label: 'Performance da Equipe', href: '/performance-equipe' },
+  { icon: Stethoscope, label: 'Relatório Médico', href: '/relatorios/medico' },
+  { icon: FileText, label: 'Relatório Convênio', href: '/relatorios/convenio' },
 ];
 
 const crmSubmenu = [
   { icon: LayoutGrid, label: 'Dashboard CRM', href: '/crm' },
   { icon: Users, label: 'Leads', href: '/crm/leads' },
+  { icon: Mail, label: 'Campanhas', href: '/crm/campanhas' },
 ];
 
 const configuracoesSubmenu = [
@@ -145,6 +163,16 @@ const gamificacaoSubmenu = [
   { icon: Flame, label: 'Ranking', href: '/gamification/leaderboard' },
 ];
 
+const maisSubmenu = [
+  { icon: UserCircle, label: 'Portal Paciente', href: '/portal' },
+  { icon: BarChart3, label: 'Ocupação', href: '/ocupacao-fisioterapeutas' },
+  { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
+  { icon: BookOpen, label: 'Wiki', href: '/wiki' },
+  { icon: Clock, label: 'Time Tracking', href: '/timetracking' },
+  { icon: Zap, label: 'Automação', href: '/automation' },
+  { icon: Plug, label: 'Integrações', href: '/integrations' },
+];
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
@@ -157,9 +185,11 @@ export function Sidebar() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [operacionaisOpen, setOperacionaisOpen] = useState(false);
   const [gamificacaoOpen, setGamificacaoOpen] = useState(false);
+  const [maisOpen, setMaisOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   useNavPreload();
 
   const isCadastrosActive = location.pathname.startsWith('/cadastros');
@@ -170,18 +200,28 @@ export function Sidebar() {
   const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
   const isAdminActive = location.pathname.startsWith('/admin');
-  const isOperacionaisActive = location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
+  const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
+  const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations';
 
   // Função auxiliar para renderizar item do menu
-  const renderMenuItem = (item: { icon: React.ComponentType<{ className?: string }>; label: string; href: string }, collapsed: boolean, location: { pathname: string }) => {
+  const renderMenuItem = (item: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; preload?: () => void | Promise<unknown> }, collapsed: boolean, location: { pathname: string }) => {
     const Icon = item.icon;
     const isActive = location.pathname === item.href;
+
+    const handleMouseEnter = () => {
+      item.preload?.();
+      // Prefetch dados de tarefas ao passar mouse em Tarefas ou Tarefas V2 (melhora velocidade de /tarefas)
+      if (item.href === '/tarefas' || item.href === '/tarefas-v2') {
+        queryClient.prefetchQuery({ queryKey: TAREFAS_QUERY_KEY, queryFn: fetchTarefas });
+      }
+    };
 
     return (
       <Link
         key={item.href}
         to={item.href}
+        onMouseEnter={handleMouseEnter}
         className={cn(
           "flex items-center gap-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
           collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
@@ -627,6 +667,18 @@ export function Sidebar() {
             isOpen: gamificacaoOpen || isGamificacaoActive,
             onOpenChange: setGamificacaoOpen,
             isActive: isGamificacaoActive,
+            collapsed,
+            location
+          })}
+
+          {/* Mais Submenu - Portal, Ocupação, Wiki, etc. */}
+          {renderSubmenu({
+            icon: MoreHorizontal,
+            label: 'Mais',
+            items: maisSubmenu,
+            isOpen: maisOpen || isMaisActive,
+            onOpenChange: setMaisOpen,
+            isActive: isMaisActive,
             collapsed,
             location
           })}

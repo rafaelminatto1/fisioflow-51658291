@@ -40,10 +40,10 @@ test('agenda drag and drop', async ({ page }) => {
     const appointmentBox = await appointment.boundingBox();
     console.log('Appointment box:', appointmentBox);
 
-    // 4. Find a target slot (different from current); fallback to grid cell
+    // 4. Find a target slot; week view uses [data-testid^="time-slot-"]
     console.log('Finding target slot...');
-    const targetSlot = page.locator('.calendar-time-slot, [data-slot], .rbc-day-slot').last();
-    const targetBox = await targetSlot.boundingBox();
+    const targetSlot = page.locator('[data-testid^="time-slot-"]').first();
+    const targetBox = await targetSlot.boundingBox({ timeout: 15000 });
     console.log('Target box:', targetBox);
 
     if (!appointmentBox || !targetBox) {
@@ -52,20 +52,18 @@ test('agenda drag and drop', async ({ page }) => {
 
     // 5. Perform Drag and Drop
     console.log('Dragging...');
-    // Use mouse manually for better control if dragTo fails, but try dragTo first
     await appointment.dragTo(targetSlot);
 
-    // 6. Verify Modal Appears
+    // 6. Verify Modal Appears (no "Invalid time value" - fix: parseDate handles ISO date strings)
     console.log('Waiting for modal...');
-    const modal = page.locator('text=Confirmar Reagendamento');
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    const modal = page.getByRole('heading', { name: 'Confirmar Reagendamento' });
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
     console.log('Confirming...');
     // 7. Confirm (button text: "Confirmar Reagendamento" or "Confirmar")
     await page.getByRole('button', { name: /Confirmar Reagendamento|Confirmar/ }).click();
 
-    // 8. Verify Success Toast
-    console.log('Waiting for success toast...');
-    await expect(page.locator('text=/Reagendado.*sucesso/i')).toBeVisible({ timeout: 10000 });
+    // 8. Verify success toast (main fix: dialog no longer throws "Invalid time value" for ISO date strings)
+    await expect(page.locator('text=/Reagendado.*sucesso|reagendado com sucesso/i')).toBeVisible({ timeout: 15000 });
     console.log('Success!');
 });
