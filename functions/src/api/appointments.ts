@@ -237,13 +237,9 @@ export const createAppointmentHttp = onRequest(
           return;
         }
       }
-      // Fisioterapeuta obrigatório: não usar usuário logado como default (deve ser escolhido manualmente)
+      // Fisioterapeuta opcional: quando não informado, usa o usuário logado como responsável
       const therapistIdRaw = (data.therapistId != null && data.therapistId !== '') ? String(data.therapistId).trim() : '';
-      if (!therapistIdRaw) {
-        res.status(400).json({ error: 'Fisioterapeuta é obrigatório. Escolha um fisioterapeuta no formulário.' });
-        return;
-      }
-      const therapistId = therapistIdRaw;
+      const therapistId = therapistIdRaw || userId;
       // Conflito por capacidade do slot (0/4 = livre), não por terapeuta
       const hasConflict = await checkTimeConflictByCapacity(pool, {
         date: data.date,

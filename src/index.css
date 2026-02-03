@@ -1155,6 +1155,16 @@ All colors MUST be HSL.
     .animate-pulse-slow {
       animation: none;
     }
+
+    /* DnD preview e ghost */
+    .dragging-ghost {
+      @apply transition-none;
+    }
+
+    .animate-in,
+    .animate-pulse-subtle {
+      animation: none;
+    }
   }
 
   /* Current time line */

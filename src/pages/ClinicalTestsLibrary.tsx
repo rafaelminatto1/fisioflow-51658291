@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
+    AlertCircle,
     HeartPulse,
     Plus,
 } from 'lucide-react';
@@ -56,7 +57,7 @@ export default function ClinicalTestsLibrary() {
     const [protocolDialogOpen, setProtocolDialogOpen] = useState(false);
     const { protocols, updateProtocol } = useExerciseProtocols();
 
-    const { data: tests = [], isLoading } = useQuery({
+    const { data: tests = [], isLoading, isError, error, refetch } = useQuery({
         queryKey: ['clinical-tests-library'],
         queryFn: async () => {
             const q = query(
@@ -180,19 +181,40 @@ export default function ClinicalTestsLibrary() {
                 </header>
 
                 <main className="px-4 py-8 animate-fade-in pb-24">
-                    <ClinicalTestsFilter
-                        searchTerm={searchTerm}
-                        onSearchChange={setSearchTerm}
-                        activeFilter={activeFilter}
-                        onFilterChange={filterTests}
-                    />
+                    {isError ? (
+                        <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+                            <div className="w-24 h-24 rounded-full bg-red-50 flex items-center justify-center mb-6">
+                                <AlertCircle className="h-10 w-10 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-slate-900 mb-2">Não foi possível carregar os testes</h3>
+                            <p className="text-slate-500 max-w-sm mx-auto mb-8 leading-relaxed">
+                                Verifique sua conexão e permissões. Se o problema persistir, tente novamente.
+                            </p>
+                            <Button
+                                variant="outline"
+                                className="border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 px-8"
+                                onClick={() => refetch()}
+                            >
+                                Tentar novamente
+                            </Button>
+                        </div>
+                    ) : (
+                        <>
+                            <ClinicalTestsFilter
+                                searchTerm={searchTerm}
+                                onSearchChange={setSearchTerm}
+                                activeFilter={activeFilter}
+                                onFilterChange={filterTests}
+                            />
 
-                    <ClinicalTestsGrid
-                        isLoading={isLoading}
-                        tests={filteredTests}
-                        onSelectTest={setSelectedTest}
-                        onClearFilters={() => { setSearchTerm(''); setActiveFilter('Todos'); }}
-                    />
+                            <ClinicalTestsGrid
+                                isLoading={isLoading}
+                                tests={filteredTests}
+                                onSelectTest={setSelectedTest}
+                                onClearFilters={() => { setSearchTerm(''); setActiveFilter('Todos'); }}
+                            />
+                        </>
+                    )}
                 </main>
 
                 <ClinicalTestDetailsModal
