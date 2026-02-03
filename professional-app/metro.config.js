@@ -17,7 +17,8 @@ config.resolver.nodeModulesPaths = [
 ];
 
 // 3. Forçar o Metro a resolver bibliotecas nativas apenas do projeto mobile
-config.resolver.disableHierarchicalLookup = true;
+// Alterado para false para permitir que o Metro resolva links simbólicos do pnpm corretamente
+config.resolver.disableHierarchicalLookup = false;
 
 // 4. Ignorar pastas de teste e build que confundem o watcher
 config.resolver.blockList = [
