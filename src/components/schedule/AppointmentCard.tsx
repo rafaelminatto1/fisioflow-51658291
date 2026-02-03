@@ -54,7 +54,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
   if (variant === 'compact') {
     return (
       <motion.div
-        whileHover={{ y: -2, scale: 1.01 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleClick}
         className={cn(
@@ -91,7 +90,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.99 }}
       onClick={handleClick}
       className={cn(
