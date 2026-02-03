@@ -78,6 +78,7 @@ const Install = lazy(() => import(/* webpackChunkName: "install" */ "./pages/Ins
 const Waitlist = lazy(() => import(/* webpackChunkName: "waitlist" */ "./pages/Waitlist"));
 const Surveys = lazy(() => import(/* webpackChunkName: "surveys" */ "./pages/Surveys"));
 const Tarefas = lazy(() => import(/* webpackChunkName: "tasks" */ "./pages/Tarefas"));
+const TarefasV2 = lazy(() => import(/* webpackChunkName: "tasks-v2" */ "./pages/TarefasV2"));
 const Projects = lazy(() => import(/* webpackChunkName: "projects" */ "./pages/Projects"));
 const ProjectDetails = lazy(() => import(/* webpackChunkName: "project-details" */ "./pages/ProjectDetails"));
 const Inventory = lazy(() => import(/* webpackChunkName: "inventory" */ "./pages/Inventory"));
@@ -247,6 +248,7 @@ export function AppRoutes() {
             <Route path="/telemedicine-room/:roomId" element={<ProtectedRoute><TelemedicineRoom /></ProtectedRoute>} />
 
             <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
+            <Route path="/tarefas-v2" element={<ProtectedRoute><TarefasV2 /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
             <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
