@@ -237,9 +237,19 @@ export const createAppointmentHttp = onRequest(
           return;
         }
       }
-      const therapistId = (data.therapistId && String(data.therapistId).trim()) ? String(data.therapistId).trim() : userId;
-      const hasConflict = await checkTimeConflictHelper(pool, {
-        date: data.date, startTime: data.startTime, endTime: data.endTime, therapistId, organizationId
+      // Fisioterapeuta obrigatório: não usar usuário logado como default (deve ser escolhido manualmente)
+      const therapistIdRaw = (data.therapistId != null && data.therapistId !== '') ? String(data.therapistId).trim() : '';
+      if (!therapistIdRaw) {
+        res.status(400).json({ error: 'Fisioterapeuta é obrigatório. Escolha um fisioterapeuta no formulário.' });
+        return;
+      }
+      const therapistId = therapistIdRaw;
+      // Conflito por capacidade do slot (0/4 = livre), não por terapeuta
+      const hasConflict = await checkTimeConflictByCapacity(pool, {
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        organizationId
       });
       if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
       const result = await pool.query(

@@ -15,7 +15,6 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { patientsApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { agentIngest } from '@/lib/debug/agentIngest';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PatientSchema, type Patient } from '@/schemas/patient';
@@ -138,26 +137,6 @@ export const useActivePatients = () => {
           organizationId,
         }, 'usePatients');
         logger.info('useActivePatients: successfully fetched patients', { count: validPatients.length }, 'usePatients');
-        // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
-        {
-          const rawFirst = Array.isArray(data) ? data[0] : null;
-          const mappedFirst = validPatients[0];
-          if (rawFirst || mappedFirst) {
-            agentIngest({
-              location: 'usePatients.ts:queryFn',
-              message: 'API vs mapped first patient',
-              hypothesisId: 'H1,H3',
-              data: {
-                rawKeys: rawFirst ? Object.keys(rawFirst) : [],
-                rawName: (rawFirst as { name?: string })?.name,
-                rawFullName: (rawFirst as { full_name?: string })?.full_name,
-                mappedName: mappedFirst?.name,
-                count: validPatients.length,
-              },
-            });
-          }
-        }
-        // #endregion
 
         // Save to cache for offline use
         if (validPatients.length > 0) {

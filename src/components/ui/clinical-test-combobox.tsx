@@ -32,8 +32,15 @@ export interface ClinicalTest {
     category: string;
     target_joint: string;
     purpose?: string;
+    execution?: string;
     tags?: string[];
     type?: string;
+    /** URLs de imagens/vídeos para "como realizar" o teste */
+    media_urls?: string[];
+    /** URL única da imagem principal do teste (alternativa a media_urls[0]) */
+    image_url?: string;
+    /** Layout de entrada: single | multi_field | y_balance | radial */
+    layout_type?: 'single' | 'multi_field' | 'y_balance' | 'radial';
     fields_definition?: Array<{
         id: string;
         label: string;

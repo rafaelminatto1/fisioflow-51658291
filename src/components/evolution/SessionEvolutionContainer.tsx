@@ -103,9 +103,6 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const { therapists } = useTherapists();
 
   const loadData = React.useCallback(async () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SessionEvolutionContainer.tsx:loadData',message:'loadData started',data:{appointmentId,hasDb:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     if (!auth.currentUser) {
       setIsLoading(false);
       setLoadError('Faça login para acessar esta página.');
@@ -272,11 +269,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     }
   }, [appointmentId, propPatientId, testsCompleted, toast, db]);
 
-  // #region agent log
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SessionEvolutionContainer.tsx:mount',message:'SessionEvolutionContainer mounted',data:{appointmentId,hasDb:!!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
   }, []);
-  // #endregion
   // Só carregar dados quando o usuário estiver autenticado (evita permission-denied por token ainda não disponível)
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;

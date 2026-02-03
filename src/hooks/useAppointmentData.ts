@@ -3,7 +3,6 @@
  *
  */
 import { useQuery } from '@tanstack/react-query';
-import { doc, getDoc } from '@/integrations/firebase/app';
 import {
     PATIENT_SELECT,
     devValidate as devValidatePatient,
@@ -14,8 +13,7 @@ import {
     devValidateAppointment,
     type AppointmentDBStandard
 } from '@/lib/constants/appointment-queries';
-import { db } from '@/integrations/firebase/app';
-import { appointmentsApi } from '@/integrations/firebase/functions';
+import { appointmentsApi, patientsApi } from '@/integrations/firebase/functions';
 
 
 
@@ -58,7 +56,7 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         });
     }
 
-    // Buscar informações do paciente do Firebase com retry e timeout
+    // Buscar informações do paciente do PostgreSQL via Firebase Functions
     const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
         queryKey: ['patient', patientId],
         queryFn: async () => {
@@ -69,22 +67,21 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidatePatient(PATIENT_SELECT.standard);
 
-            const docRef = doc(db, 'patients', patientId);
-            const snapshot = await getDoc(docRef);
+            const response = await patientsApi.get(patientId);
 
-            if (!snapshot.exists()) {
+            if (!response.data) {
                 console.error('[useAppointmentData] Patient not found in database:', patientId);
                 return null;
             }
 
-            const data = snapshot.data();
+            const data = response.data;
             console.log('[useAppointmentData] Patient loaded:', {
-                id: snapshot.id,
+                id: data.id,
                 name: data.name || data.full_name
             });
 
             return {
-                id: snapshot.id,
+                id: data.id,
                 ...data,
             } as PatientDBStandard;
         },

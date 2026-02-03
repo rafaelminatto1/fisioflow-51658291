@@ -255,9 +255,6 @@ export class AppointmentService {
 
             if (Object.keys(updateData).length === 0) throw AppError.badRequest('Nenhum dado para atualizar');
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'appointmentService.ts:updateAppointment',message:'API update payload',data:{id,updateDataKeys:Object.keys(updateData),date:updateData.date,start_time:updateData.start_time},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-            // #endregion
             const response = await appointmentsApi.update(id, updateData);
             // API retorna o appointment diretamente (res.data), não { data: appointment }
             const fetchedUpdatedAppointment = response;

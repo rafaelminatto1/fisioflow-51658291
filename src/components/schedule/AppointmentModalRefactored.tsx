@@ -101,6 +101,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const queryClient = useQueryClient();
   const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
   const [suggestedPatientName, setSuggestedPatientName] = useState('');
+  /** Paciente recém-criado no cadastro rápido: exibir no combobox até a lista atualizar */
+  const [lastCreatedPatient, setLastCreatedPatient] = useState<{ id: string; name: string } | null>(null);
   const [currentMode, setCurrentMode] = useState<'create' | 'edit' | 'view'>(initialMode);
   const [activeTab, setActiveTab] = useState('info');
   const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
@@ -265,6 +267,18 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
   }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, reset, getInitialFormData]);
 
+  // Limpar paciente recém-criado ao fechar o modal
+  useEffect(() => {
+    if (!isOpen) setLastCreatedPatient(null);
+  }, [isOpen]);
+
+  // Quando a lista de pacientes atualizar e contiver o recém-criado, remover o fallback
+  useEffect(() => {
+    if (lastCreatedPatient && activePatients?.some((p) => p.id === lastCreatedPatient.id)) {
+      setLastCreatedPatient(null);
+    }
+  }, [lastCreatedPatient, activePatients]);
+
   // Monitora mudanças no paciente selecionado para ajustar o status automaticamente
   useEffect(() => {
     // Só aplica lógica automática para novos agendamentos (sem appointment definido)
@@ -345,6 +359,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
     if (!data.appointment_date || data.appointment_date === '') {
       toast.error('Data do agendamento é obrigatória');
+      return;
+    }
+
+    if (!appointment && (!data.therapist_id || String(data.therapist_id).trim() === '')) {
+      toast.error('Escolha um fisioterapeuta no formulário.');
       return;
     }
 
@@ -602,6 +621,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                       setSuggestedPatientName(searchTerm);
                       setQuickPatientModalOpen(true);
                     }}
+                    fallbackPatientName={
+                      lastCreatedPatient?.id === watchedPatientId ? lastCreatedPatient.name : undefined
+                    }
                   />
 
                   <DateTimeSection
@@ -855,8 +877,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               setSuggestedPatientName('');
             }
           }}
-          onPatientCreated={(patientId, _patientName) => {
+          onPatientCreated={(patientId, patientName) => {
             setValue('patient_id', patientId);
+            setLastCreatedPatient({ id: patientId, name: patientName });
             setQuickPatientModalOpen(false);
             setSuggestedPatientName('');
             queryClient.invalidateQueries({ queryKey: ['patients'] });

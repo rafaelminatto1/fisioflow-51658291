@@ -75,9 +75,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:componentDidCatch',message:'ErrorBoundary caught',data:{errorMessage:error.message,errorName:error.name,url:typeof window!=='undefined'?window.location.href:''},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     // Rastrear erro no sistema de analytics
     trackError(error, errorInfo);
 

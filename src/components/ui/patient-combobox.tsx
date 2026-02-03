@@ -18,13 +18,14 @@ import {
 } from "@/components/ui/popover";
 import type { Patient } from "@/types";
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { agentIngest } from '@/lib/debug/agentIngest';
 
 interface PatientComboboxProps {
   patients: Patient[];
   value?: string;
   onValueChange: (value: string) => void;
   onCreateNew: (searchTerm: string) => void;
+  /** Nome a exibir quando value está setado mas o paciente ainda não está na lista (ex.: recém-criado) */
+  fallbackDisplayName?: string;
   disabled?: boolean;
   className?: string;
 }
@@ -34,6 +35,7 @@ export function PatientCombobox({
   value,
   onValueChange,
   onCreateNew,
+  fallbackDisplayName,
   disabled = false,
   className,
 }: PatientComboboxProps) {
@@ -102,25 +104,6 @@ export function PatientCombobox({
 
     const resultList = directMatches.length > 0 ? directMatches : mapped;
     logger.debug('PatientCombobox filtering', { searchTerm, direct: directMatches.length, fuzzy: mapped.length }, 'PatientCombobox');
-    // #region agent log (VITE_DEBUG_AGENT_INGEST=true)
-    if (searchTerm && patients.length > 0) {
-      const first = patients[0];
-      agentIngest({
-        location: 'patient-combobox.tsx:filteredPatients',
-        message: 'combobox filter',
-        hypothesisId: 'H2,H4,H5',
-        data: {
-          patientsLength: patients.length,
-          searchTerm,
-          inputValue,
-          firstPatientName: first?.name,
-          firstPatientFullName: (first as { full_name?: string })?.full_name,
-          directCount: directMatches.length,
-          resultCount: resultList.length,
-        },
-      });
-    }
-    // #endregion
     return resultList;
   }, [fuse, inputValue, patients]);
 
@@ -163,6 +146,14 @@ export function PatientCombobox({
                 {selectedPatient.incomplete_registration && (
                   <span className="text-[10px] text-amber-600 font-normal">Cadastro incompleto</span>
                 )}
+              </div>
+            </div>
+          ) : value && fallbackDisplayName ? (
+            <div className="flex items-center gap-2 overflow-hidden">
+              <User className="h-4 w-4 shrink-0 opacity-50" />
+              <div className="flex flex-col items-start truncate leading-tight">
+                <span className="truncate font-medium">{fallbackDisplayName}</span>
+                <span className="text-[10px] text-amber-600 font-normal">Recém-cadastrado</span>
               </div>
             </div>
           ) : (
