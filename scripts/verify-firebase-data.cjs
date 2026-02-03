@@ -5,7 +5,7 @@
 
 const admin = require('firebase-admin');
 
-const serviceAccount = require('../fisioflow-firebase-admin.json');
+const serviceAccount = require('../functions/service-account-key.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

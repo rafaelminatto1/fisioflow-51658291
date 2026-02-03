@@ -4,7 +4,7 @@ const fs = require('fs');
 // Load service account
 let serviceAccount;
 try {
-  serviceAccount = require('./fisioflow-firebase-admin.json');
+  serviceAccount = require('./functions/service-account-key.json');
 } catch (e) {
   console.error('Could not load service account file:', e.message);
   process.exit(1);
