@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "orgs": {
+      "$orgId": {
+        // Apenas usuários autenticados que pertencem a esta organização podem ler/escrever
+        // (Simplificado para autenticado por enquanto, idealmente verificaria claims)
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "agenda": {
+          "refresh_trigger": {
+            ".validate": "newData.hasChildren(['force'])"
+          }
+        }
+      }
+    }
+  }
+}

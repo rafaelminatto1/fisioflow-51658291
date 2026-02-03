@@ -560,7 +560,9 @@ async function handleIncomingWhatsAppMessage(message) {
         .where('phone', '==', phone)
         .get();
     if (patientsSnapshot.empty) {
-        logger.info(`No patient found for phone: ${phone}`);
+        // Dado sensível removido: telefone mascarado (apenas últimos 4 dígitos) para logs (LGPD)
+        const maskedPhone = phone.length > 4 ? '...' + phone.substring(phone.length - 4) : '***';
+        logger.info(`No patient found for phone: ${maskedPhone}`);
         return;
     }
     const patient = patientsSnapshot.docs[0].data();

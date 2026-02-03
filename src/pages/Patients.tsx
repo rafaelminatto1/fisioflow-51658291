@@ -37,6 +37,7 @@ import {
   type PatientFilters
 } from '@/components/patients';
 import { usePatientsPaginated } from '@/hooks/usePatientCrud';
+import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import { useMultiplePatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,8 +65,42 @@ const Patients = () => {
   const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
   const [showAnalytics, setShowAnalytics] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
-  // Use paginated query with server-side filtering
+  // --- DATA CONNECT (POSTGRES) IMPLEMENTATION ---
+  const { data: allPatientsPostgres, isLoading: loadingPostgres } = usePatientsPostgres(organizationId);
+  
+  // Filtragem no cliente (extremamente rápida para < 1000 pacientes)
+  const filteredAllPatients = useMemo(() => {
+    if (!allPatientsPostgres) return [];
+    return allPatientsPostgres.filter((p: any) => {
+      const searchLower = debouncedSearch.toLowerCase();
+      const matchesSearch = !debouncedSearch || 
+        p.name.toLowerCase().includes(searchLower) ||
+        p.email?.toLowerCase().includes(searchLower) ||
+        p.phone?.includes(searchLower);
+        
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [allPatientsPostgres, debouncedSearch, statusFilter]);
+
+  // Paginação no cliente
+  const totalCount = filteredAllPatients.length;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const patients = filteredAllPatients.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  
+  const hasNextPage = currentPage < totalPages;
+  const hasPreviousPage = currentPage > 1;
+  const loading = loadingPostgres;
+
+  const goToPage = (page: number) => setCurrentPage(page);
+  const nextPage = () => setCurrentPage(p => Math.min(totalPages, p + 1));
+  const previousPage = () => setCurrentPage(p => Math.max(1, p - 1));
+
+  /* LEGACY FIRESTORE PAGINATION (Substituído pelo Data Connect)
   const {
     data: patients = [],
     totalCount,
@@ -83,6 +118,7 @@ const Patients = () => {
     searchTerm: debouncedSearch,
     pageSize: 20,
   });
+  */
 
   // Buscar estatísticas de múltiplos pacientes
   const patientIds = useMemo(() => patients.map(p => p.id), [patients]);
