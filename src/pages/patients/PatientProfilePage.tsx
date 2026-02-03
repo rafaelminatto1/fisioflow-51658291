@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseResponseDate } from '@/utils/dateUtils';
 
 import EditPatientModal from '@/components/modals/EditPatientModal';
 
@@ -67,6 +68,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEvaluationForms } from '@/hooks/useEvaluationForms';
+import { PatientServiceV2 } from '@/services/patientServiceV2';
 
 const PersonalDataTab = ({ patient }: { patient: Patient }) => (
     <div className="space-y-6">
@@ -222,20 +224,24 @@ const OverviewTab = ({ patient }: { patient: Patient }) => {
     );
 };
 
+import { useSoapRecordsV2 } from '@/hooks/useSoapRecordsV2';
+
+// ... (imports)
+
 const ClinicalHistoryTab = ({ patientId }: { patientId: string }) => {
-    const { data: records = [] } = useSoapRecords(patientId);
+    const { data: records = [] } = useSoapRecordsV2(patientId);
 
-    // Adapt records to SessionData interface if needed, or use as is if compatible
-    // SessionHistoryPanel expects SessionData[] which is very similar to what useSoapRecords returns
-    // We might need to map it if types strictly mismatch, but let's try direct or simple map.
-    // Looking at types:
-    // SessionHistoryPanel expects: subjective, objective, assessment, plan, pain_level_after
-    // useSoapRecords returns: ... same fields ...
-
-    // Mapping to ensure compatibility and avoid type errors
+    // Adapt records to SessionData interface
     const sessions = records.map(record => ({
-        ...record,
-        pain_level_after: record.pain_level // Mapping pain_level to pain_level_after as expected by component
+        id: record.id,
+        session_date: record.recordDate,
+        subjective: record.subjective,
+        objective: record.objective,
+        assessment: record.assessment,
+        plan: record.plan,
+        created_at: record.createdAt,
+        // Optional fields
+        pain_level_after: 0, // V2 SOAP doesn't have pain level in core yet, separate record
     }));
 
     return (
@@ -360,7 +366,7 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
                                         </div>
                                         <div>
                                             <p className="font-medium">
-                                                {format(new Date(tx.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}
+                                                {format(parseResponseDate(tx.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 {tx.type} • {tx.payment_method || 'Pendente'}
@@ -691,13 +697,9 @@ export const PatientProfilePage = () => {
         queryKey: ['patient', id],
         queryFn: async () => {
             if (!id) return null;
-            const docRef = doc(db, 'patients', id);
-            const docSnap = await getDoc(docRef);
-
-            if (!docSnap.exists()) {
-                throw new Error('Paciente não encontrado');
-            }
-            return { id: docSnap.id, ...docSnap.data() };
+            // Migrated to V2 API (Postgres)
+            const response = await PatientServiceV2.get(id);
+            return response.data;
         },
         enabled: !!id
     });

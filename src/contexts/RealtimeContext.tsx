@@ -4,6 +4,7 @@ import { appointmentsApi } from '@/integrations/firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useDebounce } from '@/hooks/performance/useDebounce';
+import { parseResponseDate } from '@/utils/dateUtils';
 
 export interface DashboardMetrics {
   totalAppointments: number;
@@ -165,7 +166,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (payload.eventType === 'INSERT') {
         const newData = payload.new as Appointment;
         // Só adiciona se for futuro ou hoje (reduz tamanho do array)
-        const apptDate = new Date(newData.start_time || (newData as Appointment).date || '');
+        // Usar parseResponseDate para evitar problemas de timezone com strings "YYYY-MM-DD"
+        const dateStr = newData.start_time || (newData as any).date || '';
+        const apptDate = dateStr ? parseResponseDate(dateStr) : new Date();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 

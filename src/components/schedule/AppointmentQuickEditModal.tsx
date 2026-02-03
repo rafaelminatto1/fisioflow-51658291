@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, differenceInYears, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { parseResponseDate } from '@/utils/dateUtils';
 
 import {
   Dialog,
@@ -363,7 +364,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
   const dateFormatted = useMemo(
     () => formData.appointment_date
-      ? format(new Date(formData.appointment_date + 'T00:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })
+      ? format(parseResponseDate(formData.appointment_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })
       : '',
     [formData.appointment_date]
   );
@@ -418,7 +419,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     }
 
     const dateShort = formData.appointment_date
-      ? format(new Date(formData.appointment_date + 'T00:00:00'), "dd 'de' MMMM", { locale: ptBR })
+      ? format(parseResponseDate(formData.appointment_date), "dd 'de' MMMM", { locale: ptBR })
       : '';
 
     const message = encodeURIComponent(

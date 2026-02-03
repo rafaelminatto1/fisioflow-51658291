@@ -27,6 +27,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
+import { parseResponseDate } from '@/utils/dateUtils';
 import { PatientHelpers } from '@/types';
 import { usePatientInsight } from '@/hooks/usePatientInsight';
 import { useGamification } from '@/hooks/useGamification';
@@ -273,7 +274,7 @@ export const PatientDashboard360 = ({
                                 </div>
                                 <div className="text-white/80 text-sm mt-1 flex items-center gap-2">
                                     <Clock className="w-3.5 h-3.5" />
-                                    {format(new Date(currentSession.date || currentSession.appointment_date), "HH:mm", { locale: ptBR })}
+                                    {format(parseResponseDate(currentSession.date || currentSession.appointment_date), "HH:mm", { locale: ptBR })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -292,11 +293,11 @@ export const PatientDashboard360 = ({
                                     </h3>
                                 </div>
                                 <div className="text-xl font-bold">
-                                    {format(new Date(nextAppointment.date || nextAppointment.appointment_date), "dd 'de' MMMM", { locale: ptBR })}
+                                    {format(parseResponseDate(nextAppointment.date || nextAppointment.appointment_date), "dd 'de' MMMM", { locale: ptBR })}
                                 </div>
                                 <div className="text-primary-foreground/80 text-sm mt-1 flex items-center gap-2">
                                     <Clock className="w-3.5 h-3.5" />
-                                    {format(new Date(nextAppointment.date || nextAppointment.appointment_date), "HH:mm", { locale: ptBR })} • {nextAppointment.type || 'Sessão'}
+                                    {format(parseResponseDate(nextAppointment.date || nextAppointment.appointment_date), "HH:mm", { locale: ptBR })} • {nextAppointment.type || 'Sessão'}
                                 </div>
                             </CardContent>
                         </Card>
