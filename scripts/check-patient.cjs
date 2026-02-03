@@ -3,31 +3,12 @@
  * Uso: node scripts/check-patient.cjs <patient_id>
  */
 
-const admin = require('firebase-admin');
-const fs = require('fs');
-const path = require('path');
+const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 
-// Carregar service account
-const serviceAccountPath = path.join(__dirname, '../functions/service-account-key.json');
-if (!fs.existsSync(serviceAccountPath)) {
-  console.error('Service account não encontrada em:', serviceAccountPath);
-  process.exit(1);
-}
-
-const serviceAccount = require(serviceAccountPath);
+const { db, serviceAccount } = getFirebaseAdmin();
 
 // Verificar project_id da service account
 console.log('Service account project_id:', serviceAccount.project_id);
-
-// Inicializar Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id
-  });
-}
-
-const db = admin.firestore();
 
 async function checkPatient(patientId) {
   console.log(`\n🔍 Verificando paciente: ${patientId}\n`);

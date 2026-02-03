@@ -1,14 +1,11 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('../functions/service-account-key.json');
+/**
+ * Lista todos os pacientes do Firestore
+ * Uso: node scripts/list-patients.cjs
+ */
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id
-  });
-}
+const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 
-const db = admin.firestore();
+const { db } = getFirebaseAdmin();
 
 db.collection('patients').get().then(snapshot => {
   console.log('📋 Todos os pacientes disponíveis:');
