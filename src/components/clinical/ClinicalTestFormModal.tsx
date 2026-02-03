@@ -41,6 +41,12 @@ interface ClinicalTest {
     fields_definition?: MetricField[];
     regularity_sessions?: number | null;
     organization_id?: string;
+    /** Layout no registro de medições: single | multi_field | y_balance | radial */
+    layout_type?: 'single' | 'multi_field' | 'y_balance' | 'radial';
+    /** URL da imagem "como realizar" o teste */
+    image_url?: string;
+    /** URLs de mídia (imagens/vídeos) */
+    media_urls?: string[];
 }
 
 interface ClinicalTestFormModalProps {
@@ -80,6 +86,9 @@ export function ClinicalTestFormModal({
         type: 'special_test',
         fields_definition: [],
         regularity_sessions: null,
+        layout_type: undefined,
+        image_url: '',
+        media_urls: [],
     });
 
     const [tagsInput, setTagsInput] = useState('');
@@ -91,6 +100,9 @@ export function ClinicalTestFormModal({
                 fields_definition: Array.isArray(test.fields_definition)
                     ? test.fields_definition
                     : [],
+                layout_type: test.layout_type ?? undefined,
+                image_url: test.image_url ?? '',
+                media_urls: Array.isArray(test.media_urls) ? test.media_urls : [],
             });
             setTagsInput((test.tags || []).join(', '));
         } else if (mode === 'create') {
@@ -108,6 +120,9 @@ export function ClinicalTestFormModal({
                 type: 'special_test',
                 fields_definition: [],
                 regularity_sessions: null,
+                layout_type: undefined,
+                image_url: '',
+                media_urls: [],
             });
             setTagsInput('');
         }
@@ -129,6 +144,9 @@ export function ClinicalTestFormModal({
                 type: data.type || 'special_test',
                 fields_definition: data.fields_definition || [],
                 regularity_sessions: data.regularity_sessions || null,
+                layout_type: data.layout_type || null,
+                image_url: data.image_url || null,
+                media_urls: data.media_urls?.length ? data.media_urls : null,
                 organization_id: organizationId,
                 created_by: user?.uid,
                 created_at: serverTimestamp(),
@@ -164,6 +182,9 @@ export function ClinicalTestFormModal({
                 type: data.type || 'special_test',
                 fields_definition: data.fields_definition || [],
                 regularity_sessions: data.regularity_sessions || null,
+                layout_type: data.layout_type || null,
+                image_url: data.image_url || null,
+                media_urls: data.media_urls?.length ? data.media_urls : null,
                 updated_at: serverTimestamp(),
             }, { merge: true });
         },
@@ -412,6 +433,45 @@ export function ClinicalTestFormModal({
                                     </div>
                                     <p className="text-xs text-slate-500 mt-1">
                                         Define a frequência recomendada para reaplicar este teste. Deixe vazio para aplicar apenas quando necessário.
+                                    </p>
+                                </div>
+
+                                {/* Layout no registro de medições */}
+                                <div>
+                                    <Label htmlFor="layout_type">Layout no Registro de Medições</Label>
+                                    <Select
+                                        value={formData.layout_type || 'single'}
+                                        onValueChange={(value: 'single' | 'multi_field' | 'y_balance' | 'radial') =>
+                                            setFormData({ ...formData, layout_type: value === 'single' ? undefined : value })
+                                        }
+                                    >
+                                        <SelectTrigger id="layout_type">
+                                            <SelectValue placeholder="Padrão (valor único)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="single">Valor único (padrão)</SelectItem>
+                                            <SelectItem value="multi_field">Vários campos (3+)</SelectItem>
+                                            <SelectItem value="y_balance">Y Balance (diagrama em Y)</SelectItem>
+                                            <SelectItem value="radial">Radial (ex.: Estrela de Maigne)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Define como o teste aparece ao registrar medições na evolução (diagrama, vários campos, etc.).
+                                    </p>
+                                </div>
+
+                                {/* Imagem do teste (como realizar) */}
+                                <div>
+                                    <Label htmlFor="image_url">URL da imagem do teste</Label>
+                                    <Input
+                                        id="image_url"
+                                        type="url"
+                                        value={formData.image_url || ''}
+                                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                                        placeholder="https://... (imagem de execução)"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Imagem exibida ao selecionar o teste no registro de medições para orientar a execução.
                                     </p>
                                 </div>
                             </TabsContent>

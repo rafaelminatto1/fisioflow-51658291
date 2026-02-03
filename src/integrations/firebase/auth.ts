@@ -9,6 +9,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   GithubAuthProvider,
+  OAuthProvider,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
   sendEmailVerification as firebaseSendEmailVerification,
@@ -34,6 +35,12 @@ const auth = getFirebaseAuth();
 const googleProvider = new GoogleAuthProvider();
 // Provider para GitHub Sign In
 const githubProvider = new GithubAuthProvider();
+
+// Provider para Sign in with Apple
+const appleProvider = new OAuthProvider('apple.com');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
+appleProvider.setCustomParameters({ locale: 'pt-BR' });
 
 /**
  * Resultado de autenticação com dados do profile
@@ -98,11 +105,22 @@ export async function signInWithGithub(): Promise<AuthResult> {
 }
 
 /**
+ * Entrar com Apple
+ *
+ * @returns Credencial do usuário
+ */
+export async function signInWithApple(): Promise<AuthResult> {
+  const credential = await signInWithPopup(auth, appleProvider);
+  return { user: credential.user };
+}
+
+/**
  * Entrar com provedor OAuth genérico
  */
-export async function signInWithOAuth(provider: 'google' | 'github'): Promise<AuthResult> {
+export async function signInWithOAuth(provider: 'google' | 'github' | 'apple'): Promise<AuthResult> {
   if (provider === 'google') return signInWithGoogle();
   if (provider === 'github') return signInWithGithub();
+  if (provider === 'apple') return signInWithApple();
   throw new Error(`Provedor ${provider} não suportado`);
 }
 

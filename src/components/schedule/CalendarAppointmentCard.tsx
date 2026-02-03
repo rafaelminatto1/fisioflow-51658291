@@ -197,14 +197,14 @@ const CalendarAppointmentCardBase = ({
                     stiffness: 350,
                     damping: 30
                 },
-                opacity: { duration: 0.2 },
-                scale: { duration: 0.2 },
-                boxShadow: { duration: 0.2 }
+                opacity: { duration: 0.25 },
+                scale: { duration: 0.25 },
+                boxShadow: { duration: 0.25 }
             }}
             initial={{ opacity: 0, scale: 0.95, y: 4 }}
             animate={{
-                opacity: isDragging ? 0.8 : 1,
-                scale: isDragging ? 0.98 : 1,
+                opacity: isDragging ? 0.4 : 1,
+                scale: isDragging ? 0.96 : 1,
                 y: 0,
                 boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
             }}
@@ -221,24 +221,33 @@ const CalendarAppointmentCardBase = ({
             }}
             onDragEnd={onDragEnd}
             onDragOver={(e) => {
-                if (onDragOver && !selectionMode) onDragOver(e);
+                if (onDragOver && !selectionMode) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = 'move';
+                    onDragOver(e);
+                }
             }}
             onDrop={(e) => {
-                if (onDrop && !selectionMode) onDrop(e);
+                if (onDrop && !selectionMode) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDrop(e);
+                }
             }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "absolute rounded-lg flex flex-col overflow-hidden transition-all border",
+                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden transition-all border",
                 "cursor-pointer",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 statusStyles.bg,
                 statusStyles.hoverBg,
                 statusStyles.border,
                 draggable && "cursor-grab active:cursor-grabbing",
-                isDragging && "z-50 ring-2 ring-blue-500 shadow-2xl",
+                isDragging && "z-50 ring-2 ring-dashed ring-primary/60 shadow-2xl backdrop-blur-[1px]",
                 isSaving && "animate-pulse-subtle ring-2 ring-amber-400/60 ring-offset-1 z-30",
                 !isDragging && isHovered && !selectionMode && "ring-2 ring-black/5 dark:ring-white/10 shadow-xl",
                 isDropTarget && !isDragging && "ring-2 ring-primary/70 ring-offset-1 shadow-2xl z-25",

@@ -40,41 +40,49 @@ export const APPOINTMENT_STATUS_COLORS = {
   confirmado: {
     bg: 'bg-emerald-500/20',
     border: 'border-emerald-500',
+    accent: 'bg-emerald-600',
     hex: '#10b981'
   },
   agendado: {
     bg: 'bg-cyan-500/20',
     border: 'border-cyan-500',
+    accent: 'bg-cyan-600',
     hex: '#06b6d4'
   },
   em_andamento: {
     bg: 'bg-amber-500/20',
     border: 'border-amber-500',
+    accent: 'bg-amber-600',
     hex: '#f59e0b'
   },
   cancelado: {
     bg: 'bg-red-500/20',
     border: 'border-red-500',
+    accent: 'bg-red-600',
     hex: '#ef4444'
   },
   falta: {
     bg: 'bg-red-500/20',
     border: 'border-red-500',
+    accent: 'bg-red-600',
     hex: '#ef4444'
   },
   concluido: {
     bg: 'bg-teal-500/20',
     border: 'border-teal-500',
+    accent: 'bg-teal-600',
     hex: '#14b8a6'
   },
   avaliacao: {
     bg: 'bg-violet-500/20',
     border: 'border-violet-500',
+    accent: 'bg-violet-600',
     hex: '#8b5cf6'
   },
   default: {
     bg: 'bg-slate-500/20',
     border: 'border-slate-500',
+    accent: 'bg-slate-600',
     hex: '#64748b'
   }
 } as const;
@@ -94,7 +102,7 @@ export type StatusColors = typeof APPOINTMENT_STATUS_COLORS[keyof typeof APPOINT
  * @param status - Status do appointment
  * @returns Objeto com classes bg e border
  */
-export const getStatusCardClasses = (status: string): { bg: string; border: string } => {
+export const getStatusCardClasses = (status: string): { bg: string; border: string; accent?: string } => {
   return APPOINTMENT_STATUS_COLORS[status as keyof typeof APPOINTMENT_STATUS_COLORS] || APPOINTMENT_STATUS_COLORS.default;
 };
 
@@ -155,7 +163,7 @@ export const calculateCardOffsetPercent = (
  * @returns true se deve mostrar texto
  */
 export const shouldShowText = (cardWidthPercent: number, totalCards: number): boolean => {
-  return cardWidthPercent > MIN_WIDTH_FOR_TEXT || totalCards <= MAX_CARDS_WITHOUT_BADGE;
+  return cardWidthPercent > 25 || totalCards <= 3 || totalCards <= MAX_CARDS_WITHOUT_BADGE;
 };
 
 /**
@@ -183,14 +191,26 @@ export const createSimpleDragPreview = (
 
   const statusColor = getStatusHexColor(appointment.status || 'agendado');
 
+  // Sombra para destaque durante arraste
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 4;
+
   // Fundo com borda arredondada
   ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
   ctx.strokeStyle = statusColor;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
 
   roundRect(ctx, 0, 0, width, height, 8);
   ctx.fill();
   ctx.stroke();
+
+  // Reset shadow para não afetar elementos internos
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
 
   // Barra lateral colorida
   ctx.fillStyle = statusColor;

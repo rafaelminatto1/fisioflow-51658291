@@ -33,6 +33,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { wikiService } from '@/lib/services/wikiService';
 
 import type { WikiPage, WikiCategory } from '@/types/wiki';
 
@@ -40,28 +42,23 @@ export default function WikiPage() {
   const { slug } = useParams<{ slug?: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
 
-  // Query para páginas wiki
+  // Query para páginas wiki (Firestore wiki_pages)
   const { data: pages = [], isLoading } = useQuery({
     queryKey: ['wiki-pages', user?.organizationId],
-    queryFn: async () => {
-      // TODO: Implementar query real
-      return [] as WikiPage[];
-    },
+    queryFn: () => (user?.organizationId ? wikiService.listPages(user.organizationId) : Promise.resolve([])),
     enabled: !!user?.organizationId,
   });
 
-  // Query para categorias
+  // Query para categorias (Firestore wiki_categories)
   const { data: categories = [] } = useQuery({
     queryKey: ['wiki-categories', user?.organizationId],
-    queryFn: async () => {
-      // TODO: Implementar query real
-      return [] as WikiCategory[];
-    },
+    queryFn: () => (user?.organizationId ? wikiService.listCategories(user.organizationId) : Promise.resolve([])),
     enabled: !!user?.organizationId,
   });
 
@@ -100,9 +97,18 @@ export default function WikiPage() {
   };
 
   const handleSave = async (data: Omit<WikiPage, 'id' | 'created_at' | 'updated_at' | 'version'>) => {
-    // TODO: Implementar salvamento
-    console.log('Saving page:', data);
-    setIsEditing(false);
+    if (!user?.id || !user?.organizationId) return;
+    try {
+      await wikiService.savePage(user.organizationId, user.id, data, selectedPage ? { id: selectedPage.id, version: selectedPage.version } : undefined);
+      await queryClient.invalidateQueries({ queryKey: ['wiki-pages', user.organizationId] });
+      setIsEditing(false);
+      if (selectedPage) {
+        const updated = pages.find((p) => p.id === selectedPage.id);
+        if (updated) setSelectedPage(updated);
+      }
+    } catch (err) {
+      console.error('Erro ao salvar página wiki:', err);
+    }
   };
 
   // Se está editando, mostrar editor

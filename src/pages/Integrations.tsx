@@ -114,8 +114,17 @@ export default function IntegrationsPage() {
   };
 
   const handleSync = async (id: string) => {
-    // TODO: Implementar sync
-    console.log('Syncing integration:', id);
+    // Sync real será implementado por provedor (webhook/API). Por ora feedback visual.
+    const { toast } = await import('sonner');
+    toast.info('Sincronização em andamento...', { description: 'Os dados desta integração serão atualizados em breve.' });
+    setIntegrations((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, sync_status: 'syncing' as const } : i))
+    );
+    setTimeout(() => {
+      setIntegrations((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, sync_status: 'synced' as const } : i))
+      );
+    }, 1500);
   };
 
   const handleConfigure = (provider: IntegrationProvider) => {

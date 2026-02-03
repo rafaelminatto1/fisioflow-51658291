@@ -1,17 +1,17 @@
 import React, { memo } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, Calendar, Calendar as CalendarIcon, UserPlus } from 'lucide-react';
+import { Clock, Ban, Calendar, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
+import { DropTargetPreviewCard } from './DropTargetPreviewCard';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 import {
   calculateCardWidthPercent,
   calculateCardOffsetPercent,
-  getStatusCardClasses,
   shouldShowText,
   MAX_CARDS_WITHOUT_BADGE
 } from '@/lib/calendar/dragPreview';
@@ -259,40 +259,18 @@ const CalendarDayView = memo(({
                                                         const cardWidthPercent = calculateCardWidthPercent(totalCards);
                                                         const leftOffset = calculateCardOffsetPercent(index, totalCards);
                                                         const isDraggedCard = apt.id === dragState.appointment?.id;
-                                                        const statusColors = getStatusCardClasses(apt.status);
                                                         const showText = shouldShowText(cardWidthPercent, totalCards);
 
                                                         return (
-                                                            <div
+                                                            <DropTargetPreviewCard
                                                                 key={apt.id}
-                                                                className={cn(
-                                                                    "absolute h-[calc(100%-8px)] rounded-md border-2 border-dashed",
-                                                                    "flex flex-col items-center justify-center transition-all duration-200",
-                                                                    "animate-in fade-in slide-in-from-bottom-1",
-                                                                    statusColors.bg,
-                                                                    statusColors.border,
-                                                                    isDraggedCard && "bg-primary/30 border-primary animate-pulse-subtle shadow-lg z-10"
-                                                                )}
-                                                                style={{
-                                                                    left: `calc(${leftOffset}% + 2px)`,
-                                                                    width: `calc(${cardWidthPercent}% - 4px)`,
-                                                                    top: '4px'
-                                                                }}
-                                                            >
-                                                                {/* Ícone sempre visível */}
-                                                                <UserPlus className={cn(
-                                                                    "w-4 h-4 flex-shrink-0",
-                                                                    isDraggedCard ? "text-primary" : "text-muted-foreground",
-                                                                    showText && "mb-1"
-                                                                )} />
-
-                                                                {/* Texto condicional baseado no espaço disponível */}
-                                                                {showText && (
-                                                                    <span className="text-[10px] font-medium text-muted-foreground truncate px-1 w-full text-center">
-                                                                        {isDraggedCard ? (apt.patientName || '') : ''}
-                                                                    </span>
-                                                                )}
-                                                            </div>
+                                                                appointment={apt}
+                                                                isDraggedCard={!!isDraggedCard}
+                                                                cardWidthPercent={cardWidthPercent}
+                                                                leftOffset={leftOffset}
+                                                                showText={showText}
+                                                                variant="day"
+                                                            />
                                                         );
                                                     })}
 

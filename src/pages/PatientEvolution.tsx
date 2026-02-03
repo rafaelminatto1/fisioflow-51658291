@@ -62,7 +62,6 @@ import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
 import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
-import { EvolutionStats } from '@/components/evolution/EvolutionStats';
 import { EvolutionHistoryTab } from '@/components/evolution/EvolutionHistoryTab';
 import { EvolutionDraggableGrid } from '@/components/evolution/EvolutionDraggableGrid';
 import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
@@ -758,16 +757,6 @@ const PatientEvolution = () => {
             selectedTherapistId={selectedTherapistId}
             onTherapistChange={setSelectedTherapistId}
           />
-
-          {/* Resumo (métricas) */}
-          {showInsights && (
-            <section className="space-y-2" aria-label="Resumo da evolução">
-              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-0.5">
-                Resumo
-              </h2>
-              <EvolutionStats stats={evolutionStats} />
-            </section>
-          )}
 
           {/* Alerta de Testes Obrigatórios */}
           {requiredMeasurements.length > 0 && (

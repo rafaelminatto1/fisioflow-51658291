@@ -18,7 +18,6 @@ import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/Rec
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, collection, query as firestoreQuery, orderBy, getDocs, doc, getDoc, limit } from '@/integrations/firebase/app';
-nizations';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 // Type definitions

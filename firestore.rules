@@ -302,6 +302,21 @@ service cloud.firestore {
     }
 
     // ============================================================================================
+    // CLINICAL TEST TEMPLATES (PhysioTests DB / Testes Clínicos)
+    // ============================================================================================
+
+    match /clinical_test_templates/{docId} {
+      // Leitura: admin ou profissionais (página /clinical-tests e combobox)
+      allow read: if isAdmin() || isProfessional();
+
+      // Criação: profissionais e admin
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+
+      // Atualização e deleção: profissionais e admin
+      allow update, delete: if isProfessional() || isAdmin();
+    }
+
+    // ============================================================================================
     // FINANCIAL / PAYMENTS / CONTAS_FINANCEIRAS COLLECTION
     // ============================================================================================
 

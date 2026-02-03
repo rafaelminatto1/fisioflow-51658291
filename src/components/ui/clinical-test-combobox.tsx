@@ -133,10 +133,12 @@ export function ClinicalTestCombobox({
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    type="button"
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-between bg-background h-11 border-teal-100 hover:border-teal-300 hover:bg-teal-50/30 transition-all", className)}
+                    aria-label={selectedTest ? `Teste: ${selectedTest.name}` : placeholder}
+                    className={cn("w-full justify-between bg-background h-11 border-teal-100 hover:border-teal-300 hover:bg-teal-50/30 transition-all focus:ring-2 focus:ring-teal-400 focus:ring-offset-2", className)}
                     disabled={disabled}
                 >
                     {selectedTest ? (

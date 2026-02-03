@@ -38,14 +38,22 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
 
   const parseDate = (date: Date | string): Date => {
     if (date instanceof Date) return date;
-    // Handle string dates in YYYY-MM-DD format - safety check for empty string
     const dateStr = String(date);
     if (!dateStr || dateStr === 'Invalid Date') return new Date();
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return new Date(y, m - 1, d, 12, 0, 0);
+    // Handle ISO format (e.g. "2026-02-04T10:00:00.000Z") - use only YYYY-MM-DD part
+    const dateOnly = dateStr.indexOf('T') >= 0 ? dateStr.slice(0, 10) : dateStr;
+    if (dateOnly.length < 10) return new Date();
+    const [y, m, d] = dateOnly.split('-').map(Number);
+    const parsed = new Date(y, m - 1, d, 12, 0, 0);
+    return Number.isFinite(parsed.getTime()) ? parsed : new Date();
   };
 
   const oldDate = parseDate(appointment.date);
+
+  const safeFormat = (d: Date, fmt: string): string => {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '—';
+    return format(d, fmt, { locale: ptBR });
+  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -73,10 +81,10 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="font-semibold text-sm">
-                    {format(oldDate, "dd 'de' MMMM", { locale: ptBR })}
+                    {safeFormat(oldDate, "dd 'de' MMMM")}
                   </span>
                   <span className="text-muted-foreground text-xs">
-                    {format(oldDate, "yyyy", { locale: ptBR })}
+                    {safeFormat(oldDate, "yyyy")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -100,10 +108,10 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-sm text-primary">
-                    {format(newDate, "dd 'de' MMMM", { locale: ptBR })}
+                    {safeFormat(newDate, "dd 'de' MMMM")}
                   </span>
                   <span className="text-primary/70 text-xs">
-                    {format(newDate, "yyyy", { locale: ptBR })}
+                    {safeFormat(newDate, "yyyy")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

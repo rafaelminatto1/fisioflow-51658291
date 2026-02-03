@@ -487,7 +487,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     };
 
     const gridItems: GridItem[] = React.useMemo(() => [
-        // ===== LINHA 1: Nível de Dor (30%) | Exercícios (70%) =====
+        // ===== LINHA 1: Nível de Dor (25%) | Exercícios (75%) =====
         {
             id: 'pain-scale',
             content: (
@@ -549,9 +549,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 4, h: gridLayouts.painHeight, x: 0, y: 0, minW: 3, minH: 6 }
+            defaultLayout: { w: 3, h: gridLayouts.painHeight, x: 0, y: 0, minW: 3, minH: 6 }
         },
-        // Exercícios da Sessão (70% da largura)
+        // Exercícios da Sessão (75% da largura)
         {
             id: 'exercises-block',
             content: (
@@ -574,7 +574,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 8, h: gridLayouts.painHeight, x: 4, y: 0, minW: 6, minH: 6 }
+            defaultLayout: { w: 9, h: gridLayouts.painHeight, x: 3, y: 0, minW: 6, minH: 6 }
         },
 
         // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
@@ -820,6 +820,11 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             ...item.defaultLayout
         }));
 
+        // Use stored layout when available (localStorage or Firestore), otherwise default
+        const desktopLayout = (storedLayouts?.lg && storedLayouts.lg.length > 0)
+            ? storedLayouts.lg
+            : lgLayout;
+
         // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 1 for xxs as per DraggableGrid config)
         // and stack them vertically
         const mobileLayout = gridItems.map((item, index) => ({
@@ -850,13 +855,13 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         }));
 
         return {
-            lg: lgLayout,
-            md: lgLayout,
+            lg: desktopLayout,
+            md: desktopLayout,
             sm: mobileLayout,
             xs: xsLayout,
             xxs: xxsLayout
         };
-    }, [gridItems]);
+    }, [gridItems, storedLayouts]);
 
     return (
         <TooltipProvider>

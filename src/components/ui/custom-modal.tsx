@@ -111,13 +111,13 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 
   if (!open) return null;
 
-  // Mobile: Bottom sheet, Desktop: Centered modal
+  // Mobile: Bottom sheet com altura fixa para footer sempre visível
   const modalContainerClass = isMobile
-    ? "fixed inset-x-0 bottom-0 top-auto z-50 flex flex-col max-h-[95dvh]"
+    ? "fixed inset-x-0 bottom-0 top-auto z-50 flex flex-col"
     : "fixed inset-0 z-50 flex items-center justify-center p-4";
 
   const modalContentClass = isMobile
-    ? "bg-white w-full rounded-t-2xl shadow-2xl flex flex-col max-h-[95dvh]"
+    ? "bg-white w-full rounded-t-2xl shadow-2xl flex flex-col h-[90dvh] max-h-[90dvh] min-h-0 overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
     : "bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden";
 
   return (

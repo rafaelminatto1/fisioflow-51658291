@@ -66,11 +66,16 @@ const PatientObjectivesPage = lazy(() => import(/* webpackChunkName: "cadastros-
 // Financial pages
 const ContasFinanceirasPage = lazy(() => import(/* webpackChunkName: "financial-accounts" */ "./pages/financeiro/ContasFinanceirasPage"));
 const FluxoCaixaPage = lazy(() => import(/* webpackChunkName: "financial-cashflow" */ "./pages/financeiro/FluxoCaixaPage"));
+const NFSePage = lazy(() => import(/* webpackChunkName: "financial-nfse" */ "./pages/financeiro/NFSePage"));
+const RecibosPage = lazy(() => import(/* webpackChunkName: "financial-recibos" */ "./pages/financeiro/RecibosPage"));
+const DemonstrativoMensalPage = lazy(() => import(/* webpackChunkName: "financial-demonstrativo" */ "./pages/financeiro/DemonstrativoMensalPage"));
 
 // Reports pages
 const AniversariantesPage = lazy(() => import(/* webpackChunkName: "reports-birthdays" */ "./pages/relatorios/AniversariantesPage"));
 const AttendanceReport = lazy(() => import(/* webpackChunkName: "reports-attendance" */ "./pages/relatorios/AttendanceReport"));
 const TeamPerformance = lazy(() => import(/* webpackChunkName: "reports-team" */ "./pages/relatorios/TeamPerformance"));
+const RelatorioMedicoPage = lazy(() => import(/* webpackChunkName: "reports-medico" */ "./pages/relatorios/RelatorioMedicoPage"));
+const RelatorioConvenioPage = lazy(() => import(/* webpackChunkName: "reports-convenio" */ "./pages/relatorios/RelatorioConvenioPage"));
 
 // Advanced features - Lower priority chunks
 const Partner = lazy(() => import(/* webpackChunkName: "vouchers-partners" */ "./pages/Partner"));
@@ -130,6 +135,7 @@ const DynamicCompareDetailsPage = lazy(() => import(/* webpackChunkName: "analys
 // CRM & Portal
 const LeadsPage = lazy(() => import(/* webpackChunkName: "crm-leads" */ "./pages/crm/LeadsPage"));
 const CRMDashboard = lazy(() => import(/* webpackChunkName: "crm-dashboard" */ "./pages/crm/CRMDashboard"));
+const CRMCampanhasPage = lazy(() => import(/* webpackChunkName: "crm-campanhas" */ "./pages/crm/CRMCampanhasPage"));
 const PatientPortal = lazy(() => import(/* webpackChunkName: "portal-patient" */ "./pages/PatientPortal"));
 
 // Pre-cadastro
@@ -246,10 +252,15 @@ export function AppRoutes() {
             {/* Financeiro Avançado - Fase 4 */}
             <Route path="/financeiro/contas" element={<ProtectedRoute><ContasFinanceirasPage /></ProtectedRoute>} />
             <Route path="/financeiro/fluxo-caixa" element={<ProtectedRoute><FluxoCaixaPage /></ProtectedRoute>} />
+            <Route path="/financeiro/nfse" element={<ProtectedRoute><NFSePage /></ProtectedRoute>} />
+            <Route path="/financeiro/recibos" element={<ProtectedRoute><RecibosPage /></ProtectedRoute>} />
+            <Route path="/financeiro/demonstrativo" element={<ProtectedRoute><DemonstrativoMensalPage /></ProtectedRoute>} />
 
             {/* Relatórios - Fase 5 */}
             <Route path="/relatorios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
             <Route path="/relatorios/comparecimento" element={<ProtectedRoute><AttendanceReport /></ProtectedRoute>} />
+            <Route path="/relatorios/medico" element={<ProtectedRoute><RelatorioMedicoPage /></ProtectedRoute>} />
+            <Route path="/relatorios/convenio" element={<ProtectedRoute><RelatorioConvenioPage /></ProtectedRoute>} />
             <Route path="/performance-equipe" element={<ProtectedRoute><TeamPerformance /></ProtectedRoute>} />
 
             {/* Configurações */}
@@ -258,6 +269,7 @@ export function AppRoutes() {
             {/* Marketing/CRM - Fase 6 */}
             <Route path="/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />
             <Route path="/crm/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
+            <Route path="/crm/campanhas" element={<ProtectedRoute><CRMCampanhasPage /></ProtectedRoute>} />
 
             {/* Portal do Paciente */}
             <Route path="/portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />

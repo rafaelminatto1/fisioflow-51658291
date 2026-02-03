@@ -64,6 +64,11 @@ export interface PathologyRequiredMeasurement {
   instructions?: string;
 }
 
+/**
+ * Medição de evolução do paciente.
+ * Para testes com múltiplos valores (ex.: Y Balance: anterior, posteromedial, posterolateral),
+ * os valores individuais ficam em custom_data e value é um composto (ex.: média) para gráficos.
+ */
 export interface EvolutionMeasurement {
   id: string;
   soap_record_id?: string;
