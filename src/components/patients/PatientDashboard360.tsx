@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseResponseDate } from '@/utils/dateUtils';
 import {
   usePatientSurgeries,
   usePatientGoals,
@@ -244,7 +245,7 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
                 {upcomingAppointments.slice(0, 2).map((apt) => (
                   <div key={apt.id} className="text-sm">
                     <p className="font-medium">
-                      {format(new Date(apt.appointment_date), 'dd/MM/yyyy')}
+                      {format(parseResponseDate(apt.appointment_date), 'dd/MM/yyyy')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {apt.appointment_time} - {apt.type}

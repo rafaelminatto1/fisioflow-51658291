@@ -15,6 +15,7 @@ import { db, collection, query as firestoreQuery, where, orderBy, getDocs } from
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { parseResponseDate } from '@/utils/dateUtils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -113,7 +114,7 @@ export function AdvancedReportGenerator() {
     // Details table
     if (sections.find(s => s.id === 'details')?.enabled) {
       const tableData = formattedData.map(d => [
-        format(new Date(d.appointment_date), 'dd/MM/yyyy'),
+        format(parseResponseDate(d.appointment_date), 'dd/MM/yyyy'),
         d.patients?.full_name || 'N/A',
         d.type || 'N/A',
         d.status || 'N/A',
@@ -136,7 +137,7 @@ export function AdvancedReportGenerator() {
     const formattedData = data as AppointmentData[];
     const headers = ['Data', 'Paciente', 'Email', 'Telefone', 'Tipo', 'Status', 'Valor'];
     const rows = formattedData.map(d => [
-      format(new Date(d.appointment_date), 'dd/MM/yyyy'),
+      format(parseResponseDate(d.appointment_date), 'dd/MM/yyyy'),
       d.patients?.full_name || '',
       d.patients?.email || '',
       d.patients?.phone || '',
