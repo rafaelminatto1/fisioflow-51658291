@@ -71,13 +71,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const canStartAttendance = true;
 
   const handleStartAttendance = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppointmentQuickView.tsx:handleStartAttendance',message:'click iniciar atendimento/avaliacao',data:{appointmentId:appointment.id,status:appointment.status,target:appointment.status==='avaliacao'?'evaluations/new':'patient-evolution'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     if (appointment.status === 'avaliacao') {
       navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
       toast.success('Iniciando avaliação', {
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
-      navigate(`/session-evolution/${appointment.id}`);
+      navigate(`/patient-evolution/${appointment.id}`);
       toast.success('Iniciando atendimento', {
         description: `Atendimento de ${appointment.patientName}`,
       });
@@ -165,9 +168,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       )}
 
       {/* Content */}
-      <div className="p-5 space-y-4 flex-1 overflow-y-auto">
+      <div className="p-5 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto">
         {/* Fisioterapeuta - placeholder */}
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <span className="text-base font-medium text-muted-foreground min-w-[110px]">Fisioterapeuta:</span>
           <span className="text-base font-semibold text-foreground">Activity Fisioterapia</span>
         </div>
@@ -179,7 +182,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         </div>
 
         {/* Celular */}
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <span className="text-base font-medium text-muted-foreground min-w-[110px]">Celular:</span>
           <span className="text-base font-medium text-foreground">{appointment.phone || 'Não informado'}</span>
         </div>
@@ -191,7 +194,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         </div>
 
         {/* Status */}
-        <div className="flex items-center gap-3 pt-1">
+        <div className="flex items-center gap-4 pt-1">
           <span className="text-base font-medium text-muted-foreground min-w-[110px]">Status:</span>
           <Select
             value={appointment.status}
@@ -237,8 +240,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       <Separator />
 
       {/* Actions */}
-      <div className="p-3.5 space-y-2.5 bg-muted/20">
-        <div className="flex items-center gap-2">
+      <div className="p-4 space-y-3 bg-muted/20">
+        <div className="flex items-center gap-3">
           {onEdit && (
             <Button
               variant="outline"

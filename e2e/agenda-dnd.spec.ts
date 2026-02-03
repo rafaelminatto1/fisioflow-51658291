@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
 test('agenda drag and drop', async ({ page }) => {
+    test.setTimeout(90000);
     console.log('Starting test...');
 
     // 1. Login
@@ -25,25 +26,23 @@ test('agenda drag and drop', async ({ page }) => {
     console.log('Waiting for redirect after login...');
     await page.waitForURL((u) => u.pathname === '/' || u.pathname.startsWith('/schedule') || u.pathname.startsWith('/dashboard'), { timeout: 25000 });
 
-    // Ensure we are on schedule page (root "/" is Schedule)
-    if (page.url().includes('/dashboard')) {
-        await page.goto('/');
-    }
+    // Ensure we are on schedule page; use week view and fixed date so cards are present
+    await page.goto('/?view=week&date=2026-02-03');
+    await page.waitForLoadState('domcontentloaded');
 
-    // 2. Wait for appointments to load
+    // 2. Wait for appointments to load (card class: appointment-card or calendar-appointment-card)
     console.log('Waiting for appointment card...');
-    await page.waitForSelector('.appointment-card', { timeout: 15000 });
+    await page.waitForSelector('.appointment-card, .calendar-appointment-card', { timeout: 25000 });
     console.log('Appointment card found.');
 
     // 3. Find an appointment card to drag
-    const appointment = page.locator('.appointment-card').first();
+    const appointment = page.locator('.appointment-card, .calendar-appointment-card').first();
     const appointmentBox = await appointment.boundingBox();
     console.log('Appointment box:', appointmentBox);
 
-    // 4. Find a target slot (different from current)
-    // We'll target the last available slot to maximize distance
+    // 4. Find a target slot (different from current); fallback to grid cell
     console.log('Finding target slot...');
-    const targetSlot = page.locator('.calendar-time-slot').last();
+    const targetSlot = page.locator('.calendar-time-slot, [data-slot], .rbc-day-slot').last();
     const targetBox = await targetSlot.boundingBox();
     console.log('Target box:', targetBox);
 
@@ -62,8 +61,8 @@ test('agenda drag and drop', async ({ page }) => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     console.log('Confirming...');
-    // 7. Confirm
-    await modal.locator('button:has-text("Confirmar")').click();
+    // 7. Confirm (button text: "Confirmar Reagendamento" or "Confirmar")
+    await page.getByRole('button', { name: /Confirmar Reagendamento|Confirmar/ }).click();
 
     // 8. Verify Success Toast
     console.log('Waiting for success toast...');

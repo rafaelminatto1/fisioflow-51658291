@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { db, doc, getDoc, getDocs, collection, query as firestoreQuery, where, addDoc, updateDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { AppointmentService } from '@/services/appointmentService';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
 
@@ -138,9 +139,9 @@ export default function NewEvaluationPage() {
                 description: "Os dados da avaliação foram registrados com sucesso."
             });
 
-            // Update appointment status if applicable
+            // Update appointment status via API (agenda IDs are from API)
             if (appointmentId) {
-                await updateDoc(doc(db, 'appointments', appointmentId), { status: 'realizado' });
+                await AppointmentService.updateStatus(appointmentId, 'realizado');
             }
 
             navigate('/schedule');
