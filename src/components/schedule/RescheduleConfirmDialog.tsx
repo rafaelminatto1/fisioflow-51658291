@@ -11,7 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, ArrowRight, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 
 interface RescheduleConfirmDialogProps {
@@ -48,57 +49,99 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Confirmar Reagendamento
-          </AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-6 pt-4">
-              <p className="text-base text-muted-foreground">
-                Deseja reagendar o atendimento de <strong className="text-foreground">{appointment.patientName}</strong>?
+      <AlertDialogContent className="max-w-lg p-0 gap-0">
+        <AlertDialogHeader className="px-6 py-5 border-b">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Calendar className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <AlertDialogTitle className="text-lg">Confirmar Reagendamento</AlertDialogTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {appointment.patientName}
               </p>
+            </div>
+          </div>
+        </AlertDialogHeader>
 
-              <div className="flex flex-col gap-4 p-4 bg-muted/50 rounded-lg sm:flex-row sm:items-start sm:gap-6">
-                {/* De */}
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2 text-base font-medium text-foreground">
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-bold text-muted-foreground uppercase">De</span>
-                    <span>{format(oldDate, "dd/MM/yyyy", { locale: ptBR })}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-base text-muted-foreground pl-7">
-                    <Clock className="h-5 w-5" />
-                    {appointment.time}
-                  </div>
+        <div className="px-6 py-5">
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Card DE - Horário atual */}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">De</div>
+              <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold text-sm">
+                    {format(oldDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {format(oldDate, "yyyy", { locale: ptBR })}
+                  </span>
                 </div>
-
-                {/* Seta */}
-                <div className="flex items-center justify-center pt-2 sm:pt-0">
-                  <ArrowRight className="h-6 w-6 text-primary rotate-90 sm:rotate-0" />
-                </div>
-
-                {/* Para */}
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2 text-base font-medium text-primary">
-                    <Calendar className="h-5 w-5" />
-                    <span className="font-bold uppercase">Para</span>
-                    <span>{format(newDate, "dd/MM/yyyy", { locale: ptBR })}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-base text-primary pl-7">
-                    <Clock className="h-5 w-5" />
-                    {newTime}
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold text-sm">{appointment.time}</span>
                 </div>
               </div>
             </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending} onClick={() => onOpenChange(false)}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={isPending}>
-            {isPending ? 'Reagendando...' : 'Confirmar Reagendamento'}
+
+            {/* Seta */}
+            <div className="flex items-center justify-center">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <ArrowRight className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+
+            {/* Card PARA - Novo horário */}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-primary uppercase tracking-wide mb-2">Para</div>
+              <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm text-primary">
+                    {format(newDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </span>
+                  <span className="text-primary/70 text-xs">
+                    {format(newDate, "yyyy", { locale: ptBR })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm text-primary">{newTime}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <AlertDialogFooter className="px-6 py-4 border-t bg-muted/30 gap-3">
+          <AlertDialogCancel
+            disabled={isPending}
+            onClick={() => onOpenChange(false)}
+            className="flex-1 sm:flex-none"
+          >
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={isPending}
+            className="flex-1 sm:flex-none bg-primary hover:bg-primary/90"
+          >
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Reagendando...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Confirmar Reagendamento
+              </span>
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
