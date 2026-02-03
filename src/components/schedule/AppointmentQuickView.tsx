@@ -71,9 +71,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const canStartAttendance = true;
 
   const handleStartAttendance = () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppointmentQuickView.tsx:handleStartAttendance',message:'click iniciar atendimento/avaliacao',data:{appointmentId:appointment.id,status:appointment.status,target:appointment.status==='avaliacao'?'evaluations/new':'patient-evolution'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (appointment.status === 'avaliacao') {
       navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
       toast.success('Iniciando avaliação', {

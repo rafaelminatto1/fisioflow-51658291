@@ -316,11 +316,22 @@ export const CalendarWeekView = memo(({
                                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
 
                                         // Get target appointments for preview (excluding the dragged one)
-                                        // Filtra por data E horário para mostrar apenas os appointments do slot correto
+                                        // Filtra por data e verifica sobreposição de horário considerando duração
                                         const slotTargetAppointments = isDropTarget && dragState.appointment
                                             ? targetAppointments.filter(apt => {
                                                 const aptDate = parseAppointmentDate(apt.date);
-                                                return aptDate && isSameDay(aptDate, day) && apt.time === time && apt.id !== dragState.appointment!.id;
+                                                if (!aptDate || !isSameDay(aptDate, day) || apt.id === dragState.appointment!.id) {
+                                                  return false;
+                                                }
+                                                // Check time overlap considering duration
+                                                const [targetHour, targetMin] = time.split(':').map(Number);
+                                                const targetMinutes = targetHour * 60 + targetMin;
+                                                const aptTime = normalizeTime(apt.time);
+                                                const [aptHour, aptMin] = aptTime.split(':').map(Number);
+                                                const aptStartMinutes = aptHour * 60 + aptMin;
+                                                const aptEndMinutes = aptStartMinutes + (apt.duration || 60);
+                                                // Include if appointment starts at same time or overlaps with target slot
+                                                return aptTime === time || (targetMinutes >= aptStartMinutes && targetMinutes < aptEndMinutes);
                                               })
                                             : [];
 

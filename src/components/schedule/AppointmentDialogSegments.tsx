@@ -38,12 +38,15 @@ export const PatientSelectionSection = ({
     patients,
     isLoading,
     disabled,
-    onCreateNew
+    onCreateNew,
+    fallbackPatientName
 }: {
     patients: Patient[],
     isLoading: boolean,
     disabled: boolean,
-    onCreateNew: (name: string) => void
+    onCreateNew: (name: string) => void,
+    /** Nome do paciente recém-criado (cadastro rápido) para exibir até a lista atualizar */
+    fallbackPatientName?: string
 }) => {
     const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
 
@@ -58,6 +61,7 @@ export const PatientSelectionSection = ({
                 value={watch('patient_id')}
                 onValueChange={(value) => setValue('patient_id', value)}
                 onCreateNew={onCreateNew}
+                fallbackDisplayName={fallbackPatientName}
                 disabled={disabled || isLoading}
             />
             {errors.patient_id && (

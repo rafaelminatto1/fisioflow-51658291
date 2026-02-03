@@ -136,9 +136,6 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
                 const data = e.dataTransfer.getData('application/json');
                 if (data) {
                     const parsed = JSON.parse(data) as { id?: string; date?: string | Date; time?: string };
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useCalendarDrag.ts:handleDrop',message:'dataTransfer fallback parsed',data:{parsedId:parsed?.id,hasDate:!!parsed?.date},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-                    // #endregion
                     if (parsed?.id != null && (parsed.date != null || parsed.time != null)) {
                         appointmentToMove = {
                             id: parsed.id,
@@ -195,9 +192,6 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         if (!pendingReschedule || !onAppointmentReschedule) return;
 
         const { appointment, newDate, newTime } = pendingReschedule;
-        // #region agent log
-        if (!appointment?.id) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useCalendarDrag.ts:handleConfirmReschedule',message:'pendingReschedule.appointment missing id',data:{hasAppointment:!!appointment},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
         if (!appointment?.id) {
             setShowConfirmDialog(false);
             setPendingReschedule(null);
