@@ -341,6 +341,8 @@ No Firestore, os relacionamentos são feitos por IDs de documento (ex.: `patient
 
 Firestore Security Rules garantem que apenas dados da **organization_id** (e role) do usuário autenticado sejam acessíveis.
 
+**Agenda e agendamentos:** A lista de agendamentos da agenda é carregada pela **API** (Cloud Functions / PostgreSQL). Os IDs exibidos são da API; operações de escrita (excluir, atualizar status, salvar evolução) a partir dessa lista devem usar a API (`AppointmentService`, `appointmentsApi`), não Firestore direto. A página de evolução (`/session-evolution/:id`) aceita IDs do Firestore ou da API: carrega primeiro do Firestore e, se não existir, da API; ao salvar, persiste na mesma fonte em que o agendamento foi carregado. Detalhes e referência rápida em `DEVELOPMENT.md` (seção "Agenda e agendamentos: API vs Firestore").
+
 ---
 
 ## 6. Rotas e Navegação

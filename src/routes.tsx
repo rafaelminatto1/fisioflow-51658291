@@ -45,6 +45,7 @@ const SessionEvolutionPage = lazy(() => import(/* webpackChunkName: "session-evo
 const PainMapHistoryPage = lazy(() => import(/* webpackChunkName: "pain-maps" */ "./pages/patients/PainMapHistoryPage"));
 const NewEvaluationPage = lazy(() => import(/* webpackChunkName: "evaluation-new" */ "./pages/patients/NewEvaluationPage"));
 const PatientProfilePage = lazy(() => import(/* webpackChunkName: "patient-profile" */ "./pages/patients/PatientProfilePage"));
+const NewPatientPage = lazy(() => import(/* webpackChunkName: "patient-new" */ "./pages/patients/NewPatientPage"));
 const Communications = lazy(() => import(/* webpackChunkName: "communications" */ "./pages/Communications"));
 
 // Settings & configuration pages
@@ -283,6 +284,7 @@ export function AppRoutes() {
             <Route path="/dashboard/dinamica/:id" element={<ProtectedRoute><DynamicCompareDetailsPage /></ProtectedRoute>} />
 
             {/* Patient Profile - New Route */}
+            <Route path="/patients/new" element={<ProtectedRoute><NewPatientPage /></ProtectedRoute>} />
             <Route path="/patients/:id" element={<ProtectedRoute><PatientProfilePage /></ProtectedRoute>} />
 
             {/* Goals Admin */}

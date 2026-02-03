@@ -20,6 +20,12 @@ config.resolver.nodeModulesPaths = [
 // Alterado para false para permitir que o Metro resolva links simbólicos do pnpm corretamente
 config.resolver.disableHierarchicalLookup = false;
 
+// 5. Mapeamento explícito para pacotes problemáticos com symlinks
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'whatwg-fetch': path.resolve(projectRoot, 'node_modules/whatwg-fetch'),
+};
+
 // 4. Ignorar pastas de teste e build que confundem o watcher
 config.resolver.blockList = [
   /test-results\/.*/,

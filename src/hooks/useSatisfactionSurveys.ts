@@ -7,6 +7,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query a
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/integrations/firebase/app';
+import { appointmentsApi } from '@/integrations/firebase/functions';
 
 
 
@@ -121,6 +122,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       const appointmentIds = data.map((item: SatisfactionSurvey) => item.appointment_id).filter((id): id is string => id !== null);
       const appointmentMap = new Map<string, { id: string; start_time: string }>();
 
+      // Agendamentos podem vir da API (ids da agenda); Firestore primeiro, depois API
       await Promise.all([...new Set(appointmentIds)].map(async (appointmentId) => {
         const appointmentDoc = await getDoc(doc(db, 'appointments', appointmentId));
         if (appointmentDoc.exists()) {
@@ -128,6 +130,17 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
             id: appointmentDoc.id,
             start_time: appointmentDoc.data().start_time as string,
           });
+        } else {
+          try {
+            const apiAppointment = await appointmentsApi.get(appointmentId);
+            const startTime = (apiAppointment as { startTime?: string; start_time?: string }).startTime
+              ?? (apiAppointment as { start_time?: string }).start_time;
+            if (startTime) {
+              appointmentMap.set(appointmentId, { id: appointmentId, start_time: startTime });
+            }
+          } catch {
+            // Appointment not in Firestore nor API; skip
+          }
         }
       }));
 
