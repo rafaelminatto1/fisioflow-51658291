@@ -12,6 +12,7 @@
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ],
+      "concurrency": 80,
       "env": [
         {
           "variables": {
@@ -59,7 +60,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.firebaseapp.com https://*.googleapis.com https://fisioflow-migration.firebaseapp.com https://ably.io https://*.ably.io https://realtime.ably.io wss://realtime.ably.io https://rest.ably.io https://*.ably-realtime.com https://internet-up.ably-realtime.com https://*.cloudfunctions.net https://www.googletagmanager.com https://www.google-analytics.com https://*.ingest.sentry.io https://*.sentry.io; frame-src 'self' https://www.youtube.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://*.firebaseio.com https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.firebaseapp.com https://*.googleapis.com https://fisioflow-migration.firebaseapp.com https://ably.io https://*.ably.io https://realtime.ably.io wss://realtime.ably.io https://rest.ably.io https://*.ably-realtime.com https://internet-up.ably-realtime.com https://*.cloudfunctions.net https://www.googletagmanager.com https://www.google-analytics.com https://*.ingest.sentry.io https://*.sentry.io; frame-src 'self' https://www.youtube.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self';"
           }
         ]
       },
@@ -83,10 +84,18 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "database": {
+    "rules": "database.rules.json"
+  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "dataconnect": [
+    {
+      "source": "fdc"
+    }
+  ],
   "emulators": {
     "auth": {
       "port": 9099
