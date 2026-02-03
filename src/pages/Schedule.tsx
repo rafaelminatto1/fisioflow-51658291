@@ -256,9 +256,6 @@ const Schedule = () => {
   const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
     try {
       const formattedDate = formatDateToLocalISO(newDate);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Schedule.tsx:handleAppointmentReschedule',message:'reschedule payload',data:{appointmentId:appointment.id,formattedDate,newTime,therapistId:appointment.therapistId,duration:appointment.duration},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
       await rescheduleAppointment({
         appointmentId: appointment.id,
         appointment_date: formattedDate,
