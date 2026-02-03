@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PatientHelpers } from '@/types';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
+import { parseResponseDate } from '@/utils/dateUtils';
 import type { Patient, Appointment } from '@/types';
 
 interface EvolutionHeaderProps {
@@ -88,7 +89,7 @@ export const EvolutionHeader = memo(({
                                 <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground mt-1 flex-wrap">
                                     <span className="flex items-center gap-1">
                                         <Calendar className="h-3 w-3" />
-                                        {appointment?.appointment_date && format(new Date(appointment.appointment_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                        {appointment?.appointment_date && format(parseResponseDate(appointment.appointment_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
                                     </span>
                                     {patient?.phone && (
                                         <span className="flex items-center gap-1">
