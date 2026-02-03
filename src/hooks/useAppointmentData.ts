@@ -1,5 +1,5 @@
 /**
- * useAppointmentData - Migrated to Firebase
+ * useAppointmentData - Updated to use PostgreSQL via Firebase Functions
  *
  */
 import { useQuery } from '@tanstack/react-query';
@@ -15,11 +15,12 @@ import {
     type AppointmentDBStandard
 } from '@/lib/constants/appointment-queries';
 import { db } from '@/integrations/firebase/app';
+import { appointmentsApi } from '@/integrations/firebase/functions';
 
 
 
 export const useAppointmentData = (appointmentId: string | undefined) => {
-    // Buscar dados do agendamento do Firebase com retry e timeout
+    // Buscar dados do agendamento do PostgreSQL via Firebase Functions
     const { data: appointment, isLoading: appointmentLoading, error: appointmentError } = useQuery({
         queryKey: ['appointment', appointmentId],
         queryFn: async () => {
@@ -27,23 +28,16 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidateAppointment(APPOINTMENT_SELECT.standard);
 
-            const docRef = doc(db, 'appointments', appointmentId);
-            const snapshot = await getDoc(docRef);
-
-            if (!snapshot.exists()) {
-                console.warn('[useAppointmentData] Appointment not found:', appointmentId);
-                return null;
-            }
-
-            const data = snapshot.data();
+            console.log('[useAppointmentData] Fetching appointment from PostgreSQL via API:', appointmentId);
+            const data = await appointmentsApi.get(appointmentId);
             console.log('[useAppointmentData] Appointment loaded:', {
-                id: snapshot.id,
+                id: data.id,
                 patient_id: data.patient_id,
                 hasPatientId: !!data.patient_id
             });
 
             return {
-                id: snapshot.id,
+                id: data.id,
                 ...data,
             } as AppointmentDBStandard;
         },
