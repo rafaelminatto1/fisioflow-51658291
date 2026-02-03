@@ -332,7 +332,9 @@
       "mcp__playwright__browser_install",
       "mcp__playwright__browser_drag",
       "Bash(nslookup:*)",
-      "Bash(whois:*)"
+      "Bash(whois:*)",
+      "Bash(xdg-open:*)",
+      "Bash(sensible-browser:*)"
     ],
     "deny": [],
     "ask": [],
