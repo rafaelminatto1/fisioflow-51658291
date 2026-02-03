@@ -12,7 +12,7 @@
 
 const CONFIG = {
   // Nome do cache (versão)
-  CACHE_VERSION: 'v2.0.0',
+  CACHE_VERSION: 'v2.1.0',
   CACHE_PREFIX: 'fisioflow',
 
   // URLs para cache imediato (core resources)
