@@ -221,11 +221,6 @@ const CalendarAppointmentCardBase = ({
                 y: 0,
                 boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
             }}
-            whileHover={{
-                scale: isTouch ? 1 : 1.02,
-                zIndex: 20,
-                transition: { duration: 0.15 }
-            }}
             whileTap={{
                 scale: isTouch ? 0.97 : 0.99,
                 transition: { duration: 0.1 }
