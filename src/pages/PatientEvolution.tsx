@@ -735,8 +735,8 @@ const PatientEvolution = () => {
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
       <MainLayout maxWidth="7xl">
-        <div className="space-y-4 animate-fade-in pb-8">
-          {/* Header Compacto Moderno */}
+        <div className="space-y-5 animate-fade-in pb-8">
+          {/* Cabeçalho: paciente + sessão + ações */}
           <EvolutionHeader
             patient={patient}
             appointment={appointment}
@@ -759,8 +759,15 @@ const PatientEvolution = () => {
             onTherapistChange={setSelectedTherapistId}
           />
 
-          {/* Quick Stats Row */}
-          {showInsights && <EvolutionStats stats={evolutionStats} />}
+          {/* Resumo (métricas) */}
+          {showInsights && (
+            <section className="space-y-2" aria-label="Resumo da evolução">
+              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-0.5">
+                Resumo
+              </h2>
+              <EvolutionStats stats={evolutionStats} />
+            </section>
+          )}
 
           {/* Alerta de Testes Obrigatórios */}
           {requiredMeasurements.length > 0 && (
