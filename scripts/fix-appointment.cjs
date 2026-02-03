@@ -1,14 +1,11 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('../functions/service-account-key.json');
+/**
+ * Script para corrigir appointment com patient_id inválido
+ * Uso: node scripts/fix-appointment.cjs
+ */
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id
-  });
-}
+const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 
-const db = admin.firestore();
+const { db } = getFirebaseAdmin();
 
 // Appointment ID que precisa ser corrigido
 const appointmentId = '2b1a34a7-4f92-4010-ba38-607716efd366';

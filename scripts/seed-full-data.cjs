@@ -3,18 +3,9 @@
  * Run with: node scripts/seed-full-data.cjs
  */
 
-const admin = require('firebase-admin');
-const serviceAccount = require('../functions/service-account-key.json');
+const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 
-// Initialize Firebase
-if (admin.apps.length === 0) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: 'fisioflow-migration'
-    });
-}
-
-const db = admin.firestore();
+const { db } = getFirebaseAdmin();
 
 // Helper for dates
 function addDays(date, days) {
