@@ -121,7 +121,9 @@ export const createEvolution = onCall({
       timestamp: firestore.FieldValue.serverTimestamp(),
     });
 
-  logger.info(`Evolution created: ${evolutionId} for patient: ${patientId}`);
+  // Dado sensível removido: ID do paciente mascarado para logs (LGPD)
+  const maskedPatientId = patientId.substring(0, 8) + '...';
+  logger.info(`Evolution created: ${evolutionId} for patient: ${maskedPatientId}`);
 
   return {
     success: true,

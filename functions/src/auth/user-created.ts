@@ -24,7 +24,10 @@ export const onUserCreated = functions
         const ADMIN_EMAIL = 'rafael.minatto@yahoo.com.br';
 
         try {
-            logger.info(`[onUserCreated] Creating profile for user: ${user.uid} (${user.email})`);
+            // Dados sensíveis removidos: UID completo e email mascarado (LGPD)
+            const maskedEmail = user.email ? user.email.split('@')[0].substring(0, 3) + '***@' + user.email.split('@')[1] : '***';
+            const maskedUid = user.uid.substring(0, 8) + '...';
+            logger.info(`[onUserCreated] Creating profile for user: ${maskedUid} (${maskedEmail})`);
 
             // 1. Create Profile in Firestore
             // We use set with merge: true to be idempotent

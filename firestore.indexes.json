@@ -219,6 +219,126 @@
                     "order": "ASCENDING"
                 }
             ]
+        },
+        {
+            "collectionGroup": "time_entries",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "user_id", "order": "ASCENDING" },
+                { "fieldPath": "start_time", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "time_entries",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "patient_id", "order": "ASCENDING" },
+                { "fieldPath": "start_time", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "time_entries",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "project_id", "order": "ASCENDING" },
+                { "fieldPath": "start_time", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "time_entries",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "task_id", "order": "ASCENDING" },
+                { "fieldPath": "start_time", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "wiki_pages",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "slug", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "wiki_pages",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "parent_id", "order": "ASCENDING" },
+                { "fieldPath": "title", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "wiki_pages",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "category", "order": "ASCENDING" },
+                { "fieldPath": "updated_at", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "wiki_versions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "page_id", "order": "ASCENDING" },
+                { "fieldPath": "version", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "wiki_comments",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "page_id", "order": "ASCENDING" },
+                { "fieldPath": "created_at", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "automations",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "is_active", "order": "ASCENDING" },
+                { "fieldPath": "created_at", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "automations",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "created_by", "order": "ASCENDING" },
+                { "fieldPath": "created_at", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "automation_logs",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "automation_id", "order": "ASCENDING" },
+                { "fieldPath": "executed_at", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "integrations",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "provider", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "webhook_logs",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "organization_id", "order": "ASCENDING" },
+                { "fieldPath": "integration_id", "order": "ASCENDING" },
+                { "fieldPath": "created_at", "order": "DESCENDING" }
+            ]
         }
     ],
     "fieldOverrides": []

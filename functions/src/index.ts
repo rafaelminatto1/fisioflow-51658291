@@ -221,12 +221,15 @@ import { scanMedicalReportHttp } from './api/ocr-scanner';
 import { migrateClinicalSchema } from './migrations/clinical-setup';
 import { dailyPatientDigest } from './crons/scheduled-tasks';
 
+import { analyzeProgress } from './ai/flows';
+
 export { 
     getPatientAISummaryHttp, 
     getClinicalInsightsHttp, 
     scanMedicalReportHttp,
     migrateClinicalSchema, 
-    dailyPatientDigest 
+    dailyPatientDigest,
+    analyzeProgress 
 };
 
 // ============================================================================

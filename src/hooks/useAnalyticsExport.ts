@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import XLSX from '@/lib/export/exceljsWrapper';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
 
 // ============================================================================

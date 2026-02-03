@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "fisioflow-migration-service"
+location: "southamerica-east1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fisioflow-migration-database"
+      cloudSql:
+        instanceId: "fisioflow-pg-sp"
+connectorDirs:
+  - "./connector"

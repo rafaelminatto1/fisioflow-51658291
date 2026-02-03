@@ -4,6 +4,7 @@ import { authorizeRequest } from '../middleware/auth';
 import { Appointment } from '../types/models';
 import { logger } from '../lib/logger';
 import * as admin from 'firebase-admin';
+import { rtdb } from '../lib/rtdb';
 
 const firebaseAuth = admin.auth();
 
@@ -267,8 +268,12 @@ export const createAppointmentHttp = onRequest(
 
       try {
         const realtime = await import('../realtime/publisher');
-        await realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment as any, old: null });
-      } catch (err) { logger.error('Erro Ably:', err); }
+        // Usar RTDB em paralelo com Ably (migração gradual)
+        await Promise.allSettled([
+           realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment as any, old: null }),
+           rtdb.refreshAppointments(organizationId)
+        ]);
+      } catch (err) { logger.error('Erro Realtime:', err); }
       res.status(201).json({ data: appointment });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -353,8 +358,11 @@ export const updateAppointmentHttp = onRequest(
 
       try {
         const realtime = await import('../realtime/publisher');
-        await realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt });
-      } catch (err) { logger.error('Erro Ably:', err); }
+        await Promise.allSettled([
+          realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
+          rtdb.refreshAppointments(organizationId)
+        ]);
+      } catch (err) { logger.error('Erro Realtime:', err); }
       res.json({ data: updatedAppt });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -401,8 +409,11 @@ export const cancelAppointmentHttp = onRequest(
 
       try {
         const realtime = await import('../realtime/publisher');
-        await realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] });
-      } catch (err) { logger.error('Erro Ably:', err); }
+        await Promise.allSettled([
+          realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] }),
+          rtdb.refreshAppointments(organizationId)
+        ]);
+      } catch (err) { logger.error('Erro Realtime:', err); }
       res.json({ success: true });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -732,13 +743,12 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
     // Publicar Evento
     try {
       const realtime = await import('../realtime/publisher');
-      await realtime.publishAppointmentEvent(auth.organizationId, {
-        event: 'INSERT',
-        new: appointment,
-        old: null,
-      });
+      await Promise.allSettled([
+        realtime.publishAppointmentEvent(auth.organizationId, { event: 'INSERT', new: appointment, old: null }),
+        rtdb.refreshAppointments(auth.organizationId)
+      ]);
     } catch (err) {
-      logger.error('Erro Ably:', err);
+      logger.error('Erro Realtime:', err);
     }
 
     return { data: appointment as Appointment };
@@ -872,13 +882,12 @@ export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<Update
     // Publicar Evento
     try {
       const realtime = await import('../realtime/publisher');
-      await realtime.publishAppointmentEvent(auth.organizationId, {
-        event: 'UPDATE',
-        new: updatedAppt,
-        old: currentAppt,
-      });
+      await Promise.allSettled([
+        realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
+        rtdb.refreshAppointments(auth.organizationId)
+      ]);
     } catch (err) {
-      logger.error('Erro Ably:', err);
+      logger.error('Erro Realtime:', err);
     }
 
     return { data: updatedAppt as Appointment };
@@ -947,13 +956,12 @@ export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<Cancel
     // Publicar Evento
     try {
       const realtime = await import('../realtime/publisher');
-      await realtime.publishAppointmentEvent(auth.organizationId, {
-        event: 'UPDATE',
-        new: result.rows[0],
-        old: current.rows[0],
-      });
+      await Promise.allSettled([
+        realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: result.rows[0], old: current.rows[0] }),
+        rtdb.refreshAppointments(auth.organizationId)
+      ]);
     } catch (err) {
-      logger.error('Erro Ably:', err);
+      logger.error('Erro Realtime:', err);
     }
 
     return { success: true };

@@ -247,7 +247,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return { error: null };
     } catch (err: unknown) {
       const error = err as Error;
-      logger.error('Erro ao resetar senha', error, 'AuthContextProvider');
+      // Dado sensível removido: operação de reset de senha registrada sem expor a senha (LGPD)
+      logger.error('Erro ao resetar senha: operação falhou', error, 'AuthContextProvider');
       return { error: { message: error.message || 'Erro ao resetar senha' } };
     }
   };
@@ -258,7 +259,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return { error: null };
     } catch (err: unknown) {
       const error = err as Error;
-      logger.error('Erro ao atualizar senha', error, 'AuthContextProvider');
+      // Dado sensível removido: operação de atualização de senha registrada sem expor a senha (LGPD)
+      logger.error('Erro ao atualizar senha: operação falhou', error, 'AuthContextProvider');
       return { error: { message: error.message || 'Erro ao atualizar senha' } };
     }
   };

@@ -13,6 +13,8 @@ import { format, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
+import { useAppointments } from '@/hooks/useAppointments';
+import { useRealtimeAppointments } from '@/hooks/useRealtimeAppointments';
 
 interface Appointment {
   id: string;
@@ -48,16 +50,28 @@ export default function AgendaScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const onRefresh = () => {
+  // Ativar Sincronização em Tempo Real (RTDB)
+  useRealtimeAppointments();
+
+  // Buscar Agendamentos Reais (Postgres)
+  const { data: realAppointments, refetch, isLoading } = useAppointments();
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    await refetch();
+    setRefreshing(false);
   };
 
   // Generate week days
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i - 1));
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const appointments = mockAppointments[dateKey] || [];
+  
+  // Filtrar agendamentos reais pela data selecionada
+  const appointments = (realAppointments || []).filter(apt => {
+    const aptDate = apt.date instanceof Date ? apt.date : new Date(apt.date);
+    return isSameDay(aptDate, selectedDate);
+  });
 
   const getStatusColor = (status: Appointment['status']) => {
     switch (status) {

@@ -38,7 +38,9 @@ export async function initPushNotifications(): Promise<void> {
 
     // Listener: Registro bem-sucedido
     await PushNotifications.addListener('registration', async (token: Token) => {
-      logger.info('Push token registrado', { token: token.value }, 'push-notifications');
+      // Dado sensível removido: apenas primeiros 8 caracteres do token para debug (segurança)
+      const maskedToken = token.value.substring(0, 8) + '...';
+      logger.info('Push token registrado', { token: maskedToken }, 'push-notifications');
       await savePushTokenToDatabase(token.value);
     });
 

@@ -95,9 +95,11 @@ export class AppointmentService {
                     });
                 } else {
                     // Log detalhado do erro de validação para debug
+                    // Dados sensíveis removidos: nome do paciente mascarado (LGPD)
+                    const maskedName = item.patient_name ? item.patient_name.split(' ')[0] : '***';
                     logger.error(`Appointment validation failed for ID ${item.id}`, {
                         id: item.id,
-                        patient_name: item.patient_name,
+                        patient_name: maskedName,
                         date: item.date,
                         start_time: item.start_time,
                         appointment_time: item.appointment_time,

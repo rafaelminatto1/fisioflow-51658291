@@ -10,7 +10,13 @@ interface PatientInsightResponse {
 export function usePatientInsight() {
     return useMutation({
         mutationFn: async (patientData: Record<string, unknown>) => {
-            const prompt = `Analise os dados do paciente e forneça insights clínicos relevantes para fisioterapia: ${JSON.stringify(patientData)}`;
+            // Dados sensíveis removidos: apenas ID e informações não-identificáveis são enviados (LGPD)
+            const sanitizedData = {
+                id: patientData.patientId ?? patientData.id,
+                age: patientData.age,
+                condition: patientData.condition,
+            };
+            const prompt = `Analise os dados do paciente e forneça insights clínicos relevantes para fisioterapia: ${JSON.stringify(sanitizedData)}`;
             const response = await chatWithClinicalAssistant({
                 message: prompt,
                 context: { patientId: String(patientData.patientId ?? patientData.id ?? ''), sessionCount: 0 },

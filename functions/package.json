@@ -30,6 +30,7 @@
     "@google-cloud/translate": "^8.5.0",
     "@google-cloud/vertexai": "^1.5.0",
     "@google-cloud/vision": "^5.3.4",
+    "@opentelemetry/api": "^1.9.0",
     "@sentry/node": "^10.38.0",
     "ably": "^2.17.0",
     "firebase-admin": "^13.6.0",
@@ -39,6 +40,7 @@
     "pg": "^8.13.1",
     "stripe": "^17.3.1",
     "twilio": "^5.3.5",
+    "winston": "^3.19.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

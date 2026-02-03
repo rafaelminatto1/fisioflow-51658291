@@ -22,6 +22,7 @@ import {
   Clock,
   Sparkles,
   RefreshCw,
+  Edit,
 } from 'lucide-react';
 
 import { EvolutionDebugInfo } from '@/components/evolution/EvolutionDebugInfo';
@@ -646,15 +647,14 @@ const PatientEvolution = () => {
               <>
                 <p className="text-lg font-semibold">Paciente não encontrado</p>
                 <p className="text-muted-foreground">
-                  O agendamento existe, mas não há um paciente associado a ele.
-                  Isso pode acontecer se o paciente foi excluído ou se há um problema nos dados.
+                  O agendamento existe, mas o paciente associado (ID: <code className="bg-muted px-1 py-0.5 rounded text-xs">{patientId}</code>) não foi encontrado no banco de dados.
                 </p>
                 <Alert className="mt-4 text-left">
                   <AlertDescription>
                     <strong>O que fazer:</strong>
                     <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                      <li>Verifique se este agendamento tem um paciente válido associado</li>
-                      <li>Edite o agendamento e selecione um paciente</li>
+                      <li>Edite o agendamento e selecione um paciente válido</li>
+                      <li>Verifique se o paciente foi excluído acidentalmente</li>
                       <li>Entre em contato com o suporte se o problema persistir</li>
                     </ul>
                   </AlertDescription>
@@ -703,6 +703,12 @@ const PatientEvolution = () => {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar para Agenda
               </Button>
+              {isMissingPatientError && appointment && (
+                <Button onClick={() => navigate(`/schedule?edit=${appointmentId}`)} variant="default">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Agendamento
+                </Button>
+              )}
               {isPermissionError && (
                 <Button onClick={() => window.location.reload()} variant="default">
                   <RefreshCw className="h-4 w-4 mr-2" />

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import XLSX from './exceljsWrapper';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

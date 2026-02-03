@@ -204,6 +204,7 @@ export function PainPointsManager({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por região, músculo, notas..."
+                aria-label="Buscar pontos de dor por região, músculo ou notas"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"

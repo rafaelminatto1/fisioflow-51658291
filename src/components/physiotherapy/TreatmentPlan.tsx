@@ -63,7 +63,13 @@ export const TreatmentPlan = () => {
   };
 
   const handleSave = () => {
-    logger.info('Salvando plano', { diagnosis, goals, sessions, generalObservations }, 'TreatmentPlan');
+    // Dados médicos sensíveis removidos: apenas metadados para logs (LGPD)
+    logger.info('Salvando plano de tratamento', {
+      goalsCount: goals.length,
+      sessionsCount: sessions.length,
+      hasDiagnosis: !!diagnosis,
+      hasObservations: !!generalObservations
+    }, 'TreatmentPlan');
     toast({
       title: "Plano salvo",
       description: "Plano de tratamento registrado com sucesso.",

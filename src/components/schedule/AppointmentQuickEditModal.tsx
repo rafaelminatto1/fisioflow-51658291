@@ -442,7 +442,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
-      navigate(`/patient-evolution/${appointment.id}`);
+      navigate(`/session-evolution/${appointment.id}`);
       toast.success('Iniciando atendimento', {
         description: `Atendimento de ${appointment.patientName}`,
       });
