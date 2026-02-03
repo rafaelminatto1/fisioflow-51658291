@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import {
-  User, CreditCard, FileText, Check, X
+  User, CreditCard, FileText, Check, X, UserCog
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -19,7 +19,20 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
+import {
+  useTherapists,
+  formatTherapistLabel,
+  THERAPIST_SELECT_NONE,
+  THERAPIST_PLACEHOLDER,
+} from '@/hooks/useTherapists';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivePatients } from '@/hooks/usePatients';
@@ -98,6 +111,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [waitlistQuickAddOpen, setWaitlistQuickAddOpen] = useState(false);
 
   const { user } = useAuth();
+  const { therapists, isLoading: therapistsLoading } = useTherapists();
   const { mutateAsync: createAppointmentAsync, isPending: isCreating } = useCreateAppointment();
   const { mutateAsync: updateAppointmentAsync, isPending: isUpdating } = useUpdateAppointment();
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
@@ -210,6 +224,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       type: 'Fisioterapia',
       status: 'agendado',
       notes: '',
+      therapist_id: '',
       payment_status: 'pending',
       payment_amount: 170,
       payment_method: '',
@@ -674,6 +689,35 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   />
 
                   <TypeAndStatusSection disabled={currentMode === 'view'} />
+
+                  <div className="space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                      <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
+                      Fisioterapeuta
+                    </Label>
+                    <Select
+                      value={watch('therapist_id') || THERAPIST_SELECT_NONE}
+                      onValueChange={(value) => setValue('therapist_id', value === THERAPIST_SELECT_NONE ? '' : value)}
+                      disabled={currentMode === 'view' || therapistsLoading}
+                      aria-label={THERAPIST_PLACEHOLDER}
+                    >
+                      <SelectTrigger className="h-10 text-xs sm:text-sm">
+                        <SelectValue
+                          placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={THERAPIST_SELECT_NONE}>
+                          {THERAPIST_PLACEHOLDER}
+                        </SelectItem>
+                        {therapists.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {formatTherapistLabel(t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <div className="space-y-2">
                     <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">

@@ -4,10 +4,23 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
     ArrowLeft, Stethoscope, Calendar, Phone, FileText,
-    Zap, Eye, EyeOff, Save, Cloud, Keyboard, CheckCircle2
+    Zap, Eye, EyeOff, Save, Cloud, Keyboard, CheckCircle2, UserCog
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+  type TherapistOption,
+  THERAPIST_SELECT_NONE,
+  THERAPIST_PLACEHOLDER,
+  getTherapistById,
+} from '@/hooks/useTherapists';
 import { PatientHelpers } from '@/types';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { parseResponseDate } from '@/utils/dateUtils';
@@ -38,6 +51,12 @@ interface EvolutionHeaderProps {
     toggleInsights: () => void;
     onShowTemplateModal: () => void;
     onShowKeyboardHelp: () => void;
+    /** Lista de fisioterapeutas para o dropdown (opcional) */
+    therapists?: TherapistOption[];
+    /** ID do fisioterapeuta responsável pela sessão */
+    selectedTherapistId?: string;
+    /** Callback ao alterar o fisioterapeuta */
+    onTherapistChange?: (therapistId: string) => void;
 }
 
 export const EvolutionHeader = memo(({
@@ -56,9 +75,16 @@ export const EvolutionHeader = memo(({
     showInsights,
     toggleInsights,
     onShowTemplateModal,
-    onShowKeyboardHelp
+    onShowKeyboardHelp,
+    therapists = [],
+    selectedTherapistId = '',
+    onTherapistChange,
 }: EvolutionHeaderProps) => {
     const navigate = useNavigate();
+    const selectedTherapist = selectedTherapistId
+        ? getTherapistById(therapists, selectedTherapistId)
+        : null;
+    const showTherapistFallback = Boolean(selectedTherapistId && !selectedTherapist);
 
     return (
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border/50 backdrop-blur-sm">
@@ -108,6 +134,45 @@ export const EvolutionHeader = memo(({
                             </div>
                         </div>
                     </div>
+
+                    {/* Fisioterapeuta + CREFITO (quando informado) */}
+                    {therapists.length > 0 && onTherapistChange && (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                                <UserCog className="h-3.5 w-3.5" />
+                                Fisioterapeuta
+                            </span>
+                            <Select
+                                value={selectedTherapistId || THERAPIST_SELECT_NONE}
+                                onValueChange={(v) => onTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
+                                aria-label={THERAPIST_PLACEHOLDER}
+                            >
+                                <SelectTrigger className="h-8 w-[180px] sm:w-[200px] text-xs">
+                                    <SelectValue placeholder={THERAPIST_PLACEHOLDER} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={THERAPIST_SELECT_NONE}>
+                                        {THERAPIST_PLACEHOLDER}
+                                    </SelectItem>
+                                    {showTherapistFallback && (
+                                        <SelectItem value={selectedTherapistId}>
+                                            Responsável atual
+                                        </SelectItem>
+                                    )}
+                                    {therapists.map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>
+                                            {t.crefito ? `${t.name} (${t.crefito})` : t.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {selectedTherapist?.crefito && (
+                                <Badge variant="secondary" className="text-[10px] font-mono">
+                                    CREFITO {selectedTherapist.crefito}
+                                </Badge>
+                            )}
+                        </div>
+                    )}
 
                     {/* Actions Section - Bottom row with better mobile layout */}
                     <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">

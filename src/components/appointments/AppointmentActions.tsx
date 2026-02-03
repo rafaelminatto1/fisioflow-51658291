@@ -32,7 +32,7 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
   const { toast } = useToast();
 
   const handleStartAttendance = () => {
-    navigate(`/session-evolution/${appointment.id}`);
+    navigate(`/patient-evolution/${appointment.id}`);
     toast({
       title: 'Iniciando atendimento',
       description: `Atendimento de ${appointment.patientName}`
