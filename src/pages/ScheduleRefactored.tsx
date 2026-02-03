@@ -1,5 +1,4 @@
 import { memo, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
-import { deleteDoc, doc } from '@/integrations/firebase/app';
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
@@ -24,7 +23,8 @@ import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { format, startOfDay, endOfDay, parseISO, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { db } from '@/integrations/firebase/app';
+import { AppointmentService } from '@/services/appointmentService';
+import { getUserOrganizationId } from '@/utils/userHelpers';
 
 
 // Lazy load CalendarView for better initial load performance
@@ -300,7 +300,12 @@ const ScheduleRefactored = () => {
 
   const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
     try {
-      await deleteDoc(doc(db, 'appointments', appointment.id));
+      const organizationId = await getUserOrganizationId();
+      if (!organizationId) {
+        toast({ title: 'Erro', description: 'Organização não encontrada.', variant: 'destructive' });
+        return;
+      }
+      await AppointmentService.deleteAppointment(appointment.id, organizationId);
 
       toast({
         title: '✅ Agendamento excluído',

@@ -14,3 +14,47 @@ type Patient @table(name: "patients") {
   mainCondition: String @col(name: "main_condition")
   medicalHistory: String @col(name: "medical_history")
 }
+
+type Exercise @table(name: "exercises") {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String!
+  slug: String
+  description: String
+  instructions: String
+  videoUrl: String @col(name: "video_url")
+  imageUrl: String @col(name: "image_url")
+  category: String
+  difficulty: String
+  durationMinutes: Int @col(name: "duration_minutes")
+  equipment: String
+  muscles: String
+  setsRecommended: String @col(name: "sets_recommended")
+  repsRecommended: String @col(name: "reps_recommended")
+  precautions: String
+  benefits: String
+  tags: String
+  isActive: Boolean @col(name: "is_active")
+  isFeatured: Boolean @col(name: "is_featured")
+  deletedAt: Timestamp @col(name: "deleted_at")
+  organizationId: UUID @col(name: "organization_id")
+  createdBy: UUID @col(name: "created_by")
+  createdAt: Timestamp @col(name: "created_at")
+  updatedAt: Timestamp @col(name: "updated_at")
+}
+
+type PrescribedExercise @table(name: "prescribed_exercises") {
+  id: UUID! @default(expr: "uuidV4()")
+  patientId: UUID! @col(name: "patient_id")
+  exerciseId: UUID! @col(name: "exercise_id")
+  sets: Int
+  reps: Int
+  frequency: String
+  durationSeconds: Int @col(name: "duration_seconds")
+  notes: String
+  completed: Boolean
+  isActive: Boolean @col(name: "is_active")
+  createdAt: Timestamp @col(name: "created_at")
+  updatedAt: Timestamp @col(name: "updated_at")
+  exercise: Exercise! @ref(fields: "exerciseId", references: "id")
+  patient: Patient! @ref(fields: "patientId", references: "id")
+}

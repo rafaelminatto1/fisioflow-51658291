@@ -29,7 +29,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full px-6 py-3 flex items-center gap-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full px-6 py-3 flex items-center gap-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 motion-reduce:animate-none motion-reduce:transition-none">
       <div className="flex items-center gap-2 mr-2">
         <span className="bg-primary text-primary-foreground text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
           {selectedCount}
@@ -88,8 +88,9 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="rounded-full h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800"
+        className="rounded-full min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 hover:bg-slate-100 dark:hover:bg-slate-800"
         onClick={onClearSelection}
+        aria-label="Sair do modo seleção"
       >
         <X className="w-4 h-4" />
       </Button>
