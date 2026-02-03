@@ -60,6 +60,11 @@ export const usePatientExercisesPostgres = (patientId: string | undefined) => {
     enabled: !!patientId,
   });
 };
+
+/**
+ * Hook para obter um paciente por ID via Data Connect
+ */
+export const usePatientPostgres = (patientId: string | undefined) => {
   return useQuery({
     queryKey: ['patient-postgres', patientId],
     queryFn: async () => {
