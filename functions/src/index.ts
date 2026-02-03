@@ -31,10 +31,10 @@ setGlobalOptions({
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
         WHATSAPP_ACCESS_TOKEN_SECRET
     ],
-    // Allow up to 100 concurrent instances per function (removed bottleneck)
+    // Allow up to 100 concurrent instances per function
     maxInstances: 100,
-    // 0.5 vCPU to stay within "total allowable CPU per project per region" quota during deploy
-    cpu: 0.5,
+    // 0.25 vCPU is usually enough for CRUD/IO bound tasks and saves cost
+    cpu: 0.25,
     // Set default memory for all functions
     memory: '512MiB',
 });
