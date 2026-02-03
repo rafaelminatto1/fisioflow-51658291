@@ -5,15 +5,9 @@
 
 const admin = require('firebase-admin');
 const fs = require('fs');
+const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 
-const serviceAccount = require('../functions/service-account-key.json');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  projectId: 'fisioflow-migration'
-});
-
-const db = admin.firestore();
+const { db } = getFirebaseAdmin();
 
 async function createTestData() {
   try {
