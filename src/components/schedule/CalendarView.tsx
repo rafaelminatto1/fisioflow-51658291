@@ -62,45 +62,48 @@ export const CalendarView = memo(({
   const displayAppointments = useMemo(() => {
     const base = pendingOptimisticUpdate && optimisticAppointments.length > 0 ? optimisticAppointments : appointments;
     return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
+  const displayAppointments = useMemo(() => {
+    const base = pendingOptimisticUpdate && optimisticAppointments.length > 0 ? optimisticAppointments : appointments;
+    return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === "string");
   }, [appointments, optimisticAppointments, pendingOptimisticUpdate]);
 
-  // Optimistic update handlers
+  const getAppointmentsForDate = useCallback((date: Date) => {
+    return (displayAppointments || []).filter(apt => {
+      if (!apt || !apt.date) return false;
+      const aptDate = typeof apt.date === "string"
+        ? (() => {
+          const [y, m, d] = apt.date.split("-").map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0);
+        })()
+        : apt.date;
+      return isSameDay(aptDate, date);
+    });
+  }, [displayAppointments]);
+
   const handleOptimisticUpdate = useCallback((appointmentId: string, newDate: Date, newTime: string) => {
-    const safeAppointments = (appointments || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
-    // #region agent log
-    const hasUndefined = (appointments || []).some((a, i) => a == null);
-    if (hasUndefined) fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CalendarView.tsx:handleOptimisticUpdate',message:'appointments has null/undefined',data:{len:appointments?.length,appointmentId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
+    const safeAppointments = (appointments || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === "string");
     const appointment = safeAppointments.find(a => a.id === appointmentId);
     if (!appointment) return;
-
-    // Save original values for potential revert
     setPendingOptimisticUpdate({
       id: appointmentId,
       originalDate: appointment.date,
       originalTime: appointment.time
     });
-
-    // Create updated appointment with new date/time
     const updatedAppointment: Appointment = {
       ...appointment,
       date: formatDateToLocalISO(newDate),
       time: newTime
     };
-
-    // Update local state immediately (optimistic)
     setOptimisticAppointments(
       safeAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
     );
   }, [appointments]);
 
   const handleRevertUpdate = useCallback((appointmentId: string) => {
-    // Clear optimistic state to revert to original appointments
     setPendingOptimisticUpdate(null);
     setOptimisticAppointments([]);
   }, []);
 
-  // Drag and drop logic from hook
   const {
     dragState,
     dropTarget,
@@ -123,9 +126,6 @@ export const CalendarView = memo(({
     }, [getAppointmentsForDate])
   });
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
     }, 60000); // Update every minute
 
     return () => clearInterval(timer);
@@ -184,113 +184,6 @@ export const CalendarView = memo(({
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
     }
   }, [viewType, currentDate]);
-
-  const getAppointmentsForDate = useCallback((date: Date) => {
-    let filteredNoDate = 0;
-    let filteredInvalidDate = 0;
-
-    const result = (displayAppointments || []).filter(apt => {
-      if (!apt || !apt.date) {
-        filteredNoDate++;
-        return false;
-      }
-
-      const aptDate = typeof apt.date === 'string'
-        ? (() => {
-          const dateStr = apt.date as string;
-          const parts = dateStr.split('-');
-          if (parts.length !== 3) return new Date('Invalid');
-          const [y, m, d] = parts.map(Number);
-          return new Date(y, m - 1, d, 12, 0, 0);
-        })()
-        : apt.date;
-
-      // Ensure we have a valid date object before comparison
-      if (!(aptDate instanceof Date) || isNaN(aptDate.getTime())) {
-        filteredInvalidDate++;
-        logger.warn(`Agendamento com data inválida filtrado no CalendarView`, {
-          aptId: apt?.id,
-          aptDate: apt?.date,
-          patientName: apt?.patientName
-        }, 'CalendarView');
-        return false;
-      }
-
-      return isSameDay(aptDate, date);
-    });
-
-    // Log apenas se houver filtros (evitar spam)
-    if (filteredNoDate > 0 || filteredInvalidDate > 0) {
-      logger.warn(`Agendamentos filtrados no CalendarView`, {
-        date: format(date, 'yyyy-MM-dd'),
-        filteredNoDate,
-        filteredInvalidDate,
-        returnedCount: result.length
-      }, 'CalendarView');
-    }
-
-    return result;
-  }, [displayAppointments]);
-
-  const getStatusColor = useCallback((status: string, isOverCapacity: boolean = false) => {
-    // Over-capacity appointments get a special amber/orange pulsing style
-    if (isOverCapacity) {
-      return 'bg-gradient-to-br from-amber-600 to-orange-600 border-amber-400 shadow-amber-500/40 ring-2 ring-amber-400/50 ring-offset-1';
-    }
-
-    switch (status.toLowerCase()) {
-      case 'confirmado':
-      case 'confirmed':
-        return 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 shadow-emerald-500/30';
-      case 'agendado':
-      case 'scheduled':
-        return 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 shadow-blue-500/30';
-      case 'concluido':
-      case 'completed':
-        return 'bg-gradient-to-br from-purple-500 to-purple-600 border-purple-400 shadow-purple-500/30';
-      case 'cancelado':
-      case 'cancelled':
-        return 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 shadow-red-500/30';
-      case 'aguardando_confirmacao':
-      case 'awaiting':
-        return 'bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400 shadow-amber-500/30';
-      case 'em_andamento':
-      case 'in_progress':
-        return 'bg-gradient-to-br from-cyan-500 to-cyan-600 border-cyan-400 shadow-cyan-500/30';
-      case 'remarcado':
-      case 'rescheduled':
-        return 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 shadow-orange-500/30';
-      case 'nao_compareceu':
-      case 'no_show':
-        return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
-      case 'em_espera':
-      case 'waiting':
-        return 'bg-gradient-to-br from-indigo-500 to-indigo-600 border-indigo-400 shadow-indigo-500/30';
-      case 'falta':
-      case 'no_show_confirmed':
-        return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
-      case 'atrasado':
-      case 'late':
-        return 'bg-gradient-to-br from-yellow-500 to-yellow-600 border-yellow-400 shadow-yellow-500/30';
-      default:
-        return 'bg-gradient-to-br from-gray-500 to-gray-600 border-gray-400 shadow-gray-500/30';
-    }
-  }, []);
-
-  // Helper to check if appointment is over capacity
-  const isOverCapacity = useCallback((apt: Appointment): boolean => {
-    return apt.notes?.includes('[EXCEDENTE]') || false;
-  }, []);
-
-  // Hook for time slots availability
-  const { timeSlots: dayTimeSlotInfo, isDayClosed, isTimeBlocked, getBlockReason, blockedTimes, businessHours } = useAvailableTimeSlots(currentDate);
-
-  // Helper to check if time is blocked for any date
-  const checkTimeBlocked = useCallback((date: Date, time: string): { blocked: boolean; reason?: string } => {
-    if (!blockedTimes || !time) {
-      return { blocked: false };
-    }
-
     const dayOfWeek = date.getDay();
     // Safety check for time split
     const [timeH, timeM] = (time || '00:00').split(':').map(Number);
@@ -304,67 +197,6 @@ export const CalendarView = memo(({
 
       const checkDate = new Date(date);
       checkDate.setHours(0, 0, 0, 0);
-
-      if (checkDate >= blockStart && checkDate <= blockEnd) {
-        if (block.is_all_day) {
-          return { blocked: true, reason: block.title };
-        }
-        if (block.start_time && block.end_time) {
-          const [btH, btM] = block.start_time.split(':').map(Number);
-          const [etH, etM] = block.end_time.split(':').map(Number);
-          if (timeMinutes >= btH * 60 + btM && timeMinutes < etH * 60 + etM) {
-            return { blocked: true, reason: block.title };
-          }
-        }
-      }
-
-      if (block.is_recurring && block.recurring_days?.includes(dayOfWeek)) {
-        if (block.is_all_day) {
-          return { blocked: true, reason: block.title };
-        }
-        if (block.start_time && block.end_time) {
-          const [btH, btM] = block.start_time.split(':').map(Number);
-          const [etH, etM] = block.end_time.split(':').map(Number);
-          if (timeMinutes >= btH * 60 + btM && timeMinutes < etH * 60 + etM) {
-            return { blocked: true, reason: block.title };
-          }
-        }
-      }
-    }
-    return { blocked: false };
-  }, [blockedTimes]);
-
-  // Check if a day is closed based on business hours
-  const isDayClosedForDate = useCallback((date: Date): boolean => {
-    const dayOfWeek = date.getDay();
-    if (!businessHours || businessHours.length === 0) {
-      return dayOfWeek === 0; // Sunday closed by default
-    }
-    const dayConfig = businessHours.find(h => h.day_of_week === dayOfWeek);
-    return dayConfig ? !dayConfig.is_open : dayOfWeek === 0;
-  }, [businessHours]);
-
-  const memoizedTimeSlots = useMemo(() => {
-    return dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
-  }, [dayTimeSlotInfo, currentDate]);
-
-  const isEmptyDay = useMemo(() => getAppointmentsForDate(currentDate).length === 0, [currentDate, getAppointmentsForDate]);
-  const isEmptyWeek = useMemo(() => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
-    return weekDays.every((day) => getAppointmentsForDate(day).length === 0);
-  }, [currentDate, getAppointmentsForDate]);
-  const isEmptyMonth = useMemo(() => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
-    return days.every((day) => getAppointmentsForDate(day).length === 0);
-  }, [currentDate, getAppointmentsForDate]);
-
-  const showEmptyState = (viewType === 'day' && isEmptyDay) || (viewType === 'week' && isEmptyWeek) || (viewType === 'month' && isEmptyMonth);
-  const handleEmptyStateCreate = useCallback(() => {
-    const firstSlot = memoizedTimeSlots[0] || '07:00';
-    onTimeSlotClick(currentDate, firstSlot);
   }, [currentDate, memoizedTimeSlots, onTimeSlotClick]);
 
   return (
