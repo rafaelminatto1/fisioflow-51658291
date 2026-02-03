@@ -118,7 +118,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 
   const modalContentClass = isMobile
     ? "bg-white w-full rounded-t-2xl shadow-2xl flex flex-col max-h-[95dvh]"
-    : "bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden";
+    : "bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden";
 
   return (
     <div
@@ -158,14 +158,14 @@ export const CustomModalHeader: React.FC<{
 }> = ({ className, children, onClose }) => {
   return (
     <div className={cn(
-      "flex items-center justify-between px-6 py-4 border-b shrink-0",
+      "flex items-center justify-between px-6 py-5 border-b shrink-0",
       className
     )}>
       {children}
       {onClose && (
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-100 rounded transition-colors"
+          className="text-gray-500 hover:text-gray-700 p-2 -mr-2 hover:bg-gray-100 rounded-lg transition-colors"
           type="button"
           aria-label="Fechar"
         >
@@ -181,7 +181,7 @@ export const CustomModalTitle: React.FC<{
   children: React.ReactNode;
 }> = ({ className, children }) => {
   return (
-    <h2 className={cn("text-lg sm:text-xl font-semibold", className)}>
+    <h2 className={cn("text-xl font-semibold text-gray-900", className)}>
       {children}
     </h2>
   );

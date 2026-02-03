@@ -318,7 +318,8 @@ exports.createAppointmentHttp = (0, https_1.onRequest)({ region: 'southamerica-e
             res.status(409).json({ error: 'Conflito de horário detectado' });
             return;
         }
-        const result = await pool.query(`INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)` `VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`, [
+        const result = await pool.query(`INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`, [
             data.patientId, therapistId, data.date, data.startTime, data.endTime,
             normalizeSessionType(data.type || data.session_type),
             data.notes || null, normalizeAppointmentStatus(data.status), organizationId, userId

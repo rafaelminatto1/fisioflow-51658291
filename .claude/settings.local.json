@@ -325,7 +325,8 @@
       "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 add:*)",
       "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 commit:*)",
       "Bash(do echo \"Enabling unauthenticated access for $service...\" gcloud run services add-iam-policy-binding \"$service\" --region=southamerica-east1 --member=\"allUsers\" --role=\"roles/run.invoker\")",
-      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 push origin main)"
+      "Bash(git -C /home/rafael/antigravity/fisioflow/fisioflow-51658291 push origin main)",
+      "mcp__gemini__gemini-analyze-image"
     ],
     "deny": [],
     "ask": [],
