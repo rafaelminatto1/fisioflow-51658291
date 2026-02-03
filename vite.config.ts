@@ -417,6 +417,10 @@ export default defineConfig(({ mode }) => {
         '@mediapipe/pose',
         '@mediapipe/tasks-vision',
         'msw',
+        // Exclude PDFKit from pre-bundling to avoid circular dependency issues
+        // Rollup will handle it directly in the build
+        '@react-pdf/pdfkit',
+        '@react-pdf/renderer',
       ],
     },
     esbuild: {
