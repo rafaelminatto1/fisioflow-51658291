@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const { getInterestCount } = useWaitlistMatch();
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
+  // Local state for optimistic status updates - syncs with appointment.status
+  const [localStatus, setLocalStatus] = useState(appointment.status);
+
+  // Sync local status when appointment prop changes
+  useEffect(() => {
+    setLocalStatus(appointment.status);
+  }, [appointment.status]);
 
   const appointmentDate = typeof appointment.date === 'string'
     ? (() => {
@@ -71,7 +78,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const canStartAttendance = true;
 
   const handleStartAttendance = () => {
-    if (appointment.status === 'avaliacao') {
+    if (localStatus === 'avaliacao') {
       navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
       toast.success('Iniciando avaliação', {
         description: `Avaliação de ${appointment.patientName}`,
@@ -87,6 +94,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus !== appointment.status) {
+      // Optimistic update - update local state immediately
+      setLocalStatus(newStatus as any);
+      // Then call the API
       updateStatus({ appointmentId: appointment.id, status: newStatus });
 
       // If cancelling and there are interested patients, show notification
@@ -194,16 +204,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         <div className="flex items-center gap-4 pt-1">
           <span className="text-base font-medium text-muted-foreground min-w-[110px]">Status:</span>
           <Select
-            value={appointment.status}
+            value={localStatus}
             onValueChange={handleStatusChange}
             disabled={isUpdatingStatus}
             aria-label="Mudar status do agendamento"
           >
-            <SelectTrigger className="h-10 w-[180px]" aria-label={`Status atual: ${STATUS_CONFIG[appointment.status]?.label}`}>
+            <SelectTrigger className="h-10 w-[180px]" aria-label={`Status atual: ${STATUS_CONFIG[localStatus]?.label}`}>
               <SelectValue>
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[appointment.status]?.color }} aria-hidden="true" />
-                  <span className="text-sm">{STATUS_CONFIG[appointment.status]?.label}</span>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[localStatus]?.color }} aria-hidden="true" />
+                  <span className="text-sm">{STATUS_CONFIG[localStatus]?.label}</span>
                 </div>
               </SelectValue>
             </SelectTrigger>
@@ -268,15 +278,15 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               onClick={handleStartAttendance}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
               size="sm"
-              aria-label={appointment.status === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
+              aria-label={localStatus === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
             >
               <span className="flex items-center gap-1.5">
-                {appointment.status === 'avaliacao' ? (
+                {localStatus === 'avaliacao' ? (
                   <FileText className="h-4 w-4" />
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
-                {appointment.status === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}
+                {localStatus === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}
               </span>
             </Button>
           )}
