@@ -93,6 +93,7 @@ export function MuscleSelectorModal({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors" />
             <Input
               placeholder="Buscar músculo..."
+              aria-label="Buscar músculo"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 transition-all focus:ring-2 focus:ring-primary/20"

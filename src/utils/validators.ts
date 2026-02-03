@@ -2,6 +2,47 @@
  * Validadores de dados comuns no Brasil
  */
 
+/**
+ * Converte uma string de data no formato brasileiro (DD/MM/YYYY) para um objeto Date
+ * @param dateStr - String de data no formato DD/MM/YYYY
+ * @returns Objeto Date ou null se inválido
+ */
+export function parseBrazilianDate(dateStr: string): Date | null {
+  if (!dateStr || typeof dateStr !== 'string') {
+    return null;
+  }
+
+  // Verificar formato DD/MM/YYYY
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [dayStr, monthStr, yearStr] = parts;
+  const day = parseInt(dayStr, 10);
+  const month = parseInt(monthStr, 10);
+  const year = parseInt(yearStr, 10);
+
+  // Validações básicas
+  if (isNaN(day) || isNaN(month) || isNaN(year)) {
+    return null;
+  }
+
+  if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+    return null;
+  }
+
+  // Criar Date usando mês-1 (Janeiro é 0 em JavaScript)
+  const date = new Date(year, month - 1, day);
+
+  // Verificar se a data é válida (ex: 31/02/2024 seria ajustado para 02/03/2024)
+  if (date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
+  }
+
+  return date;
+}
+
 export function stripNonDigits(value: string): string {
   return value.replace(/\D/g, '');
 }
