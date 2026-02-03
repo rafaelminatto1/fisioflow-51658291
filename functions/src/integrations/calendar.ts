@@ -96,7 +96,7 @@ export const syncToGoogleCalendar = onCall({
     oauth2Client.setCredentials(credentials);
 
     // Criar cliente Calendar
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client as any });
 
     // Preparar dados do evento
     const dateTime = new Date(appointment?.date);

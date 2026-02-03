@@ -39,6 +39,7 @@ const init_1 = require("../init");
 const auth_1 = require("../middleware/auth");
 const logger_1 = require("../lib/logger");
 const admin = __importStar(require("firebase-admin"));
+const rtdb_1 = require("../lib/rtdb");
 const firebaseAuth = admin.auth();
 // ============================================================================ 
 // HTTP VERSION (for frontend fetch calls with CORS fix)
@@ -340,10 +341,14 @@ exports.createAppointmentHttp = (0, https_1.onRequest)({ region: 'southamerica-e
         }
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-            await realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment, old: null });
+            // Usar RTDB em paralelo com Ably (migração gradual)
+            await Promise.allSettled([
+                realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment, old: null }),
+                rtdb_1.rtdb.refreshAppointments(organizationId)
+            ]);
         }
         catch (err) {
-            logger_1.logger.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Realtime:', err);
         }
         res.status(201).json({ data: appointment });
     }
@@ -447,10 +452,13 @@ exports.updateAppointmentHttp = (0, https_1.onRequest)({ region: 'southamerica-e
         }
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-            await realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt });
+            await Promise.allSettled([
+                realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
+                rtdb_1.rtdb.refreshAppointments(organizationId)
+            ]);
         }
         catch (err) {
-            logger_1.logger.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Realtime:', err);
         }
         res.json({ data: updatedAppt });
     }
@@ -512,10 +520,13 @@ exports.cancelAppointmentHttp = (0, https_1.onRequest)({ region: 'southamerica-e
         }
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-            await realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] });
+            await Promise.allSettled([
+                realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] }),
+                rtdb_1.rtdb.refreshAppointments(organizationId)
+            ]);
         }
         catch (err) {
-            logger_1.logger.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Realtime:', err);
         }
         res.json({ success: true });
     }
@@ -753,14 +764,13 @@ exports.createAppointment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, a
         // Publicar Evento
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-            await realtime.publishAppointmentEvent(auth.organizationId, {
-                event: 'INSERT',
-                new: appointment,
-                old: null,
-            });
+            await Promise.allSettled([
+                realtime.publishAppointmentEvent(auth.organizationId, { event: 'INSERT', new: appointment, old: null }),
+                rtdb_1.rtdb.refreshAppointments(auth.organizationId)
+            ]);
         }
         catch (err) {
-            logger_1.logger.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Realtime:', err);
         }
         return { data: appointment };
     }
@@ -855,14 +865,13 @@ exports.updateAppointment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, a
         // Publicar Evento
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-            await realtime.publishAppointmentEvent(auth.organizationId, {
-                event: 'UPDATE',
-                new: updatedAppt,
-                old: currentAppt,
-            });
+            await Promise.allSettled([
+                realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
+                rtdb_1.rtdb.refreshAppointments(auth.organizationId)
+            ]);
         }
         catch (err) {
-            logger_1.logger.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Realtime:', err);
         }
         return { data: updatedAppt };
     }
@@ -910,14 +919,13 @@ exports.cancelAppointment = (0, https_1.onCall)({ cors: init_1.CORS_ORIGINS }, a
         // Publicar Evento
         try {
             const realtime = await Promise.resolve().then(() => __importStar(require('../realtime/publisher')));
-            await realtime.publishAppointmentEvent(auth.organizationId, {
-                event: 'UPDATE',
-                new: result.rows[0],
-                old: current.rows[0],
-            });
+            await Promise.allSettled([
+                realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: result.rows[0], old: current.rows[0] }),
+                rtdb_1.rtdb.refreshAppointments(auth.organizationId)
+            ]);
         }
         catch (err) {
-            logger_1.logger.error('Erro Ably:', err);
+            logger_1.logger.error('Erro Realtime:', err);
         }
         return { success: true };
     }
