@@ -20,7 +20,10 @@ import {
   EyeOff,
   Loader2,
   Check,
-  Info
+  Info,
+  Contrast,
+  ZapOff,
+  Type
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -39,7 +42,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 // TYPES & INTERFACES
 // ============================================================================================
 
-type TabValue = 'profile' | 'notifications' | 'security' | 'schedule';
+type TabValue = 'profile' | 'notifications' | 'security' | 'schedule' | 'a11y';
 
 interface PasswordForm {
   newPassword: string;
@@ -66,6 +69,12 @@ interface WorkingHours {
   lunchEnd: string;
 }
 
+interface AccessibilitySettings {
+  highContrast: boolean;
+  reducedMotion: boolean;
+  fontSize: 'small' | 'medium' | 'large';
+}
+
 interface NotificationToggleProps {
   id: string;
   label: string;
@@ -87,7 +96,7 @@ interface QuickActionProps {
 // CONSTANTS
 // ============================================================================================
 
-const VALID_TABS: TabValue[] = ['profile', 'notifications', 'security', 'schedule'];
+const VALID_TABS: TabValue[] = ['profile', 'notifications', 'security', 'schedule', 'a11y'];
 
 const PASSWORD_REQUIREMENTS = {
   minLength: 6,
@@ -99,6 +108,12 @@ const DEFAULT_WORKING_HOURS: WorkingHours = {
   lunchStart: '12:00',
   lunchEnd: '13:00',
 } as const;
+
+const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
+  highContrast: false,
+  reducedMotion: false,
+  fontSize: 'medium',
+};
 
 const DEFAULT_NOTIFICATIONS: NotificationSettings = {
   email: true,
@@ -481,6 +496,36 @@ const Settings = () => {
   // Working hours
   const [workingHours, setWorkingHours] = useState<WorkingHours>(DEFAULT_WORKING_HOURS);
 
+  // Accessibility settings
+  const [accessibilitySettings, setAccessibilitySettings] = useState<AccessibilitySettings>(() => {
+    const saved = localStorage.getItem('accessibility-settings');
+    return saved ? JSON.parse(saved) : DEFAULT_ACCESSIBILITY_SETTINGS;
+  });
+
+  // Apply accessibility settings
+  useEffect(() => {
+    // Save to localStorage
+    localStorage.setItem('accessibility-settings', JSON.stringify(accessibilitySettings));
+
+    // Apply high contrast
+    if (accessibilitySettings.highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+
+    // Apply reduced motion
+    if (accessibilitySettings.reducedMotion) {
+      document.documentElement.classList.add('reduced-motion');
+    } else {
+      document.documentElement.classList.remove('reduced-motion');
+    }
+
+    // Apply font size
+    document.documentElement.classList.remove('text-small', 'text-medium', 'text-large');
+    document.documentElement.classList.add(`text-${accessibilitySettings.fontSize}`);
+  }, [accessibilitySettings]);
+
   // Handle tab from URL params
   useEffect(() => {
     const tab = searchParams.get('tab') as TabValue;
@@ -556,7 +601,7 @@ const Settings = () => {
 
         {/* Tabs for different settings sections */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-9 sm:h-10 gap-0.5">
+          <TabsList className="grid w-full grid-cols-5 h-9 sm:h-10 gap-0.5">
             <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
               <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden xs:inline">Perfil</span>
@@ -572,6 +617,10 @@ const Settings = () => {
             <TabsTrigger value="schedule" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
               <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden xs:inline">Horários</span>
+            </TabsTrigger>
+            <TabsTrigger value="a11y" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+              <Contrast className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Acessib.</span>
             </TabsTrigger>
           </TabsList>
 
@@ -792,6 +841,118 @@ const Settings = () => {
               onChange={setWorkingHours}
               onSave={handleSaveWorkingHours}
             />
+          </TabsContent>
+
+          {/* Accessibility Tab */}
+          <TabsContent value="a11y" className="space-y-3 sm:space-y-4 lg:space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Contrast className="h-5 w-5" />
+                  Acessibilidade Visual
+                </CardTitle>
+                <CardDescription>
+                  Personalize a aparência do sistema para suas necessidades
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* High Contrast Mode */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="high-contrast">Modo Alto Contraste</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Aumenta o contraste das cores para melhor legibilidade
+                    </p>
+                  </div>
+                  <Switch
+                    id="high-contrast"
+                    checked={accessibilitySettings.highContrast}
+                    onCheckedChange={(checked) => setAccessibilitySettings({ ...accessibilitySettings, highContrast: checked })}
+                  />
+                </div>
+
+                {/* Reduced Motion */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reduced-motion" className="flex items-center gap-2">
+                      <ZapOff className="h-4 w-4" />
+                      Movimento Reduzido
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Desabilita animações e transições
+                    </p>
+                  </div>
+                  <Switch
+                    id="reduced-motion"
+                    checked={accessibilitySettings.reducedMotion}
+                    onCheckedChange={(checked) => setAccessibilitySettings({ ...accessibilitySettings, reducedMotion: checked })}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Font Size */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <Type className="h-4 w-4" />
+                    Tamanho da Fonte
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['small', 'medium', 'large'].map((size) => (
+                      <Button
+                        key={size}
+                        variant={accessibilitySettings.fontSize === size ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAccessibilitySettings({ ...accessibilitySettings, fontSize: size as 'small' | 'medium' | 'large' })}
+                      >
+                        {size === 'small' ? 'Pequeno' : size === 'medium' ? 'Médio' : 'Grande'}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Altera o tamanho do texto em toda a aplicação
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações</CardTitle>
+                <CardDescription>
+                  Recursos de acessibilidade disponíveis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Navegação por Teclado</p>
+                    <p className="text-muted-foreground">
+                      Use Tab para navegar entre elementos, Shift+Tab para voltar, e Enter para selecionar
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Leitor de Tela</p>
+                    <p className="text-muted-foreground">
+                      Compatível com NVDA, JAWS, VoiceOver e TalkBack para anúncios de navegação e conteúdo
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Zoom</p>
+                    <p className="text-muted-foreground">
+                      Suporta até 200% de zoom sem perda de funcionalidade (Ctrl + no navegador)
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
