@@ -26,7 +26,8 @@ import {
   Wind,
   Stethoscope,
   Droplets,
-  FileText
+  FileText,
+  CheckSquare
 } from 'lucide-react';
 import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
 import { ClinicalTestCombobox, type ClinicalTest } from '@/components/ui/clinical-test-combobox';
@@ -58,6 +59,8 @@ interface MeasurementInput {
   unit: string;
   notes: string;
   selectedTestId?: string;
+  /** Teste completo da biblioteca (para exibir imagem/execução) */
+  selectedTest?: ClinicalTest;
   // Dynamic fields
   custom_data: Record<string, string>;
 }
@@ -169,6 +172,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
       updated[index] = {
         ...updated[index],
         selectedTestId: "",
+        selectedTest: undefined,
       };
       setMeasurements(updated);
       return;
@@ -196,6 +200,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
       updated[index] = {
         ...updated[index],
         selectedTestId: testId,
+        selectedTest: test,
         measurement_name: test.name,
         measurement_type: 'Personalizado',
         unit: test.fields_definition.find(f => f.id === 'value')?.unit || '',
@@ -208,6 +213,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
       updated[index] = {
         ...updated[index],
         selectedTestId: testId,
+        selectedTest: test,
         measurement_name: test?.name || '',
         measurement_type: test?.category || 'Teste Funcional',
       };
@@ -390,6 +396,54 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                )}
+
+                {/* Como realizar: imagem do teste ou texto de execução */}
+                {measurement.selectedTest && (
+                  <div className="mb-4 rounded-xl border border-teal-100 bg-teal-50/30 overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-teal-100 bg-white/50">
+                      <CheckSquare className="h-4 w-4 text-teal-600 shrink-0" aria-hidden />
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Como realizar o teste</span>
+                    </div>
+                    <div className="p-3">
+                      {(measurement.selectedTest.image_url || measurement.selectedTest.media_urls?.[0]) ? (
+                        <div className="space-y-2">
+                          <img
+                            src={measurement.selectedTest.image_url || measurement.selectedTest.media_urls?.[0]}
+                            alt={`Execução: ${measurement.selectedTest.name}`}
+                            className="w-full max-h-48 object-contain rounded-lg border border-slate-200 bg-white"
+                          />
+                          {measurement.selectedTest.execution && (
+                            <Collapsible>
+                              <CollapsibleTrigger className="flex items-center gap-2 text-xs font-bold text-teal-700 hover:text-teal-800">
+                                <ChevronDown className="h-3.5 w-3.5" />
+                                Ver instruções de execução
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <p className="mt-2 text-sm text-slate-600 whitespace-pre-line pt-2 border-t border-slate-100">
+                                  {measurement.selectedTest.execution}
+                                </p>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          )}
+                        </div>
+                      ) : measurement.selectedTest.execution ? (
+                        <Collapsible defaultOpen>
+                          <CollapsibleTrigger className="flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900">
+                            <ChevronDown className="h-3.5 w-3.5 transition-transform data-[state=open]:rotate-180" />
+                            Instruções de execução
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <p className="mt-2 text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                              {measurement.selectedTest.execution}
+                            </p>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      ) : (
+                        <p className="text-sm text-slate-500 italic">Nenhuma mídia ou instrução cadastrada para este teste.</p>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
