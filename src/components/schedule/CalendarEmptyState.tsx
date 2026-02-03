@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
 
 interface CalendarEmptyStateProps {
   viewType: 'day' | 'week' | 'month';
@@ -53,14 +54,20 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
   onCreateAppointment,
   className
 }) => {
+  const reducedMotion = useReducedMotion();
   const content = getEmptyStateContent(viewType, currentDate);
   const Icon = content.icon;
 
+  const transition = reducedMotion ? { duration: 0 } : { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const };
+  const iconTransition = reducedMotion ? { duration: 0 } : { delay: 0.1, duration: 0.3 };
+  const iconAnimate = reducedMotion ? { rotate: 0, scale: 1 } : { rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] };
+  const iconTransitionLoop = reducedMotion ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: 'easeInOut' as const };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      transition={transition}
       className={cn(
         'flex flex-col items-center justify-center h-full px-8 py-12',
         'text-center',
@@ -68,64 +75,45 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
       )}
     >
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={reducedMotion ? false : { scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
+        transition={iconTransition}
         className="relative"
       >
-        {/* Background glow effect */}
-        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl scale-150" />
+        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl scale-150" aria-hidden />
 
-        {/* Icon container */}
         <div className="relative">
           <motion.div
-            animate={{
-              rotate: [0, 5, -5, 0],
-              scale: [1, 1.05, 1],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+            animate={iconAnimate}
+            transition={iconTransitionLoop}
             className="flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 border-2 border-primary/20"
           >
             <Icon className="w-10 h-10 text-primary" strokeWidth={1.5} />
           </motion.div>
 
-          {/* Decorative elements */}
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber-400/20 dark:bg-amber-400/30"
-          />
-          <motion.div
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: 0.5,
-            }}
-            className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-blue-400/20 dark:bg-blue-400/30"
-          />
+          {!reducedMotion && (
+            <>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber-400/20 dark:bg-amber-400/30"
+                aria-hidden
+              />
+              <motion.div
+                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-blue-400/20 dark:bg-blue-400/30"
+                aria-hidden
+              />
+            </>
+          )}
         </div>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
+        transition={reducedMotion ? { duration: 0 } : { delay: 0.2, duration: 0.3 }}
         className="mt-8 max-w-md"
       >
         <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
@@ -137,14 +125,14 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
 
         {onCreateAppointment && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={reducedMotion ? false : { opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.2 }}
+            transition={reducedMotion ? { duration: 0 } : { delay: 0.3, duration: 0.2 }}
           >
             <Button
               onClick={onCreateAppointment}
               size="lg"
-              className="shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+              className="shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all motion-reduce:transition-none"
             >
               <CalendarPlus className="w-4 h-4 mr-2" />
               {content.action}
@@ -152,11 +140,10 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
           </motion.div>
         )}
 
-        {/* Helpful tips */}
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={reducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.3 }}
+          transition={reducedMotion ? { duration: 0 } : { delay: 0.4, duration: 0.3 }}
           className="mt-8 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
         >
           <div className="flex items-start gap-3 text-left">

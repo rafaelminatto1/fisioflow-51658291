@@ -62,6 +62,11 @@ import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { db, collection, query as firestoreQuery, where, getDocs } from '@/integrations/firebase/app';
 import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
+import {
+  useTherapists,
+  formatTherapistLabel,
+  THERAPIST_PLACEHOLDER,
+} from '@/hooks/useTherapists';
 
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
@@ -127,7 +132,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [conflictError, setConflictError] = useState<string | null>(null);
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(null);
-  const [therapists, setTherapists] = useState<Array<{ id: string; name: string }>>([]);
+  const { therapists } = useTherapists();
   const [formData, setFormData] = useState<FormData>({
     appointment_date: '',
     appointment_time: '',
@@ -279,31 +284,6 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     }
   }, [appointment?.patientId, open]);
 
-  // Carregar fisioterapeutas (apenas uma vez, usando ref para controle)
-  const therapistsLoadedRef = React.useRef(false);
-  useEffect(() => {
-    if (therapistsLoadedRef.current) return;
-
-    const fetchTherapists = async () => {
-      try {
-        const q = firestoreQuery(
-          collection(db, 'profiles'),
-          where('role', '==', 'fisioterapeuta')
-        );
-        const snap = await getDocs(q);
-        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (data) {
-          setTherapists(data.map((p: { id: string; full_name?: string }) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
-        }
-        therapistsLoadedRef.current = true;
-      } catch {
-        // Silencioso, fallback para lista vazia
-        therapistsLoadedRef.current = true;
-      }
-    };
-    fetchTherapists();
-  }, []); // Sem dependências - executa apenas uma vez
-
   // Inicializar formulário quando o agendamento mudar
   useEffect(() => {
     if (appointment) {
@@ -442,7 +422,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
-      navigate(`/session-evolution/${appointment.id}`);
+      navigate(`/patient-evolution/${appointment.id}`);
       toast.success('Iniciando atendimento', {
         description: `Atendimento de ${appointment.patientName}`,
       });
@@ -621,20 +601,25 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                       value={formData.therapist_id}
                       onValueChange={(value) => updateFormField('therapist_id', value)}
                     >
-                      <SelectTrigger className="h-9" aria-label="Fisioterapeuta responsável">
-                        <SelectValue placeholder="Selecione" />
+                      <SelectTrigger className="h-9" aria-label={THERAPIST_PLACEHOLDER}>
+                        <SelectValue placeholder={THERAPIST_PLACEHOLDER} />
                       </SelectTrigger>
                       <SelectContent>
                         {therapists.map((t) => (
                           <SelectItem key={t.id} value={t.id}>
-                            {t.name}
+                            {formatTherapistLabel(t)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
                     <p className="text-sm font-medium py-2">
-                      {therapists.find(t => t.id === formData.therapist_id)?.name || 'Não atribuído'}
+                      {formData.therapist_id
+                        ? (() => {
+                            const t = therapists.find(t => t.id === formData.therapist_id);
+                            return t ? formatTherapistLabel(t) : 'Não atribuído';
+                          })()
+                        : THERAPIST_PLACEHOLDER}
                     </p>
                   )}
                 </div>
