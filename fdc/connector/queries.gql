@@ -1,6 +1,6 @@
 # Query para listar exercícios prescritos para um paciente
 query getPatientExercises($patientId: UUID!) @auth(level: PUBLIC) {
-  prescribed_exercises(where: { patientId: { eq: $patientId } }, orderBy: [{ createdAt: DESC }]) {
+  prescribedExercises(where: { patientId: { eq: $patientId } }, orderBy: [{ createdAt: DESC }]) {
     id
     exerciseId
     sets
