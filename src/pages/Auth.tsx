@@ -191,6 +191,27 @@ export default function Auth() {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const { signInWithOAuth } = await import('@/integrations/firebase/auth');
+      await signInWithOAuth('apple');
+    } catch (err: unknown) {
+      logger.error('Erro no login com Apple', err, 'Auth');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao conectar com Apple.';
+      setError(errorMessage);
+      toast({
+        title: 'Erro no login',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignIn = async (data: { email: string; password: string }) => {
     setLoading(true);
     setError('');
@@ -200,17 +221,27 @@ export default function Auth() {
 
       if (error) {
         setError(error.message);
+        toast({
+          title: 'Erro no login',
+          description: error.message,
+          variant: 'destructive',
+        });
       } else {
         toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo ao FisioFlow",
+          title: 'Login realizado com sucesso!',
+          description: 'Bem-vindo ao FisioFlow',
         });
         navigate('/');
       }
     } catch (err: unknown) {
       logger.error('Erro no login', err, 'Auth');
-
-      setError('Erro inesperado. Tente novamente.');
+      const message = err instanceof Error ? err.message : 'Erro inesperado. Tente novamente.';
+      setError(message);
+      toast({
+        title: 'Erro no login',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -433,6 +464,7 @@ export default function Auth() {
             loading={loading}
             onGoogleClick={handleGoogleSignIn}
             onGithubClick={handleGithubSignIn}
+            onAppleClick={handleAppleSignIn}
             activeTab={activeTab}
           />
         </CardContent>

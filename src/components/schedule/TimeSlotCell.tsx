@@ -1,14 +1,14 @@
 import React, { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { UserPlus, Calendar, Ban } from 'lucide-react';
+import { Calendar, Ban } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import {
   calculateCardWidthPercent,
   calculateCardOffsetPercent,
-  getStatusCardClasses,
   shouldShowText,
   MAX_CARDS_WITHOUT_BADGE
 } from '@/lib/calendar/dragPreview';
+import { DropTargetPreviewCard } from './DropTargetPreviewCard';
 
 interface TimeSlotCellProps {
   day: Date;
@@ -124,40 +124,18 @@ export const TimeSlotCell = memo(({
             const cardWidthPercent = calculateCardWidthPercent(totalCards);
             const leftOffset = calculateCardOffsetPercent(index, totalCards);
             const isDraggedCard = apt.id === draggedAppointment?.id;
-            const statusColors = getStatusCardClasses(apt.status);
             const showText = shouldShowText(cardWidthPercent, totalCards);
 
             return (
-              <div
+              <DropTargetPreviewCard
                 key={apt.id}
-                className={cn(
-                  "absolute h-[calc(100%-8px)] rounded-md border-2 border-dashed",
-                  "flex flex-col items-center justify-center transition-all duration-200",
-                  "animate-in fade-in slide-in-from-bottom-1",
-                  statusColors.bg,
-                  statusColors.border,
-                  isDraggedCard && "bg-primary/30 border-primary animate-pulse-subtle shadow-lg z-10"
-                )}
-                style={{
-                  left: `calc(${leftOffset}% + 2px)`,
-                  width: `calc(${cardWidthPercent}% - 4px)`,
-                  top: '4px'
-                }}
-              >
-                {/* Ícone sempre visível */}
-                <UserPlus className={cn(
-                  "w-3 h-3 flex-shrink-0",
-                  isDraggedCard ? "text-primary" : "text-muted-foreground",
-                  showText && "mb-0.5"
-                )} />
-
-                {/* Texto condicional */}
-                {showText && (
-                  <span className="text-[9px] font-medium text-muted-foreground truncate px-0.5 w-full text-center">
-                    {isDraggedCard ? (apt.patientName?.slice(0, 12) || '') : ''}
-                  </span>
-                )}
-              </div>
+                appointment={apt}
+                isDraggedCard={!!isDraggedCard}
+                cardWidthPercent={cardWidthPercent}
+                leftOffset={leftOffset}
+                showText={showText}
+                variant="week"
+              />
             );
           })}
 

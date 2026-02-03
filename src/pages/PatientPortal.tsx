@@ -34,6 +34,7 @@ import { ptBR } from 'date-fns/locale';
 import { PainMapRegistration } from '@/components/patient/PainMapRegistration';
 import { PatientHelpers } from '@/types';
 import { ExercisePlayer } from '@/components/patient/ExercisePlayer';
+import { PainMapService } from '@/lib/services/painMapService';
 
 interface PrescriptionExercise {
   id: string;
@@ -90,8 +91,30 @@ const PatientPortal = () => {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
-  // TODO: Fetch pain records from API
-  const painRecords: PainRecord[] = [];
+  // Fetch pain records from pain_maps (mapa de dor)
+  const { data: painMapsData = [] } = useQuery({
+    queryKey: ['patient-pain-maps', patient?.id],
+    queryFn: () => (patient?.id ? PainMapService.getPainMapsByPatientId(patient.id) : Promise.resolve([])),
+    enabled: !!patient?.id,
+  });
+
+  const painRecords: PainRecord[] = useMemo(() => painMapsData.map((pm) => {
+    const raw = pm.recorded_at;
+    const created_at = typeof raw === 'string'
+      ? raw
+      : (raw && typeof (raw as { toDate?: () => Date }).toDate === 'function')
+        ? (raw as { toDate: () => Date }).toDate().toISOString()
+        : new Date().toISOString();
+    return {
+      id: pm.id,
+      patient_id: pm.patient_id,
+      pain_level: typeof pm.global_pain_level === 'number' ? pm.global_pain_level : 0,
+      body_part: pm.pain_points?.[0]?.region ?? 'geral',
+      intensity: typeof pm.global_pain_level === 'number' ? pm.global_pain_level : undefined,
+      location: pm.pain_points?.[0]?.region ?? undefined,
+      created_at,
+    };
+  }), [painMapsData]);
 
   const generateHealthSummary = async () => {
     if (!patient || !painRecords) return;
@@ -121,12 +144,12 @@ const PatientPortal = () => {
     }
   };
 
-  // Generate summary once when records are loaded
+  // Generate summary once when patient is loaded (painRecords may be empty)
   useEffect(() => {
-    if (painRecords && !aiSummary && !isGeneratingSummary) {
+    if (patient && !aiSummary && !isGeneratingSummary) {
       generateHealthSummary();
     }
-  }, [painRecords]);
+  }, [patient?.id]);
 
   if (isLoadingPatient) {
     return (

@@ -38,6 +38,9 @@ export {
 
 import type { Tarefa, TarefaStatus } from '@/types/tarefas';
 
+// Query key para cache e prefetch
+export const TAREFAS_QUERY_KEY = ['tarefas'] as const;
+
 // Helper: Convert Firestore doc to Tarefa
 const convertDocToTarefa = (doc: { id: string; data: () => Record<string, unknown> }): Tarefa => {
   const data = doc.data();
@@ -47,28 +50,31 @@ const convertDocToTarefa = (doc: { id: string; data: () => Record<string, unknow
   } as Tarefa;
 };
 
+// QueryFn extraída para permitir prefetch (melhora velocidade ao abrir /tarefas)
+export async function fetchTarefas(): Promise<Tarefa[]> {
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  const organizationId = await getUserOrganizationId();
+  if (!organizationId) {
+    console.warn('[useTarefas] No organization_id found - returning empty array');
+    return [];
+  }
+
+  const q = firestoreQuery(
+    collection(db, 'tarefas'),
+    where('organization_id', '==', organizationId),
+    orderBy('order_index', 'asc')
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(convertDocToTarefa);
+}
+
 export function useTarefas() {
   return useQuery({
-    queryKey: ['tarefas'],
-    queryFn: async () => {
-      const user = auth.currentUser;
-      if (!user) return [];
-
-      const organizationId = await getUserOrganizationId();
-      if (!organizationId) {
-        console.warn('[useTarefas] No organization_id found - returning empty array');
-        return [];
-      }
-
-      const q = firestoreQuery(
-        collection(db, 'tarefas'),
-        where('organization_id', '==', organizationId),
-        orderBy('order_index', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToTarefa);
-    },
+    queryKey: TAREFAS_QUERY_KEY,
+    queryFn: fetchTarefas,
     staleTime: 1000 * 60 * 5, // 5 minutos - dados considerados frescos
     gcTime: 1000 * 60 * 30, // 30 minutos - tempo para garbage collection
     refetchOnWindowFocus: false, // Evita recargas ao mudar de aba

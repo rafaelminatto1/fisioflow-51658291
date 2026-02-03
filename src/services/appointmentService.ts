@@ -226,6 +226,26 @@ export class AppointmentService {
         organizationId: string
     ): Promise<AppointmentBase> {
         try {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    sessionId:'debug-session',
+                    runId:'pre-fix',
+                    hypothesisId:'H2',
+                    location:'src/services/appointmentService.ts:updateAppointment:entry',
+                    message:'updateAppointment called',
+                    data:{
+                        appointmentId:id,
+                        providedUpdateKeys:Object.keys(updates || {}),
+                        rawUpdates:updates
+                    },
+                    timestamp:Date.now()
+                })
+            }).catch(()=>{});
+            // #endregion
+
             const updateData: Record<string, string | number | null | undefined> = {};
 
             if (updates.patient_id) updateData.patient_id = updates.patient_id;
@@ -253,11 +273,54 @@ export class AppointmentService {
                 updateData.start_time = updateTime;
             }
 
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    sessionId:'debug-session',
+                    runId:'pre-fix',
+                    hypothesisId:'H2',
+                    location:'src/services/appointmentService.ts:updateAppointment:preparedData',
+                    message:'Prepared update payload',
+                    data:{
+                        appointmentId:id,
+                        updateData,
+                        candidateEndTime:updateTime && (updates.duration ? calculateEndTime(updateTime, updates.duration) : null),
+                        hasDuration:Boolean(updates.duration),
+                        hasStartTime:Boolean(updateTime)
+                    },
+                    timestamp:Date.now()
+                })
+            }).catch(()=>{});
+            // #endregion
+
             if (Object.keys(updateData).length === 0) throw AppError.badRequest('Nenhum dado para atualizar');
 
             const response = await appointmentsApi.update(id, updateData);
             // API retorna o appointment diretamente (res.data), não { data: appointment }
             const fetchedUpdatedAppointment = response;
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    sessionId:'debug-session',
+                    runId:'pre-fix',
+                    hypothesisId:'H2',
+                    location:'src/services/appointmentService.ts:updateAppointment:response',
+                    message:'Received update response',
+                    data:{
+                        appointmentId:id,
+                        responseTime:fetchedUpdatedAppointment?.start_time ?? fetchedUpdatedAppointment?.appointment_time,
+                        responseEndTime:fetchedUpdatedAppointment?.end_time,
+                        responseDuration:fetchedUpdatedAppointment?.duration
+                    },
+                    timestamp:Date.now()
+                })
+            }).catch(()=>{});
+            // #endregion
 
             // Helper to parse date string as local date (avoiding timezone issues)
             const parseResponseDate = (dateStr: string | null | undefined): Date => {
@@ -308,6 +371,25 @@ export class AppointmentService {
 
             return updatedAppointment;
         } catch (error) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    sessionId:'debug-session',
+                    runId:'pre-fix',
+                    hypothesisId:'H2',
+                    location:'src/services/appointmentService.ts:updateAppointment:error',
+                    message:'updateAppointment threw',
+                    data:{
+                        appointmentId:id,
+                        error:String(error)
+                    },
+                    timestamp:Date.now()
+                })
+            }).catch(()=>{});
+            // #endregion
+
             throw AppError.from(error, 'AppointmentService.updateAppointment');
         }
     }
