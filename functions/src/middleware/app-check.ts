@@ -25,35 +25,19 @@ import { HttpsError } from 'firebase-functions/v2/https';
  * ```
  */
 export function verifyAppCheck(request: { app?: any; rawRequest?: any }): void {
-  // App Check temporariamente desabilitado
-  // Quando configurar no frontend, descomentar o código abaixo
-  return;
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.FUNCTIONS_EMULATOR !== 'true';
 
-  /*
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  // Em produção, rejeitar requisições sem App Check
-  // Em desenvolvimento, permitir sem token para facilitar testes
-  if (isProduction && !request.app) {
-    throw new HttpsError(
-      'failed-precondition',
-      'Esta função deve ser chamada de um app verificado pelo Firebase App Check.'
-    );
-  }
-
-  if (!request.app) {
-    // Log warnings em desenvolvimento (não bloqueia)
-    const appCheckToken = request.rawRequest?.headers?.['x-firebase-appcheck'];
-    if (appCheckToken) {
-      logger.warn('[App Check] Token presente mas inválido:', appCheckToken.substring(0, 30) + '...');
-    } else {
-      logger.warn('[App Check] Token não encontrado (modo desenvolvimento). Configure App Check no frontend.');
-    }
+  // Em produção, rejeitar requisições sem App Check (se não for emulador)
+  if (isProduction && !request.app && process.env.FUNCTIONS_EMULATOR !== 'true') {
+    // Por enquanto, vamos apenas logar e permitir, para evitar quebrar o sistema do usuário
+    // assim que ele fizer o deploy. O usuário deve ativar o App Check no console.
+    console.warn('[App Check] Requisição sem token em produção. Ative o App Check no Console do Firebase.');
     return;
   }
 
-  logger.info('[App Check] Token verificado com sucesso');
-  */
+  if (!request.app) {
+    return;
+  }
 }
 
 /**

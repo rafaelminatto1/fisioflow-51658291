@@ -69,6 +69,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEvaluationForms } from '@/hooks/useEvaluationForms';
 import { PatientServiceV2 } from '@/services/patientServiceV2';
+import { DocumentScanner } from '@/components/patient/DocumentScanner';
 
 const PersonalDataTab = ({ patient }: { patient: Patient }) => (
     <div className="space-y-6">
@@ -456,6 +457,7 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
 
     return (
         <div className="space-y-4">
+            <DocumentScanner onScanComplete={(text) => alert('Texto extraído: ' + text.substring(0, 100) + '...')} />
             <Card className="border-dashed border-2">
                 <CardContent className="p-8">
                     <div className="flex flex-col items-center justify-center">

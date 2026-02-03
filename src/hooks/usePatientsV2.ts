@@ -1,0 +1,166 @@
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { PatientServiceV2, type PatientV2 } from '@/services/patientServiceV2';
+import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { isOnline } from '@/lib/utils/query-helpers';
+import { type Patient } from '@/schemas/patient';
+
+// Mapper to convert V2 (snake_case) to Frontend (camelCase)
+const mapPatientV2ToFrontend = (p: PatientV2): Patient => ({
+  id: p.id,
+  name: p.name,
+  email: p.email || null,
+  phone: p.phone || null,
+  cpf: p.cpf || null,
+  birthDate: p.birth_date || null,
+  gender: p.gender || null,
+  // Normalize status to match schema if needed, though schema has generous enums
+  status: p.status as any, 
+  mainCondition: p.main_condition || null,
+  organization_id: p.organization_id,
+  createdAt: p.created_at,
+  updatedAt: p.updated_at,
+  // Default values for missing fields
+  progress: 0,
+  incomplete_registration: false, 
+});
+
+export const useActivePatientsV2 = () => {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
+  const queryClient = useQueryClient();
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Setup realtime subscription via Ably (Compatible with Backend V2 events)
+  useEffect(() => {
+    if (!organizationId) return;
+
+    const ably = getAblyClient();
+    const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
+
+    const handleUpdate = () => {
+      console.log('Realtime (Ably): Pacientes atualizados via V2');
+      queryClient.invalidateQueries({ queryKey: ['patients-v2', organizationId] });
+    };
+
+    channel.subscribe(ABLY_EVENTS.update, handleUpdate);
+    channel.subscribe(ABLY_EVENTS.create, handleUpdate); // V2 might send different event names
+    channel.subscribe('INSERT', handleUpdate); // Raw DB event
+    channel.subscribe('UPDATE', handleUpdate); // Raw DB event
+    channel.subscribe('DELETE', handleUpdate); // Raw DB event
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [organizationId, queryClient, retryCount]);
+
+  return useQuery({
+    queryKey: ['patients-v2', organizationId],
+    queryFn: async () => {
+      if (!isOnline()) {
+        // TODO: Implement V2 compatible cache
+        console.warn('Offline: V2 cache not implemented yet');
+        return [];
+      }
+
+      console.log('useActivePatientsV2: fetching from API V2');
+      const response = await PatientServiceV2.list({ status: 'active' }); // Or whatever status needed
+      return response.data.map(mapPatientV2ToFrontend);
+    },
+    enabled: !!organizationId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+export const useCreatePatientV2 = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (patient: Partial<Patient>) => {
+      // Map back to snake_case if needed, but ServiceV2 handles partials.
+      // We might need to map keys manually if they differ significantly.
+      const payload: Partial<PatientV2> = {
+        name: patient.name,
+        email: patient.email || undefined,
+        phone: patient.phone || undefined,
+        cpf: patient.cpf || undefined,
+        birth_date: patient.birthDate || undefined,
+        gender: patient.gender || undefined,
+        main_condition: patient.mainCondition || undefined,
+        status: patient.status as any,
+      };
+      
+      const { data } = await PatientServiceV2.create(payload);
+      return mapPatientV2ToFrontend(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients-v2'] });
+      toast({
+        title: 'Paciente cadastrado (V2)',
+        description: 'O paciente foi cadastrado com sucesso no Postgres.',
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useCreatePatientV2');
+    },
+  });
+};
+
+export const useUpdatePatientV2 = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<Patient>) => {
+      const payload: Partial<PatientV2> = {
+        name: updates.name,
+        email: updates.email || undefined,
+        phone: updates.phone || undefined,
+        cpf: updates.cpf || undefined,
+        birth_date: updates.birthDate || undefined,
+        gender: updates.gender || undefined,
+        main_condition: updates.mainCondition || undefined,
+        status: updates.status as any,
+      };
+
+      const { data } = await PatientServiceV2.update(id, payload);
+      return mapPatientV2ToFrontend(data);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['patients-v2'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-v2', variables.id] });
+      toast({
+        title: 'Paciente atualizado (V2)',
+        description: 'As informações foram atualizadas com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useUpdatePatientV2');
+    },
+  });
+};
+
+export const useDeletePatientV2 = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (patientId: string) => {
+      await PatientServiceV2.delete(patientId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients-v2'] });
+      toast({
+        title: 'Paciente excluído (V2)',
+        description: 'O paciente foi removido com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useDeletePatientV2');
+    },
+  });
+};

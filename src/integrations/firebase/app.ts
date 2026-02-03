@@ -253,6 +253,20 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
 }
 
 /**
+ * Expor instâncias do Firebase no window para diagnóstico em desenvolvimento
+ */
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  (window as any).__fisioflow_firebase__ = {
+    app,
+    auth,
+    db,
+    storage,
+    functions,
+  };
+  console.log('[Firebase] Instances exposed at window.__fisioflow_firebase__ for debugging');
+}
+
+/**
  * Re-export Firestore functions for convenience
  */
 export {

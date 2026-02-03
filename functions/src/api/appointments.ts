@@ -242,8 +242,8 @@ export const createAppointmentHttp = onRequest(
       });
       if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
       const result = await pool.query(
-        `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)`
-         `VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+        `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
         [
           data.patientId, therapistId, data.date, data.startTime, data.endTime,
           normalizeSessionType(data.type || data.session_type),
@@ -267,7 +267,7 @@ export const createAppointmentHttp = onRequest(
 
       try {
         const realtime = await import('../realtime/publisher');
-        await realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment, old: null });
+        await realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment as any, old: null });
       } catch (err) { logger.error('Erro Ably:', err); }
       res.status(201).json({ data: appointment });
     } catch (error: unknown) {

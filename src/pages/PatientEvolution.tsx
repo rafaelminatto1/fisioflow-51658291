@@ -623,15 +623,16 @@ const PatientEvolution = () => {
     );
   }
 
-  // Verificar se é um problema de permissão
+  // Verificar se é um problema de permissão ou dados inconsistentes
+  // Caso específico: appointment existe mas patient não - geralmente patient_id null ou patient não existe no BD
+  const isMissingPatientError = appointment && !patient && !patientError && !dataLoading;
   const isPermissionError = appointmentError?.message?.includes('permission') ||
     appointmentError?.message?.includes('RLS') ||
     appointmentError?.message?.includes('row-level security') ||
     patientError?.message?.includes('permission') ||
     patientError?.message?.includes('RLS') ||
     patientError?.message?.includes('row-level security') ||
-    (!appointment && !appointmentError && !dataLoading) ||
-    (!patient && !patientError && !dataLoading && appointment);
+    (!appointment && !appointmentError && !dataLoading);
 
   // Error state
   if (!appointment || !patient) {
@@ -641,7 +642,25 @@ const PatientEvolution = () => {
           <div className="text-center space-y-4 max-w-md">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
 
-            {isPermissionError ? (
+            {isMissingPatientError ? (
+              <>
+                <p className="text-lg font-semibold">Paciente não encontrado</p>
+                <p className="text-muted-foreground">
+                  O agendamento existe, mas não há um paciente associado a ele.
+                  Isso pode acontecer se o paciente foi excluído ou se há um problema nos dados.
+                </p>
+                <Alert className="mt-4 text-left">
+                  <AlertDescription>
+                    <strong>O que fazer:</strong>
+                    <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                      <li>Verifique se este agendamento tem um paciente válido associado</li>
+                      <li>Edite o agendamento e selecione um paciente</li>
+                      <li>Entre em contato com o suporte se o problema persistir</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              </>
+            ) : isPermissionError ? (
               <>
                 <p className="text-lg font-semibold">Acesso não autorizado</p>
                 <p className="text-muted-foreground">

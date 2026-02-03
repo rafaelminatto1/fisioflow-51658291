@@ -48,7 +48,7 @@ export const PatientSelectionSection = ({
     const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
 
     return (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
             <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 text-primary" />
                 Paciente *
@@ -103,9 +103,9 @@ export const DateTimeSection = ({
     const exceedsCapacity = conflictCount >= maxCapacity;
 
     return (
-        <div className="space-y-3">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                <div className="space-y-1.5 sm:space-y-2">
+        <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="space-y-2">
                     <Label className="text-xs sm:text-sm font-medium">Data *</Label>
                     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <PopoverTrigger asChild>
@@ -113,13 +113,13 @@ export const DateTimeSection = ({
                                 type="button"
                                 variant="outline"
                                 className={cn(
-                                    "w-full justify-start text-left font-normal h-9 sm:h-10 text-xs sm:text-sm",
+                                    "w-full justify-start text-left font-normal h-10 text-xs sm:text-sm",
                                     !watchedDate && "text-muted-foreground",
                                     errors.appointment_date && "border-destructive text-destructive"
                                 )}
                                 disabled={disabled}
                             >
-                                <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                <CalendarIcon className="mr-2 h-4 w-4" />
                                 {watchedDate ? format(watchedDate, 'dd/MM', { locale: ptBR }) : "Data"}
                             </Button>
                         </PopoverTrigger>
@@ -138,11 +138,11 @@ export const DateTimeSection = ({
                         </PopoverContent>
                     </Popover>
                     {errors.appointment_date && (
-                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
+                        <p className="text-xs text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
                     )}
                 </div>
 
-                <div className="space-y-1.5 sm:space-y-2 relative">
+                <div className="space-y-2 relative">
                     <div className="flex items-center justify-between">
                         <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
                         {onAutoSchedule && !disabled && (
@@ -150,11 +150,11 @@ export const DateTimeSection = ({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-5 w-5 -mt-1 -mr-1 text-primary hover:text-primary hover:bg-primary/10"
+                                className="h-6 w-6 -mt-1 -mr-1 text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={onAutoSchedule}
                                 title="Sugerir melhor horário"
                             >
-                                <Wand2 className="h-3 w-3" />
+                                <Wand2 className="h-3.5 w-3.5" />
                             </Button>
                         )}
                     </div>
@@ -164,7 +164,7 @@ export const DateTimeSection = ({
                         disabled={disabled}
                     >
                         <SelectTrigger className={cn(
-                            "h-9 sm:h-10 text-xs sm:text-sm",
+                            "h-10 text-xs sm:text-sm",
                             errors.appointment_time && "border-destructive text-destructive"
                         )}>
                             <SelectValue placeholder="Hora" />
@@ -176,18 +176,18 @@ export const DateTimeSection = ({
                         </SelectContent>
                     </Select>
                     {errors.appointment_time && (
-                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_time as { message?: string })?.message}</p>
+                        <p className="text-xs text-destructive font-medium">{(errors.appointment_time as { message?: string })?.message}</p>
                     )}
                 </div>
 
-                <div className="space-y-1.5 sm:space-y-2 col-span-2 sm:col-span-1">
+                <div className="space-y-2 col-span-2 sm:col-span-1">
                     <Label className="text-xs sm:text-sm font-medium">Duração</Label>
                     <Select
                         value={watchedDuration?.toString()}
                         onValueChange={(value) => setValue('duration', parseInt(value))}
                         disabled={disabled}
                     >
-                        <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                        <SelectTrigger className="h-10 text-xs sm:text-sm">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -203,18 +203,18 @@ export const DateTimeSection = ({
 
             {watchedDate && watchedTime && (
                 <div className={cn(
-                    "flex items-center justify-between p-2 sm:p-2.5 border rounded-lg text-xs sm:text-sm transition-all",
+                    "flex items-center justify-between p-3 border rounded-lg text-sm transition-all",
                     exceedsCapacity
                         ? "border-red-500/30 bg-red-500/5"
                         : conflictCount > 0
                             ? "border-amber-500/30 bg-amber-500/5"
                             : "border-emerald-500/30 bg-emerald-500/5"
                 )}>
-                    <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="flex items-center gap-2">
                         {exceedsCapacity ? (
-                            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
+                            <AlertTriangle className="w-4 h-4 text-red-600" />
                         ) : (
-                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                            <Check className="w-4 h-4 text-emerald-600" />
                         )}
                         <span className={cn(
                             "font-medium",
@@ -229,7 +229,7 @@ export const DateTimeSection = ({
                         </span>
                     </div>
                     <Badge variant="outline" className={cn(
-                        "text-[10px] sm:text-xs h-5 sm:h-6",
+                        "text-xs h-6",
                         exceedsCapacity ? "border-red-500/50" : "border-muted"
                     )}>
                         {conflictCount}/{maxCapacity}
@@ -244,8 +244,8 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
     const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
 
     return (
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <div className="space-y-1.5 sm:space-y-2">
+        <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
                 <Label className="text-xs sm:text-sm font-medium">Tipo *</Label>
                 <Select
                     value={watch('type')}
@@ -253,7 +253,7 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     disabled={disabled}
                 >
                     <SelectTrigger className={cn(
-                        "h-9 sm:h-10 text-xs sm:text-sm",
+                        "h-10 text-xs sm:text-sm",
                         errors.type && "border-destructive text-destructive"
                     )}>
                         <SelectValue placeholder="Tipo" />
@@ -265,18 +265,18 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     </SelectContent>
                 </Select>
                 {errors.type && (
-                    <p className="text-[10px] text-destructive font-medium">{(errors.type as { message?: string })?.message}</p>
+                    <p className="text-xs text-destructive font-medium">{(errors.type as { message?: string })?.message}</p>
                 )}
             </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
+            <div className="space-y-2">
                 <Label className="text-xs sm:text-sm font-medium">Status *</Label>
                 <Select
                     value={watch('status')}
                     onValueChange={(value) => setValue('status', value as AppointmentStatus)}
                     disabled={disabled}
                 >
-                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                    <SelectTrigger className="h-10 text-xs sm:text-sm">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -344,7 +344,25 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-2/3" />
                   </div>
-                ) : insights.completion ? (
+                ) : aiSummary.isError ? (
+                  <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
+                    <AlertTriangle className="h-10 w-10 mb-2 text-amber-500 opacity-50" />
+                    <p className="text-xs text-muted-foreground">
+                      Não foi possível gerar a análise histórica no momento.
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Certifique-se de que o paciente possui evoluções registradas no novo sistema.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => aiSummary.mutate(patientId)}
+                    >
+                      Tentar Novamente
+                    </Button>
+                  </div>
+                ) : aiSummary.data?.summary ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     <ReactMarkdown
                       components={{

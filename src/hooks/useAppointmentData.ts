@@ -31,10 +31,17 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
             const snapshot = await getDoc(docRef);
 
             if (!snapshot.exists()) {
+                console.warn('[useAppointmentData] Appointment not found:', appointmentId);
                 return null;
             }
 
             const data = snapshot.data();
+            console.log('[useAppointmentData] Appointment loaded:', {
+                id: snapshot.id,
+                patient_id: data.patient_id,
+                hasPatientId: !!data.patient_id
+            });
+
             return {
                 id: snapshot.id,
                 ...data,
@@ -48,11 +55,23 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
     const patientId = appointment?.patient_id;
 
+    // Log quando patientId muda
+    if (appointment && import.meta.env.DEV) {
+        console.log('[useAppointmentData] Current state:', {
+            appointmentId: appointment.id,
+            patientId: patientId,
+            hasPatientId: !!patientId
+        });
+    }
+
     // Buscar informações do paciente do Firebase com retry e timeout
     const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
         queryKey: ['patient', patientId],
         queryFn: async () => {
-            if (!patientId) throw new Error('ID do paciente não fornecido');
+            if (!patientId) {
+                console.warn('[useAppointmentData] No patientId provided, skipping patient query');
+                throw new Error('ID do paciente não fornecido');
+            }
 
             devValidatePatient(PATIENT_SELECT.standard);
 
@@ -60,10 +79,16 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
             const snapshot = await getDoc(docRef);
 
             if (!snapshot.exists()) {
+                console.error('[useAppointmentData] Patient not found in database:', patientId);
                 return null;
             }
 
             const data = snapshot.data();
+            console.log('[useAppointmentData] Patient loaded:', {
+                id: snapshot.id,
+                name: data.name || data.full_name
+            });
+
             return {
                 id: snapshot.id,
                 ...data,
