@@ -271,7 +271,7 @@ export const testWebhook = onCall(
 export const getWebhookEventTypes = onRequest(
   {
     region: 'southamerica-east1',
-    memory: '128MiB',
+    memory: '256MiB',
     maxInstances: 10,
   },
   async (req, res) => {

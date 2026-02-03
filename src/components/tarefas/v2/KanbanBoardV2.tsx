@@ -80,15 +80,19 @@ interface KanbanBoardV2Props {
   statuses?: TarefaStatus[];
   wipLimits?: Partial<Record<TarefaStatus, number>>;
   onViewChange?: (view: 'kanban' | 'list' | 'calendar' | 'analytics') => void;
+  tarefas?: Tarefa[];
 }
 
 export function KanbanBoardV2({
   projectId,
   statuses = DEFAULT_STATUSES,
   wipLimits = DEFAULT_WIP_LIMITS,
-  onViewChange
+  onViewChange,
+  tarefas: propTarefas
 }: KanbanBoardV2Props) {
-  const { data: tarefas, isLoading, refetch } = useTarefas();
+  const { data: hookTarefas, isLoading, refetch } = useTarefas();
+  // Use prop tarefas if provided (for mock data), otherwise use hook data
+  const tarefas = propTarefas !== undefined ? propTarefas : hookTarefas;
   const { data: teamMembers } = useTeamMembers();
   const updateTarefa = useUpdateTarefa();
   const deleteTarefa = useDeleteTarefa();
@@ -291,8 +295,8 @@ export function KanbanBoardV2({
     setFilters({});
   };
 
-  // Loading state
-  if (isLoading) {
+  // Loading state - only show if we don't have props and still loading
+  if (isLoading && propTarefas === undefined) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">

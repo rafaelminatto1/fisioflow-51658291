@@ -86,10 +86,404 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 type ViewMode = 'kanban' | 'table' | 'timeline' | 'insights';
 
+// Mock data para teste quando não houver dados reais
+const MOCK_TAREFAS: Tarefa[] = [
+  {
+    id: 'mock-1',
+    titulo: 'Preparar plano de tratamento para paciente com lombalgia',
+    descricao: 'Elaborar protocolo de exercícios para fortalecimento core',
+    status: 'BACKLOG',
+    prioridade: 'ALTA',
+    tipo: 'AVALIACAO',
+    tags: ['fisioterapia', 'coluna', 'ortopedia'],
+    data_vencimento: addDays(new Date(), 3).toISOString(),
+    created_at: subDays(new Date(), 5).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: null,
+    cover_image: null,
+    start_date: null,
+    completed_at: null,
+    due_date: null,
+    order_index: 0,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: null,
+    actual_hours: null,
+    location: null,
+    checklist_progress: null
+  },
+  {
+    id: 'mock-2',
+    titulo: 'Avaliar evolução do paciente João Silva',
+    descricao: 'Revisar progresso após 4 sessões de fisioterapia',
+    status: 'A_FAZER',
+    prioridade: 'MEDIA',
+    tipo: 'CONSULTA',
+    tags: ['avaliação', 'progresso'],
+    data_vencimento: addDays(new Date(), 1).toISOString(),
+    created_at: subDays(new Date(), 2).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [
+      {
+        id: 'check-1',
+        title: 'Itens de avaliação',
+        items: [
+          { id: 'item-1', text: 'Verificar amplitude de movimento', completed: true },
+          { id: 'item-2', text: 'Avaliar dor', completed: true },
+          { id: 'item-3', text: 'Testar força muscular', completed: false }
+        ]
+      }
+    ],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: null,
+    cover_image: null,
+    start_date: null,
+    completed_at: null,
+    due_date: null,
+    order_index: 1,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 1,
+    actual_hours: null,
+    location: null,
+    checklist_progress: null
+  },
+  {
+    id: 'mock-3',
+    titulo: 'Atualizar prontuário do paciente Maria Santos',
+    descricao: 'Registrar evolução da sessão de hoje',
+    status: 'EM_PROGRESSO',
+    prioridade: 'BAIXA',
+    tipo: 'DOCUMENTACAO',
+    tags: ['prontuário', 'documentação'],
+    data_vencimento: new Date().toISOString(),
+    created_at: subDays(new Date(), 1).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [{ id: 'att-1', name: 'exame-raio-x.jpg', url: '/mock/files/exame.jpg', size: 1024000 }],
+    references: [{ id: 'ref-1', title: 'Protocolo de Avaliação Lumbar', url: 'https://example.com' }],
+    comments: [{ id: 'comm-1', text: 'Lembre de atualizar os exercícios prescritos', author: 'Rafael Minatto', created_at: new Date().toISOString() }],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: '#3b82f6',
+    cover_image: null,
+    start_date: subDays(new Date(), 1).toISOString(),
+    completed_at: null,
+    due_date: null,
+    order_index: 2,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 0.5,
+    actual_hours: null,
+    location: 'Consultório 1',
+    checklist_progress: null
+  },
+  {
+    id: 'mock-4',
+    titulo: 'Reunião com equipe multidisciplinar',
+    descricao: 'Discutir casos complexos do mês',
+    status: 'EM_PROGRESSO',
+    prioridade: 'ALTA',
+    tipo: 'REUNIAO',
+    tags: ['equipe', 'multidisciplinar'],
+    data_vencimento: addDays(new Date(), 2).toISOString(),
+    created_at: subDays(new Date(), 3).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: '#a855f7',
+    cover_image: null,
+    start_date: new Date().toISOString(),
+    completed_at: null,
+    due_date: null,
+    order_index: 3,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 2,
+    actual_hours: null,
+    location: 'Sala de Reunião',
+    checklist_progress: null
+  },
+  {
+    id: 'mock-5',
+    titulo: 'Revisar literatura sobre fisioterapia esportiva',
+    descricao: 'Pesquisar artigos recentes sobre reabilitação de atletas',
+    status: 'REVISAO',
+    prioridade: 'MEDIA',
+    tipo: 'PESQUISA',
+    tags: ['pesquisa', 'esporte', 'atletas'],
+    data_vencimento: addDays(new Date(), 5).toISOString(),
+    created_at: subDays(new Date(), 7).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [],
+    references: [
+      { id: 'ref-1', title: 'Journal of Orthopedic & Sports Physical Therapy', url: 'https://example.com' },
+      { id: 'ref-2', title: 'Physical Therapy in Sport', url: 'https://example.com' }
+    ],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: null,
+    cover_image: null,
+    start_date: null,
+    completed_at: null,
+    due_date: null,
+    order_index: 4,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 3,
+    actual_hours: 1.5,
+    location: null,
+    checklist_progress: null
+  },
+  {
+    id: 'mock-6',
+    titulo: 'Organizar estoque de materiais',
+    descricao: 'Verificar e repor materiais de consumo do consultório',
+    status: 'CONCLUIDO',
+    prioridade: 'BAIXA',
+    tipo: 'ADMINISTRATIVO',
+    tags: ['estoque', 'materiais'],
+    data_vencimento: subDays(new Date(), 2).toISOString(),
+    created_at: subDays(new Date(), 5).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: null,
+    cover_image: null,
+    start_date: subDays(new Date(), 5).toISOString(),
+    completed_at: subDays(new Date(), 1).toISOString(),
+    due_date: null,
+    order_index: 5,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 1,
+    actual_hours: 1.5,
+    location: null,
+    checklist_progress: null
+  },
+  {
+    id: 'mock-7',
+    titulo: 'Curso de atualização em terapia manual',
+    descricao: 'Participar do curso online de 20 horas',
+    status: 'A_FAZER',
+    prioridade: 'MEDIA',
+    tipo: 'CAPACITACAO',
+    tags: ['curso', 'terapia manual', 'capacitação'],
+    data_vencimento: addDays(new Date(), 15).toISOString(),
+    created_at: subDays(new Date(), 10).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [
+      {
+        id: 'check-2',
+        title: 'Módulos do curso',
+        items: [
+          { id: 'item-1', text: 'Módulo 1: Introdução', completed: true },
+          { id: 'item-2', text: 'Módulo 2: Técnicas básicas', completed: true },
+          { id: 'item-3', text: 'Módulo 3: Técnicas avançadas', completed: false },
+          { id: 'item-4', text: 'Módulo 4: Casos clínicos', completed: false }
+        ]
+      }
+    ],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: '#f59e0b',
+    cover_image: null,
+    start_date: null,
+    completed_at: null,
+    due_date: null,
+    order_index: 6,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 20,
+    actual_hours: 5,
+    location: null,
+    checklist_progress: null
+  },
+  {
+    id: 'mock-8',
+    titulo: 'Ligar para paciente para confirmar consulta',
+    descricao: 'Confirmar consulta de amanhã às 14h',
+    status: 'BACKLOG',
+    prioridade: 'ALTA',
+    tipo: 'COMUNICACAO',
+    tags: ['contato', 'confirmação'],
+    data_vencimento: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [],
+    dependencies: [],
+    blocking: [],
+    color: '#ef4444',
+    cover_image: null,
+    start_date: null,
+    completed_at: null,
+    due_date: null,
+    order_index: 7,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 0.25,
+    actual_hours: null,
+    location: null,
+    checklist_progress: null
+  },
+  {
+    id: 'mock-9',
+    titulo: 'Preparar material educativo para paciente',
+    descricao: 'Criar folheto com exercícios domiciliares',
+    status: 'EM_PROGRESSO',
+    prioridade: 'MEDIA',
+    tipo: 'EDUCACAO',
+    tags: ['educação', 'exercícios', 'domiciliar'],
+    data_vencimento: addDays(new Date(), 4).toISOString(),
+    created_at: subDays(new Date(), 4).toISOString(),
+    project_id: null,
+    responsavel: {
+      id: 'user-1',
+      full_name: 'Rafael Minatto',
+      email: 'rafael.minatto@yahoo.com.br',
+      avatar_url: null
+    },
+    assignees: [],
+    checklists: [],
+    attachments: [],
+    references: [],
+    comments: [],
+    subtasks: [
+      { id: 'sub-1', text: 'Selecionar exercícios', completed: true, status: 'CONCLUIDO' },
+      { id: 'sub-2', text: 'Criar diagramas', completed: false, status: 'A_FAZER' },
+      { id: 'sub-3', text: 'Revisar texto', completed: false, status: 'BACKLOG' }
+    ],
+    dependencies: [],
+    blocking: [],
+    color: '#06b6d4',
+    cover_image: null,
+    start_date: subDays(new Date(), 4).toISOString(),
+    completed_at: null,
+    due_date: null,
+    order_index: 8,
+    parent_id: null,
+    recurrent: false,
+    recurrence_rule: null,
+    estimated_hours: 2,
+    actual_hours: 1,
+    location: null,
+    checklist_progress: null
+  }
+];
+
 export default function TarefasV2() {
   const { data: tarefas, isLoading, refetch } = useTarefas();
   const { data: teamMembers } = useTeamMembers();
   const deleteTarefa = useDeleteTarefa();
+
+  // Use mock data when no real data is available
+  const effectiveTarefas = useMemo(() => {
+    if (!tarefas || tarefas.length === 0) {
+      return MOCK_TAREFAS;
+    }
+    return tarefas;
+  }, [tarefas]);
+
+  // Check if using mock data
+  const usingMockData = !tarefas || tarefas.length === 0;
 
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,49 +497,49 @@ export default function TarefasV2() {
 
   // Calculate stats
   const stats = useMemo((): TaskStats | null => {
-    if (!tarefas) return null;
+    if (!effectiveTarefas) return null;
 
     const today = new Date();
     const weekAgo = subDays(today, 7);
 
-    const byStatus = tarefas.reduce((acc, t) => {
+    const byStatus = effectiveTarefas.reduce((acc, t) => {
       acc[t.status] = (acc[t.status] || 0) + 1;
       return acc;
     }, {} as Record<TarefaStatus, number>);
 
-    const byPriority = tarefas.reduce((acc, t) => {
+    const byPriority = effectiveTarefas.reduce((acc, t) => {
       acc[t.prioridade] = (acc[t.prioridade] || 0) + 1;
       return acc;
     }, {} as Record<TarefaPrioridade, number>);
 
-    const byType = tarefas.reduce((acc, t) => {
+    const byType = effectiveTarefas.reduce((acc, t) => {
       acc[t.tipo || 'TAREFA'] = (acc[t.tipo || 'TAREFA'] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const overdue = tarefas.filter(t =>
+    const overdue = effectiveTarefas.filter(t =>
       t.data_vencimento &&
       new Date(t.data_vencimento) < today &&
       t.status !== 'CONCLUIDO' &&
       t.status !== 'ARQUIVADO'
     ).length;
 
-    const dueSoon = tarefas.filter(t => {
+    const dueSoon = effectiveTarefas.filter(t => {
       if (!t.data_vencimento || t.status === 'CONCLUIDO' || t.status === 'ARQUIVADO') return false;
       const dueDate = new Date(t.data_vencimento);
       const daysUntil = differenceInDays(dueDate, today);
       return daysUntil >= 0 && daysUntil <= 3;
     }).length;
 
-    const completedThisWeek = tarefas.filter(t =>
+    const completedThisWeek = effectiveTarefas.filter(t =>
       t.completed_at && new Date(t.completed_at) >= weekAgo
     ).length;
 
     const completedTotal = byStatus['CONCLUIDO'] || 0;
-    const completionRate = tarefas.length > 0 ? (completedTotal / tarefas.length) * 100 : 0;
+    const completionRate = effectiveTarefas.length > 0 ? (completedTotal / effectiveTarefas.length) * 100 : 0;
 
     // Average cycle time (days from creation to completion)
-    const completedTasks = tarefas.filter(t => t.completed_at && t.created_at);
+    const completedTasks = effectiveTarefas.filter(t => t.completed_at && t.created_at);
     const avgCycleTime = completedTasks.length > 0
       ? completedTasks.reduce((acc, t) => {
         return acc + differenceInDays(new Date(t.completed_at!), new Date(t.created_at));
@@ -153,7 +547,7 @@ export default function TarefasV2() {
       : 0;
 
     return {
-      total: tarefas.length,
+      total: effectiveTarefas.length,
       by_status: byStatus,
       by_priority: byPriority,
       by_type: byType,
@@ -163,20 +557,20 @@ export default function TarefasV2() {
       completion_rate: completionRate,
       average_cycle_time: avgCycleTime
     };
-  }, [tarefas]);
+  }, [effectiveTarefas]);
 
   // Filtered tasks
   const filteredTarefas = useMemo(() => {
-    if (!tarefas) return [];
-    if (!searchTerm) return tarefas;
+    if (!effectiveTarefas) return [];
+    if (!searchTerm) return effectiveTarefas;
 
     const search = searchTerm.toLowerCase();
-    return tarefas.filter(t =>
+    return effectiveTarefas.filter(t =>
       t.titulo.toLowerCase().includes(search) ||
       t.descricao?.toLowerCase().includes(search) ||
       t.tags?.some(tag => tag.toLowerCase().includes(search))
     );
-  }, [tarefas, searchTerm]);
+  }, [effectiveTarefas, searchTerm]);
 
   // Group tasks by status for table view
   const groupedTasks = useMemo(() => {
@@ -246,11 +640,11 @@ export default function TarefasV2() {
       const date = subDays(today, i);
       const dateStr = format(date, 'yyyy-MM-dd');
 
-      const created = tarefas?.filter(t =>
+      const created = effectiveTarefas?.filter(t =>
         t.created_at?.startsWith(dateStr)
       ).length || 0;
 
-      const completed = tarefas?.filter(t =>
+      const completed = effectiveTarefas?.filter(t =>
         t.completed_at?.startsWith(dateStr)
       ).length || 0;
 
@@ -262,7 +656,7 @@ export default function TarefasV2() {
     }
 
     return { status: statusData, priority: priorityData, weekly: weeklyData };
-  }, [stats, tarefas]);
+  }, [stats, effectiveTarefas]);
 
   const handleRefresh = async () => {
     setIsRefetching(true);
@@ -299,7 +693,9 @@ export default function TarefasV2() {
     setSelectedTasks(newSelected);
   };
 
-  if (isLoading) {
+  // Show loading skeleton only if we don't have mock data ready yet
+  // (isLoading && !usingMockData) means we're waiting for real data with no fallback
+  if (isLoading && !usingMockData) {
     return (
       <MainLayout>
         <div className="space-y-6">
@@ -321,7 +717,14 @@ export default function TarefasV2() {
                 <LayoutGrid className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Tarefas V2</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold">Tarefas V2</h1>
+                  {usingMockData && (
+                    <Badge variant="outline" className="text-xs">
+                      📊 Dados de Demonstração
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Gerenciamento avançado de tarefas
                 </p>
@@ -329,6 +732,12 @@ export default function TarefasV2() {
             </div>
 
             <div className="flex items-center gap-2">
+              {usingMockData && (
+                <Badge variant="secondary" className="hidden md:inline-flex">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Modo Demo
+                </Badge>
+              )}
               <Button
                 variant="outline"
                 size="icon"
@@ -473,7 +882,7 @@ export default function TarefasV2() {
         <div className="flex-1 min-h-0">
           {/* Kanban View */}
           {viewMode === 'kanban' && (
-            <KanbanBoardV2 />
+            <KanbanBoardV2 tarefas={effectiveTarefas} />
           )}
 
           {/* Table View */}
