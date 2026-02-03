@@ -197,7 +197,9 @@ export const useCreatePatient = () => {
       return response.data as Patient;
     },
     onSuccess: (data) => {
-      logger.info('Paciente criado com sucesso', { id: data.id, name: data.full_name }, 'useCreatePatient');
+      // Dado sensível removido: nome completo mascarado para logs (LGPD)
+      const firstName = data.full_name ? data.full_name.split(' ')[0] : '***';
+      logger.info('Paciente criado com sucesso', { id: data.id, name: firstName }, 'useCreatePatient');
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       toast({
         title: 'Paciente cadastrado!',

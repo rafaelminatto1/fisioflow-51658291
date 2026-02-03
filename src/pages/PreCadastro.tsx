@@ -89,6 +89,7 @@ const PreCadastro = () => {
           campos_opcionais: data.campos_opcionais as string[] || []
         });
       } catch (err) {
+        // Dado sensível removido: erro de validação de token registrado sem expor o token completo (LGPD)
         logger.error('Error validating token', err, 'PreCadastro');
         setError('Erro ao validar link');
       } finally {

@@ -32,7 +32,7 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
   const { toast } = useToast();
 
   const handleStartAttendance = () => {
-    navigate(`/patient-evolution/${appointment.id}`);
+    navigate(`/session-evolution/${appointment.id}`);
     toast({
       title: 'Iniciando atendimento',
       description: `Atendimento de ${appointment.patientName}`
@@ -54,7 +54,7 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Ações</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        
+
         {canStartAttendance && (
           <DropdownMenuItem onClick={handleStartAttendance} className="cursor-pointer">
             <Play className="mr-2 h-4 w-4 text-green-600" />

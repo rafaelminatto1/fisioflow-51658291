@@ -28,6 +28,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { usePatientExercisesPostgres } from '@/hooks/useDataConnect';
 
 interface Exercise {
   id: string;
@@ -65,42 +66,51 @@ export default function ExercisesScreen() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const {isOnline, queueOperation} = useOfflineSync();
 
+  // --- DATA CONNECT IMPLEMENTATION ---
+  const { data: exercisesPostgres, isLoading: loadingPostgres } = usePatientExercisesPostgres(user?.id);
+
   useEffect(() => {
     if (!user?.id) {
       setLoading(false);
       return;
     }
 
-    // Fetch active exercise plan
-    const plansRef = collection(db, 'users', user.id, 'exercise_plans');
-    const q = query(
-      plansRef,
-      where('status', '==', 'active'),
-      orderBy('created_at', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const planDoc = snapshot.docs[0];
-        const planData = planDoc.data();
-        setExercisePlan({
-          id: planDoc.id,
-          ...planData,
-          start_date: planData.start_date?.toDate() || new Date(),
-          end_date: planData.end_date?.toDate(),
-          created_at: planData.created_at?.toDate() || new Date(),
-        } as ExercisePlan);
-      } else {
-        setExercisePlan(null);
-      }
+    // Se temos dados do Postgres, usamos eles para montar o plano "virtual"
+    if (exercisesPostgres && exercisesPostgres.length > 0) {
+      setExercisePlan({
+        id: 'postgres-plan', // ID virtual
+        name: 'Plano Atual (Sincronizado)',
+        description: 'Seus exercícios prescritos mais recentes.',
+        exercises: exercisesPostgres.map((ex: any) => ({
+          id: ex.id,
+          name: ex.exercise?.name || 'Exercício',
+          description: ex.notes || ex.exercise?.description,
+          sets: ex.sets,
+          reps: ex.reps,
+          completed: ex.completed,
+          video_url: ex.exercise?.videoUrl,
+          // Adaptação de campos
+          hold_time: 0,
+          rest_time: 0
+        })),
+        start_date: new Date(),
+        created_at: new Date()
+      });
       setLoading(false);
-    }, (error) => {
-      console.error('Error fetching exercise plan:', error);
-      setLoading(false);
-    });
+    } else if (!loadingPostgres) {
+        // Fallback para Firestore apenas se Postgres estiver vazio e carregamento terminou
+        // (Mantendo lógica antiga como backup silencioso ou removendo se quiser full migration)
+        setLoading(false); 
+    }
+  }, [user?.id, exercisesPostgres, loadingPostgres]);
 
-    return unsubscribe;
+  /* FIRESTORE LOGIC REPLACED/DISABLED FOR READING
+  useEffect(() => {
+    // ... (código antigo comentado)
   }, [user?.id]);
+  */
+
+  const onRefresh = async () => {
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -77,7 +77,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
-      navigate(`/patient-evolution/${appointment.id}`);
+      navigate(`/session-evolution/${appointment.id}`);
       toast.success('Iniciando atendimento', {
         description: `Atendimento de ${appointment.patientName}`,
       });

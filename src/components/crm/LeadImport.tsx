@@ -9,7 +9,7 @@ import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react
 import { useDropzone } from 'react-dropzone';
 import { useCallback } from 'react';
 import { useImportLeads } from '@/hooks/useCRM';
-import * as XLSX from 'xlsx';
+import XLSX from '@/lib/export/exceljsWrapper';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface LeadPreview {

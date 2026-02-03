@@ -475,3 +475,22 @@ export function getStatus(appointment: AppointmentUnified | { status?: string } 
   if (!appointment) return 'scheduled';
   return appointment.status || 'scheduled';
 }
+
+// ============================================================================
+// ENTERPRISE TYPES - Novas funcionalidades estratégicas
+// ============================================================================
+
+// Time Tracking - Sistema completo de tracking de tempo faturável
+export * from './timetracking';
+
+// Wiki/Knowledge Base - Documentação colaborativa estilo Notion
+export * from './wiki';
+
+// Automation - Sistema de automações visuais (monday.com/Make style)
+export * from './automation';
+
+// Integrations - Integrações com serviços terceiros
+export * from './integrations';
+
+// Gantt Chart - Visualização timeline/Gantt avançada
+export * from './gantt';

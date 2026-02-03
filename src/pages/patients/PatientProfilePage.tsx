@@ -204,6 +204,7 @@ const OverviewTab = ({ patient }: { patient: Patient }) => {
                     status: patient.status
                 }}
                 upcomingAppointments={Array.isArray(upcomingAppointments) ? upcomingAppointments : []}
+                onAction={() => {}}
             />
 
             {/* Evolution charts below */}
