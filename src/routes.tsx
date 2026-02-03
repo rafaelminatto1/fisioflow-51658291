@@ -142,6 +142,22 @@ const FileUploadTest = lazy(() => import(/* webpackChunkName: "test-upload" */ "
 const ClinicalTestsLibrary = lazy(() => import(/* webpackChunkName: "clinical-tests" */ "./pages/ClinicalTestsLibrary"));
 const NotFound = lazy(() => import(/* webpackChunkName: "not-found" */ "./pages/NotFound"));
 
+// =============================================================================
+// ENTERPRISE FEATURES - Novas funcionalidades estratégicas
+// =============================================================================
+
+// Time Tracking
+const TimeTracking = lazy(() => import(/* webpackChunkName: "timetracking" */ "./pages/TimeTracking"));
+
+// Wiki / Knowledge Base
+const Wiki = lazy(() => import(/* webpackChunkName: "wiki" */ "./pages/Wiki"));
+
+// Automation
+const Automation = lazy(() => import(/* webpackChunkName: "automation" */ "./pages/Automation"));
+
+// Integrations
+const Integrations = lazy(() => import(/* webpackChunkName: "integrations" */ "./pages/Integrations"));
+
 // Lazy load Public Booking
 const BookingPage = lazy(() => import(/* webpackChunkName: "public-booking" */ "./pages/public/BookingPage").then(module => ({ default: module.BookingPage })));
 
@@ -280,6 +296,13 @@ export function AppRoutes() {
 
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
             <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
+
+            {/* Enterprise Features */}
+            <Route path="/timetracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
+            <Route path="/wiki" element={<ProtectedRoute><Wiki /></ProtectedRoute>} />
+            <Route path="/wiki/:slug" element={<ProtectedRoute><Wiki /></ProtectedRoute>} />
+            <Route path="/automation" element={<ProtectedRoute><Automation /></ProtectedRoute>} />
+            <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
 
             {/* Seed Data Route - Temporary */}
             <Route path="/seed-data" element={<ProtectedRoute><SeedData /></ProtectedRoute>} />
