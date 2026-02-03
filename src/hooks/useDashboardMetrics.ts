@@ -112,9 +112,6 @@ export const useDashboardMetrics = () => {
   return useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: async (): Promise<DashboardMetrics> => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useDashboardMetrics.ts:queryFn',message:'queryFn started',data:{dbNull:!db},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       const today = formatDateToLocalISO(new Date());
       const startOfCurrentMonth = formatDateToLocalISO(startOfMonth(new Date()));
       const startOfLastMonth = formatDateToLocalISO(startOfMonth(subMonths(new Date(), 1)));
@@ -159,9 +156,6 @@ export const useDashboardMetrics = () => {
 
       // Ensure db is ready before proceeding with parallel queries
       if (!db) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useDashboardMetrics.ts:!db',message:'db is null, throwing',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         logger.error('[useDashboardMetrics] Critical: Firestore db instance is null', undefined, 'useDashboardMetrics');
         throw new Error('Firestore db is not initialized');
       }
