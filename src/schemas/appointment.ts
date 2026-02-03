@@ -43,7 +43,11 @@ function parseLocalDate(dateStr: string | null | undefined): Date | null {
         return null;
     }
 
-    const parts = dateStr.split('-');
+    // Remove UTC timestamp suffix (T00:00:00.000Z) - backend returns ISO dates with UTC
+    // Ex: "2026-02-06T00:00:00.000Z" → "2026-02-06"
+    const normalizedDateStr = dateStr.replace(/T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/, '');
+
+    const parts = normalizedDateStr.split('-');
     if (parts.length !== 3) {
         return null;
     }
@@ -231,16 +235,19 @@ export const VerifiedAppointmentSchema = AppointmentSchema.transform((data) => {
                 ? withTime
                 : parsedDate;
         } else {
-            // Fallback para data atual se parse falhou
+            // Parse falhou - log mas não quebra, retorna data atual com warning
+            console.warn(`[appointment schema] Invalid date format: ${dateSource}, using today as fallback`);
             finalDate = new Date();
         }
     } else {
-        // Sem data disponível, usar data atual
+        // Sem data disponível - usar data atual com warning
+        console.warn(`[appointment schema] Date field is missing or null, using today as fallback`);
         finalDate = new Date();
     }
 
     // Validação final da data
     if (isNaN(finalDate.getTime())) {
+        console.warn(`[appointment schema] Parsed date is invalid: ${dateSource}, using today as fallback`);
         finalDate = new Date();
     }
 
