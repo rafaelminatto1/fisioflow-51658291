@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
-types/evolution';
+import type { Surgery, SurgeryFormData } from '@/types/evolution';
 import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
 
 export class SurgeryService {

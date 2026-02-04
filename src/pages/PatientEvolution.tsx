@@ -3,7 +3,7 @@
  */
 
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, limit,  } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, limit } from '@/integrations/firebase/app';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   format,
@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 
 import { EvolutionDebugInfo } from '@/components/evolution/EvolutionDebugInfo';
+import { MedicalReturnCard } from '@/components/evolution/MedicalReturnCard';
+import { SurgeriesCard } from '@/components/evolution/SurgeriesCard';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +54,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useTherapists } from '@/hooks/useTherapists';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
 // Componentes de Evolução
@@ -125,6 +128,7 @@ const PatientEvolution = () => {
 
   // ========== HOOKS ==========
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { therapists } = useTherapists();
   // Ações de agendamento (completar atendimento)
   const { completeAppointment, isCompleting } = useAppointmentActions();
@@ -471,10 +475,11 @@ const PatientEvolution = () => {
       }
 
       // Salvar sessão de tratamento (exercícios realizados) - Migrado para Firebase
+      if (!patientId) return; // evita gravar sessão sem paciente
       const user = getFirebaseAuth().currentUser;
       if (user) {
         // Verificar se já existe sessão para este agendamento
-        let existingSessionId = null;
+        let existingSessionId: string | null = null;
         if (appointmentId) {
           const q = query(
             collection(db, 'treatment_sessions'),
@@ -798,6 +803,14 @@ const PatientEvolution = () => {
 
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <MedicalReturnCard
+                  patient={patient}
+                  patientId={patientId || undefined}
+                  onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
+                />
+                <SurgeriesCard patientId={patientId || undefined} />
+              </div>
               <EvolutionDraggableGrid
                 soapData={soapData}
                 onSoapChange={setSoapDataStable}

@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
-lution';
+import type { ConductTemplate } from '@/types/evolution';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ConductData {
