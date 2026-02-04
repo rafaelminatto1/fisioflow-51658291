@@ -20,7 +20,9 @@ interface Surgery {
 interface Evolution {
   id: string;
   patient_id: string;
-  date: string;
+  /** Preferido: vem de SoapRecord. Fallback para compatibilidade. */
+  record_date?: string;
+  date?: string;
   created_at: string;
   subjective?: string;
   objective?: string;
@@ -92,16 +94,17 @@ export const EvolutionHistoryTab = React.memo(function EvolutionHistoryTab({
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-semibold">
-                                                        {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
+                                                        {format(new Date(evolution.record_date ?? evolution.date ?? evolution.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {formatDistanceToNow(new Date(evolution.record_date), { locale: ptBR, addSuffix: true })}
+                                                        {formatDistanceToNow(new Date(evolution.record_date ?? evolution.date ?? evolution.created_at), { locale: ptBR, addSuffix: true })}
                                                     </p>
                                                 </div>
                                             </div>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
+                                                aria-label="Copiar evolução"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     onCopyEvolution(evolution);

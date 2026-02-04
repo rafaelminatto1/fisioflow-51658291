@@ -196,12 +196,12 @@ const CalendarAppointmentCardBase = ({
             transition={{
                 layout: {
                     type: "spring",
-                    stiffness: 400,
-                    damping: 35
+                    stiffness: 700,
+                    damping: 42
                 },
-                opacity: { duration: 0.12 },
-                scale: { duration: 0.12 },
-                boxShadow: { duration: 0.12 }
+                opacity: { duration: 0.1 },
+                scale: { duration: 0.1 },
+                boxShadow: { duration: 0.1 }
             }}
             initial={{ opacity: 0, scale: 0.95, y: 4 }}
             animate={{
@@ -242,7 +242,7 @@ const CalendarAppointmentCardBase = ({
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden transition-all duration-150 border",
+                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden [transition:left_100ms_ease-out,width_100ms_ease-out,opacity_100ms_ease-out,transform_100ms_ease-out,box-shadow_100ms_ease-out] border",
                 "cursor-pointer",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 statusStyles.bg,
@@ -253,9 +253,9 @@ const CalendarAppointmentCardBase = ({
                 isSaving && "animate-pulse-subtle ring-2 ring-amber-400/60 ring-offset-1 z-30",
                 !isDragging && isHovered && !selectionMode && "ring-2 ring-black/5 dark:ring-white/10 shadow-xl",
                 isDropTarget && !isDragging && "ring-2 ring-primary/70 ring-offset-1 shadow-2xl z-25",
-                selectionMode && "hover:opacity-90 active:scale-95 transition-all",
+                selectionMode && "hover:opacity-90 active:scale-95 transition-all duration-100",
                 isSelected && "ring-2 ring-primary ring-offset-1 shadow-xl z-40",
-                isTouch && "active:scale-95 transition-transform"
+                isTouch && "active:scale-95 transition-transform duration-100"
             )}
             style={{
                 ...style,
