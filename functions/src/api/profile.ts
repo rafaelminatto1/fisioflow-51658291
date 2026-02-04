@@ -7,6 +7,7 @@
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { getPool, CORS_ORIGINS } from '../init';
+import { setCorsHeaders } from '../lib/cors';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
 
@@ -94,17 +95,6 @@ async function getUserProfile(userId: string): Promise<Profile> {
   throw new HttpsError('not-found', 'Perfil não encontrado em PostgreSQL nem Firestore');
 }
 
-/**
- * CORS headers helper - reflect Origin when allowed (e.g. localhost:8085)
- */
-function setCorsHeaders(req: any, res: any) {
-  const origin = req?.headers?.origin || req?.headers?.Origin;
-  const allowOrigin = (origin && CORS_ORIGINS.includes(origin)) ? origin : '*';
-  res.set('Access-Control-Allow-Origin', allowOrigin);
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Max-Age', '86400');
-}
 
 /**
  * Handler para getProfile
@@ -129,7 +119,7 @@ export const getProfileHandler = async (request: any) => {
 export const getProfileHttpHandler = async (req: any, res: any) => {
   // Handle OPTIONS preflight FIRST
   if (req.method === 'OPTIONS') {
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
     res.status(204).send('');
     return;
   }
@@ -140,7 +130,7 @@ export const getProfileHttpHandler = async (req: any, res: any) => {
     return;
   }
 
-  setCorsHeaders(req, res);
+  setCorsHeaders(res, req);
 
   try {
     // Verify authentication
@@ -243,7 +233,7 @@ export const updateProfileHandler = async (request: any) => {
 export const updateProfileHttpHandler = async (req: any, res: any) => {
   // Handle OPTIONS preflight FIRST
   if (req.method === 'OPTIONS') {
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
     res.status(204).send('');
     return;
   }
@@ -254,7 +244,7 @@ export const updateProfileHttpHandler = async (req: any, res: any) => {
     return;
   }
 
-  setCorsHeaders(req, res);
+  setCorsHeaders(res, req);
 
   try {
     // Verify authentication

@@ -2,21 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Pagination,
   PaginationContent,
@@ -32,6 +23,7 @@ import {
   PatientActions,
   PatientAdvancedFilters,
   PatientAnalytics,
+  PatientsPageHeader,
   countActiveFilters,
   matchesFilters,
   type PatientFilters
@@ -41,16 +33,7 @@ import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import { useMultiplePatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Plus,
-  Search,
-  Users,
-  Filter,
-  Download,
-  ChevronRight,
-  Calendar,
-  Activity,
-} from 'lucide-react';
+import { Users, ChevronRight, Calendar } from 'lucide-react';
 import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -284,253 +267,50 @@ const Patients = () => {
     );
   }
 
+  const headerStats = {
+    totalCount,
+    currentPage,
+    totalPages,
+    activeCount: patients.filter((p) => p.status === 'Em Tratamento').length,
+    newCount: patients.filter((p) => p.status === 'Inicial').length,
+    completedCount: patients.filter((p) => p.status === 'Concluído').length,
+    inactive7: filteredStats.inactive7,
+    inactive30: filteredStats.inactive30,
+    inactive60: filteredStats.inactive60,
+    noShowRisk: filteredStats.noShowRisk,
+    hasUnpaid: filteredStats.hasUnpaid,
+    newPatients: filteredStats.newPatients,
+  };
+
   return (
     <MainLayout>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
-        {/* Header moderno com stats */}
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-            <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Pacientes
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Gerencie o cadastro e evolução dos seus pacientes
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="hidden sm:flex shadow-md hover:shadow-lg transition-all"
-              >
-                <Activity className="w-4 h-4 mr-2" />
-                {showAnalytics ? 'Esconder' : 'Análises'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportPatients}
-                className="hidden sm:flex shadow-md hover:shadow-lg transition-all"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Exportar
-              </Button>
-              <Button
-                size="sm"
-                className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
-                onClick={() => setIsNewPatientModalOpen(true)}
-              >
-                <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Novo Paciente</span>
-                <span className="sm:hidden">Novo</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Stats cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical shrink-0">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">{totalCount}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                      {totalPages > 1 ? `Pág ${currentPage}/${totalPages}` : 'Total'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {patients.filter(p => p.status === 'Em Tratamento').length}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Ativos (página)</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {patients.filter(p => p.status === 'Inicial').length}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Novos (página)</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gray-500/10 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {patients.filter(p => p.status === 'Concluído').length}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídos (página)</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Additional Classification Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            <Card className="hover:shadow-md transition-all">
-              <CardContent className="p-3">
-                <div className="flex flex-col">
-                  <span className="text-2xl">⚠️</span>
-                  <span className="text-xl font-bold mt-1">{filteredStats.inactive7}</span>
-                  <span className="text-[10px] text-muted-foreground">Inativos 7d</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-all">
-              <CardContent className="p-3">
-                <div className="flex flex-col">
-                  <span className="text-2xl">🔴</span>
-                  <span className="text-xl font-bold mt-1">{filteredStats.inactive30}</span>
-                  <span className="text-[10px] text-muted-foreground">Inativos 30d</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-all">
-              <CardContent className="p-3">
-                <div className="flex flex-col">
-                  <span className="text-2xl">🚫</span>
-                  <span className="text-xl font-bold mt-1">{filteredStats.noShowRisk}</span>
-                  <span className="text-[10px] text-muted-foreground">Risco No-Show</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-all">
-              <CardContent className="p-3">
-                <div className="flex flex-col">
-                  <span className="text-2xl">💰</span>
-                  <span className="text-xl font-bold mt-1">{filteredStats.hasUnpaid}</span>
-                  <span className="text-[10px] text-muted-foreground">Com Pendências</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-all">
-              <CardContent className="p-3">
-                <div className="flex flex-col">
-                  <span className="text-2xl">🆕</span>
-                  <span className="text-xl font-bold mt-1">{filteredStats.newPatients}</span>
-                  <span className="text-[10px] text-muted-foreground">Novos Pacientes</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-all">
-              <CardContent className="p-3">
-                <div className="flex flex-col">
-                  <span className="text-2xl">⭕</span>
-                  <span className="text-xl font-bold mt-1">{filteredStats.inactive60}</span>
-                  <span className="text-[10px] text-muted-foreground">Inativos 60d+</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Alerta de cadastros incompletos */}
-        <IncompleteRegistrationAlert />
-
-        {/* Search and Filters - Modernizados */}
-        <Card className="shadow-card">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {/* Busca principal */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  placeholder="Buscar pacientes por nome, condição, email ou telefone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-11 bg-background/50"
-                />
-              </div>
-
-              {/* Filtros em grid responsivo */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-11">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4" />
-                      <SelectValue placeholder="Filtrar por status" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">📋 Todos os Status</SelectItem>
-                    <SelectItem value="Inicial">🆕 Inicial</SelectItem>
-                    <SelectItem value="Em Tratamento">💚 Em Tratamento</SelectItem>
-                    <SelectItem value="Recuperação">⚡ Recuperação</SelectItem>
-                    <SelectItem value="Concluído">✅ Concluído</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={conditionFilter} onValueChange={setConditionFilter}>
-                  <SelectTrigger className="h-11">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4" />
-                      <SelectValue placeholder="Filtrar por condição" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">🏷️ Todas as Condições</SelectItem>
-                    {uniqueConditions.map((condition) => (
-                      <SelectItem key={String(condition)} value={String(condition)}>
-                        {String(condition)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Indicador de filtros ativos */}
-              {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm || activeAdvancedFiltersCount > 0) && (
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{totalCount} paciente(s) encontrado(s) no total</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleClearAllFilters}
-                  >
-                    Limpar filtros
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-4 animate-fade-in pb-20 sm:space-y-5 md:pb-0">
+        <PatientsPageHeader
+          stats={headerStats}
+          onNewPatient={() => setIsNewPatientModalOpen(true)}
+          onExport={exportPatients}
+          onToggleAnalytics={() => setShowAnalytics(!showAnalytics)}
+          showAnalytics={showAnalytics}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          conditionFilter={conditionFilter}
+          onConditionFilterChange={setConditionFilter}
+          uniqueConditions={uniqueConditions}
+          activeAdvancedFiltersCount={activeAdvancedFiltersCount}
+          totalFilteredLabel={
+            statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm || activeAdvancedFiltersCount > 0
+              ? `${totalCount} paciente(s) encontrado(s) no total`
+              : undefined
+          }
+          onClearAllFilters={handleClearAllFilters}
+          hasActiveFilters={
+            statusFilter !== 'all' || conditionFilter !== 'all' || !!searchTerm || activeAdvancedFiltersCount > 0
+          }
+        >
+          <IncompleteRegistrationAlert />
+        </PatientsPageHeader>
 
         {/* Advanced Filters */}
         <PatientAdvancedFilters

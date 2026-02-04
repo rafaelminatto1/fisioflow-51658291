@@ -20,7 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, addDoc } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, limit, updateDoc, addDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { SOAPFormPanel } from './SOAPFormPanel';
@@ -40,6 +40,8 @@ import { GamificationTriggerService } from '@/lib/services/gamificationTriggers'
 import { GamificationNotificationService } from '@/lib/services/gamificationNotifications';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { PatientService } from '@/lib/services/PatientService';
+import { useQueryClient } from '@tanstack/react-query';
+import { soapKeys } from '@/hooks/useSoapRecords';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -57,6 +59,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const params = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { currentOrganization } = useOrganizations();
   const auth = getFirebaseAuth();
 
@@ -378,8 +381,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       const user = auth.currentUser;
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Save SOAP record
-      const soapRecordRef = doc(collection(db, 'soap_records'));
+      // Upsert SOAP record: update existing draft for this appointment or create new (evita duplicação)
+      const recordDate = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
       const soapRecordData = {
         patient_id: patientId,
         appointment_id: appointmentId || null,
@@ -388,14 +392,29 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         assessment: trimmedAssessment,
         plan: trimmedPlan,
         created_by: user.uid,
-        record_date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString()
+        record_date: recordDate,
+        status: 'draft' as const,
+        updated_at: now,
       };
-      await setDoc(soapRecordRef, soapRecordData);
-      const soapRecordId = soapRecordRef.id;
 
-      if (soapData && soapRecordId) {
-        // Also update the note created in treatment_session if needed or just rely on appointment linkage
+      let soapRecordId: string;
+      const draftQuery = query(
+        collection(db, 'soap_records'),
+        where('appointment_id', '==', appointmentId),
+        where('status', '==', 'draft'),
+        limit(1)
+      );
+      const draftSnap = await getDocs(draftQuery);
+      if (!draftSnap.empty) {
+        const existingRef = draftSnap.docs[0].ref;
+        soapRecordId = existingRef.id;
+        await updateDoc(existingRef, { ...soapRecordData, updated_at: now });
+      } else {
+        const newRef = await addDoc(collection(db, 'soap_records'), {
+          ...soapRecordData,
+          created_at: now,
+        });
+        soapRecordId = newRef.id;
       }
 
       // Save to treatment_sessions (Exercises Performed)
@@ -452,6 +471,10 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       }
 
       logger.info('Evolução salva com sucesso', { soapRecordId: soapRecordId, patientId }, 'SessionEvolutionContainer');
+
+      // Invalidar cache de SOAP para refletir o novo registro na lista e histórico
+      queryClient.invalidateQueries({ queryKey: soapKeys.list(patientId) });
+      queryClient.invalidateQueries({ queryKey: soapKeys.drafts(patientId) });
 
       // Award XP for session completion
       if (patientId) {

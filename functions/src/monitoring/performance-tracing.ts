@@ -3,8 +3,7 @@
  * Distributed tracing for monitoring request performance across functions
  */
 
-// @ts-nocheck - TypeScript errors in monitoring module, not critical for main functionality
-import { onCall, onRequest } from 'firebase-functions/v2/https';
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
 
@@ -18,7 +17,7 @@ export interface TraceEntry {
   traceId: string;
   parentSpanId?: string;
   spanId: string;
-  timestamp: Date;
+  timestamp: Date | admin.firestore.Timestamp;
   function: string;
   method: string;
   userId?: string;
@@ -155,8 +154,8 @@ export function traceFunction<T extends (...args: any[]) => Promise<any>>(
     metadata?: Record<string, any>;
   }
 ): T {
-  return (async (...args: any[]) => {
-    const spanId = startSpan(functionName, undefined, {
+  return (async (...args: unknown[]) => {
+    const spanId = startSpan(generateSpanId(), functionName, undefined, {
       ...options?.metadata,
       args: JSON.stringify(args).substring(0, 500),
     });
@@ -203,7 +202,7 @@ export const getPerformanceStatsHandler = async (request: any) => {
 
     const snapshot = await query.get();
 
-    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+    const traces = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as TraceEntry);
 
     if (traces.length === 0) {
       return {
@@ -220,10 +219,10 @@ export const getPerformanceStatsHandler = async (request: any) => {
     }
 
     // Calculate statistics
-    const durations = traces.map(t => t.duration).sort((a, b) => a - b);
-    const errors = traces.filter(t => !t.success);
+    const durations = traces.map((t: TraceEntry) => t.duration).sort((a: number, b: number) => a - b);
+    const errors = traces.filter((t: TraceEntry) => !t.success);
 
-    const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
+    const avgDuration = durations.reduce((a: number, b: number) => a + b, 0) / durations.length;
     const p95Index = Math.floor(durations.length * 0.95);
     const p99Index = Math.floor(durations.length * 0.99);
     const p95Duration = durations[p95Index] || durations[durations.length - 1];
@@ -241,7 +240,7 @@ export const getPerformanceStatsHandler = async (request: any) => {
       }
     > = {};
 
-    traces.forEach(trace => {
+    traces.forEach((trace: TraceEntry) => {
       if (!byFunction[trace.function]) {
         byFunction[trace.function] = {
           count: 0,
@@ -335,7 +334,7 @@ export const getSlowRequestsHandler = async (request: any) => {
 
     const snapshot = await query.get();
 
-    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+    const traces = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as TraceEntry);
 
     return { success: true, traces, count: traces.length, thresholdMs };
   } catch (error) {
@@ -384,17 +383,17 @@ export const getTraceTimelineHandler = async (request: any) => {
       return { success: true, timeline: [], traceId };
     }
 
-    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+    const traces = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as TraceEntry);
 
     // Build timeline tree
     const rootSpans: TraceEntry[] = [];
     const spanMap = new Map<string, TraceEntry>();
 
-    traces.forEach(trace => {
+    traces.forEach((trace: TraceEntry) => {
       spanMap.set(trace.spanId, trace);
     });
 
-    traces.forEach(trace => {
+    traces.forEach((trace: TraceEntry) => {
       if (!trace.parentSpanId) {
         rootSpans.push(trace);
       } else {
@@ -475,19 +474,23 @@ export const getPerformanceTrendsHandler = async (request: any) => {
     }
 
     const snapshot = await query.get();
-    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+    const traces = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as TraceEntry);
+
+    const toDate = (d: Date | admin.firestore.Timestamp): Date =>
+      d instanceof Date ? d : (d as admin.firestore.Timestamp).toDate();
 
     // Aggregate by time bucket
     const trends = buckets.map(bucket => {
-      const bucketTraces = traces.filter(t =>
-        t.timestamp >= bucket.start && t.timestamp < bucket.end
-      );
+      const bucketTraces = traces.filter((t: TraceEntry) => {
+        const ts = toDate(t.timestamp);
+        return ts >= bucket.start && ts < bucket.end;
+      });
 
-      const durations = bucketTraces.map(t => t.duration);
+      const durations = bucketTraces.map((t: TraceEntry) => t.duration);
       const avgDuration = durations.length > 0
-        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        ? durations.reduce((a: number, b: number) => a + b, 0) / durations.length
         : 0;
-      const errors = bucketTraces.filter(t => !t.success).length;
+      const errors = bucketTraces.filter((t: TraceEntry) => !t.success).length;
 
       return {
         label: bucket.label,
@@ -573,12 +576,12 @@ export const performanceStreamHandler = async (req: any, res: any) => {
   };
 
   // Handle connection errors
-  req.on('error', (error) => {
+  req.on('error', (error: Error) => {
     logger.error('Performance stream request error', { error });
     cleanup();
   });
 
-  res.on('error', (error) => {
+  res.on('error', (error: Error) => {
     logger.error('Performance stream response error', { error });
     cleanup();
   });
@@ -589,8 +592,8 @@ export const performanceStreamHandler = async (req: any, res: any) => {
   // Send initial keep-alive
   try {
     res.write(': keep-alive\n\n');
-  } catch (error) {
-    logger.error('Failed to write initial keep-alive', { error });
+      } catch (err) {
+        logger.error('Failed to write initial keep-alive', { error: err });
     cleanup();
     return;
   }
@@ -610,14 +613,14 @@ export const performanceStreamHandler = async (req: any, res: any) => {
 
   // Set up Firestore snapshot listener
   unsubscribe = query.onSnapshot(
-    (snapshot) => {
+    (snapshot: admin.firestore.QuerySnapshot) => {
       if (!isAlive) {
         if (unsubscribe) unsubscribe();
         return;
       }
 
       try {
-        const traces = snapshot.docs.map(doc => {
+        const traces = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => {
           const data = doc.data();
           // Highlight slow requests
           const isSlow = (data.duration || 0) >= parseInt(slowThreshold as string);
@@ -625,13 +628,13 @@ export const performanceStreamHandler = async (req: any, res: any) => {
         });
 
         res.write(`data: ${JSON.stringify({ traces, count: traces.length })}\n\n`);
-      } catch (error) {
-        logger.error('Failed to write performance data', { error });
+      } catch (err) {
+        logger.error('Failed to write performance data', { error: err });
         cleanup();
       }
     },
-    (error) => {
-      logger.error('Performance stream error', { error });
+    (err: Error) => {
+      logger.error('Performance stream error', { error: err });
       if (isAlive) {
         try {
           res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`);
@@ -808,4 +811,3 @@ function getTimeBuckets(period: string): TimeBucket[] {
   return buckets;
 }
 
-import { HttpsError } from 'firebase-functions/v2/https';

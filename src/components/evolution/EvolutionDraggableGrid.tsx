@@ -239,6 +239,7 @@ const SOAPSectionWidget = React.memo(({
                     showStats={false}
                     showToolbarOnFocus={true}
                     compact={true}
+                    aria-label={`Campo SOAP: ${section.label}`}
                 />
                 <div className="px-5 py-2.5 bg-muted/20 border-t flex justify-between items-center text-[11px] text-muted-foreground shrink-0 select-none">
                     <div className="flex items-center gap-1.5 font-medium">

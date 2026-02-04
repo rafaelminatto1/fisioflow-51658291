@@ -7,6 +7,7 @@ import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { getOverlapStackPosition } from '@/lib/calendar';
 
 interface DayColumnProps {
     day: Date;
@@ -188,18 +189,8 @@ export const DayColumn = memo(({
                     })
                 )}
 
-                {/* Appointments overlay - with stacking support for multiple appointments at same time */}
+                {/* Appointments overlay - with stacking support for overlapping appointments (by time range) */}
                 {(() => {
-                    // Agrupar appointments por horário para calcular offset horizontal
-                    const appointmentsByTime: Record<string, Appointment[]> = {};
-                    appointments.forEach(apt => {
-                        const time = apt.time || '09:00';
-                        if (!appointmentsByTime[time]) {
-                            appointmentsByTime[time] = [];
-                        }
-                        appointmentsByTime[time].push(apt);
-                    });
-
                     return appointments.map(apt => {
                         // Safety check for time - handle null, undefined, or empty string
                         const time = apt.time && apt.time.trim() ? apt.time : '00:00';
@@ -221,14 +212,11 @@ export const DayColumn = memo(({
                             return null;
                         }
 
-                        // Calcular offset horizontal para appointments empilhados no mesmo horário
-                        const sameTimeAppointments = appointmentsByTime[apt.time || '09:00'] || [];
-                        const stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
-                        const stackCount = sameTimeAppointments.length;
-
-                        // Calcular largura e offset baseado em quantos appointments estão empilhados
-                        const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
-                        const leftPercent = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
+                        // Layout lateral: appointments que se sobrepõem no tempo (ex.: 08:30 e 09:00) dividem a largura
+                        const { index: stackIndex, count: stackCount } = getOverlapStackPosition(appointments, apt);
+                        const hasOverlap = stackCount > 1;
+                        const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100; // ~1% margem entre cards
+                        const leftPercent = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
                         // Altura e posição baseada na duração: 48px/slot mobile, 60px/slot desktop (cada slot = 30min)
                         const duration = apt.duration || 60;
@@ -258,19 +246,18 @@ export const DayColumn = memo(({
                                     }
                                 }}
                                 className={cn(
-                                    "appointment-card absolute transition-all duration-300 group/card z-10",
+                                    "appointment-card absolute [transition:left_100ms_ease-out,width_100ms_ease-out,opacity_100ms_ease-out,transform_100ms_ease-out] group/card z-10",
                                     dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-40 scale-95 ring-2 ring-dashed ring-primary/60 backdrop-blur-[1px] dragging-ghost",
                                     "hover:z-20 card-hover" // Garantir que o hover fique por cima
                                 )}
                                 style={{
                                     top: `${topMobile}px`,
                                     height: `${heightMobile}px`,
-                                    // Posicionamento dinâmico para appointments empilhados
-                                    left: stackCount > 1 ? `${leftPercent}%` : '4px',
-                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                    left: hasOverlap ? `${leftPercent}%` : '4px',
+                                    width: hasOverlap ? `${widthPercent}%` : 'calc(100% - 8px)',
                                     ['--top-desktop' as string]: `${topDesktop}px`,
                                     ['--height-desktop' as string]: `${heightDesktop}px`,
-                                    zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
+                                    zIndex: hasOverlap ? 10 + stackIndex : undefined,
                                 } as React.CSSProperties}
                                 onPointerDownCapture={(e) => e.stopPropagation()}
                                 role="button"

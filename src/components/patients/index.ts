@@ -7,6 +7,7 @@ export { PatientActions } from './PatientActions';
 export { PatientCard } from './PatientCard';
 export { PatientAdvancedFilters } from './PatientAdvancedFilters';
 export { PatientAnalytics } from './PatientAnalytics';
+export { PatientsPageHeader } from './PatientsPageHeader';
 
 // UI Components
 export { PatientStatsCard, PatientStatsCardSkeleton } from './PatientStatsCard';
@@ -21,3 +22,4 @@ export { countActiveFilters, matchesFilters, type PatientFilters } from './patie
 // Types
 export type { PatientAdvancedFiltersProps } from './PatientAdvancedFilters';
 export type { StatsCardProps } from './PatientStatsCard';
+export type { PatientsPageHeaderProps, PatientsPageHeaderStats } from './PatientsPageHeader';

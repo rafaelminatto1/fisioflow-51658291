@@ -9,6 +9,7 @@ import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { DropTargetPreviewCard } from './DropTargetPreviewCard';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
+import { getOverlapStackPosition, DEFAULT_APPOINTMENT_DURATION_MINUTES } from '@/lib/calendar';
 import {
   calculateCardWidthPercent,
   calculateCardOffsetPercent,
@@ -337,19 +338,8 @@ const CalendarDayView = memo(({
                         </div>
                     )}
 
-                    {/* Appointments overlay - with stacking support */}
+                    {/* Appointments overlay - with stacking support for overlapping appointments (by time range) */}
                     {(() => {
-                        // Group appointments by time for horizontal offset calculation
-                        const appointmentsByTime: Record<string, Appointment[]> = {};
-                        dayAppointments.forEach(apt => {
-                            // Safety check for time - handle null, undefined, or empty string
-                            const time = apt.time && apt.time.trim() ? apt.time : '09:00';
-                            if (!appointmentsByTime[time]) {
-                                appointmentsByTime[time] = [];
-                            }
-                            appointmentsByTime[time].push(apt);
-                        });
-
                         return dayAppointments.map(apt => {
                             // Safety check for time - handle null, undefined, or empty string
                             const aptTime = apt.time && apt.time.trim() ? apt.time : '09:00';
@@ -365,41 +355,33 @@ const CalendarDayView = memo(({
                             const isTimeSlotBlocked = isTimeBlocked(aptTime);
                             const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === aptTime;
 
-                            // Calculate horizontal offset for stacked appointments
-                            const sameTimeAppointments = appointmentsByTime[aptTime] || [];
-                            let stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
-                            let stackCount = sameTimeAppointments.length;
+                            // Layout lateral: appointments que se sobrepõem no tempo dividem a largura (ex.: 08:30 e 09:00)
+                            let { index: stackIndex, count: stackCount } = getOverlapStackPosition(dayAppointments, apt);
+                            const hasOverlap = stackCount > 1;
 
                             // Durante o drag sobre este slot de destino, redimensionar os cards como se o arrastado já estivesse lá
                             if (isDropTarget && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
-                                const futureCount = targetAppointments.length + 1;
-                                const futureIndex = targetAppointments.findIndex(a => a.id === apt.id);
-                                if (futureIndex >= 0) {
-                                    stackCount = futureCount;
-                                    stackIndex = futureIndex;
-                                }
+                                const futureDayAppointments = [...dayAppointments, dragState.appointment];
+                                const future = getOverlapStackPosition(futureDayAppointments, apt);
+                                stackCount = future.count;
+                                stackIndex = future.index;
                             }
 
                             // Slot de origem: redimensionar os demais cards como se o arrastado já tivesse saído
                             const draggedDate = parseAppointmentDate(dragState.appointment?.date);
                             const draggedTime = dragState.appointment?.time ? normalizeTime(dragState.appointment.time) : null;
-                            const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(currentDate, draggedDate) && normalizeTime(aptTime) === draggedTime;
-                            if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id && sameTimeAppointments.length > 1) {
-                                const originRemainingCount = sameTimeAppointments.length - 1;
-                                const originRemaining = sameTimeAppointments.filter(a => a.id !== dragState.appointment!.id);
-                                const originRemainingIndex = originRemaining.findIndex(a => a.id === apt.id);
-                                if (originRemainingIndex >= 0) {
-                                    stackCount = originRemainingCount;
-                                    stackIndex = originRemainingIndex;
-                                }
+                            const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(currentDate, draggedDate);
+                            if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id) {
+                                const originDayAppointments = dayAppointments.filter(a => a.id !== dragState.appointment!.id);
+                                const origin = getOverlapStackPosition(originDayAppointments, apt);
+                                stackCount = origin.count;
+                                stackIndex = origin.index;
                             }
 
-                            // Calculate width and offset based on how many appointments are stacked
-                            const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
-                            const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
+                            const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100;
+                            const leftOffset = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                            // Calculate height based on duration (respects time slots)
-                            const duration = apt.duration || 60;
+                            const duration = apt.duration ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
 
                             // Duration-based card height calculation
                             const heightMobile = calculateAppointmentCardHeight(cardSize, duration, heightScale);
@@ -413,10 +395,10 @@ const CalendarDayView = memo(({
                             const style: React.CSSProperties = {
                                 top: `${topMobile}px`,
                                 height: `${heightMobile}px`,
-                                left: stackCount > 1 ? `${leftOffset}%` : '4px',
-                                right: stackCount > 1 ? 'auto' : '4px',
-                                width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                zIndex: isDraggingThis ? 5 : (isDropTarget ? 25 : (stackCount > 1 ? 20 : 1)),
+                                left: hasOverlap ? `${leftOffset}%` : '4px',
+                                right: hasOverlap ? 'auto' : '4px',
+                                width: hasOverlap ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                zIndex: isDraggingThis ? 5 : (isDropTarget ? 25 : (hasOverlap ? 20 : 1)),
                                 ['--top-desktop' as string]: `${topDesktop}px`,
                                 ['--height-desktop' as string]: `${heightDesktop}px`,
                                 transform: isDraggingThis ? 'rotate(2deg)' : undefined,
@@ -431,7 +413,7 @@ const CalendarDayView = memo(({
                                     isDragging={isDraggingThis}
                                     isSaving={apt.id === savingAppointmentId}
                                     isDropTarget={isDropTarget}
-                                    hideGhostWhenSiblings={isDraggingThis && sameTimeAppointments.length > 1}
+                                    hideGhostWhenSiblings={isDraggingThis && hasOverlap}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
                                     onDragOver={(e) => {

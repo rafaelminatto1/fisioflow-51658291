@@ -437,6 +437,27 @@ export const useDraftSoapRecords = (patientId: string) => {
   });
 };
 
+// Hook para buscar draft de SOAP por appointment (carregar evolução em progresso ao abrir a página)
+export const useDraftSoapRecordByAppointment = (patientId: string, appointmentId: string | undefined) => {
+  return useQuery({
+    queryKey: [...soapKeys.drafts(patientId), 'byAppointment', appointmentId],
+    queryFn: async () => {
+      if (!appointmentId) return null;
+      const q = firestoreQuery(
+        collection(db, 'soap_records'),
+        where('appointment_id', '==', appointmentId),
+        where('status', '==', 'draft'),
+        limit(1)
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
+      return convertDocToSoapRecord(snapshot.docs[0]);
+    },
+    enabled: !!patientId && !!appointmentId,
+    staleTime: 1000 * 60 * 2,
+  });
+};
+
 // ===== SESSION ATTACHMENTS =====
 
 // Helper: Convert Firestore doc to SessionAttachment

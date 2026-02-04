@@ -89,7 +89,14 @@ export const getPatientStats = onCall(async (request) => {
     return getPatientStatsHandler(request);
 });
 // HTTP (CORS) - frontend callFunctionHttp uses these names
-export { listPatientsHttp as listPatientsV2, getPatientStatsHttp as getPatientStatsV2, getPatientHttp } from './api/patients';
+export {
+  listPatientsHttp as listPatientsV2,
+  getPatientStatsHttp as getPatientStatsV2,
+  getPatientHttp,
+  createPatientHttp as createPatientV2,
+  updatePatientHttp as updatePatientV2,
+  deletePatientHttp as deletePatientV2,
+} from './api/patients';
 // Gamification / patient quests (callable)
 export { checkPatientAppointments, getLastPainMapDate } from './api/patient-quests';
 
@@ -523,6 +530,7 @@ export const downloadExport = onRequest(
 // ============================================================================
 
 // Monitoring & Observability
+export { setupMonitoring } from './api/setup-monitoring';
 export const getErrorStats = onCall(
     {
         region: 'southamerica-east1',
@@ -726,47 +734,26 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
     }
 );
 
-export const onAppointmentCreated = functions.firestore.onDocumentCreated(
+/**
+ * Firestore trigger unificado: publica eventos de agendamento no Ably (INSERT e UPDATE)
+ */
+export const onAppointmentWritten = functions.firestore.onDocumentWritten(
     'appointments/{appointmentId}',
     async (event) => {
-        const snapshot = event.data;
-        if (!snapshot) return;
+        const after = event.data?.after?.data();
+        const before = event.data?.before?.data();
+        if (!after) return;
 
-        const appointment = snapshot.data();
-
-        // Publicar no Ably para atualização em tempo real com timeout protection
+        const eventType = before ? 'UPDATE' : 'INSERT';
         try {
             const realtime = await import('./realtime/publisher');
-            await realtime.publishAppointmentEvent(appointment.organization_id, {
-                event: 'INSERT',
-                new: appointment,
-                old: null,
+            await realtime.publishAppointmentEvent(after.organization_id, {
+                event: eventType,
+                new: after,
+                old: before ?? null,
             });
         } catch (err) {
-            // Non-critical error - log but don't fail the trigger
-            console.error('[onAppointmentCreated] Realtime publish failed (non-critical):', err);
-        }
-    }
-);
-
-export const onAppointmentUpdated = functions.firestore.onDocumentWritten(
-    'appointments/{appointmentId}',
-    async (event) => {
-        const before = event.data?.before.data();
-        const after = event.data?.after.data();
-
-        if (before && after) {
-            try {
-                const realtime = await import('./realtime/publisher');
-                await realtime.publishAppointmentEvent(after.organization_id, {
-                    event: 'UPDATE',
-                    new: after,
-                    old: before,
-                });
-            } catch (err) {
-                // Non-critical error - log but don't fail the trigger
-                console.error('[onAppointmentUpdated] Realtime publish failed (non-critical):', err);
-            }
+            console.error('[onAppointmentWritten] Realtime publish failed (non-critical):', err);
         }
     }
 );
@@ -775,7 +762,6 @@ export const onAppointmentUpdated = functions.firestore.onDocumentWritten(
 // SCHEDULED FUNCTIONS (Cron Jobs)
 // ============================================================================
 
-export { dailyReminders } from './crons/reminders';
 export { dailyReports, weeklySummary } from './crons/daily-reports';
 export { expiringVouchers, birthdays, cleanup, dataIntegrity } from './crons/additional-crons';
 

@@ -167,6 +167,7 @@ function SlotHeightControl({
 
   const {
     inputValue,
+    setInputValue,
     handleChange,
     handleFocus,
     handleBlur,

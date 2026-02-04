@@ -160,6 +160,23 @@ export async function callFunctionHttp<TRequest, TResponse>(
     HTTP_FUNCTION_URLS[functionName] ??
     `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
 
+  // #region agent log
+  if (functionName === 'updatePatientV2') {
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'functions.ts:callFunctionHttp',
+        message: 'updatePatientV2 request start',
+        data: { url, functionName },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        hypothesisId: 'H1,H4,H5',
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -178,6 +195,22 @@ export async function callFunctionHttp<TRequest, TResponse>(
     const result = await response.json();
     return result as TResponse;
   } catch (error) {
+    // #region agent log
+    if (functionName === 'updatePatientV2') {
+      fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'functions.ts:callFunctionHttp',
+          message: 'updatePatientV2 request failed',
+          data: { url, err: String(error), name: (error as Error)?.name },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          hypothesisId: 'H1,H2,H3,H5',
+        }),
+      }).catch(() => {});
+    }
+    // #endregion
     throw new FunctionCallError(functionName, error);
   }
 }
