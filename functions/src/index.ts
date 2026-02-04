@@ -244,6 +244,19 @@ export const testWebhook = webhooks.testWebhook;
 export const getWebhookEventTypes = webhooks.getWebhookEventTypes;
 
 // ============================================================================
+// INTEGRATIONS (Calendar, etc.)
+// ============================================================================
+
+import * as calendarIntegrations from './integrations/calendar';
+export const syncToGoogleCalendar = calendarIntegrations.syncToGoogleCalendar;
+export const syncIntegration = calendarIntegrations.syncIntegration;
+export const importFromGoogleCalendar = calendarIntegrations.importFromGoogleCalendar;
+export const connectGoogleCalendar = calendarIntegrations.connectGoogleCalendar;
+export const disconnectGoogleCalendar = calendarIntegrations.disconnectGoogleCalendar;
+export const getGoogleAuthUrl = calendarIntegrations.getGoogleAuthUrl;
+export const exportToICal = calendarIntegrations.exportToICal;
+
+// ============================================================================
 // EXPORT/IMPORT FUNCTIONS
 // ============================================================================
 
@@ -434,6 +447,11 @@ export { testWhatsAppMessage, testWhatsAppTemplate } from './communications/what
 // Auth Triggers
 import { onUserCreated } from './auth/user-created';
 export { onUserCreated }; // v1 trigger exported directly
+
+import * as authInvitations from './auth/invitations';
+export const createUserInvitation = authInvitations.createUserInvitation;
+export const getInvitationByToken = authInvitations.getInvitationByToken;
+export const consumeInvitation = authInvitations.consumeInvitation;
 
 // User Management API
 import { listUsers, updateUserRole } from './api/users';

@@ -147,6 +147,17 @@ service cloud.firestore {
 
       // Criação/Atualização: apenas admin ou profissionais
       allow write: if isAdmin() || isProfessional();
+
+      // Subcoleção: logs de execução de automações (somente leitura pelo cliente)
+      match /automation_logs/{logId} {
+        allow read: if isAuthenticated() && hasProfile() && organizationId == userOrgId();
+        allow create, update, delete: if false;
+      }
+
+      // Subcoleção: status de integrações (last_sync_at, sync_status)
+      match /integration_status/{providerId} {
+        allow read, write: if isAuthenticated() && hasProfile() && organizationId == userOrgId();
+      }
     }
     
     // ============================================================================================
@@ -428,6 +439,23 @@ service cloud.firestore {
     // Presence (usuários online) - cada usuário só escreve/lê o próprio doc
     match /presence/{channelName}/users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId && isValidSize();
+    }
+
+    // Wiki / Knowledge Base (Fase 2 - Pente Fino)
+    match /wiki_pages/{pageId} {
+      allow read: if isAuthenticated() && hasProfile() && resource.data.organization_id == userOrgId();
+      allow create: if isAuthenticated() && hasProfile() && request.resource.data.organization_id == userOrgId() && isValidSize();
+      allow update, delete: if isAuthenticated() && hasProfile() && resource.data.organization_id == userOrgId() && isValidSize();
+    }
+    match /wiki_categories/{categoryId} {
+      allow read: if isAuthenticated() && hasProfile() && resource.data.organization_id == userOrgId();
+      allow create: if isAuthenticated() && hasProfile() && request.resource.data.organization_id == userOrgId() && isValidSize();
+      allow update, delete: if isAuthenticated() && hasProfile() && resource.data.organization_id == userOrgId() && isValidSize();
+    }
+
+    // Convites de usuários (createUserInvitation, getInvitationByToken, consumeInvitation)
+    match /user_invitations/{invitationId} {
+      allow read, create, update, delete: if isAuthenticated();
     }
 
     match /{document=**} {

@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { IntegrationCard } from '@/components/integrations/IntegrationCard';
 import { IntegrationConfig } from '@/components/integrations/IntegrationConfig';
+import { callFunction } from '@/integrations/firebase/functions';
 
 import type { Integration, IntegrationProvider } from '@/types/integrations';
 
@@ -114,17 +115,47 @@ export default function IntegrationsPage() {
   };
 
   const handleSync = async (id: string) => {
-    // Sync real será implementado por provedor (webhook/API). Por ora feedback visual.
+    const integration = integrations.find((i) => i.id === id);
     const { toast } = await import('sonner');
-    toast.info('Sincronização em andamento...', { description: 'Os dados desta integração serão atualizados em breve.' });
     setIntegrations((prev) =>
       prev.map((i) => (i.id === id ? { ...i, sync_status: 'syncing' as const } : i))
     );
-    setTimeout(() => {
+    try {
+      const supportedSyncProviders: IntegrationProvider[] = ['google_calendar'];
+      if (integration && supportedSyncProviders.includes(integration.provider)) {
+        const result = await callFunction<{ provider: string }, { last_sync_at: string; sync_status: string }>(
+          'syncIntegration',
+          { provider: integration.provider }
+        );
+        setIntegrations((prev) =>
+          prev.map((i) =>
+            i.id === id
+              ? {
+                  ...i,
+                  sync_status: 'synced' as const,
+                  last_sync_at: { seconds: new Date(result.last_sync_at).getTime() / 1000, nanoseconds: 0 } as any,
+                }
+              : i
+          )
+        );
+        toast.success('Sincronização concluída', { description: 'Status atualizado com sucesso.' });
+      } else {
+        toast.info('Sincronização em andamento...', {
+          description: 'Os dados desta integração serão atualizados em breve.',
+        });
+        setTimeout(() => {
+          setIntegrations((prev) =>
+            prev.map((i) => (i.id === id ? { ...i, sync_status: 'synced' as const } : i))
+          );
+        }, 1500);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao sincronizar';
+      toast.error('Erro na sincronização', { description: message });
       setIntegrations((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, sync_status: 'synced' as const } : i))
+        prev.map((i) => (i.id === id ? { ...i, sync_status: 'error' as const } : i))
       );
-    }, 1500);
+    }
   };
 
   const handleConfigure = (provider: IntegrationProvider) => {

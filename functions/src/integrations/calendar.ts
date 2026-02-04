@@ -246,6 +246,93 @@ export const syncToGoogleCalendar = onCall({
 });
 
 /**
+ * Cloud Function: Importar eventos do Google Calendar (listar para o usuário)
+ * Retorna lista de eventos no período; o frontend pode exibir e opcionalmente confirmar import.
+ */
+export const importFromGoogleCalendar = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Usuário não autenticado');
+  }
+
+  const { startDate, endDate, calendarId: calendarIdParam } = request.data as {
+    startDate: string;
+    endDate: string;
+    calendarId?: string;
+  };
+
+  if (!startDate || !endDate) {
+    throw new HttpsError('invalid-argument', 'startDate e endDate são obrigatórios');
+  }
+
+  const db = firestore();
+  const tokensDoc = await db.collection('user_oauth_tokens').doc(request.auth.uid).get();
+
+  if (!tokensDoc.exists || !tokensDoc.data()?.google?.refresh_token) {
+    throw new HttpsError(
+      'failed-precondition',
+      'Google Calendar não conectado. Conecte sua conta nas configurações.'
+    );
+  }
+
+  const tokens = tokensDoc.data()?.google;
+
+  try {
+    const oauth2Client = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      tokens.redirect_uri
+    );
+    oauth2Client.setCredentials({ refresh_token: tokens.refresh_token });
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    oauth2Client.setCredentials(credentials);
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client as any });
+    const calendarId = calendarIdParam || CALENDAR_ID;
+
+    const timeMin = new Date(startDate).toISOString();
+    const timeMax = new Date(endDate).toISOString();
+
+    const response = await calendar.events.list({
+      calendarId,
+      timeMin,
+      timeMax,
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 250,
+    });
+
+    const events = (response.data.items || []).map((ev) => ({
+      id: ev.id,
+      summary: ev.summary || '(Sem título)',
+      description: ev.description || null,
+      start: ev.start?.dateTime || ev.start?.date || null,
+      end: ev.end?.dateTime || ev.end?.date || null,
+      location: ev.location || null,
+      htmlLink: ev.htmlLink || null,
+    }));
+
+    return {
+      success: true,
+      events,
+      calendarId,
+    };
+  } catch (error: any) {
+    logger.error('importFromGoogleCalendar error:', error);
+    if (error.code === 401) {
+      throw new HttpsError(
+        'unauthenticated',
+        'Sessão do Google Calendar expirou. Por favor, reconecte sua conta.'
+      );
+    }
+    throw new HttpsError('internal', `Erro ao importar eventos: ${error.message}`);
+  }
+});
+
+/**
  * Cloud Function: Exportar agenda para iCal
  */
 export const exportToICal = onCall({
@@ -427,6 +514,53 @@ export const getGoogleAuthUrl = onCall({
   return {
     success: true,
     authUrl,
+  };
+});
+
+/**
+ * Cloud Function: Sincronizar integração (persiste last_sync_at e sync_status)
+ * Para google_calendar: atualiza status; sync real de eventos é feito por syncToGoogleCalendar por agendamento.
+ */
+export const syncIntegration = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Usuário não autenticado');
+  }
+
+  const { provider } = request.data as { provider: string };
+  if (!provider) {
+    throw new HttpsError('invalid-argument', 'provider é obrigatório');
+  }
+
+  const db = firestore();
+  const profileSnap = await db.collection('profiles').doc(request.auth.uid).get();
+  const organizationId = profileSnap.data()?.organization_id;
+  if (!organizationId) {
+    throw new HttpsError('failed-precondition', 'Perfil sem organização');
+  }
+
+  const now = new Date();
+  const statusRef = db
+    .collection('organizations')
+    .doc(organizationId)
+    .collection('integration_status')
+    .doc(provider);
+
+  await statusRef.set({
+    last_sync_at: firestore.FieldValue.serverTimestamp(),
+    sync_status: 'synced',
+    updated_by: request.auth.uid,
+    updated_at: firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  logger.info(`Integration sync recorded: ${provider} for org ${organizationId}`);
+
+  return {
+    last_sync_at: now.toISOString(),
+    sync_status: 'synced',
   };
 });
 

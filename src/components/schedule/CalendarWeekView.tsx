@@ -198,8 +198,19 @@ export const CalendarWeekView = memo(({
         // Check for collisions (guard against undefined entries)
         const key = `${dayIndex}-${time}`;
         const sameTimeAppointments = (appointmentsByTimeSlot[key] || []).filter((a): a is Appointment => a != null && typeof a.id === 'string');
-        const index = sameTimeAppointments.findIndex(a => a.id === apt.id);
-        const count = sameTimeAppointments.length;
+        let index = sameTimeAppointments.findIndex(a => a.id === apt.id);
+        let count = sameTimeAppointments.length;
+
+        // Durante o drag sobre este slot, redimensionar os cards como se o arrastado já estivesse lá
+        const isInDropTargetSlot = dropTarget && isSameDay(dropTarget.date, aptDate) && dropTarget.time === time;
+        if (isInDropTargetSlot && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
+            const futureCount = targetAppointments.length + 1;
+            const futureIndex = targetAppointments.findIndex(a => a.id === apt.id);
+            if (futureIndex >= 0) {
+                count = futureCount;
+                index = futureIndex;
+            }
+        }
 
         const outerMargin = 4;
         const gap = 4;
@@ -213,7 +224,7 @@ export const CalendarWeekView = memo(({
             top: '0px',
             zIndex: 10 + index
         };
-    }, [weekDays, timeSlots, appointmentsByTimeSlot, cardSize, heightScale]);
+    }, [weekDays, timeSlots, appointmentsByTimeSlot, cardSize, heightScale, dropTarget, dragState, targetAppointments]);
 
     const isDraggable = !!onAppointmentReschedule;
     const isDraggingThis = useCallback((aptId: string) =>
@@ -315,25 +326,8 @@ export const CalendarWeekView = memo(({
 
                                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
 
-                                        // Get target appointments for preview (excluding the dragged one)
-                                        // Filtra por data e verifica sobreposição de horário considerando duração
-                                        const slotTargetAppointments = isDropTarget && dragState.appointment
-                                            ? targetAppointments.filter(apt => {
-                                                const aptDate = parseAppointmentDate(apt.date);
-                                                if (!aptDate || !isSameDay(aptDate, day) || apt.id === dragState.appointment!.id) {
-                                                  return false;
-                                                }
-                                                // Check time overlap considering duration
-                                                const [targetHour, targetMin] = time.split(':').map(Number);
-                                                const targetMinutes = targetHour * 60 + targetMin;
-                                                const aptTime = normalizeTime(apt.time);
-                                                const [aptHour, aptMin] = aptTime.split(':').map(Number);
-                                                const aptStartMinutes = aptHour * 60 + aptMin;
-                                                const aptEndMinutes = aptStartMinutes + (apt.duration || 60);
-                                                // Include if appointment starts at same time or overlaps with target slot
-                                                return aptTime === time || (targetMinutes >= aptStartMinutes && targetMinutes < aptEndMinutes);
-                                              })
-                                            : [];
+                                        // targetAppointments do hook já vem filtrado por slot via getAppointmentsForSlot
+                                        const slotTargetAppointments = isDropTarget ? targetAppointments : [];
 
                                         return (
                                             <TimeSlotCell

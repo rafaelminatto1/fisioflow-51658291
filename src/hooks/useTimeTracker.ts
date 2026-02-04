@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Timestamp } from '@/integrations/firebase/app';
+import { fisioLogger } from '@/lib/errors/logger';
 
 import {
   createTimeEntry,
@@ -91,6 +92,10 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   // ============================================================================
 
   useEffect(() => {
+    if (!organizationId || !userId) {
+      return;
+    }
+
     // Carregar timer ativo
     loadActiveTimer();
 
@@ -166,7 +171,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
         }
       }
     } catch (err) {
-      console.error('Erro ao carregar timer ativo:', err);
+      fisioLogger.error('Erro ao carregar timer ativo', err as Error, 'useTimeTracker');
     }
   }, [userId]);
 
@@ -187,7 +192,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
     try {
       await saveActiveTimerDraft(userId, activeTimer);
     } catch (err) {
-      console.error('Erro ao sync timer ativo:', err);
+      fisioLogger.error('Erro ao sync timer ativo', err as Error, 'useTimeTracker');
     }
   }, [activeTimer, userId]);
 
@@ -301,6 +306,10 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   // ============================================================================
 
   const loadEntries = useCallback(async (filters?: TimeEntryFilters) => {
+    if (!organizationId) {
+      setEntries([]);
+      return;
+    }
     setIsLoading(true);
     setError(null);
 
@@ -318,6 +327,9 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   const createEntry = useCallback(async (
     data: Omit<TimeEntry, 'id' | 'created_at' | 'updated_at'>
   ): Promise<TimeEntry> => {
+    if (!organizationId) {
+      throw new Error('Organização não definida');
+    }
     setError(null);
 
     try {
@@ -332,6 +344,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   }, [organizationId]);
 
   const updateEntry = useCallback(async (id: string, updates: Partial<TimeEntry>) => {
+    if (!organizationId) return;
     setError(null);
 
     try {
@@ -347,6 +360,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   }, [organizationId]);
 
   const deleteEntry = useCallback(async (id: string) => {
+    if (!organizationId) return;
     setError(null);
 
     try {
@@ -364,6 +378,14 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   // ============================================================================
 
   const getStats = useCallback(async (): Promise<TimeStats> => {
+    if (!organizationId) {
+      return {
+        today: { total_seconds: 0, billable_seconds: 0, entries: 0 },
+        this_week: { total_seconds: 0, billable_seconds: 0, entries: 0 },
+        this_month: { total_seconds: 0, billable_seconds: 0, entries: 0 },
+        average_daily: 0,
+      };
+    }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

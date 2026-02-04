@@ -1,6 +1,7 @@
 import { getDataConnect, type DataConnect } from 'firebase/data-connect';
 import { app } from '@/integrations/firebase/app';
 import { connectorConfig } from '@/lib/dataconnect-sdk';
+import { fisioLogger } from '@/lib/errors/logger';
 
 /**
  * Instância do Data Connect com inicialização preguiçosa (lazy)
@@ -13,7 +14,7 @@ export const dc = (): DataConnect => {
     try {
       _dc = getDataConnect(app, connectorConfig);
     } catch (error) {
-      console.error('[DataConnect] Failed to initialize:', error);
+      fisioLogger.error('DataConnect failed to initialize', error, 'DataConnect');
       throw new Error('Data Connect service is not available. Please check your configuration.');
     }
   }

@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
-import { Users, DollarSign, Calendar, TrendingUp, Clock } from "lucide-react";
+import { Users, UserMinus, UserPlus, DollarSign, Calendar, TrendingUp, Clock, CreditCard } from "lucide-react";
 import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {

@@ -1,56 +1,197 @@
+/**
+ * Medical Record (Prontuário Eletrônico) - Hub de prontuários
+ * Lista pacientes e navega para o prontuário completo em /patients/:id
+ */
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Construction, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import { usePatientsPaginated, type Patient } from '@/hooks/usePatientCrud';
+import { useAuth } from '@/contexts/AuthContext';
+import { FileText, Search, ChevronRight, Users } from 'lucide-react';
 
-const MedicalRecord = () => {
+export default function MedicalRecord() {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id ?? null;
   const navigate = useNavigate();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const {
+    data: patients = [],
+    totalCount,
+    currentPage,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+    nextPage,
+    previousPage,
+    goToPage,
+    isLoading,
+  } = usePatientsPaginated({
+    organizationId,
+    status: null,
+    searchTerm: debouncedSearch,
+    pageSize: 20,
+  });
+
+  useEffect(() => {
+    goToPage(1);
+  }, [debouncedSearch]);
+
+  const handleViewRecord = (patientId: string) => {
+    navigate(`/patients/${patientId}`);
+  };
 
   return (
     <MainLayout>
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-6 space-y-8 animate-fade-in relative overflow-hidden">
-
-        {/* Decorative background elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10" />
-
-        {/* Icon Container with premium effect */}
-        <div className="relative group">
-          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full opacity-50 group-hover:opacity-75 transition-opacity duration-500" />
-          <div className="relative w-32 h-32 bg-card/50 backdrop-blur-xl border border-primary/10 rounded-3xl flex items-center justify-center shadow-2xl hover:scale-105 transition-transform duration-500">
-            <Construction className="w-14 h-14 text-primary" />
-          </div>
-        </div>
-
-        <div className="text-center space-y-4 max-w-lg mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-primary via-primary/80 to-blue-600 bg-clip-text text-transparent">
-              Em Desenvolvimento
-            </span>
+      <div className="space-y-6 p-4 md:p-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <FileText className="h-7 w-7" />
+            Prontuário Eletrônico
           </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Estamos preparando um Prontuário Eletrônico revolucionário para você.
-            Todas as ferramentas clínicas que você precisa estarão disponíveis em breve.
-          </p>
-          <p className="text-sm text-muted-foreground/80">
-            Previsão de lançamento: Q2 2026
+          <p className="text-muted-foreground mt-1">
+            Acesse o prontuário completo de cada paciente. Evoluções, anamnese e dados clínicos ficam no perfil do paciente.
           </p>
         </div>
 
-        <div className="flex gap-4 pt-4">
-          <Button
-            variant="outline"
-            size="lg"
-            className="border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all duration-300"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar ao Início
-          </Button>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Pacientes
+            </CardTitle>
+            <CardDescription>
+              Busque pelo nome e clique em &quot;Ver prontuário&quot; para abrir evoluções e dados clínicos.
+            </CardDescription>
+            <div className="pt-2">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar pacientes por nome, email ou telefone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <LoadingSkeleton type="list" rows={8} />
+            ) : patients.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title="Nenhum paciente encontrado"
+                description={
+                  searchTerm
+                    ? 'Tente outro termo de busca ou cadastre um novo paciente.'
+                    : 'Cadastre pacientes para acessar os prontuários.'
+                }
+                action={
+                  !searchTerm
+                    ? { label: 'Cadastrar paciente', onClick: () => navigate('/patients/new') }
+                    : { label: 'Limpar busca', onClick: () => setSearchTerm('') }
+                }
+              />
+            ) : (
+              <>
+                <ul className="divide-y divide-border rounded-md border">
+                  {patients.map((patient: Patient) => (
+                    <li key={patient.id}>
+                      <div className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-muted/50 transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{patient.full_name || patient.name}</p>
+                          {(patient.main_condition || patient.email) && (
+                            <p className="text-sm text-muted-foreground truncate">
+                              {[patient.main_condition, patient.email].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() => handleViewRecord(patient.id)}
+                        >
+                          Ver prontuário
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {totalPages > 1 && (
+                  <Pagination className="mt-4">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (hasPreviousPage) previousPage();
+                          }}
+                          className={!hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum: number;
+                        if (totalPages <= 5) pageNum = i + 1;
+                        else if (currentPage <= 3) pageNum = i + 1;
+                        else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                        else pageNum = currentPage - 2 + i;
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                goToPage(pageNum);
+                              }}
+                              isActive={currentPage === pageNum}
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (hasNextPage) nextPage();
+                          }}
+                          className={!hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  {totalCount} {totalCount === 1 ? 'paciente' : 'pacientes'}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );
-};
-
-export default MedicalRecord;
+}

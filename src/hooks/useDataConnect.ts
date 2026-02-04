@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { executeQuery } from 'firebase/data-connect';
 import { dc, listPatientsByOrgRef, getPatientByIdRef } from '@/lib/dataconnect';
+import { fisioLogger } from '@/lib/errors/logger';
 
 /**
  * Adaptador para converter formato Data Connect (camelCase) para Frontend (snake_case)
@@ -54,7 +55,7 @@ export const usePatientExercisesPostgres = (patientId: string | undefined) => {
       // const result = await executeQuery(getPatientExercisesRef(dc, { patientId }));
       // return result.data.prescribed_exercises;
 
-      console.warn('Data Connect exercises query pending SDK generation. Using fallback.');
+      fisioLogger.debug('Data Connect exercises query pending SDK generation. Using fallback.', undefined, 'useDataConnect');
       return []; 
     },
     enabled: !!patientId,

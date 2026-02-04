@@ -101,7 +101,9 @@ export const TimeSlotCell = memo(({
         isBlocked && "bg-slate-100/50 dark:bg-slate-800/50 cursor-not-allowed",
         // Drop target styles
         isDropTarget && !isInvalidDrop && "bg-primary/10 dark:bg-primary/20 shadow-inner ring-2 ring-inset ring-primary/30",
-        isInvalidDrop && "bg-red-50 dark:bg-red-900/20 shadow-inner ring-2 ring-inset ring-red-500/30"
+        isInvalidDrop && "bg-red-50 dark:bg-red-900/20 shadow-inner ring-2 ring-inset ring-red-500/30",
+        // Preview deve ficar acima dos cards existentes (z-40 > z-20 dos cards)
+        showPreview && "z-40"
       )}
       style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
       onClick={handleClick}

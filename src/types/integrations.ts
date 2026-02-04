@@ -19,7 +19,7 @@ export interface Integration {
   created_at: Timestamp;
   updated_at: Timestamp;
   last_sync_at?: Timestamp;
-  sync_status?: 'synced' | 'pending' | 'error';
+  sync_status?: 'synced' | 'syncing' | 'pending' | 'error';
   error_message?: string;
 }
 

@@ -6,6 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   User,
@@ -26,6 +34,7 @@ import {
   Type
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { mfaService } from '@/lib/auth/mfa';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
@@ -81,6 +90,7 @@ interface NotificationToggleProps {
   description: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
 }
 
 interface QuickActionProps {
@@ -136,6 +146,7 @@ const NotificationToggle: React.FC<NotificationToggleProps> = ({
   description,
   checked,
   onCheckedChange,
+  disabled,
 }) => (
   <div className="flex items-center justify-between gap-2">
     <div className="space-y-0.5 min-w-0">
@@ -150,6 +161,7 @@ const NotificationToggle: React.FC<NotificationToggleProps> = ({
       id={id}
       checked={checked}
       onCheckedChange={onCheckedChange}
+      disabled={disabled}
     />
   </div>
 );
@@ -478,6 +490,14 @@ const Settings = () => {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const { isAdmin } = usePermissions();
   const { user } = useAuth();
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [showMfaModal, setShowMfaModal] = useState(false);
+  const [mfaQrCode, setMfaQrCode] = useState('');
+  const [mfaSecret, setMfaSecret] = useState('');
+  const [mfaFactorId, setMfaFactorId] = useState('');
+  const [mfaVerifyCode, setMfaVerifyCode] = useState('');
+  const [mfaVerifying, setMfaVerifying] = useState(false);
 
   // Custom hook for password management
   const {
@@ -543,6 +563,16 @@ const Settings = () => {
 
   const { toast } = useToast();
 
+  // Load MFA settings on mount
+  useEffect(() => {
+    if (!user?.uid) return;
+    let cancelled = false;
+    mfaService.getMFASettings(user.uid).then((settings) => {
+      if (!cancelled) setMfaEnabled(settings.enabled);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [user?.uid]);
+
   // Load saved working hours from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('workingHours');
@@ -573,16 +603,51 @@ const Settings = () => {
     }
   }, [workingHours, toast]);
 
-  // Enable 2FA (placeholder - requires backend integration)
+  // Enable 2FA - inicia fluxo de inscrição ou desativa
   const handleEnable2FA = useCallback(async (enabled: boolean) => {
-    if (enabled) {
-      toast({
-        title: 'Autenticação de dois fatores',
-        description: 'Em desenvolvimento: Integração com Firebase Auth 2FA será implementada em breve.',
-        variant: 'default'
-      });
+    if (!user?.uid) return;
+    if (!enabled) {
+      setMfaLoading(true);
+      try {
+        await mfaService.unenrollMFA(user.uid);
+        setMfaEnabled(false);
+        toast({ title: '2FA desativado', description: 'Autenticação em duas etapas foi desativada.' });
+      } catch (e) {
+        toast({ title: 'Erro', description: 'Não foi possível desativar 2FA.', variant: 'destructive' });
+      } finally {
+        setMfaLoading(false);
+      }
+      return;
     }
-  }, [toast]);
+    setMfaLoading(true);
+    try {
+      const result = await mfaService.enrollMFA(user.uid, 'Authenticator App');
+      setMfaQrCode(result.qrCode);
+      setMfaSecret(result.secret);
+      setMfaFactorId(result.factorId);
+      setMfaVerifyCode('');
+      setShowMfaModal(true);
+    } catch (e) {
+      toast({ title: 'Erro ao ativar 2FA', description: e instanceof Error ? e.message : 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setMfaLoading(false);
+    }
+  }, [user?.uid, toast]);
+
+  const handleMfaVerify = useCallback(async () => {
+    if (!mfaFactorId || !mfaVerifyCode.trim()) return;
+    setMfaVerifying(true);
+    try {
+      await mfaService.verifyMFAEnrollment(mfaFactorId, mfaVerifyCode.trim());
+      setMfaEnabled(true);
+      setShowMfaModal(false);
+      toast({ title: '2FA ativado', description: 'Autenticação em duas etapas está ativa.' });
+    } catch (e) {
+      toast({ title: 'Código inválido', description: 'Verifique o código do aplicativo e tente novamente.', variant: 'destructive' });
+    } finally {
+      setMfaVerifying(false);
+    }
+  }, [mfaFactorId, mfaVerifyCode, toast]);
 
   return (
     <MainLayout>
@@ -681,6 +746,36 @@ const Settings = () => {
 
           {/* Security Tab */}
           <TabsContent value="security" className="space-y-3 sm:space-y-4 lg:space-y-6">
+            {/* Atalhos: Notificações e Segurança (Fase 3 - Pente Fino) */}
+            <Card className="bg-gradient-card border-border shadow-card">
+              <CardHeader className="border-b border-border p-3 sm:p-4">
+                <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                  Atalhos
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Acesso rápido às páginas de notificações e segurança
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-wrap gap-3">
+                <QuickAction
+                  title="Notificações"
+                  description="Ver todas as notificações do sistema"
+                  icon={<Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                  buttonText="Abrir"
+                  onClick={() => navigate('/notifications')}
+                  variant="outline"
+                />
+                <QuickAction
+                  title="Configurações de segurança"
+                  description="Senha, 2FA e sessões"
+                  icon={<Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                  buttonText="Abrir"
+                  onClick={() => navigate('/security-settings')}
+                  variant="outline"
+                />
+              </CardContent>
+            </Card>
+
             {/* Gerenciamento de Usuários - Apenas Admins */}
             {isAdmin && (
               <Card className="bg-gradient-card border-border shadow-card">
@@ -807,12 +902,51 @@ const Settings = () => {
                 <div className="space-y-2 sm:space-y-3">
                   <NotificationToggle
                     id="2fa"
-                    label="Autenticação de dois fatores"
-                    description="Adicione uma camada extra de segurança"
-                    checked={false}
+                    label="Autenticação em duas etapas (2FA)"
+                    description="Adicione uma camada extra de segurança com aplicativo autenticador"
+                    checked={mfaEnabled}
                     onCheckedChange={handleEnable2FA}
+                    disabled={mfaLoading}
                   />
                 </div>
+
+                <Dialog open={showMfaModal} onOpenChange={setShowMfaModal}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Ativar autenticação em duas etapas</DialogTitle>
+                      <DialogDescription>
+                        Escaneie o QR code com seu aplicativo autenticador (Google Authenticator, Authy, etc.) e digite o código de 6 dígitos abaixo.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      {mfaQrCode && (
+                        <div className="flex flex-col items-center gap-2">
+                          <p className="text-sm text-muted-foreground">Ou use esta chave manualmente:</p>
+                          <code className="text-xs bg-muted px-2 py-1 rounded break-all">{mfaSecret}</code>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="mfa-code">Código de 6 dígitos</Label>
+                        <Input
+                          id="mfa-code"
+                          placeholder="000000"
+                          maxLength={6}
+                          value={mfaVerifyCode}
+                          onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, ''))}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowMfaModal(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleMfaVerify} disabled={mfaVerifying || mfaVerifyCode.length !== 6}>
+                        {mfaVerifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                        Verificar e ativar
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 <Button
                   className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical text-sm touch-target"

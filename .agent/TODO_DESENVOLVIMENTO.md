@@ -507,9 +507,34 @@ pnpm deploy:all             # Deploy completo
 - [x] **Wiki:** Firestore `wiki_pages` + `wikiService.listPages/listCategories/savePage`; query e salvamento implementados
 - [x] **Integrations:** handleSync com feedback (toast + estado syncing/synced)
 
+### Fase 2 (2026-02-03) - Concluida
+
+- [x] **Sidebar:** link "Gamificacao" no submenu Administracao (`/admin/gamification`)
+- [x] **Settings:** mensagem 2FA com previsao Q2 2026
+- [x] **Firestore rules:** regras para `wiki_pages` e `wiki_categories` (leitura/escrita por organizacao)
+- [x] **MobileHeader:** CRM, Wiki, Testes Clinicos; Agenda aponta para `/`
+- [x] **Auth:** placeholder de convites Firebase documentado (Cloud Function onUserCreated)
+- [x] **Documentacao:** PENTE_FINO_FASE2.md e PENTE_FINO_PAGINAS.md atualizados
+
+**Pente fino: todas as fases concluidas.**
+
+### Pente Fino - 9 Fases (2026-02-03)
+
+- [x] **Fase 1:** Rotas e Sidebar (NFSe, Recibos, Demonstrativo, Relatorios, Campanhas CRM; Eventos, Mais)
+- [x] **Fase 2:** Placeholders, Wiki Firestore, 2FA, Firestore rules Wiki, MobileHeader, Auth convites
+- [x] **Fase 3:** Settings - atalhos para /notifications e /security-settings
+- [x] **Fase 4:** Empty states audit (Wiki, CRM Campanhas, NFSe, Recibos)
+- [x] **Fase 5:** Doc rotas dev - `.agent/docs/ROTAS_DEV.md` (seed-data, file-upload-test)
+- [x] **Fase 6:** Acessibilidade - aria-label Sidebar (collapse, logout), MobileHeader (logout)
+- [x] **Fase 7:** Doc Firestore Wiki - `.agent/docs/FIRESTORE_WIKI.md`
+- [x] **Fase 8:** Sidebar - aria-label/aria-current nos links; aria-expanded nos submenus
+- [x] **Fase 9:** Encerramento - PENTE_FINO_9_FASES.md e atualizacao dos planos
+
+Ver: `.agent/planning/PENTE_FINO_9_FASES.md`
+
 ### Planejamento
 
-- Ver: `.agent/planning/PENTE_FINO_PAGINAS.md`
+- Ver: `.agent/planning/PENTE_FINO_PAGINAS.md` e `.agent/planning/PENTE_FINO_FASE2.md`
 
 ---
 

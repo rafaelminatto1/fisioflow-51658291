@@ -7,6 +7,7 @@ import { collection, getDocs, query, where } from '@/integrations/firebase/app';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { TeamMember } from '@/types/tarefas';
+import { fisioLogger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
 
@@ -19,7 +20,7 @@ export function useTeamMembers() {
 
       const organizationId = await getUserOrganizationId();
       if (!organizationId) {
-        console.warn('[useTeamMembers] No organization_id found');
+        fisioLogger.debug('No organization_id found', undefined, 'useTeamMembers');
         return [];
       }
 

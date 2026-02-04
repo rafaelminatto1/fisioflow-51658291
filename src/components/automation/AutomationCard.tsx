@@ -20,6 +20,16 @@ import {
 
 import type { Automation } from '@/types/automation';
 
+function toDateSafe(v: unknown): Date | null {
+  if (!v) return null;
+  if (typeof (v as { toDate?: () => Date }).toDate === 'function') {
+    return (v as { toDate: () => Date }).toDate();
+  }
+  if (v instanceof Date) return v;
+  const n = Number(v);
+  return !isNaN(n) ? new Date(n) : null;
+}
+
 interface AutomationCardProps {
   automation: Automation;
   onToggleActive: () => void;
@@ -119,15 +129,14 @@ export function AutomationCard({
           <span className="text-muted-foreground">
             Execuções: {automation.execution_count}
           </span>
-          {automation.last_executed_at && (
-            <span className="text-muted-foreground">
-              Última:{' '}
-              {formatDistanceToNow(
-                new Date(automation.last_executed_at.toDate()),
-                { addSuffix: true, locale: ptBR }
-              )}
-            </span>
-          )}
+          {automation.last_executed_at && (() => {
+            const d = toDateSafe(automation.last_executed_at);
+            return d ? (
+              <span className="text-muted-foreground">
+                Última: {formatDistanceToNow(d, { addSuffix: true, locale: ptBR })}
+              </span>
+            ) : null;
+          })()}
         </div>
 
         {/* Toggle */}

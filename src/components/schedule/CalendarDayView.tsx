@@ -239,7 +239,9 @@ const CalendarDayView = memo(({
                                                     "bg-primary/10 ring-inset ring-2 ring-primary/50"
                                                 ),
                                                 // Show drag hint when dragging
-                                                dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5"
+                                                dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5",
+                                                // Preview deve ficar acima dos cards existentes (z-40 > z-25 dos cards)
+                                                showPreview && "z-40"
                                             )}
                                             style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
                                             onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
@@ -355,8 +357,18 @@ const CalendarDayView = memo(({
 
                             // Calculate horizontal offset for stacked appointments
                             const sameTimeAppointments = appointmentsByTime[aptTime] || [];
-                            const stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
-                            const stackCount = sameTimeAppointments.length;
+                            let stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
+                            let stackCount = sameTimeAppointments.length;
+
+                            // Durante o drag sobre este slot, redimensionar os cards como se o arrastado já estivesse lá
+                            if (isDropTarget && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
+                                const futureCount = targetAppointments.length + 1;
+                                const futureIndex = targetAppointments.findIndex(a => a.id === apt.id);
+                                if (futureIndex >= 0) {
+                                    stackCount = futureCount;
+                                    stackIndex = futureIndex;
+                                }
+                            }
 
                             // Calculate width and offset based on how many appointments are stacked
                             const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;

@@ -19,7 +19,25 @@ import { AIInsightsWidget } from './AIInsightsWidget';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LazyWidget } from './LazyWidget';
 
-// ... (Tooltip and AnimatedCard remain the same)
+interface AnimatedCardProps {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}
+
+const AnimatedCard = React.memo(({ children, delay = 0, className = '' }: AnimatedCardProps) => (
+  <div
+    className={`animate-fade-in-up ${className}`}
+    style={{
+      animationDelay: `${delay}ms`,
+      animationFillMode: 'both'
+    }}
+  >
+    {children}
+  </div>
+));
+
+AnimatedCard.displayName = 'AnimatedCard';
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period = 'hoje' }) => {
   const navigate = useNavigate();
@@ -29,6 +47,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
 
   // TODO: Add appointments query if needed
   const appointmentsLoading = false;
+  const agendamentosProximos = useMemo(() => [], []);
 
   const loading = metricsLoading || appointmentsLoading;
 

@@ -1,4 +1,5 @@
 import { getAuth } from 'firebase/auth';
+import { fisioLogger } from '@/lib/errors/logger';
 
 /**
  * Cliente HTTP genérico para consumir Cloud Functions V2
@@ -54,7 +55,7 @@ class ApiClient {
       const data = await response.json();
       return data as T;
     } catch (error) {
-      console.error(`[ApiClient] Erro ao chamar ${url}:`, error);
+      fisioLogger.error(`Erro ao chamar ${url}`, error, 'ApiClient');
       throw error;
     }
   }

@@ -153,6 +153,7 @@ const adminSubmenu = [
   { icon: Database, label: 'CRUD Admin', href: '/admin/crud' },
   { icon: Users, label: 'Cohorts', href: '/admin/cohorts' },
   { icon: Target, label: 'Metas', href: '/admin/goals' },
+  { icon: Trophy, label: 'Gamificação', href: '/admin/gamification' },
 ];
 
 const gamificacaoSubmenu = [
@@ -222,6 +223,8 @@ export function Sidebar() {
         key={item.href}
         to={item.href}
         onMouseEnter={handleMouseEnter}
+        aria-label={item.label}
+        aria-current={isActive ? 'page' : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
           collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
@@ -300,6 +303,9 @@ export function Sidebar() {
       <Collapsible open={isOpen} onOpenChange={onOpenChange}>
         <CollapsibleTrigger asChild>
           <button
+            type="button"
+            aria-expanded={isOpen}
+            aria-label={isOpen ? `Fechar menu ${label}` : `Abrir menu ${label}`}
             className={cn(
               "flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-200 group relative overflow-hidden",
               isActive
@@ -427,6 +433,7 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
             className={cn(
               "hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:scale-110 active:scale-95 shrink-0 rounded-lg relative overflow-hidden group",
               !collapsed && "ml-auto"
@@ -709,6 +716,7 @@ export function Sidebar() {
         <Button
           variant="ghost"
           onClick={handleLogout}
+          aria-label="Sair da conta (logout)"
           className={cn(
             "w-full justify-start gap-3 text-muted-foreground hover:bg-red-50/90 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 group relative overflow-hidden",
             collapsed ? "px-2 py-2.5 justify-center" : "px-3 py-2"

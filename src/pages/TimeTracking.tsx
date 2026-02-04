@@ -2,7 +2,7 @@
  * Time Tracking Page - Dashboard principal de controle de tempo
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -31,6 +31,7 @@ import { TimeSheet } from '@/components/timetracking/TimeSheet';
 import { TimeReport } from '@/components/timetracking/TimeReport';
 import { TimeEntryModal } from '@/components/timetracking/TimeEntryModal';
 import { WeeklySummary } from '@/components/timetracking/WeeklySummary';
+import { TimeTrackingCalendarView } from '@/components/timetracking/TimeTrackingCalendarView';
 import {
   formatDuration,
   formatHoursDecimal,
@@ -40,8 +41,11 @@ import {
 import type { ReportPeriod, TimeSheetView } from '@/types/timetracking';
 
 export default function TimeTrackingPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+
+  const organizationId = profile?.organization_id ?? '';
+  const userId = user?.uid ?? '';
 
   const [period, setPeriod] = useState<ReportPeriod>('today');
   const [view, setView] = useState<TimeSheetView>('weekly');
@@ -65,14 +69,16 @@ export default function TimeTrackingPage() {
     getStats,
     refresh,
   } = useTimeTracker({
-    organizationId: user?.organizationId || '',
-    userId: user?.uid || '',
+    organizationId,
+    userId,
   });
 
   // Carregar entradas ao montar
-  useState(() => {
-    loadEntries();
-  });
+  useEffect(() => {
+    if (organizationId && userId) {
+      loadEntries();
+    }
+  }, [organizationId, userId]);
 
   // Estatísticas calculadas
   const stats = useMemo(() => getStats(), [entries, getStats]);
@@ -316,10 +322,7 @@ export default function TimeTrackingPage() {
             </TabsContent>
 
             <TabsContent value="calendar" className="mt-4">
-              <div className="text-center py-12 text-muted-foreground">
-                <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Visualização de calendário em breve...</p>
-              </div>
+              <TimeTrackingCalendarView entries={filteredEntries} />
             </TabsContent>
           </Tabs>
 
