@@ -66,9 +66,25 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidatePatient(PATIENT_SELECT.standard);
 
-            const response = await patientsApi.get(patientId);
+            let response: { data?: PatientDBStandard | null } | null = null;
+            try {
+                response = await patientsApi.get(patientId);
+            } catch (e) {
+                // Fallback: getPatientHttp falha por CORS/rede; listPatientsV2 funciona — buscar na lista
+                const isNetworkOrCors = (e as Error)?.message?.includes('Failed to fetch') || (e as Error)?.name === 'TypeError';
+                if (isNetworkOrCors) {
+                    const listRes = await patientsApi.list({ limit: 2000 });
+                    const found = listRes.data?.find((p: { id?: string }) => p.id === patientId);
+                    if (found) {
+                        fisioLogger.debug('Patient loaded via list fallback', { id: found.id }, 'useAppointmentData');
+                        const p = found as Record<string, unknown>;
+                        return { id: p.id as string, full_name: (p.name ?? p.full_name ?? '') as string, ...p } as PatientDBStandard;
+                    }
+                }
+                throw e;
+            }
 
-            if (!response.data) {
+            if (!response?.data) {
                 fisioLogger.warn('Patient not found in database', { patientId }, 'useAppointmentData');
                 return null;
             }
