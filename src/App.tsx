@@ -10,6 +10,9 @@ import { AuthContextProvider } from "@/contexts/AuthContextProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { fisioLogger as logger } from '@/lib/errors/logger';
+
+let _loggedAppInit = false;
+let _loggedNotificationsInit = false;
 import { notificationManager } from '@/lib/services/NotificationManager';
 import { initMonitoring } from '@/lib/monitoring';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -106,7 +109,10 @@ const App = () => {
   // Os alertas de "Nova versão disponível" foram desabilitados conforme solicitação
 
   useEffect(() => {
-    logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
+    if (!_loggedAppInit) {
+      _loggedAppInit = true;
+      logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
+    }
 
     // Initialize monitoring (performance, errors, analytics)
     initMonitoring();
@@ -120,7 +126,10 @@ const App = () => {
     const initNotifications = async () => {
       try {
         await notificationManager.initialize();
-        logger.info('Sistema de notificações inicializado', {}, 'App');
+        if (!_loggedNotificationsInit) {
+          _loggedNotificationsInit = true;
+          logger.info('Sistema de notificações inicializado', {}, 'App');
+        }
       } catch (error) {
         logger.error('Falha ao inicializar sistema de notificações', error, 'App');
       }

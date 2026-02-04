@@ -44,7 +44,7 @@ export async function initPerformanceMonitoring(): Promise<void> {
   }
 
   if (!PERFORMANCE_ENABLED) {
-    logger.info('Performance Monitoring disabled via VITE_PERFORMANCE_MONITORING_ENABLED');
+    logger.debug('Performance Monitoring disabled via VITE_PERFORMANCE_MONITORING_ENABLED');
     initialized = true;
     return;
   }
@@ -56,7 +56,7 @@ export async function initPerformanceMonitoring(): Promise<void> {
     const perf = getPerformance(app);
 
     // Performance is automatically collected
-    logger.info('Firebase Performance Monitoring initialized');
+    logger.debug('Firebase Performance Monitoring initialized');
     initialized = true;
   } catch (error) {
     logger.error('Failed to initialize Performance Monitoring:', error);

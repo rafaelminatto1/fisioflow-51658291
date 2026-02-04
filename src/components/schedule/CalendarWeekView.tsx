@@ -201,7 +201,7 @@ export const CalendarWeekView = memo(({
         let index = sameTimeAppointments.findIndex(a => a.id === apt.id);
         let count = sameTimeAppointments.length;
 
-        // Durante o drag sobre este slot, redimensionar os cards como se o arrastado já estivesse lá
+        // Durante o drag sobre este slot de destino, redimensionar os cards como se o arrastado já estivesse lá
         const isInDropTargetSlot = dropTarget && isSameDay(dropTarget.date, aptDate) && dropTarget.time === time;
         if (isInDropTargetSlot && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
             const futureCount = targetAppointments.length + 1;
@@ -209,6 +209,20 @@ export const CalendarWeekView = memo(({
             if (futureIndex >= 0) {
                 count = futureCount;
                 index = futureIndex;
+            }
+        }
+
+        // Slot de origem: redimensionar os demais cards como se o arrastado já tivesse saído
+        const draggedDate = dragState.appointment ? parseAppointmentDate(dragState.appointment.date) : null;
+        const draggedTime = dragState.appointment ? normalizeTime(dragState.appointment.time) : null;
+        const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(aptDate, draggedDate) && time === draggedTime;
+        if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id && sameTimeAppointments.length > 1) {
+            const originRemainingCount = sameTimeAppointments.length - 1;
+            const originRemaining = sameTimeAppointments.filter(a => a.id !== dragState.appointment!.id);
+            const originRemainingIndex = originRemaining.findIndex(a => a.id === apt.id);
+            if (originRemainingIndex >= 0) {
+                count = originRemainingCount;
+                index = originRemainingIndex;
             }
         }
 
@@ -277,7 +291,7 @@ export const CalendarWeekView = memo(({
                         </div>
 
                         {/* Scrollable Grid Area */}
-                        <div className="relative bg-white dark:bg-slate-950" id="calendar-grid">
+                        <div className="relative bg-white dark:bg-slate-950" id="calendar-grid" data-calendar-drop-zone>
                             <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0 min-w-[600px]" style={{
                                 gridTemplateRows: `repeat(${timeSlots.length}, ${slotHeight}px)`
                             }}>
@@ -376,6 +390,8 @@ export const CalendarWeekView = memo(({
                                     const { blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
 
                                     const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
+                                    const sameTimeAppointments = (appointmentsByTimeSlot[key] || []).filter((a): a is Appointment => a != null && typeof a.id === 'string');
+                                    const hideGhostWhenSiblings = isDraggingThis(apt.id) && sameTimeAppointments.length > 1;
 
                                     return (
                                         <CalendarAppointmentCard
@@ -386,6 +402,7 @@ export const CalendarWeekView = memo(({
                                             isDragging={isDraggingThis(apt.id)}
                                             isSaving={apt.id === savingAppointmentId}
                                             isDropTarget={!!isDropTarget}
+                                            hideGhostWhenSiblings={hideGhostWhenSiblings}
                                             onDragStart={handleDragStart}
                                             onDragEnd={handleDragEnd}
                                             onDragOver={(e) => {

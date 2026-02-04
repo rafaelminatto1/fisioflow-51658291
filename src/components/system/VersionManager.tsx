@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
+let _loggedVersionFor: string | null = null;
+
 /**
  * Componente que gerencia a versão da aplicação e limpa caches antigos
  * quando uma nova versão é detectada.
@@ -17,7 +19,10 @@ export const VersionManager = () => {
 
                 // Se não houver versão armazenada ou for diferente da atual
                 if (storedVersion !== currentVersion) {
-                    logger.info(`Nova versão detectada: ${currentVersion} (anterior: ${storedVersion})`, {}, 'VersionManager');
+                    if (_loggedVersionFor !== currentVersion) {
+                        _loggedVersionFor = currentVersion;
+                        logger.info(`Nova versão detectada: ${currentVersion} (anterior: ${storedVersion})`, {}, 'VersionManager');
+                    }
 
                     // Limpar caches específicos
                     await appointmentsCacheService.clearCache();

@@ -7,6 +7,7 @@
 
 import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
 import { app, getFirebaseAuth } from './app';
+import { API_URLS } from '@/lib/api/v2/config';
 
 // ============================================================================
 // CONSTANTS
@@ -477,14 +478,29 @@ export const patientsApi = {
   },
 
   /**
-   * Cria um novo paciente
+   * Cria um novo paciente (usa URL HTTP direta para evitar CORS no cadastro rápido)
    */
   create: async (patient: PatientApi.CreateData): Promise<PatientApi.Patient> => {
-    const res = await callFunctionHttp<PatientApi.CreateData, { data: PatientApi.Patient }>(
-      'createPatientV2',
-      patient
-    );
-    return res.data;
+    const auth = getFirebaseAuth();
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) {
+      throw new FunctionCallError('createPatientV2', 'No authentication token available');
+    }
+    const url = API_URLS.patients.create;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(patient),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new FunctionCallError('createPatientV2', new Error(`HTTP ${response.status}: ${errorText}`));
+    }
+    const result = await response.json() as { data: PatientApi.Patient };
+    return result.data;
   },
 
   /**
