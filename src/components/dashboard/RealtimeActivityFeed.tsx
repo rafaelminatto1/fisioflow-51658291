@@ -29,6 +29,17 @@ interface AppointmentDocument {
 
 const MAX_ACTIVITIES = 20; // Limitar para evitar crescimento infinito
 
+const safeFormatDate = (val: unknown): string => {
+  const d =
+    val && typeof (val as { toDate?: () => Date }).toDate === 'function'
+      ? (val as { toDate: () => Date }).toDate()
+      : val
+        ? new Date(val as string)
+        : null;
+  if (!d || isNaN(d.getTime())) return '--/--/----';
+  return format(d, 'dd/MM/yyyy HH:mm');
+};
+
 /**
  * RealtimeActivityFeed otimizado com React.memo
  * Não cria subscriptions duplicadas - usa dados iniciais do Firebase Firestore
@@ -102,7 +113,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
             id: apt.id,
             type: 'appointment',
             title: 'Novo Agendamento',
-            description: `${apt.patients?.name || 'Paciente'} - ${format(apt.appointment_date?.toDate ? apt.appointment_date.toDate() : new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+            description: `${apt.patients?.name || 'Paciente'} - ${safeFormatDate(apt.appointment_date)}`,
             timestamp: apt.created_at?.toDate ? apt.created_at.toDate() : new Date(apt.created_at),
             icon: Calendar,
             variant: 'default',
@@ -152,7 +163,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
             id: `activity-${change.doc.id}-${Date.now()}`,
             type: 'appointment',
             title: 'Novo Agendamento',
-            description: `${patientName} - ${format(apt.appointment_date?.toDate ? apt.appointment_date.toDate() : new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+            description: `${patientName} - ${safeFormatDate(apt.appointment_date)}`,
             timestamp: new Date(),
             icon: Calendar,
             variant: 'success',

@@ -126,9 +126,9 @@ export default function TeamPerformance() {
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold">
-                {isLoading ? <Skeleton className="h-9 w-24" /> : value}
-              </p>
+            <div className="text-3xl font-bold">
+              {isLoading ? <Skeleton className="h-9 w-24" /> : value}
+            </div>
               {change !== undefined && (
                 <span className={cn(
                   "flex items-center text-xs font-medium",
