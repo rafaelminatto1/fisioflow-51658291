@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, Ban, Calendar, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,16 @@ import {
   shouldShowText,
   MAX_CARDS_WITHOUT_BADGE
 } from '@/lib/calendar/dragPreview';
+
+const parseAppointmentDate = (date: string | Date | null | undefined): Date | null => {
+    if (!date) return null;
+    return typeof date === 'string' ? parseISO(date) : date;
+};
+
+const normalizeTime = (time: string | null | undefined): string => {
+    if (!time || !time.trim()) return '00:00';
+    return time.substring(0, 5);
+};
 
 interface CalendarDayViewProps {
     currentDate: Date;
@@ -201,7 +211,7 @@ const CalendarDayView = memo(({
                         </div>
 
                         {/* Time slots */}
-                        <div className="relative" role="grid">
+                        <div className="relative" role="grid" data-calendar-drop-zone>
                             {timeSlots.map((time, slotIndex) => {
                         const hour = parseInt(time.split(':')[0]);
                         const isCurrentHour = hour === currentTime.getHours();
@@ -360,13 +370,27 @@ const CalendarDayView = memo(({
                             let stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
                             let stackCount = sameTimeAppointments.length;
 
-                            // Durante o drag sobre este slot, redimensionar os cards como se o arrastado já estivesse lá
+                            // Durante o drag sobre este slot de destino, redimensionar os cards como se o arrastado já estivesse lá
                             if (isDropTarget && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
                                 const futureCount = targetAppointments.length + 1;
                                 const futureIndex = targetAppointments.findIndex(a => a.id === apt.id);
                                 if (futureIndex >= 0) {
                                     stackCount = futureCount;
                                     stackIndex = futureIndex;
+                                }
+                            }
+
+                            // Slot de origem: redimensionar os demais cards como se o arrastado já tivesse saído
+                            const draggedDate = parseAppointmentDate(dragState.appointment?.date);
+                            const draggedTime = dragState.appointment?.time ? normalizeTime(dragState.appointment.time) : null;
+                            const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(currentDate, draggedDate) && normalizeTime(aptTime) === draggedTime;
+                            if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id && sameTimeAppointments.length > 1) {
+                                const originRemainingCount = sameTimeAppointments.length - 1;
+                                const originRemaining = sameTimeAppointments.filter(a => a.id !== dragState.appointment!.id);
+                                const originRemainingIndex = originRemaining.findIndex(a => a.id === apt.id);
+                                if (originRemainingIndex >= 0) {
+                                    stackCount = originRemainingCount;
+                                    stackIndex = originRemainingIndex;
                                 }
                             }
 
@@ -407,6 +431,7 @@ const CalendarDayView = memo(({
                                     isDragging={isDraggingThis}
                                     isSaving={apt.id === savingAppointmentId}
                                     isDropTarget={isDropTarget}
+                                    hideGhostWhenSiblings={isDraggingThis && sameTimeAppointments.length > 1}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
                                     onDragOver={(e) => {

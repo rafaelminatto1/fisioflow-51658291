@@ -63,17 +63,17 @@ export const useActivePatients = () => {
   // Setup realtime subscription via Ably
   useEffect(() => {
     if (!organizationId) {
-      logger.warn('useActivePatients: Missing organizationId', undefined, 'usePatients');
+      logger.debug('useActivePatients: Missing organizationId', undefined, 'usePatients');
       return;
     }
 
-    logger.info('useActivePatients: subscribing via Ably', { organizationId, retryCount }, 'usePatients');
+    logger.debug('useActivePatients: subscribing via Ably', { organizationId, retryCount }, 'usePatients');
 
     const ably = getAblyClient();
     const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
 
     channel.subscribe(ABLY_EVENTS.update, (message) => {
-      logger.info('Realtime (Ably): Pacientes atualizados', { organizationId, event: message.name }, 'usePatients');
+      logger.debug('Realtime (Ably): Pacientes atualizados', { organizationId, event: message.name }, 'usePatients');
       queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
     });
 
@@ -84,7 +84,7 @@ export const useActivePatients = () => {
 
         // Auto-retry connection after delay
         setTimeout(() => {
-          logger.info('Realtime: Retrying patients subscription...', {}, 'usePatients');
+          logger.debug('Realtime: Retrying patients subscription...', {}, 'usePatients');
           setRetryCount(prev => prev + 1);
         }, 5000);
       }
@@ -93,7 +93,7 @@ export const useActivePatients = () => {
     channel.on(handleChannelState);
 
     return () => {
-      logger.info('Realtime (Ably): Unsubscribing from patients channel', { organizationId }, 'usePatients');
+      logger.debug('Realtime (Ably): Unsubscribing from patients channel', { organizationId }, 'usePatients');
       channel.unsubscribe();
       channel.off(handleChannelState);
     };
@@ -104,13 +104,13 @@ export const useActivePatients = () => {
     queryFn: async () => {
       // Try cache first when offline
       if (!isOnline()) {
-        logger.info('Offline: Carregando pacientes do cache', { organizationId }, 'usePatients');
+        logger.debug('Offline: Carregando pacientes do cache', { organizationId }, 'usePatients');
         const cacheResult = await patientsCacheService.getFromCache(organizationId);
         if (cacheResult.data.length > 0) {
-          logger.info('Pacientes carregados do cache offline', { count: cacheResult.data.length }, 'usePatients');
+          logger.debug('Pacientes carregados do cache offline', { count: cacheResult.data.length }, 'usePatients');
           return cacheResult.data;
         }
-        logger.warn('Cache vazio ou expirado', { organizationId }, 'usePatients');
+        logger.debug('Cache vazio ou expirado', { organizationId }, 'usePatients');
         return [];
       }
 
@@ -118,8 +118,7 @@ export const useActivePatients = () => {
       devValidate(PATIENT_SELECT.standard);
 
       try {
-        // Log antes de chamar a API
-        logger.info('useActivePatients: fetching patients', { organizationId }, 'usePatients');
+        logger.debug('useActivePatients: fetching patients', { organizationId }, 'usePatients');
 
         // Execute query via Service (getActivePatients returns a thenable query builder)
         const { data, error } = await PatientService.getActivePatients(organizationId!);
@@ -133,10 +132,9 @@ export const useActivePatients = () => {
         const validPatients = PatientService.mapPatientsFromDB(data);
         logger.debug('useActivePatients: fetched patients', {
           count: validPatients.length,
-          patientIds: validPatients.map(p => p.id).slice(0, 5), // Log first 5 IDs for debugging
+          patientIds: validPatients.map(p => p.id).slice(0, 5),
           organizationId,
         }, 'usePatients');
-        logger.info('useActivePatients: successfully fetched patients', { count: validPatients.length }, 'usePatients');
 
         // Save to cache for offline use
         if (validPatients.length > 0) {
@@ -152,10 +150,10 @@ export const useActivePatients = () => {
 
         // Try cache on network error
         if (isNetworkError(error)) {
-          logger.info('Erro de rede detectado, tentando cache', { organizationId }, 'usePatients');
+          logger.debug('Erro de rede detectado, tentando cache', { organizationId }, 'usePatients');
           const cacheResult = await patientsCacheService.getFromCache(organizationId);
           if (cacheResult.data.length > 0) {
-            logger.info('Pacientes carregados do cache (fallback)', { count: cacheResult.data.length }, 'usePatients');
+            logger.debug('Pacientes carregados do cache (fallback)', { count: cacheResult.data.length }, 'usePatients');
             return cacheResult.data;
           }
         }
