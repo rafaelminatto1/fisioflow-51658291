@@ -24,6 +24,8 @@ declare global {
   }
 }
 
+let _loggedGA4Init = false;
+
 /**
  * Initialize Google Analytics 4
  * Call this once when the app loads
@@ -59,7 +61,10 @@ export function initGoogleAnalytics(measurementId: string): void {
       send_page_view: false,
     });
 
-    logger.info('Google Analytics 4 initialized', { measurementId }, 'Monitoring');
+    if (!_loggedGA4Init) {
+      _loggedGA4Init = true;
+      logger.info('Google Analytics 4 initialized', { measurementId }, 'Monitoring');
+    }
   } catch (error) {
     logger.warn('GA4 initialization failed', error, 'Monitoring');
   }

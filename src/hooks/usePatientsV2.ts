@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +8,28 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger } from '@/lib/errors/logger';
 import { isOnline } from '@/lib/utils/query-helpers';
 import { type Patient } from '@/schemas/patient';
+
+// Pagination types
+export interface PaginatedPatientsResult {
+  data: Patient[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface UsePaginatedPatientsOptions {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  search?: string;
+  orderBy?: string;
+  order?: 'asc' | 'desc';
+}
 
 // Mapper to convert V2 (snake_case) to Frontend (camelCase)
 const mapPatientV2ToFrontend = (p: PatientV2): Patient => ({
@@ -19,14 +41,14 @@ const mapPatientV2ToFrontend = (p: PatientV2): Patient => ({
   birthDate: p.birth_date || null,
   gender: p.gender || null,
   // Normalize status to match schema if needed, though schema has generous enums
-  status: p.status as any, 
+  status: p.status as any,
   mainCondition: p.main_condition || null,
   organization_id: p.organization_id,
   createdAt: p.created_at,
   updatedAt: p.updated_at,
   // Default values for missing fields
   progress: 0,
-  incomplete_registration: false, 
+  incomplete_registration: false,
 });
 
 export const useActivePatientsV2 = () => {
@@ -165,3 +187,160 @@ export const useDeletePatientV2 = () => {
     },
   });
 };
+
+/**
+ * Paginated patients hook with cursor-based pagination
+ * Use this for large patient lists to avoid loading all data at once
+ */
+export const usePaginatedPatients = (options: UsePaginatedPatientsOptions = {}) => {
+  const {
+    page = 1,
+    pageSize = 25,
+    status,
+    search,
+    orderBy = 'created_at',
+    order = 'desc',
+  } = options;
+
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
+  const queryClient = useQueryClient();
+
+  // Build query key based on options
+  const queryKey = useMemo(
+    () => [
+      'patients-v2',
+      'paginated',
+      organizationId,
+      page,
+      pageSize,
+      status,
+      search,
+      orderBy,
+      order,
+    ],
+    [page, pageSize, status, search, orderBy, order, organizationId]
+  );
+
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<PaginatedPatientsResult> => {
+      if (!organizationId) {
+        return {
+          data: [],
+          pagination: {
+            page: 1,
+            pageSize,
+            total: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+        };
+      }
+
+      // Calculate offset
+      const offset = (page - 1) * pageSize;
+
+      // Build query params
+      const params: Record<string, any> = {
+        limit: pageSize,
+        offset,
+        order_by: orderBy,
+        order_direction: order,
+      };
+
+      if (status) {
+        params.status = status;
+      }
+
+      if (search) {
+        params.search = search;
+      }
+
+      const response = await PatientServiceV2.list(params);
+      const patients = response.data.map(mapPatientV2ToFrontend);
+
+      // Get total count for pagination (this would need a separate endpoint or header)
+      const total = response.total || patients.length;
+      const totalPages = Math.ceil(total / pageSize);
+
+      return {
+        data: patients,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    },
+    enabled: !!organizationId,
+    staleTime: 1000 * 60 * 2, // 2 minutes - shorter for paginated data
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+/**
+ * Hook to prefetch next page for smooth pagination
+ */
+export function usePrefetchPatients() {
+  const queryClient = useQueryClient();
+  const { profile } = useAuth();
+
+  return (options: UsePaginatedPatientsOptions) => {
+    const {
+      page = 1,
+      pageSize = 25,
+      status,
+      search,
+      orderBy = 'created_at',
+      order = 'desc',
+    } = options;
+
+    const nextPage = page + 1;
+
+    queryClient.prefetchQuery({
+      queryKey: [
+        'patients-v2',
+        'paginated',
+        profile?.organization_id,
+        nextPage,
+        pageSize,
+        status,
+        search,
+        orderBy,
+        order,
+      ],
+      queryFn: async () => {
+        const offset = (nextPage - 1) * pageSize;
+        const params: Record<string, any> = {
+          limit: pageSize,
+          offset,
+          order_by: orderBy,
+          order_direction: order,
+        };
+
+        if (status) params.status = status;
+        if (search) params.search = search;
+
+        const response = await PatientServiceV2.list(params);
+        const patients = response.data.map(mapPatientV2ToFrontend);
+
+        return {
+          data: patients,
+          pagination: {
+            page: nextPage,
+            pageSize,
+            total: response.total || patients.length,
+            totalPages: Math.ceil((response.total || patients.length) / pageSize),
+            hasNext: nextPage < Math.ceil((response.total || patients.length) / pageSize),
+            hasPrev: nextPage > 1,
+          },
+        };
+      },
+    });
+  };
+}

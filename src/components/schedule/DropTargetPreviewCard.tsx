@@ -37,8 +37,8 @@ export const DropTargetPreviewCard = memo(({
         <div
             className={cn(
                 "absolute h-[calc(100%-8px)] rounded-md border-2 border-dashed",
-                "flex flex-col overflow-hidden transition-all duration-[250ms]",
-                "animate-in fade-in slide-in-from-bottom-1",
+                "flex flex-col overflow-hidden transition-all duration-100",
+                "animate-in fade-in duration-100",
                 statusColors.bg,
                 statusColors.border,
                 isDraggedCard && "bg-primary/25 border-primary animate-pulse-subtle shadow-lg z-10"

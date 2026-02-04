@@ -40,7 +40,7 @@ export function initMonitoring() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
 
   if (!dsn) {
-    logger.warn('Sentry DSN não configurado');
+    logger.debug('Sentry DSN não configurado');
     return;
   }
 
@@ -129,7 +129,7 @@ function setupPerformanceMonitoring() {
 
       resourceObserver.observe({ entryTypes: ['resource'] });
     } catch (error) {
-      logger.warn('PerformanceObserver não suportado');
+      logger.debug('PerformanceObserver não suportado');
     }
   }
 }
