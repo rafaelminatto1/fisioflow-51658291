@@ -141,10 +141,6 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8084,
       strictPort: false, // Tenta portas alternativas se 8084 estiver em uso
-      headers: {
-        "Cross-Origin-Embedder-Policy": "credentialless",
-        "Cross-Origin-Opener-Policy": "same-origin",
-      },
       hmr: {
         timeout: 60000,
       },
@@ -236,15 +232,12 @@ export default defineConfig(({ mode }) => {
       //   },
       //   strategies: 'generateSW',
       // }),
-      viteCompression({
-        algorithm: 'gzip',
-        ext: '.gz',
-        threshold: 10240,
-        filter: (file) => {
-          // Only compress files inside dist, not the absolute path
-          return file.includes('/dist/') || file.includes('\\dist\\');
-        },
-      }),
+      // Compression disabled - Firebase Hosting handles gzip automatically
+      // viteCompression({
+      //   algorithm: 'gzip',
+      //   ext: '.gz',
+      //   threshold: 10240,
+      // }),
       isProduction && excludeMswPlugin(),
     ].filter(Boolean),
     resolve: {

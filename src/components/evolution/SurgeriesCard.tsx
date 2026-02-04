@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePatientSurgeries } from '@/hooks/usePatientEvolution';
 import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
+import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
 
 /** Formata tempo desde a cirurgia: "X dias, Y semanas e W meses" (totais desde a data) */
@@ -86,30 +87,42 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
               <ul className="space-y-3">
                 {surgeries.map((s) => {
                   const surgeryDate = (s as Record<string, unknown>).surgery_date as string;
+                  const surgeryType = (s as Record<string, unknown>).surgery_type as string | undefined;
+                  const affectedSide = (s as Record<string, unknown>).affected_side as string | undefined;
+                  const notes = (s as Record<string, unknown>).notes as string | undefined;
                   const timeSince = surgeryDate ? formatTimeSinceSurgery(surgeryDate) : '—';
                   return (
                     <li
                       key={s.id}
                       className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors group"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <p className="font-medium text-sm truncate">
                           {(s as Record<string, unknown>).surgery_name as string}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {surgeryDate
-                            ? format(new Date(surgeryDate), "dd/MM/yyyy", { locale: ptBR })
-                            : '—'}
-                        </p>
-                        <p className="text-xs text-primary font-medium mt-1">
-                          {timeSince}
-                        </p>
-                        {(s as Record<string, unknown>).affected_side &&
-                          (s as Record<string, unknown>).affected_side !== 'nao_aplicavel' && (
-                            <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-muted">
-                              {(s as Record<string, unknown>).affected_side as string}
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                          {surgeryType && (
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-muted font-medium">
+                              {getSurgeryTypeLabel(surgeryType)}
                             </span>
                           )}
+                          {affectedSide && (
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                              {getAffectedSideLabel(affectedSide)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {surgeryDate
+                            ? format(new Date(surgeryDate), "dd/MM/yyyy", { locale: ptBR })
+                            : '—'}{' '}
+                          · {timeSince}
+                        </p>
+                        {notes && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                            {notes}
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
