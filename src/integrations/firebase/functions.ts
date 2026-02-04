@@ -23,6 +23,24 @@ const DEFAULT_TIMEOUT = 60;
 export const functionsInstance = getFunctions(app, DEFAULT_REGION);
 
 /**
+ * Map of HTTP function names to run.app URLs (Firebase Functions v2 onRequest).
+ * When present, callFunctionHttp uses this URL instead of cloudfunctions.net.
+ */
+const HTTP_FUNCTION_URLS: Record<string, string> = {
+  getPatientHttp: API_URLS.patients.get,
+  listPatientsV2: API_URLS.patients.list,
+  getPatientStatsV2: API_URLS.patients.stats,
+  updatePatientV2: API_URLS.patients.update,
+  deletePatientV2: API_URLS.patients.delete,
+  listAppointments: API_URLS.appointments.list,
+  getAppointmentV2: API_URLS.appointments.get,
+  createAppointmentV2: API_URLS.appointments.create,
+  updateAppointmentV2: API_URLS.appointments.update,
+  cancelAppointmentV2: API_URLS.appointments.cancel,
+  checkTimeConflictV2: API_URLS.appointments.checkConflict,
+};
+
+/**
  * Get Firebase Functions instance
  * Export this for use in services that need the raw instance
  */
@@ -138,7 +156,9 @@ export async function callFunctionHttp<TRequest, TResponse>(
 
   const region = DEFAULT_REGION;
   const projectId = app.options.projectId;
-  const url = `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
+  const url =
+    HTTP_FUNCTION_URLS[functionName] ??
+    `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
 
   try {
     const response = await fetch(url, {
@@ -693,10 +713,13 @@ export const appointmentsApi = {
  */
 export const profileApi = {
   /**
-   * Obtém o perfil do usuário atual
+   * Obtém o perfil do usuário atual.
+   * Usa callFunction (SDK) porque getProfile é callable e espera body { data }.
    */
-  getCurrent: (): Promise<ProfileApi.Profile> =>
-    callFunctionHttp('getProfile', {}),
+  getCurrent: async (): Promise<ProfileApi.Profile> => {
+    const res = await callFunction<Record<string, never>, { data: ProfileApi.Profile }>('getProfile', {});
+    return res.data;
+  },
 
   /**
    * Atualiza o perfil do usuário atual
