@@ -36,12 +36,14 @@ export const DropTargetPreviewCard = memo(({
     return (
         <div
             className={cn(
-                "absolute h-[calc(100%-8px)] rounded-md border-2 border-dashed",
-                "flex flex-col overflow-hidden transition-all duration-100",
-                "animate-in fade-in duration-100",
+                "absolute h-[calc(100%-8px)] rounded-lg border-2 border-dashed",
+                "flex flex-col overflow-hidden",
+                "transition-[box-shadow,background-color,border-color] duration-150 ease-out",
+                "animate-in fade-in duration-150 ease-out",
+                "shadow-sm",
                 statusColors.bg,
                 statusColors.border,
-                isDraggedCard && "bg-primary/25 border-primary animate-pulse-subtle shadow-lg z-10"
+                isDraggedCard && "bg-primary/20 dark:bg-primary/30 border-primary ring-1 ring-primary/30 shadow-md z-10"
             )}
             style={{
                 left: `calc(${leftOffset}% + 2px)`,
@@ -53,7 +55,7 @@ export const DropTargetPreviewCard = memo(({
                 "flex flex-col h-full min-w-0",
                 isCompact ? "p-0.5" : "p-1"
             )}>
-                {/* Barra lateral de status - como CalendarAppointmentCard */}
+                {/* Barra lateral de status - alinhado ao CalendarAppointmentCard */}
                 <div className="flex items-start gap-1 min-w-0 flex-1">
                     <div className={cn(
                         "w-1 rounded-full shrink-0 opacity-80 mt-0.5",

@@ -43,6 +43,12 @@ jobs:
           VITE_GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
         run: pnpm build:prod
 
+      - name: Verify hosting build (dist/index.html)
+        run: |
+          node scripts/verify-hosting-build.mjs
+          echo "dist contents:" >> $GITHUB_STEP_SUMMARY
+          ls -la dist >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+
       - name: Deploy to Firebase Hosting
         uses: w9jds/firebase-action@master
         with:
