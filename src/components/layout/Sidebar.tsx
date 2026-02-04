@@ -393,12 +393,12 @@ export function Sidebar() {
   return (
     <div className={cn(
       "hidden md:flex bg-white/95 dark:bg-card/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-800/60 transition-all duration-300 ease-in-out flex-col h-screen sticky top-0 shadow-xl z-50",
-      collapsed ? "w-[72px]" : "w-[280px]"
+      collapsed ? "w-[72px]" : "w-[220px]"
     )}>
       {/* Header - Inspirado no shadcn com efeitos melhorados */}
       <div className={cn(
         "border-b border-border/60 shrink-0 bg-gradient-to-b from-background via-background/80 to-background/50 relative",
-        collapsed ? "p-3" : "p-4"
+        collapsed ? "p-3" : "p-3"
       )}>
         {/* Efeito de brilho superior */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />

@@ -4,11 +4,18 @@ import { Exercise, Evolution, PatientInsights } from '../types/models';
 
 const firestore = getAdminDb();
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 /**
  * Cloud Function: Sugerir exercícios baseado em diagnóstico
  */
 export const suggestExercises = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
   maxInstances: 10,
@@ -63,7 +70,7 @@ export const suggestExercises = onCall({
  * Cloud Function: Analisar prontuário do paciente
  */
 export const analyzePatientRecord = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
   maxInstances: 10,
@@ -114,9 +121,9 @@ export const analyzePatientRecord = onCall({
  * Cloud Function: Predizer tempo de recuperação
  */
 export const predictRecoveryTime = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -196,7 +203,7 @@ export const predictRecoveryTime = onCall({
  * Cloud Function: Chatbot IA para pacientes
  */
 export const patientChatbot = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
   maxInstances: 10,
