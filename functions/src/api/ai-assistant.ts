@@ -1,5 +1,6 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
+import { setCorsHeaders } from '../lib/cors';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { VertexAI } from '@google-cloud/vertexai';
 import { logger } from '../lib/logger';
@@ -13,9 +14,7 @@ const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as co
  * Assistente de IA que analisa todo o histórico do paciente via Gemini (Versão Estável Vertex AI)
  */
 export const getPatientAISummaryHttpHandler = async (req: any, res: any) => {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  setCorsHeaders(res);
 
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
 

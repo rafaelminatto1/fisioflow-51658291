@@ -3,15 +3,15 @@ import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { MedicalRecord, TreatmentSession, PainRecord } from '../types/models';
 import { logger } from '../lib/logger';
+import { setCorsHeaders } from '../lib/cors';
 
-function setCorsHeaders(res: any) { res.set('Access-Control-Allow-Origin', '*'); res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization'); }
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
 const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS };
 
 export const getPatientRecordsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  if (req.method !== 'POST') { setCorsHeaders(res); res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
   try {
     const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
@@ -28,6 +28,7 @@ export const getPatientRecordsHttp = onRequest(httpOpts, async (req, res) => {
     const result = await pool.query(query, params);
     res.json({ data: result.rows });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('getPatientRecordsHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -48,6 +49,7 @@ export const createMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     try { const realtime = await import('../realtime/publisher'); await realtime.publishPatientUpdate(patientId, { type: 'medical_record_created', recordId: result.rows[0].id }); } catch (er) { logger.error('Ably:', er); }
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('createMedicalRecordHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -71,6 +73,7 @@ export const updateMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     const result = await pool.query(`UPDATE medical_records SET ${setClauses.join(', ')} WHERE id = $${pc + 1} AND organization_id = $${pc + 2} RETURNING *`, values);
     res.json({ data: result.rows[0] });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('updateMedicalRecordHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -88,6 +91,7 @@ export const deleteMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     if (result.rows.length === 0) { res.status(404).json({ error: 'Prontuário não encontrado' }); return; }
     res.json({ success: true });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('deleteMedicalRecordHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -104,6 +108,7 @@ export const listTreatmentSessionsHttp = onRequest(httpOpts, async (req, res) =>
     const result = await getPool().query(`SELECT ts.*, p.name as patient_name, prof.full_name as therapist_name, a.date as appointment_date FROM treatment_sessions ts LEFT JOIN patients p ON ts.patient_id=p.id LEFT JOIN profiles prof ON ts.therapist_id=prof.user_id LEFT JOIN appointments a ON ts.appointment_id=a.id WHERE ts.patient_id=$1 AND ts.organization_id=$2 ORDER BY ts.session_date DESC, ts.created_at DESC LIMIT $3`, [patientId, auth.organizationId, limit]);
     res.json({ data: result.rows });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('listTreatmentSessionsHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -126,6 +131,7 @@ export const createTreatmentSessionHttp = onRequest(httpOpts, async (req, res) =
     const result = await pool.query(`INSERT INTO treatment_sessions (patient_id, therapist_id, appointment_id, organization_id, pain_level_before, pain_level_after, observations, evolution, next_session_goals, session_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`, [patientId, therapistId, appointmentId || null, auth.organizationId, painLevelBefore || null, painLevelAfter || null, observations || null, evolution || null, nextGoals || null, appointmentDate || new Date().toISOString().split('T')[0]]);
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('createTreatmentSessionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -145,6 +151,7 @@ export const getPainRecordsHttp = onRequest(httpOpts, async (req, res) => {
     const result = await pool.query('SELECT * FROM pain_records WHERE patient_id = $1 AND organization_id = $2 ORDER BY record_date DESC', [patientId, auth.organizationId]);
     res.json({ data: result.rows });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('getPainRecordsHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }
@@ -164,6 +171,7 @@ export const savePainRecordHttp = onRequest(httpOpts, async (req, res) => {
     const result = await pool.query('INSERT INTO pain_records (patient_id, organization_id, pain_level, record_date, notes, recorded_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [patientId, auth.organizationId, painLevel, recordDate || new Date().toISOString().split('T')[0], notes || null, auth.userId]);
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
+    setCorsHeaders(res);
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
     logger.error('savePainRecordHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
   }

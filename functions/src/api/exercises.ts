@@ -5,11 +5,7 @@ import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Exercise } from '../types/models';
 import { logger } from '../lib/logger';
 
-function setCorsHeaders(res: any) {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
+import { setCorsHeaders } from '../lib/cors';
 
 function getAuthHeader(req: any): string | undefined {
   const h = req.headers?.authorization || req.headers?.Authorization;

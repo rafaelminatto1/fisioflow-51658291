@@ -125,6 +125,80 @@
                     "order": "ASCENDING"
                 },
                 {
+                    "fieldPath": "record_date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "soap_records",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "soap_records",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "appointment_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patient_surgeries",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "surgery_date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patient_goals",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "patient_pathologies",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "patient_id",
+                    "order": "ASCENDING"
+                },
+                {
                     "fieldPath": "created_at",
                     "order": "DESCENDING"
                 }

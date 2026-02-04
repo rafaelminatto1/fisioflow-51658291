@@ -179,6 +179,73 @@ export function calculateTimeOverlap(
   return Math.max(0, overlapEnd - overlapStart);
 }
 
+/** Duração padrão de um agendamento em minutos (usada quando não informada). */
+export const DEFAULT_APPOINTMENT_DURATION_MINUTES = 60;
+
+/** Item com horário e duração para cálculo de sobreposição (ex.: Appointment). */
+export interface AppointmentLike {
+  id: string;
+  /** Horário de início no formato HH:MM (aceita HH:MM:SS). */
+  time?: string | null;
+  /** Duração em minutos. */
+  duration?: number;
+}
+
+/**
+ * Converte horário de um item para minutos desde meia-noite.
+ * @internal
+ */
+function appointmentTimeToMinutes(apt: AppointmentLike): number {
+  const raw = apt.time && apt.time.trim() ? apt.time.substring(0, 5) : '00:00';
+  return timeToMinutes(raw);
+}
+
+/**
+ * Verifica se dois appointments se sobrepõem no tempo (considerando duração).
+ * Ex.: 08:30 (60 min) e 09:00 (60 min) se sobrepõem entre 09:00 e 09:30.
+ */
+export function appointmentsOverlap(
+  a: AppointmentLike,
+  b: AppointmentLike
+): boolean {
+  const duration = (x: number | undefined) => x ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
+  const aStart = appointmentTimeToMinutes(a);
+  const aEnd = aStart + duration(a.duration);
+  const bStart = appointmentTimeToMinutes(b);
+  const bEnd = bStart + duration(b.duration);
+  return aStart < bEnd && bStart < aEnd;
+}
+
+/**
+ * Retorna índice e quantidade de appointments que se sobrepõem no tempo com o dado,
+ * ordenados por horário de início. Usado para dimensionar cards lateralmente (lado a lado).
+ *
+ * @param sameDayAppointments - Lista de agendamentos do mesmo dia (ex.: filtrados por data).
+ * @param appointment - Agendamento para o qual obter a posição no grupo de sobreposição.
+ * @returns `{ index, count }`: index é a posição (0-based) entre os que se sobrepõem; count é o total.
+ *          count é sempre >= 1 para evitar divisão por zero nos consumidores.
+ *
+ * @example
+ * // Dia com 08:30 (60 min) e 09:00 (60 min) → ambos se sobrepõem
+ * getOverlapStackPosition(dayAppointments, apt0830) // { index: 0, count: 2 }
+ * getOverlapStackPosition(dayAppointments, apt0900) // { index: 1, count: 2 }
+ */
+export function getOverlapStackPosition(
+  sameDayAppointments: AppointmentLike[],
+  appointment: AppointmentLike
+): { index: number; count: number } {
+  const overlapping = sameDayAppointments.filter((other) =>
+    appointmentsOverlap(appointment, other)
+  );
+  overlapping.sort((x, y) => appointmentTimeToMinutes(x) - appointmentTimeToMinutes(y));
+  const index = overlapping.findIndex((a) => a.id === appointment.id);
+  const count = Math.max(1, overlapping.length);
+  return {
+    index: index >= 0 ? index : 0,
+    count,
+  };
+}
+
 // =====================================================================
 // ALIASES PARA COMPATIBILIDADE
 // =====================================================================
@@ -279,6 +346,9 @@ export default {
   minutesToTime,
   timeToMinutes,
   calculateTimeOverlap,
+  DEFAULT_APPOINTMENT_DURATION_MINUTES,
+  appointmentsOverlap,
+  getOverlapStackPosition,
   createDefaultFilters,
   createDefaultViewSettings,
   createInitialDragState,

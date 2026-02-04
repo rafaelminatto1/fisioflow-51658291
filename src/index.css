@@ -1329,7 +1329,7 @@ All colors MUST be HSL.
   .dragging-ghost {
     @apply opacity-60 scale-95 rotate-2;
     @apply shadow-2xl;
-    @apply transition-all duration-150;
+    @apply transition-all duration-100;
   }
 
   /* Drop zone ativa - quando arrastando sobre */
