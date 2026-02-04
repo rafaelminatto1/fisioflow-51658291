@@ -42,7 +42,7 @@ export async function initCrashlytics(): Promise<void> {
   }
 
   if (!CRASHLYTICS_ENABLED) {
-    logger.info('Crashlytics disabled via VITE_CRASHLYTICS_ENABLED');
+    logger.debug('Crashlytics disabled via VITE_CRASHLYTICS_ENABLED');
     initialized = true;
     return;
   }
@@ -56,7 +56,7 @@ export async function initCrashlytics(): Promise<void> {
     // Enable Crashlytics
     await crashlytics.setCrashlyticsCollectionEnabled(true);
 
-    logger.info('Firebase Crashlytics initialized');
+    logger.debug('Firebase Crashlytics initialized');
     initialized = true;
   } catch (error) {
     logger.error('Failed to initialize Crashlytics:', error);

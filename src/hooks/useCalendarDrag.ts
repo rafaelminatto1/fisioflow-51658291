@@ -59,9 +59,11 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
     const [targetAppointments, setTargetAppointments] = useState<Appointment[]>([]);
 
     const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const lastDropTargetKeyRef = useRef<string | null>(null);
 
     const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
-        logger.info('[useCalendarDrag] handleDragStart chamado', {
+        lastDropTargetKeyRef.current = null;
+        logger.debug('[useCalendarDrag] handleDragStart', {
             appointmentId: appointment.id,
             hasOnAppointmentReschedule: !!onAppointmentReschedule
         }, 'useCalendarDrag');
@@ -86,12 +88,13 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             e.dataTransfer.setDragImage(previewCanvas, 120, 32);
         }
 
-        logger.info('[useCalendarDrag] Drag iniciado com sucesso', { appointmentId: appointment.id }, 'useCalendarDrag');
+        logger.debug('[useCalendarDrag] Drag iniciado', { appointmentId: appointment.id }, 'useCalendarDrag');
         setDragState({ appointment, isDragging: true, savingAppointmentId: null });
         setTargetAppointments([]);
     }, [onAppointmentReschedule]);
 
     const handleDragEnd = useCallback(() => {
+        lastDropTargetKeyRef.current = null;
         if (leaveTimeoutRef.current) {
             clearTimeout(leaveTimeoutRef.current);
             leaveTimeoutRef.current = null;
@@ -111,31 +114,42 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             leaveTimeoutRef.current = null;
         }
 
+        const dropKey = `${date.getTime()}-${time}`;
+        if (lastDropTargetKeyRef.current === dropKey) return;
+        lastDropTargetKeyRef.current = dropKey;
+
         setDropTarget({ date, time });
 
-        // Buscar appointments existentes no slot de destino para preview dinâmica
         if (getAppointmentsForSlot) {
             const existingApps = getAppointmentsForSlot(date, time);
-            // Filtrar o appointment sendo arrastado se ele já estiver no destino (movendo dentro do mesmo slot)
             const otherApps = existingApps.filter(apt => apt.id !== dragState.appointment?.id);
-            setTargetAppointments(otherApps);
+            setTargetAppointments(prev => {
+                if (prev.length !== otherApps.length || prev.some((p, i) => p.id !== otherApps[i]?.id)) {
+                    return otherApps;
+                }
+                return prev;
+            });
         } else {
             setTargetAppointments([]);
         }
     }, [dragState.isDragging, dragState.appointment, onAppointmentReschedule, getAppointmentsForSlot]);
 
     const handleDragLeave = useCallback((e?: React.DragEvent) => {
-        // Verificar se realmente saiu do elemento (não para elemento filho)
         if (e) {
             const relatedTarget = e.relatedTarget as Node | null;
             if (relatedTarget && e.currentTarget.contains(relatedTarget)) {
                 return;
             }
+            // Não limpar ao passar para outra célula/card dentro da zona de drop
+            const dropZone = document.querySelector('[data-calendar-drop-zone]');
+            if (relatedTarget && dropZone?.contains(relatedTarget)) {
+                return;
+            }
         }
-        // Debounce: ao passar do cell para o card, dragOver cancela o timeout e mantém o preview
         if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
         leaveTimeoutRef.current = setTimeout(() => {
             leaveTimeoutRef.current = null;
+            lastDropTargetKeyRef.current = null;
             setDropTarget(null);
             setTargetAppointments([]);
         }, 60);

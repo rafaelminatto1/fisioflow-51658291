@@ -36,7 +36,7 @@ class PerformanceMonitor {
             const navEntry = entry as PerformanceNavigationTiming;
             const loadTime = navEntry.loadEventEnd - navEntry.fetchStart;
 
-            logger.info('🚀 Performance: Navigation', {
+            logger.debug('🚀 Performance: Navigation', {
               domContentLoaded: `${(navEntry.domContentLoadedEventEnd - navEntry.fetchStart).toFixed(0)}ms`,
               loadComplete: `${loadTime.toFixed(0)}ms`,
               domComplete: `${(navEntry.domComplete - navEntry.fetchStart).toFixed(0)}ms`
@@ -55,7 +55,7 @@ class PerformanceMonitor {
       const paintObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'paint') {
-            logger.info(`🎨 ${entry.name}`, { duration: `${(entry as PerformancePaintTiming).startTime.toFixed(0)}ms` }, 'PerformanceMonitor');
+            logger.debug(`🎨 ${entry.name}`, { duration: `${(entry as PerformancePaintTiming).startTime.toFixed(0)}ms` }, 'PerformanceMonitor');
           }
         }
       });
@@ -70,7 +70,7 @@ class PerformanceMonitor {
       const longTaskObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'longtask') {
-            logger.warn(`⚠️ Long Task detected: ${entry.duration.toFixed(0)}ms`, { entry }, 'PerformanceMonitor');
+            logger.debug(`⚠️ Long Task detected: ${entry.duration.toFixed(0)}ms`, { entry }, 'PerformanceMonitor');
           }
         }
       });
@@ -115,13 +115,13 @@ class PerformanceMonitor {
 
         // Log se for muito lento
         if (measure.duration > 16) {
-          logger.warn(
+          logger.debug(
             `🐌 Performance: ${name} levou ${measure.duration.toFixed(2)}ms (>16ms = 60fps threshold)`,
             undefined,
             'PerformanceMonitor'
           );
         } else if (measure.duration > 8) {
-          logger.info(`⏱️ Performance: ${name}`, { duration: `${measure.duration.toFixed(2)}ms` }, 'PerformanceMonitor');
+          logger.debug(`⏱️ Performance: ${name}`, { duration: `${measure.duration.toFixed(2)}ms` }, 'PerformanceMonitor');
         }
       }
     } catch (e) {
@@ -201,20 +201,20 @@ class PerformanceMonitor {
       }
     }
 
-    // Log summary
-    logger.info('📊 Performance Summary', { metrics }, 'PerformanceMonitor');
+    // Log summary (debug only to reduce console noise)
+    logger.debug('📊 Performance Summary', { metrics }, 'PerformanceMonitor');
 
     // Métricas de navegação
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navigation) {
       const loadTime = navigation.loadEventEnd - navigation.fetchStart;
-      logger.info(`⚡ Page Load`, { loadTime: `${loadTime.toFixed(0)}ms` }, 'PerformanceMonitor');
+      logger.debug(`⚡ Page Load`, { loadTime: `${loadTime.toFixed(0)}ms` }, 'PerformanceMonitor');
     }
 
     // Contagem de long tasks
     const longTasks = performance.getEntriesByType('longtask');
     if (longTasks.length > 0) {
-      logger.warn(`⚠️ ${longTasks.length} long tasks detected (blocking main thread)`, { count: longTasks.length }, 'PerformanceMonitor');
+      logger.debug(`⚠️ ${longTasks.length} long tasks detected (blocking main thread)`, { count: longTasks.length }, 'PerformanceMonitor');
     }
   }
 
@@ -251,7 +251,7 @@ export function useComponentPerformance(componentName: string, enabled = IS_DEV)
     renderCount.current++;
 
     if (renderCount.current > 10) {
-      logger.warn(
+      logger.debug(
         `🔄 Component "${componentName}" re-rendered ${renderCount.current} times. Consider using React.memo or useMemo/useCallback.`,
         { componentName, renderCount: renderCount.current },
         'PerformanceMonitor'
@@ -325,9 +325,9 @@ declare global {
 
 if (IS_DEV && typeof window !== 'undefined') {
   window.__perfMonitor = getPerformanceMonitor();
-  logger.info('💡 Performance Monitor disponível em window.__perfMonitor', undefined, 'PerformanceMonitor');
-  logger.info('   - __perfMonitor.markStart(name)', undefined, 'PerformanceMonitor');
-  logger.info('   - __perfMonitor.markEnd(name)', undefined, 'PerformanceMonitor');
-  logger.info('   - __perfMonitor.getStats(name)', undefined, 'PerformanceMonitor');
-  logger.info('   - __perfMonitor.reportSummary()', undefined, 'PerformanceMonitor');
+  logger.debug('💡 Performance Monitor disponível em window.__perfMonitor', undefined, 'PerformanceMonitor');
+  logger.debug('   - __perfMonitor.markStart(name)', undefined, 'PerformanceMonitor');
+  logger.debug('   - __perfMonitor.markEnd(name)', undefined, 'PerformanceMonitor');
+  logger.debug('   - __perfMonitor.getStats(name)', undefined, 'PerformanceMonitor');
+  logger.debug('   - __perfMonitor.reportSummary()', undefined, 'PerformanceMonitor');
 }

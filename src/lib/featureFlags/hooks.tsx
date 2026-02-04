@@ -67,7 +67,7 @@ export function FeatureFlagProvider({
     if (statsigKey) {
       logger.debug('[Statsig] Key present (Statsig removed in this build)', undefined, 'featureFlags');
     } else {
-      logger.warn('[Statsig] No key found', undefined, 'featureFlags');
+      logger.debug('[Statsig] No key found', undefined, 'featureFlags');
     }
   }, [statsigKey]);
 

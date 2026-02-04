@@ -56,12 +56,18 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
 }
 
 /**
- * CORS headers helper
+ * CORS headers helper - reflete Origin para requests com Authorization (ex: localhost)
  */
-function setCorsHeaders(res: any) {
-  res.set('Access-Control-Allow-Origin', '*');
+function setCorsHeaders(req: any, res: any) {
+  const origin = req.headers?.origin || req.headers?.Origin;
+  const allowOrigin = (origin && (
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+    /moocafisio\.com\.br$/.test(origin)
+  )) ? origin : '*';
+  res.set('Access-Control-Allow-Origin', allowOrigin);
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Max-Age', '86400');
 }
 
 /**
@@ -102,8 +108,8 @@ export const listPatientsHttp = onRequest(
     cors: true,
   },
   async (req, res) => {
+    setCorsHeaders(req, res);
     if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
       res.status(204).send('');
       return;
     }
@@ -112,8 +118,6 @@ export const listPatientsHttp = onRequest(
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
-
-    setCorsHeaders(res);
 
     try {
       const { uid } = await verifyAuthHeader(req);
@@ -216,6 +220,7 @@ export const listPatientsHttp = onRequest(
     } catch (error: unknown) {
       logger.error('Error in listPatientsHttp:', error);
       const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
+      setCorsHeaders(req, res);
       res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao listar pacientes' });
     }
   }
@@ -233,7 +238,7 @@ export const getPatientHttp = onRequest(
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
+      setCorsHeaders(req, res);
       res.status(204).send('');
       return;
     }
@@ -243,7 +248,7 @@ export const getPatientHttp = onRequest(
       return;
     }
 
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
 
     try {
       const { uid } = await verifyAuthHeader(req);
@@ -292,7 +297,7 @@ export const getPatientStatsHttp = onRequest(
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
+      setCorsHeaders(req, res);
       res.status(204).send('');
       return;
     }
@@ -302,7 +307,7 @@ export const getPatientStatsHttp = onRequest(
       return;
     }
 
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
 
     const emptyStats = () => ({
       data: {
@@ -409,17 +414,18 @@ export const createPatientHttp = onRequest(
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
+      setCorsHeaders(req, res);
       res.status(204).send('');
       return;
     }
 
     if (req.method !== 'POST') {
+      setCorsHeaders(req, res);
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
 
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
 
     try {
       const { uid } = await verifyAuthHeader(req);
@@ -428,6 +434,7 @@ export const createPatientHttp = onRequest(
       const data = body as CreatePatientRequest;
 
       if (!data.name) {
+        setCorsHeaders(req, res);
         res.status(400).json({ error: 'name é obrigatório' });
         return;
       }
@@ -441,6 +448,7 @@ export const createPatientHttp = onRequest(
           [data.cpf.replace(/\D/g, ''), organizationId]
         );
         if (existing.rows.length > 0) {
+          setCorsHeaders(req, res);
           res.status(409).json({ error: 'Já existe um paciente com este CPF' });
           return;
         }
@@ -542,8 +550,10 @@ export const createPatientHttp = onRequest(
         logger.error('Erro ao publicar evento no Ably:', err);
       }
 
+      setCorsHeaders(req, res);
       res.status(201).json({ data: patient });
     } catch (error: unknown) {
+      setCorsHeaders(req, res);
       if (error instanceof HttpsError && error.code === 'unauthenticated') {
         res.status(401).json({ error: error.message });
         return;
@@ -565,9 +575,9 @@ export const updatePatientHttp = onRequest(
     cors: true,
   },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -635,9 +645,9 @@ export const deletePatientHttp = onRequest(
     cors: true,
   },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);

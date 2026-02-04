@@ -72,6 +72,10 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
           </div>
         </AlertDialogHeader>
 
+        <AlertDialogDescription className="sr-only">
+          Confirmação de reagendamento: nova data e horário para {appointment.patientName}.
+        </AlertDialogDescription>
+
         <div className="px-6 py-5">
           <div className="flex items-center gap-4 sm:gap-6">
             {/* Card DE - Horário atual */}

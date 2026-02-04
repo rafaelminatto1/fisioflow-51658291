@@ -33,12 +33,18 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
 }
 
 /**
- * CORS headers helper
+ * CORS headers helper - reflete Origin para requests com Authorization (ex: localhost)
  */
-function setCorsHeaders(res: any) {
-  res.set('Access-Control-Allow-Origin', '*');
+function setCorsHeaders(req: any, res: any) {
+  const origin = req.headers?.origin || req.headers?.Origin;
+  const allowOrigin = (origin && (
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+    /moocafisio\.com\.br$/.test(origin)
+  )) ? origin : '*';
+  res.set('Access-Control-Allow-Origin', allowOrigin);
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Max-Age', '86400');
 }
 
 /** DB enum session_type é ('individual','dupla','grupo'). Frontend envia 'group' → normalizar para 'grupo'. */
@@ -49,16 +55,16 @@ function normalizeSessionType(value: string | undefined): 'individual' | 'dupla'
   return 'individual';
 }
 
-/** DB enum appointment_status é ('agendado','confirmado','em_atendimento','concluido','cancelado','paciente_faltou'). Frontend envia 'avaliacao', etc. */
+/** DB enum appointment_status é ('agendado','confirmado','em_atendimento','concluido','cancelado','paciente_faltou'). Frontend envia 'avaliacao', 'realizado', etc. */
 type DbAppointmentStatus = 'agendado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado' | 'paciente_faltou';
 function normalizeAppointmentStatus(value: string | undefined): DbAppointmentStatus {
   if (!value) return 'agendado';
   const v = value.toLowerCase();
   if (['agendado', 'confirmado', 'em_atendimento', 'concluido', 'cancelado', 'paciente_faltou'].includes(v)) return v as DbAppointmentStatus;
-  if (v === 'avaliacao' || v === 'aguardando_confirmacao' || v === 'remarcado' || v === 'reagendado') return 'agendado';
+  if (v === 'avaliacao' || v === 'aguardando_confirmacao' || v === 'remarcado' || v === 'reagendado' || v === 'em_espera') return 'agendado';
   if (v === 'em_andamento' || v === 'atrasado') return 'em_atendimento';
   if (v === 'falta' || v === 'faltou') return 'paciente_faltou';
-  if (v === 'atendido') return 'concluido';
+  if (v === 'atendido' || v === 'realizado') return 'concluido';
   return 'agendado';
 }
 
@@ -105,7 +111,7 @@ export const listAppointmentsHttp = onRequest(
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
+      setCorsHeaders(req, res);
       res.status(204).send('');
       return;
     }
@@ -115,7 +121,7 @@ export const listAppointmentsHttp = onRequest(
       return;
     }
 
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
 
     try {
       const { uid } = await verifyAuthHeader(req);
@@ -157,9 +163,9 @@ export const listAppointmentsHttp = onRequest(
 export const getAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -190,9 +196,9 @@ export const getAppointmentHttp = onRequest(
 export const checkTimeConflictHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -219,9 +225,9 @@ export const checkTimeConflictHttp = onRequest(
 export const createAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -295,9 +301,9 @@ export const createAppointmentHttp = onRequest(
 export const updateAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { setCorsHeaders(req, res); res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -353,13 +359,17 @@ export const updateAppointmentHttp = onRequest(
       );
       const updatedAppt = result.rows[0];
 
+      if (!updatedAppt) {
+        logger.error(`[updateAppointmentHttp] UPDATE did not return row for appointmentId=${appointmentId}`);
+        res.status(500).json({ error: 'Atualização não retornou o agendamento. Tente novamente.' });
+        return;
+      }
+
       // [SYNC] Write to Firestore for legacy frontend compatibility
       try {
         const db = admin.firestore();
-        await db.collection('appointments').doc(appointmentId).set({
-          ...updatedAppt,
-          updated_at: new Date()
-        }, { merge: true });
+        const safeDoc: Record<string, unknown> = { ...updatedAppt, updated_at: new Date() };
+        await db.collection('appointments').doc(appointmentId).set(safeDoc, { merge: true });
         logger.info(`[updateAppointmentHttp] Appointment ${appointmentId} synced to Firestore`);
       } catch (fsError) {
         logger.error(`[updateAppointmentHttp] Failed to sync appointment ${appointmentId} to Firestore:`, fsError);
@@ -374,9 +384,13 @@ export const updateAppointmentHttp = onRequest(
       } catch (err) { logger.error('Erro Realtime:', err); }
       res.json({ data: updatedAppt });
     } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
-      logger.error('Error in updateAppointmentHttp:', error);
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao atualizar agendamento' });
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { setCorsHeaders(req, res); res.status(401).json({ error: error.message }); return; }
+      if (error instanceof HttpsError && error.code === 'not-found') { setCorsHeaders(req, res); res.status(404).json({ error: error.message }); return; }
+      const errMsg = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
+      const errStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Error in updateAppointmentHttp:', { message: errMsg, stack: errStack, error });
+      setCorsHeaders(req, res);
+      res.status(500).json({ error: errMsg });
     }
   }
 );
@@ -387,9 +401,9 @@ export const updateAppointmentHttp = onRequest(
 export const cancelAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
+    setCorsHeaders(req, res);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);

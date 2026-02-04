@@ -1,4 +1,7 @@
 // Enhanced logging system with performance monitoring
+const LOG_LEVEL_ORDER = { debug: 0, info: 1, warn: 2, error: 3, performance: 1 } as const;
+type LogLevel = keyof typeof LOG_LEVEL_ORDER;
+
 interface LogEntry {
   timestamp: string;
   level: 'error' | 'warn' | 'info' | 'debug' | 'performance';
@@ -9,15 +12,47 @@ interface LogEntry {
   sessionId: string;
 }
 
+function getMinLogLevel(): LogLevel {
+  const env = (import.meta as ImportMeta & { env: { VITE_LOG_LEVEL?: string } }).env;
+  const v = env.VITE_LOG_LEVEL?.toLowerCase();
+  if (v === 'error' || v === 'warn' || v === 'info' || v === 'debug') return v as LogLevel;
+  return 'info';
+}
+
+function shouldLogLongTasks(): boolean {
+  if (typeof window === 'undefined') return false;
+  return getMinLogLevel() === 'debug' || window.localStorage?.getItem('DEBUG_LONG_TASKS') === '1';
+}
+
+function formatLogData(data: unknown): unknown {
+  if (data === undefined || data === null || data === '') return '';
+  if (typeof data === 'object') {
+    try {
+      const str = JSON.stringify(data, null, 0);
+      return str.length > 500 ? str.slice(0, 500) + '…' : str;
+    } catch {
+      return data;
+    }
+  }
+  return data;
+}
+
 class Logger {
   private sessionId: string;
   private logs: LogEntry[] = [];
   private maxLogs = 1000;
   private isDevelopment = (import.meta as ImportMeta & { env: { DEV?: boolean; PROD?: boolean } }).env.DEV;
+  private minLevel: LogLevel = getMinLogLevel();
 
   constructor() {
     this.sessionId = this.generateSessionId();
     this.setupPerformanceMonitoring();
+  }
+
+  private shouldOutput(level: LogEntry['level']): boolean {
+    const order = LOG_LEVEL_ORDER[level] ?? 0;
+    const minOrder = LOG_LEVEL_ORDER[this.minLevel] ?? 0;
+    return order >= minOrder;
   }
 
   private generateSessionId(): string {
@@ -41,13 +76,16 @@ class Logger {
       this.logs.shift();
     }
 
-    // Console output in development
-    if (this.isDevelopment) {
+    // Console output in development: respect VITE_LOG_LEVEL (Long Task also when DEBUG_LONG_TASKS=1)
+    const forceLongTask = entry.message === 'Long Task Detected' && entry.level === 'debug' && shouldLogLongTasks();
+    if (this.isDevelopment && (this.shouldOutput(entry.level) || forceLongTask)) {
       const style = this.getConsoleStyle(entry.level);
+      const dataForConsole = formatLogData(entry.data);
+      const hasData = entry.data !== undefined && entry.data !== null && dataForConsole !== '';
       console.log(
         `%c[${entry.level.toUpperCase()}] ${entry.timestamp} ${entry.component ? `[${entry.component}]` : ''} ${entry.message}`,
         style,
-        entry.data || ''
+        hasData ? dataForConsole : ''
       );
     }
   }
@@ -77,13 +115,14 @@ class Logger {
         }, 0);
       });
 
-      // Monitor long tasks
+      // Monitor long tasks: only log when VITE_LOG_LEVEL=debug or localStorage DEBUG_LONG_TASKS=1
       if ('PerformanceObserver' in window) {
         try {
           const observer = new PerformanceObserver((list) => {
+            if (!shouldLogLongTasks()) return;
             list.getEntries().forEach((entry) => {
               if (entry.duration > 50) {
-                this.warn('Long Task Detected', {
+                this.debug('Long Task Detected', {
                   duration: entry.duration,
                   startTime: entry.startTime
                 });

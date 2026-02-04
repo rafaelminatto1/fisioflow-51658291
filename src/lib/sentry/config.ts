@@ -6,7 +6,7 @@ export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   
   if (!dsn) {
-    logger.warn('Sentry DSN não configurado. Monitoramento de erros desabilitado.', {}, 'Sentry');
+    logger.debug('Sentry DSN não configurado. Monitoramento de erros desabilitado.', {}, 'Sentry');
     return;
   }
 

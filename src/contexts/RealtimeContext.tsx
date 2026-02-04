@@ -6,6 +6,8 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { parseResponseDate } from '@/utils/dateUtils';
 
+let _loggedRealtimeNoOrgId = false;
+
 export interface DashboardMetrics {
   totalAppointments: number;
   confirmedAppointments: number;
@@ -204,11 +206,14 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    */
   const subscribeToAppointments = useCallback(() => {
     if (!organizationId) {
-      logger.warn('Realtime: No organization_id, skipping subscription', {}, 'RealtimeContext');
+      if (!_loggedRealtimeNoOrgId) {
+        _loggedRealtimeNoOrgId = true;
+        logger.debug('Realtime: No organization_id, skipping subscription', {}, 'RealtimeContext');
+      }
       return () => { };
     }
 
-    logger.info('Realtime: Subscribing to appointments via Ably', { organizationId, retryCount }, 'RealtimeContext');
+    logger.debug('Realtime: Subscribing to appointments via Ably', { organizationId, retryCount }, 'RealtimeContext');
 
     const ably = getAblyClient();
     const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
@@ -230,7 +235,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         // Auto-retry connection after delay
         const timeout = setTimeout(() => {
-          logger.info('Realtime: Retrying subscription...', {}, 'RealtimeContext');
+          logger.debug('Realtime: Retrying subscription...', {}, 'RealtimeContext');
           setRetryCount(prev => prev + 1);
         }, 5000);
 
@@ -242,7 +247,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsSubscribed(true);
 
     return () => {
-      logger.info('Realtime: Unsubscribing from Ably channel', { organizationId }, 'RealtimeContext');
+      logger.debug('Realtime: Unsubscribing from Ably channel', { organizationId }, 'RealtimeContext');
       channel.unsubscribe();
       channel.off(handleChannelState);
       setIsSubscribed(false);
@@ -262,7 +267,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!organizationId) return;
 
       try {
-        logger.info('Realtime: Loading initial appointments via Functions', {}, 'RealtimeContext');
+        logger.debug('Realtime: Loading initial appointments via Functions', {}, 'RealtimeContext');
 
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -275,7 +280,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (response.data) {
           setAppointments(response.data as Appointment[]);
-          logger.info(`Realtime: Loaded ${response.data.length} initial appointments`, {}, 'RealtimeContext');
+          logger.debug(`Realtime: Loaded ${response.data.length} initial appointments`, {}, 'RealtimeContext');
         }
       } catch (error) {
         logger.error('Realtime: Error in loadInitialAppointments', error, 'RealtimeContext');

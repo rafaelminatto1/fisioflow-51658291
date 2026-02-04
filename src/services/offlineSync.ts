@@ -10,6 +10,9 @@ import { db } from '@/integrations/firebase/app';
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
+let _loggedOfflineSyncStart = false;
+let _loggedOfflineSyncComplete = false;
+
 // const db = getFirebaseDb(); // Moved inside functions
 
 // ============================================================================
@@ -462,7 +465,10 @@ class OfflineSyncService {
     }
 
     try {
-      logger.info('[OfflineSyncService] Starting critical data caching', undefined, 'offlineSync');
+      if (!_loggedOfflineSyncStart) {
+        _loggedOfflineSyncStart = true;
+        logger.info('[OfflineSyncService] Starting critical data caching', undefined, 'offlineSync');
+      }
       // Initialize both databases correctly
       const localDb = await getDB();
 
@@ -489,7 +495,7 @@ class OfflineSyncService {
         appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
-          logger.info('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.', undefined, 'offlineSync');
+          logger.debug('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.', undefined, 'offlineSync');
           appointments = [];
         } else {
           apptError = error as Error;
@@ -508,9 +514,9 @@ class OfflineSyncService {
           // For now, we just store the appointment data
         }
         await tx.done;
-        logger.info(`[OfflineSyncService] Cached ${appointments.length} appointments`, { count: appointments.length }, 'offlineSync');
+        logger.debug(`[OfflineSyncService] Cached ${appointments.length} appointments`, { count: appointments.length }, 'offlineSync');
       } else {
-        logger.info('[OfflineSyncService] No appointments to cache for today', undefined, 'offlineSync');
+        logger.debug('[OfflineSyncService] No appointments to cache for today', undefined, 'offlineSync');
       }
 
       // 2. Cache common exercises (first 100)
@@ -524,7 +530,7 @@ class OfflineSyncService {
         exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
-          logger.info('[OfflineSyncService] Permission denied for exercises. Skipping.', undefined, 'offlineSync');
+          logger.debug('[OfflineSyncService] Permission denied for exercises. Skipping.', undefined, 'offlineSync');
           exercises = [];
         } else {
           logger.warn('[OfflineSyncService] Error fetching exercises', { error }, 'offlineSync');
@@ -539,10 +545,13 @@ class OfflineSyncService {
           await store.put(ex);
         }
         await tx.done;
-        logger.info(`[OfflineSyncService] Cached ${exercises.length} exercises`, { count: exercises.length }, 'offlineSync');
+        logger.debug(`[OfflineSyncService] Cached ${exercises.length} exercises`, { count: exercises.length }, 'offlineSync');
       }
 
-      logger.info('[OfflineSyncService] Critical data caching complete', undefined, 'offlineSync');
+      if (!_loggedOfflineSyncComplete) {
+        _loggedOfflineSyncComplete = true;
+        logger.debug('[OfflineSyncService] Critical data caching complete', undefined, 'offlineSync');
+      }
     } catch (error) {
       logger.error('[OfflineSyncService] Error caching critical data', error, 'offlineSync');
     }

@@ -15,6 +15,7 @@
 6. [Integrações](#integrações)
 7. [Performance](#performance)
 8. [Segurança](#segurança)
+9. [Console e logs em desenvolvimento](#console-e-logs-em-desenvolvimento)
 
 ---
 
@@ -475,6 +476,18 @@ npm run lighthouse
 2. Lazy loading de componentes
 3. Otimizar imagens (WebP, lazy loading)
 4. Usar service worker para cache
+
+### Console e logs em desenvolvimento
+
+O app usa um logger central (`src/lib/errors/logger.ts`) que respeita o nível mínimo em dev.
+
+**Variáveis de ambiente** (ex.: `.env.development`):
+
+- **`VITE_LOG_LEVEL`**: Nível mínimo de log no console em desenvolvimento. Valores: `error`, `warn`, `info`, `debug`. Padrão: `info`. Para console mais limpo use `VITE_LOG_LEVEL=warn` ou `error`; para depuração use `VITE_LOG_LEVEL=debug`.
+
+**LocalStorage** (DevTools → Application → Local Storage):
+
+- **`DEBUG_LONG_TASKS`**: Se definido como `1`, o logger emite avisos de "Long Task Detected" (tarefas > 50 ms no main thread) mesmo quando `VITE_LOG_LEVEL` não é `debug`. Útil para investigar travamentos de UI.
 
 ---
 

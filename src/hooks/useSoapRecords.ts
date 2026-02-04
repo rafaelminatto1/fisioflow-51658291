@@ -372,6 +372,52 @@ export const useSignSoapRecord = () => {
   });
 };
 
+// Hook para deletar um registro SOAP
+export const useDeleteSoapRecord = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ recordId, patientId }: { recordId: string; patientId: string }) => {
+      const docRef = doc(db, 'soap_records', recordId);
+
+      // Check if record exists and get its data
+      const snapshot = await getDoc(docRef);
+      if (!snapshot.exists()) {
+        throw new SoapOperationError('Registro não encontrado', 'NOT_FOUND');
+      }
+
+      const record = convertDocToSoapRecord(snapshot);
+
+      // Don't allow deletion of finalized records
+      if (record.status === 'finalized') {
+        throw new SoapOperationError('Não é possível excluir uma evolução finalizada', 'CANNOT_DELETE_FINALIZED');
+      }
+
+      // Delete the record
+      await deleteDoc(docRef);
+
+      return { recordId, patientId };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: soapKeys.list(result.patientId) });
+      queryClient.invalidateQueries({ queryKey: soapKeys.drafts(result.patientId) });
+      queryClient.removeQueries({ queryKey: soapKeys.detail(result.recordId) });
+      toast({
+        title: 'Evolução excluída',
+        description: 'A evolução foi excluída com sucesso.'
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: 'Erro ao excluir evolução',
+        description: error instanceof SoapOperationError ? error.message : 'Erro desconhecido',
+        variant: 'destructive'
+      });
+    }
+  });
+};
+
 // Hook para buscar drafts de um paciente (não finalizados)
 export const useDraftSoapRecords = (patientId: string) => {
   return useQuery({

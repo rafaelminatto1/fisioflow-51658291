@@ -93,7 +93,8 @@ export class StructuredLogger {
   }
 
   /**
-   * Log em nível ERROR
+   * Log em nível ERROR.
+   * Assinatura: (message, data?) — use um único objeto no 2º argumento para múltiplos campos (ex: { message, stack, error }).
    */
   error(message: string, error?: Error | any): void {
     this.log(LogLevel.ERROR, message, error);

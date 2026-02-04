@@ -268,7 +268,7 @@ class RemoteConfigManager {
       await fetchAndActivate(this.remoteConfig);
 
       this.initialized = true;
-      logger.info('Firebase Remote Config initialized successfully', undefined, 'remote-config');
+      logger.debug('Firebase Remote Config initialized successfully', undefined, 'remote-config');
     } catch (error) {
       logger.error('Failed to initialize Remote Config', error, 'remote-config');
       // Don't throw - allow app to continue with defaults

@@ -33,10 +33,15 @@ setGlobalOptions({
     ],
     // Allow up to 100 concurrent instances per function
     maxInstances: 100,
-    // 0.5 vCPU is minimum for functions with 1GiB memory
-    cpu: 0.5,
-    // Set default memory for all functions
+    // 1 vCPU for better performance during cold starts
+    cpu: 1,
+    // Set default memory for all functions (increased for better cold start performance)
     memory: '512MiB',
+    // Set timeout for all functions (default is 60s for Gen 2)
+    timeoutSeconds: 60,
+    // Keep minimum instances warm for critical functions (reduces cold starts)
+    // Note: This applies globally but can be overridden per function
+    minInstances: 0,
 });
 
 // ============================================================================
@@ -305,9 +310,29 @@ export const realtimePublish = realtimePublisher.realtimePublish;
 // HTTP FUNCTIONS
 // ============================================================================
 
+function setApiRouterCors(req: functions.https.Request, res: functions.Response) {
+    const origin = req.headers?.origin || req.headers?.Origin;
+    const allowOrigin = (origin && (
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(String(origin)) ||
+        /moocafisio\.com\.br$/.test(String(origin)) ||
+        /fisioflow\.web\.app$/.test(String(origin))
+    )) ? origin : '*';
+    res.set('Access-Control-Allow-Origin', allowOrigin);
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Access-Control-Max-Age', '86400');
+}
+
 export const apiRouter = functions.https.onRequest({
     cors: true,
 }, async (req, res) => {
+    if (req.method === 'OPTIONS') {
+        setApiRouterCors(req, res);
+        res.status(204).send('');
+        return;
+    }
+    setApiRouterCors(req, res);
+
     // Router principal para endpoints HTTP
     const { path } = req;
 

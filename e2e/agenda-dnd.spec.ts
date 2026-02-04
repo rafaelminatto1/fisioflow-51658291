@@ -40,18 +40,13 @@ test('agenda drag and drop', async ({ page }) => {
     const appointmentBox = await appointment.boundingBox();
     console.log('Appointment box:', appointmentBox);
 
-    // 4. Find a target slot; week view uses [data-testid^="time-slot-"]
-    console.log('Finding target slot...');
-    const targetSlot = page.locator('[data-testid^="time-slot-"]').first();
+    // 4. Target: slot 28 = terça 07:00 (mesmo horário, dia diferente)
+    const targetSlot = page.locator('[data-testid^="time-slot-"]').nth(28);
+    await targetSlot.scrollIntoViewIfNeeded();
     const targetBox = await targetSlot.boundingBox({ timeout: 15000 });
-    console.log('Target box:', targetBox);
+    if (!appointmentBox || !targetBox) throw new Error('Positions not found');
 
-    if (!appointmentBox || !targetBox) {
-        throw new Error('Positions not found');
-    }
-
-    // 5. Perform Drag and Drop
-    console.log('Dragging...');
+    // 5. Drag and drop
     await appointment.dragTo(targetSlot);
 
     // 6. Verify Modal Appears (no "Invalid time value" - fix: parseDate handles ISO date strings)

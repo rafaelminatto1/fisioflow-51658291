@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { PatientHelpers } from '@/types';
 
-export function InternalDashboard() {
+function InternalDashboardComponent() {
   // Pacientes ativos (com consulta nos últimos 30 dias)
   const { data: activePatients, isLoading: loadingActive } = useQuery({
     queryKey: ["active-patients-dashboard"],
@@ -449,3 +450,7 @@ export function InternalDashboard() {
     </div>
   );
 }
+
+// Memoize InternalDashboard to prevent unnecessary re-renders
+export const InternalDashboard = memo(InternalDashboardComponent);
+InternalDashboard.displayName = 'InternalDashboard';

@@ -458,6 +458,64 @@ service cloud.firestore {
       allow read, create, update, delete: if isAuthenticated();
     }
 
+    // ============================================================================================
+    // GAMIFICATION COLLECTIONS
+    // ============================================================================================
+
+    // Perfis de gamificação de pacientes
+    match /patient_gamification/{patientId} {
+      allow read: if isAuthenticated();
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Transações de XP
+    match /xp_transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isProfessional() || isAdmin();
+    }
+
+    // Conquistas (achievements) disponíveis
+    match /achievements/{achievementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Log de conquistas desbloqueadas por pacientes
+    match /achievements_log/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isProfessional() || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Missões diárias
+    match /daily_quests/{questId} {
+      allow read: if isAuthenticated();
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Itens da loja
+    match /shop_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Inventário do usuário
+    match /user_inventory/{inventoryId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Configurações de gamificação
+    match /gamification_settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
