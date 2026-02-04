@@ -2,7 +2,8 @@
  * Firebase Multi-Factor Authentication (MFA) Implementation
  *
  */
-import { getFirebaseAuth, db, doc, getDoc, updateDoc, query as firestoreQuery, where, getDocs, collection } from '@/integrations/firebase/app';
+import { multiFactor } from 'firebase/auth';
+import { getFirebaseAuth, db, doc, getDoc, updateDoc, query as firestoreQuery, where, getDocs, collection, limit } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
@@ -92,10 +93,10 @@ export class MFAService {
         verified_at: new Date().toISOString(),
       });
 
-      const profileQ = firestoreQuery(collection(db, 'profiles'), where('user_id', '==', user.uid), limit(1));
-      const profileSnap = await getDocs(profileQ);
-      if (!profileSnap.empty) {
-        await updateDoc(profileSnap.docs[0].ref, {
+      const profileRef = doc(db, 'profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+      if (profileSnap.exists()) {
+        await updateDoc(profileRef, {
           mfa_enabled: true,
           mfa_method: 'totp',
         });
@@ -169,10 +170,10 @@ export class MFAService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
-      const profileQ = firestoreQuery(collection(db, 'profiles'), where('user_id', '==', user.uid), limit(1));
-      const profileSnap = await getDocs(profileQ);
-      if (!profileSnap.empty) {
-        await updateDoc(profileSnap.docs[0].ref, {
+      const profileRef = doc(db, 'profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+      if (profileSnap.exists()) {
+        await updateDoc(profileRef, {
           mfa_enabled: false,
           mfa_method: null,
         });
@@ -232,10 +233,10 @@ export class MFAAdminService {
 
   async updateUserMFAStatus(userId: string, enabled: boolean): Promise<void> {
     try {
-      const profileQ = firestoreQuery(collection(db, 'profiles'), where('user_id', '==', userId), limit(1));
-      const profileSnap = await getDocs(profileQ);
-      if (!profileSnap.empty) {
-        await updateDoc(profileSnap.docs[0].ref, {
+      const profileRef = doc(db, 'profiles', userId);
+      const profileSnap = await getDoc(profileRef);
+      if (profileSnap.exists()) {
+        await updateDoc(profileRef, {
           mfa_enabled: enabled,
           mfa_method: enabled ? 'totp' : null,
           updated_at: new Date().toISOString(),

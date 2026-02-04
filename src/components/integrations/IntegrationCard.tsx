@@ -93,12 +93,17 @@ export function IntegrationCard({
               </Badge>
             </div>
 
-            {integration.last_sync_at && (
-              <div className="text-xs text-muted-foreground">
-                Última sync:{' '}
-                {new Date(integration.last_sync_at.toDate()).toLocaleString('pt-BR')}
-              </div>
-            )}
+            {integration.last_sync_at && (() => {
+              const v = integration.last_sync_at;
+              const d = v && typeof (v as { toDate?: () => Date }).toDate === 'function'
+                ? (v as { toDate: () => Date }).toDate()
+                : v instanceof Date ? v : v ? new Date(v as number) : null;
+              return d ? (
+                <div className="text-xs text-muted-foreground">
+                  Última sync: {d.toLocaleString('pt-BR')}
+                </div>
+              ) : null;
+            })()}
 
             {/* Toggle */}
             <div className="flex items-center justify-between">

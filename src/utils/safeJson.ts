@@ -4,6 +4,8 @@
  * Evita erros em runtime quando JSON está malformado ou corrompido.
  */
 
+import { fisioLogger } from '@/lib/errors/logger';
+
 /**
  * Parse seguro de JSON com fallback
  *
@@ -40,17 +42,18 @@ export function safeJsonParseWithLog<T>(
   }
 
   if (typeof json !== 'string') {
-    console.warn(`[${context}] safeJsonParse: input is not a string`);
+    fisioLogger.warn('safeJsonParse: input is not a string', { context }, 'safeJson');
     return fallback;
   }
 
   try {
     return JSON.parse(json) as T;
   } catch (error) {
-    console.warn(`[${context}] safeJsonParse: failed to parse JSON`, {
+    fisioLogger.warn('safeJsonParse: failed to parse JSON', {
+      context,
       json: json.substring(0, 100) + (json.length > 100 ? '...' : ''),
       error: error instanceof Error ? error.message : String(error)
-    });
+    }, 'safeJson');
     return fallback;
   }
 }
