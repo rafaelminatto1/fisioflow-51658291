@@ -11,9 +11,8 @@ import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { db, doc, getDoc, updateDoc } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { PatientService } from '@/lib/services/PatientService';
+import { patientsApi } from '@/integrations/firebase/functions';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -42,7 +41,7 @@ export const EditPatientModal: React.FC<{
 
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, control } = useForm<PatientFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, control } = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
       name: '',
@@ -66,36 +65,27 @@ export const EditPatientModal: React.FC<{
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-
-      const patientRef = doc(db, 'patients', patientId);
-      const patientSnap = await getDoc(patientRef);
-
-      if (!patientSnap.exists()) {
-        return null;
-      }
-
-      return { id: patientSnap.id, ...patientSnap.data() };
+      return PatientService.getPatientById(patientId);
     },
     enabled: open && !!patientId
   });
 
   useEffect(() => {
     if (patient) {
-      // Reset form with patient data
       reset({
         name: patient.name || '',
         email: patient.email || '',
         phone: patient.phone || '',
         cpf: patient.cpf || '',
-        birth_date: patient.birth_date || '',
-        address: patient.address || '',
-        city: patient.city || '',
-        state: patient.state || '',
-        zip_code: patient.zip_code || '',
-        health_insurance: patient.health_insurance || '',
-        emergency_contact: patient.emergency_contact || '',
-        emergency_phone: patient.emergency_phone || '',
-        observations: patient.observations || '',
+        birth_date: patient.birthDate ? patient.birthDate.slice(0, 10) : '',
+        address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        health_insurance: '',
+        emergency_contact: '',
+        emergency_phone: '',
+        observations: patient.mainCondition || '',
         status: patient.status || 'active',
       });
     }
@@ -105,17 +95,18 @@ export const EditPatientModal: React.FC<{
     mutationFn: async (data: PatientFormData) => {
       if (!patientId) throw new Error('Patient ID is required');
 
-      const updatePatientFn = httpsCallable(getFirebaseFunctions(), 'updatePatient');
-      const result = await updatePatientFn({
-        patientId,
-        ...data,
-      });
+      const payload: Record<string, unknown> = {
+        name: data.name,
+        cpf: data.cpf || undefined,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        birth_date: data.birth_date || undefined,
+        main_condition: data.observations || undefined,
+        status: data.status || undefined,
+      };
 
-      if (result.data?.error) {
-        throw new Error(result.data.error);
-      }
-
-      return result.data;
+      const updated = await patientsApi.update(patientId, payload);
+      return updated;
     },
     onSuccess: () => {
       toast({

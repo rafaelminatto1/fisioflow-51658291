@@ -84,7 +84,7 @@ export class MFAService {
       const data = snap.data();
       const secret = data.secret;
 
-      if (!this.verifyTOTPCode(secret, code)) {
+      if (!(await this.verifyTOTPCode(secret, code))) {
         throw new Error('Invalid verification code');
       }
 
@@ -109,23 +109,107 @@ export class MFAService {
     }
   }
 
-  private verifyTOTPCode(secret: string, code: string): boolean {
-    // Basic format validation - but this is NOT cryptographically secure
-    // Real TOTP verification requires:
-    // 1. Base32 decoding of the secret
-    // 2. HMAC-SHA1 computation with current timestamp
-    // 3. Comparison with tolerance for clock drift
+  /**
+   * Verify TOTP code using proper HMAC-SHA1 algorithm
+   * Implements RFC 6238 (TOTP) and RFC 4226 (HOTP)
+   */
+  private async verifyTOTPCode(secret: string, code: string): Promise<boolean> {
+    // Validate code format first (6 digits)
+    if (!/^\d{6}$/.test(code)) {
+      return false;
+    }
 
-    // SECURITY WARNING: This implementation only validates format!
-    // It does NOT verify the code is cryptographically valid for this secret
-    // This allows ANY 6-digit code to pass verification!
+    try {
+      const secretBytes = this.base32Decode(secret);
+      const codeInt = parseInt(code, 10);
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeStep = 30; // Standard TOTP time step
 
-    // For proper implementation, install otplib:
-    // npm install oplib
-    // import { authenticator } from 'otplib';
-    // return authenticator.verify({ token: code, secret });
+      // Check current time window and adjacent windows (for clock drift tolerance)
+      // This allows codes from 1 step before and 1 step after
+      for (let windowOffset = -1; windowOffset <= 1; windowOffset++) {
+        let timeCounter = Math.floor((currentTime + (windowOffset * timeStep)) / timeStep);
 
-    return /^\d{6}$/.test(code); // Format validation only - NOT SECURE!
+        // Convert counter to 8-byte big-endian array
+        const counterBytes = new Uint8Array(8);
+        for (let i = 7; i >= 0; i--) {
+          counterBytes[i] = timeCounter & 0xff;
+          timeCounter >>= 8;
+        }
+
+        // Compute HMAC-SHA1
+        const hmacKey = await crypto.subtle.importKey(
+          'raw',
+          secretBytes,
+          { name: 'HMAC', hash: 'SHA-1' },
+          false,
+          ['sign']
+        );
+
+        const hmacSignature = await crypto.subtle.sign(
+          'HMAC',
+          hmacKey,
+          counterBytes
+        );
+
+        const hmacData = new Uint8Array(hmacSignature);
+
+        // Dynamic truncation (RFC 4226 section 5.4)
+        const dynOffset = hmacData[hmacData.length - 1] & 0x0f;
+        const binary = ((hmacData[dynOffset] & 0x7f) << 24) |
+                      ((hmacData[dynOffset + 1] & 0xff) << 16) |
+                      ((hmacData[dynOffset + 2] & 0xff) << 8) |
+                      (hmacData[dynOffset + 3] & 0xff);
+
+        const otp = binary % 1000000;
+
+        if (otp === codeInt) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      logger.error('TOTP verification error', error, 'mfa');
+      return false;
+    }
+  }
+
+  /**
+   * Decode Base32 string to Uint8Array
+   * Implements RFC 4648 Base32 encoding
+   */
+  private base32Decode(base32: string): Uint8Array {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    base32 = base32.toUpperCase().replace(/[^A-Z2-7]/g, '');
+
+    const bits = base32.split('').map(char => {
+      const index = alphabet.indexOf(char);
+      if (index === -1) throw new Error(`Invalid Base32 character: ${char}`);
+      return index.toString(2).padStart(5, '0');
+    }).join('');
+
+    const bytes = new Uint8Array(Math.floor(bits.length / 8));
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = parseInt(bits.substr(i * 8, 8), 2);
+    }
+
+    return bytes;
+  }
+
+  /**
+   * Generate backup codes for account recovery
+   * Returns 10 single-use codes
+   */
+  generateBackupCodes(): string[] {
+    const codes: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      // Generate 10-character alphanumeric codes in groups of 5
+      const code1 = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const code2 = Math.random().toString(36).substring(2, 7).toUpperCase();
+      codes.push(`${code1}-${code2}`);
+    }
+    return codes;
   }
 
   async getEnrolledFactors(userId: string): Promise<MFAEnrollment[]> {
