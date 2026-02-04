@@ -11,7 +11,6 @@ import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-f
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { UnknownError } from '@/types/common';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES

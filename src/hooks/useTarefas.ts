@@ -7,7 +7,7 @@ import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query a
 import { toast } from 'sonner';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { getFirebaseAuth, db } from '@/integrations/firebase/app';
-
+import { fisioLogger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
 
@@ -57,7 +57,7 @@ export async function fetchTarefas(): Promise<Tarefa[]> {
 
   const organizationId = await getUserOrganizationId();
   if (!organizationId) {
-    console.warn('[useTarefas] No organization_id found - returning empty array');
+    fisioLogger.debug('No organization_id found - returning empty array', undefined, 'useTarefas');
     return [];
   }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { isSameDay, startOfDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -58,6 +58,8 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
     // Estado para armazenar appointments do destino atual (para preview dinâmica)
     const [targetAppointments, setTargetAppointments] = useState<Appointment[]>([]);
 
+    const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
         logger.info('[useCalendarDrag] handleDragStart chamado', {
             appointmentId: appointment.id,
@@ -90,6 +92,10 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
     }, [onAppointmentReschedule]);
 
     const handleDragEnd = useCallback(() => {
+        if (leaveTimeoutRef.current) {
+            clearTimeout(leaveTimeoutRef.current);
+            leaveTimeoutRef.current = null;
+        }
         setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
         setDropTarget(null);
         setTargetAppointments([]);
@@ -99,6 +105,12 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         if (!dragState.isDragging || !onAppointmentReschedule) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+
+        if (leaveTimeoutRef.current) {
+            clearTimeout(leaveTimeoutRef.current);
+            leaveTimeoutRef.current = null;
+        }
+
         setDropTarget({ date, time });
 
         // Buscar appointments existentes no slot de destino para preview dinâmica
@@ -120,13 +132,23 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
                 return;
             }
         }
-        setDropTarget(null);
-        setTargetAppointments([]);
+        // Debounce: ao passar do cell para o card, dragOver cancela o timeout e mantém o preview
+        if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+        leaveTimeoutRef.current = setTimeout(() => {
+            leaveTimeoutRef.current = null;
+            setDropTarget(null);
+            setTargetAppointments([]);
+        }, 60);
     }, []);
 
     const handleDrop = useCallback((e: React.DragEvent, targetDate: Date, time: string) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (leaveTimeoutRef.current) {
+            clearTimeout(leaveTimeoutRef.current);
+            leaveTimeoutRef.current = null;
+        }
 
         let appointmentToMove = dragState.appointment;
 
