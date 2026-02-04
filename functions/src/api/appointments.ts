@@ -5,6 +5,7 @@ import { Appointment } from '../types/models';
 import { logger } from '../lib/logger';
 import * as admin from 'firebase-admin';
 import { rtdb } from '../lib/rtdb';
+import { setCorsHeaders } from '../lib/cors';
 
 const firebaseAuth = admin.auth();
 
@@ -32,20 +33,6 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
   }
 }
 
-/**
- * CORS headers helper - reflete Origin para requests com Authorization (ex: localhost)
- */
-function setCorsHeaders(req: any, res: any) {
-  const origin = req.headers?.origin || req.headers?.Origin;
-  const allowOrigin = (origin && (
-    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
-    /moocafisio\.com\.br$/.test(origin)
-  )) ? origin : '*';
-  res.set('Access-Control-Allow-Origin', allowOrigin);
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Max-Age', '86400');
-}
 
 /** DB enum session_type é ('individual','dupla','grupo'). Frontend envia 'group' → normalizar para 'grupo'. */
 function normalizeSessionType(value: string | undefined): 'individual' | 'dupla' | 'grupo' {
@@ -110,7 +97,7 @@ export const listAppointmentsHttp = onRequest(
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
-      setCorsHeaders(req, res);
+      setCorsHeaders(res, req);
       res.status(204).send('');
       return;
     }
@@ -120,7 +107,7 @@ export const listAppointmentsHttp = onRequest(
       return;
     }
 
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
 
     try {
       const { uid } = await verifyAuthHeader(req);
@@ -162,9 +149,9 @@ export const listAppointmentsHttp = onRequest(
 export const getAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -195,9 +182,9 @@ export const getAppointmentHttp = onRequest(
 export const checkTimeConflictHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -224,9 +211,9 @@ export const checkTimeConflictHttp = onRequest(
 export const createAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -300,9 +287,9 @@ export const createAppointmentHttp = onRequest(
 export const updateAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
-    if (req.method !== 'POST') { setCorsHeaders(req, res); res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(req, res);
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { setCorsHeaders(res, req); res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
@@ -383,12 +370,12 @@ export const updateAppointmentHttp = onRequest(
       } catch (err) { logger.error('Erro Realtime:', err); }
       res.json({ data: updatedAppt });
     } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { setCorsHeaders(req, res); res.status(401).json({ error: error.message }); return; }
-      if (error instanceof HttpsError && error.code === 'not-found') { setCorsHeaders(req, res); res.status(404).json({ error: error.message }); return; }
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { setCorsHeaders(res, req); res.status(401).json({ error: error.message }); return; }
+      if (error instanceof HttpsError && error.code === 'not-found') { setCorsHeaders(res, req); res.status(404).json({ error: error.message }); return; }
       const errMsg = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
       const errStack = error instanceof Error ? error.stack : undefined;
       logger.error('Error in updateAppointmentHttp:', { message: errMsg, stack: errStack, error });
-      setCorsHeaders(req, res);
+      setCorsHeaders(res, req);
       res.status(500).json({ error: errMsg });
     }
   }
@@ -400,9 +387,9 @@ export const updateAppointmentHttp = onRequest(
 export const cancelAppointmentHttp = onRequest(
   { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
   async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(req, res);
+    setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
