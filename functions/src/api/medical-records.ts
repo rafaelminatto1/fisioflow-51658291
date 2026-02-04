@@ -7,7 +7,7 @@ import { logger } from '../lib/logger';
 function setCorsHeaders(res: any) { res.set('Access-Control-Allow-Origin', '*'); res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization'); }
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
-const httpOpts = { region: 'southamerica-east1' as const, memory: '256MiB' as const, maxInstances: 100, cors: true };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS };
 
 export const getPatientRecordsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
@@ -186,7 +186,10 @@ interface GetPatientRecordsResponse {
   data: MedicalRecord[];
 }
 
-export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPatientRecordsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca prontuários de um paciente
+ */
+export const getPatientRecordsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -238,7 +241,12 @@ export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPat
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prontuários';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPatientRecordsResponse>>(
+  { cors: CORS_ORIGINS },
+  getPatientRecordsHandler
+);
 
 /**
  * Cria um novo prontuário
@@ -255,7 +263,10 @@ interface CreateMedicalRecordResponse {
   data: MedicalRecord;
 }
 
-export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<CreateMedicalRecordResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria um novo prontuário
+ */
+export const createMedicalRecordHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -321,7 +332,12 @@ export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<Cr
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar prontuário';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<CreateMedicalRecordResponse>>(
+  { cors: CORS_ORIGINS },
+  createMedicalRecordHandler
+);
 
 /**
  * Atualiza um prontuário
@@ -337,7 +353,10 @@ interface UpdateMedicalRecordResponse {
   data: MedicalRecord;
 }
 
-export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<UpdateMedicalRecordResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Atualiza um prontuário
+ */
+export const updateMedicalRecordHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -401,7 +420,12 @@ export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<Up
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar prontuário';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<UpdateMedicalRecordResponse>>(
+  { cors: CORS_ORIGINS },
+  updateMedicalRecordHandler
+);
 
 /**
  * Lista sessões de tratamento de um paciente
@@ -415,7 +439,10 @@ interface ListTreatmentSessionsResponse {
   data: TreatmentSession[];
 }
 
-export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promise<ListTreatmentSessionsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista sessões de tratamento de um paciente
+ */
+export const listTreatmentSessionsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -453,7 +480,12 @@ export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promis
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar sessões';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promise<ListTreatmentSessionsResponse>>(
+  { cors: CORS_ORIGINS },
+  listTreatmentSessionsHandler
+);
 
 /**
  * Cria uma nova sessão de tratamento
@@ -472,7 +504,10 @@ interface CreateTreatmentSessionResponse {
   data: TreatmentSession;
 }
 
-export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Promise<CreateTreatmentSessionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria uma nova sessão de tratamento
+ */
+export const createTreatmentSessionHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -560,7 +595,12 @@ export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Prom
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar sessão';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Promise<CreateTreatmentSessionResponse>>(
+  { cors: CORS_ORIGINS },
+  createTreatmentSessionHandler
+);
 
 /**
  * Atualiza uma sessão de tratamento
@@ -579,7 +619,10 @@ interface UpdateTreatmentSessionResponse {
   data: TreatmentSession;
 }
 
-export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Promise<UpdateTreatmentSessionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Atualiza uma sessão de tratamento
+ */
+export const updateTreatmentSessionHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -605,14 +648,10 @@ export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Prom
 
     // Construir SET dinâmico
     const setClauses: string[] = [];
-    const values: (string | number | Date)[] = [];
+    const values: (string | number | Date | null)[] = [];
     let paramCount = 0;
 
     const allowedFields = ['pain_level_before', 'pain_level_after', 'observations', 'evolution', 'next_session_goals'];
-
-    // Map camelCase to snake_case if necessary, but here keys match allowedFields logic except for case if mismatched.
-    // However, input keys seem to be camelCase in previous file but allowedFields were snake_case.
-    // Let's standardise on expecting camelCase in request but mapping to snake_case db columns.
 
     const fieldMap: Record<string, string> = {
       painLevelBefore: 'pain_level_before',
@@ -654,7 +693,12 @@ export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Prom
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar sessão';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Promise<UpdateTreatmentSessionResponse>>(
+  { cors: CORS_ORIGINS },
+  updateTreatmentSessionHandler
+);
 
 /**
  * Busca registros de dor de um paciente
@@ -667,7 +711,10 @@ interface GetPainRecordsResponse {
   data: PainRecord[];
 }
 
-export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecordsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca registros de dor de um paciente
+ */
+export const getPainRecordsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -698,7 +745,12 @@ export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecor
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar registros de dor';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecordsResponse>>(
+  { cors: CORS_ORIGINS },
+  getPainRecordsHandler
+);
 
 /**
  * Registra um novo evento de dor
@@ -715,7 +767,10 @@ interface SavePainRecordResponse {
   data: PainRecord;
 }
 
-export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainRecordResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Registra um novo evento de dor
+ */
+export const savePainRecordHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -753,4 +808,9 @@ export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainReco
     const errorMessage = error instanceof Error ? error.message : 'Erro ao salvar registro de dor';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainRecordResponse>>(
+  { cors: CORS_ORIGINS },
+  savePainRecordHandler
+);

@@ -9,7 +9,10 @@ const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as co
 /**
  * Assistente de IA que analisa todo o histórico do paciente via Gemini (Versão Estável Vertex AI)
  */
-export const getPatientAISummaryHttp = onRequest(httpOpts, async (req, res) => {
+/**
+ * Assistente de IA que analisa todo o histórico do paciente via Gemini (Versão Estável Vertex AI)
+ */
+export const getPatientAISummaryHttpHandler = async (req: any, res: any) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -20,7 +23,7 @@ export const getPatientAISummaryHttp = onRequest(httpOpts, async (req, res) => {
     const authHeader = req.headers?.authorization || req.headers?.Authorization;
     const token = Array.isArray(authHeader) ? authHeader[0] : authHeader;
     const auth = await authorizeRequest(extractBearerToken(token));
-    
+
     const { patientId } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     if (!patientId) { res.status(400).json({ error: 'patientId é obrigatório' }); return; }
 
@@ -60,4 +63,6 @@ export const getPatientAISummaryHttp = onRequest(httpOpts, async (req, res) => {
     logger.error('getPatientAISummary error:', e);
     res.status(500).json({ error: 'Falha na análise de IA' });
   }
-});
+};
+
+export const getPatientAISummaryHttp = onRequest(httpOpts, getPatientAISummaryHttpHandler);

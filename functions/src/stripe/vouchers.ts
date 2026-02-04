@@ -20,6 +20,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Webhook secret para verificar assinaturas
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 /**
  * Tipos de voucher disponíveis
  */
@@ -56,9 +63,9 @@ const VOUCHER_SESSIONS: Record<VoucherType, number> = {
  * Cria uma sessão de checkout no Stripe para pagamento de voucher
  */
 export const createVoucherCheckout = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -174,7 +181,7 @@ export const createVoucherCheckout = onCall({
  */
 export const stripeWebhook = onCall({
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   // Este endpoint deve ser acessível publicamente pelo Stripe
@@ -227,9 +234,9 @@ export const stripeWebhook = onCall({
  * Cloud Function: Listar vouchers disponíveis
  */
 export const listAvailableVouchers = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async () => {
   const vouchers = Object.values(VoucherType).map(type => ({
@@ -248,9 +255,9 @@ export const listAvailableVouchers = onCall({
  * Cloud Function: Obter vouchers do usuário
  */
 export const getUserVouchers = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {

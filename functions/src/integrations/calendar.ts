@@ -7,6 +7,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import * as admin from 'firebase-admin';
 import { firestore } from 'firebase-admin';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
@@ -15,14 +16,7 @@ import * as logger from 'firebase-functions/logger';
 // Configuração do Google Calendar
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
 
-/**
- * Cloud Function: Sincronizar agendamento com Google Calendar
- */
-export const syncToGoogleCalendar = onCall({
-  cors: true,
-  memory: '256MiB',
-  maxInstances: 10,
-}, async (request) => {
+export const syncToGoogleCalendarHandler = async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
@@ -243,17 +237,19 @@ export const syncToGoogleCalendar = onCall({
 
     throw new HttpsError('internal', `Erro ao sincronizar com Google Calendar: ${error.message}`);
   }
-});
+};
+
+export const syncToGoogleCalendar = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, syncToGoogleCalendarHandler);
 
 /**
  * Cloud Function: Importar eventos do Google Calendar (listar para o usuário)
  * Retorna lista de eventos no período; o frontend pode exibir e opcionalmente confirmar import.
  */
-export const importFromGoogleCalendar = onCall({
-  cors: true,
-  memory: '256MiB',
-  maxInstances: 10,
-}, async (request) => {
+export const importFromGoogleCalendarHandler = async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
@@ -330,29 +326,21 @@ export const importFromGoogleCalendar = onCall({
     }
     throw new HttpsError('internal', `Erro ao importar eventos: ${error.message}`);
   }
-});
+};
 
-/**
- * Cloud Function: Exportar agenda para iCal
- */
-export const exportToICal = onCall({
+export const importFromGoogleCalendar = onCall({
   cors: true,
   memory: '256MiB',
   maxInstances: 10,
-}, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'Usuário não autenticado');
-  }
+}, importFromGoogleCalendarHandler);
 
-  const { startDate, endDate } = request.data as {
-    startDate: string;
-    endDate: string;
-  };
-
-  // Buscar agendamentos no período
+/**
+ * Cloud Function: Exportar agenda para iCal (callable - mantém tipo para deploy)
+ */
+async function buildICalData(userId: string, startDate: string, endDate: string) {
   const appointmentsSnapshot = await firestore()
     .collection('appointments')
-    .where('therapistId', '==', request.auth.uid)
+    .where('therapistId', '==', userId)
     .where('date', '>=', startDate)
     .where('date', '<=', endDate)
     .where('status', 'in', ['agendado', 'confirmado'])
@@ -361,53 +349,88 @@ export const exportToICal = onCall({
 
   if (appointmentsSnapshot.empty) {
     return {
-      success: true,
-      icalData: 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//FisioFlow//Calendar//EN\nEND:VCALENDAR',
+      success: true as const,
+      iCalData: 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//FisioFlow//Calendar//EN\nEND:VCALENDAR',
+      filename: `fisioflow_agenda_${new Date().toISOString().split('T')[0]}.ics`,
     };
   }
 
-  // Gerar conteúdo iCal
   let iCalData = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//FisioFlow//Calendar//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n';
-
   for (const doc of appointmentsSnapshot.docs) {
     const apt = doc.data();
     const patient = await firestore().collection('patients').doc(apt.patientId).get();
-
     const dateTime = new Date(apt.date);
     const [hours, minutes] = apt.startTime.split(':');
     dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    const endDate = new Date(dateTime);
-    endDate.setHours(dateTime.getHours() + 1);
-
+    const endDateTime = new Date(dateTime);
+    endDateTime.setHours(dateTime.getHours() + 1);
     iCalData += 'BEGIN:VEVENT\n';
     iCalData += `UID:${doc.id}@fisioflow.app\n`;
     iCalData += `DTSTAMP:${formatDateForICal(new Date(apt.createdAt?.toDate?.() || new Date()))}\n`;
     iCalData += `DTSTART:${formatDateForICal(dateTime)}\n`;
-    iCalData += `DTEND:${formatDateForICal(endDate)}\n`;
+    iCalData += `DTEND:${formatDateForICal(endDateTime)}\n`;
     iCalData += `SUMMARY:Fisioterapia - ${patient.data()?.fullName || patient.data()?.name}\n`;
     iCalData += `DESCRIPTION:Tipo: ${apt.type}\n`;
     iCalData += `LOCATION:${apt.room || 'A definir'}\n`;
     iCalData += 'END:VEVENT\n';
   }
-
   iCalData += 'END:VCALENDAR';
-
   return {
-    success: true,
+    success: true as const,
     iCalData,
     filename: `fisioflow_agenda_${new Date().toISOString().split('T')[0]}.ics`,
   };
-});
+}
+
+export const exportToICalHandler = async (req: any, res: any) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(authHeader.substring(7));
+    const { startDate, endDate } = (req.query || req.body || {}) as { startDate?: string; endDate?: string };
+    if (!startDate || !endDate) {
+      res.status(400).json({ error: 'startDate and endDate are required' });
+      return;
+    }
+    const result = await buildICalData(decodedToken.uid, startDate, endDate);
+    res.json(result);
+  } catch (error: any) {
+    logger.error('exportToICal error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const exportToICalCallableHandler = async (request: any) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Usuário não autenticado');
+  }
+  const { startDate, endDate } = (request.data || {}) as { startDate?: string; endDate?: string };
+  if (!startDate || !endDate) {
+    throw new HttpsError('invalid-argument', 'startDate and endDate are required');
+  }
+  return buildICalData(request.auth.uid, startDate, endDate);
+};
+
+export const exportToICal = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, exportToICalCallableHandler);
 
 /**
  * Cloud Function: Conectar Google Calendar (OAuth)
  */
-export const connectGoogleCalendar = onCall({
-  cors: true,
-  memory: '256MiB',
-  maxInstances: 10,
-}, async (request) => {
+export const connectGoogleCalendarHandler = async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
@@ -452,16 +475,18 @@ export const connectGoogleCalendar = onCall({
     logger.error('Google Calendar connection error:', error);
     throw new HttpsError('internal', `Erro ao conectar Google Calendar: ${error.message}`);
   }
-});
+};
+
+export const connectGoogleCalendar = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, connectGoogleCalendarHandler);
 
 /**
  * Cloud Function: Desconectar Google Calendar
  */
-export const disconnectGoogleCalendar = onCall({
-  cors: true,
-  memory: '256MiB',
-  maxInstances: 10,
-}, async (request) => {
+export const disconnectGoogleCalendarHandler = async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
@@ -479,16 +504,18 @@ export const disconnectGoogleCalendar = onCall({
   return {
     success: true,
   };
-});
+};
+
+export const disconnectGoogleCalendar = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, disconnectGoogleCalendarHandler);
 
 /**
  * Cloud Function: Obter URL de autorização OAuth
  */
-export const getGoogleAuthUrl = onCall({
-  cors: true,
-  memory: '256MiB',
-  maxInstances: 10,
-}, async (request) => {
+export const getGoogleAuthUrlHandler = async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
@@ -515,17 +542,19 @@ export const getGoogleAuthUrl = onCall({
     success: true,
     authUrl,
   };
-});
+};
+
+export const getGoogleAuthUrl = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, getGoogleAuthUrlHandler);
 
 /**
  * Cloud Function: Sincronizar integração (persiste last_sync_at e sync_status)
  * Para google_calendar: atualiza status; sync real de eventos é feito por syncToGoogleCalendar por agendamento.
  */
-export const syncIntegration = onCall({
-  cors: true,
-  memory: '256MiB',
-  maxInstances: 10,
-}, async (request) => {
+export const syncIntegrationHandler = async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
   }
@@ -562,7 +591,13 @@ export const syncIntegration = onCall({
     last_sync_at: now.toISOString(),
     sync_status: 'synced',
   };
-});
+};
+
+export const syncIntegration = onCall({
+  cors: true,
+  memory: '256MiB',
+  maxInstances: 10,
+}, syncIntegrationHandler);
 
 // ============================================================================================
 // HELPER FUNCTIONS

@@ -8,126 +8,126 @@ import { logger } from '../lib/logger';
 function setCorsHeaders(res: any) { res.set('Access-Control-Allow-Origin', '*'); res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization'); }
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
-const httpOpts = { region: 'southamerica-east1' as const, memory: '256MiB' as const, maxInstances: 100, cors: true };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS };
 
 export const listTransactionsHttp = onRequest(httpOpts, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const { limit = 100, offset = 0 } = parseBody(req);
-    const result = await getPool().query('SELECT * FROM transacoes WHERE organization_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3', [auth.organizationId, limit, offset]);
-    res.json({ data: result.rows });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('listTransactionsHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
-  }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const { limit = 100, offset = 0 } = parseBody(req);
+        const result = await getPool().query('SELECT * FROM transacoes WHERE organization_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3', [auth.organizationId, limit, offset]);
+        res.json({ data: result.rows });
+    } catch (e: unknown) {
+        if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
+        logger.error('listTransactionsHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
+    }
 });
 
 export const createTransactionHttp = onRequest(httpOpts, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const data = parseBody(req);
-    if (!data.valor || !data.tipo) { res.status(400).json({ error: 'Valor e tipo são obrigatórios' }); return; }
-    const result = await getPool().query('INSERT INTO transacoes (tipo, descricao, valor, status, metadata, organization_id, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [data.tipo, data.descricao || null, data.valor, data.status || 'pendente', data.metadata ? JSON.stringify(data.metadata) : null, auth.organizationId, auth.userId]);
-    res.status(201).json({ data: result.rows[0] });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('createTransactionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
-  }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const data = parseBody(req);
+        if (!data.valor || !data.tipo) { res.status(400).json({ error: 'Valor e tipo são obrigatórios' }); return; }
+        const result = await getPool().query('INSERT INTO transacoes (tipo, descricao, valor, status, metadata, organization_id, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *', [data.tipo, data.descricao || null, data.valor, data.status || 'pendente', data.metadata ? JSON.stringify(data.metadata) : null, auth.organizationId, auth.userId]);
+        res.status(201).json({ data: result.rows[0] });
+    } catch (e: unknown) {
+        if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
+        logger.error('createTransactionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
+    }
 });
 
 export const updateTransactionHttp = onRequest(httpOpts, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const { transactionId, ...updates } = parseBody(req);
-    if (!transactionId) { res.status(400).json({ error: 'transactionId é obrigatório' }); return; }
-    const pool = getPool();
-    const existing = await pool.query('SELECT id FROM transacoes WHERE id = $1 AND organization_id = $2', [transactionId, auth.organizationId]);
-    if (existing.rows.length === 0) { res.status(404).json({ error: 'Transação não encontrada' }); return; }
-    const allowedFields = ['tipo', 'descricao', 'valor', 'status', 'metadata'];
-    const setClauses: string[] = []; const values: any[] = []; let pc = 0;
-    for (const f of allowedFields) {
-      if (f in updates) { pc++; setClauses.push(`${f} = $${pc}`); values.push(f === 'metadata' ? JSON.stringify(updates[f]) : updates[f]); }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const { transactionId, ...updates } = parseBody(req);
+        if (!transactionId) { res.status(400).json({ error: 'transactionId é obrigatório' }); return; }
+        const pool = getPool();
+        const existing = await pool.query('SELECT id FROM transacoes WHERE id = $1 AND organization_id = $2', [transactionId, auth.organizationId]);
+        if (existing.rows.length === 0) { res.status(404).json({ error: 'Transação não encontrada' }); return; }
+        const allowedFields = ['tipo', 'descricao', 'valor', 'status', 'metadata'];
+        const setClauses: string[] = []; const values: any[] = []; let pc = 0;
+        for (const f of allowedFields) {
+            if (f in updates) { pc++; setClauses.push(`${f} = $${pc}`); values.push(f === 'metadata' ? JSON.stringify(updates[f]) : updates[f]); }
+        }
+        if (setClauses.length === 0) { res.status(400).json({ error: 'Nenhum dado para atualizar' }); return; }
+        pc++; setClauses.push(`updated_at = $${pc}`); values.push(new Date()); values.push(transactionId, auth.organizationId);
+        const result = await pool.query(`UPDATE transacoes SET ${setClauses.join(', ')} WHERE id = $${pc + 1} AND organization_id = $${pc + 2} RETURNING *`, values);
+        res.json({ data: result.rows[0] });
+    } catch (e: unknown) {
+        if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
+        logger.error('updateTransactionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
     }
-    if (setClauses.length === 0) { res.status(400).json({ error: 'Nenhum dado para atualizar' }); return; }
-    pc++; setClauses.push(`updated_at = $${pc}`); values.push(new Date()); values.push(transactionId, auth.organizationId);
-    const result = await pool.query(`UPDATE transacoes SET ${setClauses.join(', ')} WHERE id = $${pc + 1} AND organization_id = $${pc + 2} RETURNING *`, values);
-    res.json({ data: result.rows[0] });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('updateTransactionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
-  }
 });
 
 export const deleteTransactionHttp = onRequest(httpOpts, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const { transactionId } = parseBody(req);
-    if (!transactionId) { res.status(400).json({ error: 'transactionId é obrigatório' }); return; }
-    const result = await getPool().query('DELETE FROM transacoes WHERE id = $1 AND organization_id = $2 RETURNING id', [transactionId, auth.organizationId]);
-    if (result.rows.length === 0) { res.status(404).json({ error: 'Transação não encontrada' }); return; }
-    res.json({ success: true });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('deleteTransactionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
-  }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const { transactionId } = parseBody(req);
+        if (!transactionId) { res.status(400).json({ error: 'transactionId é obrigatório' }); return; }
+        const result = await getPool().query('DELETE FROM transacoes WHERE id = $1 AND organization_id = $2 RETURNING id', [transactionId, auth.organizationId]);
+        if (result.rows.length === 0) { res.status(404).json({ error: 'Transação não encontrada' }); return; }
+        res.json({ success: true });
+    } catch (e: unknown) {
+        if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
+        logger.error('deleteTransactionHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
+    }
 });
 
 export const findTransactionByAppointmentIdHttp = onRequest(httpOpts, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const { appointmentId } = parseBody(req);
-    if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
-    const result = await getPool().query("SELECT * FROM transacoes WHERE organization_id = $1 AND metadata->>'appointment_id' = $2 LIMIT 1", [auth.organizationId, appointmentId]);
-    res.json({ data: result.rows[0] || null });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('findTransactionByAppointmentIdHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
-  }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const { appointmentId } = parseBody(req);
+        if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
+        const result = await getPool().query("SELECT * FROM transacoes WHERE organization_id = $1 AND metadata->>'appointment_id' = $2 LIMIT 1", [auth.organizationId, appointmentId]);
+        res.json({ data: result.rows[0] || null });
+    } catch (e: unknown) {
+        if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
+        logger.error('findTransactionByAppointmentIdHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
+    }
 });
 
 export const getEventReportHttp = onRequest(httpOpts, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const { eventoId } = parseBody(req);
-    if (!eventoId) { res.status(400).json({ error: 'eventoId é obrigatório' }); return; }
-    const pool = getPool();
-    const [eventoRes, pagamentosRes, prestadoresRes, checklistRes] = await Promise.all([
-      pool.query('SELECT nome FROM eventos WHERE id = $1', [eventoId]),
-      pool.query('SELECT tipo, descricao, valor, pago_em FROM pagamentos WHERE evento_id = $1', [eventoId]),
-      pool.query('SELECT valor_acordado, status_pagamento FROM prestadores WHERE evento_id = $1', [eventoId]),
-      pool.query('SELECT quantidade, custo_unitario FROM checklist_items WHERE evento_id = $1', [eventoId])
-    ]);
-    if (eventoRes.rows.length === 0) { res.status(404).json({ error: 'Evento não encontrado' }); return; }
-    const evento = eventoRes.rows[0]; const pagamentos = pagamentosRes.rows; const prestadores = prestadoresRes.rows; const checklist = checklistRes.rows;
-    const receitas = pagamentos.filter((p: any) => p.tipo === 'receita').reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
-    const custosPrestadores = prestadores.reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0);
-    const custosInsumos = checklist.reduce((s: number, c: any) => s + Number(c.quantidade || 0) * Number(c.custo_unitario || 0), 0);
-    const outrosCustos = pagamentos.filter((p: any) => p.tipo !== 'receita').reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
-    const custoTotal = custosPrestadores + custosInsumos + outrosCustos; const saldo = receitas - custoTotal; const margem = receitas > 0 ? Math.round((saldo / receitas) * 100) : 0;
-    const pagamentosPendentes = prestadores.filter((p: any) => p.status_pagamento === 'PENDENTE').reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0);
-    res.json({ data: { eventoId, eventoNome: evento.nome, receitas, custosPrestadores, custosInsumos, outrosCustos, custoTotal, saldo, margem, pagamentosPendentes, detalhePagamentos: pagamentos.map((p: any) => ({ tipo: p.tipo, descricao: p.descricao || '', valor: Number(p.valor || 0), pagoEm: p.pago_em })) } });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('getEventReportHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
-  }
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const { eventoId } = parseBody(req);
+        if (!eventoId) { res.status(400).json({ error: 'eventoId é obrigatório' }); return; }
+        const pool = getPool();
+        const [eventoRes, pagamentosRes, prestadoresRes, checklistRes] = await Promise.all([
+            pool.query('SELECT nome FROM eventos WHERE id = $1', [eventoId]),
+            pool.query('SELECT tipo, descricao, valor, pago_em FROM pagamentos WHERE evento_id = $1', [eventoId]),
+            pool.query('SELECT valor_acordado, status_pagamento FROM prestadores WHERE evento_id = $1', [eventoId]),
+            pool.query('SELECT quantidade, custo_unitario FROM checklist_items WHERE evento_id = $1', [eventoId])
+        ]);
+        if (eventoRes.rows.length === 0) { res.status(404).json({ error: 'Evento não encontrado' }); return; }
+        const evento = eventoRes.rows[0]; const pagamentos = pagamentosRes.rows; const prestadores = prestadoresRes.rows; const checklist = checklistRes.rows;
+        const receitas = pagamentos.filter((p: any) => p.tipo === 'receita').reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
+        const custosPrestadores = prestadores.reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0);
+        const custosInsumos = checklist.reduce((s: number, c: any) => s + Number(c.quantidade || 0) * Number(c.custo_unitario || 0), 0);
+        const outrosCustos = pagamentos.filter((p: any) => p.tipo !== 'receita').reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
+        const custoTotal = custosPrestadores + custosInsumos + outrosCustos; const saldo = receitas - custoTotal; const margem = receitas > 0 ? Math.round((saldo / receitas) * 100) : 0;
+        const pagamentosPendentes = prestadores.filter((p: any) => p.status_pagamento === 'PENDENTE').reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0);
+        res.json({ data: { eventoId, eventoNome: evento.nome, receitas, custosPrestadores, custosInsumos, outrosCustos, custoTotal, saldo, margem, pagamentosPendentes, detalhePagamentos: pagamentos.map((p: any) => ({ tipo: p.tipo, descricao: p.descricao || '', valor: Number(p.valor || 0), pagoEm: p.pago_em })) } });
+    } catch (e: unknown) {
+        if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
+        logger.error('getEventReportHttp:', e); res.status(500).json({ error: e instanceof Error ? e.message : 'Erro' });
+    }
 });
 
 // ============================================================================
@@ -149,7 +149,10 @@ interface ListTransactionsResponse {
 /**
  * Lista transações financeiras
  */
-export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista transações financeiras
+ */
+export const listTransactionsHandler = async (request: any) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -174,7 +177,12 @@ export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTran
         const errorMessage = error instanceof Error ? error.message : 'Erro ao listar transações';
         throw new HttpsError('internal', errorMessage);
     }
-});
+};
+
+export const listTransactions = onCall<ListTransactionsRequest, Promise<ListTransactionsResponse>>(
+    { cors: CORS_ORIGINS },
+    listTransactionsHandler
+);
 
 interface CreateTransactionRequest {
     tipo: 'receita' | 'despesa';
@@ -191,7 +199,10 @@ interface CreateTransactionResponse {
 /**
  * Cria uma nova transação
  */
-export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria uma nova transação
+ */
+export const createTransactionHandler = async (request: any) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -229,7 +240,12 @@ export const createTransaction = onCall<CreateTransactionRequest, Promise<Create
         const errorMessage = error instanceof Error ? error.message : 'Erro ao criar transação';
         throw new HttpsError('internal', errorMessage);
     }
-});
+};
+
+export const createTransaction = onCall<CreateTransactionRequest, Promise<CreateTransactionResponse>>(
+    { cors: CORS_ORIGINS },
+    createTransactionHandler
+);
 
 interface UpdateTransactionRequest {
     transactionId: string;
@@ -248,7 +264,10 @@ interface UpdateTransactionResponse {
 /**
  * Atualiza uma transação
  */
-export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Atualiza uma transação
+ */
+export const updateTransactionHandler = async (request: any) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -290,7 +309,7 @@ export const updateTransaction = onCall<UpdateTransactionRequest, Promise<Update
         }
 
         if (setClauses.length === 0) {
-            throw new HttpsError('invalid-argument', 'Nenhum dado para atualizar');
+            throw new HttpsError('invalid-argument', 'Nenhum data para atualizar');
         }
 
         paramCount++;
@@ -315,7 +334,12 @@ export const updateTransaction = onCall<UpdateTransactionRequest, Promise<Update
         const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar transação';
         throw new HttpsError('internal', errorMessage);
     }
-});
+};
+
+export const updateTransaction = onCall<UpdateTransactionRequest, Promise<UpdateTransactionResponse>>(
+    { cors: CORS_ORIGINS },
+    updateTransactionHandler
+);
 
 interface DeleteTransactionRequest {
     transactionId: string;
@@ -324,7 +348,10 @@ interface DeleteTransactionRequest {
 /**
  * Remove uma transação
  */
-export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Remove uma transação
+ */
+export const deleteTransactionHandler = async (request: any) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -354,7 +381,12 @@ export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ succ
         const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir transação';
         throw new HttpsError('internal', errorMessage);
     }
-});
+};
+
+export const deleteTransaction = onCall<DeleteTransactionRequest, Promise<{ success: boolean }>>(
+    { cors: CORS_ORIGINS },
+    deleteTransactionHandler
+);
 
 interface FindTransactionByAppointmentIdRequest {
     appointmentId: string;
@@ -367,7 +399,10 @@ interface FindTransactionByAppointmentIdResponse {
 /**
  * Busca transação por ID do agendamento (metadados)
  */
-export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca transação por ID do agendamento (metadados)
+ */
+export const findTransactionByAppointmentIdHandler = async (request: any) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -400,7 +435,12 @@ export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmen
         const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar transação';
         throw new HttpsError('internal', errorMessage);
     }
-});
+};
+
+export const findTransactionByAppointmentId = onCall<FindTransactionByAppointmentIdRequest, Promise<FindTransactionByAppointmentIdResponse>>(
+    { cors: CORS_ORIGINS },
+    findTransactionByAppointmentIdHandler
+);
 
 interface GetEventReportRequest {
     eventoId: string;
@@ -425,7 +465,10 @@ interface GetEventReportResponse {
 /**
  * Gera relatório financeiro de evento
  */
-export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Gera relatório financeiro de evento
+ */
+export const getEventReportHandler = async (request: any) => {
     if (!request.auth || !request.auth.token) {
         throw new HttpsError('unauthenticated', 'Requisita autenticação.');
     }
@@ -502,4 +545,9 @@ export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventRepo
         const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar relatório';
         throw new HttpsError('internal', errorMessage);
     }
-});
+};
+
+export const getEventReport = onCall<GetEventReportRequest, Promise<GetEventReportResponse>>(
+    { cors: CORS_ORIGINS },
+    getEventReportHandler
+);

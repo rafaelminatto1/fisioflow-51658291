@@ -15,6 +15,13 @@ import { logger } from 'firebase-functions';
 import { getAdminDb, getAdminMessaging } from '../init';
 import { FieldValue } from 'firebase-admin/firestore';
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -83,7 +90,7 @@ function getNotificationsCollection() {
  */
 export const sendNotification = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     region: 'southamerica-east1',
   },
   async (request): Promise<{ success: boolean; notificationId?: string; result?: NotificationResult }> => {
@@ -183,7 +190,7 @@ interface SendBatchNotificationsData {
 
 export const sendNotificationBatch = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     region: 'southamerica-east1',
   },
   async (request): Promise<{ success: boolean; queued: number; timestamp: string }> => {
@@ -390,7 +397,7 @@ export const processNotificationQueue = onMessagePublished(
  */
 export const emailWebhook = onCall(
   {
-    cors: true,
+    cors: CORS_ORIGINS,
     region: 'southamerica-east1',
   },
   async (request) => {

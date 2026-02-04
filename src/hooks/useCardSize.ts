@@ -7,7 +7,7 @@ const CARD_SIZE_STORAGE_KEY = 'agenda_card_size';
 const CARD_HEIGHT_KEY = 'agenda_card_height_multiplier';
 const CARD_FONT_SCALE_KEY = 'agenda_card_font_scale';
 
-const DEFAULT_HEIGHT_MULTIPLIER = 5; // 0-10 scale, 5 is default (1.0x)
+const DEFAULT_HEIGHT_MULTIPLIER = 3; // 0-10 scale, 3 is default (smaller hour cells)
 const DEFAULT_FONT_SCALE = 5; // 0-10 scale, 5 is default (100%)
 
 /**

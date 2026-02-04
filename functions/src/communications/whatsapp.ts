@@ -14,6 +14,13 @@ import { defineSecret } from 'firebase-functions/params';
 export const WHATSAPP_PHONE_NUMBER_ID_SECRET = defineSecret('WHATSAPP_PHONE_NUMBER_ID');
 export const WHATSAPP_ACCESS_TOKEN_SECRET = defineSecret('WHATSAPP_ACCESS_TOKEN');
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 // WhatsApp API configuration
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0';
 const WHATSAPP_TIMEOUT_MS = 30000; // 30 seconds
@@ -102,9 +109,9 @@ export enum WhatsAppTemplate {
  * Cloud Function: Enviar confirmação de agendamento via WhatsApp
  */
 export const sendWhatsAppAppointmentConfirmation = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -192,9 +199,9 @@ export const sendWhatsAppAppointmentConfirmation = onCall({
  * Cloud Function: Enviar lembrete de agendamento (24h antes)
  */
 export const sendWhatsAppAppointmentReminder = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   const { patientId, appointmentId } = request.data as {
@@ -261,9 +268,9 @@ export const sendWhatsAppAppointmentReminder = onCall({
  * Cloud Function: Enviar mensagem de boas-vindas
  */
 export const sendWhatsAppWelcome = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   const { userId } = request.data as { userId: string };
@@ -306,9 +313,9 @@ export const sendWhatsAppWelcome = onCall({
  * Cloud Function: Enviar mensagem personalizada
  */
 export const sendWhatsAppCustomMessage = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -366,9 +373,9 @@ export const sendWhatsAppCustomMessage = onCall({
  * Cloud Function: Enviar notificação de exercício atribuído
  */
 export const sendWhatsAppExerciseAssigned = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   const { patientId, planName, exercisesCount } = request.data as {
@@ -581,7 +588,7 @@ function verifyWhatsAppSignature(
  */
 export const whatsappWebhookHttp = onRequest({
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
   secrets: ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET'],
 }, async (request: any, response: any) => {
@@ -782,9 +789,9 @@ async function handleAutoReply(from: string, text: string, patient: any) {
  * Útil para verificar se as credenciais estão configuradas corretamente
  */
 export const testWhatsAppMessage = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth && request.data.secret !== 'FISIOFLOW_TEST_SECRET') {
@@ -848,9 +855,9 @@ export const testWhatsAppMessage = onCall({
  * Envia um template específico para verificar se foi aprovado
  */
 export const testWhatsAppTemplate = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -968,9 +975,9 @@ export const testWhatsAppTemplate = onCall({
  * Cloud Function: Buscar histórico de mensagens do WhatsApp
  */
 export const getWhatsAppHistory = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
 }, async (request) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Não autenticado');

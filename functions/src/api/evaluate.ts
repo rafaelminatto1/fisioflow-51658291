@@ -10,7 +10,10 @@ import { logger } from '../lib/logger';
  * Endpoint HTTP para avaliações
  * Suporta GET (listar/buscar) e POST (criar)
  */
-export const apiEvaluate = onRequest((req, res) => {
+/**
+ * Handler HTTP para avaliações
+ */
+export const apiEvaluateHandler = async (req: any, res: any) => {
   // CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -96,4 +99,6 @@ export const apiEvaluate = onRequest((req, res) => {
       message: error?.message || 'Unknown error',
     });
   }
-});
+};
+
+export const apiEvaluate = onRequest(apiEvaluateHandler);

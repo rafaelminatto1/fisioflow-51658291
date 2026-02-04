@@ -96,8 +96,8 @@ function checkBlockedContent(text: string): { blocked: boolean; reason?: string 
       return {
         blocked: true,
         reason: pattern.toString().includes('suicide') ? 'emergency-crisis' :
-                pattern.toString().includes('prescribe') ? 'prescription-request' :
-                'emergency-warning',
+          pattern.toString().includes('prescribe') ? 'prescription-request' :
+            'emergency-warning',
       };
     }
   }
@@ -149,8 +149,8 @@ function sanitizeInput(message: string): { valid: boolean; sanitized: string; er
       error: blockedCheck.reason === 'emergency-crisis' ?
         'Se você estiver em crise, ligue imediatamente para o CVV (188) ou emergência (192).' :
         blockedCheck.reason === 'prescription-request' ?
-        'Este assistente não pode prescrever medicamentos. Consulte um médico.' :
-        'Conteúdo não permitido nesta consulta.'
+          'Este assistente não pode prescrever medicamentos. Consulte um médico.' :
+          'Conteúdo não permitido nesta consulta.'
     };
   }
 
@@ -168,6 +168,155 @@ function estimateCost(inputTokens: number, outputTokens: number): number {
 /**
  * Clinical chat with AI (with safety guardrails)
  */
+export const aiClinicalChatHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { message, context, conversationHistory } = data as {
+    message: string;
+    context?: {
+      patientId?: string;
+      condition?: string;
+      sessionCount?: number;
+      recentEvolutions?: Array<{ date: string; notes: string }>;
+    };
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  };
+
+  // Sanitize input
+  const inputCheck = sanitizeInput(message);
+  if (!inputCheck.valid) {
+    throw new HttpsError('invalid-argument', inputCheck.error || 'Invalid input');
+  }
+
+  // Check usage limits
+  const usageCheck = await checkUsageLimit(userId);
+  if (!usageCheck.allowed) {
+    throw new HttpsError(
+      'resource-exhausted',
+      `Daily limit reached (${MAX_DAILY_REQUESTS} requests). Try again tomorrow.`
+    );
+  }
+
+  // Detect and redact PHI
+  const phiCheck = detectAndRedactPHI(inputCheck.sanitized);
+  const sanitizedMessage = phiCheck.sanitized;
+
+  if (phiCheck.hasPHI) {
+    logger.warn('PHI detected and redacted in clinical chat', {
+      userId,
+      detectedTypes: phiCheck.detectedTypes,
+    });
+  }
+
+  try {
+    logger.info('AI clinical chat request', {
+      userId,
+      patientId: context?.patientId,
+      remainingRequests: usageCheck.remaining,
+      phiDetected: phiCheck.hasPHI,
+    });
+
+    // Build conversation context
+    let contextPrompt = CLINICAL_SYSTEM_PROMPT + '\n\n';
+
+    if (context) {
+      contextPrompt += '**Contexto do Paciente:**\n';
+      if (context.patientId) contextPrompt += `- ID do Paciente: ${context.patientId}\n`;
+      if (context.condition) contextPrompt += `- Condição: ${context.condition}\n`;
+      if (context.sessionCount) contextPrompt += `- Sessões realizadas: ${context.sessionCount}\n`;
+      if (context.recentEvolutions && context.recentEvolutions.length > 0) {
+        contextPrompt += '\n**Evoluções Recentes:**\n';
+        context.recentEvolutions.forEach(evo => {
+          contextPrompt += `- ${evo.date}: ${evo.notes}\n`;
+        });
+      }
+      contextPrompt += '\n';
+    }
+
+    // Add PHI warning if detected
+    if (phiCheck.hasPHI) {
+      contextPrompt += '**Nota:** Informações sensíveis foram automaticamente removidas da consulta.\n\n';
+    }
+
+    // Initialize Vertex AI
+    const vertexAI = new VertexAI({
+      project: process.env.GOOGLE_CLOUD_PROJECT || 'fisioflow-migration',
+      location: process.env.VERTEX_AI_LOCATION || 'us-central1',
+    });
+
+    const generativeModel = vertexAI.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      systemInstruction: contextPrompt,
+    });
+
+    // Sanitize conversation history
+    const sanitizedHistory = (conversationHistory || []).map(msg => ({
+      role: msg.role,
+      parts: [{ text: detectAndRedactPHI(msg.content).sanitized }],
+    }));
+
+    // Build chat history
+    const contents = [
+      ...sanitizedHistory,
+      { role: 'user', parts: [{ text: sanitizedMessage }] },
+    ];
+
+    // Generate response
+    // @ts-ignore - Type mismatch between conversation history format and Content[]
+    const result = await generativeModel.generateContent({ contents });
+    const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!response) {
+      throw new Error('No response from AI model');
+    }
+
+    // Estimate token usage and cost
+    const usageMetadata = result.response.usageMetadata;
+    const estimatedCost = usageMetadata
+      ? estimateCost(usageMetadata.totalTokenCount || 0, usageMetadata.totalTokenCount || 0)
+      : 0;
+
+    // Log the interaction with safety metadata
+    await db.collection('clinical_chat_logs').add({
+      userId,
+      patientId: context?.patientId || null,
+      message: sanitizedMessage, // Store sanitized version
+      originalMessage: phiCheck.hasPHI ? message : null, // Store original only if PHI was redacted
+      response,
+      context: context || null,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      safetyMetadata: {
+        phiDetected: phiCheck.hasPHI,
+        phiTypes: phiCheck.detectedTypes,
+        estimatedCost,
+        tokenCount: usageMetadata?.totalTokenCount,
+      },
+    });
+
+    return {
+      success: true,
+      response,
+      timestamp: new Date().toISOString(),
+      disclaimers: phiCheck.hasPHI ? ['Informações sensíveis foram removidas automaticamente.'] : [],
+      usage: {
+        remaining: (usageCheck.remaining || 1) - 1,
+        limit: MAX_DAILY_REQUESTS,
+      },
+    };
+  } catch (error) {
+    logger.error('AI clinical chat failed', { error, userId });
+    throw new HttpsError(
+      'internal',
+      `Failed to get AI response: ${(error as Error).message}`
+    );
+  }
+};
+
 export const aiClinicalChat = onCall(
   {
     region: 'southamerica-east1',
@@ -176,159 +325,67 @@ export const aiClinicalChat = onCall(
     maxInstances: 10,
     timeoutSeconds: 120,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { message, context, conversationHistory } = data as {
-      message: string;
-      context?: {
-        patientId?: string;
-        condition?: string;
-        sessionCount?: number;
-        recentEvolutions?: Array<{ date: string; notes: string }>;
-      };
-      conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
-    };
-
-    // Sanitize input
-    const inputCheck = sanitizeInput(message);
-    if (!inputCheck.valid) {
-      throw new HttpsError('invalid-argument', inputCheck.error || 'Invalid input');
-    }
-
-    // Check usage limits
-    const usageCheck = await checkUsageLimit(userId);
-    if (!usageCheck.allowed) {
-      throw new HttpsError(
-        'resource-exhausted',
-        `Daily limit reached (${MAX_DAILY_REQUESTS} requests). Try again tomorrow.`
-      );
-    }
-
-    // Detect and redact PHI
-    const phiCheck = detectAndRedactPHI(inputCheck.sanitized);
-    const sanitizedMessage = phiCheck.sanitized;
-
-    if (phiCheck.hasPHI) {
-      logger.warn('PHI detected and redacted in clinical chat', {
-        userId,
-        detectedTypes: phiCheck.detectedTypes,
-      });
-    }
-
-    try {
-      logger.info('AI clinical chat request', {
-        userId,
-        patientId: context?.patientId,
-        remainingRequests: usageCheck.remaining,
-        phiDetected: phiCheck.hasPHI,
-      });
-
-      // Build conversation context
-      let contextPrompt = CLINICAL_SYSTEM_PROMPT + '\n\n';
-
-      if (context) {
-        contextPrompt += '**Contexto do Paciente:**\n';
-        if (context.patientId) contextPrompt += `- ID do Paciente: ${context.patientId}\n`;
-        if (context.condition) contextPrompt += `- Condição: ${context.condition}\n`;
-        if (context.sessionCount) contextPrompt += `- Sessões realizadas: ${context.sessionCount}\n`;
-        if (context.recentEvolutions && context.recentEvolutions.length > 0) {
-          contextPrompt += '\n**Evoluções Recentes:**\n';
-          context.recentEvolutions.forEach(evo => {
-            contextPrompt += `- ${evo.date}: ${evo.notes}\n`;
-          });
-        }
-        contextPrompt += '\n';
-      }
-
-      // Add PHI warning if detected
-      if (phiCheck.hasPHI) {
-        contextPrompt += '**Nota:** Informações sensíveis foram automaticamente removidas da consulta.\n\n';
-      }
-
-      // Initialize Vertex AI
-      const vertexAI = new VertexAI({
-        project: process.env.GOOGLE_CLOUD_PROJECT || 'fisioflow-migration',
-        location: process.env.VERTEX_AI_LOCATION || 'us-central1',
-      });
-
-      const generativeModel = vertexAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp',
-        systemInstruction: contextPrompt,
-      });
-
-      // Sanitize conversation history
-      const sanitizedHistory = (conversationHistory || []).map(msg => ({
-        role: msg.role,
-        parts: [{ text: detectAndRedactPHI(msg.content).sanitized }],
-      }));
-
-      // Build chat history
-      const contents = [
-        ...sanitizedHistory,
-        { role: 'user', parts: [{ text: sanitizedMessage }] },
-      ];
-
-      // Generate response
-      // @ts-ignore - Type mismatch between conversation history format and Content[]
-      const result = await generativeModel.generateContent({ contents });
-      const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!response) {
-        throw new Error('No response from AI model');
-      }
-
-      // Estimate token usage and cost
-      const usageMetadata = result.response.usageMetadata;
-      const estimatedCost = usageMetadata
-        ? estimateCost(usageMetadata.totalTokenCount || 0, usageMetadata.totalTokenCount || 0)
-        : 0;
-
-      // Log the interaction with safety metadata
-      await db.collection('clinical_chat_logs').add({
-        userId,
-        patientId: context?.patientId || null,
-        message: sanitizedMessage, // Store sanitized version
-        originalMessage: phiCheck.hasPHI ? message : null, // Store original only if PHI was redacted
-        response,
-        context: context || null,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        safetyMetadata: {
-          phiDetected: phiCheck.hasPHI,
-          phiTypes: phiCheck.detectedTypes,
-          estimatedCost,
-          tokenCount: usageMetadata?.totalTokenCount,
-        },
-      });
-
-      return {
-        success: true,
-        response,
-        timestamp: new Date().toISOString(),
-        disclaimers: phiCheck.hasPHI ? ['Informações sensíveis foram removidas automaticamente.'] : [],
-        usage: {
-          remaining: (usageCheck.remaining || 1) - 1,
-          limit: MAX_DAILY_REQUESTS,
-        },
-      };
-    } catch (error) {
-      logger.error('AI clinical chat failed', { error, userId });
-      throw new HttpsError(
-        'internal',
-        `Failed to get AI response: ${(error as Error).message}`
-      );
-    }
-  }
+  aiClinicalChatHandler
 );
 
 /**
  * AI-powered exercise recommendation (enhanced)
  */
+export const aiExerciseRecommendationChatHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { patientData, question } = data as {
+    patientData: {
+      name: string;
+      condition: string;
+      limitations: string[];
+      goals: string[];
+      sessionCount: number;
+      equipment?: string[];
+    };
+    question: string;
+  };
+
+  if (!patientData || !question) {
+    throw new HttpsError('invalid-argument', 'patientData and question are required');
+  }
+
+  try {
+    // Use idempotency for caching similar recommendations
+    const cacheParams = {
+      condition: patientData.condition,
+      limitations: patientData.limitations.sort(),
+      goals: patientData.goals.sort(),
+      question,
+    };
+
+    const response = await withIdempotency(
+      'EXERCISE_RECOMMENDATION_CHAT',
+      userId,
+      cacheParams,
+      async () => generateExerciseRecommendation(patientData, question),
+      { cacheTtl: 10 * 60 * 1000 } // 10 minutes cache
+    );
+
+    return {
+      success: true,
+      response,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    logger.error('AI exercise recommendation failed', { error, userId });
+    throw new HttpsError(
+      'internal',
+      `Failed to get recommendation: ${(error as Error).message}`
+    );
+  }
+};
+
 export const aiExerciseRecommendationChat = onCall(
   {
     region: 'southamerica-east1',
@@ -337,65 +394,65 @@ export const aiExerciseRecommendationChat = onCall(
     maxInstances: 10,
     timeoutSeconds: 120,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { patientData, question } = data as {
-      patientData: {
-        name: string;
-        condition: string;
-        limitations: string[];
-        goals: string[];
-        sessionCount: number;
-        equipment?: string[];
-      };
-      question: string;
-    };
-
-    if (!patientData || !question) {
-      throw new HttpsError('invalid-argument', 'patientData and question are required');
-    }
-
-    try {
-      // Use idempotency for caching similar recommendations
-      const cacheParams = {
-        condition: patientData.condition,
-        limitations: patientData.limitations.sort(),
-        goals: patientData.goals.sort(),
-        question,
-      };
-
-      const response = await withIdempotency(
-        'EXERCISE_RECOMMENDATION_CHAT',
-        userId,
-        cacheParams,
-        async () => generateExerciseRecommendation(patientData, question),
-        { cacheTtl: 10 * 60 * 1000 } // 10 minutes cache
-      );
-
-      return {
-        success: true,
-        response,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.error('AI exercise recommendation failed', { error, userId });
-      throw new HttpsError(
-        'internal',
-        `Failed to get recommendation: ${(error as Error).message}`
-      );
-    }
-  }
+  aiExerciseRecommendationChatHandler
 );
 
 /**
  * AI SOAP note generator with chat
  */
+export const aiSoapNoteChatHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { patientContext, subjective, objective, assistantNeeded } = data as {
+    patientContext: {
+      patientName: string;
+      condition: string;
+      sessionNumber: number;
+    };
+    subjective?: string;
+    objective?: string;
+    assistantNeeded: 'assessment' | 'plan' | 'both' | 'full';
+  };
+
+  if (!patientContext) {
+    throw new HttpsError('invalid-argument', 'patientContext is required');
+  }
+
+  try {
+    const prompt = buildSOAPPrompt(patientContext, subjective, objective, assistantNeeded);
+
+    const vertexAI = new VertexAI({
+      project: process.env.GOOGLE_CLOUD_PROJECT || 'fisioflow-migration',
+      location: 'us-central1',
+    });
+
+    const model = vertexAI.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      systemInstruction: `Você é um especialista em documentação fisioterapêutica. Gere notas SOAP profissionais e concisas.`,
+    });
+
+    const result = await model.generateContent(prompt);
+    const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    return {
+      success: true,
+      soapNote: response,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    logger.error('AI SOAP note generation failed', { error, userId });
+    throw new HttpsError(
+      'internal',
+      `Failed to generate SOAP note: ${(error as Error).message}`
+    );
+  }
+};
+
 export const aiSoapNoteChat = onCall(
   {
     region: 'southamerica-east1',
@@ -404,63 +461,83 @@ export const aiSoapNoteChat = onCall(
     maxInstances: 10,
     timeoutSeconds: 120,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { patientContext, subjective, objective, assistantNeeded } = data as {
-      patientContext: {
-        patientName: string;
-        condition: string;
-        sessionNumber: number;
-      };
-      subjective?: string;
-      objective?: string;
-      assistantNeeded: 'assessment' | 'plan' | 'both' | 'full';
-    };
-
-    if (!patientContext) {
-      throw new HttpsError('invalid-argument', 'patientContext is required');
-    }
-
-    try {
-      const prompt = buildSOAPPrompt(patientContext, subjective, objective, assistantNeeded);
-
-      const vertexAI = new VertexAI({
-        project: process.env.GOOGLE_CLOUD_PROJECT || 'fisioflow-migration',
-        location: 'us-central1',
-      });
-
-      const model = vertexAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp',
-        systemInstruction: `Você é um especialista em documentação fisioterapêutica. Gere notas SOAP profissionais e concisas.`,
-      });
-
-      const result = await model.generateContent(prompt);
-      const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      return {
-        success: true,
-        soapNote: response,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.error('AI SOAP note generation failed', { error, userId });
-      throw new HttpsError(
-        'internal',
-        `Failed to generate SOAP note: ${(error as Error).message}`
-      );
-    }
-  }
+  aiSoapNoteChatHandler
 );
 
 /**
  * Auto-suggestions based on patient history
  */
+export const aiGetSuggestionsHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { patientId, suggestionType } = data as {
+    patientId: string;
+    suggestionType: 'exercises' | 'treatment' | 'homecare' | 'all';
+  };
+
+  if (!patientId) {
+    throw new HttpsError('invalid-argument', 'patientId is required');
+  }
+
+  try {
+    // Fetch patient history
+    const patientDoc = await db.collection('patients').doc(patientId).get();
+    if (!patientDoc.exists) {
+      throw new HttpsError('not-found', 'Patient not found');
+    }
+
+    const patient = patientDoc.data();
+
+    // Fetch recent evolutions
+    const evolutionsSnapshot = await db
+      .collection('evolutions')
+      .where('patientId', '==', patientId)
+      .orderBy('createdAt', 'desc')
+      .limit(5)
+      .get();
+
+    const recentEvolutions = evolutionsSnapshot.docs.map(doc => doc.data());
+
+    // Fetch treatment sessions
+    const sessionsSnapshot = await db
+      .collection('treatment_sessions')
+      .where('patientId', '==', patientId)
+      .orderBy('createdAt', 'desc')
+      .limit(10)
+      .get();
+
+    const recentSessions = sessionsSnapshot.docs.map(doc => doc.data());
+
+    // Generate suggestions
+    const suggestions = await generateSuggestions(
+      patient,
+      recentEvolutions,
+      recentSessions,
+      suggestionType
+    );
+
+    return {
+      success: true,
+      suggestions,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    if ((error as HttpsError).code === 'not-found') {
+      throw error;
+    }
+    logger.error('AI suggestions failed', { error, userId, patientId });
+    throw new HttpsError(
+      'internal',
+      `Failed to generate suggestions: ${(error as Error).message}`
+    );
+  }
+};
+
 export const aiGetSuggestions = onCall(
   {
     region: 'southamerica-east1',
@@ -469,76 +546,7 @@ export const aiGetSuggestions = onCall(
     maxInstances: 10,
     timeoutSeconds: 90,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { patientId, suggestionType } = data as {
-      patientId: string;
-      suggestionType: 'exercises' | 'treatment' | 'homecare' | 'all';
-    };
-
-    if (!patientId) {
-      throw new HttpsError('invalid-argument', 'patientId is required');
-    }
-
-    try {
-      // Fetch patient history
-      const patientDoc = await db.collection('patients').doc(patientId).get();
-      if (!patientDoc.exists) {
-        throw new HttpsError('not-found', 'Patient not found');
-      }
-
-      const patient = patientDoc.data();
-
-      // Fetch recent evolutions
-      const evolutionsSnapshot = await db
-        .collection('evolutions')
-        .where('patientId', '==', patientId)
-        .orderBy('createdAt', 'desc')
-        .limit(5)
-        .get();
-
-      const recentEvolutions = evolutionsSnapshot.docs.map(doc => doc.data());
-
-      // Fetch treatment sessions
-      const sessionsSnapshot = await db
-        .collection('treatment_sessions')
-        .where('patientId', '==', patientId)
-        .orderBy('createdAt', 'desc')
-        .limit(10)
-        .get();
-
-      const recentSessions = sessionsSnapshot.docs.map(doc => doc.data());
-
-      // Generate suggestions
-      const suggestions = await generateSuggestions(
-        patient,
-        recentEvolutions,
-        recentSessions,
-        suggestionType
-      );
-
-      return {
-        success: true,
-        suggestions,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      if ((error as HttpsError).code === 'not-found') {
-        throw error;
-      }
-      logger.error('AI suggestions failed', { error, userId, patientId });
-      throw new HttpsError(
-        'internal',
-        `Failed to generate suggestions: ${(error as Error).message}`
-      );
-    }
-  }
+  aiGetSuggestionsHandler
 );
 
 // Helper functions

@@ -15,6 +15,13 @@ import * as logger from 'firebase-functions/logger';
 
 const firestore = admin.firestore();
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -101,13 +108,7 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 
-export const movementAnalysis = onCall({
-  cors: true,
-  region: 'southamerica-east1',
-  memory: '2GiB',
-  cpu: 1,
-  maxInstances: 5,
-}, async (request): Promise<MovementAnalysisResponse> => {
+export const movementAnalysisHandler = async (request: any): Promise<MovementAnalysisResponse> => {
   const startTime = Date.now();
 
   // Authentication check
@@ -235,7 +236,15 @@ export const movementAnalysis = onCall({
       error instanceof Error ? error.message : 'Failed to analyze movement'
     );
   }
-});
+};
+
+export const movementAnalysis = onCall({
+  cors: CORS_ORIGINS,
+  region: 'southamerica-east1',
+  memory: '2GiB',
+  cpu: 1,
+  maxInstances: 5,
+}, movementAnalysisHandler);
 
 // ============================================================================
 // HELPER FUNCTIONS

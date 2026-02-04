@@ -104,8 +104,8 @@ export const listPatientsHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 100,
-    cors: true,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
   async (req, res) => {
     setCorsHeaders(req, res);
@@ -233,8 +233,8 @@ export const getPatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 100,
-    cors: true,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -291,9 +291,8 @@ export const getPatientHttp = onRequest(
 export const getPatientStatsHttp = onRequest(
   {
     region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 100,
-    cors: true, // Habilita CORS na plataforma (preflight OPTIONS)
+    maxInstances: 10,
+    cors: CORS_ORIGINS, // Habilita CORS na plataforma (preflight OPTIONS)
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -409,8 +408,8 @@ export const createPatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 100,
-    cors: true,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -571,8 +570,8 @@ export const updatePatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 100,
-    cors: true,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
@@ -641,8 +640,8 @@ export const deletePatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 100,
-    cors: true,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
@@ -693,7 +692,7 @@ export const deletePatientHttp = onRequest(
 /**
  * Lista pacientes com filtros opcionais
  */
-export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+export const listPatientsHandler = async (request: any) => {
   console.log('[listPatients] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -755,53 +754,44 @@ export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResp
 
     if (search) {
       paramCount++;
-      query += ` AND (name ILIKE $${paramCount} OR cpf ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
+      query += ` AND (name ILIKE $${paramCount} OR email ILIKE $${paramCount} OR phone ILIKE $${paramCount} OR cpf ILIKE $${paramCount})`;
       params.push(`%${search}%`);
     }
+
+    // Contagem total
+    let countQuery = `SELECT COUNT(*) FROM patients WHERE organization_id = $1 AND is_active = true`;
+    if (status) countQuery += ` AND status = '${status}'`;
+    if (search) countQuery += ` AND (name ILIKE '%${search}%' OR email ILIKE '%${search}%')`;
+
+    const countResult = await pool.query(countQuery, [organizationId]);
+    const totalCount = parseInt(countResult.rows[0].count);
 
     query += ` ORDER BY name ASC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     params.push(limit, offset);
 
+    console.log('[listPatients] Executing query:', query);
     const result = await pool.query(query, params);
 
-    // Buscar total
-    let countQuery = `
-      SELECT COUNT(*) as total
-      FROM patients
-      WHERE organization_id = $1 AND is_active = true
-    `;
-    const countParams: (string | number)[] = [organizationId];
-    let countParamCount = 1;
-
-    if (status) {
-      countParamCount++;
-      countQuery += ` AND status = $${countParamCount}`;
-      countParams.push(status);
-    }
-
-    if (search) {
-      countParamCount++;
-      countQuery += ` AND (name ILIKE $${countParamCount} OR cpf ILIKE $${countParamCount} OR email ILIKE $${countParamCount})`;
-      countParams.push(`%${search}%`);
-    }
-
-    const countResult = await pool.query(countQuery, countParams);
+    console.log('[listPatients] Query executed, rows returned:', result.rowCount);
 
     return {
       data: result.rows as Patient[],
-      total: parseInt(countResult.rows[0].total, 10),
+      total: totalCount,
       page: Math.floor(offset / limit) + 1,
-      perPage: limit,
+      perPage: limit
     };
   } catch (error: unknown) {
-    logger.error('Error in listPatients:', error);
-    if (error instanceof HttpsError) {
-      throw error;
-    }
-    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao listar pacientes';
+    logger.error('[listPatients] Error:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao listar pacientes';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>(
+  { cors: CORS_ORIGINS },
+  listPatientsHandler
+);
 
 /**
  * Busca um paciente por ID
@@ -818,49 +808,43 @@ interface GetPatientResponse {
 /**
  * Busca um paciente por ID
  */
-export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+export const getPatientHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
 
-  // Verificar App Check
-  verifyAppCheck(request);
-
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId, profileId } = request.data;
+  const { id } = request.data;
 
-  if (!patientId && !profileId) {
-    throw new HttpsError('invalid-argument', 'patientId ou profileId é obrigatório');
+  if (!id) {
+    throw new HttpsError('invalid-argument', 'O ID do paciente é obrigatório.');
   }
 
   const pool = getPool();
 
   try {
-    let query = 'SELECT * FROM patients WHERE organization_id = $1';
-    const params: (string | number)[] = [auth.organizationId];
-
-    if (patientId) {
-      query += ' AND id = $2';
-      params.push(patientId);
-    } else if (profileId) {
-      query += ' AND profile_id = $2';
-      params.push(profileId);
-    }
-
-    const result = await pool.query(query, params);
+    const result = await pool.query(
+      `SELECT * FROM patients WHERE id = $1 AND organization_id = $2 AND is_active = true`,
+      [id, auth.organizationId]
+    );
 
     if (result.rows.length === 0) {
-      throw new HttpsError('not-found', 'Paciente não encontrado');
+      throw new HttpsError('not-found', 'Paciente não encontrado.');
     }
 
     return { data: result.rows[0] as Patient };
   } catch (error: unknown) {
-    logger.error('Error in getPatient:', error);
+    logger.error('[getPatient] Error:', error);
     if (error instanceof HttpsError) throw error;
-    const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar paciente';
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar paciente';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>(
+  { cors: CORS_ORIGINS },
+  getPatientHandler
+);
 
 interface CreatePatientRequest {
   name: string;
@@ -885,7 +869,10 @@ interface CreatePatientResponse {
 /**
  * Cria um novo paciente
  */
-export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria um novo paciente
+ */
+export const createPatientHandler = async (request: any) => {
   logger.debug('[createPatient] ===== START =====');
 
   if (!request.auth || !request.auth.token) {
@@ -1002,11 +989,11 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
             data.gender || null,
             data.address ? JSON.stringify(data.address) : null,
             data.emergency_contact ? JSON.stringify(data.emergency_contact) : null,
-        data.medical_history || null,
-          mainCondition,
-          status,
-          auth.organizationId
-        ]
+            data.medical_history || null,
+            mainCondition,
+            status,
+            auth.organizationId
+          ]
         );
       } else {
         throw insertErr;
@@ -1054,13 +1041,18 @@ export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientR
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao criar paciente';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>(
+  { cors: CORS_ORIGINS },
+  createPatientHandler
+);
 
 /**
  * Atualiza um paciente existente
  */
 interface UpdatePatientRequest {
-  patientId: string;
+  id: string; // Changed from patientId to id
   name?: string;
   cpf?: string;
   email?: string;
@@ -1071,6 +1063,8 @@ interface UpdatePatientRequest {
   main_condition?: string;
   status?: string;
   progress?: number;
+  notes?: string; // Added notes
+  is_active?: boolean; // Added is_active
   [key: string]: any; // Allow dynamic fields for now, but explicit is better
 }
 
@@ -1081,7 +1075,7 @@ interface UpdatePatientResponse {
 /**
  * Atualiza um paciente existente
  */
-export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+export const updatePatientHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -1090,10 +1084,10 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
   verifyAppCheck(request);
 
   const auth = await authorizeRequest(request.auth.token);
-  const { patientId, ...updates } = request.data;
+  const { id, ...updateData } = request.data; // Changed from patientId to id
 
-  if (!patientId) {
-    throw new HttpsError('invalid-argument', 'patientId é obrigatório');
+  if (!id) {
+    throw new HttpsError('invalid-argument', 'O ID do paciente é obrigatório.');
   }
 
   const pool = getPool();
@@ -1102,7 +1096,7 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     // Verificar se paciente existe e pertence à organização
     const existing = await pool.query(
       'SELECT * FROM patients WHERE id = $1 AND organization_id = $2',
-      [patientId, auth.organizationId]
+      [id, auth.organizationId]
     );
 
     if (existing.rows.length === 0) {
@@ -1125,16 +1119,18 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
       'main_condition',
       'status',
       'progress',
+      'notes', // Added notes
+      'is_active', // Added is_active
     ];
 
     for (const field of allowedFields) {
-      if (field in updates) {
+      if (field in updateData) { // Changed from updates to updateData
         paramCount++;
         setClauses.push(`${field} = $${paramCount}`);
         if (field === 'cpf') {
-          values.push(updates[field]?.replace(/\D/g, '') || null);
+          values.push(updateData[field]?.replace(/\D/g, '') || null);
         } else {
-          values.push(updates[field]);
+          values.push(updateData[field]);
         }
       }
     }
@@ -1149,7 +1145,7 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     values.push(new Date());
 
     // Adicionar WHERE params
-    values.push(patientId, auth.organizationId);
+    values.push(id, auth.organizationId); // Changed from patientId to id
 
     const query = `
       UPDATE patients
@@ -1164,13 +1160,13 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     // [SYNC] Write to Firestore for legacy frontend compatibility
     try {
       const db = admin.firestore();
-      await db.collection('patients').doc(patientId).set({
+      await db.collection('patients').doc(id).set({ // Changed from patientId to id
         ...patient,
         updated_at: new Date()
       }, { merge: true });
-      logger.info(`[updatePatient] Patient ${patientId} synced to Firestore`);
+      logger.info(`[updatePatient] Patient ${id} synced to Firestore`); // Changed from patientId to id
     } catch (fsError) {
-      logger.error(`[updatePatient] Failed to sync patient ${patientId} to Firestore:`, fsError);
+      logger.error(`[updatePatient] Failed to sync patient ${id} to Firestore:`, fsError); // Changed from patientId to id
     }
 
     // Publicar no Ably
@@ -1192,7 +1188,12 @@ export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientR
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao atualizar paciente';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>(
+  { cors: CORS_ORIGINS },
+  updatePatientHandler
+);
 
 interface DeletePatientRequest {
   patientId: string;
@@ -1205,7 +1206,10 @@ interface DeletePatientResponse {
 /**
  * Remove (soft delete) um paciente
  */
-export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Remove (soft delete) um paciente
+ */
+export const deletePatientHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -1267,10 +1271,15 @@ export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientR
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao excluir paciente';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>(
+  { cors: CORS_ORIGINS },
+  deletePatientHandler
+);
 
 interface GetPatientStatsRequest {
-  patientId: string;
+  id: string; // Changed from patientId to id
 }
 
 interface GetPatientStatsResponse {
@@ -1289,19 +1298,19 @@ interface GetPatientStatsResponse {
 /**
  * Busca estatísticas de um paciente
  */
-export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca estatísticas de um paciente
+ */
+export const getPatientStatsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  verifyAppCheck(request);
-  console.log('App Check verified');
-  verifyAppCheck(request);
-  // App Check verified");
-  const { patientId } = request.data;
+  // verifyAppCheck(request);
+  const { id } = request.data;
 
-  if (!patientId) {
-    throw new HttpsError('invalid-argument', 'patientId é obrigatório');
+  if (!id) {
+    throw new HttpsError('invalid-argument', 'id é obrigatório');
   }
 
   const pool = getPool();
@@ -1310,7 +1319,7 @@ export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatient
     // Verificar se paciente pertence à organização
     const patient = await pool.query(
       'SELECT id FROM patients WHERE id = $1 AND organization_id = $2',
-      [patientId, auth.organizationId]
+      [id, auth.organizationId]
     );
 
     if (patient.rows.length === 0) {
@@ -1331,19 +1340,19 @@ export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatient
           COUNT(*) FILTER (WHERE date >= CURRENT_DATE) as upcoming
         FROM appointments
         WHERE patient_id = $1`,
-        [patientId]
+        [id]
       ),
       pool.query(
         `SELECT COUNT(*) as total_sessions
         FROM treatment_sessions
         WHERE patient_id = $1`,
-        [patientId]
+        [id]
       ),
       pool.query(
         `SELECT COUNT(*) as active_plans
         FROM exercise_plans
         WHERE patient_id = $1 AND status = 'ativo'`,
-        [patientId]
+        [id]
       ),
     ]);
 
@@ -1367,4 +1376,9 @@ export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatient
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao buscar estatísticas';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>(
+  { cors: CORS_ORIGINS },
+  getPatientStatsHandler
+);

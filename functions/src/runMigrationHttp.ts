@@ -1,6 +1,13 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { Pool } from 'pg';
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 /**
  * HTTP endpoint to run migration (no auth required - temporary!)
  * DELETE THIS AFTER MIGRATION IS COMPLETE!
@@ -9,8 +16,8 @@ import { Pool } from 'pg';
  */
 export const runMigrationHttp = onRequest({
   secrets: ['DB_PASS'],
-  memory: '256MiB',
-  cors: true,
+  memory: '512MiB',
+  cors: CORS_ORIGINS,
 }, async (req, res) => {
   // Simple API key check (optional security)
   const apiKey = req.query.key;

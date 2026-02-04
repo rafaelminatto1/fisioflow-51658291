@@ -24,7 +24,7 @@ function parseBody(req: any): any {
 // HTTP VERSIONS (CORS fix)
 // ============================================================================
 
-export const listExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const listExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -50,7 +50,7 @@ export const listExercisesHttp = onRequest({ region: 'southamerica-east1', memor
   }
 });
 
-export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -75,7 +75,7 @@ export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east
   }
 });
 
-export const getExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const getExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -94,7 +94,7 @@ export const getExerciseHttp = onRequest({ region: 'southamerica-east1', memory:
   }
 });
 
-export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -110,7 +110,7 @@ export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1
   }
 });
 
-export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -131,7 +131,7 @@ export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east
   }
 });
 
-export const logExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const logExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -151,7 +151,7 @@ export const logExerciseHttp = onRequest({ region: 'southamerica-east1', memory:
   }
 });
 
-export const createExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const createExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -169,7 +169,7 @@ export const createExerciseHttp = onRequest({ region: 'southamerica-east1', memo
   }
 });
 
-export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -198,7 +198,7 @@ export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', memo
   }
 });
 
-export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -218,7 +218,7 @@ export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', memo
   }
 });
 
-export const mergeExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true }, async (req, res) => {
+export const mergeExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -260,7 +260,10 @@ interface ListExercisesResponse {
   categories: string[];
 }
 
-export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista exercícios cadastrados
+ */
+export const listExercisesHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -322,7 +325,12 @@ export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesR
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar exercícios';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesResponse>>(
+  { cors: CORS_ORIGINS },
+  listExercisesHandler
+);
 
 interface GetExerciseRequest {
   exerciseId: string;
@@ -332,7 +340,10 @@ interface GetExerciseResponse {
   data: Exercise;
 }
 
-export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca um exercício por ID
+ */
+export const getExerciseHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -362,7 +373,48 @@ export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseRespons
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercício';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseResponse>>(
+  { cors: CORS_ORIGINS },
+  getExerciseHandler
+);
+
+/**
+ * Registra a realização de um exercício
+ */
+export const logExerciseHandler = async (request: any) => {
+  if (!request.auth || !request.auth.token) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
+  }
+
+  const auth = await authorizeRequest(request.auth.token);
+  const { prescriptionId, exerciseId, sets, reps, load, effort, notes } = request.data;
+
+  if (!exerciseId || !sets || !reps) {
+    throw new HttpsError('invalid-argument', 'exercício, séries e repetições são obrigatórios');
+  }
+
+  const pool = getPool();
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO exercise_logs (
+        organization_id, user_id, prescription_id, exercise_id,
+        sets, reps, load, effort_level, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *`,
+      [auth.organizationId, auth.userId, prescriptionId || null, exerciseId, sets, reps, load || null, effort || null, notes || '']
+    );
+
+    return { data: result.rows[0] };
+  } catch (error: unknown) {
+    logger.error('Error in logExercise:', error);
+    if (error instanceof HttpsError) throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao registrar exercício';
+    throw new HttpsError('internal', errorMessage);
+  }
+};
 
 interface SearchSimilarExercisesRequest {
   exerciseId?: string;
@@ -374,7 +426,10 @@ interface SearchSimilarExercisesResponse {
   data: Exercise[];
 }
 
-export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Promise<SearchSimilarExercisesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca exercícios similares
+ */
+export const searchSimilarExercisesHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -432,46 +487,58 @@ export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Prom
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar exercícios similares';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Promise<SearchSimilarExercisesResponse>>(
+  { cors: CORS_ORIGINS },
+  searchSimilarExercisesHandler
+);
 
 interface GetExerciseCategoriesResponse {
   data: { id: string, name: string }[];
 }
 
-export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista categorias de exercícios
+ */
+export const getExerciseCategoriesHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
-  await authorizeRequest(request.auth.token);
 
   const pool = getPool();
 
   try {
     const result = await pool.query(
-      `SELECT DISTINCT category
-       FROM exercises
-       WHERE is_active = true
-       ORDER BY category`
+      `SELECT DISTINCT category FROM exercises WHERE is_active = true ORDER BY category ASC`
     );
 
     return {
       data: result.rows.map((r: { category: string }) => ({
         id: r.category.toLowerCase().replace(/\s+/g, '-'),
         name: r.category,
-      })),
+      }))
     };
   } catch (error: unknown) {
     logger.error('Error in getExerciseCategories:', error);
     if (error instanceof HttpsError) throw error;
-    const errorMessage = error instanceof Error ? error.message : 'Erro ao listar categorias';
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar categorias';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesResponse>>(
+  { cors: CORS_ORIGINS },
+  getExerciseCategoriesHandler
+);
 
 interface LogExerciseRequest {
-  patientId: string;
-  prescriptionId: string;
-  difficulty: number;
+  prescriptionId?: string;
+  exerciseId: string;
+  sets: number;
+  reps: number;
+  load?: number;
+  effort?: number;
   notes?: string;
 }
 
@@ -479,52 +546,10 @@ interface LogExerciseResponse {
   data: any; // Using explicit any for now as ExerciseLog model is not strictly defined in models.ts yet
 }
 
-export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseResponse>>({ cors: CORS_ORIGINS }, async (request) => {
-  if (!request.auth || !request.auth.token) {
-    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
-  }
-  const auth = await authorizeRequest(request.auth.token);
-  const { patientId, prescriptionId, difficulty, notes } = request.data;
-
-  if (!patientId || !prescriptionId) {
-    throw new HttpsError('invalid-argument', 'patientId e prescriptionId são obrigatórios');
-  }
-
-  const pool = getPool();
-
-  try {
-    // Verificar se paciente pertence à organização
-    const patientCheck = await pool.query(
-      'SELECT id FROM patients WHERE id = $1 AND organization_id = $2',
-      [patientId, auth.organizationId]
-    );
-
-    if (patientCheck.rows.length === 0) {
-      throw new HttpsError('not-found', 'Paciente não encontrado');
-    }
-
-    const result = await pool.query(
-      `INSERT INTO exercise_logs (
-        patient_id, prescribed_exercise_id,
-        difficulty_rating, notes, complete_date
-      ) VALUES ($1, $2, $3, $4, NOW())
-      RETURNING *`,
-      [
-        patientId,
-        prescriptionId,
-        difficulty,
-        notes || null,
-      ]
-    );
-
-    return { data: result.rows[0] };
-  } catch (error: unknown) {
-    logger.error('Error in logExercise:', error);
-    if (error instanceof HttpsError) throw error;
-    const errorMessage = error instanceof Error ? error.message : 'Erro ao registrar exercício';
-    throw new HttpsError('internal', errorMessage);
-  }
-});
+export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseResponse>>(
+  { cors: CORS_ORIGINS },
+  logExerciseHandler
+);
 
 interface GetPrescribedExercisesRequest {
   patientId: string;
@@ -534,7 +559,10 @@ interface GetPrescribedExercisesResponse {
   data: any[]; // Using explicit any for PrescribedExercise rich type
 }
 
-export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Promise<GetPrescribedExercisesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista exercícios prescritos para um paciente
+ */
+export const getPrescribedExercisesHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -598,7 +626,12 @@ export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Prom
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar prescrições';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Promise<GetPrescribedExercisesResponse>>(
+  { cors: CORS_ORIGINS },
+  getPrescribedExercisesHandler
+);
 
 interface CreateExerciseRequest {
   name: string;
@@ -623,7 +656,10 @@ interface CreateExerciseResponse {
   data: Exercise;
 }
 
-export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerciseResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria um novo exercício
+ */
+export const createExerciseHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -673,14 +709,22 @@ export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerci
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar exercício';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerciseResponse>>(
+  { cors: CORS_ORIGINS },
+  createExerciseHandler
+);
 
 interface UpdateExerciseRequest {
   id: string;
   [key: string]: any;
 }
 
-export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exercise }>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Atualiza um exercício existente
+ */
+export const updateExerciseHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -724,13 +768,21 @@ export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exer
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar exercício';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exercise }>>(
+  { cors: CORS_ORIGINS },
+  updateExerciseHandler
+);
 
 interface DeleteExerciseRequest {
   id: string;
 }
 
-export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: boolean }>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Exclui logicamente um exercício
+ */
+export const deleteExerciseHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -766,14 +818,22 @@ export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: b
     const errorMessage = error instanceof Error ? error.message : 'Erro ao excluir exercício';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: boolean }>>(
+  { cors: CORS_ORIGINS },
+  deleteExerciseHandler
+);
 
 interface MergeExercisesRequest {
   keepId: string;
   mergeIds: string[];
 }
 
-export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: boolean, deletedCount: number }>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Une exercícios duplicados
+ */
+export const mergeExercisesHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -825,4 +885,9 @@ export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: b
     const errorMessage = err instanceof Error ? err.message : 'Erro ao unir exercícios';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: boolean, deletedCount: number }>>(
+  { cors: CORS_ORIGINS },
+  mergeExercisesHandler
+);

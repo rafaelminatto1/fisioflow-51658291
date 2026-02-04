@@ -17,18 +17,10 @@ import {
 // Import secrets to register them with the functions framework
 import '../init';
 
-export const healthCheck = onRequest({
-  memory: '256MiB',
-  maxInstances: 1,
-  secrets: [
-    DB_PASS_SECRET,
-    DB_USER_SECRET,
-    DB_NAME_SECRET,
-    DB_HOST_IP_SECRET,
-    DB_HOST_IP_PUBLIC_SECRET,
-    CLOUD_SQL_CONNECTION_NAME_SECRET
-  ],
-}, async (req, res) => {
+/**
+ * Handler HTTP para healthCheck
+ */
+export const healthCheckHandler = async (req: any, res: any) => {
   // CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST');
@@ -63,4 +55,17 @@ export const healthCheck = onRequest({
       hint: 'Configure VPC connector for Cloud SQL access'
     });
   }
-});
+};
+
+export const healthCheck = onRequest({
+  memory: '256MiB',
+  maxInstances: 1,
+  secrets: [
+    DB_PASS_SECRET,
+    DB_USER_SECRET,
+    DB_NAME_SECRET,
+    DB_HOST_IP_SECRET,
+    DB_HOST_IP_PUBLIC_SECRET,
+    CLOUD_SQL_CONNECTION_NAME_SECRET
+  ],
+}, healthCheckHandler);

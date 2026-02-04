@@ -240,7 +240,7 @@ export const updateEvolution = onCall({
 export const addEvolutionAttachment = onCall({
   cors: true,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -301,7 +301,7 @@ export const addEvolutionAttachment = onCall({
 export const getPatientEvolutionHistory = onCall({
   cors: true,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {
@@ -450,7 +450,7 @@ export const generateEvolutionReport = onCall({
 export const compareEvolutions = onCall({
   cors: true,
   region: 'southamerica-east1',
-  memory: '256MiB',
+  
   maxInstances: 10,
 }, async (request) => {
   if (!request.auth) {

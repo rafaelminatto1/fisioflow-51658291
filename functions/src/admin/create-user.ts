@@ -14,7 +14,7 @@ if (!getApps().length) {
   initializeApp();
 }
 
-export const createAdminUser = onCall({ cors: CORS_ORIGINS }, async () => {
+export const createAdminUserHandler = async () => {
   const auth = getAuth();
 
   try {
@@ -49,4 +49,6 @@ export const createAdminUser = onCall({ cors: CORS_ORIGINS }, async () => {
   } catch (error: any) {
     throw new Error(`Erro ao criar usuário: ${error.message}`);
   }
-});
+};
+
+export const createAdminUser = onCall({ cors: CORS_ORIGINS }, createAdminUserHandler);

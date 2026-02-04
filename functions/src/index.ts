@@ -1,6 +1,8 @@
 /**
  * FisioFlow Cloud Functions Entry Point
  * Exporta todas as Cloud Functions do projeto
+ *
+ * OTIMIZADO - Removido duplicatas e funções desnecessárias
  */
 
 import * as functions from 'firebase-functions/v2';
@@ -9,9 +11,10 @@ import {
     DB_PASS_SECRET,
     DB_USER_SECRET,
     DB_NAME_SECRET,
-    CLOUD_SQL_CONNECTION_NAME_SECRET,
     DB_HOST_IP_SECRET,
-    DB_HOST_IP_PUBLIC_SECRET
+    DB_HOST_IP_PUBLIC_SECRET,
+    CLOUD_SQL_CONNECTION_NAME_SECRET,
+    CORS_ORIGINS
 } from './init';
 import {
     WHATSAPP_PHONE_NUMBER_ID_SECRET,
@@ -31,11 +34,9 @@ setGlobalOptions({
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
         WHATSAPP_ACCESS_TOKEN_SECRET
     ],
-    // Allow up to 100 concurrent instances per function
-    maxInstances: 100,
-    // 1 vCPU for better performance during cold starts
-    cpu: 1,
-    // Set default memory for all functions (increased for better cold start performance)
+    // Reduced maxInstances to prevent cost spikes (most functions don't need 100)
+    maxInstances: 10,
+    // Set default memory for all functions
     memory: '512MiB',
     // Set timeout for all functions (default is 60s for Gen 2)
     timeoutSeconds: 60,
@@ -56,240 +57,612 @@ import { adminDb } from './init';
 import './lib/sentry';
 
 // ============================================================================
-// API FUNCTIONS (Callable)
+// API FUNCTIONS (Callable - Lazy Loading)
 // ============================================================================
+
+import { onCall, onRequest, Request } from 'firebase-functions/v2/https';
+import { Response } from 'express';
 
 // API de Pacientes
-import * as apiPatients from './api/patients';
-export const listPatientsV2 = apiPatients.listPatientsHttp; // HTTP version - new name to avoid conflict
-export const getPatientHttp = apiPatients.getPatientHttp; // HTTP version for web
-export const getPatientStatsV2 = apiPatients.getPatientStatsHttp; // HTTP version - CORS fix
-export const createPatientV2 = apiPatients.createPatientHttp; // HTTP version - CORS fix
-export const updatePatientV2 = apiPatients.updatePatientHttp; // HTTP version - CORS fix
-export const deletePatientV2 = apiPatients.deletePatientHttp; // HTTP version - CORS fix
-export const listPatients = apiPatients.listPatients; // Original callable - TODO: remove after migration
-export const createPatient = apiPatients.createPatient;
-export const updatePatient = apiPatients.updatePatient;
-export const getPatient = apiPatients.getPatient;
-export const deletePatient = apiPatients.deletePatient;
+export const listPatients = onCall(async (request) => {
+    const { listPatientsHandler } = await import('./api/patients');
+    return listPatientsHandler(request);
+});
+export const createPatient = onCall(async (request) => {
+    const { createPatientHandler } = await import('./api/patients');
+    return createPatientHandler(request);
+});
+export const updatePatient = onCall(async (request) => {
+    const { updatePatientHandler } = await import('./api/patients');
+    return updatePatientHandler(request);
+});
+export const getPatient = onCall(async (request) => {
+    const { getPatientHandler } = await import('./api/patients');
+    return getPatientHandler(request);
+});
+export const deletePatient = onCall(async (request) => {
+    const { deletePatientHandler } = await import('./api/patients');
+    return deletePatientHandler(request);
+});
+export const getPatientStats = onCall(async (request) => {
+    const { getPatientStatsHandler } = await import('./api/patients');
+    return getPatientStatsHandler(request);
+});
+// HTTP (CORS) - frontend callFunctionHttp uses these names
+export { listPatientsHttp as listPatientsV2, getPatientStatsHttp as getPatientStatsV2 } from './api/patients';
 
 // API de Agendamentos
-import * as apiAppointments from './api/appointments';
-export const listAppointments = apiAppointments.listAppointmentsHttp; // Use HTTP version for CORS fix
-export const getAppointmentV2 = apiAppointments.getAppointmentHttp; // HTTP version - CORS fix
-export const createAppointmentV2 = apiAppointments.createAppointmentHttp; // HTTP version - CORS fix
-export const updateAppointmentV2 = apiAppointments.updateAppointmentHttp; // HTTP version - CORS fix
-export const cancelAppointmentV2 = apiAppointments.cancelAppointmentHttp; // HTTP version - CORS fix
-export const checkTimeConflictV2 = apiAppointments.checkTimeConflictHttp; // HTTP version - CORS fix
-export const createAppointment = apiAppointments.createAppointment;
-export const updateAppointment = apiAppointments.updateAppointment;
-export const getAppointment = apiAppointments.getAppointment;
-export const cancelAppointment = apiAppointments.cancelAppointment;
-export const checkTimeConflict = apiAppointments.checkTimeConflict;
+export const createAppointment = onCall(async (request) => {
+    const { createAppointmentHandler } = await import('./api/appointments');
+    return createAppointmentHandler(request);
+});
+export const updateAppointment = onCall(async (request) => {
+    const { updateAppointmentHandler } = await import('./api/appointments');
+    return updateAppointmentHandler(request);
+});
+export const getAppointment = onCall(async (request) => {
+    const { getAppointmentHandler } = await import('./api/appointments');
+    return getAppointmentHandler(request);
+});
+export const cancelAppointment = onCall(async (request) => {
+    const { cancelAppointmentHandler } = await import('./api/appointments');
+    return cancelAppointmentHandler(request);
+});
+export const checkTimeConflict = onCall(async (request) => {
+    const { checkTimeConflictHandler } = await import('./api/appointments');
+    return checkTimeConflictHandler(request);
+});
+// HTTP (CORS) - frontend callFunctionHttp hits these URLs
+export { listAppointmentsHttp as listAppointments } from './api/appointments';
 
 // API de Exercícios
-import * as apiExercises from './api/exercises';
-export const listExercisesV2 = apiExercises.listExercisesHttp;
-export const getExerciseV2 = apiExercises.getExerciseHttp;
-export const searchSimilarExercisesV2 = apiExercises.searchSimilarExercisesHttp;
-export const getExerciseCategoriesV2 = apiExercises.getExerciseCategoriesHttp;
-export const getPrescribedExercisesV2 = apiExercises.getPrescribedExercisesHttp;
-export const logExerciseV2 = apiExercises.logExerciseHttp;
-export const createExerciseV2 = apiExercises.createExerciseHttp;
-export const updateExerciseV2 = apiExercises.updateExerciseHttp;
-export const deleteExerciseV2 = apiExercises.deleteExerciseHttp;
-export const mergeExercisesV2 = apiExercises.mergeExercisesHttp;
-export const listExercises = apiExercises.listExercises;
-export const getExercise = apiExercises.getExercise;
-export const searchSimilarExercises = apiExercises.searchSimilarExercises;
-export const getExerciseCategories = apiExercises.getExerciseCategories;
-export const getPrescribedExercises = apiExercises.getPrescribedExercises;
-export const logExercise = apiExercises.logExercise;
-export const createExercise = apiExercises.createExercise;
-export const updateExercise = apiExercises.updateExercise;
-export const deleteExercise = apiExercises.deleteExercise;
-export const mergeExercises = apiExercises.mergeExercises;
+export const listExercises = onCall(async (request) => {
+    const { listExercisesHandler } = await import('./api/exercises');
+    return listExercisesHandler(request);
+});
+export const getExercise = onCall(async (request) => {
+    const { getExerciseHandler } = await import('./api/exercises');
+    return getExerciseHandler(request);
+});
+export const searchSimilarExercises = onCall(async (request) => {
+    const { searchSimilarExercisesHandler } = await import('./api/exercises');
+    return searchSimilarExercisesHandler(request);
+});
+export const getExerciseCategories = onCall(async (request) => {
+    const { getExerciseCategoriesHandler } = await import('./api/exercises');
+    return getExerciseCategoriesHandler(request);
+});
+export const getPrescribedExercises = onCall(async (request) => {
+    const { getPrescribedExercisesHandler } = await import('./api/exercises');
+    return getPrescribedExercisesHandler(request);
+});
+export const logExercise = onCall(async (request) => {
+    const { logExerciseHandler } = await import('./api/exercises');
+    return logExerciseHandler(request);
+});
+export const createExercise = onCall(async (request) => {
+    const { createExerciseHandler } = await import('./api/exercises');
+    return createExerciseHandler(request);
+});
+export const updateExercise = onCall(async (request) => {
+    const { updateExerciseHandler } = await import('./api/exercises');
+    return updateExerciseHandler(request);
+});
+export const deleteExercise = onCall(async (request) => {
+    const { deleteExerciseHandler } = await import('./api/exercises');
+    return deleteExerciseHandler(request);
+});
+export const mergeExercises = onCall(async (request) => {
+    const { mergeExercisesHandler } = await import('./api/exercises');
+    return mergeExercisesHandler(request);
+});
 
 // API de Avaliações
-import * as apiAssessments from './api/assessments';
-export const listAssessments = apiAssessments.listAssessments;
-export const getAssessment = apiAssessments.getAssessment;
-export const createAssessment = apiAssessments.createAssessment;
-export const updateAssessment = apiAssessments.updateAssessment;
-export const listAssessmentTemplates = apiAssessments.listAssessmentTemplates;
-export const getAssessmentTemplate = apiAssessments.getAssessmentTemplate;
+export const listAssessments = onCall(async (request) => {
+    const { listAssessmentsHandler } = await import('./api/assessments');
+    return listAssessmentsHandler(request);
+});
+export const getAssessment = onCall(async (request) => {
+    const { getAssessmentHandler } = await import('./api/assessments');
+    return getAssessmentHandler(request);
+});
+export const createAssessment = onCall(async (request) => {
+    const { createAssessmentHandler } = await import('./api/assessments');
+    return createAssessmentHandler(request);
+});
+export const updateAssessment = onCall(async (request) => {
+    const { updateAssessmentHandler } = await import('./api/assessments');
+    return updateAssessmentHandler(request);
+});
+export const listAssessmentTemplates = onCall(async (request) => {
+    const { listAssessmentTemplatesHandler } = await import('./api/assessments');
+    return listAssessmentTemplatesHandler(request);
+});
+export const getAssessmentTemplate = onCall(async (request) => {
+    const { getAssessmentTemplateHandler } = await import('./api/assessments');
+    return getAssessmentTemplateHandler(request);
+});
 
-// API de Perfis
-import * as apiProfile from './api/profile';
-export const getProfile = apiProfile.getProfile;
-export const updateProfile = apiProfile.updateProfile;
-
-// API de Estatísticas de Pacientes
-import { getPatientStats } from './api/patient-stats';
-export { getPatientStats };
+// API de Perfis (onCall with CORS so callFunctionHttp works from browser)
+export const getProfile = onCall(
+    { cors: CORS_ORIGINS },
+    async (request) => {
+        const { getProfileHandler } = await import('./api/profile');
+        return getProfileHandler(request);
+    }
+);
+export const updateProfile = onCall(async (request) => {
+    const { updateProfileHandler } = await import('./api/profile');
+    return updateProfileHandler(request);
+});
 
 // API de Pagamentos
-import * as apiPayments from './api/payments';
-export const listPayments = apiPayments.listPayments;
-export const createPayment = apiPayments.createPayment;
+export const listPayments = onCall(async (request) => {
+    const { listPaymentsHandler } = await import('./api/payments');
+    return listPaymentsHandler(request);
+});
+export const getPatientFinancialSummary = onCall(async (request) => {
+    const { getPatientFinancialSummaryHandler } = await import('./api/payments');
+    return getPatientFinancialSummaryHandler(request);
+});
+export const createPayment = onCall(async (request) => {
+    const { createPaymentHandler } = await import('./api/payments');
+    return createPaymentHandler(request);
+});
+
 // API Financeira (Transações)
-import * as apiFinancial from './api/financial';
-export const listTransactionsV2 = apiFinancial.listTransactionsHttp;
-export const createTransactionV2 = apiFinancial.createTransactionHttp;
-export const updateTransactionV2 = apiFinancial.updateTransactionHttp;
-export const deleteTransactionV2 = apiFinancial.deleteTransactionHttp;
-export const findTransactionByAppointmentIdV2 = apiFinancial.findTransactionByAppointmentIdHttp;
-export const getEventReportV2 = apiFinancial.getEventReportHttp;
-export const listTransactions = apiFinancial.listTransactions;
-export const createTransaction = apiFinancial.createTransaction;
-export const updateTransaction = apiFinancial.updateTransaction;
-export const deleteTransaction = apiFinancial.deleteTransaction;
-export const findTransactionByAppointmentId = apiFinancial.findTransactionByAppointmentId;
-export const getEventReport = apiFinancial.getEventReport;
+export const listTransactions = onCall(async (request) => {
+    const { listTransactionsHandler } = await import('./api/financial');
+    return listTransactionsHandler(request);
+});
+export const createTransaction = onCall(async (request) => {
+    const { createTransactionHandler } = await import('./api/financial');
+    return createTransactionHandler(request);
+});
+export const updateTransaction = onCall(async (request) => {
+    const { updateTransactionHandler } = await import('./api/financial');
+    return updateTransactionHandler(request);
+});
+export const deleteTransaction = onCall(async (request) => {
+    const { deleteTransactionHandler } = await import('./api/financial');
+    return deleteTransactionHandler(request);
+});
+export const findTransactionByAppointmentId = onCall(async (request) => {
+    const { findTransactionByAppointmentIdHandler } = await import('./api/financial');
+    return findTransactionByAppointmentIdHandler(request);
+});
+export const getEventReport = onCall(async (request) => {
+    const { getEventReportHandler } = await import('./api/financial');
+    return getEventReportHandler(request);
+});
 
 // API de Prontuários
-import * as apiMedicalRecords from './api/medical-records';
-export const getPatientRecordsV2 = apiMedicalRecords.getPatientRecordsHttp;
-export const createMedicalRecordV2 = apiMedicalRecords.createMedicalRecordHttp;
-export const updateMedicalRecordV2 = apiMedicalRecords.updateMedicalRecordHttp;
-export const deleteMedicalRecordV2 = apiMedicalRecords.deleteMedicalRecordHttp;
-export const listTreatmentSessionsV2 = apiMedicalRecords.listTreatmentSessionsHttp;
-export const createTreatmentSessionV2 = apiMedicalRecords.createTreatmentSessionHttp;
-export const getPainRecordsV2 = apiMedicalRecords.getPainRecordsHttp;
-export const savePainRecordV2 = apiMedicalRecords.savePainRecordHttp;
-export const getPatientRecords = apiMedicalRecords.getPatientRecords;
-export const getPainRecords = apiMedicalRecords.getPainRecords;
-export const savePainRecord = apiMedicalRecords.savePainRecord;
-export const createMedicalRecord = apiMedicalRecords.createMedicalRecord;
-export const updateMedicalRecord = apiMedicalRecords.updateMedicalRecord;
-export const listTreatmentSessions = apiMedicalRecords.listTreatmentSessions;
-export const createTreatmentSession = apiMedicalRecords.createTreatmentSession;
-export const updateTreatmentSession = apiMedicalRecords.updateTreatmentSession;
+export const getPatientRecords = onCall(async (request) => {
+    const { getPatientRecordsHandler } = await import('./api/medical-records');
+    return getPatientRecordsHandler(request);
+});
+export const getPainRecords = onCall(async (request) => {
+    const { getPainRecordsHandler } = await import('./api/medical-records');
+    return getPainRecordsHandler(request);
+});
+export const savePainRecord = onCall(async (request) => {
+    const { savePainRecordHandler } = await import('./api/medical-records');
+    return savePainRecordHandler(request);
+});
+export const createMedicalRecord = onCall(async (request) => {
+    const { createMedicalRecordHandler } = await import('./api/medical-records');
+    return createMedicalRecordHandler(request);
+});
+export const updateMedicalRecord = onCall(async (request) => {
+    const { updateMedicalRecordHandler } = await import('./api/medical-records');
+    return updateMedicalRecordHandler(request);
+});
+export const listTreatmentSessions = onCall(async (request) => {
+    const { listTreatmentSessionsHandler } = await import('./api/medical-records');
+    return listTreatmentSessionsHandler(request);
+});
+export const createTreatmentSession = onCall(async (request) => {
+    const { createTreatmentSessionHandler } = await import('./api/medical-records');
+    return createTreatmentSessionHandler(request);
+});
+export const updateTreatmentSession = onCall(async (request) => {
+    const { updateTreatmentSessionHandler } = await import('./api/medical-records');
+    return updateTreatmentSessionHandler(request);
+});
 
 // API HTTP para avaliações
-import { apiEvaluate } from './api/evaluate';
-export { apiEvaluate };
+export const apiEvaluate = onRequest(async (req: Request, res: Response) => {
+    const { apiEvaluateHandler } = await import('./api/evaluate');
+    return apiEvaluateHandler(req, res);
+});
 
 // Health Check
-import { healthCheck } from './api/health';
-export { healthCheck };
+export const healthCheck = onRequest(async (req: Request, res: Response) => {
+    const { healthCheckHandler } = await import('./api/health');
+    return healthCheckHandler(req, res);
+});
 
 // Upload API (replaces Vercel Blob /api/upload)
-export { generateUploadToken, confirmUpload, deleteFile as deleteStorageFile, listUserFiles } from './api/upload';
+export const generateUploadToken = onCall(async (request) => {
+    const { generateUploadTokenHandler } = await import('./api/upload');
+    return generateUploadTokenHandler(request);
+});
+export const confirmUpload = onCall(async (request) => {
+    const { confirmUploadHandler } = await import('./api/upload');
+    return confirmUploadHandler(request);
+});
+export const deleteStorageFile = onCall(async (request) => {
+    const { deleteFileHandler } = await import('./api/upload');
+    return deleteFileHandler(request);
+});
+export const listUserFiles = onCall(async (request) => {
+    const { listUserFilesHandler } = await import('./api/upload');
+    return listUserFilesHandler(request);
+});
 
-// ============================================================================
-// GOOGLE CLOUD SERVICES API ENDPOINTS
-// ============================================================================
+// Cloud API Endpoints
+export const synthesizeTTS = onRequest(async (req: any, res: any) => {
+    const { synthesizeTTSHandler } = await import('./api/tts');
+    return synthesizeTTSHandler(req, res);
+});
 
-import { synthesizeTTS } from './api/tts';
-import { transcribeAudio, transcribeLongAudio } from './api/speech';
-import { translate, detectLanguage, getSupportedLanguages, translateExercise } from './api/translation';
+export const transcribeAudio = onRequest(async (req: any, res: any) => {
+    const { transcribeAudioHandler } = await import('./api/speech');
+    return transcribeAudioHandler(req, res);
+});
 
-export { synthesizeTTS, transcribeAudio, transcribeLongAudio, translate, detectLanguage, getSupportedLanguages, translateExercise };
+export const transcribeLongAudio = onRequest(async (req: any, res: any) => {
+    const { transcribeLongAudioHandler } = await import('./api/speech');
+    return transcribeLongAudioHandler(req, res);
+});
+
+export const translate = onRequest(async (req: any, res: any) => {
+    const { translateHandler } = await import('./api/translation');
+    return translateHandler(req, res);
+});
+
+export const detectLanguage = onRequest(async (req: any, res: any) => {
+    const { detectLanguageHandler } = await import('./api/translation');
+    return detectLanguageHandler(req, res);
+});
+
+export const getSupportedLanguages = onRequest(async (req: any, res: any) => {
+    const { getSupportedLanguagesHandler } = await import('./api/translation');
+    return getSupportedLanguagesHandler(req, res);
+});
+
+export const translateExercise = onRequest(async (req: any, res: any) => {
+    const { translateExerciseHandler } = await import('./api/translation');
+    return translateExerciseHandler(req, res);
+});
 
 // Admin Functions
-import { createAdminUser } from './admin/create-user';
-export { createAdminUser };
+export const createAdminUser = onCall(async (request) => {
+    const { createAdminUserHandler } = await import('./admin/create-user');
+    return createAdminUserHandler();
+});
 
-// Migration Functions (temporary - can be removed after migration)
-import { runMigration } from './runMigration';
-export { runMigration };
-import { runMigrationHttp } from './runMigrationHttp';
-export { runMigrationHttp };
-import { createPerformanceIndexes } from './migrations/create-performance-indexes';
-export { createPerformanceIndexes };
-import { runPerformanceIndexes } from './migrations/run-performance-indexes';
-export { runPerformanceIndexes };
-import { setupMonitoring } from './api/setup-monitoring';
-export { setupMonitoring };
+// Migration Functions
+export const createPerformanceIndexes = onCall(async (request) => {
+    const { createPerformanceIndexesHandler } = await import('./migrations/create-performance-indexes');
+    return createPerformanceIndexesHandler(request);
+});
 
-// ============================================================================
 // AI FUNCTIONS
-// ============================================================================
+export const aiExerciseSuggestion = onCall(async (request) => {
+    const { exerciseSuggestionHandler } = await import('./ai/exercise-suggestion');
+    return exerciseSuggestionHandler(request);
+});
 
-export { exerciseSuggestion as aiExerciseSuggestion } from './ai/exercise-suggestion';
-export { soapGeneration as aiSoapGeneration } from './ai/soap-generation';
-export { clinicalAnalysis as aiClinicalAnalysis } from './ai/clinical-analysis';
-export { movementAnalysis as aiMovementAnalysis } from './ai/movement-analysis';
+export const aiSoapGeneration = onCall(async (request) => {
+    const { soapGenerationHandler } = await import('./ai/soap-generation');
+    return soapGenerationHandler(request);
+});
+
+export const aiClinicalAnalysis = onCall(async (request) => {
+    const { clinicalAnalysisHandler } = await import('./ai/clinical-analysis');
+    return clinicalAnalysisHandler(request);
+});
+
+export const aiMovementAnalysis = onCall(async (request) => {
+    const { movementAnalysisHandler } = await import('./ai/movement-analysis');
+    return movementAnalysisHandler(request);
+});
 
 // New AI Functions (Clinical Assistant)
-export {
-    aiClinicalChat,
-    aiExerciseRecommendationChat,
-    aiSoapNoteChat,
-    aiGetSuggestions
-} from './ai/clinical-chat';
+export const aiClinicalChat = onCall(async (request) => {
+    const { aiClinicalChatHandler } = await import('./ai/clinical-chat');
+    return aiClinicalChatHandler(request);
+});
 
-import { getPatientAISummaryHttp } from './api/ai-assistant';
-import { getClinicalInsightsHttp } from './api/clinical-insights';
-import { scanMedicalReportHttp } from './api/ocr-scanner';
-import { migrateClinicalSchema } from './migrations/clinical-setup';
-import { dailyPatientDigest } from './crons/scheduled-tasks';
+export const aiExerciseRecommendationChat = onCall(async (request) => {
+    const { aiExerciseRecommendationChatHandler } = await import('./ai/clinical-chat');
+    return aiExerciseRecommendationChatHandler(request);
+});
 
-import { analyzeProgress } from './ai/flows';
+export const aiSoapNoteChat = onCall(async (request) => {
+    const { aiSoapNoteChatHandler } = await import('./ai/clinical-chat');
+    return aiSoapNoteChatHandler(request);
+});
 
-export { 
-    getPatientAISummaryHttp, 
-    getClinicalInsightsHttp, 
-    scanMedicalReportHttp,
-    migrateClinicalSchema, 
-    dailyPatientDigest,
-    analyzeProgress 
-};
+export const aiGetSuggestions = onCall(async (request) => {
+    const { aiGetSuggestionsHandler } = await import('./ai/clinical-chat');
+    return aiGetSuggestionsHandler(request);
+});
+
+export const getPatientAISummaryHttp = onRequest(async (req: any, res: any) => {
+    const { getPatientAISummaryHttpHandler } = await import('./api/ai-assistant');
+    return getPatientAISummaryHttpHandler(req, res);
+});
+
+export const getClinicalInsightsHttp = onRequest(async (req: any, res: any) => {
+    const { getClinicalInsightsHttpHandler } = await import('./api/clinical-insights');
+    return getClinicalInsightsHttpHandler(req, res);
+});
+
+export const scanMedicalReportHttp = onRequest(async (req: any, res: any) => {
+    const { scanMedicalReportHttpHandler } = await import('./api/ocr-scanner');
+    return scanMedicalReportHttpHandler(req, res);
+});
+
+export { migrateClinicalSchema } from './migrations/clinical-setup';
+export { dailyPatientDigest } from './crons/scheduled-tasks';
+export { analyzeProgress } from './ai/flows';
 
 // ============================================================================
 // WEBHOOK MANAGEMENT
 // ============================================================================
 
-import * as webhooks from './webhooks/index';
-export const subscribeWebhook = webhooks.subscribeWebhook;
-export const unsubscribeWebhook = webhooks.unsubscribeWebhook;
-export const listWebhooks = webhooks.listWebhooks;
-export const testWebhook = webhooks.testWebhook;
-export const getWebhookEventTypes = webhooks.getWebhookEventTypes;
+// Webhook Management
+export const subscribeWebhook = onCall(async (request) => {
+    const { subscribeWebhookHandler } = await import('./webhooks/index');
+    return subscribeWebhookHandler(request);
+});
+export const unsubscribeWebhook = onCall(async (request) => {
+    const { unsubscribeWebhookHandler } = await import('./webhooks/index');
+    return unsubscribeWebhookHandler(request);
+});
+export const listWebhooks = onCall(async (request) => {
+    const { listWebhooksHandler } = await import('./webhooks/index');
+    return listWebhooksHandler(request);
+});
+export const testWebhook = onCall(async (request) => {
+    const { testWebhookHandler } = await import('./webhooks/index');
+    return testWebhookHandler(request);
+});
+export const getWebhookEventTypes = onRequest(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (req: any, res: any) => {
+        const { getWebhookEventTypesHandler } = await import('./webhooks/index');
+        return getWebhookEventTypesHandler(req, res);
+    }
+);
 
 // ============================================================================
 // INTEGRATIONS (Calendar, etc.)
 // ============================================================================
 
-import * as calendarIntegrations from './integrations/calendar';
-export const syncToGoogleCalendar = calendarIntegrations.syncToGoogleCalendar;
-export const syncIntegration = calendarIntegrations.syncIntegration;
-export const importFromGoogleCalendar = calendarIntegrations.importFromGoogleCalendar;
-export const connectGoogleCalendar = calendarIntegrations.connectGoogleCalendar;
-export const disconnectGoogleCalendar = calendarIntegrations.disconnectGoogleCalendar;
-export const getGoogleAuthUrl = calendarIntegrations.getGoogleAuthUrl;
-export const exportToICal = calendarIntegrations.exportToICal;
+// Integrations (Calendar, etc.)
+export const syncToGoogleCalendar = onCall(async (request) => {
+    const { syncToGoogleCalendarHandler } = await import('./integrations/calendar');
+    return syncToGoogleCalendarHandler(request);
+});
+export const syncIntegration = onCall(async (request) => {
+    const { syncIntegrationHandler } = await import('./integrations/calendar');
+    return syncIntegrationHandler(request);
+});
+export const importFromGoogleCalendar = onCall(async (request) => {
+    const { importFromGoogleCalendarHandler } = await import('./integrations/calendar');
+    return importFromGoogleCalendarHandler(request);
+});
+export const connectGoogleCalendar = onCall(async (request) => {
+    const { connectGoogleCalendarHandler } = await import('./integrations/calendar');
+    return connectGoogleCalendarHandler(request);
+});
+export const disconnectGoogleCalendar = onCall(async (request) => {
+    const { disconnectGoogleCalendarHandler } = await import('./integrations/calendar');
+    return disconnectGoogleCalendarHandler(request);
+});
+export const getGoogleAuthUrl = onCall(async (request) => {
+    const { getGoogleAuthUrlHandler } = await import('./integrations/calendar');
+    return getGoogleAuthUrlHandler(request);
+});
+export { exportToICal } from './integrations/calendar';
 
 // ============================================================================
 // EXPORT/IMPORT FUNCTIONS
 // ============================================================================
 
-import * as exportImport from './export-import/index';
-export const exportPatients = exportImport.exportPatients;
-export const importPatients = exportImport.importPatients;
-export const downloadExport = exportImport.downloadExport;
+// Export/Import Functions
+export const exportPatients = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '512MiB',
+        maxInstances: 5,
+        timeoutSeconds: 300,
+    },
+    async (request) => {
+        const { exportPatientsHandler } = await import('./export-import/index');
+        return exportPatientsHandler(request);
+    }
+);
+export const importPatients = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '512MiB',
+        maxInstances: 5,
+        timeoutSeconds: 300,
+    },
+    async (request) => {
+        const { importPatientsHandler } = await import('./export-import/index');
+        return importPatientsHandler(request);
+    }
+);
+export const downloadExport = onRequest(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (req: any, res: any) => {
+        const { downloadExportHandler } = await import('./export-import/index');
+        return downloadExportHandler(req, res);
+    }
+);
 
 // ============================================================================
 // MONITORING & OBSERVABILITY
 // ============================================================================
 
-import * as errorDashboard from './monitoring/error-dashboard';
-export const getErrorStats = errorDashboard.getErrorStats;
-export const getRecentErrors = errorDashboard.getRecentErrors;
-export const resolveError = errorDashboard.resolveError;
-export const getErrorDetails = errorDashboard.getErrorDetails;
-export const errorStream = errorDashboard.errorStream;
-export const getErrorTrends = errorDashboard.getErrorTrends;
-export const cleanupOldErrors = errorDashboard.cleanupOldErrors;
+// Monitoring & Observability
+export const getErrorStats = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getErrorStatsHandler } = await import('./monitoring/error-dashboard');
+        return getErrorStatsHandler(request);
+    }
+);
+export const getRecentErrors = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getRecentErrorsHandler } = await import('./monitoring/error-dashboard');
+        return getRecentErrorsHandler(request);
+    }
+);
+export const resolveError = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { resolveErrorHandler } = await import('./monitoring/error-dashboard');
+        return resolveErrorHandler(request);
+    }
+);
+export const getErrorDetails = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getErrorDetailsHandler } = await import('./monitoring/error-dashboard');
+        return getErrorDetailsHandler(request);
+    }
+);
+export const errorStream = onRequest(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (req: any, res: any) => {
+        const { errorStreamHandler } = await import('./monitoring/error-dashboard');
+        return errorStreamHandler(req, res);
+    }
+);
+export const getErrorTrends = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getErrorTrendsHandler } = await import('./monitoring/error-dashboard');
+        return getErrorTrendsHandler(request);
+    }
+);
+export const cleanupOldErrors = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 1,
+    },
+    async (request) => {
+        const { cleanupOldErrorsHandler } = await import('./monitoring/error-dashboard');
+        return cleanupOldErrorsHandler(request);
+    }
+);
 
-import * as performanceTracing from './monitoring/performance-tracing';
-export const getPerformanceStats = performanceTracing.getPerformanceStats;
-export const getSlowRequests = performanceTracing.getSlowRequests;
-export const getTraceTimeline = performanceTracing.getTraceTimeline;
-export const getPerformanceTrends = performanceTracing.getPerformanceTrends;
-export const performanceStream = performanceTracing.performanceStream;
-export const cleanupOldTraces = performanceTracing.cleanupOldTraces;
+export const getPerformanceStats = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getPerformanceStatsHandler } = await import('./monitoring/performance-tracing');
+        return getPerformanceStatsHandler(request);
+    }
+);
+export const getSlowRequests = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getSlowRequestsHandler } = await import('./monitoring/performance-tracing');
+        return getSlowRequestsHandler(request);
+    }
+);
+export const getTraceTimeline = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getTraceTimelineHandler } = await import('./monitoring/performance-tracing');
+        return getTraceTimelineHandler(request);
+    }
+);
+export const getPerformanceTrends = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (request) => {
+        const { getPerformanceTrendsHandler } = await import('./monitoring/performance-tracing');
+        return getPerformanceTrendsHandler(request);
+    }
+);
+export const performanceStream = onRequest(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 10,
+    },
+    async (req: any, res: any) => {
+        const { performanceStreamHandler } = await import('./monitoring/performance-tracing');
+        return performanceStreamHandler(req, res);
+    }
+);
+export const cleanupOldTraces = onCall(
+    {
+        region: 'southamerica-east1',
+        memory: '256MiB',
+        maxInstances: 1,
+    },
+    async (request) => {
+        const { cleanupOldTracesHandler } = await import('./monitoring/performance-tracing');
+        return cleanupOldTracesHandler(request);
+    }
+);
 
 import * as aiReports from './monitoring/ai-reports';
 export const generateAIReport = aiReports.generateAIReport;
@@ -303,48 +676,10 @@ export const scheduledWeeklyReport = aiReports.scheduledWeeklyReport;
 // REALTIME FUNCTIONS
 // ============================================================================
 
-import * as realtimePublisher from './realtime/publisher';
-export const realtimePublish = realtimePublisher.realtimePublish;
-
-// ============================================================================
-// HTTP FUNCTIONS
-// ============================================================================
-
-function setApiRouterCors(req: any, res: any) {
-    const origin = req.headers?.origin || req.headers?.Origin;
-    const allowOrigin = (origin && (
-        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(String(origin)) ||
-        /moocafisio\.com\.br$/.test(String(origin)) ||
-        /fisioflow\.web\.app$/.test(String(origin))
-    )) ? origin : '*';
-    res.set('Access-Control-Allow-Origin', allowOrigin);
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.set('Access-Control-Max-Age', '86400');
-}
-
-export const apiRouter = functions.https.onRequest({
-    cors: true,
-}, async (req, res) => {
-    if (req.method === 'OPTIONS') {
-        setApiRouterCors(req, res);
-        res.status(204).send('');
-        return;
-    }
-    setApiRouterCors(req, res);
-
-    // Router principal para endpoints HTTP
-    const { path } = req;
-
-    // Parse do path
-    const segments = path.split('/').filter(Boolean);
-
-    if (segments[0] === 'api') {
-        // Router de API
-        res.json({ message: 'API Router', path: segments.join('/') });
-    } else {
-        res.status(404).json({ error: 'Not found' });
-    }
+// Realtime Functions
+export const realtimePublish = onRequest(async (req: any, res: any) => {
+    const { realtimePublishHandler } = await import('./realtime/publisher');
+    await realtimePublishHandler(req, res);
 });
 
 // ============================================================================
@@ -353,11 +688,7 @@ export const apiRouter = functions.https.onRequest({
 
 // Firestore triggers with proper error handling
 export const onPatientCreated = functions.firestore.onDocumentCreated(
-    {
-        document: 'patients/{patientId}',
-        region: 'southamerica-east1',
-        memory: '256MiB',
-    },
+    'patients/{patientId}',
     async (event) => {
         const snapshot = event.data;
         if (!snapshot) return;
@@ -392,11 +723,7 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
 );
 
 export const onAppointmentCreated = functions.firestore.onDocumentCreated(
-    {
-        document: 'appointments/{appointmentId}',
-        region: 'southamerica-east1',
-        memory: '256MiB',
-    },
+    'appointments/{appointmentId}',
     async (event) => {
         const snapshot = event.data;
         if (!snapshot) return;
@@ -419,11 +746,7 @@ export const onAppointmentCreated = functions.firestore.onDocumentCreated(
 );
 
 export const onAppointmentUpdated = functions.firestore.onDocumentWritten(
-    {
-        document: 'appointments/{appointmentId}',
-        region: 'southamerica-east1',
-        memory: '256MiB',
-    },
+    'appointments/{appointmentId}',
     async (event) => {
         const before = event.data?.before.data();
         const after = event.data?.after.data();
@@ -470,53 +793,47 @@ export { testWhatsAppMessage, testWhatsAppTemplate } from './communications/what
 
 // ============================================================================
 // Auth Triggers
+// ============================================================================
+
 import { onUserCreated } from './auth/user-created';
 export { onUserCreated }; // v1 trigger exported directly
 
-import * as authInvitations from './auth/invitations';
-export const createUserInvitation = authInvitations.createUserInvitation;
-export const getInvitationByToken = authInvitations.getInvitationByToken;
-export const consumeInvitation = authInvitations.consumeInvitation;
+export const createUserInvitation = onCall(
+    { cors: true, memory: '512MiB', maxInstances: 10 },
+    async (request) => {
+        const { createUserInvitationHandler } = await import('./auth/invitations');
+        return createUserInvitationHandler(request);
+    }
+);
+export const getInvitationByToken = onCall(
+    { cors: true, memory: '512MiB', maxInstances: 10 },
+    async (request) => {
+        const { getInvitationByTokenHandler } = await import('./auth/invitations');
+        return getInvitationByTokenHandler(request);
+    }
+);
+export const consumeInvitation = onCall(
+    { cors: true, memory: '512MiB', maxInstances: 10 },
+    async (request) => {
+        const { consumeInvitationHandler } = await import('./auth/invitations');
+        return consumeInvitationHandler(request);
+    }
+);
 
 // User Management API
-import { listUsers, updateUserRole } from './api/users';
-export { listUsers, updateUserRole };
+export const listUsers = onCall(async (request) => {
+    const { listUsersHandler } = await import('./api/users');
+    return listUsersHandler(request);
+});
+export const updateUserRole = onCall(async (request) => {
+    const { updateUserRoleHandler } = await import('./api/users');
+    return updateUserRoleHandler(request);
+});
 
-/**
- * Trigger disparado quando um novo usuário é criado no Firebase Auth.
- * Cria o perfil correspondente na tabela profiles do Cloud SQL.
- *
- * TODO: Temporarily disabled - onUserCreated not available in firebase-functions v2
- */
-// export const onUserCreatedHandler = onUserCreatedFn(async (user: any) => {
-//     const pool = getPool();
-//     const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
-//
-//     try {
-//         await pool.query(
-//             `INSERT INTO profiles (
-//                 user_id,
-//                 organization_id,
-//                 full_name,
-//                 email,
-//                 role,
-//                 email_verified,
-//                 is_active
-//             ) VALUES ($1, $2, $3, $4, $5, $6, true)
-//             ON CONFLICT (user_id) DO NOTHING`,
-//             [
-//                 user.uid,
-//                 DEFAULT_ORG_ID,
-//                 user.displayName || 'Novo Usuário',
-//                 user.email,
-//                 'fisioterapeuta', // Papel padrão
-//                 user.emailVerified || false
-//             ]
-//         );
-//     } catch (error) {
-//         // Error logged by logger
-//     }
-// });
+// ============================================================================
+// STRIPE WEBHOOK
+// ============================================================================
+export { stripeWebhookHttp } from './stripe/webhook';
 
 // ============================================================================
 // GOOGLE CLOUD SERVICES EXPORTS
@@ -524,21 +841,21 @@ export { listUsers, updateUserRole };
 
 // Export helper functions (lib) - avoid re-exporting names already exported from api/
 export {
-  initCrashlytics,
-  recordError,
-  setUserId,
-  clearUserId,
-  setCustomKey,
-  setCustomKeys,
-  createCrashlyticsLogger,
+    initCrashlytics,
+    recordError,
+    setUserId,
+    clearUserId,
+    setCustomKey,
+    setCustomKeys,
+    createCrashlyticsLogger,
 } from './lib/crashlytics';
 
 export {
-  startTrace,
-  measure,
-  measureHttpCall,
-  measureDatabase,
-  measureFirestore,
-  startHttpTrace,
-  withPerformanceTracing,
+    startTrace,
+    measure,
+    measureHttpCall,
+    measureDatabase,
+    measureFirestore,
+    startHttpTrace,
+    withPerformanceTracing,
 } from './lib/performance';
