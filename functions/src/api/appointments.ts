@@ -160,7 +160,7 @@ export const listAppointmentsHttp = onRequest(
  * HTTP version of getAppointment for CORS
  */
 export const getAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
@@ -222,7 +222,7 @@ export const checkTimeConflictHttp = onRequest(
  * HTTP version of createAppointment for CORS
  */
 export const createAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: true },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(req, res); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }

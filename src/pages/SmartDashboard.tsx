@@ -8,8 +8,10 @@ import {
   Brain, TrendingUp, AlertTriangle, Users, DollarSign,
   Calendar, BarChart3, CheckCircle,
   MessageSquare, Sparkles, Package,
-  LayoutDashboard, Save, RotateCcw
+  LayoutDashboard, Save, RotateCcw, Stethoscope, FileText
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useMedicalReturnsUpcoming } from '@/hooks/useMedicalReturnsUpcoming';
 import { useAppointmentPredictions, useRevenueForecasts, useStaffPerformance, useInventory } from '@/hooks/useInnovations';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useEventos } from '@/hooks/useEventos';
@@ -58,6 +60,8 @@ export default function SmartDashboard() {
   // Data Hooks
   const { data: metrics, isLoading: isLoadingMetrics } = useDashboardMetrics();
   const { data: predictions = [] } = useAppointmentPredictions();
+  const { data: medicalReturnsUpcoming = [] } = useMedicalReturnsUpcoming(14);
+  const navigate = useNavigate();
   const { data: forecasts = [] } = useRevenueForecasts();
   const { data: staffPerformance = [] } = useStaffPerformance();
   const { data: inventory = [] } = useInventory();
@@ -320,7 +324,59 @@ export default function SmartDashboard() {
       defaultLayout: { w: 8, h: 4, x: 0, y: 9, minW: 4, minH: 3 }
     },
 
-    // 5. ACTIVITY FEED (Atividades em Tempo Real)
+    // 5. RETORNOS MÉDICOS PRÓXIMOS (preparar relatório médico)
+    {
+      id: 'medical-returns',
+      content: (
+        <GridWidget title="Retornos médicos próximos" icon={<Stethoscope className="h-4 w-4" />} isDraggable={isEditable}>
+          <ScrollArea className="h-full">
+            <div className="space-y-2 p-2">
+              {medicalReturnsUpcoming.length > 0 ? (
+                medicalReturnsUpcoming.slice(0, 8).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{item.full_name || item.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Retorno: {format(new Date(item.medical_return_date), 'dd/MM/yyyy', { locale: ptBR })}
+                        {item.referring_doctor_name && ` · ${item.referring_doctor_name}`}
+                      </p>
+                      {(item.medical_report_done || item.medical_report_sent) && (
+                        <div className="flex gap-1 mt-1">
+                          {item.medical_report_done && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Relatório feito</span>
+                          )}
+                          {item.medical_report_sent && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Enviado</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 h-8"
+                      onClick={() => navigate('/relatorios/medico', { state: { patientId: item.id } })}
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  Nenhum retorno médico nos próximos 14 dias
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </GridWidget>
+      ),
+      defaultLayout: { w: 4, h: 6, x: 0, y: 13, minW: 3, minH: 4 }
+    },
+
+    // 6. ACTIVITY FEED (Atividades em Tempo Real)
     {
       id: 'activity-feed',
       content: (

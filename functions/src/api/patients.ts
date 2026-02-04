@@ -235,6 +235,7 @@ export const getPatientHttp = onRequest(
     memory: '256MiB',
     maxInstances: 10,
     cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -244,6 +245,7 @@ export const getPatientHttp = onRequest(
     }
 
     if (req.method !== 'POST') {
+      setCorsHeaders(req, res);
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
@@ -253,7 +255,7 @@ export const getPatientHttp = onRequest(
     try {
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
-      const { patientId } = req.body || {};
+      const { patientId } = (req.body as Record<string, unknown>) || {};
 
       if (!patientId) {
         res.status(400).json({ error: 'patientId é obrigatório' });
@@ -279,6 +281,7 @@ export const getPatientHttp = onRequest(
       res.json({ data: result.rows[0] });
     } catch (error: unknown) {
       logger.error('Error in getPatientHttp:', error);
+      setCorsHeaders(req, res);
       const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
       res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao buscar paciente' });
     }

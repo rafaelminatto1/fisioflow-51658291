@@ -379,7 +379,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       if (!user) throw new Error('Usuário não autenticado');
 
       // Save SOAP record
-      const soapRecordRef = docRef(collection(db, 'soap_records'));
+      const soapRecordRef = doc(collection(db, 'soap_records'));
       const soapRecordData = {
         patient_id: patientId,
         appointment_id: appointmentId || null,

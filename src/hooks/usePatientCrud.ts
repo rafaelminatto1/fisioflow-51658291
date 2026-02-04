@@ -44,6 +44,12 @@ export interface Patient {
   consent_image?: boolean | null;
   incomplete_registration?: boolean | null;
   organization_id?: string | null;
+  /** Médico assistente / retorno médico */
+  referring_doctor_name?: string | null;
+  referring_doctor_phone?: string | null;
+  medical_return_date?: string | null;
+  medical_report_done?: boolean | null;
+  medical_report_sent?: boolean | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -76,6 +82,9 @@ export interface PatientCreateInput {
   education_level?: string;
   observations?: string;
   organization_id: string;
+  referring_doctor_name?: string;
+  referring_doctor_phone?: string;
+  medical_return_date?: string;
 }
 
 export interface PatientUpdateInput extends Partial<Omit<PatientCreateInput, 'organization_id' | 'birth_date'>> {
@@ -85,6 +94,11 @@ export interface PatientUpdateInput extends Partial<Omit<PatientCreateInput, 'or
   consent_data?: boolean;
   consent_image?: boolean;
   incomplete_registration?: boolean;
+  referring_doctor_name?: string;
+  referring_doctor_phone?: string;
+  medical_return_date?: string;
+  medical_report_done?: boolean;
+  medical_report_sent?: boolean;
 }
 
 export interface PatientsQueryParams {
@@ -267,6 +281,11 @@ export const useUpdatePatient = () => {
       if (inputData.consent_data !== undefined) sanitizedData.consent_data = inputData.consent_data;
       if (inputData.consent_image !== undefined) sanitizedData.consent_image = inputData.consent_image;
       if (inputData.incomplete_registration !== undefined) sanitizedData.incomplete_registration = inputData.incomplete_registration;
+      if (inputData.referring_doctor_name !== undefined) sanitizedData.referring_doctor_name = inputData.referring_doctor_name ? sanitizeString(inputData.referring_doctor_name, 200) : null;
+      if (inputData.referring_doctor_phone !== undefined) sanitizedData.referring_doctor_phone = inputData.referring_doctor_phone ? cleanPhone(inputData.referring_doctor_phone) : null;
+      if (inputData.medical_return_date !== undefined) sanitizedData.medical_return_date = inputData.medical_return_date || null;
+      if (inputData.medical_report_done !== undefined) sanitizedData.medical_report_done = inputData.medical_report_done;
+      if (inputData.medical_report_sent !== undefined) sanitizedData.medical_report_sent = inputData.medical_report_sent;
 
       // Use Firebase Functions API
       const response = await patientsApi.update(id, sanitizedData);

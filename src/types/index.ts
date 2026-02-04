@@ -171,6 +171,18 @@ export interface Patient {
   
   incomplete_registration?: boolean;
   
+  // Retorno médico / médico assistente (vinculado ao paciente)
+  referring_doctor_name?: string;
+  referringDoctorName?: string; // Alias
+  referring_doctor_phone?: string;
+  referringDoctorPhone?: string; // Alias
+  medical_return_date?: string; // ISO date - data prevista do retorno ao médico
+  medicalReturnDate?: string;
+  medical_report_done?: boolean; // relatório médico já foi feito
+  medicalReportDone?: boolean;
+  medical_report_sent?: boolean; // relatório já foi enviado ao médico
+  medicalReportSent?: boolean;
+  
   createdAt: string;
   created_at?: string; // Database compatibility
   updatedAt: string;

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,8 +23,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { patientsApi } from '@/integrations/firebase/functions';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Info } from 'lucide-react';
 
 const styles = StyleSheet.create({
@@ -137,6 +140,7 @@ interface DadosProfissionalDestino {
   especialidade?: string;
   instituicao?: string;
   email?: string;
+  telefone?: string;
 }
 
 interface HistoricoClinico {
@@ -198,6 +202,11 @@ interface RelatorioMedicoData {
   recomendacoes?: string;
   data_emissao: string;
   urgencia?: 'baixa' | 'media' | 'alta';
+  /** ID do paciente (para atualizar relatório feito/enviado no cadastro) */
+  patientId?: string;
+  /** Controle: relatório já foi feito / já foi enviado (persistido no paciente) */
+  relatorio_feito?: boolean;
+  relatorio_enviado?: boolean;
 }
 
 // Componente PDF do Relatório Médico
@@ -287,6 +296,12 @@ function RelatorioMedicoPDF({ data }: { data: RelatorioMedicoData }) {
               <View style={styles.row}>
                 <Text style={styles.label}>Instituição:</Text>
                 <Text style={styles.value}>{data.profissional_destino.instituicao}</Text>
+              </View>
+            )}
+            {data.profissional_destino.telefone && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Telefone:</Text>
+                <Text style={styles.value}>{data.profissional_destino.telefone}</Text>
               </View>
             )}
           </View>
@@ -714,6 +729,20 @@ function RelatorioMedicoEditor({
                   })}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Telefone do Médico</Label>
+                <Input
+                  placeholder="(00) 00000-0000"
+                  value={data.profissional_destino?.telefone || ''}
+                  onChange={(e) => onChange({
+                    ...data,
+                    profissional_destino: {
+                      ...data.profissional_destino,
+                      telefone: e.target.value
+                    }
+                  })}
+                />
+              </div>
               <div className="space-y-2 col-span-2">
                 <Label>Email do Destinatário</Label>
                 <Input
@@ -732,6 +761,42 @@ function RelatorioMedicoEditor({
             </div>
           </CardContent>
         </Card>
+
+        {/* Controle do relatório (relatório feito / enviado - fica no paciente) */}
+        {data.patientId && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Controle do relatório</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal">
+                Marque quando o relatório for feito e quando for enviado ao médico. Os dados ficam vinculados ao paciente.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={data.relatorio_feito ?? false}
+                    onCheckedChange={(checked) => onChange({
+                      ...data,
+                      relatorio_feito: !!checked
+                    })}
+                  />
+                  <span className="text-sm">Relatório feito</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={data.relatorio_enviado ?? false}
+                    onCheckedChange={(checked) => onChange({
+                      ...data,
+                      relatorio_enviado: !!checked
+                    })}
+                  />
+                  <span className="text-sm">Relatório enviado ao médico</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Histórico Clínico */}
         <Card>
@@ -1071,6 +1136,16 @@ export default function RelatorioMedicoPage() {
   const [previewRelatorio, setPreviewRelatorio] = useState<RelatorioMedicoData | null>(null);
   const [editingRelatorio, setEditingRelatorio] = useState<RelatorioMedicoData | null>(null);
   const [activeTab, setActiveTab] = useState<'criar' | 'lista' | 'modelos'>('criar');
+  const location = useLocation();
+  const statePatientId = (location.state as { patientId?: string } | null)?.patientId;
+
+  // Abrir relatório para o paciente quando vier do dashboard/evolução
+  useEffect(() => {
+    if (statePatientId && pacientes.length > 0) {
+      criarRelatorioPaciente(statePatientId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statePatientId, pacientes.length]);
 
   // Estado para novo relatório
   const [novoRelatorio] = useState<RelatorioMedicoData>({
@@ -1121,15 +1196,28 @@ export default function RelatorioMedicoPage() {
       if (data.id) {
         const docRef = doc(db, 'relatorios_medicos', data.id);
         await setDoc(docRef, data, { merge: true });
-        return data;
       } else {
         const { id, ...rest } = data;
         const docRef = await addDoc(collection(db, 'relatorios_medicos'), rest);
-        return { id: docRef.id, ...rest };
+        (data as RelatorioMedicoData & { id: string }).id = docRef.id;
       }
+      // Atualizar paciente: médico/telefone, relatório feito / enviado (para dashboard e evolução)
+      if (data.patientId) {
+        await patientsApi.update(data.patientId, {
+          referring_doctor_name: data.profissional_destino?.nome ?? undefined,
+          referring_doctor_phone: data.profissional_destino?.telefone ?? undefined,
+          medical_report_done: data.relatorio_feito ?? false,
+          medical_report_sent: data.relatorio_enviado ?? false,
+        });
+      }
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['relatorios-medicos'] });
+      if (data.patientId) {
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
+        queryClient.invalidateQueries({ queryKey: ['patient', data.patientId] });
+      }
       toast.success('Relatório salvo com sucesso!');
       setIsEditorOpen(false);
       setEditingRelatorio(null);
@@ -1148,7 +1236,7 @@ export default function RelatorioMedicoPage() {
 
   // Criar relatório a partir de paciente
   const criarRelatorioPaciente = async (pacienteId: string) => {
-    const paciente = pacientes.find(p => p.id === pacienteId);
+    const paciente = pacientes.find((p: { id: string }) => p.id === pacienteId) as Record<string, unknown> | undefined;
     if (!paciente) return;
 
     const { profile, org } = await carregarDadosProfissional();
@@ -1162,15 +1250,18 @@ export default function RelatorioMedicoPage() {
     const snapshotEvolucoes = await getDocs(qEvolucoes);
     const evolucoes = snapshotEvolucoes.docs.map(d => d.data());
 
+    const doctorName = (paciente.referring_doctor_name ?? paciente.referringDoctorName) as string | undefined;
+    const doctorPhone = (paciente.referring_doctor_phone ?? paciente.referringDoctorPhone) as string | undefined;
+
     const relatorio: RelatorioMedicoData = {
       id: '',
       tipo_relatorio: 'inicial',
       paciente: {
-        nome: paciente.full_name,
-        cpf: paciente.cpf || '',
-        data_nascimento: paciente.birth_date || '',
-        telefone: paciente.phone || '',
-        email: paciente.email || '',
+        nome: (paciente.full_name ?? paciente.name) as string,
+        cpf: (paciente.cpf ?? '') as string,
+        data_nascimento: (paciente.birth_date ?? '') as string,
+        telefone: (paciente.phone ?? '') as string,
+        email: (paciente.email ?? '') as string,
       },
       profissional_emissor: {
         nome: profile?.full_name || '',
@@ -1180,7 +1271,7 @@ export default function RelatorioMedicoPage() {
         email: profile?.email || '',
         telefone: profile?.phone || '',
       },
-      profissional_destino: {},
+      profissional_destino: (doctorName || doctorPhone) ? { nome: doctorName, telefone: doctorPhone } : {},
       clinica: {
         nome: org?.name || '',
         cnpj: org?.cnpj || '',
@@ -1194,6 +1285,9 @@ export default function RelatorioMedicoPage() {
       })) || [],
       data_emissao: new Date().toISOString(),
       urgencia: 'baixa',
+      patientId: pacienteId,
+      relatorio_feito: (paciente.medical_report_done ?? paciente.medicalReportDone) as boolean | undefined,
+      relatorio_enviado: (paciente.medical_report_sent ?? paciente.medicalReportSent) as boolean | undefined,
     };
 
     setEditingRelatorio(relatorio);
