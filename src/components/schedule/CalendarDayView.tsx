@@ -242,16 +242,14 @@ const CalendarDayView = memo(({
                                             aria-dropeffect={!blocked ? 'move' : 'none'}
                                             className={cn(
                                                 "calendar-time-slot group relative",
-                                                blocked && "blocked",
+                                                "transition-[background-color,box-shadow] duration-200 ease-out",
+                                                blocked && "blocked bg-red-50/60 dark:bg-red-950/30 ring-2 ring-inset ring-red-400/30 cursor-not-allowed",
                                                 isCurrentHour && !blocked && "bg-primary/5",
-                                                // Drop target styles
                                                 isDropTarget && !blocked && cn(
                                                     "is-drop-target",
-                                                    "bg-primary/10 ring-inset ring-2 ring-primary/50"
+                                                    "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner"
                                                 ),
-                                                // Show drag hint when dragging
                                                 dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5",
-                                                // Preview deve ficar acima dos cards existentes (z-40 > z-25 dos cards)
                                                 showPreview && "z-40"
                                             )}
                                             style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
@@ -261,9 +259,9 @@ const CalendarDayView = memo(({
                                             onDrop={(e) => !blocked && handleDrop(e, currentDate, time)}
                                         >
                                             {blocked ? (
-                                                <span className="absolute inset-0 flex items-center justify-center text-xs text-destructive/70" aria-hidden="true">
-                                                    <Ban className="h-3 w-3 mr-1" />
-                                                    Bloqueado
+                                                <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
+                                                    <Ban className="h-4 w-4 shrink-0" />
+                                                    <span className="text-[10px] uppercase tracking-wide">Bloqueado</span>
                                                 </span>
                                             ) : showPreview ? (
                                                 // Preview dinâmica mostrando como os cards serão organizados
@@ -296,15 +294,15 @@ const CalendarDayView = memo(({
                                                 </div>
                                             ) : (
                                                 <span className={cn(
-                                                    "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground transition-all duration-200",
-                                                    !isDropTarget && "opacity-0 group-hover:opacity-100",
+                                                    "absolute inset-0 flex items-center justify-center text-xs transition-opacity duration-200",
+                                                    !isDropTarget && "opacity-0 group-hover:opacity-100 text-muted-foreground",
                                                     isDropTarget && "opacity-100 text-primary font-medium"
                                                 )}>
                                                     {isDropTarget ? (
-                                                        <div className="flex flex-col items-center gap-1">
-                                                            <CalendarIcon className="w-4 h-4" />
+                                                        <span className="flex flex-col items-center gap-1">
+                                                            <CalendarIcon className="w-5 h-5 text-primary/80" />
                                                             <span>Solte aqui</span>
-                                                        </div>
+                                                        </span>
                                                     ) : 'Clique para agendar'}
                                                 </span>
                                             )}
@@ -412,7 +410,7 @@ const CalendarDayView = memo(({
                                     isDraggable={isDraggable}
                                     isDragging={isDraggingThis}
                                     isSaving={apt.id === savingAppointmentId}
-                                    isDropTarget={isDropTarget}
+                                    isDropTarget={!!isDropTarget}
                                     hideGhostWhenSiblings={isDraggingThis && hasOverlap}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}

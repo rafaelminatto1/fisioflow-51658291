@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useCardSize } from '@/hooks/useCardSize';
+import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CalendarAppointmentCardProps {
@@ -29,6 +30,8 @@ interface CalendarAppointmentCardProps {
     selectionMode?: boolean;
     isSelected?: boolean;
     onToggleSelection?: (id: string) => void;
+    /** When true, drag starts only from the grip handle (reduces accidental drag when clicking to open) */
+    dragHandleOnly?: boolean;
 }
 
 const normalizeTime = (time: string | null | undefined): string => {
@@ -134,10 +137,12 @@ const CalendarAppointmentCardBase = ({
     hideGhostWhenSiblings = false,
     selectionMode = false,
     isSelected = false,
-    onToggleSelection
+    onToggleSelection,
+    dragHandleOnly = false
 }: CalendarAppointmentCardProps) => {
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
+    const reducedMotion = useReducedMotion();
     const [isHovered, setIsHovered] = useState(false);
     const { cardSize, fontPercentage } = useCardSize();
 
@@ -163,6 +168,8 @@ const CalendarAppointmentCardBase = ({
     // Disable dragging in selection mode or on touch devices (Mobile/iPad) for better UX
     // This allows clicks to register immediately without waiting for drag detection
     const draggable = isDraggable && !selectionMode && !isTouch;
+    // When dragHandleOnly, only the grip handle initiates drag; root is not draggable
+    const rootDraggable = draggable && !dragHandleOnly;
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -189,36 +196,35 @@ const CalendarAppointmentCardBase = ({
         }
     };
 
+    const dragDuration = reducedMotion ? 0 : 0.15;
     const cardContent = (
         <motion.div
-            layout
+            layout={!reducedMotion}
             layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
             transition={{
-                layout: {
-                    type: "spring",
-                    stiffness: 700,
-                    damping: 42
-                },
-                opacity: { duration: 0.1 },
-                scale: { duration: 0.1 },
-                boxShadow: { duration: 0.1 }
+                layout: reducedMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 700, damping: 42 },
+                opacity: { duration: reducedMotion ? 0 : 0.15 },
+                scale: { duration: dragDuration },
+                boxShadow: { duration: 0.15 }
             }}
-            initial={{ opacity: 0, scale: 0.95, y: 4 }}
+            initial={reducedMotion ? false : { opacity: 0, scale: 0.98, y: 2 }}
             animate={{
-                opacity: isDragging && hideGhostWhenSiblings ? 0 : (isDragging ? 0.4 : 1),
-                scale: isDragging ? 0.96 : 1,
+                opacity: isDragging && hideGhostWhenSiblings ? 0 : (isDragging ? 0.45 : 1),
+                scale: reducedMotion ? 1 : (isDragging ? 0.98 : 1),
                 y: 0,
                 boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
             }}
-            whileTap={{
+            whileTap={reducedMotion ? undefined : {
                 scale: isTouch ? 0.97 : 0.99,
                 transition: { duration: 0.1 }
             }}
-            draggable={draggable}
+            draggable={rootDraggable}
             onDragStart={(e) => {
-                if (draggable) {
+                if (rootDraggable && e && 'dataTransfer' in e) {
                     onOpenPopover(null);
-                    onDragStart(e, appointment);
+                    onDragStart(e as unknown as React.DragEvent, appointment);
                 }
             }}
             onDragEnd={onDragEnd}
@@ -242,20 +248,20 @@ const CalendarAppointmentCardBase = ({
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden [transition:left_100ms_ease-out,width_100ms_ease-out,opacity_100ms_ease-out,transform_100ms_ease-out,box-shadow_100ms_ease-out] border",
+                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden [transition:left_150ms_ease-out,width_150ms_ease-out,opacity_150ms_ease-out,transform_150ms_ease-out,box-shadow_150ms_ease-out] border",
                 "cursor-pointer",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 statusStyles.bg,
                 statusStyles.hoverBg,
                 statusStyles.border,
                 draggable && "cursor-grab active:cursor-grabbing",
-                isDragging && "z-50 ring-2 ring-dashed ring-primary/60 shadow-2xl backdrop-blur-[1px]",
+                isDragging && "z-50 ring-2 ring-dashed ring-primary/50 shadow-xl backdrop-blur-[1px]",
                 isSaving && "animate-pulse-subtle ring-2 ring-amber-400/60 ring-offset-1 z-30",
                 !isDragging && isHovered && !selectionMode && "ring-2 ring-black/5 dark:ring-white/10 shadow-xl",
                 isDropTarget && !isDragging && "ring-2 ring-primary/70 ring-offset-1 shadow-2xl z-25",
-                selectionMode && "hover:opacity-90 active:scale-95 transition-all duration-100",
+                selectionMode && "hover:opacity-90 active:scale-[0.98] transition-all duration-150",
                 isSelected && "ring-2 ring-primary ring-offset-1 shadow-xl z-40",
-                isTouch && "active:scale-95 transition-transform duration-100"
+                isTouch && "active:scale-[0.98] transition-transform duration-150"
             )}
             style={{
                 ...style,
@@ -358,8 +364,8 @@ const CalendarAppointmentCardBase = ({
                     </>
                 )}
 
-                {/* Hover Actions (Edit/Drag) - Only if not tiny, or if hovered on tiny */}
-                {!isMobile && isHovered && draggable && !isDragging && !selectionMode && (
+                {/* Hover Actions (Edit/Drag). Com dragHandleOnly, mostrar handle sempre para descoberta. */}
+                {!isMobile && (isHovered || dragHandleOnly) && draggable && !isDragging && !selectionMode && (
                     <AnimatePresence>
                         <motion.div
                             key="edit-action"
@@ -384,7 +390,23 @@ const CalendarAppointmentCardBase = ({
                             animate={{ opacity: 1 }}
                             className="absolute bottom-0.5 right-0.5 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing backdrop-blur-[1px] p-0.5 rounded-sm"
                         >
-                            <GripVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                            {dragHandleOnly ? (
+                                <div
+                                    className="size-full min-w-[24px] min-h-[24px] flex items-center justify-center -m-0.5 p-0.5"
+                                    draggable
+                                    onDragStart={(e) => {
+                                        e.stopPropagation();
+                                        onOpenPopover(null);
+                                        onDragStart(e, appointment);
+                                    }}
+                                    onDragEnd={onDragEnd}
+                                    data-drag-handle
+                                >
+                                    <GripVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                                </div>
+                            ) : (
+                                <GripVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                            )}
                         </motion.div>
                     </AnimatePresence>
                 )}
@@ -422,7 +444,8 @@ function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: Calen
         prev.hideGhostWhenSiblings !== next.hideGhostWhenSiblings ||
         prev.selectionMode !== next.selectionMode ||
         prev.isSelected !== next.isSelected ||
-        prev.isPopoverOpen !== next.isPopoverOpen
+        prev.isPopoverOpen !== next.isPopoverOpen ||
+        prev.dragHandleOnly !== next.dragHandleOnly
     ) {
         return false;
     }

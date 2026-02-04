@@ -8,11 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   Plus,
   Search,
   Users,
@@ -20,7 +15,6 @@ import {
   Download,
   Activity,
   AlertTriangle,
-  ChevronDown,
   UserCheck,
   UserPlus,
   UserMinus,
@@ -28,6 +22,7 @@ import {
   DollarSign,
   Sparkles,
 } from 'lucide-react';
+import type { PatientClassification } from '@/hooks/usePatientStats';
 import { cn } from '@/lib/utils';
 import { PatientStatsCard } from './PatientStatsCard';
 
@@ -63,6 +58,8 @@ export interface PatientsPageHeaderProps {
   totalFilteredLabel?: string;
   onClearAllFilters: () => void;
   hasActiveFilters: boolean;
+  classificationFilter?: PatientClassification | 'all';
+  onClassificationFilterChange?: (classification: PatientClassification | 'all') => void;
   children?: React.ReactNode;
 }
 
@@ -83,6 +80,8 @@ export function PatientsPageHeader({
   totalFilteredLabel,
   onClearAllFilters,
   hasActiveFilters,
+  classificationFilter = 'all',
+  onClassificationFilterChange,
   children,
 }: PatientsPageHeaderProps) {
   return (
@@ -170,60 +169,69 @@ export function PatientsPageHeader({
         />
       </div>
 
-      {/* Classificação: colapsável para reduzir densidade */}
-      <Collapsible defaultOpen={false}>
-        <CollapsibleTrigger
-          className={cn(
-            'group flex w-full items-center justify-between rounded-lg border bg-muted/30 px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-          )}
-        >
-          <span className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" aria-hidden />
-            Resumo por classificação
-          </span>
-          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
-            <StatChip
-              label="Inativos 7d"
-              value={stats.inactive7}
-              icon={<Clock className="h-3.5 w-3.5" />}
-              variant="warning"
-            />
-            <StatChip
-              label="Inativos 30d"
-              value={stats.inactive30}
-              icon={<Clock className="h-3.5 w-3.5" />}
-              variant="danger"
-            />
-            <StatChip
-              label="Risco No-Show"
-              value={stats.noShowRisk}
-              icon={<AlertTriangle className="h-3.5 w-3.5" />}
-              variant="danger"
-            />
-            <StatChip
-              label="Com Pendências"
-              value={stats.hasUnpaid}
-              icon={<DollarSign className="h-3.5 w-3.5" />}
-              variant="warning"
-            />
-            <StatChip
-              label="Novos Pacientes"
-              value={stats.newPatients}
-              icon={<Sparkles className="h-3.5 w-3.5" />}
-              variant="info"
-            />
-            <StatChip
-              label="Inativos 60d+"
-              value={stats.inactive60}
-              icon={<Clock className="h-3.5 w-3.5" />}
-              variant="danger"
-            />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Resumo por classificação - sempre visível e clicável como filtro */}
+      <div>
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <AlertTriangle className="h-4 w-4" aria-hidden />
+          Resumo por classificação
+        </h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+          <StatChip
+            label="Inativos 7d"
+            value={stats.inactive7}
+            icon={<Clock className="h-3.5 w-3.5" />}
+            variant="warning"
+            classification="inactive_7"
+            isSelected={classificationFilter === 'inactive_7'}
+            onClick={onClassificationFilterChange}
+          />
+          <StatChip
+            label="Inativos 30d"
+            value={stats.inactive30}
+            icon={<Clock className="h-3.5 w-3.5" />}
+            variant="danger"
+            classification="inactive_30"
+            isSelected={classificationFilter === 'inactive_30'}
+            onClick={onClassificationFilterChange}
+          />
+          <StatChip
+            label="Risco No-Show"
+            value={stats.noShowRisk}
+            icon={<AlertTriangle className="h-3.5 w-3.5" />}
+            variant="danger"
+            classification="no_show_risk"
+            isSelected={classificationFilter === 'no_show_risk'}
+            onClick={onClassificationFilterChange}
+          />
+          <StatChip
+            label="Com Pendências"
+            value={stats.hasUnpaid}
+            icon={<DollarSign className="h-3.5 w-3.5" />}
+            variant="warning"
+            classification="has_unpaid"
+            isSelected={classificationFilter === 'has_unpaid'}
+            onClick={onClassificationFilterChange}
+          />
+          <StatChip
+            label="Novos Pacientes"
+            value={stats.newPatients}
+            icon={<Sparkles className="h-3.5 w-3.5" />}
+            variant="info"
+            classification="new_patient"
+            isSelected={classificationFilter === 'new_patient'}
+            onClick={onClassificationFilterChange}
+          />
+          <StatChip
+            label="Inativos 60d+"
+            value={stats.inactive60}
+            icon={<Clock className="h-3.5 w-3.5" />}
+            variant="danger"
+            classification="inactive_custom"
+            isSelected={classificationFilter === 'inactive_custom'}
+            onClick={onClassificationFilterChange}
+          />
+        </div>
+      </div>
 
       {/* Alerta de cadastros pendentes (slot para IncompleteRegistrationAlert) */}
       {children}
@@ -298,17 +306,17 @@ export function PatientsPageHeader({
   );
 }
 
-function StatChip({
-  label,
-  value,
-  icon,
-  variant,
-}: {
+interface StatChipProps {
   label: string;
   value: number;
   icon: React.ReactNode;
   variant: 'warning' | 'danger' | 'info';
-}) {
+  classification?: PatientClassification;
+  isSelected?: boolean;
+  onClick?: (classification: PatientClassification | 'all') => void;
+}
+
+function StatChip({ label, value, icon, variant, classification, isSelected, onClick }: StatChipProps) {
   const variantClasses = {
     warning:
       'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200',
@@ -317,13 +325,23 @@ function StatChip({
     info:
       'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200',
   };
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors',
-        variantClasses[variant]
-      )}
-    >
+
+  const handleClick = () => {
+    if (onClick && classification) {
+      // Toggle: if already selected, clear filter
+      onClick(isSelected ? 'all' : classification);
+    }
+  };
+
+  const baseClasses = cn(
+    'flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors',
+    variantClasses[variant],
+    onClick && 'cursor-pointer hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+    isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+  );
+
+  const content = (
+    <>
       <span className="shrink-0 opacity-80" aria-hidden>
         {icon}
       </span>
@@ -331,6 +349,22 @@ function StatChip({
         <p className="text-lg font-semibold tabular-nums">{value}</p>
         <p className="truncate text-[10px] opacity-90">{label}</p>
       </div>
-    </div>
+    </>
   );
+
+  if (onClick && classification) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        className={baseClasses}
+        aria-pressed={isSelected}
+        aria-label={`Filtrar por ${label}${isSelected ? ' (clique para limpar)' : ''}`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={baseClasses}>{content}</div>;
 }

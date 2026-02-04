@@ -246,6 +246,15 @@ export const getEventReport = onCall(async (request) => {
     const { getEventReportHandler } = await import('./api/financial');
     return getEventReportHandler(request);
 });
+// HTTP (CORS) - V2 endpoints for frontend
+export {
+  listTransactionsHttp as listTransactionsV2,
+  createTransactionHttp as createTransactionV2,
+  updateTransactionHttp as updateTransactionV2,
+  deleteTransactionHttp as deleteTransactionV2,
+  findTransactionByAppointmentIdHttp as findTransactionByAppointmentIdV2,
+  getEventReportHttp as getEventReportV2,
+} from './api/financial';
 
 // API de Prontuários
 export const getPatientRecords = onCall(async (request) => {
@@ -345,6 +354,12 @@ export const getSupportedLanguages = onRequest(async (req: any, res: any) => {
 export const translateExercise = onRequest(async (req: any, res: any) => {
     const { translateExerciseHandler } = await import('./api/translation');
     return translateExerciseHandler(req, res);
+});
+
+// Exercise Image Proxy - bypasses CORS issues for Firebase Storage images
+export const exerciseImageProxy = onRequest(async (req: any, res: any) => {
+    const { exerciseImageProxy } = await import('./api/exerciseImage');
+    return exerciseImageProxy(req, res);
 });
 
 // Admin Functions

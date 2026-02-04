@@ -33,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/components/ui/CommandPalette';
@@ -753,10 +754,18 @@ const PatientEvolution = () => {
     );
   }
 
-  // Main content
+  // Main content - custom breadcrumb: último segmento (UUID) mostra nome do paciente
+  const customBreadcrumbLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    if (appointmentId && patient) {
+      labels[`/patient-evolution/${appointmentId}`] = PatientHelpers.getName(patient);
+    }
+    return labels;
+  }, [appointmentId, patient]);
+
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
-      <MainLayout maxWidth="7xl">
+      <MainLayout maxWidth="7xl" customBreadcrumbLabels={customBreadcrumbLabels}>
         <div className="space-y-5 animate-fade-in pb-8">
           {/* Cabeçalho: paciente + sessão + ações */}
           <EvolutionHeader
@@ -805,18 +814,29 @@ const PatientEvolution = () => {
 
           {/* Abas de Navegação */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
-            <TabsList className="inline-flex h-10 sm:h-11 items-center justify-start rounded-xl bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide sticky top-0 z-40 backdrop-blur-sm">
-              {tabsConfig.map(tab => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md gap-1.5 sm:gap-2 min-w-fit touch-target"
-                >
-                  <tab.icon className="h-4 w-4 shrink-0" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.shortLabel}</span>
-                </TabsTrigger>
-              ))}
+            <TabsList className="inline-flex h-11 sm:h-12 items-center justify-start rounded-xl border-b border-border/50 bg-muted/30 p-1.5 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide sticky top-[8.5rem] z-20 backdrop-blur-sm">
+              {tabsConfig.map(tab => {
+                const avaliacaoBadge = tab.value === 'avaliacao' && pendingRequiredMeasurements.length > 0;
+                const tratamentoBadge = tab.value === 'tratamento' && upcomingGoals.length > 0;
+                const badgeCount = tab.value === 'avaliacao' ? pendingRequiredMeasurements.length : tab.value === 'tratamento' ? upcomingGoals.length : 0;
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ''}`}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border-b-2 data-[state=active]:border-primary gap-1.5 sm:gap-2 min-w-fit touch-target"
+                  >
+                    <tab.icon className="h-4 w-4 shrink-0" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.shortLabel}</span>
+                    {(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
+                      <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-1 h-5 min-w-5 px-1.5 text-[10px]">
+                        {badgeCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
 
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}

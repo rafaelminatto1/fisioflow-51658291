@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +77,8 @@ const ExerciseCard = React.memo(function ExerciseCard({
   onDelete,
   selectionMode,
   isAdded,
-  onAdd
+  onAdd,
+  imagePriority = false,
 }: {
   exercise: Exercise;
   isFavorite: boolean;
@@ -88,6 +89,8 @@ const ExerciseCard = React.memo(function ExerciseCard({
   selectionMode?: boolean;
   isAdded?: boolean;
   onAdd?: () => void;
+  /** Prioridade de carregamento (above-the-fold): eager + fetchPriority high */
+  imagePriority?: boolean;
 }) {
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
@@ -103,6 +106,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
             className="h-full w-full transition-transform duration-500 group-hover:scale-110"
             aspectRatio="4:3"
             fallback="/placeholder.svg"
+            priority={imagePriority}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
@@ -543,10 +547,45 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
-        ))}
+      <div className="space-y-4 pb-20">
+        {/* Search/filters skeleton */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 flex-1 rounded-lg" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-10 rounded-lg" />
+              <Skeleton className="h-10 w-10 rounded-lg" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Skeleton className="h-8 w-16 rounded-md" />
+            <Skeleton className="h-8 w-20 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+          </div>
+        </div>
+        {/* Card grid skeleton - mimics real cards (image + content) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <div className="relative h-44 bg-muted">
+                <Skeleton className="h-full w-full rounded-none" />
+              </div>
+              <CardContent className="p-4 space-y-3">
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-full rounded-md" />
+                <Skeleton className="h-4 w-5/6 rounded-md" />
+                <div className="flex gap-2 pt-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Skeleton className="h-9 flex-1 rounded-md" />
+                  <Skeleton className="h-9 w-24 rounded-md" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -662,7 +701,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
         <EmptyState icon={Dumbbell} title="Nenhum exercício" />
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredExercises.map((exercise) => (
+          {filteredExercises.map((exercise, index) => (
             <div key={exercise.id} className="relative group">
               <ExerciseCard
                 exercise={exercise}
@@ -674,6 +713,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
                 selectionMode={selectionMode}
                 isAdded={addedExerciseIds.includes(exercise.id)}
                 onAdd={() => onSelectExercise && onSelectExercise(exercise)}
+                imagePriority={index < 6}
               />
               {isSelectionMode && (
                 <div className="absolute top-2 right-2 z-20">

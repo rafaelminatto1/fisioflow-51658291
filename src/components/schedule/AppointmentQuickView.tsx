@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
+import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -24,13 +24,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
+import { usePatientPackages } from '@/hooks/usePackages';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import type { Appointment } from '@/types/appointment';
+import { formatCurrency } from '@/lib/utils';
 
 import { STATUS_CONFIG } from '@/lib/config/agenda';
 
@@ -55,22 +59,42 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const isMobile = useIsMobile();
   const { updateStatus, isUpdatingStatus } = useAppointmentActions();
   const { getInterestCount } = useWaitlistMatch();
+  const { data: patientPackages = [] } = usePatientPackages(appointment.patientId);
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
   // Local state for optimistic status updates - syncs with appointment.status
   const [localStatus, setLocalStatus] = useState(appointment.status);
+
+  // Pacote vinculado a este agendamento (session_package_id = id do patient_packages)
+  const linkedPackage = useMemo(() => {
+    if (!appointment.session_package_id) return null;
+    return patientPackages.find((p) => p.id === appointment.session_package_id) ?? null;
+  }, [patientPackages, appointment.session_package_id]);
+
+  const sessionNumber = linkedPackage ? linkedPackage.sessions_used + 1 : null;
+  const sessionTotal = linkedPackage ? linkedPackage.sessions_purchased : null;
+  const paymentStatus = (appointment.payment_status ?? 'pending').toLowerCase();
+  const isPaid = paymentStatus === 'paid' || paymentStatus === 'pago';
+  const paymentAmount = appointment.payment_amount != null ? Number(appointment.payment_amount) : null;
 
   // Sync local status when appointment prop changes
   useEffect(() => {
     setLocalStatus(appointment.status);
   }, [appointment.status]);
 
-  const appointmentDate = typeof appointment.date === 'string'
-    ? (() => {
-      const [y, m, d] = appointment.date.split('-').map(Number);
-      return new Date(y, m - 1, d, 12, 0, 0); // Local noon
-    })()
-    : appointment.date;
+  const appointmentDate = useMemo((): Date => {
+    const d = appointment.date as Date | string | null | undefined;
+    if (d instanceof Date && !isNaN(d.getTime())) return d;
+    if (typeof d === 'string' && String(d).trim()) {
+      const parts = String(d).split('-').map(Number);
+      if (parts.length === 3) {
+        const [y, m, day] = parts;
+        const parsed = new Date(y, m - 1, day, 12, 0, 0);
+        if (Number.isFinite(parsed.getTime())) return parsed;
+      }
+    }
+    return new Date();
+  }, [appointment.date]);
 
   const interestCount = getInterestCount(appointmentDate, appointment.time);
   const hasWaitlistInterest = interestCount > 0;
@@ -176,31 +200,61 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
       {/* Content */}
       <div className="p-5 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto">
-        {/* Fisioterapeuta - placeholder */}
-        <div className="flex items-start gap-4">
-          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Fisioterapeuta:</span>
-          <span className="text-base font-semibold text-foreground">Activity Fisioterapia</span>
+        {/* Quem: Fisioterapeuta + Paciente */}
+        <div className="space-y-3">
+          <div className="flex items-start gap-4">
+            <span className="text-base font-medium text-muted-foreground min-w-[110px]">Fisioterapeuta:</span>
+            <span className="text-base font-semibold text-foreground">Activity Fisioterapia</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="text-base font-medium text-muted-foreground min-w-[110px]">Paciente:</span>
+            <span className="text-base font-bold text-primary">{appointment.patientName}</span>
+          </div>
         </div>
 
-        {/* Paciente */}
-        <div className="flex items-start gap-3">
-          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Paciente:</span>
-          <span className="text-base font-bold text-primary">{appointment.patientName}</span>
+        {/* Pagamento: status + valor */}
+        <div className="space-y-2">
+          <span className="text-base font-medium text-muted-foreground block">Pagamento:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isPaid ? (
+              <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                Pago
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                Pendente
+              </Badge>
+            )}
+            {paymentAmount != null && paymentAmount > 0 && (
+              <span className="text-sm font-medium text-foreground" aria-label={`Valor: ${formatCurrency(paymentAmount)}`}>
+                {formatCurrency(paymentAmount)}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Celular */}
-        <div className="flex items-start gap-4">
-          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Celular:</span>
-          <span className="text-base font-medium text-foreground">{appointment.phone || 'Não informado'}</span>
-        </div>
+        {/* Pacote: Sessão X de Y (quando vinculado) */}
+        {linkedPackage != null && sessionNumber != null && sessionTotal != null && sessionTotal > 0 && (
+          <div className="space-y-2">
+            <span className="text-base font-medium text-muted-foreground block">Pacote:</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="gap-1.5 font-medium">
+                  <Package className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+                  Sessão {sessionNumber} de {sessionTotal}
+                </Badge>
+              </div>
+              <Progress
+                value={(sessionNumber / sessionTotal) * 100}
+                className="h-1.5 w-full"
+              />
+            </div>
+          </div>
+        )}
 
-        {/* Convênio */}
-        <div className="flex items-start gap-3">
-          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Convênio:</span>
-          <span className="text-base font-medium text-foreground">{appointment.type || 'Particular'}</span>
-        </div>
-
-        {/* Status */}
+        {/* Status do agendamento */}
         <div className="flex items-center gap-4 pt-1">
           <span className="text-base font-medium text-muted-foreground min-w-[110px]">Status:</span>
           <Select
@@ -250,15 +304,27 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       <div className="p-4 space-y-3 bg-muted/20">
         <div className="flex items-center gap-3">
           {onEdit && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 touch-target bg-background"
-              onClick={handleEdit}
-              aria-label="Editar agendamento"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 touch-target bg-background"
+                onClick={handleEdit}
+                aria-label="Editar agendamento"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="touch-target bg-background shrink-0 h-9 px-2 sm:px-3"
+                onClick={handleEdit}
+                aria-label="Reagendar: mudar data e horário"
+              >
+                <CalendarClock className="h-4 w-4 sm:mr-1.5 shrink-0" aria-hidden />
+                <span className="hidden sm:inline">Reagendar</span>
+              </Button>
+            </>
           )}
 
           {onDelete && (
@@ -345,7 +411,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             {children}
           </PopoverTrigger>
           <PopoverContent
-            className="w-80 p-0 bg-card border border-border shadow-xl z-50"
+            className="w-80 max-w-sm p-0 bg-card border border-border shadow-xl z-50"
             align="start"
             side="right"
             sideOffset={8}

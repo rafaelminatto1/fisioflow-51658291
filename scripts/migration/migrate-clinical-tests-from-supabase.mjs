@@ -7,8 +7,12 @@
  *   node scripts/migration/migrate-clinical-tests-from-supabase.mjs
  *   node scripts/migration/migrate-clinical-tests-from-supabase.mjs --dry-run
  *   node scripts/migration/migrate-clinical-tests-from-supabase.mjs --table=clinical_test_templates
+ *   node scripts/migration/migrate-clinical-tests-from-supabase.mjs --export-to=clinical_tests_export.json
+ *   node scripts/migration/migrate-clinical-tests-from-supabase.mjs --from-file=clinical_tests_export.json
+ *   node scripts/migration/migrate-clinical-tests-from-supabase.mjs --from-file=clinical_tests_export.json --table=assessment_test_configs
  *
- * .env necessário: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FIREBASE_SERVICE_ACCOUNT_KEY_PATH
+ * .env: Supabase (VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) para migração direta ou --export-to.
+ *       Firebase (FIREBASE_SERVICE_ACCOUNT_KEY_PATH) para migração direta ou --from-file.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -25,42 +29,71 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 const isDryRun = process.argv.includes('--dry-run');
 const tableArg = process.argv.find((a) => a.startsWith('--table='));
 const sourceTable = tableArg ? tableArg.split('=')[1] : 'assessment_test_configs';
+const fromFileArg = process.argv.find((a) => a.startsWith('--from-file='));
+const fromFilePath = fromFileArg ? fromFileArg.split('=')[1] : null;
+const exportToArg = process.argv.find((a) => a.startsWith('--export-to='));
+const exportToPath = exportToArg ? exportToArg.split('=')[1] : null;
 const BATCH_SIZE = 100;
 const FIRESTORE_COLLECTION = 'clinical_test_templates';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou VITE_SUPABASE_ANON_KEY) no .env');
-  process.exit(1);
-}
-
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
-if (!serviceAccountPath) {
-  console.error('❌ Defina FIREBASE_SERVICE_ACCOUNT_KEY_PATH no .env');
-  process.exit(1);
+
+if (!fromFilePath && !exportToPath) {
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou VITE_SUPABASE_ANON_KEY) no .env');
+    process.exit(1);
+  }
+  if (!serviceAccountPath) {
+    console.error('❌ Defina FIREBASE_SERVICE_ACCOUNT_KEY_PATH no .env');
+    process.exit(1);
+  }
+} else if (exportToPath) {
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ Para --export-to defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env');
+    process.exit(1);
+  }
+} else if (fromFilePath) {
+  if (!serviceAccountPath) {
+    console.error('❌ Para --from-file defina FIREBASE_SERVICE_ACCOUNT_KEY_PATH no .env');
+    process.exit(1);
+  }
 }
 
-const resolvedKeyPath = serviceAccountPath.startsWith('./') || serviceAccountPath.startsWith('../')
+const resolvedKeyPath = serviceAccountPath && (serviceAccountPath.startsWith('./') || serviceAccountPath.startsWith('../'))
   ? path.join(__dirname, '../..', serviceAccountPath)
-  : path.isAbsolute(serviceAccountPath)
+  : serviceAccountPath && path.isAbsolute(serviceAccountPath)
     ? serviceAccountPath
-    : path.join(__dirname, '../..', serviceAccountPath);
+    : serviceAccountPath
+      ? path.join(__dirname, '../..', serviceAccountPath)
+      : null;
 
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(fs.readFileSync(resolvedKeyPath, 'utf8'));
-} catch (e) {
-  console.error('❌ Erro ao ler service account:', e.message);
-  process.exit(1);
+let db = null;
+let supabase = null;
+
+if (!fromFilePath || exportToPath) {
+  if (supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
 }
-
-if (!admin.apps.length) {
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+if (!exportToPath) {
+  if (!resolvedKeyPath || !fs.existsSync(resolvedKeyPath)) {
+    console.error('❌ Arquivo da service account não encontrado. Verifique FIREBASE_SERVICE_ACCOUNT_KEY_PATH no .env');
+    process.exit(1);
+  }
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(fs.readFileSync(resolvedKeyPath, 'utf8'));
+  } catch (e) {
+    console.error('❌ Erro ao ler service account:', e.message);
+    process.exit(1);
+  }
+  if (!admin.apps.length) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  }
+  db = admin.firestore();
 }
-
-const db = admin.firestore();
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const log = (msg, type = 'info') => {
   const t = new Date().toISOString().slice(11, 19);
@@ -149,17 +182,55 @@ function transformTemplateRow(row) {
 
 async function migrate() {
   const useAssessmentConfigs = sourceTable === 'assessment_test_configs';
+  let rows = [];
 
-  log(`Buscando dados no Supabase (tabela: ${sourceTable})...`);
-  const { data: rows, error } = await supabase.from(sourceTable).select('*');
-
-  if (error) {
-    log(`Erro Supabase ${sourceTable}: ${error.message}`, 'err');
-    return { migrated: 0, errors: 1, sourceCount: 0 };
+  if (exportToPath) {
+    log(`Exportando do Supabase (tabela: ${sourceTable}) para ${exportToPath}...`);
+    const { data, error } = await supabase.from(sourceTable).select('*');
+    if (error) {
+      log(`Erro Supabase ${sourceTable}: ${error.message}`, 'err');
+      return { migrated: 0, errors: 1, sourceCount: 0 };
+    }
+    if (!data?.length) {
+      log('Nenhum registro encontrado na tabela.');
+      return { migrated: 0, errors: 0, sourceCount: 0 };
+    }
+    const outPath = path.isAbsolute(exportToPath) ? exportToPath : path.join(process.cwd(), exportToPath);
+    fs.writeFileSync(outPath, JSON.stringify(data, null, 2), 'utf8');
+    log(`Exportados ${data.length} registros para ${outPath}`, 'success');
+    return { migrated: 0, errors: 0, sourceCount: data.length, exported: true };
   }
-  if (!rows?.length) {
-    log('Nenhum registro encontrado na tabela.');
-    return { migrated: 0, errors: 0, sourceCount: 0 };
+
+  if (fromFilePath) {
+    const filePath = path.isAbsolute(fromFilePath) ? fromFilePath : path.join(process.cwd(), fromFilePath);
+    if (!fs.existsSync(filePath)) {
+      log(`Arquivo não encontrado: ${filePath}`, 'err');
+      return { migrated: 0, errors: 1, sourceCount: 0 };
+    }
+    log(`Lendo dados de ${filePath}...`);
+    const raw = fs.readFileSync(filePath, 'utf8');
+    try {
+      rows = JSON.parse(raw);
+    } catch (e) {
+      log(`Erro ao parsear JSON: ${e.message}`, 'err');
+      return { migrated: 0, errors: 1, sourceCount: 0 };
+    }
+    if (!Array.isArray(rows) || !rows.length) {
+      log('Nenhum registro no arquivo.');
+      return { migrated: 0, errors: 0, sourceCount: 0 };
+    }
+  } else {
+    log(`Buscando dados no Supabase (tabela: ${sourceTable})...`);
+    const { data, error } = await supabase.from(sourceTable).select('*');
+    if (error) {
+      log(`Erro Supabase ${sourceTable}: ${error.message}`, 'err');
+      return { migrated: 0, errors: 1, sourceCount: 0 };
+    }
+    if (!data?.length) {
+      log('Nenhum registro encontrado na tabela.');
+      return { migrated: 0, errors: 0, sourceCount: 0 };
+    }
+    rows = data;
   }
 
   const transform = useAssessmentConfigs ? transformAssessmentConfigToTemplate : transformTemplateRow;
@@ -181,7 +252,7 @@ async function migrate() {
 
   for (let i = 0; i < documents.length; i += BATCH_SIZE) {
     const batch = documents.slice(i, i + BATCH_SIZE);
-    if (!isDryRun) {
+    if (!isDryRun && db) {
       const firestoreBatch = db.batch();
       for (const { id, data } of batch) {
         const ref = db.collection(FIRESTORE_COLLECTION).doc(id);
@@ -203,7 +274,7 @@ async function migrate() {
     log(`[DRY-RUN] Seriam migrados ${migrated} documentos para ${FIRESTORE_COLLECTION}.`, 'info');
   }
 
-  if (!isDryRun && migrated > 0) {
+  if (!isDryRun && db && migrated > 0) {
     const snapshot = await db.collection(FIRESTORE_COLLECTION).count().get();
     const destCount = snapshot.data().count;
     if (destCount !== sourceCount) {
@@ -218,20 +289,38 @@ async function migrate() {
 
 async function main() {
   console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  MIGRAÇÃO TESTES CLÍNICOS (Supabase → Firestore)           ║');
+  if (exportToPath) {
+    console.log('║  EXPORTAR TESTES CLÍNICOS (Supabase → JSON)                  ║');
+  } else if (fromFilePath) {
+    console.log('║  MIGRAÇÃO TESTES CLÍNICOS (JSON → Firestore)               ║');
+  } else {
+    console.log('║  MIGRAÇÃO TESTES CLÍNICOS (Supabase → Firestore)           ║');
+  }
   console.log('╚════════════════════════════════════════════════════════════╝\n');
   if (isDryRun) console.log('⚠️  DRY-RUN: nenhuma alteração será feita.\n');
-  console.log(`Tabela fonte: ${sourceTable}`);
-  console.log(`Coleção destino: ${FIRESTORE_COLLECTION}\n`);
+  if (fromFilePath) {
+    console.log(`Fonte: arquivo ${fromFilePath}`);
+    console.log(`Formato esperado: tabela ${sourceTable}`);
+  } else {
+    console.log(`Tabela fonte: ${sourceTable}`);
+  }
+  if (!exportToPath) {
+    console.log(`Coleção destino: ${FIRESTORE_COLLECTION}`);
+  }
+  console.log('');
 
-  const { migrated, errors, sourceCount } = await migrate();
+  const { migrated, errors, sourceCount, exported } = await migrate();
 
   console.log('\n' + '='.repeat(60));
-  log(`Total: ${migrated} registros migrados${errors ? `, ${errors} erros` : ''}`, 'success');
-  if (sourceCount > 0 && migrated === sourceCount && !errors) {
-    log('A página /clinical-tests deve exibir os testes após recarregar (e com regras Firestore publicadas).', 'info');
+  if (exported) {
+    log(`Exportação concluída: ${sourceCount} registros em ${exportToPath}`, 'success');
+  } else {
+    log(`Total: ${migrated} registros migrados${errors ? `, ${errors} erros` : ''}`, 'success');
+    if (sourceCount > 0 && migrated === sourceCount && !errors) {
+      log('A página /clinical-tests deve exibir os testes após recarregar (e com regras Firestore publicadas).', 'info');
+    }
   }
-  if (isDryRun) log('Execute sem --dry-run para aplicar.', 'warn');
+  if (isDryRun && !exportToPath) log('Execute sem --dry-run para aplicar.', 'warn');
   console.log('');
 }
 

@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Stethoscope, Calendar, User, Building2, AlertTriangle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SurgeryService } from '@/lib/services/surgeryService';
+import { SURGERY_TYPES, AFFECTED_SIDES } from '@/lib/constants/surgery';
 import type { Surgery, SurgeryFormData } from '@/types/evolution';
 import { toast } from 'sonner';
 
@@ -54,29 +55,6 @@ interface SurgeryFormModalProps {
   surgery?: Surgery | null;
   onSuccess?: () => void;
 }
-
-const SURGERY_TYPES = [
-  { value: 'artroscopia', label: 'Artroscopia' },
-  { value: 'reconstrucao_lca', label: 'Reconstrução LCA' },
-  { value: 'reconstrucao_lcp', label: 'Reconstrução LCP' },
-  { value: 'meniscectomia', label: 'Meniscectomia' },
-  { value: 'artroplastia_joelho', label: 'Artroplastia de Joelho' },
-  { value: 'artroplastia_quadril', label: 'Artroplastia de Quadril' },
-  { value: 'artrodese', label: 'Artrodese' },
-  { value: 'reparo_manguito', label: 'Reparo de Manguito Rotador' },
-  { value: 'descompressao_subacromial', label: 'Descompressão Subacromial' },
-  { value: 'hernia_disco', label: 'Hérnia de Disco' },
-  { value: 'fusao_vertebral', label: 'Fusão Vertebral' },
-  { value: 'osteossintese', label: 'Osteossíntese' },
-  { value: 'outro', label: 'Outro' },
-];
-
-const AFFECTED_SIDES = [
-  { value: 'direito', label: 'Direito' },
-  { value: 'esquerdo', label: 'Esquerdo' },
-  { value: 'bilateral', label: 'Bilateral' },
-  { value: 'nao_aplicavel', label: 'Não Aplicável' },
-];
 
 export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
   open,

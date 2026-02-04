@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, memo } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -32,6 +32,10 @@ interface CalendarViewProps {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelection?: (id: string) => void;
+  /** Message announced to screen readers after successful reschedule (e.g. "Reagendado com sucesso") */
+  rescheduleSuccessMessage?: string | null;
+  /** Optional: called when user clicks an appointment (e.g. open quick edit). Not used by day/week views; kept for API compatibility. */
+  onAppointmentClick?: (appointment: Appointment) => void;
 }
 
 export const CalendarView = memo(({
@@ -47,6 +51,8 @@ export const CalendarView = memo(({
   selectionMode = false,
   selectedIds = new Set(),
   onToggleSelection,
+  rescheduleSuccessMessage = null,
+  onAppointmentClick: _onAppointmentClick,
 }: CalendarViewProps) => {
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
@@ -253,6 +259,45 @@ export const CalendarView = memo(({
     }
   }, [viewType, currentDate]);
 
+  // Restore focus to calendar grid when RescheduleConfirmDialog closes (cancel or confirm)
+  const calendarGridRef = useRef<HTMLDivElement>(null);
+  const prevShowConfirmRef = useRef(showConfirmDialog);
+  useEffect(() => {
+    const didClose = prevShowConfirmRef.current && !showConfirmDialog;
+    prevShowConfirmRef.current = showConfirmDialog;
+    if (didClose) {
+      // Short delay so focus runs after Radix unmounts the dialog and releases focus
+      const t = setTimeout(() => {
+        calendarGridRef.current?.focus({ preventScroll: true });
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [showConfirmDialog]);
+
+  // Screen reader: announce drop target during drag (WCAG feedback)
+  const dropTargetAnnouncement = useMemo(() => {
+    if (!dragState.isDragging) return null;
+    if (!dropTarget) return 'Nenhum slot selecionado';
+    const dayStr = format(dropTarget.date, "EEEE, d 'de' MMMM", { locale: ptBR });
+    const capitalized = dayStr.charAt(0).toUpperCase() + dayStr.slice(1);
+    return `Solte em ${capitalized}, ${dropTarget.time}`;
+  }, [dragState.isDragging, dropTarget]);
+
+  // Debounce drop target announcement (150ms) to avoid excessive announcements when dragging quickly
+  const [debouncedDropAnnouncement, setDebouncedDropAnnouncement] = useState<string | null>(null);
+  useEffect(() => {
+    if (!dragState.isDragging) {
+      setDebouncedDropAnnouncement(null);
+      return;
+    }
+    if (dropTargetAnnouncement === null) {
+      setDebouncedDropAnnouncement(null);
+      return;
+    }
+    const t = setTimeout(() => setDebouncedDropAnnouncement(dropTargetAnnouncement), 150);
+    return () => clearTimeout(t);
+  }, [dragState.isDragging, dropTargetAnnouncement]);
+
   const getStatusColor = useCallback((status: string, isOverCapacity: boolean = false) => {
     // Over-capacity appointments get a special amber/orange pulsing style
     if (isOverCapacity) {
@@ -369,8 +414,17 @@ export const CalendarView = memo(({
     return dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
   }, [dayTimeSlotInfo, currentDate]);
 
+  // Single live region: success takes precedence over debounced drop target (avoids two competing announcements)
+  const liveAnnouncement = rescheduleSuccessMessage ?? debouncedDropAnnouncement ?? '';
+
   return (
     <>
+      {/* Screen reader: drop target during drag and reschedule success (only render when there is something to announce) */}
+      {liveAnnouncement ? (
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {liveAnnouncement}
+        </div>
+      ) : null}
       <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]" role="region" aria-label="Calendário de agendamentos">
         <CardContent className="p-2 md:p-3 lg:p-4 flex flex-col h-full">
           {/* Header - Mobile Optimized */}
@@ -475,7 +529,14 @@ export const CalendarView = memo(({
             </div>
           </div>
 
-          <div className="flex-1 relative" id="calendar-grid" role="tabpanel" aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}>
+          <div
+            ref={calendarGridRef}
+            className="flex-1 relative outline-none"
+            id="calendar-grid"
+            role="tabpanel"
+            tabIndex={-1}
+            aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}
+          >
             {viewType === 'day' && (
               <div key="day-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
                 <CalendarDayView
@@ -613,6 +674,10 @@ function calendarViewAreEqual(
 
   // Compare selected sets
   if (prev.selectedIds?.size !== next.selectedIds?.size) {
+    return false;
+  }
+
+  if (prev.rescheduleSuccessMessage !== next.rescheduleSuccessMessage) {
     return false;
   }
 

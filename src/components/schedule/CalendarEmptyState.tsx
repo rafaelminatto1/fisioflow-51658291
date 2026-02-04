@@ -156,7 +156,13 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
                 {viewType === 'day'
                   ? 'Use as setas do teclado ou clique nos horários para agendar rapidamente.'
                   : viewType === 'week'
-                  ? 'Clique e arraste um agendamento para reagendar.'
+                  ? (
+                    <>
+                      Clique e arraste um agendamento para reagendar.
+                      <br />
+                      Ou clique no agendamento e use <strong>Editar</strong> para mudar data e horário (sem arrastar).
+                    </>
+                  )
                   : 'Navegue pelos meses para ver todos os agendamentos futuros.'}
               </p>
             </div>

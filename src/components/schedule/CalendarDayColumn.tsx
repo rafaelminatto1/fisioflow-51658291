@@ -391,8 +391,10 @@ const TimeSlot = memo(({
                     <div
                         className={cn(
                             "calendar-time-slot cursor-pointer group/slot relative",
-                            blocked ? "blocked" : "",
-                            isDropTarget && !blocked && "is-drop-target"
+                            "transition-[background-color,box-shadow] duration-200 ease-out",
+                            blocked && "bg-red-50/60 dark:bg-red-950/30 cursor-not-allowed ring-2 ring-inset ring-red-400/30",
+                            !blocked && "hover:bg-primary/5 dark:hover:bg-primary/10",
+                            isDropTarget && !blocked && "is-drop-target bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner"
                         )}
                         onClick={() => !blocked && onTimeSlotClick(day, time)}
                         onKeyDown={handleKeyDown}
@@ -404,21 +406,31 @@ const TimeSlot = memo(({
                         aria-label={
                             blocked
                                 ? `Horário ${time} bloqueado${reason ? ': ' + reason : ''}`
-                                : `Criar agendamento para ${dayString} às ${time}`
+                                : isDropTarget
+                                    ? `Solte para reagendar em ${dayString} às ${time}`
+                                    : `Criar agendamento para ${dayString} às ${time}`
                         }
+                        aria-dropeffect={!blocked ? 'move' : 'none'}
                     >
                         {blocked ? (
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60" aria-hidden="true">
-                                <Ban className="h-2 w-2" />
+                            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
+                                <Ban className="h-4 w-4 shrink-0" />
+                                <span className="text-[10px] uppercase tracking-wide">Bloqueado</span>
                             </span>
                         ) : (
                             <span className={cn(
-                                "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
-                                isDropTarget && "opacity-100"
+                                "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-medium pointer-events-none transition-opacity duration-200",
+                                isDropTarget ? "opacity-100 text-primary" : "opacity-0 group-hover/slot:opacity-100 text-muted-foreground group-hover/slot:text-primary"
                             )} aria-hidden="true">
-                                <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
-                                    {isDropTarget ? '↓ Soltar' : '+ Novo'}
-                                </span>
+                                {isDropTarget ? (
+                                    <span className="flex flex-col items-center gap-1">
+                                        <span className="font-semibold">Solte aqui</span>
+                                    </span>
+                                ) : (
+                                    <span className="bg-primary/90 text-primary-foreground px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-md">
+                                        + Novo
+                                    </span>
+                                )}
                             </span>
                         )}
                     </div>

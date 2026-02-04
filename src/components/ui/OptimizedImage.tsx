@@ -30,6 +30,18 @@ const aspectRatioClasses = {
  * - Aspect ratio mantido
  * - Suporte a srcset/sizes para responsive images
  */
+/** URLs válidas para imagem: http, https, data ou caminho absoluto/relativo começando com / */
+function isValidImageSrc(src: string): boolean {
+  const s = src?.trim();
+  if (!s) return false;
+  return (
+    s.startsWith('http:') ||
+    s.startsWith('https:') ||
+    s.startsWith('data:') ||
+    s.startsWith('/')
+  );
+}
+
 export function OptimizedImage({
   src,
   alt,
@@ -48,11 +60,20 @@ export function OptimizedImage({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  const srcInvalid = !isValidImageSrc(src);
+  const effectiveSrc = srcInvalid || hasError ? fallback : src;
+  const skipLoad = srcInvalid;
+
   // Reset states when src changes
   useEffect(() => {
+    if (srcInvalid) {
+      setIsLoaded(false);
+      setHasError(false);
+      return;
+    }
     setIsLoaded(false);
     setHasError(false);
-  }, [src]);
+  }, [src, srcInvalid]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -64,7 +85,44 @@ export function OptimizedImage({
     onError?.();
   };
 
-  const imageSrc = hasError ? fallback : src;
+  // URL inválida: mostrar fallback sem tentar carregar o src (evita 404 e request desnecessário)
+  if (skipLoad) {
+    if (isValidImageSrc(fallback)) {
+      return (
+        <div
+          className={cn(
+            'relative overflow-hidden bg-muted',
+            aspectRatioClasses[aspectRatio],
+            className
+          )}
+        >
+          <img
+            ref={imgRef}
+            src={fallback}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            onLoad={handleLoad}
+            onError={handleError}
+            className="h-full w-full object-cover"
+            {...props}
+          />
+        </div>
+      );
+    }
+    // src e fallback inválidos: placeholder visual sem request
+    return (
+      <div
+        className={cn(
+          'relative overflow-hidden bg-muted flex items-center justify-center',
+          aspectRatioClasses[aspectRatio],
+          className
+        )}
+        role="img"
+        aria-label={alt}
+      />
+    );
+  }
 
   return (
     <div
@@ -81,12 +139,13 @@ export function OptimizedImage({
 
       <img
         ref={imgRef}
-        src={imageSrc}
+        src={effectiveSrc}
         srcSet={srcset}
         sizes={sizes}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
+        {...(priority && { fetchPriority: 'high' })}
         onLoad={handleLoad}
         onError={handleError}
         className={cn(

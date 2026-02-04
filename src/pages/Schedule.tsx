@@ -121,6 +121,9 @@ const Schedule = () => {
     return isMobile ? 'day' : 'week';
   });
 
+  /** Message announced to screen readers after successful reschedule (aria-live) */
+  const [rescheduleSuccessMessage, setRescheduleSuccessMessage] = useState<string | null>(null);
+
   // Filters state
   const [filters, setFilters] = useState<{
     status: string[];
@@ -266,6 +269,7 @@ const Schedule = () => {
         title: '✅ Reagendado com sucesso',
         description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
       });
+      setRescheduleSuccessMessage('Reagendado com sucesso');
     } catch (error) {
       if (isAppointmentConflictError(error)) {
         toast({
@@ -378,6 +382,13 @@ const Schedule = () => {
       viewType
     }, 'Schedule');
   }, [appointments.length, loading, viewType]);
+
+  // Clear reschedule success announcement after 3s (screen reader already heard it)
+  useEffect(() => {
+    if (!rescheduleSuccessMessage) return;
+    const t = setTimeout(() => setRescheduleSuccessMessage(null), 3000);
+    return () => clearTimeout(t);
+  }, [rescheduleSuccessMessage]);
 
   // Force day view on mobile
   // No longer forcing 'day' view on mobile to allow responsive weekly view
@@ -751,6 +762,7 @@ const Schedule = () => {
                   selectionMode={isSelectionMode}
                   selectedIds={selectedIds}
                   onToggleSelection={toggleSelection}
+                  rescheduleSuccessMessage={rescheduleSuccessMessage}
                 />
               </Suspense>
             </div>

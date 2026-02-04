@@ -32,7 +32,7 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hrs > 0) {
       return `${hrs}h ${mins.toString().padStart(2, '0')}m`;
     }
@@ -41,22 +41,24 @@ export const SessionTimer: React.FC<SessionTimerProps> = ({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
-        <Clock className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-mono font-medium">
-          {formatTime(elapsed)}
-        </span>
+      <div className={cn(
+        "flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm font-medium",
+        isPaused ? "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" : "bg-muted text-foreground"
+      )}>
+        <Clock className={cn("h-4 w-4 shrink-0", isPaused ? "text-amber-600" : "text-muted-foreground")} />
+        <span className="tabular-nums">{formatTime(elapsed)}</span>
       </div>
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="h-9 w-9 shrink-0"
         onClick={() => setIsPaused(!isPaused)}
+        aria-label={isPaused ? "Retomar cronômetro" : "Pausar cronômetro"}
       >
         {isPaused ? (
-          <Play className="h-4 w-4" />
+          <Play className="h-4 w-4 text-amber-600" />
         ) : (
-          <Pause className="h-4 w-4" />
+          <Pause className="h-4 w-4 text-muted-foreground" />
         )}
       </Button>
     </div>

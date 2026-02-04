@@ -64,8 +64,10 @@ export const TimeSlotCell = memo(({
   }, [isBlocked, isClosed, onTimeSlotClick, day, time]);
 
   const handleDragOverWrapper = useCallback((e: React.DragEvent) => {
+    // Não definir este slot como drop target se for bloqueado/fechado (evita anúncio aria-live enganoso)
+    if (isBlocked || isClosed) return;
     handleDragOver(e, day, time);
-  }, [handleDragOver, day, time]);
+  }, [handleDragOver, day, time, isBlocked, isClosed]);
 
   const handleDropWrapper = useCallback((e: React.DragEvent) => {
     if (!isBlocked && !isClosed) {
@@ -92,17 +94,18 @@ export const TimeSlotCell = memo(({
       aria-selected={isDropTarget}
       aria-dropeffect={!isBlocked && !isClosed ? 'move' : 'none'}
       className={cn(
-        "border-r border-slate-100 dark:border-slate-800 relative transition-all duration-100",
+        "border-r border-slate-100 dark:border-slate-800 relative",
+        "transition-[background-color,box-shadow] duration-200 ease-out",
         isHourStart && "border-t border-slate-100 dark:border-slate-800",
         !isHourStart && "border-t border-dashed border-slate-50 dark:border-slate-900",
         colIndex === 6 && "border-r-0",
         isClosed && "bg-slate-50/50 dark:bg-slate-900/20 pattern-diagonal-lines",
-        !isClosed && !isBlocked && "hover:bg-blue-50/30 dark:hover:bg-blue-900/10 cursor-pointer group/cell",
-        isBlocked && "bg-slate-100/50 dark:bg-slate-800/50 cursor-not-allowed",
-        // Drop target styles
-        isDropTarget && !isInvalidDrop && "bg-primary/10 dark:bg-primary/20 shadow-inner ring-2 ring-inset ring-primary/30",
-        isInvalidDrop && "bg-red-50 dark:bg-red-900/20 shadow-inner ring-2 ring-inset ring-red-500/30",
-        // Preview deve ficar acima dos cards existentes (z-40 > z-20 dos cards)
+        !isClosed && !isBlocked && "hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer group/cell",
+        isBlocked && "bg-red-50/60 dark:bg-red-950/30 cursor-not-allowed",
+        // Drop target válido: fundo e anel bem visíveis (redesign agenda DnD)
+        isDropTarget && !isInvalidDrop && "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner",
+        // Drop inválido (bloqueado/fechado com drag sobre): feedback explícito
+        isInvalidDrop && "bg-red-100/80 dark:bg-red-900/30 ring-2 ring-inset ring-red-400/50",
         showPreview && "z-40"
       )}
       style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
@@ -111,17 +114,17 @@ export const TimeSlotCell = memo(({
       onDragLeave={handleDragLeave}
       onDrop={handleDropWrapper}
     >
-      {/* Indicador de bloqueio/fechado */}
+      {/* Indicador de bloqueio/fechado - ícone + texto (não só cor) */}
       {(isClosed || isBlocked) && (
-        <span className="absolute inset-0 flex items-center justify-center text-xs text-destructive/70" aria-hidden="true">
-          <Ban className="h-3 w-3 mr-1" />
-          {isClosed ? 'Fechado' : 'Bloqueado'}
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
+          <Ban className="h-4 w-4 shrink-0" />
+          <span className="text-[10px] uppercase tracking-wide">{isClosed ? 'Fechado' : 'Bloqueado'}</span>
         </span>
       )}
 
-      {/* Preview dinâmica mostrando como os cards serão organizados */}
+      {/* Preview dinâmica: como os cards ficarão após o drop */}
       {showPreview && (
-        <div className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none" aria-hidden="true">
+        <div className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none animate-in fade-in duration-150" aria-hidden="true">
           {previewCards.map((apt, index) => {
             const cardWidthPercent = calculateCardWidthPercent(totalCards);
             const leftOffset = calculateCardOffsetPercent(index, totalCards);
@@ -141,28 +144,34 @@ export const TimeSlotCell = memo(({
             );
           })}
 
-          {/* Indicador de quantidade quando há muitos cards */}
           {totalCards > MAX_CARDS_WITHOUT_BADGE && (
-            <div className="absolute bottom-1 right-1 bg-primary/80 text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+            <div className="absolute bottom-1 right-1 bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
               {totalCards}
             </div>
           )}
+
+          {/* Dica "Solte aqui" sobre o preview */}
+          <div className="absolute bottom-0.5 left-0 right-0 flex justify-center pointer-events-none">
+            <span className="text-[9px] font-medium text-primary/90 bg-background/80 dark:bg-background/90 px-1.5 py-0.5 rounded">
+              Solte aqui
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Mensagem de "Solte aqui" quando slot vazio */}
-      {showPreview && totalCards === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-primary/60 text-xs font-medium animate-pulse" aria-hidden="true">
-          <Calendar className="w-4 h-4 mr-1" />
-          Solte aqui
+      {/* Drop target sem preview (ex.: antes do primeiro dragOver) - indicador "Solte aqui" */}
+      {isDropTarget && !isInvalidDrop && !showPreview && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-primary font-medium" aria-hidden="true">
+          <Calendar className="h-5 w-5 text-primary/80" />
+          <span className="text-xs">Solte aqui</span>
         </div>
       )}
 
-      {/* Botão de adicionar no hover - escondido durante drag */}
+      {/* Botão + no hover - só quando não está em drag e slot disponível */}
       {!isBlocked && !isClosed && !isInvalidDrop && !showPreview && (
-        <div className="absolute inset-x-0 mx-auto w-fit -top-2.5 z-20 opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none" aria-hidden="true">
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white shadow-md transform scale-75 group-hover/cell:scale-100 transition-transform">
-            <span className="text-sm leading-none mb-px">+</span>
+        <div className="absolute inset-x-0 mx-auto w-fit -top-2.5 z-20 opacity-0 group-hover/cell:opacity-100 transition-opacity duration-200 pointer-events-none" aria-hidden="true">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md transition-transform duration-200 ease-out group-hover/cell:scale-100 scale-90">
+            <span className="text-sm leading-none">+</span>
           </div>
         </div>
       )}

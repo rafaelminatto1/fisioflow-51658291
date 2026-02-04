@@ -93,6 +93,7 @@ export const listPatientsHttp = onRequest(
     memory: '256MiB',
     maxInstances: 10,
     cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (req, res) => {
     setCorsHeaders(res, req);
@@ -282,7 +283,8 @@ export const getPatientStatsHttp = onRequest(
   {
     region: 'southamerica-east1',
     maxInstances: 10,
-    cors: CORS_ORIGINS, // Habilita CORS na plataforma (preflight OPTIONS)
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -400,6 +402,7 @@ export const createPatientHttp = onRequest(
     memory: '256MiB',
     maxInstances: 10,
     cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -562,18 +565,18 @@ export const updatePatientHttp = onRequest(
     memory: '256MiB',
     maxInstances: 10,
     cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (req, res) => {
-    // #region agent log
+    setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') {
-      const origin = req.headers?.origin || req.headers?.Origin;
-      logger.info('[updatePatientHttp] OPTIONS preflight', { origin, hypothesisId: 'H2,H3,H5' });
-      setCorsHeaders(res, req);
       res.status(204).send('');
       return;
     }
-    // #endregion
-    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
     setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
@@ -640,6 +643,7 @@ export const deletePatientHttp = onRequest(
     memory: '256MiB',
     maxInstances: 10,
     cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
