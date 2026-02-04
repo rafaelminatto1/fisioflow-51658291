@@ -15,6 +15,13 @@ import { withIdempotency } from '../lib/idempotency';
 
 const firestore = admin.firestore();
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -104,14 +111,7 @@ async function getVertexAI() {
 // MAIN FUNCTION
 // ============================================================================
 
-export const soapGeneration = onCall({
-  cors: true,
-  region: 'southamerica-east1',
-  memory: '1GiB',
-  cpu: 1,
-  maxInstances: 10,
-  timeoutSeconds: 300, // 5 minutes for AI generation
-}, async (request): Promise<SOAPGenerationResponse> => {
+export const soapGenerationHandler = async (request: any): Promise<SOAPGenerationResponse> => {
   const startTime = Date.now();
 
   // Authentication check
@@ -182,10 +182,8 @@ export const soapGeneration = onCall({
 
     const previousSOAP = soapSnapshot.docs.map(doc => doc.data());
 
-    // Calculate patient age
-    const age = calculateAge(patient?.birth_date || '');
-
     // Build patient context
+    const age = calculateAge(patient?.birth_date || '');
     const patientContext = {
       patient: {
         id: patient?.id || data.patientId,
@@ -289,7 +287,16 @@ export const soapGeneration = onCall({
       error instanceof Error ? error.message : 'Failed to generate SOAP note'
     );
   }
-});
+};
+
+export const soapGeneration = onCall({
+  cors: CORS_ORIGINS,
+  region: 'southamerica-east1',
+  memory: '1GiB',
+  cpu: 1,
+  maxInstances: 10,
+  timeoutSeconds: 300, // 5 minutes for AI generation
+}, soapGenerationHandler);
 
 // ============================================================================
 // HELPER FUNCTIONS

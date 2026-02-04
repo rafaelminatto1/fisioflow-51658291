@@ -14,6 +14,13 @@ import * as logger from 'firebase-functions/logger';
 
 const firestore = admin.firestore();
 
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -97,14 +104,7 @@ const RATE_LIMITS = {
 // MAIN FUNCTION
 // ============================================================================
 
-export const clinicalAnalysis = onCall({
-  cors: true,
-  region: 'southamerica-east1',
-  memory: '1GiB',
-  cpu: 1,
-  maxInstances: 10,
-  timeoutSeconds: 300, // 5 minutes for AI generation
-}, async (request): Promise<ClinicalAnalysisResponse> => {
+export const clinicalAnalysisHandler = async (request: any): Promise<ClinicalAnalysisResponse> => {
   const startTime = Date.now();
 
   // Authentication check
@@ -251,7 +251,16 @@ export const clinicalAnalysis = onCall({
       error instanceof Error ? error.message : 'Failed to generate clinical analysis'
     );
   }
-});
+};
+
+export const clinicalAnalysis = onCall({
+  cors: CORS_ORIGINS,
+  region: 'southamerica-east1',
+  memory: '1GiB',
+  cpu: 1,
+  maxInstances: 10,
+  timeoutSeconds: 300, // 5 minutes for AI generation
+}, clinicalAnalysisHandler);
 
 // ============================================================================
 // HELPER FUNCTIONS

@@ -12,7 +12,10 @@ interface ListAssessmentTemplatesResponse {
   data: AssessmentTemplate[];
 }
 
-export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplatesResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista templates de avaliação
+ */
+export const listAssessmentTemplatesHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -40,7 +43,12 @@ export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplate
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar templates';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplatesResponse>>(
+  { cors: CORS_ORIGINS },
+  listAssessmentTemplatesHandler
+);
 
 interface GetAssessmentTemplateRequest {
   templateId: string;
@@ -50,7 +58,10 @@ interface GetAssessmentTemplateResponse {
   data: AssessmentTemplate & { sections: (AssessmentSection & { questions: any[] })[] };
 }
 
-export const getAssessmentTemplate = onCall<GetAssessmentTemplateRequest, Promise<GetAssessmentTemplateResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca um template de avaliação por ID
+ */
+export const getAssessmentTemplateHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -111,14 +122,19 @@ export const getAssessmentTemplate = onCall<GetAssessmentTemplateRequest, Promis
         ...template,
         sections: sectionsWithQuestions,
       },
-    } as GetAssessmentTemplateResponse;
+    };
   } catch (error: unknown) {
     logger.error('Error in getAssessmentTemplate:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar template';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getAssessmentTemplate = onCall<GetAssessmentTemplateRequest, Promise<GetAssessmentTemplateResponse>>(
+  { cors: CORS_ORIGINS },
+  getAssessmentTemplateHandler
+);
 
 interface ListAssessmentsRequest {
   patientId: string;
@@ -129,7 +145,10 @@ interface ListAssessmentsResponse {
   data: (PatientAssessment & { template_name: string; performer_name: string })[];
 }
 
-export const listAssessments = onCall<ListAssessmentsRequest, Promise<ListAssessmentsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista avaliações de um paciente
+ */
+export const listAssessmentsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -174,7 +193,12 @@ export const listAssessments = onCall<ListAssessmentsRequest, Promise<ListAssess
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar avaliações';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listAssessments = onCall<ListAssessmentsRequest, Promise<ListAssessmentsResponse>>(
+  { cors: CORS_ORIGINS },
+  listAssessmentsHandler
+);
 
 interface GetAssessmentRequest {
   assessmentId: string;
@@ -184,7 +208,10 @@ interface GetAssessmentResponse {
   data: PatientAssessment & { responses: any[] };
 }
 
-export const getAssessment = onCall<GetAssessmentRequest, Promise<GetAssessmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca uma avaliação por ID
+ */
+export const getAssessmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -230,14 +257,19 @@ export const getAssessment = onCall<GetAssessmentRequest, Promise<GetAssessmentR
         ...assessment,
         responses: responsesResult.rows,
       },
-    } as GetAssessmentResponse;
+    };
   } catch (error: unknown) {
     logger.error('Error in getAssessment:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar avaliação';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getAssessment = onCall<GetAssessmentRequest, Promise<GetAssessmentResponse>>(
+  { cors: CORS_ORIGINS },
+  getAssessmentHandler
+);
 
 interface CreateAssessmentRequest {
   patientId: string;
@@ -256,7 +288,10 @@ interface CreateAssessmentResponse {
   data: PatientAssessment;
 }
 
-export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAssessmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria uma nova avaliação para um paciente
+ */
+export const createAssessmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -354,7 +389,12 @@ export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAs
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar avaliação';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createAssessment = onCall<CreateAssessmentRequest, Promise<CreateAssessmentResponse>>(
+  { cors: CORS_ORIGINS },
+  createAssessmentHandler
+);
 
 interface UpdateAssessmentRequest {
   assessmentId: string;
@@ -367,7 +407,10 @@ interface UpdateAssessmentRequest {
   [key: string]: any;
 }
 
-export const updateAssessment = onCall<UpdateAssessmentRequest, Promise<{ data: { success: boolean } }>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Atualiza uma avaliação existente
+ */
+export const updateAssessmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -463,4 +506,9 @@ export const updateAssessment = onCall<UpdateAssessmentRequest, Promise<{ data: 
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar avaliação';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const updateAssessment = onCall<UpdateAssessmentRequest, Promise<{ data: { success: boolean } }>>(
+  { cors: CORS_ORIGINS },
+  updateAssessmentHandler
+);

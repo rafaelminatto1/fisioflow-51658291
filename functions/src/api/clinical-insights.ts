@@ -9,7 +9,10 @@ const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as co
  * Fornece insights analíticos profundos baseados em dados SQL
  * Útil para dashboards de IA e relatórios de gestão
  */
-export const getClinicalInsightsHttp = onRequest(httpOpts, async (req, res) => {
+/**
+ * Fornece insights analíticos profundos baseados em dados SQL
+ */
+export const getClinicalInsightsHttpHandler = async (req: any, res: any) => {
   // CORS Headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -24,7 +27,7 @@ export const getClinicalInsightsHttp = onRequest(httpOpts, async (req, res) => {
     const authHeader = req.headers?.authorization || req.headers?.Authorization;
     const token = Array.isArray(authHeader) ? authHeader[0] : authHeader;
     const auth = await authorizeRequest(extractBearerToken(token));
-    
+
     const pool = getPool();
 
     // 1. Estatísticas de Metas (Goals)
@@ -77,4 +80,6 @@ export const getClinicalInsightsHttp = onRequest(httpOpts, async (req, res) => {
     logger.error('getClinicalInsights error:', e);
     res.status(500).json({ error: e.message || 'Internal Server Error' });
   }
-});
+};
+
+export const getClinicalInsightsHttp = onRequest(httpOpts, getClinicalInsightsHttpHandler);
