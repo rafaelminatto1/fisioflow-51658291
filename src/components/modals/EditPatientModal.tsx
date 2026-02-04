@@ -10,9 +10,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserX } from 'lucide-react';
 import { PatientService } from '@/lib/services/PatientService';
-import { patientsApi } from '@/integrations/firebase/functions';
+import { FunctionCallError } from '@/integrations/firebase/functions';
+import type { Patient } from '@/types';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -32,6 +33,37 @@ const patientSchema = z.object({
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
+
+/** Extrai mensagem amigável para exibir em toast de erro. */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof FunctionCallError && error.originalError instanceof Error) {
+    const msg = error.originalError.message;
+    const match = msg.match(/HTTP \d+: (.+)/);
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[1]) as { error?: string };
+        return parsed.error ?? msg;
+      } catch {
+        return msg;
+      }
+    }
+    return msg;
+  }
+  if (error instanceof Error) return error.message;
+  return 'Não foi possível atualizar o paciente. Tente novamente.';
+}
+
+/** Mapeia dados do formulário para o payload aceito pelo backend (campos permitidos). */
+function formDataToPatientUpdate(data: PatientFormData): Partial<Patient> {
+  const update: Partial<Patient> = { name: data.name };
+  if (data.email !== undefined && data.email !== '') update.email = data.email;
+  if (data.phone !== undefined && data.phone !== '') update.phone = data.phone;
+  if (data.cpf !== undefined && data.cpf !== '') update.cpf = data.cpf;
+  if (data.birth_date) update.birthDate = data.birth_date;
+  if (data.observations !== undefined) update.mainCondition = data.observations;
+  if (data.status) update.status = data.status;
+  return update;
+}
 
 export const EditPatientModal: React.FC<{
   open: boolean;
@@ -91,22 +123,17 @@ export const EditPatientModal: React.FC<{
     }
   }, [patient, reset]);
 
+  useEffect(() => {
+    if (!open) {
+      reset();
+    }
+  }, [open, reset]);
+
   const updateMutation = useMutation({
     mutationFn: async (data: PatientFormData) => {
       if (!patientId) throw new Error('Patient ID is required');
-
-      const payload: Record<string, unknown> = {
-        name: data.name,
-        cpf: data.cpf || undefined,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
-        birth_date: data.birth_date || undefined,
-        main_condition: data.observations || undefined,
-        status: data.status || undefined,
-      };
-
-      const updated = await patientsApi.update(patientId, payload);
-      return updated;
+      const updates = formDataToPatientUpdate(data);
+      return PatientService.updatePatient(patientId, updates);
     },
     onSuccess: () => {
       toast({
@@ -118,10 +145,10 @@ export const EditPatientModal: React.FC<{
       onOpenChange(false);
       reset();
     },
-    onError: (error: Error) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar',
-        description: error.message,
+        description: getErrorMessage(error),
         variant: 'destructive',
       });
     },
@@ -145,6 +172,14 @@ export const EditPatientModal: React.FC<{
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : open && patientId && patient === null ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
+              <UserX className="h-12 w-12" />
+              <p className="text-sm font-medium">Paciente não encontrado</p>
+              <p className="text-xs text-center max-w-sm">
+                O registro pode ter sido removido ou você não tem permissão para acessá-lo.
+              </p>
             </div>
           ) : (
             <form id="edit-patient-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -271,23 +306,31 @@ export const EditPatientModal: React.FC<{
         </div>
 
         <DialogFooter className="gap-2 p-6 pt-2 border-t mt-auto bg-background">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={updateMutation.isPending}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            form="edit-patient-form"
-            disabled={updateMutation.isPending}
-            className="bg-primary hover:bg-primary/90"
-          >
-            {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar Alterações
-          </Button>
+          {open && patientId && patient === null ? (
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Fechar
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={updateMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="edit-patient-form"
+                disabled={updateMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alterações
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
