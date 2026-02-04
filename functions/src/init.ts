@@ -29,7 +29,9 @@ export const DB_HOST_IP_PUBLIC_SECRET = defineSecret('DB_HOST_IP_PUBLIC');
 
 // Firebase Functions v2 CORS - explicitly list allowed origins
 // Using 'cors: true' should work but has known issues in v2
-// Explicitly listing origins is the recommended workaround
+// Explicitly listing origins is the recommended workaround.
+// Do NOT add '*' to the array: Access-Control-Allow-Origin must be a single origin or '*', not a list.
+// For new domains (staging, etc.), add the exact origin here.
 export const CORS_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:8083',
@@ -41,7 +43,6 @@ export const CORS_ORIGINS = [
   'https://fisioflow.web.app',
   'https://moocafisio.com.br',
   'https://www.moocafisio.com.br',
-  '*' // fallback for other origins
 ];
 
 // ============================================================================

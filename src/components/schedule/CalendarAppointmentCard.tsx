@@ -25,6 +25,7 @@ interface CalendarAppointmentCardProps {
     onDragOver?: (e: React.DragEvent) => void;
     onDrop?: (e: React.DragEvent) => void;
     isDropTarget?: boolean;
+    hideGhostWhenSiblings?: boolean;
     selectionMode?: boolean;
     isSelected?: boolean;
     onToggleSelection?: (id: string) => void;
@@ -130,6 +131,7 @@ const CalendarAppointmentCardBase = ({
     onDragOver,
     onDrop,
     isDropTarget = false,
+    hideGhostWhenSiblings = false,
     selectionMode = false,
     isSelected = false,
     onToggleSelection
@@ -194,16 +196,16 @@ const CalendarAppointmentCardBase = ({
             transition={{
                 layout: {
                     type: "spring",
-                    stiffness: 350,
-                    damping: 30
+                    stiffness: 400,
+                    damping: 35
                 },
-                opacity: { duration: 0.25 },
-                scale: { duration: 0.25 },
-                boxShadow: { duration: 0.25 }
+                opacity: { duration: 0.12 },
+                scale: { duration: 0.12 },
+                boxShadow: { duration: 0.12 }
             }}
             initial={{ opacity: 0, scale: 0.95, y: 4 }}
             animate={{
-                opacity: isDragging ? 0.4 : 1,
+                opacity: isDragging && hideGhostWhenSiblings ? 0 : (isDragging ? 0.4 : 1),
                 scale: isDragging ? 0.96 : 1,
                 y: 0,
                 boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
@@ -240,7 +242,7 @@ const CalendarAppointmentCardBase = ({
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden transition-all duration-200 border",
+                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden transition-all duration-150 border",
                 "cursor-pointer",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 statusStyles.bg,
@@ -258,6 +260,7 @@ const CalendarAppointmentCardBase = ({
             style={{
                 ...style,
                 backgroundColor: undefined,
+                pointerEvents: isDragging && hideGhostWhenSiblings ? 'none' : undefined,
             }}
             role="button"
             tabIndex={0}
@@ -416,6 +419,7 @@ function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: Calen
         prev.isDraggable !== next.isDraggable ||
         prev.isSaving !== next.isSaving ||
         prev.isDropTarget !== next.isDropTarget ||
+        prev.hideGhostWhenSiblings !== next.hideGhostWhenSiblings ||
         prev.selectionMode !== next.selectionMode ||
         prev.isSelected !== next.isSelected ||
         prev.isPopoverOpen !== next.isPopoverOpen
