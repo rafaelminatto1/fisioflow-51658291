@@ -54,22 +54,30 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = ({
     onTabChange,
 }) => {
     return (
-        <div className="space-y-4">
+        <div className="space-y-4" role="region" aria-label="Alertas da evolução">
             {/* Alerta CRÍTICO: Metas Vencidas */}
             {overdueGoals.length > 0 && (
-                <Alert variant="destructive" className="animate-pulse border-red-600">
-                    <CalendarX className="h-4 w-4" />
+                <Alert variant="destructive" className="animate-pulse border-red-600" role="alert">
+                    <CalendarX className="h-4 w-4" aria-hidden />
                     <AlertTitle className="text-sm font-semibold">Metas Vencidas</AlertTitle>
                     <AlertDescription className="text-xs">
-                        {overdueGoals.length} meta(s) vencida(s). Reavalie o plano de tratamento e ajuste as datas na aba Tratamento.
+                        {overdueGoals.length} meta(s) vencida(s). Reavalie o plano de tratamento e ajuste as datas na aba Tratamento.{' '}
+                        <button
+                            type="button"
+                            onClick={() => onTabChange('tratamento')}
+                            className="underline font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring"
+                            aria-label="Ir para aba Tratamento"
+                        >
+                            Ir para Tratamento
+                        </button>
                     </AlertDescription>
                 </Alert>
             )}
 
             {/* Alerta: Nível de Dor Alto */}
             {painScale.level >= 7 && (
-                <Alert variant="destructive" className="animate-pulse">
-                    <AlertTriangle className="h-4 w-4" />
+                <Alert variant="destructive" className="animate-pulse" role="alert">
+                    <AlertTriangle className="h-4 w-4" aria-hidden />
                     <AlertTitle className="text-sm font-semibold">Nível de Dor Elevado</AlertTitle>
                     <AlertDescription className="text-xs">
                         Paciente reportando dor {painScale.level}/10.
@@ -94,13 +102,15 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = ({
             {/* Alerta: Metas Próximas do Vencimento */}
             {upcomingGoals.length > 0 && (
                 <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                    <Clock className="h-4 w-4 text-amber-600" />
+                    <Clock className="h-4 w-4 text-amber-600" aria-hidden />
                     <AlertTitle className="text-sm font-semibold text-amber-800 dark:text-amber-200">Metas Próximas do Vencimento</AlertTitle>
                     <AlertDescription className="text-xs text-amber-700 dark:text-amber-300">
                         {upcomingGoals.length} meta(s) venc(em) em até 3 dias.{' '}
                         <button
+                            type="button"
                             onClick={() => onTabChange('tratamento')}
-                            className="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
+                            className="underline font-medium hover:text-amber-900 dark:hover:text-amber-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                            aria-label="Ir para aba Tratamento para acompanhar o progresso"
                         >
                             Acompanhe o progresso →
                         </button>
@@ -111,13 +121,15 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = ({
             {/* Alerta: Muito Tempo Desde Última Evolução */}
             {daysSinceLastEvolution !== null && daysSinceLastEvolution > 21 && (
                 <Alert className="border-red-500/50 bg-red-50 dark:bg-red-950/20">
-                    <FileText className="h-4 w-4 text-red-600" />
+                    <FileText className="h-4 w-4 text-red-600" aria-hidden />
                     <AlertTitle className="text-sm font-semibold text-red-800 dark:text-red-200">Longo Período Sem Evolução</AlertTitle>
                     <AlertDescription className="text-xs text-red-700 dark:text-red-300">
                         A última evolução foi registrada há {daysSinceLastEvolution} dias.{' '}
                         <button
+                            type="button"
                             onClick={() => onTabChange('historico')}
-                            className="underline font-medium hover:text-red-900 dark:hover:text-red-100"
+                            className="underline font-medium hover:text-red-900 dark:hover:text-red-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                            aria-label="Ir para aba Histórico e revisar o histórico completo"
                         >
                             Revise o histórico completo →
                         </button>
@@ -153,10 +165,12 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = ({
                     <TrendingUp className="h-4 w-4 text-orange-600" />
                     <AlertTitle className="text-sm font-semibold text-orange-800 dark:text-orange-200">Complexidade Clínica Elevada</AlertTitle>
                     <AlertDescription className="text-xs text-orange-700 dark:text-orange-300">
-                        Paciente com {activePathologies.length} patologia(s) ativa(s). Requer atenção especial e planejamento cuidadoso do tratamento.
+                        Paciente com {activePathologies.length} patologia(s) ativa(s). Requer atenção especial e planejamento cuidadoso do tratamento.{' '}
                         <button
+                            type="button"
                             onClick={() => onTabChange('tratamento')}
-                            className="underline font-medium hover:text-orange-900 dark:hover:text-orange-100 ml-1"
+                            className="underline font-medium hover:text-orange-900 dark:hover:text-orange-100 ml-1 focus:outline-none focus:ring-2 focus:ring-ring"
+                            aria-label="Ir para aba Tratamento para ver detalhes"
                         >
                             Ver detalhes →
                         </button>
