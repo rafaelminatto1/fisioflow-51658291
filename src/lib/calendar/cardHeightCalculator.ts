@@ -91,7 +91,7 @@ export function calculateSlotHeightFromCardSize(
   const MIN_SLOT_HEIGHT = 30;
   const MAX_SLOT_HEIGHT = 120;
 
-  const scale = heightScale ?? 5;
+  const scale = heightScale ?? 3;
   return Math.round(MIN_SLOT_HEIGHT + (scale / 10) * (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT));
 }
 

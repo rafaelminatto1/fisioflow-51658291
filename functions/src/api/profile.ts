@@ -6,7 +6,7 @@
 
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
 
@@ -95,13 +95,73 @@ async function getUserProfile(userId: string): Promise<Profile> {
 }
 
 /**
- * CORS headers helper
+ * CORS headers helper - reflect Origin when allowed (e.g. localhost:8085)
  */
-function setCorsHeaders(res: any) {
-  res.set('Access-Control-Allow-Origin', '*');
+function setCorsHeaders(req: any, res: any) {
+  const origin = req?.headers?.origin || req?.headers?.Origin;
+  const allowOrigin = (origin && CORS_ORIGINS.includes(origin)) ? origin : '*';
+  res.set('Access-Control-Allow-Origin', allowOrigin);
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Max-Age', '86400');
 }
+
+/**
+ * Handler para getProfile
+ */
+export const getProfileHandler = async (request: any) => {
+  const uid = request.auth?.uid || (request.auth?.token as any)?.uid;
+  if (!uid) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
+  }
+
+  // Get profile
+  const profile = await getUserProfile(uid);
+  return { data: profile };
+};
+
+/**
+ * POST /getProfile - Retorna o perfil do usuário autenticado
+ */
+/**
+ * Handler HTTP para getProfile
+ */
+export const getProfileHttpHandler = async (req: any, res: any) => {
+  // Handle OPTIONS preflight FIRST
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(req, res);
+    res.status(204).send('');
+    return;
+  }
+
+  // Only accept POST requests
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  setCorsHeaders(req, res);
+
+  try {
+    // Verify authentication
+    const { uid } = await verifyAuth(req);
+
+    // Get profile
+    const profile = await getUserProfile(uid);
+
+    res.json({ data: profile });
+  } catch (error: unknown) {
+    logger.error('Erro ao buscar perfil:', error);
+
+    if (error instanceof HttpsError) {
+      const statusCode = error.code === 'unauthenticated' ? 401 :
+        error.code === 'not-found' ? 404 : 500;
+      res.status(statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Erro interno ao buscar perfil' });
+    }
+  }
+};
 
 /**
  * POST /getProfile - Retorna o perfil do usuário autenticado
@@ -109,46 +169,159 @@ function setCorsHeaders(res: any) {
 export const getProfile = onRequest(
   {
     region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 100,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
-  async (req, res) => {
-    // Handle OPTIONS preflight FIRST, before any other processing
-    if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
-      res.status(204).send('');
-      return;
-    }
+  getProfileHttpHandler
+);
 
-    // Only accept POST requests
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
+/**
+ * Handler para updateProfile
+ */
+export const updateProfileHandler = async (request: any) => {
+  const uid = request.auth?.uid || (request.auth?.token as any)?.uid;
+  if (!uid) {
+    throw new HttpsError('unauthenticated', 'Requisita autenticação.');
+  }
 
-    setCorsHeaders(res);
+  const updates = request.data;
+  const pool = getPool();
 
-    try {
-      // Verify authentication
-      const { uid } = await verifyAuth(req);
+  // Campos permitidos para atualização
+  const allowedFields = [
+    'full_name', 'phone', 'avatar_url', 'crefito',
+    'specialties', 'bio', 'birth_date', 'preferences'
+  ];
 
-      // Get profile
-      const profile = await getUserProfile(uid);
+  const setClauses: string[] = [];
+  const values: (string | number | Date)[] = [];
+  let paramCount = 0;
 
-      res.json({ data: profile });
-    } catch (error: unknown) {
-      logger.error('Erro ao buscar perfil:', error);
+  for (const field of allowedFields) {
+    if (field in updates) {
+      paramCount++;
+      setClauses.push(`${field} = $${paramCount}`);
 
-      if (error instanceof HttpsError) {
-        const statusCode = error.code === 'unauthenticated' ? 401 :
-                          error.code === 'not-found' ? 404 : 500;
-        res.status(statusCode).json({ error: error.message });
+      if (field === 'specialties' || field === 'preferences') {
+        values.push(JSON.stringify(updates[field]));
       } else {
-        res.status(500).json({ error: 'Erro interno ao buscar perfil' });
+        values.push(updates[field]);
       }
     }
   }
-);
+
+  if (setClauses.length === 0) {
+    throw new HttpsError('invalid-argument', 'Nenhum campo válido para atualização');
+  }
+
+  // Adicionar updated_at
+  paramCount++;
+  setClauses.push(`updated_at = $${paramCount}`);
+  values.push(new Date());
+
+  // Adicionar WHERE
+  paramCount++;
+  values.push(uid);
+
+  const query = `
+    UPDATE profiles
+    SET ${setClauses.join(', ')}
+    WHERE user_id = $${paramCount}
+    RETURNING *
+  `;
+
+  const result = await pool.query(query, values);
+  return { data: result.rows[0] as Profile };
+};
+
+/**
+ * POST /updateProfile - Atualiza o perfil do usuário
+ */
+/**
+ * Handler HTTP para updateProfile
+ */
+export const updateProfileHttpHandler = async (req: any, res: any) => {
+  // Handle OPTIONS preflight FIRST
+  if (req.method === 'OPTIONS') {
+    setCorsHeaders(req, res);
+    res.status(204).send('');
+    return;
+  }
+
+  // Only accept POST requests
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  setCorsHeaders(req, res);
+
+  try {
+    // Verify authentication
+    const { uid } = await verifyAuth(req);
+
+    const updates = req.body;
+    const pool = getPool();
+
+    // Campos permitidos para atualização
+    const allowedFields = [
+      'full_name', 'phone', 'avatar_url', 'crefito',
+      'specialties', 'bio', 'birth_date', 'preferences'
+    ];
+
+    const setClauses: string[] = [];
+    const values: (string | number | Date)[] = [];
+    let paramCount = 0;
+
+    for (const field of allowedFields) {
+      if (field in updates) {
+        paramCount++;
+        setClauses.push(`${field} = $${paramCount}`);
+
+        if (field === 'specialties' || field === 'preferences') {
+          values.push(JSON.stringify(updates[field]));
+        } else {
+          values.push(updates[field]);
+        }
+      }
+    }
+
+    if (setClauses.length === 0) {
+      res.status(400).json({ error: 'Nenhum campo válido para atualização' });
+      return;
+    }
+
+    // Adicionar updated_at
+    paramCount++;
+    setClauses.push(`updated_at = $${paramCount}`);
+    values.push(new Date());
+
+    // Adicionar WHERE
+    paramCount++;
+    values.push(uid);
+
+    const query = `
+      UPDATE profiles
+      SET ${setClauses.join(', ')}
+      WHERE user_id = $${paramCount}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+
+    res.json({ data: result.rows[0] as Profile });
+  } catch (error: unknown) {
+    logger.error('Erro ao atualizar perfil:', error);
+
+    if (error instanceof HttpsError) {
+      const statusCode = error.code === 'unauthenticated' ? 401 :
+        error.code === 'not-found' ? 404 : 500;
+      res.status(statusCode).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Erro interno ao atualizar perfil' });
+    }
+  }
+};
 
 /**
  * POST /updateProfile - Atualiza o perfil do usuário
@@ -156,89 +329,12 @@ export const getProfile = onRequest(
 export const updateProfile = onRequest(
   {
     region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 100,
+    maxInstances: 10,
+    cors: [
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+      /moocafisio\.com\.br$/,
+      /fisioflow\.web\.app$/,
+    ],
   },
-  async (req, res) => {
-    // Handle OPTIONS preflight FIRST
-    if (req.method === 'OPTIONS') {
-      setCorsHeaders(res);
-      res.status(204).send('');
-      return;
-    }
-
-    // Only accept POST requests
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    setCorsHeaders(res);
-
-    try {
-      // Verify authentication
-      const { uid } = await verifyAuth(req);
-
-      const updates = req.body;
-      const pool = getPool();
-
-      // Campos permitidos para atualização
-      const allowedFields = [
-        'full_name', 'phone', 'avatar_url', 'crefito',
-        'specialties', 'bio', 'birth_date', 'preferences'
-      ];
-
-      const setClauses: string[] = [];
-      const values: (string | number | Date)[] = [];
-      let paramCount = 0;
-
-      for (const field of allowedFields) {
-        if (field in updates) {
-          paramCount++;
-          setClauses.push(`${field} = $${paramCount}`);
-
-          if (field === 'specialties' || field === 'preferences') {
-            values.push(JSON.stringify(updates[field]));
-          } else {
-            values.push(updates[field]);
-          }
-        }
-      }
-
-      if (setClauses.length === 0) {
-        res.status(400).json({ error: 'Nenhum campo válido para atualização' });
-        return;
-      }
-
-      // Adicionar updated_at
-      paramCount++;
-      setClauses.push(`updated_at = $${paramCount}`);
-      values.push(new Date());
-
-      // Adicionar WHERE
-      paramCount++;
-      values.push(uid);
-
-      const query = `
-        UPDATE profiles
-        SET ${setClauses.join(', ')}
-        WHERE user_id = $${paramCount}
-        RETURNING *
-      `;
-
-      const result = await pool.query(query);
-
-      res.json({ data: result.rows[0] as Profile });
-    } catch (error: unknown) {
-      logger.error('Erro ao atualizar perfil:', error);
-
-      if (error instanceof HttpsError) {
-        const statusCode = error.code === 'unauthenticated' ? 401 :
-                          error.code === 'not-found' ? 404 : 500;
-        res.status(statusCode).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Erro interno ao atualizar perfil' });
-      }
-    }
-  }
+  updateProfileHttpHandler
 );
