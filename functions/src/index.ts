@@ -310,7 +310,7 @@ export const realtimePublish = realtimePublisher.realtimePublish;
 // HTTP FUNCTIONS
 // ============================================================================
 
-function setApiRouterCors(req: functions.https.Request, res: functions.Response) {
+function setApiRouterCors(req: any, res: any) {
     const origin = req.headers?.origin || req.headers?.Origin;
     const allowOrigin = (origin && (
         /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(String(origin)) ||
