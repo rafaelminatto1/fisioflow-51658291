@@ -258,6 +258,8 @@ export default defineConfig(({ mode }) => {
         "@fisioflow/shared-utils": path.resolve(__dirname, "./packages/shared-utils/src"),
         // Allow importing legacy module from react-grid-layout
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
+        // Fix @kitware/vtk.js / @cornerstonejs: globalthis não exporta default em ESM
+        globalthis: path.resolve(__dirname, "./src/lib/globalthis-shim.ts"),
       },
     },
     build: {
@@ -409,6 +411,12 @@ export default defineConfig(({ mode }) => {
         'react-grid-layout',
         'react-draggable',
         'react-resizable',
+        'base64-js',
+        'unicode-trie',
+        'brotli',
+        'brotli/decompress.js',
+        'fontkit',
+        'crypto-js',
       ],
       exclude: [
         '@cornerstonejs/dicom-image-loader',

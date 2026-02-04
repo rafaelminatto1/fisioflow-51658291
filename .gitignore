@@ -187,6 +187,9 @@ functions/service-account-key.json
 # Virtual Environment
 venv/
 
+# Console audit reports
+console-errors-report.json
+
 # Local test scripts and temporary verification outputs
 .agent/*.txt
 get-firebase-token.js

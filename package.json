@@ -61,6 +61,7 @@
     "professional:build:prod": "pnpm --filter @fisioflow/professional-ios build:prod",
     "db:proxy": "bash ./scripts/db-proxy.sh",
     "verify": "node scripts/health-check.js",
+    "check:console": "BASE_URL=http://127.0.0.1:8084 node scripts/check-console-errors-local.mjs",
     "migrate:exercises-protocols": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs",
     "migrate:exercises-protocols:dry": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --dry-run",
     "migrate:exercises-protocols:protocols-only": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --only-protocols",

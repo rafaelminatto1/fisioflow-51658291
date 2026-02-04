@@ -10,6 +10,7 @@
  */
 
 import { z } from "zod";
+import { fisioLogger } from "@/lib/errors/logger";
 
 // ============================================================================
 // CONSTANTES E UTILITÁRIOS
@@ -236,18 +237,18 @@ export const VerifiedAppointmentSchema = AppointmentSchema.transform((data) => {
                 : parsedDate;
         } else {
             // Parse falhou - log mas não quebra, retorna data atual com warning
-            console.warn(`[appointment schema] Invalid date format: ${dateSource}, using today as fallback`);
+            fisioLogger.warn('Invalid date format, using today as fallback', { dateSource }, 'appointment-schema');
             finalDate = new Date();
         }
     } else {
         // Sem data disponível - usar data atual com warning
-        console.warn(`[appointment schema] Date field is missing or null, using today as fallback`);
+        fisioLogger.warn('Date field is missing or null, using today as fallback', undefined, 'appointment-schema');
         finalDate = new Date();
     }
 
     // Validação final da data
     if (isNaN(finalDate.getTime())) {
-        console.warn(`[appointment schema] Parsed date is invalid: ${dateSource}, using today as fallback`);
+        fisioLogger.warn('Parsed date is invalid, using today as fallback', { dateSource }, 'appointment-schema');
         finalDate = new Date();
     }
 

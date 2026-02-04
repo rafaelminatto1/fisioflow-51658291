@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PatientServiceV2, type PatientV2 } from '@/services/patientServiceV2';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { fisioLogger } from '@/lib/errors/logger';
 import { isOnline } from '@/lib/utils/query-helpers';
 import { type Patient } from '@/schemas/patient';
 
@@ -42,7 +43,7 @@ export const useActivePatientsV2 = () => {
     const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
 
     const handleUpdate = () => {
-      console.log('Realtime (Ably): Pacientes atualizados via V2');
+      fisioLogger.debug('Realtime (Ably): Pacientes atualizados via V2', undefined, 'usePatientsV2');
       queryClient.invalidateQueries({ queryKey: ['patients-v2', organizationId] });
     };
 
@@ -62,11 +63,11 @@ export const useActivePatientsV2 = () => {
     queryFn: async () => {
       if (!isOnline()) {
         // TODO: Implement V2 compatible cache
-        console.warn('Offline: V2 cache not implemented yet');
+        fisioLogger.debug('Offline: V2 cache not implemented yet', undefined, 'usePatientsV2');
         return [];
       }
 
-      console.log('useActivePatientsV2: fetching from API V2');
+      fisioLogger.debug('useActivePatientsV2: fetching from API V2', undefined, 'usePatientsV2');
       const response = await PatientServiceV2.list({ status: 'active' }); // Or whatever status needed
       return response.data.map(mapPatientV2ToFrontend);
     },
