@@ -47,7 +47,7 @@ import {
   useEvolutionMeasurements,
 } from '@/hooks/usePatientEvolution';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
-import { useAutoSaveSoapRecord, useSoapRecords, type SoapRecord } from '@/hooks/useSoapRecords';
+import { useAutoSaveSoapRecord, useSoapRecords, useDraftSoapRecordByAppointment, type SoapRecord } from '@/hooks/useSoapRecords';
 import { useGamification } from '@/hooks/useGamification';
 import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -166,6 +166,7 @@ const PatientEvolution = () => {
   const { data: pathologies = [] } = usePatientPathologies(patientId || '');
   const { data: measurements = [] } = useEvolutionMeasurements(patientId || '');
   const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
+  const { data: draftByAppointment } = useDraftSoapRecordByAppointment(patientId || '', appointmentId);
 
   // Hook de auto-save
   const autoSaveMutation = useAutoSaveSoapRecord();
@@ -179,6 +180,23 @@ const PatientEvolution = () => {
   }, []);
 
   // ========== EFFECTS ==========
+  // Carregar draft existente ao abrir a página (evolução em progresso para este agendamento)
+  useEffect(() => {
+    if (!draftByAppointment || currentSoapRecordId !== undefined) return;
+    setSubjective(draftByAppointment.subjective ?? '');
+    setObjective(draftByAppointment.objective ?? '');
+    setAssessment(draftByAppointment.assessment ?? '');
+    setPlan(draftByAppointment.plan ?? '');
+    if (draftByAppointment.pain_level !== undefined) {
+      setPainScale({
+        level: draftByAppointment.pain_level,
+        location: draftByAppointment.pain_location,
+        character: draftByAppointment.pain_character
+      });
+    }
+    setCurrentSoapRecordId(draftByAppointment.id);
+  }, [draftByAppointment, currentSoapRecordId]);
+
   // Carregar exercícios da sessão anterior se a sessão atual estiver vazia
   useEffect(() => {
     if (lastSession?.exercises_performed && sessionExercises.length === 0 && !isLoadingLastSession) {

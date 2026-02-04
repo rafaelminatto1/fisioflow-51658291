@@ -3,8 +3,7 @@
  * Real-time error tracking and aggregation for monitoring
  */
 
-// @ts-nocheck - TypeScript errors in monitoring module, not critical for main functionality
-import { onCall, onRequest } from 'firebase-functions/v2/https';
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
 
@@ -16,7 +15,7 @@ const db = admin.firestore();
  */
 export interface ErrorEntry {
   id: string;
-  timestamp: Date;
+  timestamp: Date | admin.firestore.Timestamp;
   function: string;
   errorType: string;
   errorMessage: string;
@@ -30,7 +29,7 @@ export interface ErrorEntry {
   resolvedAt?: Date;
   resolvedBy?: string;
   occurrences: number;
-  lastOccurrence: Date;
+  lastOccurrence: Date | admin.firestore.Timestamp;
   metadata?: Record<string, any>;
 }
 
@@ -47,7 +46,6 @@ export interface ErrorStats {
 }
 
 const ERRORS_COLLECTION = 'error_logs';
-const ERROR_AGGREGATION_COLLECTION = 'error_aggregation';
 
 /**
  * Log an error to the error dashboard
@@ -149,7 +147,7 @@ export const getErrorStatsHandler = async (request: any) => {
 
     const snapshot = await query.get();
 
-    const errors = snapshot.docs.map(doc => doc.data() as ErrorEntry);
+    const errors = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as ErrorEntry);
 
     // Calculate statistics
     const stats: ErrorStats = {
@@ -157,13 +155,21 @@ export const getErrorStatsHandler = async (request: any) => {
       byFunction: {},
       byType: {},
       bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
-      recentErrors: errors.sort((a, b) =>
-        b.lastOccurrence.getTime() - a.lastOccurrence.getTime()
-      ).slice(0, 20),
+      recentErrors: errors
+        .sort((a: ErrorEntry, b: ErrorEntry) => {
+          const aTime = a.lastOccurrence instanceof Date
+            ? a.lastOccurrence.getTime()
+            : (a.lastOccurrence as admin.firestore.Timestamp).toMillis();
+          const bTime = b.lastOccurrence instanceof Date
+            ? b.lastOccurrence.getTime()
+            : (b.lastOccurrence as admin.firestore.Timestamp).toMillis();
+          return bTime - aTime;
+        })
+        .slice(0, 20),
       topErrors: [],
     };
 
-    errors.forEach(error => {
+    errors.forEach((error: ErrorEntry) => {
       // By function
       stats.byFunction[error.function] =
         (stats.byFunction[error.function] || 0) + error.occurrences;
@@ -179,9 +185,9 @@ export const getErrorStatsHandler = async (request: any) => {
 
     // Top errors by occurrences
     stats.topErrors = errors
-      .sort((a, b) => b.occurrences - a.occurrences)
+      .sort((a: ErrorEntry, b: ErrorEntry) => b.occurrences - a.occurrences)
       .slice(0, 10)
-      .map(error => ({ error, count: error.occurrences }));
+      .map((error: ErrorEntry) => ({ error, count: error.occurrences }));
 
     return { success: true, stats, timeRange };
   } catch (error) {
@@ -235,7 +241,7 @@ export const getRecentErrorsHandler = async (request: any) => {
 
     const snapshot = await query.get();
 
-    const errors = snapshot.docs.map(doc => doc.data() as ErrorEntry);
+    const errors = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as ErrorEntry);
 
     return { success: true, errors, count: errors.length };
   } catch (error) {
@@ -402,12 +408,12 @@ export const errorStreamHandler = async (req: any, res: any) => {
   };
 
   // Handle connection errors
-  req.on('error', (error) => {
+  req.on('error', (error: Error) => {
     logger.error('Error stream request error', { error });
     cleanup();
   });
 
-  res.on('error', (error) => {
+  res.on('error', (error: Error) => {
     logger.error('Error stream response error', { error });
     cleanup();
   });
@@ -436,22 +442,22 @@ export const errorStreamHandler = async (req: any, res: any) => {
 
   // Set up Firestore snapshot listener
   unsubscribe = query.onSnapshot(
-    (snapshot) => {
+    (snapshot: admin.firestore.QuerySnapshot) => {
       if (!isAlive) {
         if (unsubscribe) unsubscribe();
         return;
       }
 
       try {
-        const errors = snapshot.docs.map(doc => doc.data() as ErrorEntry);
+        const errors = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as ErrorEntry);
         res.write(`data: ${JSON.stringify({ errors, count: errors.length })}\n\n`);
-      } catch (error) {
-        logger.error('Failed to write error data', { error });
+      } catch (err) {
+        logger.error('Failed to write error data', { error: err });
         cleanup();
       }
     },
-    (error) => {
-      logger.error('Error stream error', { error });
+    (err: Error) => {
+      logger.error('Error stream error', { error: err });
       if (isAlive) {
         try {
           res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`);
@@ -512,7 +518,7 @@ export const getErrorTrendsHandler = async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { organizationId, period = '7d' } = data as {
+  const { period = '7d' } = data as {
     organizationId?: string;
     period?: '24h' | '7d' | '30d';
   };
@@ -526,13 +532,17 @@ export const getErrorTrendsHandler = async (request: any) => {
       .where('lastOccurrence', '>=', startTime)
       .get();
 
-    const errors = snapshot.docs.map(doc => doc.data() as ErrorEntry);
+    const errors = snapshot.docs.map((doc: admin.firestore.QueryDocumentSnapshot) => doc.data() as ErrorEntry);
+
+    const toDate = (d: Date | admin.firestore.Timestamp): Date =>
+      d instanceof Date ? d : (d as admin.firestore.Timestamp).toDate();
 
     // Aggregate errors by time bucket
     const trends = buckets.map(bucket => {
-      const bucketErrors = errors.filter(e =>
-        e.lastOccurrence >= bucket.start && e.lastOccurrence < bucket.end
-      );
+      const bucketErrors = errors.filter(e => {
+        const occ = toDate(e.lastOccurrence);
+        return occ >= bucket.start && occ < bucket.end;
+      });
 
       return {
         label: bucket.label,
@@ -691,4 +701,3 @@ function getTimeBuckets(period: string): TimeBucket[] {
   return buckets;
 }
 
-import { HttpsError } from 'firebase-functions/v2/https';

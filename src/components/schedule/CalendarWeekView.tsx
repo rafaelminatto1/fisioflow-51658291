@@ -9,6 +9,7 @@ import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { TimeSlotCell } from './TimeSlotCell';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
+import { getOverlapStackPosition } from '@/lib/calendar';
 
 // =====================================================================
 // TYPES
@@ -47,6 +48,10 @@ interface CalendarWeekViewProps {
 const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
+
+/** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
+const OVERLAP_LAYOUT_MARGIN_PX = 4;
+const OVERLAP_LAYOUT_GAP_PX = 4;
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -138,22 +143,17 @@ export const CalendarWeekView = memo(({
         });
     }, [appointments, weekDays]);
 
-    // Group appointments by time slot for collision detection
-    const appointmentsByTimeSlot = useMemo(() => {
-        const result: Record<string, Appointment[]> = {};
-        weekAppointments.forEach(apt => {
-            const time = normalizeTime(apt.time);
-            const date = parseAppointmentDate(apt.date);
-            if (!date) return;
-
-            const dayIndex = weekDays.findIndex(d => isSameDay(d, date));
-            if (dayIndex === -1) return;
-
-            const key = `${dayIndex}-${time}`;
-            if (!result[key]) result[key] = [];
-            result[key].push(apt);
+    // Agendamentos agrupados por índice do dia (evita filtrar weekAppointments N vezes em getAppointmentStyle)
+    const appointmentsByDayIndex = useMemo(() => {
+        const map = new Map<number, Appointment[]>();
+        weekDays.forEach((day, dayIndex) => {
+            const dayApts = weekAppointments.filter((apt) => {
+                const d = parseAppointmentDate(apt.date);
+                return d && isSameDay(d, day);
+            });
+            map.set(dayIndex, dayApts);
         });
-        return result;
+        return map;
     }, [weekAppointments, weekDays]);
 
     // Optimize blocked time checks by memoizing the status for all cells
@@ -195,50 +195,44 @@ export const CalendarWeekView = memo(({
         const duration = apt.duration || 60;
         const heightInPixels = calculateAppointmentCardHeight(cardSize, duration, heightScale);
 
-        // Check for collisions (guard against undefined entries)
-        const key = `${dayIndex}-${time}`;
-        const sameTimeAppointments = (appointmentsByTimeSlot[key] || []).filter((a): a is Appointment => a != null && typeof a.id === 'string');
-        let index = sameTimeAppointments.findIndex(a => a.id === apt.id);
-        let count = sameTimeAppointments.length;
+        // Overlap by time range (same day): lateral layout so 08:30 and 09:00 show side by side
+        const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
+        let { index, count } = getOverlapStackPosition(dayAppointments, apt);
 
         // Durante o drag sobre este slot de destino, redimensionar os cards como se o arrastado já estivesse lá
         const isInDropTargetSlot = dropTarget && isSameDay(dropTarget.date, aptDate) && dropTarget.time === time;
         if (isInDropTargetSlot && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
-            const futureCount = targetAppointments.length + 1;
-            const futureIndex = targetAppointments.findIndex(a => a.id === apt.id);
-            if (futureIndex >= 0) {
-                count = futureCount;
-                index = futureIndex;
-            }
+            const futureDayAppointments = [...dayAppointments, dragState.appointment];
+            const future = getOverlapStackPosition(futureDayAppointments, apt);
+            count = future.count;
+            index = future.index;
         }
 
         // Slot de origem: redimensionar os demais cards como se o arrastado já tivesse saído
         const draggedDate = dragState.appointment ? parseAppointmentDate(dragState.appointment.date) : null;
         const draggedTime = dragState.appointment ? normalizeTime(dragState.appointment.time) : null;
-        const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(aptDate, draggedDate) && time === draggedTime;
-        if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id && sameTimeAppointments.length > 1) {
-            const originRemainingCount = sameTimeAppointments.length - 1;
-            const originRemaining = sameTimeAppointments.filter(a => a.id !== dragState.appointment!.id);
-            const originRemainingIndex = originRemaining.findIndex(a => a.id === apt.id);
-            if (originRemainingIndex >= 0) {
-                count = originRemainingCount;
-                index = originRemainingIndex;
-            }
+        const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(aptDate, draggedDate);
+        if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id) {
+            const originDayAppointments = dayAppointments.filter((a) => a.id !== dragState.appointment!.id);
+            const origin = getOverlapStackPosition(originDayAppointments, apt);
+            count = origin.count;
+            index = origin.index;
         }
 
-        const outerMargin = 4;
-        const gap = 4;
+        const margin = OVERLAP_LAYOUT_MARGIN_PX;
+        const gap = OVERLAP_LAYOUT_GAP_PX;
+        const totalGutter = (count + 1) * margin;
 
         return {
             gridColumn: `${dayIndex + 2} / span 1`,
             gridRow: `${startRowIndex + 1}`,
             height: `${heightInPixels}px`,
-            width: `calc((100% - ${(count + 1) * 4}px) / ${count})`,
-            left: `calc(${outerMargin}px + ${index} * ((100% - ${(count + 1) * 4}px) / ${count} + ${gap}px))`,
+            width: `calc((100% - ${totalGutter}px) / ${count})`,
+            left: `calc(${margin}px + ${index} * ((100% - ${totalGutter}px) / ${count} + ${gap}px))`,
             top: '0px',
             zIndex: 10 + index
         };
-    }, [weekDays, timeSlots, appointmentsByTimeSlot, cardSize, heightScale, dropTarget, dragState, targetAppointments]);
+    }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale, dropTarget, dragState, targetAppointments]);
 
     const isDraggable = !!onAppointmentReschedule;
     const isDraggingThis = useCallback((aptId: string) =>
@@ -390,8 +384,9 @@ export const CalendarWeekView = memo(({
                                     const { blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
 
                                     const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
-                                    const sameTimeAppointments = (appointmentsByTimeSlot[key] || []).filter((a): a is Appointment => a != null && typeof a.id === 'string');
-                                    const hideGhostWhenSiblings = isDraggingThis(apt.id) && sameTimeAppointments.length > 1;
+                                    const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];
+                                    const overlapCount = getOverlapStackPosition(dayAppointmentsForGhost, apt).count;
+                                    const hideGhostWhenSiblings = isDraggingThis(apt.id) && overlapCount > 1;
 
                                     return (
                                         <CalendarAppointmentCard
