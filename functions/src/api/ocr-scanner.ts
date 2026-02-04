@@ -4,14 +4,19 @@ import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 
 const visionClient = new ImageAnnotatorClient();
-const httpOpts = { region: 'southamerica-east1' as const, memory: '1GiB' as const,
+const httpOpts = {
+  region: 'southamerica-east1' as const, memory: '1GiB' as const,
   cpu: 1 as const,
-  maxInstances: 5, cors: true };
+  maxInstances: 5, cors: true
+};
 
 /**
  * Scanner de Laudos: Transforma imagem de exame em texto
  */
-export const scanMedicalReportHttp = onRequest(httpOpts, async (req, res) => {
+/**
+ * Scanner de Laudos: Transforma imagem de exame em texto
+ */
+export const scanMedicalReportHttpHandler = async (req: any, res: any) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -22,7 +27,7 @@ export const scanMedicalReportHttp = onRequest(httpOpts, async (req, res) => {
     const authHeader = req.headers?.authorization || req.headers?.Authorization;
     const token = Array.isArray(authHeader) ? authHeader[0] : authHeader;
     await authorizeRequest(extractBearerToken(token));
-    
+
     const { imageBase64 } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     if (!imageBase64) { res.status(400).json({ error: 'Imagem base64 é obrigatória' }); return; }
 
@@ -38,15 +43,17 @@ export const scanMedicalReportHttp = onRequest(httpOpts, async (req, res) => {
     // 2. Otimização: Você poderia passar esse texto pelo Gemini aqui mesmo 
     // para extrair campos como "Data do Exame", "Conclusão", etc.
 
-    res.json({ 
-      data: { 
+    res.json({
+      data: {
         text: fullText,
-        confidence: result.textAnnotations?.[0]?.confidence || 0 
-      } 
+        confidence: result.textAnnotations?.[0]?.confidence || 0
+      }
     });
 
   } catch (e: any) {
     logger.error('scanMedicalReport error:', e);
     res.status(500).json({ error: 'Falha ao escanear laudo' });
   }
-});
+};
+
+export const scanMedicalReportHttp = onRequest(httpOpts, scanMedicalReportHttpHandler);

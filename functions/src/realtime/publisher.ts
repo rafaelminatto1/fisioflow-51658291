@@ -130,39 +130,39 @@ export async function publishPresence(
 
 import { onRequest } from 'firebase-functions/v2/https';
 
-/**
- * HTTP endpoint para publicar mensagens (útil para testes e webhooks)
- */
-export const realtimePublish = onRequest(
-  async (req, res) => {
-    // Verificar autenticação (opcional - pode usar Firebase Auth)
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Unauthorized' });
+export const realtimePublishHandler = async (req: any, res: any) => {
+  // Verificar autenticação (opcional - pode usar Firebase Auth)
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  try {
+    const { channel, event, data } = req.body || {};
+
+    if (!channel || !event || data === undefined) {
+      res.status(400).json({ error: 'channel, event e data são obrigatórios' });
       return;
     }
 
-    try {
-      const { channel, event, data } = req.body || {};
+    const ably = getAblyRest();
+    const ablyChannel = ably.channels.get(channel);
 
-      if (!channel || !event || data === undefined) {
-        res.status(400).json({ error: 'channel, event e data são obrigatórios' });
-        return;
-      }
+    await ablyChannel.publish(event, data);
 
-      const ably = getAblyRest();
-      const ablyChannel = ably.channels.get(channel);
-
-      await ablyChannel.publish(event, data);
-
-      res.json({ success: true });
-    } catch (error: unknown) {
-      logger.error('Erro ao publicar no Ably:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      res.status(500).json({ error: errorMessage });
-    }
+    res.json({ success: true });
+  } catch (error: unknown) {
+    logger.error('Erro ao publicar no Ably:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ error: errorMessage });
   }
-);
+};
+
+/**
+ * HTTP endpoint para publicar mensagens (útil para testes e webhooks)
+ */
+export const realtimePublish = onRequest(realtimePublishHandler);
 
 /**
  * Configuração de canais Ably para o FisioFlow

@@ -17,7 +17,10 @@ interface ListPaymentsResponse {
   data: Payment[];
 }
 
-export const listPayments = onCall<ListPaymentsRequest, Promise<ListPaymentsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Lista pagamentos de um paciente
+ */
+export const listPaymentsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -55,7 +58,12 @@ export const listPayments = onCall<ListPaymentsRequest, Promise<ListPaymentsResp
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar pagamentos';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listPayments = onCall<ListPaymentsRequest, Promise<ListPaymentsResponse>>(
+  { cors: CORS_ORIGINS },
+  listPaymentsHandler
+);
 
 /**
  * Busca resumo financeiro do paciente
@@ -75,7 +83,10 @@ interface GetPatientFinancialSummaryResponse {
   active_packages: PatientSessionPackage[];
 }
 
-export const getPatientFinancialSummary = onCall<GetPatientFinancialSummaryRequest, Promise<GetPatientFinancialSummaryResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Busca resumo financeiro do paciente
+ */
+export const getPatientFinancialSummaryHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -147,7 +158,12 @@ export const getPatientFinancialSummary = onCall<GetPatientFinancialSummaryReque
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar resumo financeiro';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getPatientFinancialSummary = onCall<GetPatientFinancialSummaryRequest, Promise<GetPatientFinancialSummaryResponse>>(
+  { cors: CORS_ORIGINS },
+  getPatientFinancialSummaryHandler
+);
 
 /**
  * Cria um novo pagamento
@@ -165,7 +181,10 @@ interface CreatePaymentResponse {
   data: Payment;
 }
 
-export const createPayment = onCall<CreatePaymentRequest, Promise<CreatePaymentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria um novo pagamento
+ */
+export const createPaymentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -239,4 +258,9 @@ export const createPayment = onCall<CreatePaymentRequest, Promise<CreatePaymentR
     const errorMessage = error instanceof Error ? error.message : 'Erro ao criar pagamento';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createPayment = onCall<CreatePaymentRequest, Promise<CreatePaymentResponse>>(
+  { cors: CORS_ORIGINS },
+  createPaymentHandler
+);

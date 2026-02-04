@@ -177,550 +177,562 @@ export function traceFunction<T extends (...args: any[]) => Promise<any>>(
 /**
  * Get performance statistics
  */
+export const getPerformanceStatsHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { organizationId, timeRange = '24h' } = data as {
+    organizationId?: string;
+    timeRange?: '1h' | '6h' | '24h' | '7d';
+  };
+
+  try {
+    const startTime = getTimeRangeStart(timeRange);
+
+    let query = db
+      .collection(TRACES_COLLECTION)
+      .where('timestamp', '>=', startTime) as any;
+
+    if (organizationId) {
+      query = query.where('organizationId', '==', organizationId);
+    }
+
+    const snapshot = await query.get();
+
+    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+
+    if (traces.length === 0) {
+      return {
+        success: true,
+        stats: {
+          totalRequests: 0,
+          avgDuration: 0,
+          p95Duration: 0,
+          p99Duration: 0,
+          errorRate: 0,
+          byFunction: {},
+        },
+      };
+    }
+
+    // Calculate statistics
+    const durations = traces.map(t => t.duration).sort((a, b) => a - b);
+    const errors = traces.filter(t => !t.success);
+
+    const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
+    const p95Index = Math.floor(durations.length * 0.95);
+    const p99Index = Math.floor(durations.length * 0.99);
+    const p95Duration = durations[p95Index] || durations[durations.length - 1];
+    const p99Duration = durations[p99Index] || durations[durations.length - 1];
+
+    // Group by function
+    const byFunction: Record<
+      string,
+      {
+        count: number;
+        avgDuration: number;
+        maxDuration: number;
+        minDuration: number;
+        errorRate: number;
+      }
+    > = {};
+
+    traces.forEach(trace => {
+      if (!byFunction[trace.function]) {
+        byFunction[trace.function] = {
+          count: 0,
+          avgDuration: 0,
+          maxDuration: 0,
+          minDuration: Infinity,
+          errorRate: 0,
+        };
+      }
+
+      const stats = byFunction[trace.function];
+      stats.count++;
+      stats.avgDuration += trace.duration;
+      stats.maxDuration = Math.max(stats.maxDuration, trace.duration);
+      stats.minDuration = Math.min(stats.minDuration, trace.duration);
+
+      if (!trace.success) {
+        stats.errorRate++;
+      }
+    });
+
+    // Calculate averages
+    Object.keys(byFunction).forEach(fn => {
+      const stats = byFunction[fn];
+      stats.avgDuration = stats.avgDuration / stats.count;
+      stats.errorRate = (stats.errorRate / stats.count) * 100;
+      stats.minDuration = stats.minDuration === Infinity ? 0 : stats.minDuration;
+    });
+
+    return {
+      success: true,
+      stats: {
+        totalRequests: traces.length,
+        avgDuration: Math.round(avgDuration),
+        p95Duration: Math.round(p95Duration),
+        p99Duration: Math.round(p99Duration),
+        errorRate: (errors.length / traces.length) * 100,
+        byFunction,
+      },
+      timeRange,
+    };
+  } catch (error) {
+    logger.error('Failed to get performance stats', { error });
+    throw new HttpsError(
+      'internal',
+      `Failed to get stats: ${(error as Error).message}`
+    );
+  }
+};
+
 export const getPerformanceStats = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { organizationId, timeRange = '24h' } = data as {
-      organizationId?: string;
-      timeRange?: '1h' | '6h' | '24h' | '7d';
-    };
-
-    try {
-      const startTime = getTimeRangeStart(timeRange);
-
-      let query = db
-        .collection(TRACES_COLLECTION)
-        .where('timestamp', '>=', startTime) as any;
-
-      if (organizationId) {
-        query = query.where('organizationId', '==', organizationId);
-      }
-
-      const snapshot = await query.get();
-
-      const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
-
-      if (traces.length === 0) {
-        return {
-          success: true,
-          stats: {
-            totalRequests: 0,
-            avgDuration: 0,
-            p95Duration: 0,
-            p99Duration: 0,
-            errorRate: 0,
-            byFunction: {},
-          },
-        };
-      }
-
-      // Calculate statistics
-      const durations = traces.map(t => t.duration).sort((a, b) => a - b);
-      const errors = traces.filter(t => !t.success);
-
-      const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
-      const p95Index = Math.floor(durations.length * 0.95);
-      const p99Index = Math.floor(durations.length * 0.99);
-      const p95Duration = durations[p95Index] || durations[durations.length - 1];
-      const p99Duration = durations[p99Index] || durations[durations.length - 1];
-
-      // Group by function
-      const byFunction: Record<
-        string,
-        {
-          count: number;
-          avgDuration: number;
-          maxDuration: number;
-          minDuration: number;
-          errorRate: number;
-        }
-      > = {};
-
-      traces.forEach(trace => {
-        if (!byFunction[trace.function]) {
-          byFunction[trace.function] = {
-            count: 0,
-            avgDuration: 0,
-            maxDuration: 0,
-            minDuration: Infinity,
-            errorRate: 0,
-          };
-        }
-
-        const stats = byFunction[trace.function];
-        stats.count++;
-        stats.avgDuration += trace.duration;
-        stats.maxDuration = Math.max(stats.maxDuration, trace.duration);
-        stats.minDuration = Math.min(stats.minDuration, trace.duration);
-
-        if (!trace.success) {
-          stats.errorRate++;
-        }
-      });
-
-      // Calculate averages
-      Object.keys(byFunction).forEach(fn => {
-        const stats = byFunction[fn];
-        stats.avgDuration = stats.avgDuration / stats.count;
-        stats.errorRate = (stats.errorRate / stats.count) * 100;
-        stats.minDuration = stats.minDuration === Infinity ? 0 : stats.minDuration;
-      });
-
-      return {
-        success: true,
-        stats: {
-          totalRequests: traces.length,
-          avgDuration: Math.round(avgDuration),
-          p95Duration: Math.round(p95Duration),
-          p99Duration: Math.round(p99Duration),
-          errorRate: (errors.length / traces.length) * 100,
-          byFunction,
-        },
-        timeRange,
-      };
-    } catch (error) {
-      logger.error('Failed to get performance stats', { error });
-      throw new HttpsError(
-        'internal',
-        `Failed to get stats: ${(error as Error).message}`
-      );
-    }
-  }
+  getPerformanceStatsHandler
 );
 
 /**
  * Get slow requests
  */
+export const getSlowRequestsHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { organizationId, limit = 20, thresholdMs = 3000 } = data as {
+    organizationId?: string;
+    limit?: number;
+    thresholdMs?: number;
+  };
+
+  try {
+    const startTime = new Date();
+    startTime.setHours(startTime.getHours() - 24);
+
+    let query = db
+      .collection(TRACES_COLLECTION)
+      .where('timestamp', '>=', startTime)
+      .where('duration', '>=', thresholdMs)
+      .orderBy('duration', 'desc')
+      .limit(limit) as any;
+
+    if (organizationId) {
+      query = query.where('organizationId', '==', organizationId);
+    }
+
+    const snapshot = await query.get();
+
+    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+
+    return { success: true, traces, count: traces.length, thresholdMs };
+  } catch (error) {
+    logger.error('Failed to get slow requests', { error });
+    throw new HttpsError(
+      'internal',
+      `Failed to get slow requests: ${(error as Error).message}`
+    );
+  }
+};
+
 export const getSlowRequests = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { organizationId, limit = 20, thresholdMs = 3000 } = data as {
-      organizationId?: string;
-      limit?: number;
-      thresholdMs?: number;
-    };
-
-    try {
-      const startTime = new Date();
-      startTime.setHours(startTime.getHours() - 24);
-
-      let query = db
-        .collection(TRACES_COLLECTION)
-        .where('timestamp', '>=', startTime)
-        .where('duration', '>=', thresholdMs)
-        .orderBy('duration', 'desc')
-        .limit(limit) as any;
-
-      if (organizationId) {
-        query = query.where('organizationId', '==', organizationId);
-      }
-
-      const snapshot = await query.get();
-
-      const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
-
-      return { success: true, traces, count: traces.length, thresholdMs };
-    } catch (error) {
-      logger.error('Failed to get slow requests', { error });
-      throw new HttpsError(
-        'internal',
-        `Failed to get slow requests: ${(error as Error).message}`
-      );
-    }
-  }
+  getSlowRequestsHandler
 );
 
 /**
  * Get trace timeline for a specific trace ID
  */
+export const getTraceTimelineHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { traceId } = data as { traceId: string };
+
+  if (!traceId) {
+    throw new HttpsError('invalid-argument', 'traceId is required');
+  }
+
+  try {
+    const snapshot = await db
+      .collection(TRACES_COLLECTION)
+      .where('traceId', '==', traceId)
+      .orderBy('timestamp', 'asc')
+      .get();
+
+    if (snapshot.empty) {
+      return { success: true, timeline: [], traceId };
+    }
+
+    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+
+    // Build timeline tree
+    const rootSpans: TraceEntry[] = [];
+    const spanMap = new Map<string, TraceEntry>();
+
+    traces.forEach(trace => {
+      spanMap.set(trace.spanId, trace);
+    });
+
+    traces.forEach(trace => {
+      if (!trace.parentSpanId) {
+        rootSpans.push(trace);
+      } else {
+        const parent = spanMap.get(trace.parentSpanId);
+        if (parent) {
+          if (!parent.metadata) {
+            parent.metadata = {};
+          }
+          if (!parent.metadata.children) {
+            parent.metadata.children = [];
+          }
+          parent.metadata.children.push(trace);
+        }
+      }
+    });
+
+    // Calculate total duration
+    const totalDuration = Math.max(
+      ...rootSpans.map(t => t.duration + (t.metadata?.children?.length || 0))
+    );
+
+    return {
+      success: true,
+      timeline: rootSpans,
+      traceId,
+      totalDuration,
+      spanCount: traces.length,
+    };
+  } catch (error) {
+    logger.error('Failed to get trace timeline', { error });
+    throw new HttpsError(
+      'internal',
+      `Failed to get timeline: ${(error as Error).message}`
+    );
+  }
+};
+
 export const getTraceTimeline = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { traceId } = data as { traceId: string };
-
-    if (!traceId) {
-      throw new HttpsError('invalid-argument', 'traceId is required');
-    }
-
-    try {
-      const snapshot = await db
-        .collection(TRACES_COLLECTION)
-        .where('traceId', '==', traceId)
-        .orderBy('timestamp', 'asc')
-        .get();
-
-      if (snapshot.empty) {
-        return { success: true, timeline: [], traceId };
-      }
-
-      const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
-
-      // Build timeline tree
-      const rootSpans: TraceEntry[] = [];
-      const spanMap = new Map<string, TraceEntry>();
-
-      traces.forEach(trace => {
-        spanMap.set(trace.spanId, trace);
-      });
-
-      traces.forEach(trace => {
-        if (!trace.parentSpanId) {
-          rootSpans.push(trace);
-        } else {
-          const parent = spanMap.get(trace.parentSpanId);
-          if (parent) {
-            if (!parent.metadata) {
-              parent.metadata = {};
-            }
-            if (!parent.metadata.children) {
-              parent.metadata.children = [];
-            }
-            parent.metadata.children.push(trace);
-          }
-        }
-      });
-
-      // Calculate total duration
-      const totalDuration = Math.max(
-        ...rootSpans.map(t => t.duration + (t.metadata?.children?.length || 0))
-      );
-
-      return {
-        success: true,
-        timeline: rootSpans,
-        traceId,
-        totalDuration,
-        spanCount: traces.length,
-      };
-    } catch (error) {
-      logger.error('Failed to get trace timeline', { error });
-      throw new HttpsError(
-        'internal',
-        `Failed to get timeline: ${(error as Error).message}`
-      );
-    }
-  }
+  getTraceTimelineHandler
 );
 
 /**
  * Get performance trends over time
  */
+export const getPerformanceTrendsHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { organizationId, period = '24h', functionName } = data as {
+    organizationId?: string;
+    period?: '1h' | '6h' | '24h' | '7d';
+    functionName?: string;
+  };
+
+  try {
+    const startTime = getTimeRangeStart(period);
+    const buckets = getTimeBuckets(period);
+
+    let query = db
+      .collection(TRACES_COLLECTION)
+      .where('timestamp', '>=', startTime) as any;
+
+    if (organizationId) {
+      query = query.where('organizationId', '==', organizationId);
+    }
+
+    if (functionName) {
+      query = query.where('function', '==', functionName);
+    }
+
+    const snapshot = await query.get();
+    const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
+
+    // Aggregate by time bucket
+    const trends = buckets.map(bucket => {
+      const bucketTraces = traces.filter(t =>
+        t.timestamp >= bucket.start && t.timestamp < bucket.end
+      );
+
+      const durations = bucketTraces.map(t => t.duration);
+      const avgDuration = durations.length > 0
+        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        : 0;
+      const errors = bucketTraces.filter(t => !t.success).length;
+
+      return {
+        label: bucket.label,
+        timestamp: bucket.start.toISOString(),
+        requestCount: bucketTraces.length,
+        avgDuration: Math.round(avgDuration),
+        errorRate: bucketTraces.length > 0
+          ? (errors / bucketTraces.length) * 100
+          : 0,
+        p95Duration: durations.length > 0
+          ? durations[Math.floor(durations.length * 0.95)] || 0
+          : 0,
+      };
+    });
+
+    return { success: true, trends, period };
+  } catch (error) {
+    logger.error('Failed to get performance trends', { error });
+    throw new HttpsError(
+      'internal',
+      `Failed to get trends: ${(error as Error).message}`
+    );
+  }
+};
+
 export const getPerformanceTrends = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { organizationId, period = '24h', functionName } = data as {
-      organizationId?: string;
-      period?: '1h' | '6h' | '24h' | '7d';
-      functionName?: string;
-    };
-
-    try {
-      const startTime = getTimeRangeStart(period);
-      const buckets = getTimeBuckets(period);
-
-      let query = db
-        .collection(TRACES_COLLECTION)
-        .where('timestamp', '>=', startTime) as any;
-
-      if (organizationId) {
-        query = query.where('organizationId', '==', organizationId);
-      }
-
-      if (functionName) {
-        query = query.where('function', '==', functionName);
-      }
-
-      const snapshot = await query.get();
-      const traces = snapshot.docs.map(doc => doc.data() as TraceEntry);
-
-      // Aggregate by time bucket
-      const trends = buckets.map(bucket => {
-        const bucketTraces = traces.filter(t =>
-          t.timestamp >= bucket.start && t.timestamp < bucket.end
-        );
-
-        const durations = bucketTraces.map(t => t.duration);
-        const avgDuration = durations.length > 0
-          ? durations.reduce((a, b) => a + b, 0) / durations.length
-          : 0;
-        const errors = bucketTraces.filter(t => !t.success).length;
-
-        return {
-          label: bucket.label,
-          timestamp: bucket.start.toISOString(),
-          requestCount: bucketTraces.length,
-          avgDuration: Math.round(avgDuration),
-          errorRate: bucketTraces.length > 0
-            ? (errors / bucketTraces.length) * 100
-            : 0,
-          p95Duration: durations.length > 0
-            ? durations[Math.floor(durations.length * 0.95)] || 0
-            : 0,
-        };
-      });
-
-      return { success: true, trends, period };
-    } catch (error) {
-      logger.error('Failed to get performance trends', { error });
-      throw new HttpsError(
-        'internal',
-        `Failed to get trends: ${(error as Error).message}`
-      );
-    }
-  }
+  getPerformanceTrendsHandler
 );
 
 /**
  * HTTP endpoint for real-time performance stream (SSE)
  */
+export const performanceStreamHandler = async (req: any, res: any) => {
+  // CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  // Set headers for SSE
+  res.set('Content-Type', 'text/event-stream');
+  res.set('Cache-Control', 'no-cache');
+  res.set('Connection', 'keep-alive');
+  res.set('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+  const { organizationId, slowThreshold = '3000' } = req.query;
+
+  // Track if response is still writable
+  let isAlive = true;
+  let keepAlive: NodeJS.Timeout | null = null;
+  let unsubscribe: (() => void) | null = null;
+
+  // Cleanup function
+  const cleanup = () => {
+    if (!isAlive) return;
+    isAlive = false;
+
+    if (keepAlive) {
+      clearInterval(keepAlive);
+      keepAlive = null;
+    }
+
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+
+    logger.debug('Performance stream cleaned up');
+  };
+
+  // Handle connection errors
+  req.on('error', (error) => {
+    logger.error('Performance stream request error', { error });
+    cleanup();
+  });
+
+  res.on('error', (error) => {
+    logger.error('Performance stream response error', { error });
+    cleanup();
+  });
+
+  res.on('close', cleanup);
+  req.on('close', cleanup);
+
+  // Send initial keep-alive
+  try {
+    res.write(': keep-alive\n\n');
+  } catch (error) {
+    logger.error('Failed to write initial keep-alive', { error });
+    cleanup();
+    return;
+  }
+
+  // Watch for new traces
+  const startTime = new Date();
+  startTime.setSeconds(startTime.getSeconds() - 10); // Last 10 seconds
+
+  let query = db.collection(TRACES_COLLECTION)
+    .where('timestamp', '>=', startTime)
+    .orderBy('timestamp', 'desc')
+    .limit(50) as any;
+
+  if (organizationId && typeof organizationId === 'string') {
+    query = query.where('organizationId', '==', organizationId);
+  }
+
+  // Set up Firestore snapshot listener
+  unsubscribe = query.onSnapshot(
+    (snapshot) => {
+      if (!isAlive) {
+        if (unsubscribe) unsubscribe();
+        return;
+      }
+
+      try {
+        const traces = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Highlight slow requests
+          const isSlow = (data.duration || 0) >= parseInt(slowThreshold as string);
+          return { ...data, isSlow };
+        });
+
+        res.write(`data: ${JSON.stringify({ traces, count: traces.length })}\n\n`);
+      } catch (error) {
+        logger.error('Failed to write performance data', { error });
+        cleanup();
+      }
+    },
+    (error) => {
+      logger.error('Performance stream error', { error });
+      if (isAlive) {
+        try {
+          res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`);
+        } catch {
+          // Ignore write errors if connection is already closed
+        }
+      }
+      cleanup();
+    }
+  );
+
+  // Send keep-alive every 30 seconds
+  keepAlive = setInterval(() => {
+    if (!isAlive) {
+      if (keepAlive) clearInterval(keepAlive);
+      return;
+    }
+
+    try {
+      res.write(': keep-alive\n\n');
+    } catch (error) {
+      logger.debug('Keep-alive failed, connection closed');
+      cleanup();
+    }
+  }, 30000);
+
+  // Set maximum connection timeout of 5 minutes
+  setTimeout(() => {
+    if (isAlive) {
+      logger.debug('Performance stream timeout reached');
+      try {
+        res.write('data: {"type":"timeout","message":"Stream timeout"}\n\n');
+      } catch {
+        // Ignore
+      }
+      cleanup();
+    }
+  }, 5 * 60 * 1000);
+};
+
 export const performanceStream = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 10,
   },
-  async (req, res) => {
-    // CORS
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
-    if (req.method !== 'GET') {
-      res.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    // Set headers for SSE
-    res.set('Content-Type', 'text/event-stream');
-    res.set('Cache-Control', 'no-cache');
-    res.set('Connection', 'keep-alive');
-    res.set('X-Accel-Buffering', 'no'); // Disable nginx buffering
-
-    const { organizationId, slowThreshold = '3000' } = req.query;
-
-    // Track if response is still writable
-    let isAlive = true;
-    let keepAlive: NodeJS.Timeout | null = null;
-    let unsubscribe: (() => void) | null = null;
-
-    // Cleanup function
-    const cleanup = () => {
-      if (!isAlive) return;
-      isAlive = false;
-
-      if (keepAlive) {
-        clearInterval(keepAlive);
-        keepAlive = null;
-      }
-
-      if (unsubscribe) {
-        unsubscribe();
-        unsubscribe = null;
-      }
-
-      logger.debug('Performance stream cleaned up');
-    };
-
-    // Handle connection errors
-    req.on('error', (error) => {
-      logger.error('Performance stream request error', { error });
-      cleanup();
-    });
-
-    res.on('error', (error) => {
-      logger.error('Performance stream response error', { error });
-      cleanup();
-    });
-
-    res.on('close', cleanup);
-    req.on('close', cleanup);
-
-    // Send initial keep-alive
-    try {
-      res.write(': keep-alive\n\n');
-    } catch (error) {
-      logger.error('Failed to write initial keep-alive', { error });
-      cleanup();
-      return;
-    }
-
-    // Watch for new traces
-    const startTime = new Date();
-    startTime.setSeconds(startTime.getSeconds() - 10); // Last 10 seconds
-
-    let query = db.collection(TRACES_COLLECTION)
-      .where('timestamp', '>=', startTime)
-      .orderBy('timestamp', 'desc')
-      .limit(50) as any;
-
-    if (organizationId && typeof organizationId === 'string') {
-      query = query.where('organizationId', '==', organizationId);
-    }
-
-    // Set up Firestore snapshot listener
-    unsubscribe = query.onSnapshot(
-      (snapshot) => {
-        if (!isAlive) {
-          if (unsubscribe) unsubscribe();
-          return;
-        }
-
-        try {
-          const traces = snapshot.docs.map(doc => {
-            const data = doc.data();
-            // Highlight slow requests
-            const isSlow = (data.duration || 0) >= parseInt(slowThreshold as string);
-            return { ...data, isSlow };
-          });
-
-          res.write(`data: ${JSON.stringify({ traces, count: traces.length })}\n\n`);
-        } catch (error) {
-          logger.error('Failed to write performance data', { error });
-          cleanup();
-        }
-      },
-      (error) => {
-        logger.error('Performance stream error', { error });
-        if (isAlive) {
-          try {
-            res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`);
-          } catch {
-            // Ignore write errors if connection is already closed
-          }
-        }
-        cleanup();
-      }
-    );
-
-    // Send keep-alive every 30 seconds
-    keepAlive = setInterval(() => {
-      if (!isAlive) {
-        if (keepAlive) clearInterval(keepAlive);
-        return;
-      }
-
-      try {
-        res.write(': keep-alive\n\n');
-      } catch (error) {
-        logger.debug('Keep-alive failed, connection closed');
-        cleanup();
-      }
-    }, 30000);
-
-    // Set maximum connection timeout of 5 minutes
-    setTimeout(() => {
-      if (isAlive) {
-        logger.debug('Performance stream timeout reached');
-        try {
-          res.write('data: {"type":"timeout","message":"Stream timeout"}\n\n');
-        } catch {
-          // Ignore
-        }
-        cleanup();
-      }
-    }, 5 * 60 * 1000);
-  }
+  performanceStreamHandler
 );
 
 /**
  * Cleanup old traces
  */
+export const cleanupOldTracesHandler = async (request: any) => {
+  const { data } = request;
+  const userId = request.auth?.uid;
+
+  if (!userId) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { olderThanDays = 7 } = data as { olderThanDays?: number };
+
+  try {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+
+    const snapshot = await db
+      .collection(TRACES_COLLECTION)
+      .where('timestamp', '<', cutoffDate)
+      .limit(1000)
+      .get();
+
+    const batch = db.batch();
+    let deletedCount = 0;
+
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+      deletedCount++;
+    });
+
+    await batch.commit();
+
+    logger.info('Old traces cleaned up', { userId, deletedCount, olderThanDays });
+
+    return { success: true, deletedCount };
+  } catch (error) {
+    logger.error('Failed to cleanup old traces', { error });
+    throw new HttpsError(
+      'internal',
+      `Failed to cleanup: ${(error as Error).message}`
+    );
+  }
+};
+
 export const cleanupOldTraces = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 1,
   },
-  async (request) => {
-    const { data } = request;
-    const userId = request.auth?.uid;
-
-    if (!userId) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
-    const { olderThanDays = 7 } = data as { olderThanDays?: number };
-
-    try {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-
-      const snapshot = await db
-        .collection(TRACES_COLLECTION)
-        .where('timestamp', '<', cutoffDate)
-        .limit(1000)
-        .get();
-
-      const batch = db.batch();
-      let deletedCount = 0;
-
-      snapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-        deletedCount++;
-      });
-
-      await batch.commit();
-
-      logger.info('Old traces cleaned up', { userId, deletedCount, olderThanDays });
-
-      return { success: true, deletedCount };
-    } catch (error) {
-      logger.error('Failed to cleanup old traces', { error });
-      throw new HttpsError(
-        'internal',
-        `Failed to cleanup: ${(error as Error).message}`
-      );
-    }
-  }
+  cleanupOldTracesHandler
 );
 
 // Helper functions
