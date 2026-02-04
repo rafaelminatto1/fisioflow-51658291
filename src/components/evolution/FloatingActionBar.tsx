@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
     Save,
@@ -13,6 +12,9 @@ import {
     Pause,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const SCROLL_THRESHOLD_PX = 200;
+const MOBILE_BREAKPOINT_PX = 768;
 
 interface FloatingActionBarProps {
     onSave: () => void;
@@ -43,6 +45,27 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [isPaused, setIsPaused] = useState(false);
     const [pausedDuration, setPausedDuration] = useState(0);
     const [pauseStartTime, setPauseStartTime] = useState<Date | null>(null);
+    const [showFab, setShowFab] = useState(true);
+
+    // Desktop: ocultar FAB quando header visível (scroll no topo). Mobile: sempre visível.
+    useEffect(() => {
+        const updateVisibility = () => {
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT_PX;
+            if (isMobile) {
+                setShowFab(true);
+            } else {
+                const scrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+                setShowFab(scrollY > SCROLL_THRESHOLD_PX);
+            }
+        };
+        updateVisibility();
+        window.addEventListener('scroll', updateVisibility, { passive: true });
+        window.addEventListener('resize', updateVisibility);
+        return () => {
+            window.removeEventListener('scroll', updateVisibility);
+            window.removeEventListener('resize', updateVisibility);
+        };
+    }, []);
 
     // Format elapsed time
     const formatTime = useCallback((ms: number): string => {
@@ -89,6 +112,8 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
         setIsPaused(!isPaused);
     };
 
+    if (!showFab) return null;
+
     return (
         <TooltipProvider>
             <div
@@ -97,6 +122,7 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                     'bg-background/80 backdrop-blur-lg border-t border-border/50',
                     'px-4 py-3 shadow-lg',
                     'safe-area-inset-bottom',
+                    'animate-in slide-in-from-bottom-2 duration-200',
                     className
                 )}
             >

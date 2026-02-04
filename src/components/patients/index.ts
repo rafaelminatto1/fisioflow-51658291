@@ -7,6 +7,7 @@ export { PatientActions } from './PatientActions';
 export { PatientCard } from './PatientCard';
 export { PatientAdvancedFilters } from './PatientAdvancedFilters';
 export { PatientAnalytics } from './PatientAnalytics';
+export { PatientPageInsights } from './PatientPageInsights';
 export { PatientsPageHeader } from './PatientsPageHeader';
 
 // UI Components

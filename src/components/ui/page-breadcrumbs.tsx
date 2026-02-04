@@ -32,6 +32,7 @@ const routeLabels: Record<string, string> = {
   'prontuario': 'Prontuário',
   'novo': 'Novo',
   'editar': 'Editar',
+  'patient-evolution': 'Evolução do Paciente',
 };
 
 interface PageBreadcrumbsProps {
