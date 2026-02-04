@@ -105,9 +105,8 @@ async function getOrganizationId(userId: string): Promise<string> {
 export const listAppointmentsHttp = onRequest(
   {
     region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 100,
-    cors: true,
+    maxInstances: 10,
+    cors: CORS_ORIGINS,
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -282,8 +281,8 @@ export const createAppointmentHttp = onRequest(
         const realtime = await import('../realtime/publisher');
         // Usar RTDB em paralelo com Ably (migração gradual)
         await Promise.allSettled([
-           realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment as any, old: null }),
-           rtdb.refreshAppointments(organizationId)
+          realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment as any, old: null }),
+          rtdb.refreshAppointments(organizationId)
         ]);
       } catch (err) { logger.error('Erro Realtime:', err); }
       res.status(201).json({ data: appointment });
@@ -343,8 +342,8 @@ export const updateAppointmentHttp = onRequest(
           const raw = updates[key];
           values.push(
             (dbField === 'session_type' && typeof raw === 'string') ? normalizeSessionType(raw) :
-            (dbField === 'status' && typeof raw === 'string') ? normalizeAppointmentStatus(raw) :
-            raw
+              (dbField === 'status' && typeof raw === 'string') ? normalizeAppointmentStatus(raw) :
+                raw
           );
         }
       }
@@ -470,70 +469,43 @@ interface ListAppointmentsResponse {
 /**
  * Lista agendamentos com filtros
  */
-export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppointmentsResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+export const listAppointmentsHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-
-  const {
-    dateFrom,
-    dateTo,
-    therapistId,
-    status,
-    patientId,
-    limit = 100,
-    offset = 0,
-  } = request.data;
+  const { patientId, therapistId, startDate, endDate, limit = 50, offset = 0 } = request.data;
 
   const pool = getPool();
 
   try {
     let query = `
-      SELECT
-        a.*,
-        p.name as patient_name,
-        p.phone as patient_phone,
-        prof.full_name as therapist_name
+      SELECT a.*, p.name as patient_name, prof.full_name as therapist_name
       FROM appointments a
       LEFT JOIN patients p ON a.patient_id = p.id
       LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
       WHERE a.organization_id = $1
     `;
     const params: (string | number)[] = [auth.organizationId];
-    let paramCount = 1;
-
-    if (dateFrom) {
-      paramCount++;
-      query += ` AND a.date >= $${paramCount}`;
-      params.push(dateFrom);
-    }
-
-    if (dateTo) {
-      paramCount++;
-      query += ` AND a.date <= $${paramCount}`;
-      params.push(dateTo);
-    }
-
-    if (therapistId) {
-      paramCount++;
-      query += ` AND a.therapist_id = $${paramCount}`;
-      params.push(therapistId);
-    }
-
-    if (status) {
-      paramCount++;
-      query += ` AND a.status = $${paramCount}`;
-      params.push(status);
-    }
 
     if (patientId) {
-      paramCount++;
-      query += ` AND a.patient_id = $${paramCount}`;
+      query += ` AND a.patient_id = $${params.length + 1}`;
       params.push(patientId);
     }
+    if (therapistId) {
+      query += ` AND a.therapist_id = $${params.length + 1}`;
+      params.push(therapistId);
+    }
+    if (startDate) {
+      query += ` AND a.date >= $${params.length + 1}`;
+      params.push(startDate);
+    }
+    if (endDate) {
+      query += ` AND a.date <= $${params.length + 1}`;
+      params.push(endDate);
+    }
 
-    query += ` ORDER BY a.date, a.start_time LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    query += ` ORDER BY a.date DESC, a.start_time DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
@@ -545,10 +517,15 @@ export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppo
     const errorMessage = error instanceof Error ? error.message : 'Erro ao listar agendamentos';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppointmentsResponse>>(
+  { cors: CORS_ORIGINS },
+  listAppointmentsHandler
+);
 
 interface GetAppointmentRequest {
-  appointmentId: string;
+  id: string;
 }
 
 interface GetAppointmentResponse {
@@ -558,31 +535,27 @@ interface GetAppointmentResponse {
 /**
  * Busca um agendamento por ID
  */
-export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+export const getAppointmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { appointmentId } = request.data;
+  const { id } = request.data;
 
-  if (!appointmentId) {
-    throw new HttpsError('invalid-argument', 'appointmentId é obrigatório');
+  if (!id) {
+    throw new HttpsError('invalid-argument', 'id é obrigatório');
   }
 
   const pool = getPool();
 
   try {
     const result = await pool.query(
-      `SELECT
-        a.*,
-        p.name as patient_name,
-        p.phone as patient_phone,
-        prof.full_name as therapist_name
-      FROM appointments a
-      LEFT JOIN patients p ON a.patient_id = p.id
-      LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
-      WHERE a.id = $1 AND a.organization_id = $2`,
-      [appointmentId, auth.organizationId]
+      `SELECT a.*, p.name as patient_name, prof.full_name as therapist_name
+       FROM appointments a
+       LEFT JOIN patients p ON a.patient_id = p.id
+       LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
+       WHERE a.id = $1 AND a.organization_id = $2`,
+      [id, auth.organizationId]
     );
 
     if (result.rows.length === 0) {
@@ -596,7 +569,12 @@ export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointme
     const errorMessage = error instanceof Error ? error.message : 'Erro ao buscar agendamento';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointmentResponse>>(
+  { cors: CORS_ORIGINS },
+  getAppointmentHandler
+);
 
 interface CheckTimeConflictRequest {
   date: string;
@@ -700,42 +678,53 @@ async function checkTimeConflictHelper(pool: any, params: CheckTimeConflictReque
 }
 
 /**
- * Verifica conflito de horário (Exposed Function)
+ * Verifica conflitos de horário
  */
-export const checkTimeConflict = onCall({ cors: CORS_ORIGINS }, async (request) => {
+export const checkTimeConflictHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
   const auth = await authorizeRequest(request.auth.token);
-  const { therapistId, date, startTime, endTime, excludeAppointmentId } = request.data || {};
+  const { date, startTime, duration, therapistId, appointmentId } = request.data;
 
-  if (!therapistId || !date || !startTime || !endTime) {
-    throw new HttpsError('invalid-argument', 'terapeuta, data, horário início e fim são obrigatórios');
+  if (!date || !startTime || !duration || !therapistId) {
+    throw new HttpsError('invalid-argument', 'date, startTime, duration e therapistId são obrigatórios');
   }
 
   const pool = getPool();
 
   try {
-    const hasConflict = await checkTimeConflictHelper(pool, {
-      date,
-      startTime,
-      endTime,
-      therapistId,
-      excludeAppointmentId,
-      organizationId: auth.organizationId,
-    });
+    let query = `
+      SELECT id 
+      FROM appointments 
+      WHERE organization_id = $1 
+        AND therapist_id = $2 
+        AND date = $3 
+        AND status != 'cancelado'
+        AND (
+          (start_time <= $4 AND (EXTRACT(EPOCH FROM start_time) + duration * 60) > EXTRACT(EPOCH FROM $4::time))
+          OR ($4 <= start_time AND (EXTRACT(EPOCH FROM $4::time) + $5 * 60) > EXTRACT(EPOCH FROM start_time))
+        )
+    `;
+    const params: any[] = [auth.organizationId, therapistId, date, startTime, duration];
 
-    return {
-      hasConflict,
-      conflictingAppointments: [], // Deprecated detailed list for now to simplify
-    };
+    if (appointmentId) {
+      query += ` AND id != $6`;
+      params.push(appointmentId);
+    }
+
+    const result = await pool.query(query, params);
+
+    return { hasConflict: result.rows.length > 0, conflicts: result.rows };
   } catch (error: unknown) {
     logger.error('Error in checkTimeConflict:', error);
     if (error instanceof HttpsError) throw error;
     const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar conflito';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const checkTimeConflict = onCall({ cors: CORS_ORIGINS }, checkTimeConflictHandler);
 
 interface CreateAppointmentRequest {
   patientId: string;
@@ -756,7 +745,10 @@ interface CreateAppointmentResponse {
 /**
  * Cria um novo agendamento
  */
-export const createAppointment = onCall<CreateAppointmentRequest, Promise<CreateAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cria um novo agendamento
+ */
+export const createAppointmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -846,7 +838,12 @@ export const createAppointment = onCall<CreateAppointmentRequest, Promise<Create
     logger.error('createAppointment internal error details', { errorMessage, errDetails });
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const createAppointment = onCall<CreateAppointmentRequest, Promise<CreateAppointmentResponse>>(
+  { cors: CORS_ORIGINS },
+  createAppointmentHandler
+);
 
 interface UpdateAppointmentRequest {
   appointmentId: string;
@@ -867,7 +864,10 @@ interface UpdateAppointmentResponse {
 /**
  * Atualiza um agendamento
  */
-export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<UpdateAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Atualiza um agendamento
+ */
+export const updateAppointmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -983,7 +983,12 @@ export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<Update
     const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<UpdateAppointmentResponse>>(
+  { cors: CORS_ORIGINS },
+  updateAppointmentHandler
+);
 
 interface CancelAppointmentRequest {
   appointmentId: string;
@@ -997,7 +1002,10 @@ interface CancelAppointmentResponse {
 /**
  * Cancela um agendamento
  */
-export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<CancelAppointmentResponse>>({ cors: CORS_ORIGINS }, async (request) => {
+/**
+ * Cancela um agendamento
+ */
+export const cancelAppointmentHandler = async (request: any) => {
   if (!request.auth || !request.auth.token) {
     throw new HttpsError('unauthenticated', 'Requisita autenticação.');
   }
@@ -1057,4 +1065,9 @@ export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<Cancel
     const errorMessage = error instanceof Error ? error.message : 'Erro ao cancelar agendamento';
     throw new HttpsError('internal', errorMessage);
   }
-});
+};
+
+export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<CancelAppointmentResponse>>(
+  { cors: CORS_ORIGINS },
+  cancelAppointmentHandler
+);
