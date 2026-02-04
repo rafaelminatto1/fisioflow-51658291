@@ -12,21 +12,12 @@ import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
 
-// Define secrets for Secret Manager
-const STRIPE_SECRET_KEY_SECRET = defineSecret('STRIPE_SECRET_KEY');
-const STRIPE_WEBHOOK_SECRET_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
-
-// Get Stripe credentials from Secret Manager with fallback
-const getStripeSecretKey = () => STRIPE_SECRET_KEY_SECRET.value() || process.env.STRIPE_SECRET_KEY!;
-const getStripeWebhookSecret = () => STRIPE_WEBHOOK_SECRET_SECRET.value() || process.env.STRIPE_WEBHOOK_SECRET!;
-
-// Initialize Stripe with Secret Manager credentials
-const stripe = new Stripe(getStripeSecretKey(), {
-  apiVersion: '2025-02-24.acacia' as any,
-  typescript: true,
-});
-
-const webhookSecret = getStripeWebhookSecret();
+// Firebase Functions v2 CORS - explicitly list allowed origins
+const CORS_ORIGINS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /moocafisio\.com\.br$/,
+  /fisioflow\.web\.app$/,
+];
 
 /**
  * HTTP Endpoint para Webhooks do Stripe
@@ -35,11 +26,20 @@ const webhookSecret = getStripeWebhookSecret();
  */
 export const stripeWebhookHttp = onRequest({
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 10,
-  cors: true,
+  cors: CORS_ORIGINS,
   secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
 }, async (request, response) => {
+  // Access secrets at runtime, not at module level
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY!;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2025-02-24.acacia' as any,
+    typescript: true,
+  });
+
   const sig = request.headers['stripe-signature'] as string;
   const body = request.rawBody.toString('utf8');
 
@@ -58,7 +58,7 @@ export const stripeWebhookHttp = onRequest({
   try {
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, stripe);
         break;
 
       case 'payment_intent.succeeded':
@@ -96,7 +96,7 @@ export const stripeWebhookHttp = onRequest({
 // EVENT HANDLERS
 // ============================================================================================
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session, stripe: Stripe) {
   const metadata = session.metadata || {};
   const { userId, voucherType, patientId, patientName, patientEmail, patientPhone } = metadata;
 
