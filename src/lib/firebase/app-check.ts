@@ -34,7 +34,7 @@ export const getAppCheckToken = async (): Promise<string | undefined> => {
     const appCheck = await import('firebase/app-check').then(m => m.getAppCheck(getApp()));
     return await getToken();
   } catch (error) {
-    logger.warn('Could not get App Check token', error, 'app-check');
+    logger.debug('Could not get App Check token', error, 'app-check');
     return undefined;
   }
 };

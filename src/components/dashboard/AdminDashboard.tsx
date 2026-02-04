@@ -430,4 +430,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
   );
 };
 
-export default AdminDashboard;
+// Custom comparison for AdminDashboard memoization
+function adminDashboardAreEqual(prev: AdminDashboardProps, next: AdminDashboardProps) {
+  // Only re-render if period changes
+  return prev.period === next.period;
+}
+
+export default memo(AdminDashboard, adminDashboardAreEqual);
+AdminDashboard.displayName = 'AdminDashboard';
