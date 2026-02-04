@@ -14,8 +14,7 @@ import {
     type AppointmentDBStandard
 } from '@/lib/constants/appointment-queries';
 import { appointmentsApi, patientsApi } from '@/integrations/firebase/functions';
-
-
+import { fisioLogger } from '@/lib/errors/logger';
 
 export const useAppointmentData = (appointmentId: string | undefined) => {
     // Buscar dados do agendamento do PostgreSQL via Firebase Functions
@@ -26,13 +25,13 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidateAppointment(APPOINTMENT_SELECT.standard);
 
-            console.log('[useAppointmentData] Fetching appointment from PostgreSQL via API:', appointmentId);
+            fisioLogger.debug('Fetching appointment from PostgreSQL via API', { appointmentId }, 'useAppointmentData');
             const data = await appointmentsApi.get(appointmentId);
-            console.log('[useAppointmentData] Appointment loaded:', {
+            fisioLogger.debug('Appointment loaded', {
                 id: data.id,
                 patient_id: data.patient_id,
                 hasPatientId: !!data.patient_id
-            });
+            }, 'useAppointmentData');
 
             return {
                 id: data.id,
@@ -49,11 +48,11 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
     // Log quando patientId muda
     if (appointment && import.meta.env.DEV) {
-        console.log('[useAppointmentData] Current state:', {
+        fisioLogger.debug('Current state', {
             appointmentId: appointment.id,
             patientId: patientId,
             hasPatientId: !!patientId
-        });
+        }, 'useAppointmentData');
     }
 
     // Buscar informações do paciente do PostgreSQL via Firebase Functions
@@ -61,7 +60,7 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         queryKey: ['patient', patientId],
         queryFn: async () => {
             if (!patientId) {
-                console.warn('[useAppointmentData] No patientId provided, skipping patient query');
+                fisioLogger.debug('No patientId provided, skipping patient query', undefined, 'useAppointmentData');
                 throw new Error('ID do paciente não fornecido');
             }
 
@@ -70,15 +69,15 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
             const response = await patientsApi.get(patientId);
 
             if (!response.data) {
-                console.error('[useAppointmentData] Patient not found in database:', patientId);
+                fisioLogger.warn('Patient not found in database', { patientId }, 'useAppointmentData');
                 return null;
             }
 
             const data = response.data;
-            console.log('[useAppointmentData] Patient loaded:', {
+            fisioLogger.debug('Patient loaded', {
                 id: data.id,
                 name: data.name || data.full_name
-            });
+            }, 'useAppointmentData');
 
             return {
                 id: data.id,

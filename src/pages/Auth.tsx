@@ -3,10 +3,9 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, query, where, getDocs } from '@/integrations/firebase/app';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth, AuthError } from '@/contexts/AuthContext';
-import { db } from '@/integrations/firebase/app';
+import { callFunction } from '@/integrations/firebase/functions';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -96,19 +95,16 @@ export default function Auth() {
   }, [user, initialized, navigate]);
 
   useEffect(() => {
-    // Verificar convite se token presente
     const checkInvitation = async () => {
       if (!inviteToken) return;
 
       try {
-        const q = query(
-          collection(db, 'user_invitations'),
-          where('token', '==', inviteToken),
-          where('used_at', '==', null)
+        const result = await callFunction<{ token: string }, { valid: boolean; email?: string; role?: string }>(
+          'getInvitationByToken',
+          { token: inviteToken }
         );
-        const snapshot = await getDocs(q);
 
-        if (snapshot.empty) {
+        if (!result.valid || !result.email) {
           toast({
             title: 'Convite inválido',
             description: 'Este convite expirou ou já foi utilizado',
@@ -117,26 +113,19 @@ export default function Auth() {
           return;
         }
 
-        const data = snapshot.docs[0].data();
-
-        // Check if expired
-        if (data.expires_at && new Date(data.expires_at) < new Date()) {
-          toast({
-            title: 'Convite expirado',
-            description: 'Este convite expirou',
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        setInvitationData({ email: data.email, role: data.role });
-        setEmail(data.email);
+        setInvitationData({ email: result.email, role: result.role || 'fisioterapeuta' });
+        setEmail(result.email);
         toast({
           title: 'Convite válido!',
-          description: `Você foi convidado como ${data.role}`,
+          description: `Você foi convidado como ${result.role || 'fisioterapeuta'}`,
         });
       } catch (err) {
         logger.error('Erro ao verificar convite', err, 'Auth');
+        toast({
+          title: 'Convite inválido',
+          description: 'Não foi possível validar o convite.',
+          variant: 'destructive',
+        });
       }
     };
 
@@ -227,6 +216,13 @@ export default function Auth() {
           variant: 'destructive',
         });
       } else {
+        if (inviteToken) {
+          try {
+            await callFunction<{ token: string }, { success: boolean }>('consumeInvitation', { token: inviteToken });
+          } catch (consumeErr) {
+            logger.error('Error consuming invitation after login', consumeErr, 'Auth');
+          }
+        }
         toast({
           title: 'Login realizado com sucesso!',
           description: 'Bem-vindo ao FisioFlow',
@@ -340,15 +336,13 @@ export default function Auth() {
 
       logger.info('Conta criada com sucesso', { userId: newUser.uid }, 'Auth');
 
-      // Se houver token de convite, validar e atribuir role
-      if (newUser) {
-        // Placeholder for when we have Firebase equivalent for invitations
-        // For now just logging that we created the user
-        // Dados sensíveis removidos: email e token completos mascarados para logs (LGPD)
-        const maskedEmail = newUser.email ? newUser.email.split('@')[0].substring(0, 3) + '***@' + newUser.email.split('@')[1] : '***';
-        const maskedToken = inviteToken ? inviteToken.substring(0, 8) + '...' : 'N/A';
-        logger.info('User created with invite token', { email: maskedEmail, token: maskedToken });
-        // Note: In real app, we'd call a Cloud Function here to apply invitation logic
+      if (newUser && inviteToken) {
+        try {
+          await callFunction<{ token: string }, { success: boolean }>('consumeInvitation', { token: inviteToken });
+          logger.info('Invitation consumed after signup', { userId: newUser.uid }, 'Auth');
+        } catch (consumeErr) {
+          logger.error('Error consuming invitation', consumeErr, 'Auth');
+        }
       }
 
       // Sucesso no cadastro

@@ -28,7 +28,7 @@ export function resetAblyClient() {
         try {
             ablyClient.close();
         } catch (e) {
-            console.error('Error closing Ably client:', e);
+            logger.error('Error closing Ably client', e, 'ably-client');
         }
         ablyClient = null;
     }

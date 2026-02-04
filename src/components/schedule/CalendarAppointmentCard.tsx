@@ -240,7 +240,7 @@ const CalendarAppointmentCardBase = ({
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden transition-all border",
+                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden transition-all duration-200 border",
                 "cursor-pointer",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 statusStyles.bg,
