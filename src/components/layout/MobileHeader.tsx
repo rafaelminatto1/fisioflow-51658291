@@ -25,13 +25,16 @@ import {
   ShoppingCart,
   LogOut,
   LayoutGrid,
-  Sparkles
+  Sparkles,
+  Mail,
+  BookOpen,
+  FlaskConical,
 } from 'lucide-react';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
-  { icon: Calendar, label: 'Agenda', href: '/schedule' },
+  { icon: Calendar, label: 'Agenda', href: '/' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
@@ -41,8 +44,11 @@ const menuItems = [
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
+  { icon: Mail, label: 'CRM', href: '/crm' },
   { icon: BarChart3, label: 'Analytics', href: '/analytics' },
   { icon: BarChart3, label: 'Relatórios', href: '/reports' },
+  { icon: BookOpen, label: 'Wiki', href: '/wiki' },
+  { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
@@ -140,6 +146,7 @@ export function MobileHeader() {
                 <Button
                   variant="ghost"
                   onClick={handleLogout}
+                  aria-label="Sair da conta (logout)"
                   className="w-full justify-start hover:bg-destructive/10 hover:text-destructive h-10 touch-target"
                 >
                   <LogOut className="w-5 h-5 mr-3" />

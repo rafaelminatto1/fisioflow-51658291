@@ -7,9 +7,18 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Calendar,
   CheckCircle,
@@ -34,9 +43,11 @@ import {
   Copy
 } from 'lucide-react';
 import { useCalendarIntegration } from '@/hooks/useCalendarIntegration';
+import { callFunction } from '@/integrations/firebase/functions';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { startOfWeek, endOfWeek } from 'date-fns';
 
 export default function CalendarSettings() {
   const {
@@ -57,6 +68,12 @@ export default function CalendarSettings() {
   } = useCalendarIntegration();
 
   const [activeTab, setActiveTab] = useState('status');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const now = new Date();
+  const [importStartDate, setImportStartDate] = useState(() => format(startOfWeek(now, { locale: ptBR }), 'yyyy-MM-dd'));
+  const [importEndDate, setImportEndDate] = useState(() => format(endOfWeek(now, { locale: ptBR }), 'yyyy-MM-dd'));
+  const [importEvents, setImportEvents] = useState<Array<{ id: string; summary: string; start: string | null; end: string | null }>>([]);
+  const [importLoading, setImportLoading] = useState(false);
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -88,6 +105,35 @@ export default function CalendarSettings() {
         return 'Desconectado';
       default:
         return action;
+    }
+  };
+
+  const handleImportFromGoogle = async () => {
+    if (!isConnected) {
+      toast.error('Google Calendar não conectado', { description: 'Conecte sua conta nas configurações primeiro.' });
+      return;
+    }
+    setImportLoading(true);
+    setImportEvents([]);
+    try {
+      const result = await callFunction<
+        { startDate: string; endDate: string },
+        { success: boolean; events: Array<{ id: string; summary: string; start: string | null; end: string | null }> }
+      >('importFromGoogleCalendar', {
+        startDate: importStartDate,
+        endDate: importEndDate,
+      });
+      if (result?.events) {
+        setImportEvents(result.events);
+        toast.success(`${result.events.length} evento(s) encontrado(s)`);
+      } else {
+        toast.info('Nenhum evento no período');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao buscar eventos';
+      toast.error('Erro ao importar do Google', { description: message });
+    } finally {
+      setImportLoading(false);
     }
   };
 
@@ -461,15 +507,101 @@ export default function CalendarSettings() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 opacity-60">
-                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30">
+                    <CalendarDays className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div className="flex-1">
                       <h4 className="font-medium">Importar do Google</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Em breve: importar eventos do Google para o FisioFlow
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Busque eventos do seu Google Calendar no período desejado e visualize a lista.
                       </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setImportEvents([]);
+                          setShowImportModal(true);
+                        }}
+                        disabled={!isConnected}
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        Importar do Google
+                      </Button>
+                      {!isConnected && (
+                        <p className="text-xs text-muted-foreground mt-2">Conecte o Google Calendar na aba &quot;Configuração&quot; primeiro.</p>
+                      )}
                     </div>
                   </div>
+
+                  <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Importar eventos do Google</DialogTitle>
+                        <DialogDescription>
+                          Escolha o período e busque os eventos do seu Google Calendar.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="import-start">Data inicial</Label>
+                            <Input
+                              id="import-start"
+                              type="date"
+                              value={importStartDate}
+                              onChange={(e) => setImportStartDate(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="import-end">Data final</Label>
+                            <Input
+                              id="import-end"
+                              type="date"
+                              value={importEndDate}
+                              onChange={(e) => setImportEndDate(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        <Button onClick={handleImportFromGoogle} disabled={importLoading}>
+                          {importLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Buscando...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Buscar eventos
+                            </>
+                          )}
+                        </Button>
+                        {importEvents.length > 0 && (
+                          <ScrollArea className="h-[200px] rounded-md border p-3">
+                            <p className="text-sm font-medium mb-2">{importEvents.length} evento(s) encontrado(s)</p>
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                              {importEvents.slice(0, 20).map((ev) => (
+                                <li key={ev.id} className="flex justify-between gap-2">
+                                  <span className="truncate">{ev.summary}</span>
+                                  <span className="shrink-0">
+                                    {ev.start ? format(new Date(ev.start), 'dd/MM HH:mm', { locale: ptBR }) : '—'}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                            {importEvents.length > 20 && (
+                              <p className="text-xs text-muted-foreground mt-2">e mais {importEvents.length - 20} evento(s)</p>
+                            )}
+                          </ScrollArea>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowImportModal(false)}>
+                          Fechar
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>

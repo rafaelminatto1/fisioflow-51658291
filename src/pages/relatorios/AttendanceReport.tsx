@@ -150,9 +150,9 @@ export default function AttendanceReport() {
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className={cn("text-3xl font-bold", valueColor)}>
+            <div className={cn("text-3xl font-bold", valueColor)}>
               {isLoading ? <Skeleton className="h-9 w-20" /> : value}
-            </p>
+            </div>
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           </div>
           <div className="p-3 rounded-full bg-background/50">
