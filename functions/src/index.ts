@@ -89,7 +89,9 @@ export const getPatientStats = onCall(async (request) => {
     return getPatientStatsHandler(request);
 });
 // HTTP (CORS) - frontend callFunctionHttp uses these names
-export { listPatientsHttp as listPatientsV2, getPatientStatsHttp as getPatientStatsV2 } from './api/patients';
+export { listPatientsHttp as listPatientsV2, getPatientStatsHttp as getPatientStatsV2, getPatientHttp } from './api/patients';
+// Gamification / patient quests (callable)
+export { checkPatientAppointments, getLastPainMapDate } from './api/patient-quests';
 
 // API de Agendamentos
 export const createAppointment = onCall(async (request) => {
@@ -114,6 +116,8 @@ export const checkTimeConflict = onCall(async (request) => {
 });
 // HTTP (CORS) - frontend callFunctionHttp hits these URLs
 export { listAppointmentsHttp as listAppointments } from './api/appointments';
+export { getAppointmentHttp as getAppointmentV2 } from './api/appointments';
+export { createAppointmentHttp as createAppointmentV2 } from './api/appointments';
 
 // API de Exercícios
 export const listExercises = onCall(async (request) => {
