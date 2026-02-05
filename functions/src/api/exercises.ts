@@ -20,7 +20,7 @@ function parseBody(req: any): any {
 // HTTP VERSIONS (CORS fix)
 // ============================================================================
 
-export const listExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const listExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -46,7 +46,7 @@ export const listExercisesHttp = onRequest({ region: 'southamerica-east1', maxIn
   }
 });
 
-export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -71,7 +71,7 @@ export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east
   }
 });
 
-export const getExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const getExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -90,7 +90,7 @@ export const getExerciseHttp = onRequest({ region: 'southamerica-east1', maxInst
   }
 });
 
-export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -106,7 +106,7 @@ export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1
   }
 });
 
-export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -127,7 +127,7 @@ export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east
   }
 });
 
-export const logExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const logExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -147,7 +147,7 @@ export const logExerciseHttp = onRequest({ region: 'southamerica-east1', maxInst
   }
 });
 
-export const createExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const createExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -165,7 +165,7 @@ export const createExerciseHttp = onRequest({ region: 'southamerica-east1', maxI
   }
 });
 
-export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -194,7 +194,7 @@ export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', maxI
   }
 });
 
-export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -214,7 +214,7 @@ export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', maxI
   }
 });
 
-export const mergeExercisesHttp = onRequest({ region: 'southamerica-east1', maxInstances: 10, cors: CORS_ORIGINS }, async (req, res) => {
+export const mergeExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
