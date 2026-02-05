@@ -226,11 +226,11 @@ export function VideoCall({
               {isVideoOff ? (
                 <div className="text-center">
                   <div className="w-32 h-32 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-4xl font-bold text-gray-400">
+                    <span className="text-4xl font-bold text-gray-500">
                       {patientName.charAt(0)}
                     </span>
                   </div>
-                  <p className="text-gray-400">{patientName}</p>
+                  <p className="text-gray-500">{patientName}</p>
                 </div>
               ) : (
                 <video

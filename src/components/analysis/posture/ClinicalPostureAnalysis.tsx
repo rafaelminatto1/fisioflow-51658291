@@ -87,9 +87,9 @@ const ClinicalPostureAnalysis = () => {
                 </div>
                 <div className="flex bg-slate-100 rounded-lg p-1">
                     <Button variant={step === 'upload' ? 'default' : 'ghost'} size="sm" onClick={() => setStep('upload')}>1. Imagem</Button>
-                    <ChevronRight className="w-4 h-4 self-center text-slate-400" />
+                    <ChevronRight className="w-4 h-4 self-center text-gray-500" />
                     <Button variant={step === 'analysis' ? 'default' : 'ghost'} size="sm" disabled={!landmarks.length} onClick={() => setStep('analysis')}>2. Ajustes</Button>
-                    <ChevronRight className="w-4 h-4 self-center text-slate-400" />
+                    <ChevronRight className="w-4 h-4 self-center text-gray-500" />
                     <Button variant={step === 'report' ? 'default' : 'ghost'} size="sm" disabled={!report} onClick={() => setStep('report')}>3. Relatório</Button>
                 </div>
             </div>
@@ -118,7 +118,7 @@ const ClinicalPostureAnalysis = () => {
                             <OptimizedImage src={previewUrl} alt="Preview" className="max-h-40 rounded" aspectRatio="auto" />
                         ) : (
                             <>
-                                <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                                <Upload className="w-8 h-8 text-gray-500 mb-2" />
                                 <span className="text-sm text-slate-500">Clique para enviar foto</span>
                             </>
                         )}
@@ -160,7 +160,7 @@ const ClinicalPostureAnalysis = () => {
                             />
                         </div>
                     ) : (
-                        <div className="text-slate-400 flex flex-col items-center">
+                        <div className="text-gray-500 flex flex-col items-center">
                             <Upload className="w-12 h-12 mb-2 opacity-50" />
                             <p>Carregue uma imagem para começar</p>
                         </div>
