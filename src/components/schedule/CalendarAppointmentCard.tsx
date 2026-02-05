@@ -111,7 +111,7 @@ const getStatusStyles = (status: string) => {
             bg: 'bg-slate-50/95 dark:bg-slate-500/20',
             hoverBg: 'hover:bg-slate-100/95 dark:hover:bg-slate-500/30',
             text: 'text-slate-900 dark:text-slate-300',
-            subtext: 'text-slate-700/90 dark:text-slate-400/90',
+            subtext: 'text-slate-700/90 dark:text-slate-300/90',
             accent: 'bg-slate-600',
             indicator: 'text-slate-700'
         }
