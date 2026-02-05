@@ -40,7 +40,7 @@ interface LeaderboardEntry {
 }
 
 const RANK_ICONS = [Crown, Medal, Award];
-const RANK_COLORS = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
+const RANK_COLORS = ['text-yellow-500', 'text-gray-500', 'text-amber-600'];
 
 const container = {
   hidden: { opacity: 0 },

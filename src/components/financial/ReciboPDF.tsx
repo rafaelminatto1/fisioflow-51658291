@@ -349,7 +349,7 @@ export const ReciboPreview: React.FC<{ data: ReciboData }> = ({ data }) => {
           <OptimizedImage src={data.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg" aspectRatio="1:1" />
         ) : (
           <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-xs text-gray-400">Logo</span>
+            <span className="text-xs text-gray-500">Logo</span>
           </div>
         )}
         <div className="flex-1">
@@ -411,12 +411,12 @@ export const ReciboPreview: React.FC<{ data: ReciboData }> = ({ data }) => {
       </div>
 
       {data.assinado && (
-        <div className="text-center text-xs text-gray-400 mb-4">
+        <div className="text-center text-xs text-gray-500 mb-4">
           ✓ Este recibo foi assinado digitalmente em {format(new Date(data.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
         </div>
       )}
 
-      <div className="text-center text-xs text-gray-400 border-t pt-4">
+      <div className="text-center text-xs text-gray-500 border-t pt-4">
         Este recibo serve como comprovante de pagamento para todos os fins de direito.
         Documento emitido eletronicamente conforme Lei nº 14.063/2020 (Brasil).
       </div>

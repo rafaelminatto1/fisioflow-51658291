@@ -20,11 +20,11 @@ export function ClinicalTestsFilter({
     return (
         <div className="mb-8 flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100/80">
             <div className="relative w-full md:w-96 group">
-                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-colors group-focus-within:text-teal-600" />
+                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5 transition-colors group-focus-within:text-teal-600" />
                 <input
                     type="text"
                     placeholder="Buscar teste (ex: Lachman...)"
-                    className="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:outline-none transition-all text-sm font-medium placeholder:text-slate-400"
+                    className="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 focus:outline-none transition-all text-sm font-medium placeholder:text-gray-500"
                     value={searchTerm}
                     onChange={(e) => onSearchChange(e.target.value)}
                 />

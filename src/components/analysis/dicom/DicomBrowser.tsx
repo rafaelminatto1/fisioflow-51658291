@@ -165,7 +165,7 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
                             <Card key={i} className="cursor-pointer hover:border-blue-500 transition-colors" onClick={() => handleSelectSeries(uid)}>
                                 <CardContent className="p-4 flex flex-col items-center text-center gap-2">
                                     <div className="w-16 h-16 bg-slate-200 rounded flex items-center justify-center">
-                                        <ImageIcon className="w-8 h-8 text-slate-400" />
+                                        <ImageIcon className="w-8 h-8 text-gray-500" />
                                     </div>
                                     <div>
                                         <p className="font-bold text-lg">{modality}</p>

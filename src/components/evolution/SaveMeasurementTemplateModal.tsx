@@ -154,7 +154,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                 <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-2 col-span-2">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 ml-1">
                                 <FileText className="h-3 w-3 text-teal-600" />
                                 Nome do Modelo
                             </Label>
@@ -167,7 +167,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 ml-1">
                                 <Tag className="h-3 w-3 text-teal-600" />
                                 Categoria
                             </Label>
@@ -187,7 +187,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 ml-1">
                                 <Target className="h-3 w-3 text-teal-600" />
                                 Articulação
                             </Label>
@@ -207,7 +207,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                         </div>
 
                         <div className="space-y-2 col-span-2">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 ml-1">
                                 <Info className="h-3 w-3 text-teal-600" />
                                 Propósito/Descrição
                             </Label>
@@ -245,7 +245,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                                 </motion.div>
                             ))}
                             {enabledFields.length === 0 && (
-                                <p className="text-xs text-slate-400 italic font-medium w-full text-center py-4">Nenhum campo selecionado</p>
+                                <p className="text-xs text-gray-500 italic font-medium w-full text-center py-4">Nenhum campo selecionado</p>
                             )}
                         </div>
                     </section>

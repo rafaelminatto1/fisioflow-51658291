@@ -64,7 +64,7 @@ export function PatientAIChat({ patientId, patientName }: Props) {
       <CardContent className="flex-1 p-0 overflow-hidden">
         <ScrollArea className="h-full p-4">
           {messages.length === 0 && (
-            <div className="text-center text-gray-400 mt-20 space-y-2">
+            <div className="text-center text-gray-500 mt-20 space-y-2">
               <Bot className="w-12 h-12 mx-auto opacity-20" />
               <p>Olá! Sou a IA do FisioFlow.</p>
               <p className="text-sm">Analiso todo o prontuário deste paciente em segundos.</p>
@@ -100,7 +100,7 @@ export function PatientAIChat({ patientId, patientName }: Props) {
                 <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
                   <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
                 </div>
-                <div className="bg-gray-50 rounded-2xl px-4 py-2 text-xs text-gray-400 italic">
+                <div className="bg-gray-50 rounded-2xl px-4 py-2 text-xs text-gray-500 italic">
                   Analisando prontuário no Postgres...
                 </div>
               </div>

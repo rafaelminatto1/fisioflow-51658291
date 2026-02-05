@@ -108,7 +108,7 @@ export function WaitlistSidebar({
                 </div>
                 <Link to="/waitlist">
                     <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                        <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
                     </Button>
                 </Link>
             </div>
@@ -116,7 +116,7 @@ export function WaitlistSidebar({
             {/* Search */}
             <div className="p-3 border-b border-slate-50 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/20">
                 <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
                     <Input
                         placeholder="Buscar paciente..."
                         value={searchQuery}
@@ -163,7 +163,7 @@ export function WaitlistSidebar({
                                                 <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 uppercase tracking-wider", getPriorityColor(entry.priority))}>
                                                     {getPriorityLabel(entry.priority)}
                                                 </Badge>
-                                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                <span className="text-[10px] text-gray-500 flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
                                                     {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
                                                 </span>
@@ -172,7 +172,7 @@ export function WaitlistSidebar({
 
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 -mt-1 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 -mt-1 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <MoreVertical className="w-3 h-3" />
                                                 </Button>
                                             </DropdownMenuTrigger>
@@ -190,7 +190,7 @@ export function WaitlistSidebar({
                                     {/* Preferences chips */}
                                     <div className="flex flex-wrap gap-1.5 mb-3">
                                         {entry.preferred_days?.slice(0, 3).map(day => (
-                                            <div key={day} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md">
+                                            <div key={day} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-500 rounded-md">
                                                 {DAY_LABELS[day]}
                                             </div>
                                         ))}
@@ -198,7 +198,7 @@ export function WaitlistSidebar({
                                             const config = TIME_SLOT_CONFIG[period];
                                             const Icon = config?.icon || Clock;
                                             return (
-                                                <div key={period} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md flex items-center gap-1">
+                                                <div key={period} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-gray-500 rounded-md flex items-center gap-1">
                                                     <Icon className="w-3 h-3" />
                                                     {config?.label}
                                                 </div>

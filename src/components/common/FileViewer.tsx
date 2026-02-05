@@ -146,7 +146,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center justify-center p-12 text-center">
-                                        <FileText className="w-24 h-24 mb-4 text-gray-400" />
+                                        <FileText className="w-24 h-24 mb-4 text-gray-500" />
                                         <h3 className="text-xl font-medium mb-2">{selectedFile.file_name}</h3>
                                         <Button
                                             variant="secondary"
@@ -189,7 +189,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                     {selectedFile && (
                         <div className="bg-black/80 p-4 text-center">
                             <p className="text-sm font-medium">{selectedFile.file_name}</p>
-                            <p className="text-xs text-gray-400">{selectedIndex! + 1} de {files.length}</p>
+                            <p className="text-xs text-gray-500">{selectedIndex! + 1} de {files.length}</p>
                         </div>
                     )}
                 </DialogContent>

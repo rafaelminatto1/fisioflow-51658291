@@ -37,7 +37,7 @@ export function ErrorPageLayout({
           <Bandage className="h-10 w-10 text-amber-600" />
         </div>
         {code && (
-          <p className="text-4xl font-bold text-gray-400 tracking-tight">{code}</p>
+          <p className="text-4xl font-bold text-gray-500 tracking-tight">{code}</p>
         )}
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
         <p className="text-gray-600 max-w-sm mx-auto">{message}</p>

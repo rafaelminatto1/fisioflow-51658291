@@ -96,7 +96,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
                         <Camera className="w-6 h-6 text-green-400" />
                         Sessão Ao Vivo <Badge variant="outline" className="text-green-400 border-green-400">Biofeedback Ativo</Badge>
                     </h2>
-                    <Button variant="ghost" className="text-slate-400 hover:text-white" onClick={onClose}>
+                    <Button variant="ghost" className="text-gray-500 hover:text-white" onClick={onClose}>
                         Encerrar Sessão
                     </Button>
                 </div>
@@ -111,7 +111,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
                                 <div className="text-center p-6 max-w-md">
                                     <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                                     <h3 className="text-white text-lg font-bold mb-2">Erro na Câmera</h3>
-                                    <p className="text-slate-400 mb-4">{error}</p>
+                                    <p className="text-gray-500 mb-4">{error}</p>
                                     <Button onClick={() => window.location.reload()}>Recarregar</Button>
                                 </div>
                             </div>
@@ -150,7 +150,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
                                     <p className="text-white font-medium text-sm">
                                         {metrics && metrics.confidence > 60 ? "Rastreamento Estável" : "Baixa Visibilidade"}
                                     </p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-gray-500">
                                         {metrics && metrics.confidence > 60 ? "Qualidade ideal para análise." : "Ajuste a iluminação ou posição."}
                                     </p>
                                 </div>
@@ -160,7 +160,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
                         {/* Metrics */}
                         {metrics && metrics.confidence > 60 && (
                             <div className="space-y-3">
-                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Correção Postural (Tempo Real)</h3>
+                                <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Correção Postural (Tempo Real)</h3>
 
                                 <MetricTrafficLight
                                     label="Valgo Joelho (Esq)"

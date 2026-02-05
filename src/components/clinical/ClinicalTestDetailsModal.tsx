@@ -96,7 +96,7 @@ export function ClinicalTestDetailsModal({
                         <DialogTitle className="text-2xl font-bold text-slate-800 leading-tight flex flex-col">
                             <span>{test.name}</span>
                             {test.name_en && (
-                                <span className="text-sm font-normal text-slate-400 italic mt-0.5">
+                                <span className="text-sm font-normal text-gray-500 italic mt-0.5">
                                     {test.name_en}
                                 </span>
                             )}
@@ -105,19 +105,19 @@ export function ClinicalTestDetailsModal({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => onEdit(test)}
-                            className="text-slate-400 hover:text-teal-600 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100"
+                            className="text-gray-500 hover:text-teal-600 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100"
                             title="Editar teste"
                         >
                             <Edit3 className="h-4 w-4" />
                         </button>
                         <button
                             onClick={() => onDelete(test)}
-                            className="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100"
+                            className="text-gray-500 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100"
                             title="Excluir teste"
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>
-                        <button onClick={onClose} className="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100">
+                        <button onClick={onClose} className="text-gray-500 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100">
                             <X className="h-5 w-5" />
                         </button>
                     </div>
@@ -190,7 +190,7 @@ export function ClinicalTestDetailsModal({
                                     <Info className="h-4 w-4" />
                                     Referências
                                 </h3>
-                                <p className="text-xs text-slate-400 italic">
+                                <p className="text-xs text-gray-500 italic">
                                     {test.reference}
                                 </p>
                             </div>

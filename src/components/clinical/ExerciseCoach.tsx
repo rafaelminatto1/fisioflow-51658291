@@ -371,7 +371,7 @@ export function ExerciseCoach({
     return (
       <Card className="shadow-lg">
         <CardContent className="p-8">
-          <div className="flex flex-col items-center justify-center text-slate-400">
+          <div className="flex flex-col items-center justify-center text-gray-500">
             <Dumbbell className="h-12 w-12 mb-4" />
             <p className="text-lg font-medium">Selecione um exercício</p>
             <p className="text-sm">Escolha um exercício para iniciar a sessão de coaching</p>
@@ -521,7 +521,7 @@ export function ExerciseCoach({
               />
               {!isActive && (
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-lg">
-                  <Camera className="h-12 w-12 text-slate-400" />
+                  <Camera className="h-12 w-12 text-gray-500" />
                 </div>
               )}
             </div>
@@ -613,7 +613,7 @@ export function ExerciseCoach({
                   </p>
                 </div>
                 <div className="text-right">
-                  <TrendingUp className="h-8 w-8 text-slate-400 mb-1" />
+                  <TrendingUp className="h-8 w-8 text-gray-500 mb-1" />
                   <p className="text-sm text-slate-500">
                     Média: {averageFormScore.toFixed(0)}%
                   </p>
@@ -634,7 +634,7 @@ export function ExerciseCoach({
             <ScrollArea className="h-48 p-4">
               <div className="space-y-2">
                 {feedback.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-24 text-slate-400">
+                  <div className="flex flex-col items-center justify-center h-24 text-gray-500">
                     <Info className="h-6 w-6 mb-2" />
                     <p className="text-sm">
                       {isActive

@@ -62,7 +62,7 @@ export function Leaderboard({ currentPatientId }: LeaderboardProps) {
       case 1:
         return <Crown className="h-6 w-6 text-yellow-500 fill-yellow-500" />;
       case 2:
-        return <Medal className="h-6 w-6 text-gray-400 fill-gray-400" />;
+        return <Medal className="h-6 w-6 text-gray-500 fill-gray-400" />;
       case 3:
         return <Medal className="h-6 w-6 text-amber-700 fill-amber-700" />;
       default:

@@ -413,7 +413,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                 {linkedTests.length === 0 ? (
                     <div className="text-center py-8">
                         <p className="text-muted-foreground text-sm italic">Nenhum teste clínico vinculado a este protocolo.</p>
-                        <p className="text-xs text-slate-400 mt-1">Vincule testes através da Biblioteca de Testes Clínicos.</p>
+                        <p className="text-xs text-gray-500 mt-1">Vincule testes através da Biblioteca de Testes Clínicos.</p>
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -483,10 +483,10 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                         {ref.title}
                                     </span>
                                 )}
-                                <div className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-2">
+                                <div className="text-sm text-slate-500 dark:text-gray-500 flex flex-wrap gap-x-2">
                                     <span className="font-medium text-slate-700 dark:text-slate-300">{ref.authors}</span>
-                                    {ref.journal && <span className="italic text-slate-600 dark:text-slate-400">• {ref.journal}</span>}
-                                    <span className="text-slate-400">({ref.year})</span>
+                                    {ref.journal && <span className="italic text-slate-600 dark:text-gray-500">• {ref.journal}</span>}
+                                    <span className="text-gray-500">({ref.year})</span>
                                 </div>
                             </div>
                         ))}

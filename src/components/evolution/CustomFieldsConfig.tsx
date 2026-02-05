@@ -208,7 +208,7 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
                 "flex items-center gap-3 p-3 rounded-xl border transition-all duration-300",
                 field.enabled
                     ? 'bg-white border-teal-100 shadow-md shadow-teal-900/5'
-                    : 'bg-slate-50/50 border-slate-100 text-slate-400 opacity-60'
+                    : 'bg-slate-50/50 border-slate-100 text-gray-500 opacity-60'
             )}
         >
             <div className="cursor-grab p-1 hover:bg-slate-100 rounded-md transition-colors text-slate-300">
@@ -230,7 +230,7 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
                         htmlFor={`field-${field.id}`}
                         className={cn(
                             "cursor-pointer text-sm font-bold transition-colors",
-                            field.enabled ? 'text-slate-800' : 'text-slate-400'
+                            field.enabled ? 'text-slate-800' : 'text-gray-500'
                         )}
                     >
                         {field.label}
@@ -259,7 +259,7 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
                     >
                         {field.type === 'number' && (
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Unidade</Label>
+                                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">Unidade</Label>
                                 <Input
                                     type="text"
                                     placeholder="Ex: cm"
@@ -273,7 +273,7 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
                         <div className="flex flex-col items-center gap-1">
                             <Label
                                 htmlFor={`required-${field.id}`}
-                                className="text-[10px] font-bold text-slate-400 uppercase tracking-tight cursor-pointer"
+                                className="text-[10px] font-bold text-gray-500 uppercase tracking-tight cursor-pointer"
                             >
                                 Obrigatório
                             </Label>
@@ -308,14 +308,14 @@ export const CustomFieldsConfig: React.FC<CustomFieldsConfigProps> = ({
             <CardContent className="py-5 px-6">
                 <div className="space-y-6">
                     <section className="space-y-3">
-                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Campos Principais</h4>
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Campos Principais</h4>
                         <div className="space-y-2.5">
                             {basicFields.map(renderFieldRow)}
                         </div>
                     </section>
 
                     <section className="space-y-3">
-                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Campos Avançados</h4>
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Campos Avançados</h4>
                         <div className="space-y-2.5">
                             {advancedFields.map(renderFieldRow)}
                         </div>

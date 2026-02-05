@@ -1,54 +1,85 @@
-import { initializeApp, getApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
+/**
+ * Firebase Legacy Module - Re-exports from new implementation
+ * 
+ * Este arquivo foi modificado para evitar duplicacao de inicializacao do Firebase.
+ * Agora ele apenas re-exporta as instancias do novo modulo singleton em
+ * src/integrations/firebase/app.ts
+ */
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+// Re-export from new singleton implementation
+export {
+  app,
+  auth,
+  db,
+  storage,
+  functions,
+  // Firestore functions
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  collectionGroup,
+  getDocs,
+  query,
+  where,
+  limit,
+  addDoc,
+  deleteDoc,
+  orderBy,
+  onSnapshot,
+  getDocsFromCache,
+  getDocFromCache,
+  getDocsFromServer,
+  getDocFromServer,
+  getCountFromServer,
+  Timestamp,
+  serverTimestamp,
+  increment,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  runTransaction,
+  writeBatch,
+  startAfter,
+  startAt,
+  endBefore,
+  endAt,
+  and,
+  or,
+  documentId,
+  // Functions
+  httpsCallable,
+  // Types
+  type FirebaseConfig,
+  type Query,
+  type CollectionReference,
+  type DocumentReference,
+  type DocumentData,
+  type QueryDocumentSnapshot,
+  type QuerySnapshot,
+  type QueryConstraint,
+  type Unsubscribe,
+  // Helper functions
+  getFirebaseApp,
+  getFirebaseAuth,
+  getFirebaseDb,
+  getFirebaseStorage,
+  getFirebaseFunctions,
+  useFirebase,
+  useAuth,
+  useFirestore,
+  useStorage,
+  isFirebaseConfigured,
+} from '@/integrations/firebase/app';
 
-// Initialize or get existing Firebase app (handles HMR in development)
-let app;
-try {
-  app = getApp('[DEFAULT]');
-} catch {
-  app = initializeApp(firebaseConfig);
-}
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const functions = getFunctions(app, 'southamerica-east1');
-export const storage = getStorage(app);
+// Re-export default
+export { app as default } from '@/integrations/firebase/app';
 
-// Connect to emulators in development/testing
+// Log de deprecacao para desenvolvimento
 if (import.meta.env.DEV) {
-  const authHost = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST;
-  const firestoreHost = import.meta.env.VITE_FIRESTORE_EMULATOR_HOST;
-
-  if (authHost && !authHost.startsWith('${')) {
-    const [host, port] = authHost.split(':');
-    connectAuthEmulator(auth, `http://${host}:${port}`, { disableWarnings: true });
-    console.log(`[Firebase] Auth emulator connected to http://${host}:${port}`);
-  }
-
-  if (firestoreHost && !firestoreHost.startsWith('${')) {
-    const [host, port] = firestoreHost.split(':');
-    connectFirestoreEmulator(db, host, parseInt(port, 10));
-    console.log(`[Firebase] Firestore emulator connected to http://${host}:${port}`);
-  }
-
-  // Functions emulator
-  try {
-    connectFunctionsEmulator(functions, '127.0.0.1', 5001);
-    console.log('[Firebase] Functions emulator connected to http://127.0.0.1:5001');
-  } catch {
-    // Functions emulator might not be running
-  }
+  console.warn(
+    '[DEPRECATION] @/lib/firebase está usando re-export de @/integrations/firebase/app. ' +
+    'Atualize os imports para usar a nova implementacao: @/integrations/firebase/app'
+  );
 }
-
-export default app;

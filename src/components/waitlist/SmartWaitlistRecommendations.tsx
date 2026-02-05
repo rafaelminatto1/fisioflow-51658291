@@ -120,7 +120,7 @@ function CandidateCard({ candidate, slotDate, slotTime, onSelect }: CandidateCar
           ))}
         </div>
 
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-slate-500 dark:text-gray-500 mt-1">
           Aguardando há {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}
         </p>
       </div>
@@ -274,7 +274,7 @@ function AnalyticsCard({ analytics, anomalies }: AnalyticsCardProps) {
         {/* Average Wait Time */}
         <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Tempo médio de espera</span>
+            <span className="text-sm text-slate-600 dark:text-gray-500">Tempo médio de espera</span>
             <span className="text-lg font-bold">
               {analytics.averageWaitTime} dias
             </span>

@@ -58,7 +58,7 @@ const DeltaCards: React.FC<DeltaCardsProps> = ({ data, mode = "ALL", showConfide
                                 {metric.label}
                             </span>
                             {showConfidence && metric.confidence_0_100 && (
-                                <span className={`text-[10px] ${metric.confidence_0_100 < 70 ? 'text-amber-500' : 'text-slate-400'}`}>
+                                <span className={`text-[10px] ${metric.confidence_0_100 < 70 ? 'text-amber-500' : 'text-gray-500'}`}>
                                     {metric.confidence_0_100}% conf.
                                 </span>
                             )}
@@ -72,7 +72,7 @@ const DeltaCards: React.FC<DeltaCardsProps> = ({ data, mode = "ALL", showConfide
                         </div>
 
                         <div className="flex items-center justify-between mt-1">
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-gray-500">
                                 Prev: {formatMetricValue(metric.value_A)}
                             </span>
                             <Badge variant="outline" className={`text-[10px] px-1 py-0 h-5 gap-1 ${getStatusColor(metric.status)}`}>

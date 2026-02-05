@@ -162,15 +162,15 @@ const PatientEvolutionReport = () => {
                       <tr key={i} className="hover:bg-slate-50/30 transition-colors">
                         <td className="px-6 py-4">
                           <div className="font-bold text-slate-800">{m.name}</div>
-                          <div className="text-[10px] text-slate-400 font-medium">{m.type}</div>
+                          <div className="text-[10px] text-slate-500 font-medium">{m.type}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span className="font-medium text-slate-600">{m.initial.value}</span>
-                          <span className="text-[10px] text-slate-400 ml-1 font-bold">{m.initial.unit}</span>
+                          <span className="text-[10px] text-slate-500 ml-1 font-bold">{m.initial.unit}</span>
                         </td>
                         <td className="px-6 py-4">
                           <span className="font-bold text-teal-700">{m.current.value}</span>
-                          <span className="text-[10px] text-slate-400 ml-1 font-bold">{m.current.unit}</span>
+                          <span className="text-[10px] text-slate-500 ml-1 font-bold">{m.current.unit}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${parseFloat(m.improvement.toString()) >= 0

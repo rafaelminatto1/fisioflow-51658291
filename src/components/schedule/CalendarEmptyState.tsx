@@ -119,7 +119,7 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
         <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
           {content.title}
         </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+        <p className="text-sm text-slate-600 dark:text-gray-500 mb-6">
           {content.description}
         </p>
 
@@ -152,7 +152,7 @@ export const CalendarEmptyState: React.FC<CalendarEmptyStateProps> = ({
               <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Dica
               </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-xs text-slate-600 dark:text-gray-500 mt-1">
                 {viewType === 'day'
                   ? 'Use as setas do teclado ou clique nos horários para agendar rapidamente.'
                   : viewType === 'week'

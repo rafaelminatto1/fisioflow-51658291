@@ -84,7 +84,7 @@ export const LeaderboardTable: React.FC = () => {
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (rank === 2) return <Trophy className="h-5 w-5 text-gray-400" />;
+    if (rank === 2) return <Trophy className="h-5 w-5 text-gray-500" />;
     if (rank === 3) return <Trophy className="h-5 w-5 text-amber-700" />;
     return <span className="text-sm font-bold text-muted-foreground">#{rank}</span>;
   };

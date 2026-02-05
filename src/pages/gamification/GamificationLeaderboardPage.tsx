@@ -30,7 +30,7 @@ interface GamificationData {
 }
 
 const RANK_ICONS = [Crown, Medal, Award];
-const RANK_COLORS = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
+const RANK_COLORS = ['text-yellow-500', 'text-gray-500', 'text-amber-600'];
 const RANK_BG = ['bg-yellow-100 text-yellow-700', 'bg-gray-100 text-gray-600', 'bg-amber-100 text-amber-700'];
 
 const container = {
@@ -274,7 +274,7 @@ export default function GamificationLeaderboardPage() {
               {!isLoading && filteredLeaderboard.length === 0 && (
                 <div className="text-center py-16">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-gray-400" />
+                    <Search className="w-8 h-8 text-gray-500" />
                   </div>
                   <p className="text-muted-foreground">Nenhum resultado encontrado</p>
                 </div>

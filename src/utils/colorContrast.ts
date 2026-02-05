@@ -105,7 +105,7 @@ export function getTextColorClass(backgroundColor: string): string {
         case TEXT_COLORS.lightGray.hex:
             return 'text-slate-200';
         case TEXT_COLORS.gray.hex:
-            return 'text-slate-400';
+            return 'text-slate-500';
         case TEXT_COLORS.darkGray.hex:
             return 'text-slate-600';
         case TEXT_COLORS.charcoal.hex:

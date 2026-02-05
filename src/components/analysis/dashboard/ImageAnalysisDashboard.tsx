@@ -131,7 +131,7 @@ const ImageAnalysisDashboard = () => {
                             <input {...getInputProps()} />
                             <div className="flex flex-col items-center gap-4 text-center p-8">
                                 <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center">
-                                    <FileUp className="w-10 h-10 text-slate-400" />
+                                    <FileUp className="w-10 h-10 text-gray-500" />
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-semibold mb-2">Arraste e solte seus arquivos aqui</h3>

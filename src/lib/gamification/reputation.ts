@@ -160,7 +160,7 @@ export const ACHIEVEMENT_TITLES: AchievementTitle[] = [
     title: 'Guerreiro de Ferro',
     titleEn: 'Iron Warrior',
     icon: '🛡️',
-    color: 'text-gray-400',
+    color: 'text-gray-500',
     description: '100 sessões completadas'
   },
   {
