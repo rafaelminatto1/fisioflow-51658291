@@ -1,11 +1,11 @@
 import { onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { setCorsHeaders } from '../lib/cors';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { VertexAI } from '@google-cloud/vertexai';
 import { logger } from '../lib/logger';
 
-const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: true };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' as const };
 
 /**
  * Assistente de IA que analisa todo o histórico do paciente via Gemini (Versão Estável Vertex AI)
