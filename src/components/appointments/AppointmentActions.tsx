@@ -12,6 +12,9 @@ import { MoreVertical, Play, CheckCircle, XCircle, Edit, Trash2 } from 'lucide-r
 import { AppointmentBase } from '@/types/appointment';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { prefetchRoute, RouteKeys } from '@/lib/routing/routePrefetch';
+import { useQueryClient } from '@tanstack/react-query';
+import { appointmentsApi } from '@/integrations/firebase/functions';
 
 interface AppointmentActionsProps {
   appointment: AppointmentBase;
@@ -30,8 +33,23 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleStartAttendance = () => {
+    // Prefetch do chunk da página de evolução (alto impacto)
+    prefetchRoute(
+      () => import('../pages/PatientEvolution').then(m => ({ default: m.PatientEvolution })),
+      RouteKeys.PATIENT_EVOLUTION
+    );
+
+    // Prefetch dos dados críticos (appointment e paciente)
+    queryClient.prefetchQuery({
+      queryKey: ['appointment', appointment.id],
+      queryFn: () => appointmentsApi.get(appointment.id),
+      staleTime: 1000 * 60 * 2, // 2 minutos
+    });
+
+    // Navega para a página de evolução
     navigate(`/patient-evolution/${appointment.id}`);
     toast({
       title: 'Iniciando atendimento',

@@ -35,8 +35,12 @@ export interface PatientGoal {
   patient_id: string;
   goal_title: string;
   goal_description?: string;
+  category?: string;
   target_date?: string;
   target_value?: string;
+  current_value?: string;
+  current_progress: number;
+  priority: 'baixa' | 'media' | 'alta' | 'critica';
   status: 'em_andamento' | 'concluido' | 'cancelado';
   completed_at?: string;
   created_by: string;
@@ -130,7 +134,8 @@ export const usePatientSurgeries = (patientId: string) => {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSurgery[];
     },
-    enabled: !!patientId
+    enabled: !!patientId,
+    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
   });
 };
 
@@ -148,7 +153,8 @@ export const usePatientGoals = (patientId: string) => {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoal[];
     },
-    enabled: !!patientId
+    enabled: !!patientId,
+    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
   });
 };
 
@@ -166,7 +172,8 @@ export const usePatientPathologies = (patientId: string) => {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPathology[];
     },
-    enabled: !!patientId
+    enabled: !!patientId,
+    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
   });
 };
 
@@ -210,7 +217,8 @@ export const useEvolutionMeasurements = (patientId: string) => {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as EvolutionMeasurement[];
     },
-    enabled: !!patientId
+    enabled: !!patientId,
+    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
   });
 };
 

@@ -37,6 +37,7 @@ import {
   TIPO_LABELS,
   TIPO_COLORS
 } from '@/types/tarefas';
+import { memo, useMemo } from 'react';
 
 interface KanbanCardContentProps {
   tarefa: Tarefa;
@@ -48,7 +49,7 @@ interface KanbanCardContentProps {
   onArchive?: (id: string) => void;
 }
 
-function KanbanCardContent({
+const KanbanCardContent = memo(function KanbanCardContent({
   tarefa,
   variant = 'default',
   onEdit,
@@ -57,21 +58,53 @@ function KanbanCardContent({
   onDuplicate,
   onArchive
 }: KanbanCardContentProps) {
-  const isOverdue = tarefa.data_vencimento && isPast(new Date(tarefa.data_vencimento)) && tarefa.status !== 'CONCLUIDO';
-  const isDueToday = tarefa.data_vencimento && isToday(new Date(tarefa.data_vencimento));
-  const daysUntilDue = tarefa.data_vencimento ? differenceInDays(new Date(tarefa.data_vencimento), new Date()) : null;
-  const isDueSoon = daysUntilDue !== null && daysUntilDue > 0 && daysUntilDue <= 3;
+  const tipoBadge = useMemo(() => {
+    if (!tarefa.tipo || tarefa.tipo === 'TAREFA') return null;
+    return {
+      label: TIPO_LABELS[tarefa.tipo],
+      className: TIPO_COLORS[tarefa.tipo]
+    };
+  }, [tarefa.tipo]);
 
-  const checklistProgress = (() => {
+  const prioridadeBadge = useMemo(() => {
+    return {
+      label: PRIORIDADE_LABELS[tarefa.prioridade],
+      className: PRIORIDADE_COLORS[tarefa.prioridade]
+    };
+  }, [tarefa.prioridade]);
+
+  const initials = useMemo(() => {
+    if (tarefa.assignees && tarefa.assignees.length > 0) {
+      return tarefa.assignees.slice(0, 3).map(assignee => 
+        assignee.full_name?.slice(0, 2).toUpperCase()
+      );
+    } else if (tarefa.responsavel) {
+      return tarefa.responsavel.full_name?.slice(0, 2).toUpperCase();
+    }
+    return null;
+  }, [tarefa.assignees, tarefa.responsavel]);
+  const dueDate = tarefa.data_vencimento ? new Date(tarefa.data_vencimento) : null;
+  const isOverdue = dueDate && isPast(dueDate) && tarefa.status !== 'CONCLUIDO';
+  const isDueToday = dueDate && isToday(dueDate);
+  const daysUntilDue = useMemo(() => 
+    dueDate ? differenceInDays(dueDate, new Date()) : null, 
+    [dueDate]
+  );
+  const isDueSoon = useMemo(() => 
+    daysUntilDue !== null && daysUntilDue > 0 && daysUntilDue <= 3, 
+    [daysUntilDue]
+  );
+
+  const checklistProgress = useMemo(() => {
     if (!tarefa.checklists || tarefa.checklists.length === 0) return null;
     const totalItems = tarefa.checklists.reduce((acc, cl) => acc + cl.items.length, 0);
     const completedItems = tarefa.checklists.reduce((acc, cl) => acc + cl.items.filter(i => i.completed).length, 0);
     return totalItems > 0 ? { completed: completedItems, total: totalItems, percent: (completedItems / totalItems) * 100 } : null;
-  })();
+  }, [tarefa.checklists]);
 
-  const attachmentCount = (tarefa.attachments?.length || 0);
-  const commentCount = tarefa.comment_count || tarefa.comments?.length || 0;
-  const referenceCount = tarefa.references?.length || 0;
+  const attachmentCount = useMemo(() => tarefa.attachments?.length || 0, [tarefa.attachments]);
+  const commentCount = useMemo(() => tarefa.comment_count || tarefa.comments?.length || 0, [tarefa.comment_count, tarefa.comments]);
+  const referenceCount = useMemo(() => tarefa.references?.length || 0, [tarefa.references]);
   const isGhost = variant === 'ghost';
 
   return (
@@ -90,12 +123,12 @@ function KanbanCardContent({
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
-            {tarefa.tipo && tarefa.tipo !== 'TAREFA' && (
+            {tipoBadge && (
               <Badge
                 variant="secondary"
-                className={cn('text-[10px] px-1.5 py-0 mb-1.5', TIPO_COLORS[tarefa.tipo])}
+                className={cn('text-[10px] px-1.5 py-0 mb-1.5', tipoBadge.className)}
               >
-                {TIPO_LABELS[tarefa.tipo]}
+                {tipoBadge.label}
               </Badge>
             )}
 
@@ -194,13 +227,13 @@ function KanbanCardContent({
               <TooltipTrigger>
                 <Badge
                   variant="secondary"
-                  className={cn('text-[10px] px-1.5 py-0', PRIORIDADE_COLORS[tarefa.prioridade])}
+                  className={cn('text-[10px] px-1.5 py-0', prioridadeBadge.className)}
                 >
                   <Flag className="h-2.5 w-2.5 mr-0.5" />
-                  {PRIORIDADE_LABELS[tarefa.prioridade]}
+                  {prioridadeBadge.label}
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent>Prioridade: {PRIORIDADE_LABELS[tarefa.prioridade]}</TooltipContent>
+              <TooltipContent>Prioridade: {prioridadeBadge.label}</TooltipContent>
             </Tooltip>
 
             {tarefa.data_vencimento && (
@@ -220,7 +253,7 @@ function KanbanCardContent({
                     ) : (
                       <Calendar className="h-3 w-3" />
                     )}
-                    <span>{format(new Date(tarefa.data_vencimento), 'dd/MM')}</span>
+                    <span>{dueDate && format(dueDate, 'dd/MM')}</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -282,7 +315,7 @@ function KanbanCardContent({
                       <Avatar className="h-6 w-6 border-2 border-background">
                         <AvatarImage src={assignee.avatar_url} />
                         <AvatarFallback className="text-[10px]">
-                          {assignee.full_name?.slice(0, 2).toUpperCase()}
+                          {initials?.[tarefa.assignees.indexOf(assignee)]}
                         </AvatarFallback>
                       </Avatar>
                     </TooltipTrigger>
@@ -301,7 +334,7 @@ function KanbanCardContent({
                   <Avatar className="h-6 w-6 border-2 border-background">
                     <AvatarImage src={tarefa.responsavel.avatar_url} />
                     <AvatarFallback className="text-[10px]">
-                      {tarefa.responsavel.full_name?.slice(0, 2).toUpperCase()}
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
@@ -317,9 +350,7 @@ function KanbanCardContent({
       </div>
     </div>
   );
-}
-
-export { KanbanCardContent };
+});
 
 interface KanbanCardV2Props {
   tarefa: Tarefa;
@@ -331,7 +362,7 @@ interface KanbanCardV2Props {
   onArchive?: (id: string) => void;
 }
 
-export function KanbanCardV2({ tarefa, index, onEdit, onDelete, onView, onDuplicate, onArchive }: KanbanCardV2Props) {
+export const KanbanCardV2 = memo(function KanbanCardV2({ tarefa, index, onEdit, onDelete, onView, onDuplicate, onArchive }: KanbanCardV2Props) {
   return (
     <Draggable draggableId={tarefa.id} index={index}>
       {(provided, snapshot) => (
@@ -360,4 +391,7 @@ export function KanbanCardV2({ tarefa, index, onEdit, onDelete, onView, onDuplic
       )}
     </Draggable>
   );
-}
+});
+
+export { KanbanCardContent };
+export default KanbanCardV2;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ interface MandatoryTestAlertProps {
     onResolve: (testId: string) => void;
 }
 
-export const MandatoryTestAlert = ({ tests, onResolve }: MandatoryTestAlertProps) => {
+export const MandatoryTestAlert = memo(({ tests, onResolve }: MandatoryTestAlertProps) => {
     const pendingTests = tests.filter(t => !t.completed);
     const criticalTests = pendingTests.filter(t => t.critical);
 
@@ -55,4 +55,6 @@ export const MandatoryTestAlert = ({ tests, onResolve }: MandatoryTestAlertProps
             </div>
         </Alert>
     );
-};
+});
+
+MandatoryTestAlert.displayName = 'MandatoryTestAlert';

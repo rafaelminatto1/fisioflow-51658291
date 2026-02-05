@@ -131,7 +131,7 @@ export function CommandPalette({ open, onOpenChange, patientId, patientName }: C
         description: 'Ver histórico completo do paciente',
         icon: Clock,
         category: 'patient',
-        action: () => navigate(`/patients/${patientId}?tab=history`),
+        action: () => navigate(`/patients/${patientId}?tab=clinical`),
         keywords: ['historico', 'evolucao', 'timeline', 'passado']
       },
       {
@@ -140,7 +140,7 @@ export function CommandPalette({ open, onOpenChange, patientId, patientName }: C
         description: 'Gerenciar metas do paciente',
         icon: Target,
         category: 'patient',
-        action: () => navigate(`/patients/${patientId}?tab=goals`),
+        action: () => navigate(`/patients/${patientId}?tab=overview`),
         keywords: ['metas', 'objetivos', 'alvos', 'progresso']
       },
       {
@@ -180,7 +180,7 @@ export function CommandPalette({ open, onOpenChange, patientId, patientName }: C
         description: 'Registrar medições',
         icon: BarChart3,
         category: 'clinical',
-        action: () => navigate(`/patients/${patientId}?tab=measurements`),
+        action: () => navigate(`/patients/${patientId}?tab=clinical`),
         keywords: ['medicoes', 'mensuracao', 'avaliacao', 'teste', 'escala']
       },
     ] as CommandItem[] : []),

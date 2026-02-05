@@ -194,10 +194,8 @@ export function PDFComponentFallback() {
           <p className="text-sm text-orange-900">
             Não foi possível carregar o visualizador de PDF.
           </p>
-          <Button variant="outline" size="sm" asChild>
-            <a href="#" onClick={() => window.location.reload()}>
-              Tentar Novamente
-            </a>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            Tentar Novamente
           </Button>
         </div>
       </CardContent>

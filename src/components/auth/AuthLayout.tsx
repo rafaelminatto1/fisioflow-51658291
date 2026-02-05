@@ -8,7 +8,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
     return (
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden">
+        <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden" role="presentation">
             {/* Static background orbs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
                 <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -17,8 +17,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </div>
 
             {/* Left Side - Hero & Branding (Hidden on mobile) */}
-            <div className="hidden lg:flex w-1/2 relative overflow-hidden">
-                <div className="absolute inset-0 z-0">
+            <header className="hidden lg:flex w-1/2 relative overflow-hidden" role="banner">
+                <div className="absolute inset-0 z-0" aria-hidden="true">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-blue-500/10 to-sky-400/20" />
                 </div>
 
@@ -42,18 +42,18 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                         </p>
                     </div>
 
-                    <div className="flex justify-between items-center text-sm text-muted-foreground animate-fade-in delay-200">
+                    <footer className="flex justify-between items-center text-sm text-muted-foreground animate-fade-in delay-200" role="contentinfo">
                         <p>© 2026 FisioFlow Inc.</p>
                         <div className="flex gap-6">
-                            <a href="#" className="hover:text-foreground transition-colors duration-200">Privacidade</a>
-                            <a href="#" className="hover:text-foreground transition-colors duration-200">Termos</a>
+                            <button type="button" className="hover:text-foreground transition-colors duration-200 bg-transparent border-0 p-0 cursor-pointer text-inherit">Privacidade</button>
+                            <button type="button" className="hover:text-foreground transition-colors duration-200 bg-transparent border-0 p-0 cursor-pointer text-inherit">Termos</button>
                         </div>
-                    </div>
+                    </footer>
                 </div>
-            </div>
+            </header>
 
             {/* Right Side - Auth Form */}
-            <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 relative">
+            <main className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 relative" role="main" id="main-content">
                 {/* Mobile Header Branding */}
                 <div className="lg:hidden absolute top-8 left-0 w-full flex justify-center mb-8">
                     <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 <div className="w-full max-w-md space-y-6 animate-fade-in relative z-10">
                     {children}
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

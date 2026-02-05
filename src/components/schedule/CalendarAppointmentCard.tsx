@@ -168,8 +168,9 @@ const CalendarAppointmentCardBase = ({
     // Disable dragging in selection mode or on touch devices (Mobile/iPad) for better UX
     // This allows clicks to register immediately without waiting for drag detection
     const draggable = isDraggable && !selectionMode && !isTouch;
-    // When dragHandleOnly, only the grip handle initiates drag; root is not draggable
-    const rootDraggable = draggable && !dragHandleOnly;
+    // When dragHandleOnly, only the grip handle initiates drag
+    // But root MUST be draggable to receive dragOver events while cursor transitions to drop target
+    const rootDraggable = draggable;
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -222,6 +223,13 @@ const CalendarAppointmentCardBase = ({
             }}
             draggable={rootDraggable}
             onDragStart={(e) => {
+                // Quando dragHandleOnly, apenas o handle deve iniciar o drag
+                // Mas o card raiz precisa ser draggable para receber dragOver
+                if (!rootDraggable && e && 'dataTransfer' in e) {
+                    // Prevenir drag pelo card raiz quando dragHandleOnly é true
+                    e.preventDefault();
+                    return;
+                }
                 if (rootDraggable && e && 'dataTransfer' in e) {
                     onOpenPopover(null);
                     onDragStart(e as unknown as React.DragEvent, appointment);
@@ -266,7 +274,9 @@ const CalendarAppointmentCardBase = ({
             style={{
                 ...style,
                 backgroundColor: undefined,
-                pointerEvents: isDragging && hideGhostWhenSiblings ? 'none' : undefined,
+                pointerEvents: isDragging && hideGhostWhenSiblings && !dragHandleOnly ? 'none' : undefined,
+                // Quando dragHandleOnly é true, mantém pointerEvents ativo
+                // para permitir dragOver no card raiz durante a transição do handle
             }}
             role="button"
             tabIndex={0}
@@ -398,6 +408,13 @@ const CalendarAppointmentCardBase = ({
                                         e.stopPropagation();
                                         onOpenPopover(null);
                                         onDragStart(e, appointment);
+                                    }}
+                                    onDragOver={(e) => {
+                                        // Sempre chamar preventDefault para manter o drag ativo
+                                        // mesmo quando o cursor está sobre o próprio handle
+                                        // Isso evita que o drag "morra" ao sair do handle
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                     }}
                                     onDragEnd={onDragEnd}
                                     data-drag-handle

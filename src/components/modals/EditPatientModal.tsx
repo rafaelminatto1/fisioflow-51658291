@@ -54,7 +54,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 /** Mapeia dados do formulário para o payload aceito pelo backend (campos permitidos). */
-function formDataToPatientUpdate(data: PatientFormData): Partial<Patient> {
+function formDataToPatientUpdate(data: PatientFormData, wasIncompleteRegistration?: boolean): Partial<Patient> {
   const update: Partial<Patient> = { name: data.name };
   if (data.email !== undefined && data.email !== '') update.email = data.email;
   if (data.phone !== undefined && data.phone !== '') update.phone = data.phone;
@@ -62,14 +62,21 @@ function formDataToPatientUpdate(data: PatientFormData): Partial<Patient> {
   if (data.birth_date) update.birthDate = data.birth_date;
   if (data.observations !== undefined) update.mainCondition = data.observations;
   if (data.status) update.status = data.status;
+  
+  // Se o cadastro estava incompleto, marca como completo
+  if (wasIncompleteRegistration) {
+    update.incomplete_registration = false;
+  }
+  
   return update;
 }
 
 export const EditPatientModal: React.FC<{
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  patientId?: string
-}> = ({ open, onOpenChange, patientId }) => {
+  patientId?: string;
+  patient?: Patient | null;
+}> = ({ open, onOpenChange, patientId, patient }) => {
 
   const queryClient = useQueryClient();
 
@@ -93,7 +100,7 @@ export const EditPatientModal: React.FC<{
     }
   });
 
-  const { data: patient, isLoading } = useQuery({
+  const { data: patientData, isLoading } = useQuery({
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
@@ -103,13 +110,13 @@ export const EditPatientModal: React.FC<{
   });
 
   useEffect(() => {
-    if (patient) {
+    if (patientData) {
       reset({
-        name: patient.name || '',
-        email: patient.email || '',
-        phone: patient.phone || '',
-        cpf: patient.cpf || '',
-        birth_date: patient.birthDate ? patient.birthDate.slice(0, 10) : '',
+        name: patientData.name || '',
+        email: patientData.email || '',
+        phone: patientData.phone || '',
+        cpf: patientData.cpf || '',
+        birth_date: patientData.birthDate ? patientData.birthDate.slice(0, 10) : '',
         address: '',
         city: '',
         state: '',
@@ -117,11 +124,11 @@ export const EditPatientModal: React.FC<{
         health_insurance: '',
         emergency_contact: '',
         emergency_phone: '',
-        observations: patient.mainCondition || '',
-        status: patient.status || 'active',
+        observations: patientData.mainCondition || '',
+        status: patientData.status || 'active',
       });
     }
-  }, [patient, reset]);
+  }, [patientData, reset]);
 
   useEffect(() => {
     if (!open) {
@@ -132,7 +139,7 @@ export const EditPatientModal: React.FC<{
   const updateMutation = useMutation({
     mutationFn: async (data: PatientFormData) => {
       if (!patientId) throw new Error('Patient ID is required');
-      const updates = formDataToPatientUpdate(data);
+      const updates = formDataToPatientUpdate(data, patientData?.incomplete_registration);
       return PatientService.updatePatient(patientId, updates);
     },
     onSuccess: () => {
