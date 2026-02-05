@@ -50,23 +50,23 @@ const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 
 /** Margem à esquerda do primeiro card (em px). */
-const OVERLAP_LAYOUT_MARGIN_PX = 4;
+const OVERLAP_LAYOUT_MARGIN_PX = 2;
 
 /** Espaçamento entre cards sobrepostos (em px). */
-const OVERLAP_LAYOUT_GAP_PX = 4;
+const OVERLAP_LAYOUT_GAP_PX = 2;
 
 /** Espaço reservado à direita para área clicável (em px). */
-const CLICKABLE_AREA_WIDTH_PX = 32;
+const CLICKABLE_AREA_WIDTH_PX = 16;
 
 /**
  * Calcula a largura e posição de cards sobrepostos na agenda.
  *
  * Layout:
  * ┌─────────────────────────────────────────────────────────────┐
- * │ │ Card 1 │▓│ Card 2 │▓│ Card 3 │▓│        Clicável         │
+ * │ Card 1 │▓│ Card 2 │▓│ Card 3 │▓│ Click │
  * └─────────────────────────────────────────────────────────────┘
- *   ↑       ↑   ↑       ↑   ↑       ↑   ↑            ↑
- *   margin   gap      gap      gap   gap    clickable_area
+ *   ↑       ↑   ↑       ↑   ↑       ↑   ↑   ↑
+ *   margin  gap      gap      gap   gap  clickable_area
  *
  * @param count - Número de cards sobrepostos
  * @param index - Índice do card atual (0-based)
@@ -74,9 +74,9 @@ const CLICKABLE_AREA_WIDTH_PX = 32;
  */
 const calculateOverlapStyle = (count: number, index: number) => {
     // Espaço fixo que não pode ser usado pelos cards:
-    // - margem à esquerda (4px)
-    // - área clicável à direita (32px)
-    // - gaps entre cards: (count - 1) * gap
+    // - margem à esquerda (2px)
+    // - área clicável à direita (16px)
+    // - gaps entre cards: (count - 1) * gap (2px cada)
     const reservedSpace = OVERLAP_LAYOUT_MARGIN_PX + CLICKABLE_AREA_WIDTH_PX;
     const gapsSpace = Math.max(0, (count - 1) * OVERLAP_LAYOUT_GAP_PX);
     const totalReserved = reservedSpace + gapsSpace;
