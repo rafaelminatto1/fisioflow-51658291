@@ -1297,7 +1297,7 @@ export default function TarefasV2() {
                     )}>
                       <div className="flex items-center gap-2 mb-2">
                         <AlertCircle className={cn('h-5 w-5', stats.overdue > 0 ? 'text-red-600' : 'text-gray-600')} />
-                        <span className={cn('font-medium', stats.overdue > 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-400')}>
+                        <span className={cn('font-medium', stats.overdue > 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300')}>
                           Atenção Necessária
                         </span>
                       </div>

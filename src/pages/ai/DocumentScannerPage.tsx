@@ -155,7 +155,7 @@ export default function DocumentScannerPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-400 border-2 border-dashed rounded-lg">
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500 border-2 border-dashed rounded-lg">
                 <Camera className="w-12 h-12 mb-2 opacity-20" />
                 <p>Faça o upload de uma foto de exame ou PDF.</p>
               </div>

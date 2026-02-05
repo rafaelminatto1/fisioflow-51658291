@@ -398,7 +398,11 @@ const TimeSlot = memo(({
                         )}
                         onClick={() => !blocked && onTimeSlotClick(day, time)}
                         onKeyDown={handleKeyDown}
-                        onDragOver={(e) => !blocked && onDragOver(e, day, time)}
+                        onDragOver={(e) => {
+                            // Sempre chamar preventDefault para permitir arrastar por cima de slots bloqueados
+                            e.preventDefault();
+                            if (!blocked) onDragOver(e, day, time);
+                        }}
                         onDragLeave={onDragLeave}
                         onDrop={(e) => !blocked && onDrop(e, day, time)}
                         role="button"

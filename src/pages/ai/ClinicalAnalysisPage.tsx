@@ -98,7 +98,7 @@ export default function ClinicalAnalysisPage() {
               )}
             </Button>
 
-            <div className="text-xs text-gray-400 mt-4">
+            <div className="text-xs text-gray-500 mt-4">
               * Utiliza Google Vertex AI para ler todo o prontuário do Postgres.
             </div>
           </CardContent>
@@ -115,7 +115,7 @@ export default function ClinicalAnalysisPage() {
                 <ReactMarkdown>{analysis}</ReactMarkdown>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-400 border-2 border-dashed rounded-lg">
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500 border-2 border-dashed rounded-lg">
                 <Activity className="w-12 h-12 mb-2 opacity-20" />
                 <p>Selecione um paciente para iniciar a análise.</p>
               </div>

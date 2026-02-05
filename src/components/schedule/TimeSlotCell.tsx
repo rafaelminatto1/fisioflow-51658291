@@ -64,7 +64,13 @@ export const TimeSlotCell = memo(({
   }, [isBlocked, isClosed, onTimeSlotClick, day, time]);
 
   const handleDragOverWrapper = useCallback((e: React.DragEvent) => {
-    // Não definir este slot como drop target se for bloqueado/fechado (evita anúncio aria-live enganoso)
+    // IMPORTANTE: Sempre chamar e.preventDefault() mesmo em slots bloqueados/fechados
+    // Isso permite que o drag continue propagando para slots adjacentes válidos.
+    // Sem isso, o drag "morre" quando o cursor sai da célula original.
+    e.preventDefault();
+
+    // Apenas slots válidos (não bloqueados/fechados) se tornam drop target
+    // Isso evita anúncio aria-live enganoso mas permite arrastar por cima de bloqueados
     if (isBlocked || isClosed) return;
     handleDragOver(e, day, time);
   }, [handleDragOver, day, time, isBlocked, isClosed]);

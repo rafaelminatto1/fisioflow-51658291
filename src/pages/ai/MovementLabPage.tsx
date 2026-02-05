@@ -81,7 +81,7 @@ export default function MovementLabPage() {
                 onChange={handleFileChange}
               />
               <div className="flex flex-col items-center">
-                <Upload className="w-12 h-12 text-gray-400 mb-4" />
+                <Upload className="w-12 h-12 text-gray-500 mb-4" />
                 <p className="text-sm font-medium text-gray-700">
                   {file ? file.name : "Arraste um vídeo ou clique para selecionar"}
                 </p>
@@ -109,7 +109,7 @@ export default function MovementLabPage() {
                 <ReactMarkdown>{analysis}</ReactMarkdown>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                 <Video className="w-12 h-12 mb-2 opacity-20" />
                 <p>O relatório aparecerá aqui.</p>
               </div>
