@@ -49,11 +49,46 @@ const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 
-/** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
+/** Margem à esquerda do primeiro card (em px). */
 const OVERLAP_LAYOUT_MARGIN_PX = 4;
+
+/** Espaçamento entre cards sobrepostos (em px). */
 const OVERLAP_LAYOUT_GAP_PX = 4;
-/** Espaço reservado à direita para clique em células com múltiplos cards. */
-const CLICKABLE_AREA_WIDTH_PX = 28;
+
+/** Espaço reservado à direita para área clicável (em px). */
+const CLICKABLE_AREA_WIDTH_PX = 32;
+
+/**
+ * Calcula a largura e posição de cards sobrepostos na agenda.
+ *
+ * Layout:
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │ │ Card 1 │▓│ Card 2 │▓│ Card 3 │▓│        Clicável         │
+ * └─────────────────────────────────────────────────────────────┘
+ *   ↑       ↑   ↑       ↑   ↑       ↑   ↑            ↑
+ *   margin   gap      gap      gap   gap    clickable_area
+ *
+ * @param count - Número de cards sobrepostos
+ * @param index - Índice do card atual (0-based)
+ * @returns Objeto com width e left para CSS
+ */
+const calculateOverlapStyle = (count: number, index: number) => {
+    // Espaço fixo que não pode ser usado pelos cards:
+    // - margem à esquerda (4px)
+    // - área clicável à direita (32px)
+    // - gaps entre cards: (count - 1) * gap
+    const reservedSpace = OVERLAP_LAYOUT_MARGIN_PX + CLICKABLE_AREA_WIDTH_PX;
+    const gapsSpace = Math.max(0, (count - 1) * OVERLAP_LAYOUT_GAP_PX);
+    const totalReserved = reservedSpace + gapsSpace;
+
+    // Cada card recebe uma fatia igual do espaço disponível
+    const cardWidth = `calc((100% - ${totalReserved}px) / ${count})`;
+
+    // Posição: margem + index * (largura_do_card + gap)
+    const left = `calc(${OVERLAP_LAYOUT_MARGIN_PX}px + ${index} * ((100% - ${totalReserved}px) / ${count} + ${OVERLAP_LAYOUT_GAP_PX}px))`;
+
+    return { width: cardWidth, left };
+};
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -221,17 +256,15 @@ export const CalendarWeekView = memo(({
             index = origin.index;
         }
 
-        const margin = OVERLAP_LAYOUT_MARGIN_PX;
-        const gap = OVERLAP_LAYOUT_GAP_PX;
-        // Cálculo correto: margem esquerda + área clicável + gaps entre cards
-        const totalGutter = margin + CLICKABLE_AREA_WIDTH_PX + (count - 1) * gap;
+        // Calcular largura e posição baseado na quantidade de cards sobrepostos
+        const { width, left } = calculateOverlapStyle(count, index);
 
         return {
             gridColumn: `${dayIndex + 2} / span 1`,
             gridRow: `${startRowIndex + 1}`,
             height: `${heightInPixels}px`,
-            width: `calc((100% - ${totalGutter}px) / ${count})`,
-            left: `calc(${margin}px + ${index} * ((100% - ${totalGutter}px) / ${count} + ${gap}px))`,
+            width,
+            left,
             top: '0px',
             zIndex: 10 + index
         };

@@ -37,7 +37,7 @@ setGlobalOptions({
         RESEND_API_KEY_SECRET
     ],
     // Reduced maxInstances to prevent cost spikes and CPU Quota errors
-    maxInstances: 2,
+    maxInstances: 1,
     // Set default memory for all functions
     memory: '256MiB', // Reduced from 512 to save resources
     // Set timeout for all functions (default is 60s for Gen 2)
@@ -127,6 +127,9 @@ export const checkTimeConflict = onCall(async (request) => {
 export { listAppointmentsHttp as listAppointments } from './api/appointments';
 export { getAppointmentHttp as getAppointmentV2 } from './api/appointments';
 export { createAppointmentHttp as createAppointmentV2 } from './api/appointments';
+export { updateAppointmentHttp as updateAppointmentV2 } from './api/appointments';
+export { cancelAppointmentHttp as cancelAppointmentV2 } from './api/appointments';
+export { checkTimeConflictHttp as checkTimeConflictV2 } from './api/appointments';
 
 // API de Exercícios
 export const listExercises = onCall(async (request) => {
@@ -377,6 +380,11 @@ export const createPerformanceIndexes = onCall(async (request) => {
 });
 
 // AI FUNCTIONS
+// Temporarily commented out due to Genkit API breaking changes
+// TODO: Update to latest Genkit API
+// import { generateExercisePlan } from './ai/flows/exerciseGenerator';
+// export { generateExercisePlan };
+
 export const aiExerciseSuggestion = onCall(async (request) => {
     const { exerciseSuggestionHandler } = await import('./ai/exercise-suggestion');
     return exerciseSuggestionHandler(request);
@@ -433,7 +441,7 @@ export const scanMedicalReportHttp = onRequest(async (req: any, res: any) => {
     return scanMedicalReportHttpHandler(req, res);
 });
 
-export { migrateClinicalSchema } from './migrations/clinical-setup';
+// REMOVIDO: migrateClinicalSchema - migração já executada
 export { dailyPatientDigest } from './crons/scheduled-tasks';
 export { analyzeProgress } from './ai/flows';
 
@@ -459,15 +467,12 @@ export const listWebhooks = onCall(async (request) => {
     const { listWebhooksHandler } = await import('./webhooks/index');
     return listWebhooksHandler(request);
 });
-export const testWebhook = onCall(async (request) => {
-    const { testWebhookHandler } = await import('./webhooks/index');
-    return testWebhookHandler(request);
-});
+// REMOVIDO: testWebhook - função de teste não usada em produção
 export const getWebhookEventTypes = onRequest(
     {
         region: 'southamerica-east1',
         memory: '256MiB',
-        maxInstances: 10,
+        maxInstances: 1,
     },
     async (req: any, res: any) => {
         const { getWebhookEventTypesHandler } = await import('./webhooks/index');
@@ -552,12 +557,12 @@ export const downloadExport = onRequest(
 // ============================================================================
 
 // Monitoring & Observability
-export { setupMonitoring } from './api/setup-monitoring';
+// REMOVIDO: setupMonitoring - função de setup não usada em produção
 export const getErrorStats = onCall(
     {
         region: 'southamerica-east1',
         memory: '256MiB',
-        maxInstances: 10,
+        maxInstances: 1,
     },
     async (request) => {
         const { getErrorStatsHandler } = await import('./monitoring/error-dashboard');
@@ -568,7 +573,7 @@ export const getRecentErrors = onCall(
     {
         region: 'southamerica-east1',
         memory: '256MiB',
-        maxInstances: 10,
+        maxInstances: 1,
     },
     async (request) => {
         const { getRecentErrorsHandler } = await import('./monitoring/error-dashboard');
@@ -579,7 +584,7 @@ export const resolveError = onCall(
     {
         region: 'southamerica-east1',
         memory: '256MiB',
-        maxInstances: 10,
+        maxInstances: 1,
     },
     async (request) => {
         const { resolveErrorHandler } = await import('./monitoring/error-dashboard');
@@ -590,111 +595,25 @@ export const getErrorDetails = onCall(
     {
         region: 'southamerica-east1',
         memory: '256MiB',
-        maxInstances: 10,
+        maxInstances: 1,
     },
     async (request) => {
         const { getErrorDetailsHandler } = await import('./monitoring/error-dashboard');
         return getErrorDetailsHandler(request);
     }
 );
-export const errorStream = onRequest(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (req: any, res: any) => {
-        const { errorStreamHandler } = await import('./monitoring/error-dashboard');
-        return errorStreamHandler(req, res);
-    }
-);
-export const getErrorTrends = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (request) => {
-        const { getErrorTrendsHandler } = await import('./monitoring/error-dashboard');
-        return getErrorTrendsHandler(request);
-    }
-);
-export const cleanupOldErrors = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { cleanupOldErrorsHandler } = await import('./monitoring/error-dashboard');
-        return cleanupOldErrorsHandler(request);
-    }
-);
+// REMOVIDO: errorStream - stream não essencial, usar polling
+// REMOVIDO: getErrorTrends, cleanupOldErrors - monitoramento não essencial
 
 export const getPerformanceStats = onCall(
     {
         region: 'southamerica-east1',
         memory: '256MiB',
-        maxInstances: 10,
+        maxInstances: 1,
     },
     async (request) => {
         const { getPerformanceStatsHandler } = await import('./monitoring/performance-tracing');
         return getPerformanceStatsHandler(request);
-    }
-);
-export const getSlowRequests = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (request) => {
-        const { getSlowRequestsHandler } = await import('./monitoring/performance-tracing');
-        return getSlowRequestsHandler(request);
-    }
-);
-export const getTraceTimeline = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (request) => {
-        const { getTraceTimelineHandler } = await import('./monitoring/performance-tracing');
-        return getTraceTimelineHandler(request);
-    }
-);
-export const getPerformanceTrends = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (request) => {
-        const { getPerformanceTrendsHandler } = await import('./monitoring/performance-tracing');
-        return getPerformanceTrendsHandler(request);
-    }
-);
-export const performanceStream = onRequest(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (req: any, res: any) => {
-        const { performanceStreamHandler } = await import('./monitoring/performance-tracing');
-        return performanceStreamHandler(req, res);
-    }
-);
-export const cleanupOldTraces = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { cleanupOldTracesHandler } = await import('./monitoring/performance-tracing');
-        return cleanupOldTracesHandler(request);
     }
 );
 
@@ -810,7 +729,7 @@ export const sendEmail = onCall(async (request) => {
 });
 
 // WhatsApp Test Functions
-export { testWhatsAppMessage, testWhatsAppTemplate } from './communications/whatsapp';
+// REMOVIDO: testWhatsAppMessage, testWhatsAppTemplate - funções de teste não usadas em produção
 
 // ============================================================================
 // Auth Triggers
