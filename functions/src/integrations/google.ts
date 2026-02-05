@@ -25,7 +25,7 @@ export const searchPlaces = onCall({ region: 'southamerica-east1' }, async (requ
   try {
     const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_KEY.value()}&language=pt-BR`;
     const response = await fetch(url);
-    const data = await response.json();
+    const data = await response.json() as { predictions: any[] };
     return data.predictions;
   } catch (error) {
     logger.error('Error fetching places', error);
@@ -120,6 +120,7 @@ export const syncPatientCalendar = onCall({ region: 'southamerica-east1' }, asyn
   
   // Lógica: Inserir evento no calendário do paciente como "Busy"
   // Requer que o paciente tenha dado permissão ou usamos Service Account convidando ele
+  logger.info('Syncing calendar for', { appointmentId, patientEmail });
   
   return { success: true, message: 'Event pushed to patient calendar' };
 });

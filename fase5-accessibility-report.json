@@ -1,0 +1,169 @@
+{
+  "timestamp": "2026-02-05T04:12:12.850Z",
+  "url": "https://moocafisio.com.br",
+  "summary": {
+    "totalTests": 3,
+    "passedTests": 1,
+    "failedTests": 2,
+    "totalIssues": 21
+  },
+  "details": {
+    "keyboardNavigation": {
+      "description": "Navegação por Teclado",
+      "issues": [],
+      "pass": true
+    },
+    "ariaLabels": {
+      "description": "ARIA Labels",
+      "issues": [
+        "Button without text or aria-label: id=",
+        "Button without text or aria-label: id=",
+        "Button without text or aria-label: id=",
+        "Button without text or aria-label: id="
+      ],
+      "pass": false
+    },
+    "contrast": {
+      "description": "Contraste",
+      "issues": [
+        {
+          "element": "Text element with fontSize 12px",
+          "text": "125 agendamentos",
+          "color": "rgb(15, 23, 42)",
+          "background": "rgb(236, 254, 255)",
+          "contrast": "17.16",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 12px",
+          "text": "125 agendamentos",
+          "color": "rgb(22, 78, 99)",
+          "background": "rgb(236, 254, 255)",
+          "contrast": "8.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 10px",
+          "text": "GMT-3",
+          "color": "rgb(148, 163, 184)",
+          "background": "rgb(248, 250, 252)",
+          "contrast": "2.45",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "07:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "08:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "09:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "10:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "11:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "12:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "13:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "14:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "15:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "16:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "17:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "18:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "19:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        },
+        {
+          "element": "Text element with fontSize 11px",
+          "text": "20:00",
+          "color": "rgb(100, 116, 139)",
+          "background": "rgb(255, 255, 255)",
+          "contrast": "4.76",
+          "note": "Small text may need higher contrast"
+        }
+      ],
+      "pass": false
+    }
+  }
+}

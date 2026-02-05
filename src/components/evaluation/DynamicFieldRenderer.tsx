@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { MagicTextarea } from '@/components/ai/MagicTextarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -59,10 +59,11 @@ function renderField(
         case 'texto_longo':
         case 'textarea':
             return (
-                <Textarea
-                    {...commonProps}
+                <MagicTextarea
+                    id={field.id}
+                    disabled={readOnly}
                     value={(value as string) || ''}
-                    onChange={(e) => onChange(e.target.value)}
+                    onValueChange={(val) => onChange(val)}
                     placeholder={field.placeholder || ''}
                     rows={4}
                     className="resize-none"
