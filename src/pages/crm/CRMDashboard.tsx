@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, CheckSquare, Send, Zap, BarChart3, Upload } from 'lucide-react';
+import { Users, CheckSquare, Send, Zap, BarChart3, Upload, Loader2 } from 'lucide-react';
 import { LeadsContent } from './LeadsPage';
 import { CRMTarefas } from '@/components/crm/CRMTarefas';
 import { CRMCampanhas } from '@/components/crm/CRMCampanhas';
 import { CRMAutomacoes } from '@/components/crm/CRMAutomacoes';
 import { CRMAnalytics } from '@/components/crm/CRMAnalytics';
-import { LeadImport } from '@/components/crm/LeadImport';
+
+// Lazy load LeadImport (contém exceljs - ~946KB) - só carrega quando a tab é acessada
+const LeadImport = lazy(() => import('@/components/crm/LeadImport').then(m => ({ default: m.LeadImport })));
 
 export default function CRMDashboard() {
   const [activeTab, setActiveTab] = useState('leads');
@@ -71,7 +73,16 @@ export default function CRMDashboard() {
           </TabsContent>
 
           <TabsContent value="importar" className="mt-6">
-            <LeadImport />
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center space-y-4">
+                  <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+                  <p className="text-muted-foreground">Carregando importador...</p>
+                </div>
+              </div>
+            }>
+              <LeadImport />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>
