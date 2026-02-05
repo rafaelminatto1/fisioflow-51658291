@@ -158,7 +158,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             leaveTimeoutRef.current = null;
             lastDropTargetKeyRef.current = null;
             setDropState(initialDropState);
-        }, 40);
+        }, 100);
     }, []);
 
     const handleDrop = useCallback((e: React.DragEvent, targetDate: Date, time: string) => {
