@@ -10,6 +10,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
+import { sendVoucherConfirmationEmail, sendPaymentFailedEmail } from '../communications/resend-templates';
 
 // Configuração do Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -387,8 +388,25 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   logger.info(`Voucher created: ${voucherRef.id} for user: ${userId}`);
 
-  // Enviar email de confirmação
-  // await sendVoucherConfirmationEmail(userId, voucherRef.id);
+  // Send confirmation email
+  try {
+    const voucherData = voucherRef.id ? (await voucherRef.get()).data() : null;
+    if (voucherData && patientEmail) {
+      await sendVoucherConfirmationEmail(patientEmail, {
+        customerName: patientName || userData?.displayName || 'Cliente',
+        voucherName: voucherData.name || getVoucherName(voucherType as VoucherType),
+        voucherType: voucherData.voucherType || voucherType,
+        sessionsTotal: voucherData.sessionsTotal || VOUCHER_SESSIONS[voucherType as VoucherType],
+        amountPaid: ((amount || voucherData.amountPaid) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+        expirationDate: voucherData.expiresAt || calculateExpiryDate(voucherType as VoucherType).toISOString(),
+        organizationName: 'FisioFlow',
+      });
+      logger.info(`Voucher confirmation email sent to: ${patientEmail}`);
+    }
+  } catch (emailError) {
+    logger.error('Failed to send voucher confirmation email:', emailError);
+    // Don't throw - email failure shouldn't break the flow
+  }
 }
 
 /**
@@ -465,13 +483,29 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   if (!vouchers.empty) {
     const voucher = vouchers.docs[0];
+    const voucherData = voucher.data();
+
     await voucher.ref.update({
       status: 'past_due',
       lastPaymentFailedAt: firestore.FieldValue.serverTimestamp(),
     });
 
     // Notificar usuário sobre pagamento falhado
-    // await sendPaymentFailedEmail(voucher.data().userId);
+    try {
+      if (voucherData.patientEmail) {
+        await sendPaymentFailedEmail(voucherData.patientEmail, {
+          customerName: voucherData.patientName || 'Cliente',
+          amount: ((invoice.amount_due || 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+          voucherName: voucherData.name || 'Voucher Mensal',
+          errorMessage: invoice.last_payment_error?.message || 'Pagamento não processado',
+          organizationName: 'FisioFlow',
+        });
+        logger.info(`Payment failed email sent to: ${voucherData.patientEmail}`);
+      }
+    } catch (emailError) {
+      logger.error('Failed to send payment failed email:', emailError);
+      // Don't throw - email failure shouldn't break the flow
+    }
   }
 }
 

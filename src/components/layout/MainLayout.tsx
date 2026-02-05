@@ -147,11 +147,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                       </div>
                       <div className="hidden lg:flex flex-col items-start text-sm">
                         <span className="font-semibold text-gray-700 dark:text-gray-200 leading-none">{displayName}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
                       </div>
                     </>
                   )}
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-800/50 shadow-xl rounded-2xl animate-scale-in">
