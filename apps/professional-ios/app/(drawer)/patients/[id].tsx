@@ -285,7 +285,7 @@ export default function PatientDetailScreen() {
           </Pressable>
           <Pressable style={[styles.quickActionButton, { backgroundColor: colors.card }]} onPress={handleNewEvolution}>
             <Icon name="file-plus" size={20} color={colors.primary} />
-          </Pressive>
+          </Pressable>
           <Pressable style={[styles.quickActionButton, { backgroundColor: colors.card }]} onPress={handleNewAppointment}>
             <Icon name="calendar-plus" size={20} color={colors.primary} />
           </Pressable>

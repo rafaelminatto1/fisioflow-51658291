@@ -65,26 +65,26 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
   return (
     <>
       <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Scissors className="h-4 w-4 text-primary" />
+        <CardHeader className="pb-1.5 pt-3 px-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Scissors className="h-3.5 w-3.5 text-primary" />
             Cirurgias
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleAdd} className="h-8 gap-1">
-            <Plus className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" onClick={handleAdd} className="h-7 gap-0.5">
+            <Plus className="h-3 w-3" />
             Adicionar
           </Button>
         </CardHeader>
-        <CardContent className="px-4 pb-4">
+        <CardContent className="px-3 pb-3">
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Carregando...</p>
           ) : surgeries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Nenhuma cirurgia registrada. Clique em Adicionar para incluir.
             </p>
           ) : (
-            <ScrollArea className="h-[min(280px,50vh)] pr-2">
-              <ul className="space-y-3">
+            <ScrollArea className="h-[min(200px,40vh)] pr-1">
+              <ul className="space-y-2">
                 {surgeries.map((s) => {
                   const surgeryDate = (s as Record<string, unknown>).surgery_date as string;
                   const surgeryType = (s as Record<string, unknown>).surgery_type as string | undefined;
@@ -94,32 +94,32 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
                   return (
                     <li
                       key={s.id}
-                      className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors group"
+                      className="flex items-start justify-between gap-2 p-2 rounded-md border border-border/50 hover:bg-muted/40 transition-colors group"
                     >
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <p className="font-medium text-sm truncate">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="font-medium text-xs truncate">
                           {(s as Record<string, unknown>).surgery_name as string}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted-foreground">
                           {surgeryType && (
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-muted font-medium">
+                            <span className="inline-block px-1 py-0.5 rounded bg-muted font-medium">
                               {getSurgeryTypeLabel(surgeryType)}
                             </span>
                           )}
                           {affectedSide && (
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                            <span className="inline-block px-1 py-0.5 rounded bg-primary/10 text-primary font-medium">
                               {getAffectedSideLabel(affectedSide)}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground">
                           {surgeryDate
                             ? format(new Date(surgeryDate), "dd/MM/yyyy", { locale: ptBR })
                             : '—'}{' '}
                           · {timeSince}
                         </p>
                         {notes && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
                             {notes}
                           </p>
                         )}
@@ -127,11 +127,11 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 shrink-0 opacity-70 group-hover:opacity-100"
+                        className="h-7 w-7 shrink-0 opacity-70 group-hover:opacity-100"
                         onClick={() => handleEdit(s as Surgery)}
                         aria-label="Editar cirurgia"
                       >
-                        <Edit2 className="h-3.5 w-3.5" />
+                        <Edit2 className="h-3 w-3" />
                       </Button>
                     </li>
                   );
