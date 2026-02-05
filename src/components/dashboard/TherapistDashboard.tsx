@@ -200,7 +200,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Olá, Dr(a). {profile.full_name?.split(' ')[0]}!
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
           Aqui está o resumo do seu dia
         </p>
       </div>
@@ -211,7 +211,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Taxa de Ocupação</h3>
+              <h3 className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-medium">Taxa de Ocupação</h3>
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
             </div>
             <div className="mb-2">
@@ -219,7 +219,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 {stats.occupancyRate}%
               </span>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-xs mb-3">da capacidade</p>
+            <p className="text-gray-700 dark:text-gray-300 text-xs mb-3">da capacidade</p>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
                 className="bg-blue-500 h-2 rounded-full transition-all duration-500"
@@ -236,7 +236,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Média Sessões/Paciente</h3>
+              <h3 className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-medium">Média Sessões/Paciente</h3>
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
             </div>
             <div className="mb-2">
@@ -244,7 +244,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 {stats.avgSessionsPerPatient}
               </span>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-xs">
+            <p className="text-gray-700 dark:text-gray-300 text-xs">
               Média de sessões por paciente nos últimos 30 dias
             </p>
           </CardContent>
@@ -254,7 +254,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Pacientes em Risco</h3>
+              <h3 className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm font-medium">Pacientes em Risco</h3>
               <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
             </div>
             <div className="mb-2">
@@ -262,7 +262,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 {stats.patientsAtRisk}
               </span>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-xs">
+            <p className="text-gray-700 dark:text-gray-300 text-xs">
               Pacientes sem consulta há mais de 30 dias
             </p>
           </CardContent>
@@ -305,7 +305,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 ))}
               </div>
             ) : todayAppointments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-gray-700 dark:text-gray-300">
                 <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Nenhum agendamento para hoje</p>
               </div>
@@ -328,7 +328,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                         <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
                           {apt.appointment_time}
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                        <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate">
                           {apt.patient_name}
                         </div>
                       </div>

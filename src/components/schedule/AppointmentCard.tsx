@@ -69,7 +69,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
 
         <div className="p-3 pl-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <span className="font-mono text-sm font-semibold text-slate-700 dark:text-slate-300">
               {appointment.time}
             </span>
             <StatusIcon className={cn("w-3.5 h-3.5", statusConfig.iconColor)} />
@@ -78,7 +78,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">
             {appointment.patientName}
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
+          <p className="text-sm text-slate-700 dark:text-slate-300 truncate mt-0.5">
             {appointment.type}
           </p>
         </div>
@@ -120,7 +120,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
             <div className="flex items-center gap-2 text-base font-bold text-slate-700 dark:text-slate-200 font-mono">
               <span>{appointment.time}</span>
               {appointment.duration && (
-                <span className="text-slate-400 font-normal text-sm">
+                <span className="text-slate-500 font-normal text-sm">
                   ({appointment.duration} min)
                 </span>
               )}
@@ -142,7 +142,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
           <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-1.5 line-clamp-3 group-hover:text-primary transition-colors">
             {appointment.patientName}
           </h3>
-          <p className="text-base font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-2">
+          <p className="text-base font-medium text-slate-700 dark:text-slate-300 truncate flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
             {appointment.type}
           </p>
@@ -151,12 +151,12 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
         {/* Footer Area - Notes & Actions */}
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           {appointment.notes ? (
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 max-w-[80%]">
+            <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 max-w-[80%]">
               <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500" />
               <span className="truncate font-medium">{appointment.notes}</span>
             </div>
           ) : (
-            <div className="text-sm text-slate-400 italic font-medium">Sem observações</div>
+            <div className="text-sm text-slate-500 italic font-medium">Sem observações</div>
           )}
 
           <Button

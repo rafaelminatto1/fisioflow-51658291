@@ -7,6 +7,7 @@ import { db, collection, query, where, limit, onSnapshot } from '@/integrations/
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { PatientHelpers } from '@/types';
 
 interface Patient {
   id: string;

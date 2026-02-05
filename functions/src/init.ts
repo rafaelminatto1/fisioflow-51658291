@@ -26,6 +26,7 @@ export const DB_NAME_SECRET = defineSecret('DB_NAME');
 export const CLOUD_SQL_CONNECTION_NAME_SECRET = defineSecret('CLOUD_SQL_CONNECTION_NAME');
 export const DB_HOST_IP_SECRET = defineSecret('DB_HOST_IP');
 export const DB_HOST_IP_PUBLIC_SECRET = defineSecret('DB_HOST_IP_PUBLIC');
+export const RESEND_API_KEY_SECRET = defineSecret('RESEND_API_KEY');
 
 // Firebase Functions v2 CORS - explicitly list allowed origins
 // Using 'cors: true' should work but has known issues in v2

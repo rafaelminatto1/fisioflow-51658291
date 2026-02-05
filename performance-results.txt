@@ -1,0 +1,34 @@
+Performance Report - qui 05 fev 2026 01:29:34 -03
+======================================
+
+📊 Testing dashboard (https://moocafisio.com.br/dashboard)
+
+
+        Time: 0.157076s
+        Size: 4053 bytes
+        Code: 200
+        TTFB: 0.125092 + 0.157020 = s
+    
+
+📊 Testing patients (https://moocafisio.com.br/patients)
+
+
+        Time: 0.596058s
+        Size: 4053 bytes
+        Code: 200
+        TTFB: 0.197418 + 0.595979 = s
+    
+
+📊 Testing financial (https://moocafisio.com.br/financial)
+
+
+        Time: 0.547261s
+        Size: 4053 bytes
+        Code: 200
+        TTFB: 0.147346 + 0.547183 = s
+    
+
+📋 SUMMARY:
+==========
+Average Load Time:  s
+Average Page Size:  bytes ( KB)

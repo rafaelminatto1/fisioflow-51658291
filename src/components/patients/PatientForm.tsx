@@ -31,6 +31,10 @@ import { cn } from '@/lib/utils';
 import { cleanCPF, emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
 import type { Patient, PatientCreateInput, PatientUpdateInput } from '@/hooks/usePatientCrud';
+import { AddressAutocomplete } from '@/components/forms/AddressAutocomplete';
+import { MagicTextarea } from '@/components/ai/MagicTextarea';
+import { BrasilService } from '@/services/brasilApi';
+import { toast } from 'sonner';
 
 // ============================================================================================
 // SCHEMA & TYPES
@@ -166,8 +170,28 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     setValue('emergency_phone', formatPhoneInput(e.target.value), { shouldValidate: false });
   };
 
-  const handleCEPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue('zip_code', formatCEP(e.target.value), { shouldValidate: false });
+  const handleCEPChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formattedValue = formatCEP(rawValue);
+    setValue('zip_code', formattedValue, { shouldValidate: false });
+
+    // Se o CEP estiver completo (8 dígitos limpos), busca na BrasilAPI
+    const cleanCep = rawValue.replace(/\D/g, '');
+    if (cleanCep.length === 8) {
+      try {
+        const addressData = await BrasilService.getCep(cleanCep);
+        
+        // Preencher campos automaticamente
+        setValue('address', `${addressData.street}, ${addressData.neighborhood}`, { shouldValidate: true });
+        setValue('city', addressData.city, { shouldValidate: true });
+        setValue('state', addressData.state, { shouldValidate: true });
+        
+        toast.success('Endereço encontrado!');
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+        // Não mostrar erro intrusivo, apenas deixar o usuário digitar se falhar
+      }
+    }
   };
 
   // Submit handler
@@ -484,11 +508,18 @@ export const PatientForm: React.FC<PatientFormProps> = ({
 
               <div className="space-y-2">
                 <Label htmlFor="medical_history">Histórico Médico</Label>
-                <Textarea
-                  id="medical_history"
-                  placeholder="Histórico médico relevante, cirurgias anteriores, comorbidades..."
-                  rows={3}
-                  {...register('medical_history')}
+                <Controller
+                  name="medical_history"
+                  control={control}
+                  render={({ field }) => (
+                    <MagicTextarea
+                      id="medical_history"
+                      placeholder="Histórico médico relevante, cirurgias anteriores, comorbidades... (A IA corrige para você)"
+                      rows={3}
+                      value={field.value || ''}
+                      onValueChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
@@ -575,15 +606,34 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                 <MapPin className="w-5 h-5 text-primary" />
                 Endereço
               </CardTitle>
-              <CardDescription>Informações de localização</CardDescription>
+              <CardDescription>Informações de localização (Google Maps)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="address">Logradouro</Label>
-                <Input
-                  id="address"
-                  placeholder="Rua, número, complemento, bairro"
-                  {...register('address')}
+                <Controller
+                  name="address"
+                  control={control}
+                  render={({ field }) => (
+                    <AddressAutocomplete
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      onSelect={(place) => {
+                        // O Google Maps retorna 'description' com o texto completo
+                        // Para um preenchimento robusto, idealmente chamariamos a Geocoding API
+                        // Mas aqui vamos fazer um parse simples da string retornada pelo Autocomplete
+                        const parts = place.description.split(', ');
+                        if (parts.length > 1) {
+                          // Tentativa heurística: "Rua X, 123, Bairro, Cidade - SP, Brasil"
+                          const cityState = parts[parts.length - 2] || '';
+                          const [city, state] = cityState.split(' - ');
+                          if (city) setValue('city', city);
+                          if (state) setValue('state', state);
+                        }
+                      }}
+                      placeholder="Digite o endereço para buscar no Google Maps..."
+                    />
+                  )}
                 />
               </div>
 
@@ -743,11 +793,18 @@ export const PatientForm: React.FC<PatientFormProps> = ({
 
               <div className="space-y-2">
                 <Label htmlFor="observations">Observações</Label>
-                <Textarea
-                  id="observations"
-                  placeholder="Informações adicionais, notas importantes..."
-                  rows={4}
-                  {...register('observations')}
+                <Controller
+                  name="observations"
+                  control={control}
+                  render={({ field }) => (
+                    <MagicTextarea
+                      id="observations"
+                      placeholder="Informações adicionais, notas importantes..."
+                      rows={4}
+                      value={field.value || ''}
+                      onValueChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
             </CardContent>
