@@ -134,7 +134,9 @@ export default defineConfig(({ mode }) => {
 
   // Gerar versão única para cada build
   const buildTime = Date.now().toString();
-  const appVersion = process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime;
+  // Sufixo de versão para forçar cache busting após mudança para callable functions
+  const VERSION_SUFFIX = '-v2.4.0-cors-fix';
+  const appVersion = (process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) + VERSION_SUFFIX;
 
   return {
     server: {
