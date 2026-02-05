@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, forwardRef } from 'react';
 import { Appointment } from '@/types/appointment';
 import { CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
@@ -119,7 +119,7 @@ const getStatusStyles = (status: string) => {
     return styles[status as keyof typeof styles] || styles.default;
 };
 
-const CalendarAppointmentCardBase = ({
+const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointmentCardProps>(({
     appointment,
     style,
     isDraggable,
@@ -139,11 +139,12 @@ const CalendarAppointmentCardBase = ({
     isSelected = false,
     onToggleSelection,
     dragHandleOnly = false
-}: CalendarAppointmentCardProps) => {
+}, ref) => {
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
     const reducedMotion = useReducedMotion();
     const [isHovered, setIsHovered] = useState(false);
+
     const { cardSize, fontPercentage } = useCardSize();
 
     // Status visual config
@@ -179,8 +180,15 @@ const CalendarAppointmentCardBase = ({
             return;
         }
 
-        // NÃO usar stopPropagation aqui - permite que o clique chegue ao PopoverTrigger
-        // do AppointmentQuickView wrapper, que é responsável por abrir o popover
+        // Quando estiver arrastando, não abrir o popover
+        if (isDragging) {
+            return;
+        }
+
+        // Chamar onOpenPopover diretamente para abrir o popover
+        // Isso é necessário porque os listeners do @dnd-kit no DraggableAppointment
+        // capturam os eventos de pointer e impedem que o clique chegue ao PopoverTrigger
+        onOpenPopover(appointment.id);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -199,6 +207,7 @@ const CalendarAppointmentCardBase = ({
     const dragDuration = reducedMotion ? 0 : 0.15;
     const cardContent = (
         <motion.div
+            ref={ref}
             layout={!reducedMotion}
             layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
             transition={{
@@ -273,9 +282,8 @@ const CalendarAppointmentCardBase = ({
             style={{
                 ...style,
                 backgroundColor: undefined,
+                // Não sobrescrever border com estilo inline - deixar as classes Tailwind definirem a cor baseada no status
                 pointerEvents: isDragging && hideGhostWhenSiblings && !dragHandleOnly ? 'none' : undefined,
-                // Quando dragHandleOnly é true, mantém pointerEvents ativo
-                // para permitir dragOver no card raiz durante a transição do handle
             }}
             role="button"
             tabIndex={0}
@@ -341,20 +349,20 @@ const CalendarAppointmentCardBase = ({
                         <div className="flex flex-col mt-1 min-h-0 w-full">
                             <div className="min-w-0 flex-1">
                                 <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span
-                                        className={cn(
-                                            "block font-bold leading-tight line-clamp-2 tracking-tight",
-                                            statusStyles.text,
-                                        )}
-                                        style={{ fontSize: `${scaledNameFontSize}px` }}
-                                    >
+                                    <TooltipTrigger asChild>
+                                        <span
+                                            className={cn(
+                                                "block font-bold leading-tight line-clamp-2 tracking-tight",
+                                                statusStyles.text,
+                                            )}
+                                            style={{ fontSize: `${scaledNameFontSize}px` }}
+                                        >
+                                            {appointment.patientName}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-[280px] break-words">
                                         {appointment.patientName}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-[280px] break-words">
-                                    {appointment.patientName}
-                                  </TooltipContent>
+                                    </TooltipContent>
                                 </Tooltip>
 
                                 {sizeConfig.showType && (
@@ -447,7 +455,7 @@ const CalendarAppointmentCardBase = ({
             {cardContent}
         </AppointmentQuickView>
     );
-};
+});
 
 
 function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: CalendarAppointmentCardProps) {

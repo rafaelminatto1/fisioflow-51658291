@@ -9,6 +9,7 @@ interface DraggableAppointmentProps {
   isDragging: boolean;
   isDragDisabled?: boolean;
   dragData?: UseDraggableArguments['data'];
+  isPopoverOpen?: boolean;
 }
 
 /**
@@ -23,6 +24,7 @@ function draggableAppointmentAreEqual(
     prev.id === next.id &&
     prev.isDragging === next.isDragging &&
     prev.isDragDisabled === next.isDragDisabled &&
+    prev.isPopoverOpen === next.isPopoverOpen &&
     // Simple style comparison - only check critical visual properties
     prev.style.height === next.style.height &&
     prev.style.width === next.style.width &&
@@ -48,7 +50,8 @@ export const DraggableAppointment = memo(({
   children,
   isDragging,
   isDragDisabled = false,
-  dragData
+  dragData,
+  isPopoverOpen = false
 }: DraggableAppointmentProps) => {
   const {
     setNodeRef,

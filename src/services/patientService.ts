@@ -44,16 +44,28 @@ export const PatientService = {
      */
     mapToApp(dbPatient: PatientDBStandard | PatientDBExtended): Patient {
         const extendedPatient = dbPatient as PatientDBExtended;
+
+        // Ensure birth_date is a string for Zod validation
+        let birthDate: string | undefined = undefined;
+        if (dbPatient.birth_date) {
+            const rawBirthDate = dbPatient.birth_date as any;
+            if (rawBirthDate instanceof Date) {
+                birthDate = rawBirthDate.toISOString().split('T')[0];
+            } else {
+                birthDate = String(dbPatient.birth_date);
+            }
+        }
+
         return {
             id: dbPatient.id,
             name: getPatientName(dbPatient),
             email: dbPatient.email ?? undefined,
             phone: dbPatient.phone ?? undefined,
             cpf: dbPatient.cpf ?? undefined,
-            birthDate: dbPatient.birth_date ?? undefined,
-            gender: extendedPatient.gender || 'outro',
+            birthDate,
+            gender: (extendedPatient.gender as any) || 'outro',
             mainCondition: dbPatient.observations ?? '',
-            status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial'),
+            status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
             progress: 0,
             incomplete_registration: dbPatient.incomplete_registration ?? false,
             createdAt: dbPatient.created_at ?? new Date().toISOString(),
@@ -97,7 +109,7 @@ export const PatientService = {
      * Fetch active patients for an organization
      * Uses Firebase Cloud Functions API
      */
-    async getActivePatients(organizationId: string): ServiceResult<Patient[]> {
+    async getActivePatients(organizationId: string): Promise<ServiceResult<Patient[]>> {
         if (!organizationId) throw AppError.badRequest('Organization ID is required');
 
         try {
@@ -105,25 +117,26 @@ export const PatientService = {
             // TEMP: Removendo filtro de status para debug
             const response = await patientsApi.list({ organizationId, limit: 1000 });
 
-            logger.debug('📊 [PatientService] Raw response', { response }, 'PatientService');
-            logger.debug('📊 [PatientService] response.data', { data: response.data }, 'PatientService');
-            logger.debug('📊 [PatientService] response.data type', { type: typeof response.data }, 'PatientService');
-            logger.debug('📊 [PatientService] Is array?', { isArray: Array.isArray(response.data) }, 'PatientService');
+            logger.debug('📊 [PatientService] Raw response received', {
+                count: response.data?.length,
+                error: response.error
+            }, 'PatientService');
 
-            const patients = response.data || [];
-            logger.info('PatientService: patients fetched from Firebase Functions', {
+            // Map from API model to domain model and validate
+            const patientsRaw = response.data || [];
+            const patients = this.mapPatientsFromDB(patientsRaw as any);
+
+            logger.info('PatientService: patients mapped and validated', {
                 count: patients.length,
-                organizationId,
-                hasData: Array.isArray(response.data),
+                organizationId
             }, 'PatientService');
 
             return { data: patients, error: null };
         } catch (error: UnknownError) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            logger.error('PatientService: error fetching patients from Firebase Functions', {
+            logger.error('PatientService: error fetching patients', {
                 error: errorMessage,
-                organizationId,
-                errorName: error instanceof Error ? error.name : 'Unknown',
+                organizationId
             }, 'PatientService');
             return { data: [], error: error instanceof Error ? error : new Error(String(error)) };
         }
@@ -132,12 +145,13 @@ export const PatientService = {
     /**
      * Fetch a single patient by ID
      */
-    async getPatientById(id: string): ServiceResult<Patient> {
+    async getPatientById(id: string): Promise<ServiceResult<Patient>> {
         if (!id) throw AppError.badRequest('Patient ID is required');
 
         try {
             const response = await patientsApi.get(id);
-            return { data: response.data, error: null };
+            const mapped = this.mapToApp(response as any);
+            return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
@@ -146,14 +160,16 @@ export const PatientService = {
     /**
      * Create a new patient
      */
-    async createPatient(patient: PatientInput): ServiceResult<Patient> {
+    async createPatient(patient: PatientInput): Promise<ServiceResult<Patient>> {
         try {
             const response = await patientsApi.create({
                 ...patient,
+                name: patient.name || 'Sem Nome',
                 status: patient.status || 'active',
                 progress: patient.progress || 0,
             });
-            return { data: response.data, error: null };
+            const mapped = this.mapToApp(response as any);
+            return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
@@ -162,13 +178,14 @@ export const PatientService = {
     /**
      * Update a patient
      */
-    async updatePatient(id: string, updates: Partial<PatientInput>): ServiceResult<Patient> {
+    async updatePatient(id: string, updates: Partial<PatientInput>): Promise<ServiceResult<Patient>> {
         try {
             const response = await patientsApi.update(id, {
                 ...updates,
                 updated_at: new Date().toISOString(),
             });
-            return { data: response.data, error: null };
+            const mapped = this.mapToApp(response as any);
+            return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
@@ -177,7 +194,7 @@ export const PatientService = {
     /**
      * Delete a patient
      */
-    async deletePatient(id: string): ServiceResult<null> {
+    async deletePatient(id: string): Promise<ServiceResult<null>> {
         try {
             await patientsApi.delete(id);
             return { data: null, error: null };

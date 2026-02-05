@@ -330,6 +330,8 @@ export type AppointmentFormData = {
   appointment_time?: string; // Legacy - for backward compatibility
   date?: string;           // New standardized column
   start_time?: string;      // New standardized column
+  end_time?: string;        // New standardized column
+  endTime?: string;         // Alias for consistency
   duration: number;
   type: AppointmentType;
   status: AppointmentStatus;

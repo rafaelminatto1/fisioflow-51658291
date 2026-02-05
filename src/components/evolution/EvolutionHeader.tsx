@@ -1,11 +1,11 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, FileText,
     Zap, Eye, EyeOff, Save, Clock, Keyboard, CheckCircle2, UserCog,
-    MoreVertical, Loader2
+    MoreVertical, Loader2, Brain, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,8 @@ import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { parseResponseDate } from '@/utils/dateUtils';
 import type { Patient, Appointment } from '@/types';
 
+const FIRST_EVOLUTION_DISMISS_KEY = 'fisioflow-first-evolution-header-dismissed';
+
 interface EvolutionHeaderProps {
     patient: Patient;
     appointment: Appointment;
@@ -64,6 +66,7 @@ interface EvolutionHeaderProps {
     therapists?: TherapistOption[];
     selectedTherapistId?: string;
     onTherapistChange?: (therapistId: string) => void;
+    previousEvolutionsCount?: number;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -74,6 +77,50 @@ function getPatientInitials(patient: Patient): string {
     }
     return name.slice(0, 2).toUpperCase() || '?';
 }
+
+// Componente compacto para primeira evolução no header
+const FirstEvolutionBadge = memo(() => {
+    const [dismissed, setDismissed] = useState(false);
+
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(FIRST_EVOLUTION_DISMISS_KEY);
+            setDismissed(stored === 'true');
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    const handleDismiss = () => {
+        try {
+            localStorage.setItem(FIRST_EVOLUTION_DISMISS_KEY, 'true');
+            setDismissed(true);
+        } catch {
+            // ignore
+        }
+    };
+
+    if (dismissed) return null;
+
+    return (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800">
+            <Brain className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                Primeira Evolução
+            </span>
+            <button
+                type="button"
+                onClick={handleDismiss}
+                className="ml-0.5 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
+                aria-label="Dispensar"
+            >
+                <X className="h-3.5 w-3.5" />
+            </button>
+        </div>
+    );
+});
+
+FirstEvolutionBadge.displayName = 'FirstEvolutionBadge';
 
 export const EvolutionHeader = memo(({
     patient,
@@ -95,7 +142,9 @@ export const EvolutionHeader = memo(({
     therapists = [],
     selectedTherapistId = '',
     onTherapistChange,
+    previousEvolutionsCount = 0,
 }: EvolutionHeaderProps) => {
+    const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();
     const selectedTherapist = selectedTherapistId
         ? getTherapistById(therapists, selectedTherapistId)
@@ -171,6 +220,7 @@ export const EvolutionHeader = memo(({
 
                 {/* Ações primárias */}
                 <div className="flex items-center gap-2 shrink-0 flex-shrink-0">
+                    {showFirstEvolution && <FirstEvolutionBadge />}
                     <Button
                         onClick={onSave}
                         size="sm"

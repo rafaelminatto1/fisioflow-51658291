@@ -64,6 +64,7 @@ export const CalendarView = memo(({
 }: CalendarViewProps) => {
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -148,7 +149,7 @@ export const CalendarView = memo(({
       // Check if target time falls within the appointment's duration
       // Or if the appointment starts at exactly the target time
       return aptTime === normalizedTime ||
-             (targetMinutes >= aptStartMinutes && targetMinutes < aptEndMinutes);
+        (targetMinutes >= aptStartMinutes && targetMinutes < aptEndMinutes);
     });
   }, [getAppointmentsForDate]);
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -131,8 +131,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                 <CardContent className="px-4 pb-4">
                   <div className="flex items-baseline gap-2">
                     <p className="text-3xl font-black tracking-tight">{formattedRevenue}</p>
-                    <Badge 
-                      variant="secondary" 
+                    <Badge
+                      variant="secondary"
                       className={`text-xs ${metrics?.crescimentoMensal && metrics.crescimentoMensal >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}
                     >
                       {metrics?.crescimentoMensal && metrics.crescimentoMensal >= 0 ? '+' : ''}{metrics?.crescimentoMensal || 0}%
@@ -184,7 +184,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardContent className="px-4 pb-4">
                 <LazyWidget height={200}>
                   {!metrics?.tendenciaSemanal || metrics.tendenciaSemanal.length === 0 ? (
-                    <EmptyState 
+                    <EmptyState
                       icon={TrendingUp}
                       title="Sem dados semanais"
                       description="Os dados de tendência aparecerão aqui após os primeiros agendamentos da semana."
@@ -238,7 +238,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardContent className="px-4 pb-4">
                 <LazyWidget height={200}>
                   {(metrics?.receitaPorFisioterapeuta?.length || 0) === 0 ? (
-                    <EmptyState 
+                    <EmptyState
                       icon={UserCheck}
                       title="Nenhum atendimento"
                       description="Os dados de desempenho aparecerão após os primeiros atendimentos do mês."
@@ -301,7 +301,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
                   </div>
                 ) : agendamentosProximos.length === 0 ? (
-                  <EmptyState 
+                  <EmptyState
                     icon={Clock}
                     title="Agenda livre"
                     description="Não há agendamentos próximos registrados no momento."

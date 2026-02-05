@@ -1,6 +1,6 @@
 /**
  * Card de Resumo na página de Evolução
- * Exibe EvolutionStats sempre visível (Evoluções, Metas, Progresso, Patologias, Medições, Sucesso)
+ * Exibe EvolutionStats em layout vertical com barras de progresso
  */
 
 import { BarChart2 } from 'lucide-react';
@@ -21,15 +21,15 @@ interface EvolutionSummaryCardProps {
 
 export function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
   return (
-    <Card className="border-primary/20 bg-primary/5 flex flex-col">
-      <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="border-primary/20 bg-primary/5 flex flex-col h-full shadow-sm overflow-hidden">
+      <CardHeader className="pb-3 pt-4 px-4 flex-shrink-0">
+        <CardTitle className="text-sm flex items-center gap-2">
           <BarChart2 className="h-4 w-4 text-primary" />
-          Resumo
+          Resumo da Evolução
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 pb-4 flex-1">
-        <EvolutionStats stats={stats} compact />
+      <CardContent className="px-4 pb-4 flex-1 min-h-0 overflow-auto">
+        <EvolutionStats stats={stats} vertical />
       </CardContent>
     </Card>
   );

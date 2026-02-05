@@ -48,6 +48,10 @@ interface MainLayoutProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
   /** Remove all main content padding for flush full-width layouts */
   noPadding?: boolean;
+  /** Custom header component to replace default header */
+  customHeader?: React.ReactNode;
+  /** Hide default header */
+  hideDefaultHeader?: boolean;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
@@ -57,6 +61,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   fullWidth = false,
   maxWidth,
   noPadding = false,
+  customHeader,
+  hideDefaultHeader = false,
 }) => {
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
   const navigate = useNavigate();
@@ -99,92 +105,96 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
       <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden transition-all duration-300 ease-in-out pl-0 md:pl-0 lg:pl-0"> {/* Adjusted for sidebar if needed, but sidebar is likely fixed or unrelated to this flex container's padding if handled by Sidebar component internally */}
         {/* Header Desktop */}
-        <header className="hidden md:flex h-16 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-6 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
-                <Stethoscope className="w-5 h-5 text-white" />
+        {customHeader ? (
+          customHeader
+        ) : !hideDefaultHeader && (
+          <header className="hidden md:flex h-16 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-6 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
+                  <Stethoscope className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 tracking-tight">
+                  FisioFlow
+                </h2>
               </div>
-              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 tracking-tight">
-                FisioFlow
-              </h2>
+
+              {/* Breadcrumbs can go here or be below */}
             </div>
 
-            {/* Breadcrumbs can go here or be below */}
-          </div>
+            <div className="flex items-center gap-5">
+              <GlobalSearch />
 
-          <div className="flex items-center gap-5">
-            <GlobalSearch />
+              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2" />
 
-            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2" />
+              {/* Indicador de usuários online */}
+              <OnlineUsersIndicator />
 
-            {/* Indicador de usuários online */}
-            <OnlineUsersIndicator />
+              <NotificationBell />
 
-            <NotificationBell />
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-3 h-10 px-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                  data-testid="user-menu"
-                >
-                  {loading ? (
-                    <>
-                      <Skeleton className="w-9 h-9 rounded-full" />
-                      <div className="flex flex-col items-start gap-1">
-                        <Skeleton className="hidden lg:block h-3 w-20" />
-                        <Skeleton className="hidden lg:block h-2 w-12" />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="relative">
-                        <Avatar className="w-9 h-9 ring-2 ring-white dark:ring-gray-800 shadow-sm">
-                          <AvatarImage src={profile?.avatar_url || ''} />
-                          <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white font-medium">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
-                      </div>
-                      <div className="hidden lg:flex flex-col items-start text-sm">
-                        <span className="font-semibold text-gray-700 dark:text-gray-200 leading-none">{displayName}</span>
-                        <span className="text-xs text-gray-600 dark:text-gray-500 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
-                      </div>
-                    </>
-                  )}
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-800/50 shadow-xl rounded-2xl animate-scale-in">
-                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Minha Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
-                <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
-                  <Link to="/profile">
-                    <User className="w-4 h-4 mr-3" />
-                    <span className="font-medium">Perfil</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
-                  <Link to="/settings">
-                    <Settings className="w-4 h-4 mr-3" />
-                    <span className="font-medium">Configurações</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="rounded-xl px-3 py-2.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600"
-                >
-                  <LogOut className="w-4 h-4 mr-3" />
-                  <span className="font-medium">Sair</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-3 h-10 px-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                    data-testid="user-menu"
+                  >
+                    {loading ? (
+                      <>
+                        <Skeleton className="w-9 h-9 rounded-full" />
+                        <div className="flex flex-col items-start gap-1">
+                          <Skeleton className="hidden lg:block h-3 w-20" />
+                          <Skeleton className="hidden lg:block h-2 w-12" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="relative">
+                          <Avatar className="w-9 h-9 ring-2 ring-white dark:ring-gray-800 shadow-sm">
+                            <AvatarImage src={profile?.avatar_url || ''} />
+                            <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white font-medium">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
+                        </div>
+                        <div className="hidden lg:flex flex-col items-start text-sm">
+                          <span className="font-semibold text-gray-700 dark:text-gray-200 leading-none">{displayName}</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-500 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
+                        </div>
+                      </>
+                    )}
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-800/50 shadow-xl rounded-2xl animate-scale-in">
+                  <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Minha Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
+                  <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
+                    <Link to="/profile">
+                      <User className="w-4 h-4 mr-3" />
+                      <span className="font-medium">Perfil</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
+                    <Link to="/settings">
+                      <Settings className="w-4 h-4 mr-3" />
+                      <span className="font-medium">Configurações</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="rounded-xl px-3 py-2.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4 mr-3" />
+                    <span className="font-medium">Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </header>
+        )}
 
         {/* Main Content - Com padding para mobile header e bottom navigation - Otimizado para iPhone/iPad */}
         <main

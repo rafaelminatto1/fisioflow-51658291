@@ -302,7 +302,28 @@ export const updateAppointmentHttp = onRequest(
       const currentAppt = current.rows[0];
       const newDate = updates.date ?? updates.appointment_date ?? currentAppt.date;
       const newStartTime = updates.startTime ?? updates.start_time ?? updates.appointment_time ?? currentAppt.start_time;
-      const newEndTime = updates.endTime ?? updates.end_time ?? currentAppt.end_time;
+      let newEndTime = updates.endTime ?? updates.end_time ?? currentAppt.end_time;
+
+      // Se o horário de início mudou mas o de fim não foi enviado explicitamente,
+      // ajustamos o fim para manter a duração original. Isso evita violação de valid_end_time.
+      if ((updates.startTime || updates.start_time || updates.appointment_time) && !updates.endTime && !updates.end_time) {
+        const parseToMin = (t: string) => {
+          if (!t) return 0;
+          const [h, m] = t.split(':').map(Number);
+          return h * 60 + (m || 0);
+        };
+        const minToStr = (m: number) => {
+          const hh = Math.floor(m / 60).toString().padStart(2, '0');
+          const mm = (m % 60).toString().padStart(2, '0');
+          return `${hh}:${mm}`;
+        };
+        const duration = parseToMin(String(currentAppt.end_time)) - parseToMin(String(currentAppt.start_time));
+        if (duration > 0) {
+          newEndTime = minToStr(parseToMin(newStartTime) + duration);
+          updates.end_time = newEndTime;
+        }
+      }
+
       const runConflictCheck = (updates.date || updates.appointment_date || updates.startTime || updates.start_time || updates.appointment_time || updates.endTime || updates.end_time) || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id);
       if (runConflictCheck) {
         const hasConflict = await checkTimeConflictByCapacity(pool, {

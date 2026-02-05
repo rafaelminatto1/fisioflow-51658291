@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url);
 const PROJECT_ID = 'fisioflow-migration';
 const REGION = 'southamerica-east1';
 const WEB_API_KEY = 'AIzaSyCz2c3HvQoV7RvFCbCaudbEEelEQaO-tY8'; 
-const FUNCTION_URL = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/generateExercisePlan`;
+const FUNCTION_URL = `https://generateexerciseplan-tfecm5cqoq-rj.a.run.app`;
 
 // Credenciais fornecidas
 const EMAIL = 'rafael.minatto@yahoo.com.br';

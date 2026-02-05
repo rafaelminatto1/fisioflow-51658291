@@ -1,7 +1,6 @@
 /**
  * Card de Cirurgias na página de Evolução
- * Lista cirurgias com data e tempo decorrido (X dias, Y semanas, W meses); fácil adicionar e editar.
- * Nota: ícone de cirurgia usa Scissors (lucide-react não exporta Scalpel).
+ * Lista cirurgias de forma compacta
  */
 
 import { useState } from 'react';
@@ -16,24 +15,19 @@ import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
 import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
 
-/** Formata tempo desde a cirurgia: "X dias, Y semanas e W meses" (totais desde a data) */
+/** Formata tempo desde a cirurgia de forma compacta */
 export function formatTimeSinceSurgery(surgeryDate: string): string {
   const now = new Date();
   const date = new Date(surgeryDate);
   const totalDays = differenceInDays(now, date);
 
-  if (totalDays < 0) return 'Data futura';
+  if (totalDays < 0) return 'Futura';
   if (totalDays === 0) return 'Hoje';
+  if (totalDays === 1) return '1 dia';
+  if (totalDays < 60) return `${totalDays}d`;
 
-  const totalWeeks = Math.floor(totalDays / 7);
   const totalMonths = Math.floor(totalDays / 30);
-
-  const parts: string[] = [];
-  parts.push(`${totalDays} ${totalDays === 1 ? 'dia' : 'dias'}`);
-  if (totalWeeks > 0) parts.push(`${totalWeeks} ${totalWeeks === 1 ? 'semana' : 'semanas'}`);
-  if (totalMonths > 0) parts.push(`${totalMonths} ${totalMonths === 1 ? 'mês' : 'meses'}`);
-
-  return parts.join(', ');
+  return totalMonths === 1 ? '1 mês' : `${totalMonths}m`;
 }
 
 interface SurgeriesCardProps {
@@ -64,74 +58,82 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
 
   return (
     <>
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="pb-1.5 pt-3 px-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Scissors className="h-3.5 w-3.5 text-primary" />
+      <Card className="border-primary/20 bg-primary/5 shadow-sm h-full flex flex-col">
+        <CardHeader className="pb-1.5 pt-2.5 px-3 flex flex-row items-center justify-between flex-shrink-0">
+          <CardTitle className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+            <Scissors className="h-3 w-3 text-primary" />
             Cirurgias
+            {surgeries.length > 0 && (
+              <span className="ml-1 h-4 px-1 rounded-full bg-primary/10 text-primary text-[9px] flex items-center justify-center">
+                {surgeries.length}
+              </span>
+            )}
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleAdd} className="h-7 gap-0.5">
-            <Plus className="h-3 w-3" />
-            Adicionar
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleAdd}
+            className="h-6 w-6 p-0 hover:bg-primary/10"
+            title="Adicionar cirurgia"
+          >
+            <Plus className="h-2.5 w-2.5" />
           </Button>
         </CardHeader>
-        <CardContent className="px-3 pb-3">
+        <CardContent className="px-3 pb-2.5 flex-1 min-h-0">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Carregando...</p>
+            <div className="flex items-center justify-center h-full">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : surgeries.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Nenhuma cirurgia registrada. Clique em Adicionar para incluir.
+            <p className="text-[10px] text-muted-foreground text-center py-6">
+              Nenhuma cirurgia registrada
             </p>
           ) : (
-            <ScrollArea className="h-[min(200px,40vh)] pr-1">
-              <ul className="space-y-2">
+            <ScrollArea className="h-full pr-1">
+              <ul className="space-y-1">
                 {surgeries.map((s) => {
                   const surgeryDate = (s as Record<string, unknown>).surgery_date as string;
                   const surgeryType = (s as Record<string, unknown>).surgery_type as string | undefined;
                   const affectedSide = (s as Record<string, unknown>).affected_side as string | undefined;
-                  const notes = (s as Record<string, unknown>).notes as string | undefined;
                   const timeSince = surgeryDate ? formatTimeSinceSurgery(surgeryDate) : '—';
+
                   return (
                     <li
                       key={s.id}
-                      className="flex items-start justify-between gap-2 p-2 rounded-md border border-border/50 hover:bg-muted/40 transition-colors group"
+                      className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-card/40 hover:bg-card/60 transition-colors group"
                     >
-                      <div className="min-w-0 flex-1 space-y-0.5">
-                        <p className="font-medium text-xs truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-medium truncate">
                           {(s as Record<string, unknown>).surgery_name as string}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                          {surgeryDate && (
+                            <span>{format(new Date(surgeryDate), "dd/MM/yy", { locale: ptBR })}</span>
+                          )}
+                          <span>·</span>
+                          <span className="text-primary">{timeSince}</span>
                           {surgeryType && (
-                            <span className="inline-block px-1 py-0.5 rounded bg-muted font-medium">
-                              {getSurgeryTypeLabel(surgeryType)}
-                            </span>
+                            <>
+                              <span>·</span>
+                              <span className="px-1 py-0 rounded bg-muted/50">{getSurgeryTypeLabel(surgeryType)}</span>
+                            </>
                           )}
                           {affectedSide && (
-                            <span className="inline-block px-1 py-0.5 rounded bg-primary/10 text-primary font-medium">
-                              {getAffectedSideLabel(affectedSide)}
-                            </span>
+                            <>
+                              <span>·</span>
+                              <span className="px-1 py-0 rounded bg-primary/10 text-primary">{getAffectedSideLabel(affectedSide)}</span>
+                            </>
                           )}
                         </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          {surgeryDate
-                            ? format(new Date(surgeryDate), "dd/MM/yyyy", { locale: ptBR })
-                            : '—'}{' '}
-                          · {timeSince}
-                        </p>
-                        {notes && (
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
-                            {notes}
-                          </p>
-                        )}
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-7 shrink-0 opacity-70 group-hover:opacity-100"
+                        className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0"
                         onClick={() => handleEdit(s as Surgery)}
                         aria-label="Editar cirurgia"
                       >
-                        <Edit2 className="h-3 w-3" />
+                        <Edit2 className="h-2.5 w-2.5" />
                       </Button>
                     </li>
                   );

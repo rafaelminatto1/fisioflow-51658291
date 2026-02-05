@@ -130,6 +130,47 @@ export async function getExerciseSuggestions(input: ExerciseSuggestionInput): Pr
 }
 
 // ============================================================================
+// EXERCISE PLAN GENERATION (via generateExercisePlan Genkit Flow)
+// ============================================================================
+
+export interface GenerateExercisePlanInput {
+  patientName: string;
+  age?: number;
+  condition: string;
+  painLevel: number;
+  equipment: string[];
+  goals: string;
+  limitations?: string;
+}
+
+export interface ExercisePlanResponse {
+  planName: string;
+  goal: string;
+  frequency: string;
+  durationWeeks: number;
+  exercises: Array<{
+    name: string;
+    sets: number;
+    reps: string;
+    rest: string;
+    notes?: string;
+    videoQuery: string;
+  }>;
+  warmup: string;
+  cooldown: string;
+}
+
+/**
+ * Gera um plano de exercícios completo usando o fluxo Genkit/Gemini 1.5 Flash.
+ * Retorna dados altamente estruturados e validados.
+ */
+export async function generateExercisePlanWithIA(input: GenerateExercisePlanInput): Promise<ExercisePlanResponse> {
+  const fn = httpsCallable<GenerateExercisePlanInput, ExercisePlanResponse>(functions, 'generateExercisePlan');
+  const { data } = await fn(input);
+  return data;
+}
+
+// ============================================================================
 // CLINICAL ANALYSIS (via aiClinicalAnalysis)
 // ============================================================================
 
