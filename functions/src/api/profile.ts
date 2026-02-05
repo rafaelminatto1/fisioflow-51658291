@@ -161,6 +161,7 @@ export const getProfile = onRequest(
     region: 'southamerica-east1',
     maxInstances: 10,
     cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   getProfileHttpHandler
 );
@@ -320,11 +321,8 @@ export const updateProfile = onRequest(
   {
     region: 'southamerica-east1',
     maxInstances: 10,
-    cors: [
-      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
-      /moocafisio\.com\.br$/,
-      /fisioflow\.web\.app$/,
-    ],
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   updateProfileHttpHandler
 );
