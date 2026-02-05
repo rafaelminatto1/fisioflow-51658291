@@ -14,7 +14,7 @@
  */
 
 import { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, writeBatch } from '@/integrations/firebase/app';
-rs/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
