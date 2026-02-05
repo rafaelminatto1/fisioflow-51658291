@@ -3,28 +3,26 @@
  */
 
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistHorizontal } from '@/components/schedule/WaitlistHorizontal';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
-import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare, Calendar, Sparkles, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, CheckSquare, Sparkles } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
-import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { ScheduleToolbar } from '@/components/schedule/ScheduleToolbar';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { AppointmentService } from '@/services/appointmentService';
@@ -188,6 +186,7 @@ const Schedule = () => {
       });
     },
   });
+
 
   // ===================================================================
   // COMPUTED VALUES
@@ -514,6 +513,40 @@ const Schedule = () => {
     toggleSelectionMode
   ]);
 
+  // Event handlers for ScheduleToolbar custom events
+  useEffect(() => {
+    const handleNavigate = (e: CustomEvent) => {
+      const { direction } = e.detail;
+      const daysToAdd = direction === 'next' ? 1 : -1;
+      let newDate = new Date(currentDate);
+
+      switch (viewType) {
+        case 'day':
+          newDate.setDate(newDate.getDate() + daysToAdd);
+          break;
+        case 'week':
+          newDate.setDate(newDate.getDate() + (daysToAdd * 7));
+          break;
+        case 'month':
+          newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+          break;
+      }
+      setCurrentDate(newDate);
+    };
+
+    const handleTodayClick = () => {
+      setCurrentDate(new Date());
+    };
+
+    window.addEventListener('schedule-navigate', handleNavigate as EventListener);
+    window.addEventListener('schedule-today-click', handleTodayClick);
+
+    return () => {
+      window.removeEventListener('schedule-navigate', handleNavigate as EventListener);
+      window.removeEventListener('schedule-today-click', handleTodayClick);
+    };
+  }, [currentDate, viewType]);
+
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
     const errorMessage = error instanceof Error ? error.message : 'Não foi possível carregar os agendamentos';
@@ -530,7 +563,7 @@ const Schedule = () => {
 
   return (
     <MainLayout fullWidth noPadding showBreadcrumbs={false}>
-      <div className="flex flex-col min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950">
+      <div className="flex flex-col min-h-[calc(100vh-128px)] bg-slate-50 dark:bg-slate-950">
         {/* Skip link - visible on focus for keyboard users */}
         <a
           href="#calendar-grid"
@@ -555,216 +588,45 @@ const Schedule = () => {
           dataSource={dataSource}
         />
 
-        {/* AI Assistant - Agenda Insight (healthcare palette, low visual weight) */}
-        <section className="px-4 sm:px-6 mt-6 animate-in fade-in slide-in-from-top-4 duration-700 motion-reduce:animate-none motion-reduce:duration-0">
-          <div className="bg-cyan-50/80 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800 rounded-2xl p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-cyan-100 dark:bg-cyan-900/40 flex-shrink-0 flex items-center justify-center text-cyan-700 dark:text-cyan-400">
-                <Sparkles className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Assistente de Agenda Clinsight</h2>
-                <p className="text-sm text-muted-foreground">Otimize seus horários com sugestões inteligentes da IA.</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl font-semibold h-10 px-6 border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 transition-all group"
-              onClick={() => toast({ title: "IA Analisando...", description: "Verificando disponibilidade e padrões de agendamento." })}
-            >
-              <Sparkles className="mr-2 h-4 w-4 group-hover:rotate-12 transition-transform" />
-              Sugerir Otimização
-            </Button>
+
+
+        {/* Schedule Toolbar */}
+        <ScheduleToolbar
+          currentDate={currentDate}
+          viewType={viewType as 'day' | 'week' | 'month'}
+          onViewChange={(view) => setViewType(view)}
+          isSelectionMode={isSelectionMode}
+          onToggleSelection={toggleSelectionMode}
+          onCreateAppointment={handleCreateAppointment}
+          filters={filters}
+          onFiltersChange={setFilters}
+          onClearFilters={() => setFilters({ status: [], types: [], therapists: [] })}
+          onCancelAllToday={() => setShowCancelAllTodayDialog(true)}
+        />
+
+        {/* Quick Stats Bar */}
+        <div className="flex items-center gap-4 px-6 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-800">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">
+              {appointments.length} agendamentos
+            </span>
           </div>
-        </section>
-
-        {/* Header Section - Enhanced with better visual hierarchy */}
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-          <div className="px-4 sm:px-6 py-4">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Left Section - Title, Navigation, Today Button */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
-                {/* Title with icon (healthcare palette) */}
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-cyan-600 to-cyan-700 rounded-xl shadow-sm">
-                    <Calendar className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                      Agenda
-                    </h1>
-                    <p className="text-xs text-muted-foreground hidden sm:block">
-                      Gerencie seus atendimentos
-                    </p>
-                  </div>
-                </div>
-
-                {/* Navigation Controls - Enhanced (44px touch targets on mobile) */}
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentDate(date => addDays(date, -7))}
-                    className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
-                    aria-label="Data anterior"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="px-3 min-w-[140px] text-center">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {formattedMonth}
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentDate(date => addDays(date, 7))}
-                    className="min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
-                    aria-label="Próxima data"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Today Button - Enhanced (44px touch on mobile) */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentDate(new Date())}
-                  className="min-h-[44px] sm:h-9 px-4 rounded-lg border-slate-200 dark:border-slate-700 font-medium transition-all hover:shadow-md"
-                >
-                  Hoje
-                </Button>
-
-                {/* Cancel all appointments for selected date */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCancelAllTodayDialog(true)}
-                  className="min-h-[44px] sm:h-9 px-4 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium transition-all"
-                  title="Cancelar todos os agendamentos da data exibida"
-                  aria-label="Cancelar todos os agendamentos da data exibida"
-                >
-                  <Trash2 className="w-4 h-4 mr-1.5" />
-                  Cancelar todos
-                </Button>
-              </div>
-
-              {/* Right Section - View Switcher, Filters, Actions */}
-              <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-                {/* View Type Switcher - Enhanced Design (44px touch on mobile) */}
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl" role="group" aria-label="Visualização da agenda">
-                  <Button
-                    size="sm"
-                    variant={viewType === 'day' ? 'white' : 'ghost'}
-                    onClick={() => setViewType('day')}
-                    className="min-h-[44px] sm:h-8 text-xs px-4 rounded-lg font-medium transition-all"
-                    aria-label="Visualizar por dia"
-                    aria-pressed={viewType === 'day'}
-                  >
-                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                    <span className="hidden sm:inline">Dia</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewType === 'week' ? 'white' : 'ghost'}
-                    onClick={() => setViewType('week')}
-                    className="min-h-[44px] sm:h-8 text-xs px-4 rounded-lg font-medium transition-all"
-                    aria-label="Visualizar por semana"
-                    aria-pressed={viewType === 'week'}
-                  >
-                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                    Semana
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewType === 'month' ? 'white' : 'ghost'}
-                    onClick={() => setViewType('month')}
-                    className="min-h-[44px] sm:h-8 text-xs px-4 rounded-lg font-medium transition-all"
-                    aria-label="Visualizar por mês"
-                    aria-pressed={viewType === 'month'}
-                  >
-                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                    Mês
-                  </Button>
-                </div>
-
-                {/* Selection Mode Toggle */}
-                <Button
-                  variant={isSelectionMode ? "default" : "outline"}
-                  size="icon"
-                  className={`min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 rounded-lg transition-all ${isSelectionMode
-                    ? 'bg-cyan-600 hover:bg-cyan-700 shadow-md'
-                    : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  onClick={toggleSelectionMode}
-                  title="Modo de Seleção (atalho: A)"
-                  aria-label="Modo seleção de agendamentos"
-                  aria-pressed={isSelectionMode}
-                >
-                  <CheckSquare className="w-4 h-4" />
-                </Button>
-
-                {/* Advanced Filters */}
-                <AdvancedFilters
-                  filters={filters}
-                  onChange={setFilters}
-                  onClear={() => setFilters({ status: [], types: [], therapists: [] })}
-                />
-
-                {/* Settings */}
-                <Link to="/schedule/settings">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-                    title="Configurações da Agenda"
-                    aria-label="Configurações da Agenda"
-                  >
-                    <SettingsIcon className="w-4 h-4" />
-                  </Button>
-                </Link>
-
-                {/* Primary CTA - Enhanced (44px touch on mobile) */}
-                <Button
-                  onClick={handleCreateAppointment}
-                  className="min-h-[44px] sm:h-9 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 shadow-md hover:shadow-lg rounded-lg px-4 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">{isMobile ? 'Novo' : 'Novo Agendamento'}</span>
-                  <span className="sm:hidden">Novo</span>
-                </Button>
-              </div>
+          {filteredAppointments.length !== appointments.length && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+              <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                {filteredAppointments.length} visíveis (filtros ativos)
+              </span>
             </div>
-          </div>
-
-          {/* Quick Stats Bar (healthcare palette) */}
-          <div className="px-4 sm:px-6 pb-3">
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-800">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                <span className="font-medium text-cyan-900 dark:text-cyan-100">
-                  {appointments.length} agendamentos
-                </span>
-              </div>
-              {filteredAppointments.length !== appointments.length && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
-                  <span className="font-medium text-amber-900 dark:text-amber-100">
-                    {filteredAppointments.length} visíveis (filtros ativos)
-                  </span>
-                </div>
-              )}
-              {isSelectionMode && selectedIds.size > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <CheckSquare className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                  <span className="font-medium text-purple-900 dark:text-purple-100">
-                    {selectedIds.size} selecionados
-                  </span>
-                </div>
-              )}
+          )}
+          {isSelectionMode && selectedIds.size > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+              <CheckSquare className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                {selectedIds.size} selecionados
+              </span>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Workspace */}
