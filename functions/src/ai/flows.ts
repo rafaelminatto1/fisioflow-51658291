@@ -82,7 +82,7 @@ export const analyzeProgress = onCall(async (request) => {
     logger.error('Genkit flow failed', e);
     
     if (e instanceof z.ZodError) {
-        throw new Error(`Dados inválidos: ${e.errors.map(err => err.message).join(', ')}`);
+        throw new Error(`Dados inválidos: ${e.issues.map((err: any) => err.message).join(', ')}`);
     }
     
     throw new Error('Analysis failed');
