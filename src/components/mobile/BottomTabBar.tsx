@@ -51,7 +51,7 @@ export function BottomTabBar() {
               className={({ isActive: isNavActive }) =>
                 cn(
                   'flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200',
-                  isNavActive ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600'
+                  isNavActive ? 'text-blue-500' : 'text-gray-500 hover:text-gray-600'
                 )
               }
               end={tab.path === '/dashboard'}
@@ -76,7 +76,7 @@ export function BottomTabBar() {
 
               <span className={cn(
                 'text-xs mt-1 font-medium transition-all duration-200',
-                isActive ? 'text-blue-500' : 'text-gray-400'
+                isActive ? 'text-blue-500' : 'text-gray-500'
               )}>
                 {tab.label}
               </span>
