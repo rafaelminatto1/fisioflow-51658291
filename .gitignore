@@ -206,4 +206,4 @@ functions/check_clinical_schema.js
 functions/check_token.js
 functions/decode-token.js
 functions/lib/
-functions/.env.fisioflow-migration
+functions/.env.fisioflow-migrationwhisper_env/
