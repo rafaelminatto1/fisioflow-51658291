@@ -2,12 +2,13 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 const visionClient = new ImageAnnotatorClient();
 const httpOpts = {
   region: 'southamerica-east1' as const, memory: '1GiB' as const,
   cpu: 1 as const,
-  maxInstances: 5, cors: true
+  maxInstances: 5, cors: CORS_ORIGINS, invoker: 'public' as const
 };
 
 /**

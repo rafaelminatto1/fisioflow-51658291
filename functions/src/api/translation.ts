@@ -15,6 +15,7 @@ import {
   detectLanguage as detectLang,
 } from '../lib/translation';
 import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 // ============================================================================
 // TYPES
@@ -132,7 +133,8 @@ export const translate = onRequest(
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   translateHandler
 );
@@ -193,7 +195,8 @@ export const detectLanguage = onRequest(
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   detectLanguageHandler
 );
@@ -254,7 +257,8 @@ export const getSupportedLanguages = onRequest(
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   getSupportedLanguagesHandler
 );
@@ -331,7 +335,8 @@ export const translateExercise = onRequest(
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   translateExerciseHandler
 );

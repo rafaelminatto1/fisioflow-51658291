@@ -12,6 +12,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getTextToSpeechClient } from '../lib/text-to-speech';
 import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 // ============================================================================
 // TYPES
@@ -119,7 +120,8 @@ export const synthesizeTTS = onRequest(
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   synthesizeTTSHandler
 );

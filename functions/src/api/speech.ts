@@ -12,6 +12,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getSpeechToTextClient } from '../lib/speech-to-text';
 import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 // ============================================================================
 // TYPES
@@ -134,7 +135,8 @@ export const transcribeAudio = onRequest(
     memory: '512MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 10,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   transcribeAudioHandler
 );
@@ -212,7 +214,8 @@ export const transcribeLongAudio = onRequest(
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
     maxInstances: 5,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   transcribeLongAudioHandler
 );

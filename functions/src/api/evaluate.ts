@@ -5,6 +5,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https';
 import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 /**
  * Endpoint HTTP para avaliações
@@ -101,4 +102,10 @@ export const apiEvaluateHandler = async (req: any, res: any) => {
   }
 };
 
-export const apiEvaluate = onRequest(apiEvaluateHandler);
+export const apiEvaluate = onRequest({
+  region: 'southamerica-east1',
+  memory: '256MiB',
+  maxInstances: 10,
+  cors: CORS_ORIGINS,
+  invoker: 'public',
+}, apiEvaluateHandler);
