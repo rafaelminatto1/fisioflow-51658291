@@ -844,6 +844,19 @@ export { stripeWebhookHttp } from './stripe/webhook';
 // GOOGLE CLOUD SERVICES EXPORTS
 // ============================================================================
 
+// ============================================================================
+// GOOGLE INTEGRATIONS (Maps, Meet, Calendar)
+// ============================================================================
+
+import * as googleIntegrations from './integrations/google';
+export const searchPlaces = googleIntegrations.searchPlaces;
+// export const getGoogleAuthUrl = googleIntegrations.getGoogleAuthUrl; // Already exported in integrations/calendar, using unique name here
+export const getGoogleAuthUrlIntegration = googleIntegrations.getGoogleAuthUrl;
+export const googleAuthCallback = googleIntegrations.googleAuthCallback;
+export const createMeetLink = googleIntegrations.createMeetLink;
+export const syncPatientCalendar = googleIntegrations.syncPatientCalendar;
+export const getBusinessReviews = googleIntegrations.getBusinessReviews;
+
 // Export helper functions (lib) - avoid re-exporting names already exported from api/
 export {
     initCrashlytics,

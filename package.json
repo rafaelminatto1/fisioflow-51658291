@@ -69,6 +69,9 @@
     "migrate:exercises-protocols:retry-clear": "node scripts/migration/migrate-exercises-protocols-from-supabase.mjs --retry-supabase-urls --clear-failed-urls",
     "migrate:clinical-tests": "node scripts/migration/migrate-clinical-tests-from-supabase.mjs",
     "migrate:clinical-tests:dry": "node scripts/migration/migrate-clinical-tests-from-supabase.mjs --dry-run",
+    "export:exercise-templates": "node scripts/migration/export-exercise-templates-from-supabase.mjs",
+    "migrate:exercise-templates": "node scripts/migration/migrate-exercise-templates-from-supabase.mjs",
+    "migrate:exercise-templates:dry": "node scripts/migration/migrate-exercise-templates-from-supabase.mjs --dry-run",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },
@@ -237,6 +240,7 @@
     "@eslint/js": "^9.32.0",
     "@playwright/test": "^1.58.0",
     "@sentry/vite-plugin": "^4.6.1",
+    "@supabase/supabase-js": "^2.91.1",
     "@swc/core": "^1.15.10",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/dom": "^10.4.1",

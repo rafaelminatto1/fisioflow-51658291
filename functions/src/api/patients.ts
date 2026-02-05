@@ -582,8 +582,20 @@ export const updatePatientHttp = onRequest(
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
       const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
-      const { patientId, ...updates } = body;
+      const { patientId, ...rawUpdates } = body;
       if (!patientId) { res.status(400).json({ error: 'patientId é obrigatório' }); return; }
+      // Aceitar full_name do front como name no banco
+      const updates = { ...rawUpdates };
+      if ('full_name' in updates && !('name' in updates)) {
+        updates.name = updates.full_name;
+      }
+      // Normalizar datas vazias para null (evita erro no PostgreSQL)
+      const dateFields = ['birth_date', 'medical_return_date'];
+      for (const key of dateFields) {
+        if (key in updates && (updates[key] === '' || updates[key] == null)) {
+          updates[key] = null;
+        }
+      }
       const pool = getPool();
       const existing = await pool.query('SELECT * FROM patients WHERE id = $1 AND organization_id = $2', [patientId, organizationId]);
       if (existing.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
@@ -595,7 +607,9 @@ export const updatePatientHttp = onRequest(
         if (field in updates) {
           paramCount++;
           setClauses.push(`${field} = $${paramCount}`);
-          values.push(field === 'cpf' ? (updates[field]?.replace?.(/\D/g, '') || null) : updates[field]);
+          const raw = updates[field];
+          const value = field === 'cpf' ? (raw?.replace?.(/\D/g, '') || null) : (field === 'birth_date' || field === 'medical_return_date' ? (raw === '' ? null : raw) : raw);
+          values.push(value);
         }
       }
       if (setClauses.length === 0) { res.status(400).json({ error: 'Nenhum campo válido para atualizar' }); return; }
@@ -628,8 +642,9 @@ export const updatePatientHttp = onRequest(
       res.json({ data: patient });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
-      logger.error('Error in updatePatientHttp:', error);
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao atualizar paciente' });
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error('Error in updatePatientHttp:', { error, message });
+      res.status(500).json({ error: message || 'Erro ao atualizar paciente' });
     }
   }
 );

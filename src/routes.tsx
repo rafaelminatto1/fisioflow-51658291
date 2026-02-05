@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RouteErrorBoundary } from "@/components/error-boundaries/RouteErrorBoundary";
 
 // =============================================================================
 // LAZY LOADED PAGES WITH OPTIMIZED CHUNKS
@@ -149,6 +150,7 @@ const PublicPrescriptionPage = lazy(() => import(/* webpackChunkName: "prescript
 const FileUploadTest = lazy(() => import(/* webpackChunkName: "test-upload" */ "./pages/FileUploadTest"));
 const ClinicalTestsLibrary = lazy(() => import(/* webpackChunkName: "clinical-tests" */ "./pages/ClinicalTestsLibrary"));
 const NotFound = lazy(() => import(/* webpackChunkName: "not-found" */ "./pages/NotFound"));
+const ErrorPage = lazy(() => import(/* webpackChunkName: "error-page" */ "./pages/ErrorPage"));
 
 // =============================================================================
 // ENTERPRISE FEATURES - Novas funcionalidades estratégicas
@@ -169,6 +171,16 @@ const Integrations = lazy(() => import(/* webpackChunkName: "integrations" */ ".
 // Lazy load Public Booking
 const BookingPage = lazy(() => import(/* webpackChunkName: "public-booking" */ "./pages/public/BookingPage").then(module => ({ default: module.BookingPage })));
 
+// Google AI Suite
+const ClinicalAnalysisPage = lazy(() => import(/* webpackChunkName: "ai-clinical" */ "./pages/ai/ClinicalAnalysisPage"));
+const MovementLabPage = lazy(() => import(/* webpackChunkName: "ai-movement" */ "./pages/ai/MovementLabPage"));
+const DocumentScannerPage = lazy(() => import(/* webpackChunkName: "ai-scanner" */ "./pages/ai/DocumentScannerPage"));
+
+// Google Integrations & Marketing
+const IntegrationsPage = lazy(() => import(/* webpackChunkName: "integrations-google" */ "./pages/Integrations"));
+const ReviewsPage = lazy(() => import(/* webpackChunkName: "marketing-reviews" */ "./pages/marketing/Reviews"));
+const AdvancedBI = lazy(() => import(/* webpackChunkName: "reports-bi" */ "./pages/relatorios/AdvancedBI"));
+
 export function AppRoutes() {
     return (
         <Routes>
@@ -184,10 +196,10 @@ export function AppRoutes() {
             <Route path="/agendar/:slug" element={<BookingPage />} />
 
             {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/" element={<RouteErrorBoundary routeName="Schedule"><ProtectedRoute><Schedule /></ProtectedRoute></RouteErrorBoundary>} />
+            <Route path="/dashboard" element={<RouteErrorBoundary routeName="Dashboard"><ProtectedRoute><Index /></ProtectedRoute></RouteErrorBoundary>} />
             <Route path="/ocupacao-fisioterapeutas" element={<ProtectedRoute><TherapistOccupancy /></ProtectedRoute>} />
-            <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+            <Route path="/patients" element={<RouteErrorBoundary routeName="Patients"><ProtectedRoute><Patients /></ProtectedRoute></RouteErrorBoundary>} />
             <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
             <Route path="/schedule" element={<Navigate to="/" replace />} />
             <Route path="/agenda" element={<Navigate to="/" replace />} />
@@ -196,7 +208,7 @@ export function AppRoutes() {
             <Route path="/perfil" element={<Navigate to="/profile" replace />} />
             <Route path="/configuracoes" element={<Navigate to="/settings" replace />} />
             <Route path="/schedule/settings" element={<ProtectedRoute><ScheduleSettings /></ProtectedRoute>} />
-            <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+            <Route path="/exercises" element={<RouteErrorBoundary routeName="Exercises"><ProtectedRoute><Exercises /></ProtectedRoute></RouteErrorBoundary>} />
             <Route path="/protocols" element={<ProtectedRoute><ProtocolsPage /></ProtectedRoute>} />
             <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
@@ -320,9 +332,20 @@ export function AppRoutes() {
             <Route path="/automation" element={<ProtectedRoute><Automation /></ProtectedRoute>} />
             <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
 
+            {/* Google AI Suite */}
+            <Route path="/ai/clinical" element={<ProtectedRoute><ClinicalAnalysisPage /></ProtectedRoute>} />
+            <Route path="/ai/movement" element={<ProtectedRoute><MovementLabPage /></ProtectedRoute>} />
+            <Route path="/ai/scanner" element={<ProtectedRoute><DocumentScannerPage /></ProtectedRoute>} />
+
+            {/* Google Integrations */}
+            <Route path="/integrations" element={<ProtectedRoute><IntegrationsPage /></ProtectedRoute>} />
+            <Route path="/marketing/reviews" element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>} />
+            <Route path="/analytics/bi" element={<ProtectedRoute><AdvancedBI /></ProtectedRoute>} />
+
             {/* Seed Data Route - Temporary */}
             <Route path="/seed-data" element={<ProtectedRoute><SeedData /></ProtectedRoute>} />
 
+            <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     );
