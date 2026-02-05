@@ -10,6 +10,7 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getAdminDb } from '../init';
+import { sendDailyReportEmail, sendWeeklySummaryEmail } from '../communications/resend-templates';
 
 /**
  * Daily Reports Scheduled Function
@@ -170,28 +171,33 @@ export const dailyReports = onSchedule({
           let emailsSent = 0;
           const emailPromises = therapists.map(async (therapist: any) => {
             try {
-              // TODO: Implementar envio de email via Resend/SendGrid
-              // Por enquanto, apenas logar
-              logger.info(`[dailyReports] Enviando relatório para terapeuta`, {
-                organizationId: org.id,
+              // Enviar email via Resend
+              const emailResult = await sendDailyReportEmail(therapist.email, {
+                therapistName: therapist.displayName || therapist.name || 'Terapeuta',
                 organizationName: org.name,
-                therapistId: therapist.id,
-                therapistEmail: therapist.email,
-                reportId: reportRef.id,
+                date: yesterday.toISOString().split('T')[0],
+                totalSessions: sessions.length,
+                totalAppointments: appointments.length,
+                completedSessions: reportData.completedSessions,
+                draftSessions: reportData.draftSessions,
+                appointmentsByStatus: reportData.appointmentsByStatus,
               });
 
               // Salvar log de envio
-              const logRef1 = db.collection('daily_report_logs').doc();
-              await logRef1.create({
+              await db.collection('daily_report_logs').doc().create({
                 report_id: reportRef.id,
                 therapist_id: therapist.id,
                 therapist_email: therapist.email,
                 organization_id: org.id,
                 sent_at: new Date().toISOString(),
-                status: 'sent',
+                status: emailResult.success ? 'sent' : 'failed',
+                error: emailResult.error || null,
+                email_id: emailResult.id || null,
               });
 
-              emailsSent++;
+              if (emailResult.success) {
+                emailsSent++;
+              }
             } catch (error) {
               logger.error(`[dailyReports] Erro ao enviar relatório para terapeuta`, {
                 organizationId: org.id,
@@ -200,8 +206,7 @@ export const dailyReports = onSchedule({
               });
 
               // Salvar log de erro
-              const logRef2 = db.collection('daily_report_logs').doc();
-              await logRef2.create({
+              await db.collection('daily_report_logs').doc().create({
                 report_id: reportRef.id,
                 therapist_id: therapist.id,
                 therapist_email: therapist.email,
@@ -427,18 +432,53 @@ export const weeklySummary = onSchedule({
             generated_by: 'system',
           });
 
-          // TODO: Send emails to therapists
-          logger.info(`[weeklySummary] Resumo semanal gerado`, {
-            organizationId: org.id,
-            organizationName: org.name,
-            summaryId: summaryRef.id,
+          // Send emails to therapists
+          let emailsSent = 0;
+          const emailPromises = therapists.map(async (therapist: any) => {
+            try {
+              const emailResult = await sendWeeklySummaryEmail(therapist.email, {
+                therapistName: therapist.displayName || therapist.name || 'Terapeuta',
+                organizationName: org.name,
+                weekStart: startOfLastWeek.toISOString().split('T')[0],
+                weekEnd: endOfLastWeek.toISOString().split('T')[0],
+                totalSessions: sessions.length,
+                totalAppointments: appointments.length,
+                completedSessions: summaryData.completedSessions,
+                completedAppointments: summaryData.completedAppointments,
+                cancelledAppointments: summaryData.cancelledAppointments,
+                missedAppointments: summaryData.missedAppointments,
+              });
+
+              await db.collection('weekly_summary_logs').doc().create({
+                summary_id: summaryRef.id,
+                therapist_id: therapist.id,
+                therapist_email: therapist.email,
+                organization_id: org.id,
+                sent_at: new Date().toISOString(),
+                status: emailResult.success ? 'sent' : 'failed',
+                error: emailResult.error || null,
+                email_id: emailResult.id || null,
+              });
+
+              if (emailResult.success) {
+                emailsSent++;
+              }
+            } catch (error) {
+              logger.error(`[weeklySummary] Erro ao enviar resumo para terapeuta`, {
+                organizationId: org.id,
+                therapistId: therapist.id,
+                error,
+              });
+            }
           });
+
+          await Promise.all(emailPromises);
 
           return {
             organizationId: org.id,
             organizationName: org.name,
             reportsGenerated: 1,
-            emailsSent: therapists.length, // TODO: atualizar quando emails forem enviados
+            emailsSent,
             summaryId: summaryRef.id,
             summaryData,
           };
