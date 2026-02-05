@@ -117,33 +117,87 @@ async function calculateNPS(): Promise<number> {
   }
 }
 
-// Função auxiliar para calcular adesão de exercícios (simplificada)
+// Função auxiliar para calcular adesão de exercícios (baseada em dados reais)
 async function calculateExerciseAdherence(patientId?: string): Promise<number> {
   try {
-    // Adesão simplificada baseada em sessões completadas
-    let q = firestoreQuery(
-      collection(db, 'sessions'),
-      where('status', '==', 'completed'),
+    if (!patientId) return 0;
+
+    // 1. Tentar buscar logs de exercícios (preferencial)
+    // Tenta primeiro com patient_id (padrão banco)
+    const logsQuery = firestoreQuery(
+      collection(db, 'exercise_logs'),
+      where('patient_id', '==', patientId),
+      orderBy('complete_date', 'desc'),
       limit(100)
     );
 
-    if (patientId) {
-      q = firestoreQuery(
+    let logsSnapshot;
+    try {
+      logsSnapshot = await getDocs(logsQuery);
+    } catch (e) {
+      // Se falhar (ex: coleção não existe ou erro de índice), tenta fallback
+      logsSnapshot = { empty: true, size: 0, docs: [] };
+    }
+
+    if (!logsSnapshot.empty && logsSnapshot.size > 0) {
+      const logs = logsSnapshot.docs.map(d => d.data());
+      const now = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+
+      const recentLogs = logs.filter((l: any) => {
+        const dateStr = l.complete_date || l.timestamp || l.created_at;
+        const date = dateStr ? new Date(dateStr) : null;
+        return date && date >= thirtyDaysAgo;
+      });
+
+      // Se tem logs recentes, calculamos uma pontuação baseada na consistência (meta: 3x/semana = 12/mês)
+      if (recentLogs.length > 0) {
+        const adherence = Math.min(100, (recentLogs.length / 12) * 100);
+        return Math.round(adherence);
+      }
+    }
+
+    // 2. Fallback: Taxa de Comparecimento (Attendance Rate) usando Agendamentos
+    // (Realizado / (Realizado + Faltou + Cancelado))
+    const appointmentsQ = firestoreQuery(
+      collection(db, 'appointments'),
+      where('patient_id', '==', patientId),
+      where('start_time', '<=', new Date().toISOString()),
+      orderBy('start_time', 'desc'),
+      limit(50)
+    );
+
+    const apptSnapshot = await getDocs(appointmentsQ);
+
+    if (apptSnapshot.empty) {
+      // Se não tem agendamentos, tenta usar sessões antigas como último recurso (lógica original melhorada)
+      const sessionsQ = firestoreQuery(
         collection(db, 'sessions'),
-        where('status', '==', 'completed'),
         where('patient_id', '==', patientId),
-        limit(100)
+        where('status', '==', 'completed'),
+        limit(10)
       );
+      const sessionSnap = await getDocs(sessionsQ);
+      return sessionSnap.size > 0 ? 50 : 0; // Valor base se tem histórico mas sem agendamentos recentes
     }
 
-    const snapshot = await getDocs(q);
+    const appts = apptSnapshot.docs.map(doc => doc.data());
 
-    if (snapshot.empty) {
-      return 0;
-    }
+    const completed = appts.filter((a: any) =>
+      ['concluido', 'atendido', 'completed', 'realizado'].includes((a.status || '').toLowerCase())
+    ).length;
 
-    // Estimar adesão baseada em sessões
-    return snapshot.size > 0 ? Math.min(85, 50 + snapshot.size) : 0;
+    const missed = appts.filter((a: any) =>
+      ['faltou', 'cancelado', 'no_show', 'cancelled', 'missed'].includes((a.status || '').toLowerCase())
+    ).length;
+
+    const total = completed + missed;
+
+    if (total === 0) return 0;
+
+    return Math.round((completed / total) * 100);
+
   } catch (error) {
     logger.error('Erro ao calcular adesão de exercícios', error, 'useReports');
     return 0;
