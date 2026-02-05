@@ -66,6 +66,47 @@ interface MeasurementInput {
   custom_data: Record<string, string>;
 }
 
+// Color system constants for consistent styling
+const FORM_COLORS = {
+  primary: {
+    bg: 'bg-teal-600',
+    hover: 'hover:bg-teal-700',
+    text: 'text-teal-600',
+    border: 'border-teal-200',
+    bgSubtle: 'bg-teal-50',
+    focusRing: 'focus-visible:ring-teal-400',
+  },
+  secondary: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-600',
+    border: 'border-blue-200',
+    focusRing: 'focus-visible:ring-blue-400',
+  },
+  accent: {
+    bg: 'bg-orange-50',
+    text: 'text-orange-600',
+    border: 'border-orange-200',
+  },
+  neutral: {
+    bg: 'bg-slate-50',
+    bgSubtle: 'bg-slate-50/50',
+    text: 'text-slate-600',
+    textMuted: 'text-slate-500',
+    border: 'border-slate-200',
+    borderSubtle: 'border-slate-100',
+  }
+} as const;
+
+// Standard focus classes for consistent interactive feedback
+const inputFocusClasses = [
+  "focus-visible:outline-none",
+  "focus-visible:ring-2",
+  "focus-visible:ring-teal-400",
+  "focus-visible:ring-offset-2",
+  "focus-visible:ring-offset-white",
+  "transition-all duration-200"
+].join(" ");
+
 const VITAL_SIGNS_FIELDS = [
   { id: 'bp', label: 'PA', fullLabel: 'Pressão Arterial', unit: 'mmHg', type: 'text', placeholder: '120/80', icon: Stethoscope, color: 'text-blue-600', bg: 'bg-blue-50' },
   { id: 'hr', label: 'FC', fullLabel: 'Freq. Cardíaca', unit: 'bpm', type: 'number', placeholder: '70', icon: Heart, color: 'text-red-600', bg: 'bg-red-50' },
@@ -330,7 +371,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
       <CardHeader className="bg-slate-50/50 border-b border-slate-100">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-teal-600 rounded-xl text-white shadow-lg shadow-teal-100">
+            <div className="p-2.5 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl text-white shadow-lg shadow-teal-100">
               <Zap className="h-5 w-5" />
             </div>
             <div>
@@ -343,7 +384,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
               onClick={() => navigate('/clinical-tests')}
               size="sm"
               variant="outline"
-              className="hidden sm:flex border-teal-100 text-teal-700 hover:bg-teal-50 font-bold"
+              className="hidden sm:flex border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 font-semibold"
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Biblioteca
@@ -351,7 +392,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
             <Button
               onClick={handleAddMeasurement}
               size="sm"
-              className="bg-teal-600 hover:bg-teal-700 font-bold shadow-md shadow-teal-100"
+              className="bg-teal-600 hover:bg-teal-700 font-semibold shadow-md shadow-teal-100"
             >
               <Plus className="h-4 w-4 mr-2" />
               Adicionar
@@ -359,6 +400,28 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
           </div>
         </div>
       </CardHeader>
+
+      {/* Progress indicator for multiple measurements */}
+      {measurements.length > 1 && (
+        <div className="px-6 pt-4 pb-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-600">
+              Progresso do Registro
+            </span>
+            <span className="text-xs text-slate-500">
+              {measurements.filter(m => m.measurement_name && hasAnyValue(m)).length} / {measurements.length}
+            </span>
+          </div>
+          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${(measurements.filter(m => m.measurement_name && hasAnyValue(m)).length / measurements.length) * 100}%`
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <CardContent className="p-6 space-y-6">
         {/* Mobile link for tests */}
@@ -369,46 +432,69 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
 
         {/* Presets */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">
-            <Target className="h-3 w-3" />
-            <span>Modelos Rápidos</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-teal-600" />
+              <span className="text-sm font-semibold text-slate-700">
+                Modelos Rápidos
+              </span>
+            </div>
+            <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-600 border-slate-200">
+              {presets.length} disponíveis
+            </Badge>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {presets.map((preset) => (
-              <Badge
+              <Button
                 key={preset.label}
                 variant="outline"
-                className="cursor-pointer hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all px-3 py-1.5 font-bold text-slate-600 border-slate-200"
                 onClick={() => handleQuickAdd(preset)}
+                className={cn(
+                  "h-auto py-3 px-3 flex flex-col items-center gap-1.5 group",
+                  "border-slate-200 bg-white hover:border-teal-400 hover:bg-teal-50",
+                  "hover:text-teal-700 hover:shadow-sm transition-all duration-200",
+                  "focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+                )}
               >
-                {preset.label}
-              </Badge>
+                <span className="text-xs font-bold text-slate-700 text-center leading-tight">
+                  {preset.label}
+                </span>
+                <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-teal-600" />
+              </Button>
             ))}
           </div>
         </div>
 
         {/* Required Measurements Shortcuts */}
         {requiredMeasurements.length > 0 && (
-          <div className="space-y-3 p-4 bg-orange-50/50 rounded-xl border border-orange-100">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-orange-700 uppercase tracking-widest">
-              <Sparkles className="h-3 w-3" />
-              <span>Pendentes para esta patologia</span>
+          <div className="space-y-3 p-4 bg-orange-50/50 rounded-xl border border-orange-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-orange-600" />
+                <span className="text-sm font-semibold text-orange-700">
+                  Pendentes para esta patologia
+                </span>
+              </div>
+              <Badge variant="secondary" className="text-[10px] bg-orange-100 text-orange-700 border-orange-300">
+                {requiredMeasurements.length} obrigatória(s)
+              </Badge>
             </div>
             <div className="flex flex-wrap gap-2">
               {requiredMeasurements.map((req) => (
-                <Badge
+                <Button
                   key={req.id}
                   variant="outline"
-                  className={cn(
-                    "cursor-pointer font-bold px-3 py-1.5 transition-all",
-                    req.alert_level === 'high'
-                      ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600'
-                      : 'bg-white text-orange-700 border-orange-200 hover:bg-orange-600 hover:text-white hover:border-orange-600'
-                  )}
+                  size="sm"
                   onClick={() => handleQuickFillRequired(req, measurements.length - 1)}
+                  className={cn(
+                    "h-auto py-2 px-3 font-semibold text-xs transition-all",
+                    req.alert_level === 'high'
+                      ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-600 hover:text-white hover:border-red-600'
+                      : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-600 hover:text-white hover:border-orange-600'
+                  )}
                 >
                   {req.measurement_name}
-                </Badge>
+                </Button>
               ))}
             </div>
           </div>
@@ -490,8 +576,8 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                   {/* Test Search & Type */}
                   <div className="lg:col-span-5 space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
-                        <BookOpen className="h-3 w-3 text-teal-600" />
+                      <Label className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-teal-600" />
                         Teste da Biblioteca
                       </Label>
                       <ClinicalTestCombobox
@@ -502,12 +588,12 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tipo</Label>
+                      <Label className="text-xs font-semibold text-slate-600">Tipo</Label>
                       <Select
                         value={measurement.measurement_type}
                         onValueChange={(value) => handleUpdateMeasurement(index, 'measurement_type', value)}
                       >
-                        <SelectTrigger className="h-11 bg-white border-slate-200 font-medium">
+                        <SelectTrigger className={cn("h-11 bg-white border-slate-200 font-medium", inputFocusClasses)}>
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                         <SelectContent>
@@ -529,20 +615,20 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                   {/* Name & Primary Values */}
                   <div className="lg:col-span-7 space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor={`measurement-name-${index}`} className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Nome da Medição</Label>
+                      <Label htmlFor={`measurement-name-${index}`} className="text-xs font-semibold text-slate-600">Nome da Medição</Label>
                       <Input
                         id={`measurement-name-${index}`}
                         value={measurement.measurement_name}
                         onChange={(e) => handleUpdateMeasurement(index, 'measurement_name', e.target.value)}
                         placeholder="Ex: Flexão do joelho direito"
-                        className="h-11 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100"
+                        className={cn("h-11 bg-white border-slate-200 font-semibold text-slate-700", inputFocusClasses)}
                         aria-label="Nome da medição"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       {showYBalanceDiagram(measurement) ? (
-                        <div className="col-span-2">
+                        <div className="col-span-2 space-y-4">
                           <MeasurementDiagramYBalance
                             values={{
                               anterior: measurement.custom_data.anterior ?? '',
@@ -560,45 +646,74 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                                 : null
                             }
                           />
-                          <div className="mt-4 space-y-2">
-                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Anotações</Label>
+                          <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <Label
+                              htmlFor={`ybalance-notes-${index}`}
+                              className="text-xs font-semibold text-slate-600 flex items-center gap-1.5"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-slate-400" />
+                              Anotações
+                              <span className="text-slate-400 font-normal">(opcional)</span>
+                            </Label>
                             <Textarea
+                              id={`ybalance-notes-${index}`}
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
                               placeholder="Observações sobre esta medição..."
-                              className="bg-white border-slate-200 font-medium min-h-[60px]"
-                              rows={2}
+                              className={cn("min-h-[80px] resize-y bg-white border-slate-200 text-sm", inputFocusClasses)}
+                              rows={3}
                             />
                           </div>
                         </div>
                       ) : hasMultiFieldFromTemplate(measurement) ? (
-                        <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {(measurement.selectedTest!.fields_definition!).map((field) => (
-                            <div key={field.id} className="space-y-2 p-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:border-teal-200 transition-all">
-                              <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
-                                {field.label}
-                                {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1 rounded">({field.unit})</span>}
-                                {field.required && <span className="text-red-500 ml-0.5">*</span>}
-                              </Label>
-                              <Input
-                                type={field.type === 'number' ? 'number' : 'text'}
-                                step={field.type === 'number' ? '0.1' : undefined}
-                                value={measurement.custom_data[field.id] || ''}
-                                onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
-                                placeholder={field.description || field.unit ? `0` : '...'}
-                                className="h-11 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100"
-                                aria-label={field.label}
-                              />
-                            </div>
-                          ))}
-                          <div className="col-span-full space-y-2">
-                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Anotações</Label>
+                        <div className="col-span-2 space-y-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {(measurement.selectedTest!.fields_definition!).map((field) => (
+                              <div
+                                key={field.id}
+                                className={cn(
+                                  "space-y-2 p-3 rounded-xl border transition-all duration-200",
+                                  "bg-white border-slate-200 hover:border-teal-300 hover:shadow-sm",
+                                  "focus-within:ring-2 focus-within:ring-teal-100 focus-within:border-teal-400"
+                                )}
+                              >
+                                <Label
+                                  htmlFor={`field-${field.id}-${index}`}
+                                  className="text-xs font-semibold text-slate-600 flex items-center gap-1"
+                                >
+                                  {field.label}
+                                  {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1.5 py-0.5 rounded text-[11px]">({field.unit})</span>}
+                                  {field.required && <span className="text-red-500 ml-0.5">*</span>}
+                                </Label>
+                                <Input
+                                  id={`field-${field.id}-${index}`}
+                                  type={field.type === 'number' ? 'number' : 'text'}
+                                  step={field.type === 'number' ? '0.1' : undefined}
+                                  value={measurement.custom_data[field.id] || ''}
+                                  onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
+                                  placeholder={field.description || field.unit ? `0` : '...'}
+                                  className="h-11 bg-slate-50/50 border-slate-200 font-semibold text-slate-700"
+                                  aria-label={field.label}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <Label
+                              htmlFor={`template-notes-${index}`}
+                              className="text-xs font-semibold text-slate-600 flex items-center gap-1.5"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-slate-400" />
+                              Anotações
+                              <span className="text-slate-400 font-normal">(opcional)</span>
+                            </Label>
                             <Textarea
+                              id={`template-notes-${index}`}
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
                               placeholder="Observações sobre esta medição..."
-                              className="bg-white border-slate-200 font-medium min-h-[60px]"
-                              rows={2}
+                              className={cn("min-h-[80px] resize-y bg-white border-slate-200 text-sm", inputFocusClasses)}
+                              rows={3}
                             />
                           </div>
                         </div>
@@ -617,9 +732,9 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                                   animate={{ opacity: 1, y: 0 }}
                                   className={cn("space-y-2", (field.type === 'textarea' || field.id === 'notes') ? 'col-span-2' : '')}
                                 >
-                                  <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                                  <Label className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                                     {field.label}
-                                    {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1 rounded">({field.unit})</span>}
+                                    {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1.5 py-0.5 rounded text-[11px]">({field.unit})</span>}
                                     {field.required && <span className="text-red-500 ml-0.5">*</span>}
                                   </Label>
 
@@ -628,7 +743,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                                       value={measurement.custom_data[fieldKey] || ''}
                                       onValueChange={(val) => handleUpdateCustomData(index, fieldKey, val)}
                                     >
-                                      <SelectTrigger className="h-11 bg-white font-medium border-slate-200">
+                                      <SelectTrigger className={cn("h-11 bg-white font-medium border-slate-200", inputFocusClasses)}>
                                         <SelectValue placeholder="Selecione..." />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -642,8 +757,8 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                                       value={measurement.custom_data[fieldKey] || ''}
                                       onChange={(e) => handleUpdateCustomData(index, fieldKey, e.target.value)}
                                       placeholder={field.description || "Anotações..."}
-                                      className="bg-white border-slate-200 font-medium"
-                                      rows={2}
+                                      className={cn("bg-white border-slate-200 font-medium", inputFocusClasses)}
+                                      rows={3}
                                     />
                                   ) : (
                                     <Input
@@ -652,7 +767,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                                       value={measurement.custom_data[fieldKey] || ''}
                                       onChange={(e) => handleUpdateCustomData(index, fieldKey, e.target.value)}
                                       placeholder={field.description || "Digite..."}
-                                      className="h-11 bg-white border-slate-200 font-bold"
+                                      className={cn("h-11 bg-white border-slate-200 font-semibold", inputFocusClasses)}
                                     />
                                   )}
                                 </motion.div>
@@ -661,44 +776,67 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                           </AnimatePresence>
                         </>
                       ) : measurement.measurement_type === 'Sinais Vitais' ? (
-                        <div className="col-span-2 grid grid-cols-2 lg:grid-cols-5 gap-3">
-                          {VITAL_SIGNS_FIELDS.map((field) => {
-                            const Icon = field.icon;
-                            return (
-                              <div key={field.id} className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100/50 hover:border-teal-200 hover:bg-white transition-all cursor-text group/field">
-                                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center justify-between gap-1">
-                                  <span className="flex items-center gap-1">
-                                    <Icon className={cn("h-3 w-3", field.color)} />
-                                    {field.label}
-                                  </span>
-                                  <span className="text-[9px] lowercase opacity-60 font-medium">({field.unit})</span>
-                                </Label>
-                                <Input
-                                  type={field.type === 'number' ? 'number' : 'text'}
-                                  value={measurement.custom_data[field.id] || ''}
-                                  onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
-                                  placeholder={field.placeholder}
-                                  className="h-9 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100 transition-all px-2 shadow-sm"
-                                />
-                              </div>
-                            );
-                          })}
-                          <div className="col-span-full space-y-2 mt-1">
-                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Notas Clínicas (Sinais Vitais)</Label>
+                        <div className="col-span-2 space-y-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {VITAL_SIGNS_FIELDS.map((field) => {
+                              const Icon = field.icon;
+                              return (
+                                <div
+                                  key={field.id}
+                                  className={cn(
+                                    "space-y-2 p-3 rounded-xl border transition-all duration-200",
+                                    "bg-white border-slate-200 hover:border-teal-300 hover:shadow-sm",
+                                    "focus-within:ring-2 focus-within:ring-teal-100 focus-within:border-teal-400"
+                                  )}
+                                >
+                                  <Label
+                                    htmlFor={`vital-${field.id}-${index}`}
+                                    className="text-[11px] font-semibold text-slate-600 flex items-center justify-between"
+                                  >
+                                    <span className="flex items-center gap-1.5">
+                                      <Icon className={cn("h-3.5 w-3.5", field.color)} />
+                                      {field.label}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400 font-normal lowercase">
+                                      {field.unit}
+                                    </span>
+                                  </Label>
+                                  <Input
+                                    id={`vital-${field.id}-${index}`}
+                                    type={field.type === 'number' ? 'number' : 'text'}
+                                    value={measurement.custom_data[field.id] || ''}
+                                    onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
+                                    placeholder={field.placeholder}
+                                    className="h-10 text-sm font-semibold text-slate-700 bg-slate-50/50 border-slate-200"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <Label
+                              htmlFor={`vital-notes-${index}`}
+                              className="text-xs font-semibold text-slate-600 flex items-center gap-1.5"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-slate-400" />
+                              Notas Clínicas
+                              <span className="text-slate-400 font-normal">(opcional)</span>
+                            </Label>
                             <Textarea
+                              id={`vital-notes-${index}`}
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
                               placeholder="Observações sobre o estado geral do paciente durante a medição..."
-                              className="bg-white border-slate-200 font-medium min-h-[60px]"
-                              rows={2}
+                              className={cn("min-h-[80px] resize-y bg-white border-slate-200 text-sm", inputFocusClasses)}
+                              rows={3}
                             />
                           </div>
                         </div>
                       ) : (
                         <>
-                          <div className="space-y-2 group/val">
-                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 pl-1">
-                              <Zap className="h-3 w-3 text-orange-500" />
+                          <div className="space-y-2">
+                            <Label className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                              <Zap className="h-3.5 w-3.5 text-blue-500" />
                               Valor
                             </Label>
                             <Input
@@ -707,32 +845,37 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                               value={measurement.value}
                               onChange={(e) => handleUpdateMeasurement(index, 'value', e.target.value)}
                               placeholder="0.0"
-                              className="h-11 bg-white border-slate-200 font-bold text-slate-700 focus:border-orange-400 focus:ring-orange-100 transition-all shadow-sm"
+                              className={cn("h-11 bg-white border-slate-200 font-semibold text-slate-700", inputFocusClasses, "focus-visible:ring-blue-400")}
                             />
                           </div>
-                          <div className="space-y-2 group/unit">
-                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 pl-1">
-                              <Target className="h-3 w-3 text-blue-500" />
+                          <div className="space-y-2">
+                            <Label className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                              <Target className="h-3.5 w-3.5 text-teal-500" />
                               Unidade
                             </Label>
                             <Input
                               value={measurement.unit}
                               onChange={(e) => handleUpdateMeasurement(index, 'unit', e.target.value)}
-                              placeholder="Ex: cm, graus, etc"
-                              className="h-11 bg-white border-slate-200 font-medium text-slate-600 focus:border-blue-400 focus:ring-blue-100 transition-all shadow-sm"
+                              placeholder="Ex: cm, graus"
+                              className={cn("h-11 bg-white border-slate-200 font-medium text-slate-600", inputFocusClasses)}
                             />
                           </div>
-                          <div className="col-span-2 space-y-2 group/notes">
-                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 pl-1">
-                              <FileText className="h-3 w-3 text-gray-500" />
+                          <div className="col-span-2 space-y-2 pt-2">
+                            <Label
+                              htmlFor={`notes-${index}`}
+                              className="text-xs font-semibold text-slate-600 flex items-center gap-1.5"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-slate-400" />
                               Anotações
+                              <span className="text-slate-400 font-normal">(opcional)</span>
                             </Label>
                             <Textarea
+                              id={`notes-${index}`}
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
                               placeholder="Observações importantes sobre esta medição..."
-                              className="bg-white border-slate-200 font-medium focus:border-teal-400 focus:ring-teal-100 transition-all shadow-sm"
-                              rows={2}
+                              className={cn("min-h-[80px] resize-y bg-white border-slate-200 text-sm", inputFocusClasses)}
+                              rows={3}
                             />
                           </div>
                         </>
@@ -793,7 +936,13 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
           <Button
             type="button"
             onClick={handleSave}
-            className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold text-base shadow-lg shadow-teal-100 rounded-xl group focus:ring-2 focus:ring-teal-400 focus:ring-offset-2"
+            className={cn(
+              "w-full h-12 bg-gradient-to-r from-teal-600 to-teal-700",
+              "hover:from-teal-700 hover:to-teal-800 text-white font-semibold text-base",
+              "shadow-lg shadow-teal-200 rounded-xl group",
+              "focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2",
+              "transition-all duration-200"
+            )}
             disabled={createMeasurement.isPending || measurements.every(m => !m.measurement_name || !hasAnyValue(m))}
             aria-label="Efetivar registros de medição"
           >
