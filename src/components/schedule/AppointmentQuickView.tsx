@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package, MessageCircle, MoreVertical, Timer, NotepadText, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  PopoverAnchor,
 } from '@/components/ui/popover';
 import {
   Drawer,
@@ -60,6 +62,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   open,
   onOpenChange,
 }) => {
+
+
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { updateStatus, isUpdatingStatus } = useAppointmentActions();
@@ -118,7 +122,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     if (localStatus === 'avaliacao') {
       // Prefetch para página de avaliação
       prefetchRoute(
-        () => import('../../pages/patients/NewEvaluationPage').then(m => ({ default: m.NewEvaluationPage })),
+        () => import('../../pages/patients/NewEvaluationPage'),
         'evaluation-new'
       );
 
@@ -129,7 +133,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     } else {
       // Prefetch do chunk da página de evolução (alto impacto)
       prefetchRoute(
-        () => import('../../pages/PatientEvolution').then(m => ({ default: m.PatientEvolution })),
+        () => import('../../pages/PatientEvolution'),
         RouteKeys.PATIENT_EVOLUTION
       );
 
@@ -215,61 +219,114 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const Content = (
     <div className="flex flex-col h-full min-w-0 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-muted/50 to-muted/30">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/40 backdrop-blur-sm relative overflow-hidden">
+        {/* Subtle decorative background gradient */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
+
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="p-2.5 bg-primary/10 rounded-xl shadow-inner ring-1 ring-primary/20">
             <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <span className="font-semibold text-base">
-              {appointment.time} - {endTime}
-            </span>
-            <p className="text-sm text-muted-foreground font-medium">({appointment.duration || 60} min)</p>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-lg tracking-tight text-foreground">
+                {appointment.time} — {endTime}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-bold uppercase tracking-widest">
+              <Timer className="h-3 w-3" />
+              {appointment.duration || 60} minutos
+            </div>
           </div>
         </div>
         {!isMobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 touch-target hover:bg-muted"
+            className="h-8 w-8 rounded-full hover:bg-muted/80 relative z-10"
             onClick={() => onOpenChange?.(false)}
             aria-label="Fechar detalhes"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-muted-foreground" />
           </Button>
         )}
       </div>
 
       {/* Waitlist Interest Alert */}
       {hasWaitlistInterest && (
-        <div
-          className="flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/10 border-b border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-colors"
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 cursor-pointer hover:bg-amber-500/15 transition-colors group"
           onClick={() => setShowWaitlistNotification(true)}
           role="button"
           tabIndex={0}
-          aria-label={`${interestCount} paciente${interestCount !== 1 ? 's' : ''} interessado${interestCount !== 1 ? 's' : ''} neste horário. Clique para ver detalhes.`}
         >
-          <Users className="h-4 w-4 text-amber-600" aria-hidden="true" />
-          <span className="text-sm text-amber-700 dark:text-amber-400 font-medium">
-            {interestCount} paciente{interestCount !== 1 ? 's' : ''} interessado{interestCount !== 1 ? 's' : ''}
-          </span>
-          <Bell className="h-3 w-3 text-amber-600 ml-auto" aria-hidden="true" />
-        </div>
+          <div className="p-1.5 bg-amber-500/20 rounded-lg group-hover:scale-110 transition-transform">
+            <Users className="h-4 w-4 text-amber-600" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-amber-800 dark:text-amber-400">
+              {interestCount} interessado{interestCount !== 1 ? 's' : ''}
+            </span>
+            <span className="text-[10px] text-amber-700/70 dark:text-amber-400/70 font-medium">
+              Clique para gerenciar fila
+            </span>
+          </div>
+          <Bell className="h-3.5 w-3.5 text-amber-600 ml-auto animate-pulse" aria-hidden="true" />
+        </motion.div>
       )}
 
       {/* Content */}
-      <div className="p-5 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto">
-        {/* Quem: Fisioterapeuta (editável) + Paciente */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-4">
-            <span className="text-base font-medium text-muted-foreground min-w-[110px] shrink-0">Fisioterapeuta:</span>
+      <div className="p-5 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+        {/* Patient Block */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1.5 min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
+                {appointment.patientName}
+              </h3>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className="font-bold text-[10px] uppercase tracking-wider bg-primary/5 text-primary border-primary/20 bg-blue-50/50 dark:bg-blue-900/20">
+                {appointment.type || 'Sessão Regular'}
+              </Badge>
+              {appointment.phone && (
+                <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                  {appointment.phone}
+                </span>
+              )}
+            </div>
+          </div>
+          {appointment.phone && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 rounded-xl text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-400 shrink-0 shadow-sm transition-all active:scale-95 group"
+              onClick={() => window.open(`https://wa.me/55${appointment.phone?.replace(/\D/g, '')}`, '_blank')}
+            >
+              <MessageCircle className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+            </Button>
+          )}
+        </div>
+
+        <Separator className="bg-slate-100 dark:bg-slate-800/50" />
+
+        {/* Configuration Grid */}
+        <div className="grid grid-cols-1 gap-5">
+          {/* Fisioterapeuta */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              <Users className="h-3 w-3" />
+              Fisioterapeuta Responsável
+            </div>
             <Select
               value={localTherapistId || THERAPIST_SELECT_NONE}
               onValueChange={(v) => handleTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
-              aria-label="Alterar fisioterapeuta"
             >
-              <SelectTrigger className="h-9 flex-1 min-w-0 max-w-[180px]" aria-label="Fisioterapeuta do agendamento">
-                <SelectValue placeholder="Escolher fisioterapeuta">
+              <SelectTrigger className="h-10 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
+                <SelectValue>
                   {getTherapistById(therapists, localTherapistId)?.name ?? 'Activity Fisioterapia'}
                 </SelectValue>
               </SelectTrigger>
@@ -283,145 +340,136 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-start gap-3">
-            <span className="text-base font-medium text-muted-foreground min-w-[110px]">Paciente:</span>
-            <span className="text-base font-bold text-primary">{appointment.patientName}</span>
+
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            {/* Status */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                Status
+              </div>
+              <Select
+                value={localStatus}
+                onValueChange={handleStatusChange}
+                disabled={isUpdatingStatus}
+              >
+                <SelectTrigger className="h-10 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
+                  <SelectValue>
+                    <div className="flex items-center gap-2 truncate">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.color || '#94a3b8' }} />
+                      <span className="truncate">{STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.label || localStatus}</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(STATUS_CONFIG)
+                    .filter(([key]) => [
+                      'agendado', 'confirmado', 'em_andamento', 'realizado',
+                      'cancelado', 'falta', 'remarcado', 'aguardando_confirmacao',
+                      'em_espera', 'avaliacao'
+                    ].includes(key))
+                    .map(([value, config]) => (
+                      <SelectItem key={value} value={value}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} />
+                          <span>{config.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Pagamento */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                <CreditCard className="h-3 w-3" />
+                Financeiro
+              </div>
+              <Select
+                value={isPaid ? 'paid' : 'pending'}
+                onValueChange={handlePaymentStatusChange}
+              >
+                <SelectTrigger className={cn(
+                  "h-10 w-full border-slate-200 dark:border-slate-800",
+                  isPaid ? "bg-emerald-50/50 dark:bg-emerald-900/20" : "bg-amber-50/50 dark:bg-amber-900/20"
+                )}>
+                  <SelectValue>
+                    {isPaid ? (
+                      <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 text-xs">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        Pago
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400 text-xs">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        Pendente
+                      </span>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        {/* Pagamento: status (editável) + valor na mesma linha */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-base font-medium text-muted-foreground shrink-0">Pagamento:</span>
-          <Select
-            value={isPaid ? 'paid' : 'pending'}
-            onValueChange={handlePaymentStatusChange}
-            aria-label="Alterar status de pagamento"
-          >
-            <SelectTrigger className="h-9 w-auto min-w-[120px] max-w-[140px]" aria-label="Status de pagamento">
-              <SelectValue>
-                {isPaid ? (
-                  <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                    Pago
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                    <AlertCircle className="h-3.5 w-3.5" aria-hidden />
-                    Pendente
-                  </span>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="paid">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
-                  Pago
-                </span>
-              </SelectItem>
-              <SelectItem value="pending">
-                <span className="flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5 text-amber-600" aria-hidden />
-                  Pendente
-                </span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          {paymentAmount != null && paymentAmount > 0 && (
-            <span className="text-sm font-medium text-foreground" aria-label={`Valor: ${formatCurrency(paymentAmount)}`}>
-              {formatCurrency(paymentAmount)}
-            </span>
-          )}
-        </div>
-
-        {/* Pacote: Sessão X de Y (quando vinculado) */}
-        {linkedPackage != null && sessionNumber != null && sessionTotal != null && sessionTotal > 0 && (
-          <div className="space-y-2">
-            <span className="text-base font-medium text-muted-foreground block">Pacote:</span>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="gap-1.5 font-medium">
-                  <Package className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-                  Sessão {sessionNumber} de {sessionTotal}
-                </Badge>
-              </div>
-              <Progress
-                value={(sessionNumber / sessionTotal) * 100}
-                className="h-1.5 w-full"
-              />
+        {/* Notes (if available) */}
+        {appointment.notes && (
+          <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 border-dashed">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
+              <NotepadText className="h-3 w-3" />
+              Observações
             </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed">
+              "{appointment.notes}"
+            </p>
           </div>
         )}
 
-        {/* Status do agendamento */}
-        <div className="flex items-center gap-4 pt-1">
-          <span className="text-base font-medium text-muted-foreground min-w-[110px]">Status:</span>
-          <Select
-            value={localStatus}
-            onValueChange={handleStatusChange}
-            disabled={isUpdatingStatus}
-            aria-label="Mudar status do agendamento"
-          >
-            <SelectTrigger className="h-10 w-[180px]" aria-label={`Status atual: ${STATUS_CONFIG[localStatus]?.label}`}>
-              <SelectValue>
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[localStatus]?.color }} aria-hidden="true" />
-                  <span className="text-sm">{STATUS_CONFIG[localStatus]?.label}</span>
-                </div>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(STATUS_CONFIG)
-                .filter(([key]) => [
-                  'agendado',
-                  'confirmado',
-                  'em_andamento',
-                  'realizado',
-                  'cancelado',
-                  'falta',
-                  'remarcado',
-                  'aguardando_confirmacao',
-                  'em_espera',
-                  'avaliacao'
-                ].includes(key))
-                .map(([value, config]) => (
-                  <SelectItem key={value} value={value}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} aria-hidden="true" />
-                      <span>{config.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Pacote: Sessão X de Y (quando vinculado) */}
+        {linkedPackage != null && sessionNumber != null && sessionTotal != null && sessionTotal > 0 && (
+          <div className="space-y-3 p-4 rounded-xl bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-900/30">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+                <Package className="h-3.5 w-3.5" />
+                Uso do Pacote
+              </div>
+              <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-400">
+                Sessão {sessionNumber} / {sessionTotal}
+              </span>
+            </div>
+            <Progress
+              value={(sessionNumber / sessionTotal) * 100}
+              className="h-2 w-full bg-blue-100/50 dark:bg-blue-900/40"
+            />
+          </div>
+        )}
       </div>
 
-      <Separator />
-
-      {/* Actions */}
-      <div className="p-4 space-y-3 bg-muted/20">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
+      <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border-t border-border flex flex-col gap-3">
+        <div className="flex items-center gap-2">
           {onEdit && (
             <>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 touch-target bg-background shrink-0"
+                className="h-10 w-10 rounded-xl bg-background shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
                 onClick={handleEdit}
-                aria-label="Editar agendamento"
               >
                 <Edit className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="touch-target bg-background shrink-0 h-9 px-2 sm:px-3"
+                className="h-10 flex-1 rounded-xl bg-background shadow-sm font-bold text-xs gap-2 transition-all hover:border-primary/30"
                 onClick={handleEdit}
-                aria-label="Reagendar: mudar data e horário"
               >
-                <CalendarClock className="h-4 w-4 sm:mr-1.5 shrink-0" aria-hidden />
-                <span className="hidden sm:inline">Reagendar</span>
+                <CalendarClock className="h-4 w-4 text-primary" />
+                Reagendar
               </Button>
             </>
           )}
@@ -430,9 +478,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 touch-target bg-background shrink-0"
+              className="h-10 w-10 rounded-xl text-destructive/70 hover:text-destructive hover:bg-destructive/10 bg-background shadow-sm transition-colors shrink-0 border-destructive/10"
               onClick={handleDelete}
-              aria-label="Excluir agendamento"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -442,36 +489,38 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         {canStartAttendance && (
           <Button
             onClick={handleStartAttendance}
-            className="w-full min-w-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-            size="sm"
-            aria-label={localStatus === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
+            className={cn(
+              "w-full h-11 rounded-xl font-extrabold text-sm shadow-lg shadow-emerald-500/10 transition-all active:scale-[0.98]",
+              localStatus === 'avaliacao'
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+            )}
           >
-            <span className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center justify-center gap-2.5">
               {localStatus === 'avaliacao' ? (
-                <FileText className="h-4 w-4 shrink-0" />
+                <FileText className="h-5 w-5" />
               ) : (
-                <Play className="h-4 w-4 shrink-0" />
+                <Play className="h-5 w-5 fill-current" />
               )}
-              <span className="truncate">{localStatus === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}</span>
-            </span>
+              {localStatus === 'avaliacao' ? 'INICIAR AVALIAÇÃO' : 'INICIAR ATENDIMENTO'}
+            </div>
           </Button>
         )}
 
-        {/* Add to Waitlist Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="w-full h-9 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 touch-target font-medium"
+          className="w-full h-9 rounded-lg text-xs text-muted-foreground hover:text-foreground font-bold uppercase tracking-tight"
           onClick={() => {
             setShowWaitlistQuickAdd(true);
             onOpenChange?.(false);
           }}
-          aria-label="Adicionar outro paciente à lista de espera para este horário"
         >
-          <UserPlus className="h-4 w-4 mr-2" aria-hidden="true" />
+          <UserPlus className="h-4 w-4 mr-2" />
           Outro paciente quer este horário?
         </Button>
       </div>
+
     </div>
   );
 
@@ -506,14 +555,14 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       ) : (
         // Desktop: use Popover (side panel)
         <Popover open={open} onOpenChange={onOpenChange}>
-          <PopoverTrigger asChild>
+          <PopoverAnchor asChild>
             {children}
-          </PopoverTrigger>
+          </PopoverAnchor>
           <PopoverContent
-            className="w-80 max-w-sm p-0 bg-card border border-border shadow-xl z-50"
+            className="w-[340px] max-w-sm p-0 bg-card border border-border shadow-2xl z-50 rounded-2xl overflow-hidden"
             align="start"
             side="right"
-            sideOffset={8}
+            sideOffset={12}
             collisionPadding={16}
             role="dialog"
             aria-modal="false"
