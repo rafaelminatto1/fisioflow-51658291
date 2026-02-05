@@ -44,6 +44,7 @@ import { ptBR } from 'date-fns/locale';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
 import { db, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { prefetchRoute, RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
@@ -383,6 +384,19 @@ const Schedule = () => {
     }, 'Schedule');
   }, [appointments.length, loading, viewType]);
 
+  // Prefetch de rotas relacionadas quando a agenda está carregada
+  useEffect(() => {
+    PrefetchStrategy.onMount(RouteKeys.PATIENT_EVOLUTION,
+      () => import('./PatientEvolution').then(m => ({ default: m.PatientEvolution }))
+    );
+    PrefetchStrategy.onMount(RouteKeys.PATIENT_PROFILE,
+      () => import('./patients/PatientProfilePage').then(m => ({ default: m.PatientProfilePage }))
+    );
+    PrefetchStrategy.onMount(RouteKeys.EVALUATION_NEW,
+      () => import('./patients/NewEvaluationPage').then(m => ({ default: m.NewEvaluationPage }))
+    );
+  }, []);
+
   // Clear reschedule success announcement after 3s (screen reader already heard it)
   useEffect(() => {
     if (!rescheduleSuccessMessage) return;
@@ -405,6 +419,24 @@ const Schedule = () => {
       { replace: true }
     );
   }, [viewType, currentDate, setSearchParams]);
+
+  // Process ?edit= and ?patientId= from URL
+  useEffect(() => {
+    const editAppointmentId = searchParams.get('edit');
+
+    // Open edit modal if ?edit= is present
+    if (editAppointmentId) {
+      const appointmentToEdit = appointments.find(a => a.id === editAppointmentId);
+      if (appointmentToEdit) {
+        setQuickEditAppointment(appointmentToEdit);
+        // Clear the parameter from URL
+        setSearchParams(
+          { view: viewType, date: format(currentDate, 'yyyy-MM-dd') },
+          { replace: true }
+        );
+      }
+    }
+  }, [searchParams, appointments, viewType, currentDate, setSearchParams]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

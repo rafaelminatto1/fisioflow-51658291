@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,8 +23,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Lazy load PatientGamification (594KB) - só carrega quando a tab é acessada
+const PatientGamification = lazy(() => import('@/components/gamification/PatientGamification').then(m => ({ default: m.PatientGamification })));
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/lib/services/PatientService';
 import { useAppointments } from '@/hooks/useAppointments';
@@ -473,7 +475,16 @@ const PatientPortal = () => {
 
           {/* Tab Gamificação */}
           <TabsContent value="gamification">
-            <PatientGamification patientId={patient.id} />
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center space-y-4">
+                  <Sparkles className="h-12 w-12 text-primary animate-pulse mx-auto" />
+                  <p className="text-muted-foreground">Carregando conquistas...</p>
+                </div>
+              </div>
+            }>
+              <PatientGamification patientId={patient.id} />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

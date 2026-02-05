@@ -67,6 +67,7 @@ import {
 import { KanbanBoardV2 } from '@/components/tarefas/v2';
 import { TaskDetailModal } from '@/components/tarefas/v2/TaskDetailModal';
 import { TaskQuickCreateModal } from '@/components/tarefas/v2/TaskQuickCreateModal';
+import { TaskTableVirtualized } from '@/components/tarefas/virtualized/TaskTableVirtualized';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import {
   Tarefa,
@@ -567,8 +568,8 @@ export default function TarefasV2() {
     const search = searchTerm.toLowerCase();
     return effectiveTarefas.filter(t =>
       t.titulo.toLowerCase().includes(search) ||
-      t.descricao?.toLowerCase().includes(search) ||
-      t.tags?.some(tag => tag.toLowerCase().includes(search))
+      (t.descricao && t.descricao.toLowerCase().includes(search)) ||
+      (t.tags && t.tags.some(tag => tag.toLowerCase().includes(search)))
     );
   }, [effectiveTarefas, searchTerm]);
 
@@ -584,7 +585,7 @@ export default function TarefasV2() {
     };
 
     filteredTarefas.forEach(t => {
-      if (groups[t.status]) {
+      if (t.status && groups[t.status]) {
         groups[t.status].push(t);
       }
     });
@@ -636,17 +637,20 @@ export default function TarefasV2() {
     // Weekly trend (last 7 days)
     const weeklyData = [];
     const today = new Date();
+    
+    // Pre-filter tasks by date range for better performance
+    const tasksByDate = effectiveTarefas?.reduce((acc, t) => {
+      if (t.created_at) acc.created[t.created_at] = (acc.created[t.created_at] || 0) + 1;
+      if (t.completed_at) acc.completed[t.completed_at] = (acc.completed[t.completed_at] || 0) + 1;
+      return acc;
+    }, { created: {}, completed: {} }) || { created: {}, completed: {} };
+    
     for (let i = 6; i >= 0; i--) {
       const date = subDays(today, i);
       const dateStr = format(date, 'yyyy-MM-dd');
 
-      const created = effectiveTarefas?.filter(t =>
-        t.created_at?.startsWith(dateStr)
-      ).length || 0;
-
-      const completed = effectiveTarefas?.filter(t =>
-        t.completed_at?.startsWith(dateStr)
-      ).length || 0;
+      const created = tasksByDate.created[dateStr] || 0;
+      const completed = tasksByDate.completed[dateStr] || 0;
 
       weeklyData.push({
         date: format(date, 'EEE', { locale: ptBR }),
@@ -888,182 +892,44 @@ export default function TarefasV2() {
           {/* Table View */}
           {viewMode === 'table' && (
             <Card>
-              <ScrollArea className="h-[calc(100vh-400px)]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead>Título</TableHead>
-                      <TableHead className="w-32">Status</TableHead>
-                      <TableHead className="w-28">Prioridade</TableHead>
-                      <TableHead className="w-28">Tipo</TableHead>
-                      <TableHead className="w-36">Responsável</TableHead>
-                      <TableHead className="w-28">Prazo</TableHead>
-                      <TableHead className="w-20">Progresso</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(Object.entries(groupedTasks) as [TarefaStatus, Tarefa[]][])
-                      .filter(([status]) => status !== 'ARQUIVADO')
-                      .map(([status, tasks]) => (
-                        <>
-                          {/* Group Header */}
-                          <TableRow
-                            key={`header-${status}`}
-                            className="bg-muted/50 hover:bg-muted/50 cursor-pointer"
-                            onClick={() => toggleGroup(status)}
-                          >
-                            <TableCell colSpan={10}>
-                              <div className="flex items-center gap-2">
-                                {expandedGroups.has(status) ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                                <div className={cn('h-3 w-3 rounded-full', STATUS_COLORS[status].dot)} />
-                                <span className="font-medium">{STATUS_LABELS[status]}</span>
-                                <Badge variant="secondary">{tasks.length}</Badge>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-
-                          {/* Tasks */}
-                          {expandedGroups.has(status) && tasks.map((tarefa) => {
-                            const isOverdue = tarefa.data_vencimento &&
-                              new Date(tarefa.data_vencimento) < new Date() &&
-                              tarefa.status !== 'CONCLUIDO';
-
-                            const checklistProgress = (() => {
-                              if (!tarefa.checklists?.length) return null;
-                              const total = tarefa.checklists.reduce((acc, cl) => acc + cl.items.length, 0);
-                              const done = tarefa.checklists.reduce((acc, cl) => acc + cl.items.filter(i => i.completed).length, 0);
-                              return total > 0 ? Math.round((done / total) * 100) : null;
-                            })();
-
-                            return (
-                              <TableRow
-                                key={tarefa.id}
-                                className="cursor-pointer"
-                                onClick={() => handleViewTask(tarefa)}
-                              >
-                                <TableCell onClick={(e) => e.stopPropagation()}>
-                                  <Checkbox
-                                    checked={selectedTasks.has(tarefa.id)}
-                                    onCheckedChange={() => toggleTaskSelection(tarefa.id)}
-                                  />
-                                </TableCell>
-                                <TableCell></TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium line-clamp-1">{tarefa.titulo}</span>
-                                    {tarefa.tags && tarefa.tags.length > 0 && (
-                                      <div className="flex gap-1 mt-1">
-                                        {tarefa.tags.slice(0, 2).map((tag, i) => (
-                                          <Badge key={i} variant="outline" className="text-[10px] px-1 py-0">
-                                            {tag}
-                                          </Badge>
-                                        ))}
-                                        {tarefa.tags.length > 2 && (
-                                          <span className="text-[10px] text-muted-foreground">
-                                            +{tarefa.tags.length - 2}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge className={cn('text-xs', STATUS_COLORS[tarefa.status].bg, STATUS_COLORS[tarefa.status].text)}>
-                                    {STATUS_LABELS[tarefa.status]}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge className={cn('text-xs', PRIORIDADE_COLORS[tarefa.prioridade])}>
-                                    <Flag className="h-3 w-3 mr-1" />
-                                    {PRIORIDADE_LABELS[tarefa.prioridade]}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="text-xs">
-                                    {TIPO_LABELS[tarefa.tipo || 'TAREFA']}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  {tarefa.responsavel ? (
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="h-6 w-6">
-                                        <AvatarImage src={tarefa.responsavel.avatar_url} />
-                                        <AvatarFallback className="text-[10px]">
-                                          {tarefa.responsavel.full_name?.slice(0, 2).toUpperCase()}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <span className="text-sm truncate max-w-20">
-                                        {tarefa.responsavel.full_name}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-muted-foreground text-sm">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {tarefa.data_vencimento ? (
-                                    <span className={cn(
-                                      'text-sm',
-                                      isOverdue && 'text-red-500 font-medium'
-                                    )}>
-                                      {format(new Date(tarefa.data_vencimento), 'dd/MM/yyyy')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground text-sm">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {checklistProgress !== null ? (
-                                    <div className="flex items-center gap-2">
-                                      <Progress value={checklistProgress} className="h-2 w-12" />
-                                      <span className="text-xs text-muted-foreground">{checklistProgress}%</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-muted-foreground text-sm">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell onClick={(e) => e.stopPropagation()}>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem onClick={() => handleViewTask(tarefa)}>
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        Ver
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleViewTask(tarefa)}>
-                                        <Pencil className="h-4 w-4 mr-2" />
-                                        Editar
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => handleDeleteTask(tarefa.id)}
-                                        className="text-destructive"
-                                      >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Excluir
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </>
-                      ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </Card>
+              {/* Table Header */}
+              <div className="p-4 border-b">
+                <div className="flex items-center gap-2 mb-3">
+                  {Object.entries(groupedTasks).filter(([status]) => status !== 'ARQUIVADO').map(([status, tasks]) => (
+                    <div
+                      key={`header-${status}`}
+                      className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                      onClick={() => toggleGroup(status)}
+                    >
+                      {expandedGroups.has(status) ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                      <div className={cn('h-3 w-3 rounded-full', STATUS_COLORS[status].dot)} />
+                      <span className="font-medium text-sm">{STATUS_LABELS[status]}</span>
+                      <Badge variant="secondary" className="text-xs">{tasks.length}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Virtualized Table */}
+              <ScrollArea className="h-[calc(100vh-450px)]">
+                <TaskTableVirtualized
+                  tasks={Object.values(groupedTasks)
+                    .filter(tasks => expandedGroups.has(tasks[0]?.status || 'BACKLOG'))
+                    .flat()}
+                  selectedTasks={selectedTasks}
+                  toggleTaskSelection={toggleTaskSelection}
+                  onViewTask={handleViewTask}
+                  onEditTask={handleViewTask}
+                  onDeleteTask={handleDeleteTask}
+                  onDuplicateTask={(tarefa) => console.log('Duplicate task:', tarefa)}
+                  onArchiveTask={(id) => console.log('Archive task:', id)}
+                />
+                  </ScrollArea>
+                </Card>
           )}
 
           {/* Timeline View */}

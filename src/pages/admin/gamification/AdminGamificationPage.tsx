@@ -10,8 +10,22 @@ import LeaderboardTable from '@/components/admin/gamification/LeaderboardTable';
 import LevelSystemConfig from '@/components/admin/gamification/LevelSystemConfig';
 import EngagementReports from '@/components/admin/gamification/EngagementReports';
 import GamificationSettings from '@/components/admin/gamification/GamificationSettings';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 export default function AdminGamificationPage() {
+    const [searchParams] = useSearchParams();
+
+    // Valid tab values
+    const validTabs = ['dashboard', 'ranking', 'quests', 'achievements', 'rewards', 'challenges', 'levels', 'reports', 'settings'] as const;
+    type TabValue = typeof validTabs[number];
+
+    // Get initial tab from URL or default to 'dashboard'
+    const [activeTab, setActiveTab] = useState<TabValue>(() => {
+        const tabFromUrl = searchParams.get('tab');
+        if (tabFromUrl === 'ranking') return 'ranking'; // Handle legacy 'ranking' -> maps to itself
+        return (tabFromUrl && validTabs.includes(tabFromUrl as TabValue)) ? tabFromUrl as TabValue : 'dashboard';
+    });
     return (
         <MainLayout>
             <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -28,7 +42,7 @@ export default function AdminGamificationPage() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="dashboard" className="w-full">
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="w-full">
                     <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 h-auto gap-1">
                         <TabsTrigger value="dashboard" className="gap-2 flex-col h-auto py-3 data-[state=active]:bg-primary/10">
                             <BarChart3 className="h-4 w-4" />
