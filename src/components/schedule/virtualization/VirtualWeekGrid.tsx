@@ -105,7 +105,7 @@ const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(({ index, 
       <div
         className={cn(
           "w-[60px] flex-shrink-0 border-r border-slate-100 dark:border-slate-800 text-[11px] font-medium flex justify-end pr-2 pt-2 bg-white dark:bg-slate-950 sticky left-0 z-10",
-          isHour ? "text-slate-500 dark:text-slate-400 -mt-2.5" : "text-slate-300 dark:text-slate-600 hidden"
+          isHour ? "text-slate-500 dark:text-gray-500 -mt-2.5" : "text-slate-300 dark:text-slate-600 hidden"
         )}
       >
         {isHour ? time : ''}
@@ -351,7 +351,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
       <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm">
         {/* Time icon */}
         <div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
+          <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-gray-500">
             <span className="text-[10px] font-bold">GMT-3</span>
           </div>
         </div>
@@ -371,7 +371,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
               <span
                 className={cn(
                   "text-[10px] font-medium uppercase tracking-wider mb-0.5",
-                  isTodayDate ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400"
+                  isTodayDate ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-gray-500"
                 )}
               >
                 {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
