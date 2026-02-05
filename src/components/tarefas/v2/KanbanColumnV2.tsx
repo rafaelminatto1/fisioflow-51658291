@@ -19,6 +19,7 @@ import {
   STATUS_LABELS,
   STATUS_COLORS
 } from '@/types/tarefas';
+import { memo } from 'react';
 
 interface KanbanColumnV2Props {
   status: TarefaStatus;
@@ -34,7 +35,7 @@ interface KanbanColumnV2Props {
   onArchiveAll?: (status: TarefaStatus) => void;
 }
 
-export function KanbanColumnV2({
+export const KanbanColumnV2 = memo(function KanbanColumnV2({
   status,
   tarefas,
   wipLimit,
@@ -209,4 +210,4 @@ export function KanbanColumnV2({
       </div>
     </div>
   );
-}
+});

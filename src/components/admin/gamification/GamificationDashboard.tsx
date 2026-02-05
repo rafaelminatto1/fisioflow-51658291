@@ -355,8 +355,8 @@ export const GamificationDashboard: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border-warning/30 text-warning hover:bg-warning/10 hover:text-warning-foreground"
                   onClick={() => navigate('/admin/gamification?tab=ranking')}
                 >

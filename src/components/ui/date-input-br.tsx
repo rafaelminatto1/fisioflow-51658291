@@ -88,13 +88,15 @@ export const DateInputBR = forwardRef<HTMLInputElement, DateInputBRProps>(
         {...props}
       />
       {internalValue.length > 0 && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2" aria-live="polite">
           {isValid ? (
             <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <title>Data válida</title>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           ) : isInvalid || ageInvalid || maxAgeInvalid ? (
             <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <title>Data inválida</title>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           ) : null}
