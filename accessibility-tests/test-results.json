@@ -1,0 +1,583 @@
+{
+  "config": {
+    "configFile": "/home/rafael/antigravity/fisioflow/fisioflow-51658291/accessibility-tests/playwright.config.ts",
+    "rootDir": "/home/rafael/antigravity/fisioflow/fisioflow-51658291/accessibility-tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/rafael/antigravity/fisioflow/fisioflow-51658291/accessibility-tests/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/rafael/antigravity/fisioflow/fisioflow-51658291/accessibility-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "a11y-test.spec.ts",
+      "file": "a11y-test.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "FisioFlow Accessibility Tests",
+          "file": "a11y-test.spec.ts",
+          "line": 34,
+          "column": 6,
+          "specs": [
+            {
+              "title": "1. Skip Links Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1925,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "\n=== Starting Accessibility Tests ===\n\n"
+                        },
+                        {
+                          "text": "✓ [Skip Links] Skip link present: PASS\n"
+                        },
+                        {
+                          "text": "✓ [Skip Links] Skip link visible on focus: PASS\n"
+                        },
+                        {
+                          "text": "✓ [Skip Links] Skip to main content link: PASS\n"
+                        },
+                        {
+                          "text": "✗ [Skip Links] Skip to navigation link: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Consider adding link to skip to navigation\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:41.440Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-260209b08224f7f3ef18",
+              "file": "a11y-test.spec.ts",
+              "line": 58,
+              "column": 7
+            },
+            {
+              "title": "2. ARIA Labels Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 775,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [ARIA Labels] Icon buttons have accessible names: PASS\n"
+                        },
+                        {
+                          "text": "✓ [ARIA Labels] Form inputs have labels: PASS\n"
+                        },
+                        {
+                          "text": "✗ [ARIA Labels] Navigation landmarks: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Found 0 navigation landmark(s)\n"
+                        },
+                        {
+                          "text": "✓ [ARIA Labels] ARIA hidden used appropriately: PASS\n"
+                        },
+                        {
+                          "text": "✓ [ARIA Labels] Links have text or aria-label: PASS\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:43.676Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-980a15999a7691569813",
+              "file": "a11y-test.spec.ts",
+              "line": 105,
+              "column": 7
+            },
+            {
+              "title": "3. Keyboard Navigation Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1656,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [Keyboard Navigation] Tab navigation works: PASS\n"
+                        },
+                        {
+                          "text": "✓ [Keyboard Navigation] No hidden focus traps: PASS\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:44.488Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-b61bbf257c11da9ce5fb",
+              "file": "a11y-test.spec.ts",
+              "line": 183,
+              "column": 7
+            },
+            {
+              "title": "4. Focus Management Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1283,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [Focus Management] Visible focus indicators: PASS\n"
+                        },
+                        {
+                          "text": "✓ [Focus Management] Uses :focus-visible: PASS\n"
+                        },
+                        {
+                          "text": "✗ [Focus Management] Focus outlines not removed: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: CSS removes outline on :focus - ensure alternative focus indicator is provided\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:46.179Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-c026231c78f97cccec97",
+              "file": "a11y-test.spec.ts",
+              "line": 271,
+              "column": 7
+            },
+            {
+              "title": "5. Semantic HTML Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 484,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [Semantic HTML] Single h1 per page: PASS\n"
+                        },
+                        {
+                          "text": "✓ [Semantic HTML] Proper heading hierarchy: PASS\n"
+                        },
+                        {
+                          "text": "✗ [Semantic HTML] Header landmark: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Missing header/banner landmark\n"
+                        },
+                        {
+                          "text": "✗ [Semantic HTML] Main landmark: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Missing main landmark - critical for screen reader users\n"
+                        },
+                        {
+                          "text": "✗ [Semantic HTML] Footer landmark: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Missing footer/contentinfo landmark\n"
+                        },
+                        {
+                          "text": "✗ [Semantic HTML] Navigation landmark: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Missing navigation landmark\n"
+                        },
+                        {
+                          "text": "✓ [Semantic HTML] Navigation uses lists: PASS\n"
+                        },
+                        {
+                          "text": "✗ [Semantic HTML] Links are properly semantic: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Found 5 placeholder link(s) - consider using button elements\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:47.475Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-ff3a9757db4e0da08d35",
+              "file": "a11y-test.spec.ts",
+              "line": 376,
+              "column": 7
+            },
+            {
+              "title": "6. Alt Text Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 769,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [Alt Text] Images have alt attribute: PASS\n"
+                        },
+                        {
+                          "text": "✓ [Alt Text] Decorative images use empty alt: PASS\n"
+                        },
+                        {
+                          "text": "✗ [Alt Text] SVG icons have accessible names: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Found 4 visible SVG(s) without title/desc or aria-label\n"
+                        },
+                        {
+                          "text": "✓ [Alt Text] Decorative images marked appropriately: PASS\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:47.975Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-64b2f54c4537aa6d7267",
+              "file": "a11y-test.spec.ts",
+              "line": 470,
+              "column": 7
+            },
+            {
+              "title": "7. Color Contrast Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 477,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✗ [Color Contrast] Text meets WCAG AA standards: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Found 1 potential contrast issue(s)\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:48.754Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-cde9754d71673875a649",
+              "file": "a11y-test.spec.ts",
+              "line": 542,
+              "column": 7
+            },
+            {
+              "title": "8. Form Accessibility Test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 380,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [Form Accessibility] Forms present: PASS\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:49.241Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-0cf0f0cb47cdea5d643b",
+              "file": "a11y-test.spec.ts",
+              "line": 620,
+              "column": 7
+            },
+            {
+              "title": "9. Mobile/Responsive Accessibility",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 509,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✗ [Mobile Accessibility] Touch targets >= 44x44px: FAIL\n"
+                        },
+                        {
+                          "text": "  Details: Found 6 small touch target(s) - WCAG recommends 44x44px minimum\n"
+                        },
+                        {
+                          "text": "✓ [Mobile Accessibility] Viewport meta tag present: PASS\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:49.630Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-bb6d5276c21594342488",
+              "file": "a11y-test.spec.ts",
+              "line": 673,
+              "column": 7
+            },
+            {
+              "title": "10. ARIA Attributes Validation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 267,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✓ [ARIA Validation] Only valid ARIA attributes used: PASS\n"
+                        },
+                        {
+                          "text": "✓ [ARIA Validation] Aria-live regions for dynamic content: PASS\n"
+                        },
+                        {
+                          "text": "\n=== Test Summary ===\n"
+                        },
+                        {
+                          "text": "Total Tests: 32\n"
+                        },
+                        {
+                          "text": "Passed: 21\n"
+                        },
+                        {
+                          "text": "Failed: 11\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-05T15:31:50.150Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b6fc44eeb40fac47b59-a9790b34a16d4abccf9d",
+              "file": "a11y-test.spec.ts",
+              "line": 720,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-02-05T15:31:40.460Z",
+    "duration": 10127.276999999998,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
