@@ -175,7 +175,7 @@ export default function GamificationAchievementsPage() {
                       {/* Icon */}
                       <div className={`
                         w-16 h-16 rounded-xl flex items-center justify-center text-2xl shrink-0
-                        ${isUnlocked ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'}
+                        ${isUnlocked ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'}
                       `}>
                         {isUnlocked ? (
                           <Sparkles className="w-8 h-8" />
@@ -234,7 +234,7 @@ export default function GamificationAchievementsPage() {
           {filteredAchievements.length === 0 && (
             <div className="text-center py-16">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-10 h-10 text-gray-400" />
+                <Search className="w-10 h-10 text-gray-500" />
               </div>
               <p className="text-muted-foreground text-lg">
                 Nenhuma conquista encontrada

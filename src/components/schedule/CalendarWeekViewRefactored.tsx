@@ -97,7 +97,7 @@ export const CalendarWeekViewRefactored = memo(({
                 <div className="grid grid-cols-[80px_repeat(7,1fr)] divide-x divide-slate-200">
                     {/* Time Column Header */}
                     <div className="h-20 flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-slate-400" />
+                        <Clock className="w-5 h-5 text-gray-500" />
                     </div>
 
                     {/* Day Headers */}

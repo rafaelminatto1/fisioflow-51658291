@@ -427,7 +427,7 @@ ${errorInfo?.componentStack || 'No component stack'}
                     {this.state.copied ? 'Copiado!' : 'Copiar'}
                   </button>
                   <p className="font-bold text-red-400 mb-2 pr-16">{error.name}: {error.message}</p>
-                  <pre className="text-slate-400 whitespace-pre-wrap text-[10px]">
+                  <pre className="text-gray-500 whitespace-pre-wrap text-[10px]">
                     {error.stack}
                   </pre>
                 </div>

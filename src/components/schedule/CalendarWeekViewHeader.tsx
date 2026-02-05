@@ -68,7 +68,7 @@ export const CalendarWeekViewHeader = memo(({
                     <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                         {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-gray-500">
                         {format(currentDate, 'EEEE, dd MMMM yyyy', { locale: ptBR })}
                     </p>
                 </div>
@@ -86,7 +86,7 @@ export const CalendarWeekViewHeader = memo(({
                             "h-7 text-xs capitalize transition-all",
                             viewType === view.value
                                 ? "shadow-sm"
-                                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                                : "text-slate-600 dark:text-gray-500 hover:text-slate-900 dark:hover:text-slate-100"
                         )}
                     >
                         {view.label}

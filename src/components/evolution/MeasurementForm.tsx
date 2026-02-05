@@ -369,7 +369,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
 
         {/* Presets */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">
             <Target className="h-3 w-3" />
             <span>Modelos Rápidos</span>
           </div>
@@ -490,7 +490,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                   {/* Test Search & Type */}
                   <div className="lg:col-span-5 space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
                         <BookOpen className="h-3 w-3 text-teal-600" />
                         Teste da Biblioteca
                       </Label>
@@ -502,7 +502,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tipo</Label>
+                      <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tipo</Label>
                       <Select
                         value={measurement.measurement_type}
                         onValueChange={(value) => handleUpdateMeasurement(index, 'measurement_type', value)}
@@ -529,7 +529,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                   {/* Name & Primary Values */}
                   <div className="lg:col-span-7 space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor={`measurement-name-${index}`} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome da Medição</Label>
+                      <Label htmlFor={`measurement-name-${index}`} className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Nome da Medição</Label>
                       <Input
                         id={`measurement-name-${index}`}
                         value={measurement.measurement_name}
@@ -561,7 +561,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             }
                           />
                           <div className="mt-4 space-y-2">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Anotações</Label>
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Anotações</Label>
                             <Textarea
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
@@ -575,7 +575,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                         <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {(measurement.selectedTest!.fields_definition!).map((field) => (
                             <div key={field.id} className="space-y-2 p-3 rounded-xl bg-slate-50/50 border border-slate-100 hover:border-teal-200 transition-all">
-                              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                              <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
                                 {field.label}
                                 {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1 rounded">({field.unit})</span>}
                                 {field.required && <span className="text-red-500 ml-0.5">*</span>}
@@ -592,7 +592,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             </div>
                           ))}
                           <div className="col-span-full space-y-2">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Anotações</Label>
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Anotações</Label>
                             <Textarea
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
@@ -617,7 +617,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                                   animate={{ opacity: 1, y: 0 }}
                                   className={cn("space-y-2", (field.type === 'textarea' || field.id === 'notes') ? 'col-span-2' : '')}
                                 >
-                                  <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                  <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
                                     {field.label}
                                     {field.unit && <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1 rounded">({field.unit})</span>}
                                     {field.required && <span className="text-red-500 ml-0.5">*</span>}
@@ -666,7 +666,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             const Icon = field.icon;
                             return (
                               <div key={field.id} className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100/50 hover:border-teal-200 hover:bg-white transition-all cursor-text group/field">
-                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between gap-1">
+                                <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center justify-between gap-1">
                                   <span className="flex items-center gap-1">
                                     <Icon className={cn("h-3 w-3", field.color)} />
                                     {field.label}
@@ -684,7 +684,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             );
                           })}
                           <div className="col-span-full space-y-2 mt-1">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Notas Clínicas (Sinais Vitais)</Label>
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Notas Clínicas (Sinais Vitais)</Label>
                             <Textarea
                               value={measurement.notes}
                               onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
@@ -697,7 +697,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                       ) : (
                         <>
                           <div className="space-y-2 group/val">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 pl-1">
                               <Zap className="h-3 w-3 text-orange-500" />
                               Valor
                             </Label>
@@ -711,7 +711,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             />
                           </div>
                           <div className="space-y-2 group/unit">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 pl-1">
                               <Target className="h-3 w-3 text-blue-500" />
                               Unidade
                             </Label>
@@ -723,8 +723,8 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             />
                           </div>
                           <div className="col-span-2 space-y-2 group/notes">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
-                              <FileText className="h-3 w-3 text-slate-400" />
+                            <Label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                              <FileText className="h-3 w-3 text-gray-500" />
                               Anotações
                             </Label>
                             <Textarea
