@@ -11,10 +11,18 @@ import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekView } from './CalendarWeekView';
+import { CalendarWeekViewDndKit } from './CalendarWeekViewDndKit';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
+import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
+
+/**
+ * Feature flag to enable @dnd-kit implementation for drag and drop.
+ * Set to true to use the new @dnd-kit implementation, false to use HTML5 native.
+ */
+const USE_DND_KIT = true;
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -176,26 +184,51 @@ export const CalendarView = memo(({
     setOptimisticAppointments([]);
   }, []);
 
-  // Drag and drop logic from hook
+  // Drag and drop logic from hook (HTML5 Native)
   const {
-    dragState,
-    dropTarget,
-    showConfirmDialog,
-    pendingReschedule,
+    dragState: dragStateNative,
+    dropTarget: dropTargetNative,
+    showConfirmDialog: showConfirmDialogNative,
+    pendingReschedule: pendingRescheduleNative,
     targetAppointments,
-    handleDragStart,
-    handleDragEnd,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleConfirmReschedule,
-    handleCancelReschedule
+    handleDragStart: handleDragStartNative,
+    handleDragEnd: handleDragEndNative,
+    handleDragOver: handleDragOverNative,
+    handleDragLeave: handleDragLeaveNative,
+    handleDrop: handleDropNative,
+    handleConfirmReschedule: handleConfirmRescheduleNative,
+    handleCancelReschedule: handleCancelRescheduleNative
   } = useCalendarDrag({
     onAppointmentReschedule,
     onOptimisticUpdate: handleOptimisticUpdate,
     onRevertUpdate: handleRevertUpdate,
     getAppointmentsForSlot
   });
+
+  // Drag and drop logic from hook (@dnd-kit)
+  const {
+    dragState: dragStateDndKit,
+    dropTarget: dropTargetDndKit,
+    showConfirmDialog: showConfirmDialogDndKit,
+    pendingReschedule: pendingRescheduleDndKit,
+    handleDragStart: handleDragStartDndKit,
+    handleDragOver: handleDragOverDndKit,
+    handleDragEnd: handleDragEndDndKit,
+    handleConfirmReschedule: handleConfirmRescheduleDndKit,
+    handleCancelReschedule: handleCancelRescheduleDndKit,
+  } = useCalendarDragDndKit({
+    onAppointmentReschedule,
+    onOptimisticUpdate: handleOptimisticUpdate,
+    onRevertUpdate: handleRevertUpdate,
+  });
+
+  // Use the appropriate hook based on feature flag
+  const dragState = USE_DND_KIT ? dragStateDndKit : dragStateNative;
+  const dropTarget = USE_DND_KIT ? dropTargetDndKit : dropTargetNative;
+  const showConfirmDialog = USE_DND_KIT ? showConfirmDialogDndKit : showConfirmDialogNative;
+  const pendingReschedule = USE_DND_KIT ? pendingRescheduleDndKit : pendingRescheduleNative;
+  const handleConfirmReschedule = USE_DND_KIT ? handleConfirmRescheduleDndKit : handleConfirmRescheduleNative;
+  const handleCancelReschedule = USE_DND_KIT ? handleCancelRescheduleDndKit : handleCancelRescheduleNative;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -575,32 +608,56 @@ export const CalendarView = memo(({
 
             {viewType === 'week' && (
               <div key="week-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                <CalendarWeekView
-                  currentDate={currentDate}
-                  appointments={displayAppointments}
-                  savingAppointmentId={dragState.savingAppointmentId}
-                  onTimeSlotClick={onTimeSlotClick}
-                  onEditAppointment={onEditAppointment}
-                  onDeleteAppointment={onDeleteAppointment}
-                  onAppointmentReschedule={onAppointmentReschedule}
-                  dragState={dragState}
-                  dropTarget={dropTarget}
-                  targetAppointments={targetAppointments}
-                  handleDragStart={handleDragStart}
-                  handleDragEnd={handleDragEnd}
-                  handleDragOver={handleDragOver}
-                  handleDragLeave={handleDragLeave}
-                  handleDrop={handleDrop}
-                  checkTimeBlocked={checkTimeBlocked}
-                  isDayClosedForDate={isDayClosedForDate}
-                  getStatusColor={getStatusColor}
-                  isOverCapacity={isOverCapacity}
-                  openPopoverId={openPopoverId}
-                  setOpenPopoverId={setOpenPopoverId}
-                  selectionMode={selectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelection={onToggleSelection}
-                />
+                {USE_DND_KIT ? (
+                  <CalendarWeekViewDndKit
+                    currentDate={currentDate}
+                    appointments={displayAppointments}
+                    savingAppointmentId={dragState.savingAppointmentId}
+                    onTimeSlotClick={onTimeSlotClick}
+                    onEditAppointment={onEditAppointment}
+                    onDeleteAppointment={onDeleteAppointment}
+                    onAppointmentReschedule={onAppointmentReschedule}
+                    checkTimeBlocked={checkTimeBlocked}
+                    isDayClosedForDate={isDayClosedForDate}
+                    openPopoverId={openPopoverId}
+                    setOpenPopoverId={setOpenPopoverId}
+                    dragState={dragState}
+                    dropTarget={dropTarget}
+                    handleDragStart={handleDragStartDndKit}
+                    handleDragOver={handleDragOverDndKit}
+                    handleDragEnd={handleDragEndDndKit}
+                    selectionMode={selectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={onToggleSelection}
+                  />
+                ) : (
+                  <CalendarWeekView
+                    currentDate={currentDate}
+                    appointments={displayAppointments}
+                    savingAppointmentId={dragState.savingAppointmentId}
+                    onTimeSlotClick={onTimeSlotClick}
+                    onEditAppointment={onEditAppointment}
+                    onDeleteAppointment={onDeleteAppointment}
+                    onAppointmentReschedule={onAppointmentReschedule}
+                    dragState={dragState}
+                    dropTarget={dropTarget}
+                    targetAppointments={targetAppointments}
+                    handleDragStart={handleDragStartNative}
+                    handleDragEnd={handleDragEndNative}
+                    handleDragOver={handleDragOverNative}
+                    handleDragLeave={handleDragLeaveNative}
+                    handleDrop={handleDropNative}
+                    checkTimeBlocked={checkTimeBlocked}
+                    isDayClosedForDate={isDayClosedForDate}
+                    getStatusColor={getStatusColor}
+                    isOverCapacity={isOverCapacity}
+                    openPopoverId={openPopoverId}
+                    setOpenPopoverId={setOpenPopoverId}
+                    selectionMode={selectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={onToggleSelection}
+                  />
+                )}
               </div>
             )}
 

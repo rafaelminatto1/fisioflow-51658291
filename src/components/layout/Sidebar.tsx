@@ -41,6 +41,7 @@ import {
   ShoppingCart,
   Package,
   Video,
+  Link2,
   LinkIcon,
   Layers,
   Brain,
@@ -55,6 +56,10 @@ import {
   UserCircle,
   MoreHorizontal,
   Star,
+  Calculator,
+  CheckCircle2,
+  Film,
+  Search,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -135,7 +140,21 @@ const crmSubmenu = [
 ];
 
 const marketingSubmenu = [
+  { icon: BarChart3, label: 'Dashboard', href: '/marketing/dashboard' },
   { icon: Star, label: 'Avaliações Google', href: '/marketing/reviews' },
+  { icon: Search, label: 'Rastreador SEO', href: '/marketing/seo' },
+  { icon: Calendar, label: 'Calendário de Conteúdo', href: '/marketing/calendar' },
+  { icon: Sparkles, label: 'Gerador de Conteúdo', href: '/marketing/content-generator' },
+  { icon: ImageIcon, label: 'Antes e Depois', href: '/marketing/before-after' },
+  { icon: Film, label: 'Timelapse Evolução', href: '/marketing/timelapse' },
+  { icon: MessageSquare, label: 'Scripts WhatsApp', href: '/marketing/whatsapp' },
+  { icon: Video, label: 'Exportações', href: '/marketing/exports' },
+  { icon: Users, label: 'Programa de Indicação', href: '/marketing/referral' },
+  { icon: Link2, label: 'FisioLink', href: '/marketing/fisiolink' },
+  { icon: Calculator, label: 'Calculadora ROI', href: '/marketing/roi' },
+  { icon: CheckCircle2, label: 'Mito vs Verdade', href: '/marketing/myth-truth' },
+  { icon: Trophy, label: 'Gamificação Adesão', href: '/marketing/gamification' },
+  { icon: Settings, label: 'Configurações', href: '/marketing/settings' },
 ];
 
 const configuracoesSubmenu = [
@@ -202,6 +221,7 @@ export function Sidebar() {
   const [operacionaisOpen, setOperacionaisOpen] = useState(false);
   const [gamificacaoOpen, setGamificacaoOpen] = useState(false);
   const [maisOpen, setMaisOpen] = useState(false);
+  const [marketingOpen, setMarketingOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -219,6 +239,7 @@ export function Sidebar() {
   const isAdminActive = location.pathname.startsWith('/admin');
   const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
+  const isMarketingActive = location.pathname.startsWith('/marketing');
   const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations';
 
   // Função auxiliar para renderizar item do menu
@@ -585,9 +606,9 @@ export function Sidebar() {
             icon: Star,
             label: 'Marketing',
             items: marketingSubmenu,
-            isOpen: false, // Simplificado, pode criar state se quiser
-            onOpenChange: () => {},
-            isActive: location.pathname.startsWith('/marketing'),
+            isOpen: marketingOpen || isMarketingActive,
+            onOpenChange: setMarketingOpen,
+            isActive: isMarketingActive,
             collapsed,
             location
           })}
