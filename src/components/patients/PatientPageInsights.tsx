@@ -87,9 +87,13 @@ export function PatientPageInsights({ totalPatients, classificationStats }: Pati
     });
   }
 
-  if (insights.length === 0) {
-    return null;
-  }
+  // Ordenar: alertas primeiro (inativos, no-show, pendências), depois oportunidades (novos, métricas)
+  const priorityOrder = ['red', 'orange', 'yellow', 'blue', 'amber', 'emerald'];
+  insights.sort((a, b) => {
+    const aIdx = priorityOrder.findIndex(c => a.bgClass.includes(c));
+    const bIdx = priorityOrder.findIndex(c => b.bgClass.includes(c));
+    return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+  });
 
   return (
     <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/10 dark:to-indigo-950/10 border-blue-200/50 dark:border-blue-800/50">
@@ -98,20 +102,26 @@ export function PatientPageInsights({ totalPatients, classificationStats }: Pati
           <Lightbulb className="h-4 w-4 text-primary" aria-hidden />
           <h3 className="text-sm font-semibold">Insights e Ações Sugeridas</h3>
         </div>
-        <ul className="space-y-2">
-          {insights.slice(0, 4).map((insight, i) => {
-            const Icon = insight.icon;
-            return (
-              <li
-                key={i}
-                className={`flex items-start gap-2 p-2 rounded-md border text-sm ${insight.bgClass}`}
-              >
-                <Icon className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
-                <span>{insight.text}</span>
-              </li>
-            );
-          })}
-        </ul>
+        {insights.length > 0 ? (
+          <ul className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+            {insights.slice(0, 5).map((insight, i) => {
+              const Icon = insight.icon;
+              return (
+                <li
+                  key={i}
+                  className={`flex items-start gap-2 p-2.5 rounded-lg border text-sm ${insight.bgClass}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0 mt-0.5" aria-hidden />
+                  <span>{insight.text}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground py-2">
+            Nada pendente no momento. Continue acompanhando seus pacientes.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

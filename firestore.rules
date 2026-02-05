@@ -313,6 +313,22 @@ service cloud.firestore {
     }
 
     // ============================================================================================
+    // EXERCISE TEMPLATES (aba Templates em /exercises)
+    // ============================================================================================
+
+    match /exercise_templates/{templateId} {
+      allow read: if isAdmin() || isProfessional();
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      allow update, delete: if isProfessional() || isAdmin();
+    }
+
+    match /exercise_template_items/{itemId} {
+      allow read: if isAdmin() || isProfessional();
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      allow update, delete: if isProfessional() || isAdmin();
+    }
+
+    // ============================================================================================
     // CLINICAL TEST TEMPLATES (PhysioTests DB / Testes Clínicos)
     // ============================================================================================
 

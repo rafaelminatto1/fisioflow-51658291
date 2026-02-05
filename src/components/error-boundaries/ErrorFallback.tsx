@@ -7,7 +7,7 @@
  * @module components/error-boundaries/ErrorFallback
  */
 
-import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { Bandage, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -33,10 +33,10 @@ export function ErrorFallback({ error, resetError, resetErrorBoundary }: ErrorFa
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] px-4 py-12">
       <div className="max-w-md w-full text-center space-y-6">
-        {/* Error Icon */}
+        {/* Error Icon - Bandage temático para fisioterapia */}
         <div className="flex justify-center">
-          <div className="p-4 rounded-full bg-destructive/10">
-            <AlertCircle className="w-16 h-16 text-destructive" />
+          <div className="p-4 rounded-full bg-amber-50">
+            <Bandage className="w-16 h-16 text-amber-600" />
           </div>
         </div>
 

@@ -50,7 +50,7 @@ export const PatientService = {
             email: dbPatient.email ?? undefined,
             phone: dbPatient.phone ?? undefined,
             cpf: dbPatient.cpf ?? undefined,
-            birthDate: dbPatient.birth_date ?? new Date().toISOString(),
+            birthDate: dbPatient.birth_date ?? undefined,
             gender: extendedPatient.gender || 'outro',
             mainCondition: dbPatient.observations ?? '',
             status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial'),
