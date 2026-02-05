@@ -14,7 +14,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { storage, db, doc, setDoc, collection, serverTimestamp } from '@/integrations/firebase/app';
-/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================

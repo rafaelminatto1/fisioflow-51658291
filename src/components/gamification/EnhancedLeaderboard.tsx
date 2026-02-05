@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, query as firestoreQuery, orderBy, limit, getDocs, QueryDocumentSnapshot } from '@/integrations/firebase/app';
- } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
