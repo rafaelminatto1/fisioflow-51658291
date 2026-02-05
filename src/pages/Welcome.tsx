@@ -207,7 +207,7 @@ export default function Welcome() {
             <Heart className="h-6 w-6 text-primary mr-2" />
             <span className="text-lg font-semibold">Activity Fisioterapia</span>
           </div>
-          <p className="text-gray-400">
+          <p className="text-gray-500">
             © 2024 Activity Fisioterapia. Todos os direitos reservados.
           </p>
         </div>
