@@ -62,7 +62,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
-        title: exercise.name,
+        title: exercise?.name ?? 'Exercício',
         text: exercise.description || '',
         url: window.location.href,
       });
@@ -76,7 +76,7 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
-            <CardTitle className="text-2xl">{exercise.name}</CardTitle>
+            <CardTitle className="text-2xl">{exercise?.name ?? 'Exercício'}</CardTitle>
             <div className="flex gap-2 flex-wrap">
               {exercise.category && (
                 <Badge variant="secondary">{exercise.category}</Badge>
