@@ -53,7 +53,7 @@ export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCard
       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
       : patient.status === 'Inicial'
         ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
-        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
   );
 
   const avatarFallbackColors = cn(
@@ -62,7 +62,7 @@ export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCard
       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
       : patient.status === 'Inicial'
         ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
-        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
   );
 
   // Handler para teclado

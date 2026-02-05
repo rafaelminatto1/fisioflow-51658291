@@ -12,6 +12,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import { getAdminDb, batchFetchDocuments } from '../init';
+import { sendAppointmentReminderEmail, sendAppointmentConfirmationEmail } from '../communications/resend-templates';
 
 // ============================================================================
 // TYPES
@@ -141,13 +142,24 @@ export const appointmentReminders = onSchedule(
 
             // Send email reminder
             if (preferences.email !== false && orgSettings.email_enabled && patient.email) {
-              logger.info('[appointmentReminders] Queuing email reminder', {
-                appointmentId: appointment.id,
-                patientEmail: patient.email,
+              const emailResult = await sendAppointmentReminderEmail(patient.email, {
+                patientName: patient.full_name || patient.name || 'Paciente',
+                date: appointment.date,
+                time: appointment.time || appointment.startTime,
+                therapistName: appointment.therapistName || 'Seu fisioterapeuta',
+                clinicName: organization.name || 'FisioFlow',
               });
 
-              // TODO: Send via email provider
-              remindersSent++;
+              logger.info('[appointmentReminders] Email reminder sent', {
+                appointmentId: appointment.id,
+                patientEmail: patient.email,
+                success: emailResult.success,
+                error: emailResult.error,
+              });
+
+              if (emailResult.success) {
+                remindersSent++;
+              }
             }
 
             // Send WhatsApp reminder
@@ -267,6 +279,44 @@ export const onAppointmentCreatedWorkflow = onDocumentCreated(
 
       // Check preferences
       const whatsappEnabled = organization?.settings?.whatsapp_enabled ?? true;
+      const emailEnabled = organization?.settings?.email_enabled ?? true;
+
+      // Send email confirmation
+      if (emailEnabled && patient.email) {
+        try {
+          const emailResult = await sendAppointmentConfirmationEmail(patient.email, {
+            patientName: patient.full_name || patient.name || 'Paciente',
+            therapistName: appointment.therapistName || 'Seu fisioterapeuta',
+            date: appointment.date,
+            time: appointment.time || appointment.startTime,
+            clinicName: organization?.name || 'FisioFlow',
+            clinicAddress: organization?.address,
+          });
+
+          logger.info('[onAppointmentCreatedWorkflow] Email confirmation sent', {
+            patientEmail: patient.email,
+            success: emailResult.success,
+            error: emailResult.error,
+          });
+
+          // Create confirmation log
+          await db.collection('appointment_confirmations').doc().create({
+            appointment_id: appointment.id,
+            patient_id: patient.id,
+            organization_id: organization?.id,
+            sent_at: new Date().toISOString(),
+            channel: 'email',
+            status: emailResult.success ? 'sent' : 'failed',
+            email_id: emailResult.id || null,
+            error: emailResult.error || null,
+          });
+        } catch (error) {
+          logger.error('[onAppointmentCreatedWorkflow] Failed to send email confirmation', {
+            patientEmail: patient.email,
+            error,
+          });
+        }
+      }
 
       if (whatsappEnabled && patient.phone) {
         // TODO: Send WhatsApp confirmation

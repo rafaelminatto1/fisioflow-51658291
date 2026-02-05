@@ -86,7 +86,7 @@ export function WaitlistHorizontal({
     if (!loading && waitlist.length === 0) {
         return (
             <div className={cn("w-full bg-slate-50/50 dark:bg-slate-900/20 border-b border-slate-200 dark:border-slate-800 py-1 px-4 flex justify-between items-center", className)}>
-                <span className="text-xs text-slate-400 italic">Lista de espera vazia</span>
+                <span className="text-xs text-slate-500 italic">Lista de espera vazia</span>
             </div>
         );
     }
@@ -108,8 +108,8 @@ export function WaitlistHorizontal({
                         </span>
                     </h3>
                     {isExpanded ?
-                        <ChevronUp className="h-3 w-3 text-slate-400" /> :
-                        <ChevronDown className="h-3 w-3 text-slate-400" />
+                        <ChevronUp className="h-3 w-3 text-slate-500" /> :
+                        <ChevronDown className="h-3 w-3 text-slate-500" />
                     }
                 </div>
             </div>
@@ -136,7 +136,7 @@ export function WaitlistHorizontal({
                                                     <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 uppercase tracking-wider", getPriorityColor(entry.priority))}>
                                                         {getPriorityLabel(entry.priority)}
                                                     </Badge>
-                                                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                    <span className="text-[10px] text-slate-500 flex items-center gap-1">
                                                         <Clock className="w-3 h-3" />
                                                         {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
                                                     </span>
@@ -145,7 +145,7 @@ export function WaitlistHorizontal({
 
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 -mt-1 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 -mt-1 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <MoreVertical className="w-3 h-3" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -159,7 +159,7 @@ export function WaitlistHorizontal({
 
                                         <div className="flex flex-wrap gap-1.5 mb-3">
                                             {entry.preferred_days?.slice(0, 3).map(day => (
-                                                <div key={day} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md">
+                                                <div key={day} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md">
                                                     {DAY_LABELS[day]}
                                                 </div>
                                             ))}

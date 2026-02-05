@@ -152,7 +152,7 @@ export function ClinicalTestCombobox({
                             )}
                         </div>
                     ) : (
-                        <span className="text-slate-400 flex items-center gap-2 font-medium">
+                        <span className="text-slate-500 flex items-center gap-2 font-medium">
                             <Search className="h-4 w-4 text-slate-300" />
                             {placeholder}
                         </span>
@@ -190,7 +190,7 @@ export function ClinicalTestCombobox({
                                     <p className="text-sm text-slate-600 font-bold mb-1">
                                         Nenhum teste encontrado para "{searchTerm}"
                                     </p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-slate-500">
                                         Tente termos mais genéricos ou verifique a ortografia.
                                     </p>
                                 </div>
@@ -211,7 +211,7 @@ export function ClinicalTestCombobox({
                                                             "flex h-8 w-8 items-center justify-center rounded-lg border transition-all shrink-0",
                                                             value === test.id
                                                                 ? "bg-teal-600 border-teal-600 text-white"
-                                                                : "bg-white border-slate-100 text-slate-400 group-hover:border-teal-200 group-hover:text-teal-600"
+                                                                : "bg-white border-slate-100 text-slate-500 group-hover:border-teal-200 group-hover:text-teal-600"
                                                         )}>
                                                             {value === test.id ? <Check className="h-4 w-4" /> : <Info className="h-4 w-4" />}
                                                         </div>
@@ -231,7 +231,7 @@ export function ClinicalTestCombobox({
                                                                 )}
                                                             </div>
                                                             {test.name_en && (
-                                                                <span className="text-[10px] text-slate-400 italic truncate font-medium">
+                                                                <span className="text-[10px] text-slate-500 italic truncate font-medium">
                                                                     {test.name_en}
                                                                 </span>
                                                             )}
