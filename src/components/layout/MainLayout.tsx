@@ -9,6 +9,7 @@ import { BottomNavigation } from './BottomNavigation';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { SkipLinks } from '@/components/accessibility/SkipLinks';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
@@ -82,6 +83,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
+      {/* Skip Links for Accessibility */}
+      <SkipLinks />
+
       {/* Onboarding Tour */}
       <OnboardingTour />
 
