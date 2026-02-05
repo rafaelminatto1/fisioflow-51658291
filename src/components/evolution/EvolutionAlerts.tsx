@@ -1,23 +1,18 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { memo } from 'react';
 import {
     Alert,
     AlertDescription,
     AlertTitle,
 } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import {
     AlertTriangle,
     Timer,
     CalendarX,
     HeartPulse,
     TrendingUp,
-    Brain,
     Clock,
     FileText,
-    X,
 } from 'lucide-react';
-
-const FIRST_EVOLUTION_DISMISS_KEY = 'fisioflow-first-evolution-alert-dismissed';
 
 interface Goal {
   id: string;
@@ -57,27 +52,6 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = memo(({
     previousEvolutionsCount,
     onTabChange,
 }) => {
-    const [firstEvolutionDismissed, setFirstEvolutionDismissed] = useState(false);
-
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem(FIRST_EVOLUTION_DISMISS_KEY);
-            setFirstEvolutionDismissed(stored === 'true');
-        } catch {
-            // ignore
-        }
-    }, []);
-
-    const handleDismissFirstEvolution = () => {
-        try {
-            localStorage.setItem(FIRST_EVOLUTION_DISMISS_KEY, 'true');
-            setFirstEvolutionDismissed(true);
-        } catch {
-            // ignore
-        }
-    };
-
-    const showFirstEvolution = previousEvolutionsCount === 0 && !firstEvolutionDismissed;
 
     const criticalAlerts: React.ReactNode[] = [];
     const warningAlerts: React.ReactNode[] = [];
@@ -209,30 +183,6 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = memo(({
                         Ver detalhes →
                     </button>
                 </AlertDescription>
-            </Alert>
-        );
-    }
-    if (showFirstEvolution) {
-        infoAlerts.push(
-            <Alert
-                key="first-evolution"
-                className="border-indigo-500/50 bg-indigo-50 dark:bg-indigo-950/20 border-l-4 border-l-indigo-500 relative pr-12"
-                role="alert"
-            >
-                <Brain className="h-4 w-4 text-indigo-600" />
-                <AlertTitle className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">Primeira Evolução</AlertTitle>
-                <AlertDescription className="text-xs text-indigo-700 dark:text-indigo-300">
-                    Esta é a primeira evolução do paciente. Registre um SOAP completo para estabelecer uma linha de base sólida.
-                </AlertDescription>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-3 right-3 h-8 w-8 p-0 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
-                    onClick={handleDismissFirstEvolution}
-                    aria-label="Dispensar alerta"
-                >
-                    <X className="h-4 w-4" />
-                </Button>
             </Alert>
         );
     }
