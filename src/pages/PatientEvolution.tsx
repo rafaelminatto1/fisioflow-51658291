@@ -790,6 +790,7 @@ const PatientEvolution = () => {
             therapists={therapists}
             selectedTherapistId={selectedTherapistId}
             onTherapistChange={setSelectedTherapistId}
+            previousEvolutionsCount={previousEvolutions.length}
           />
 
           {/* Alerta de Testes Obrigatórios */}
@@ -843,17 +844,24 @@ const PatientEvolution = () => {
 
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Layout: 3 cards à esquerda em 2 linhas | 1 card de Resumo à direita ocupando 2 linhas */}
+              <div className="grid grid-cols-1 lg:grid-cols-[192px_192px_1fr] lg:grid-rows-[auto_auto] gap-3">
+                {/* Linha 1, Coluna 1: Retorno Médico */}
                 <MedicalReturnCard
                   patient={patient}
                   patientId={patientId || undefined}
                   onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
                 />
+                {/* Linha 1, Coluna 2: Cirurgias */}
                 <SurgeriesCard patientId={patientId || undefined} />
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Linha 1-2, Coluna 3: Resumo - ocupa 2 linhas */}
+                <div className="lg:row-span-2">
+                  <EvolutionSummaryCard stats={evolutionStats} />
+                </div>
+                {/* Linha 2, Coluna 1: Metas */}
                 <MetasCard patientId={patientId || undefined} />
-                <EvolutionSummaryCard stats={evolutionStats} />
+                {/* Linha 2, Coluna 2: espaço vazio */}
+                <div></div>
               </div>
               <Suspense fallback={<LoadingSkeleton type="card" />}>
                 <LazyEvolutionDraggableGrid

@@ -52,8 +52,11 @@ export const TimeSlotCell = memo(({
   const isInvalidDrop = isDropTarget && (isBlocked || isClosed);
 
   // Calcular preview cards para o drop target
-  const showPreview = isDropTarget && !isInvalidDrop && draggedAppointment;
-  const previewCards = showPreview ? [...targetAppointments, draggedAppointment] : [];
+  // Não incluir o card arrastado no preview se ele já está neste slot (evita dois fantasmas)
+  const draggedIsFromThisSlot = draggedAppointment && targetAppointments.some(apt => apt.id === draggedAppointment.id);
+  const showPreview = isDropTarget && !isInvalidDrop && draggedAppointment && !draggedIsFromThisSlot;
+  // Apenas mostrar outros appointments existentes + o card arrastado quando vindo de outro slot
+  const previewCards = showPreview ? [...targetAppointments.filter(apt => apt.id !== draggedAppointment?.id), draggedAppointment] : [];
   const totalCards = previewCards.length;
 
   // Memoizar handlers para evitar re-renders desnecessários

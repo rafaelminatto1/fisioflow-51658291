@@ -373,102 +373,86 @@ export const CalendarWeekViewFinal = memo(({
                                 : null;
 
                             return (
-                                <Tooltip key={apt.id}>
-                                    <TooltipTrigger asChild>
-                                        <div
-                                            draggable={isDraggable}
-                                            onDragStart={(e) => handleDragStart(e, apt)}
-                                            onDragEnd={handleDragEnd}
-                                            className={cn(
-                                                "m-1.5 rounded-lg p-3 border-l-4 transition-all cursor-pointer shadow-sm hover:shadow-md",
-                                                "hover:scale-[1.02] hover:z-20",
-                                                dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50",
-                                                getBorderLeftColor(apt.status),
-                                                STATUS_COLORS[apt.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.agendado
-                                            )}
-                                            style={{
-                                                gridColumn: dayIndex + 2,
-                                                gridRow: `${startRowIndex + 1} / span ${span}`,
-                                                zIndex: 10
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (onAppointmentClick) {
-                                                    onAppointmentClick(apt);
-                                                }
-                                            }}
-                                        >
-                                            {/* Patient conflict indicator */}
-                                            {patientConflict?.hasConflict && (
-                                                <div className="absolute -top-1 -right-1 z-20">
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                                                                <Info className="w-3 h-3 text-white" />
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p className="font-medium">Paciente tem agendamento próximo!</p>
-                                                            <p className="text-xs text-slate-500">
-                                                                Também agendado para {format(patientConflict.existingDate, 'dd/MM')} às {patientConflict.existingTime}
-                                                            </p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </div>
-                                            )}
-
-                                            <AppointmentQuickView
-                                                appointment={apt}
-                                                open={openPopoverId === apt.id}
-                                                onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                                onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                                onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
-                                            >
-                                                <div className="space-y-1.5">
-                                                    {/* Header with therapist */}
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Stethoscope className="w-3.5 h-3.5 text-white/80" />
-                                                            <p className="text-xs font-bold text-white truncate">
-                                                                {apt.therapistId || 'Dr. Desconhecido'}
-                                                            </p>
+                                <AppointmentQuickView
+                                    key={apt.id}
+                                    appointment={apt}
+                                    open={openPopoverId === apt.id}
+                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                >
+                                    <div
+                                        draggable={isDraggable}
+                                        onDragStart={(e) => handleDragStart(e, apt)}
+                                        onDragEnd={handleDragEnd}
+                                        className={cn(
+                                            "m-1.5 rounded-lg p-3 border-l-4 transition-all cursor-pointer shadow-sm hover:shadow-md relative",
+                                            "hover:scale-[1.02] hover:z-20",
+                                            dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50",
+                                            getBorderLeftColor(apt.status),
+                                            STATUS_COLORS[apt.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.agendado
+                                        )}
+                                        style={{
+                                            gridColumn: dayIndex + 2,
+                                            gridRow: `${startRowIndex + 1} / span ${span}`,
+                                            zIndex: 10
+                                        }}
+                                    >
+                                        {/* Patient conflict indicator */}
+                                        {patientConflict?.hasConflict && (
+                                            <div className="absolute -top-1 -right-1 z-20">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                                                            <Info className="w-3 h-3 text-white" />
                                                         </div>
-                                                        <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">
-                                                            {apt.time}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Patient name */}
-                                                    <div className="flex items-center gap-1.5">
-                                                        <User className="w-3.5 h-3.5 text-white/80" />
-                                                        <p className="text-sm font-semibold text-white truncate">
-                                                            {apt.patientName}
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p className="font-medium">Paciente tem agendamento próximo!</p>
+                                                        <p className="text-xs text-slate-500">
+                                                            Também agendado para {format(patientConflict.existingDate, 'dd/MM')} às {patientConflict.existingTime}
                                                         </p>
-                                                    </div>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                        )}
 
-                                                    {/* Footer with type and room */}
-                                                    <div className="flex items-center justify-between pt-1.5 border-t border-white/20">
-                                                        <span className="text-[10px] text-white/90 truncate flex-1">
-                                                            {apt.type}
-                                                        </span>
-                                                        {apt.room && (
-                                                            <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded text-white font-medium ml-2">
-                                                                Sala {apt.room}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                        <div className="space-y-1.5">
+                                            {/* Header with therapist */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Stethoscope className="w-3.5 h-3.5 text-white/80" />
+                                                    <p className="text-xs font-bold text-white truncate">
+                                                        {apt.therapistId || 'Dr. Desconhecido'}
+                                                    </p>
                                                 </div>
-                                            </AppointmentQuickView>
+                                                <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">
+                                                    {apt.time}
+                                                </span>
+                                            </div>
+
+                                            {/* Patient name */}
+                                            <div className="flex items-center gap-1.5">
+                                                <User className="w-3.5 h-3.5 text-white/80" />
+                                                <p className="text-sm font-semibold text-white truncate">
+                                                    {apt.patientName}
+                                                </p>
+                                            </div>
+
+                                            {/* Footer with type and room */}
+                                            <div className="flex items-center justify-between pt-1.5 border-t border-white/20">
+                                                <span className="text-[10px] text-white/90 truncate flex-1">
+                                                    {apt.type}
+                                                </span>
+                                                {apt.room && (
+                                                    <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded text-white font-medium ml-2">
+                                                        Sala {apt.room}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <div className="space-y-1">
-                                            <p className="font-medium">{apt.patientName}</p>
-                                            <p className="text-xs text-slate-500">{apt.type} • {apt.duration}min</p>
-                                            <p className="text-xs text-slate-500">Status: {apt.status}</p>
-                                        </div>
-                                    </TooltipContent>
-                                </Tooltip>
+                                    </div>
+                                </AppointmentQuickView>
                             );
                         })}
                     </div>
