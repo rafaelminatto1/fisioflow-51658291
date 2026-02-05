@@ -157,17 +157,16 @@ export function LoginForm({
                   <FormLabel htmlFor="login-password" className="text-sm font-medium">
                     Senha
                   </FormLabel>
-                  <a
-                    href="#"
-                    className="text-xs text-primary hover:text-primary/80 transition-colors"
+                  <button
+                    type="button"
+                    className="text-xs text-primary hover:text-primary/80 transition-colors bg-transparent border-0 p-0 cursor-pointer"
                     tabIndex={activeTab === 'login' ? 5 : -1}
-                    onClick={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       logger.debug('Forgot password clicked', null, 'LoginForm');
                     }}
                   >
                     Esqueceu a senha?
-                  </a>
+                  </button>
                 </div>
                 <FormControl>
                   <Input

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
     Alert,
     AlertDescription,
@@ -45,7 +45,7 @@ interface EvolutionAlertsProps {
     onTabChange: (tab: string) => void;
 }
 
-export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = ({
+export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = memo(({
     overdueGoals,
     painScale,
     painTrend,
@@ -262,4 +262,6 @@ export const EvolutionAlerts: React.FC<EvolutionAlertsProps> = ({
             {allAlerts}
         </div>
     );
-};
+});
+
+EvolutionAlerts.displayName = 'EvolutionAlerts';
