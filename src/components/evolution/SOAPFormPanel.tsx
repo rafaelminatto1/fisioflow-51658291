@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SmartTextarea } from '@/components/ui/SmartTextarea';
+import { MagicTextarea } from '@/components/ai/MagicTextarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -64,24 +64,23 @@ const SOAPField = React.memo(({
     };
   }, []);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    setLocalValue(newValue);
+  const handleChange = useCallback((val: string) => {
+    setLocalValue(val);
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     debounceTimer.current = setTimeout(() => {
-      lastSentValue.current = newValue;
-      onChange(newValue);
+      lastSentValue.current = val;
+      onChange(val);
     }, 300);
   }, [onChange]);
 
   return (
     <>
-      <SmartTextarea
+      <MagicTextarea
         placeholder={placeholder}
         value={localValue}
-        onChange={handleChange}
+        onValueChange={handleChange}
         onFocus={onFocus}
         disabled={disabled}
         rows={isActive ? 5 : 3}
