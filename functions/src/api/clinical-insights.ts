@@ -1,10 +1,10 @@
 import { onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
+import { getPool, CORS_ORIGINS } from '../init';
 import { setCorsHeaders } from '../lib/cors';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
 
-const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: true };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' as const };
 
 /**
  * Fornece insights analíticos profundos baseados em dados SQL

@@ -60,6 +60,7 @@ export const healthCheckHandler = async (req: any, res: any) => {
 export const healthCheck = onRequest({
   memory: '256MiB',
   maxInstances: 1,
+  invoker: 'public',
   secrets: [
     DB_PASS_SECRET,
     DB_USER_SECRET,
