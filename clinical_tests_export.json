@@ -1,0 +1,2159 @@
+[
+  {
+    "id": "5438cc83-1e2f-42ff-986b-0505f91033a0",
+    "name": "Teste de Neer",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar impacto subacromial (síndrome do impacto no ombro)",
+    "execution": "Paciente sentado. Terapeuta estabiliza a escápula do paciente com uma mão e, com a outra, eleva passivamente o braço em flexão completa do ombro (geralmente com rotação interna).",
+    "positive_sign": "Dor no aspecto ântero-lateral do ombro reproduzindo a dor referida pelo paciente indica teste positivo para impacto subacromial.",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Impacto",
+      "Neer"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "59-72% sensibilidade, 6% especificidade",
+    "name_en": "Neer Test",
+    "media_placeholder_keywords": [
+      "neer test",
+      "shoulder impingement test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "1cc4727f-e7a3-4e8d-bbb8-cc8968c132a4",
+    "name": "Teste de Hawkins-Kennedy",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar impacto subacromial (impingement de estruturas subacromiais)",
+    "execution": "Paciente sentado, ombro e cotovelo flexionados a 90°. Terapeuta estabiliza a escápula com uma mão e, com a outra no cotovelo, realiza rotação interna passiva e forçada do ombro.",
+    "positive_sign": "Dor no ombro reproduzindo a dor do paciente indica teste positivo para síndrome do impacto subacromial.",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Impacto",
+      "Hawkins"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "58-80% sensibilidade, 56-67% especificidade",
+    "name_en": "Hawkins-Kennedy Test",
+    "media_placeholder_keywords": [
+      "hawkins kennedy test",
+      "shoulder impingement"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "77bf2203-4601-40ec-b552-4ed40403d530",
+    "name": "Teste de Jobe (Empty Can)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar lesão ou tendinopatia do músculo supraespinhal (manguito rotador)",
+    "execution": "Paciente em pé ou sentado. Braços elevados a 90° no plano da escápula. Em seguida, o paciente roda internamente os ombros (polegares para baixo). O terapeuta aplica pressão para baixo nos antebraços e o paciente resiste.",
+    "positive_sign": "Dor ou fraqueza comparativa no braço afetado em relação ao lado oposto indica lesão do tendão do supraespinhal.",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Supraespinhal",
+      "Jobe"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "74% sensibilidade, 30% especificidade",
+    "name_en": "Jobe Test (Empty Can)",
+    "media_placeholder_keywords": [
+      "empty can test",
+      "supraspinatus test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "e7ae909d-4249-4998-8f7e-39a83d96f118",
+    "name": "Teste Full Can (Lata Cheia)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar lesão do músculo supraespinhal, com menor compressão subacromial que o teste Empty Can",
+    "execution": "Paciente em pé ou sentado, braços elevados a 90° no plano escapular com polegares apontando para cima (rotação externa). O paciente resiste à pressão para baixo aplicada pelo terapeuta sobre os braços.",
+    "positive_sign": "Dor ou fraqueza em comparação com o lado contralateral sugerem lesão do tendão do supraespinhal.",
+    "reference": "Jain, 2017",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Supraespinhal"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "70% sensibilidade, 81% especificidade",
+    "name_en": "Full Can Test",
+    "media_placeholder_keywords": [
+      "full can test",
+      "supraspinatus test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "81757b33-5425-45e0-a02d-13fa70b76d07",
+    "name": "Teste de Speed",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar tendinopatia do tendão da cabeça longa do bíceps ou lesão tipo SLAP",
+    "execution": "Paciente sentado ou em pé. Paciente com ombro em flexão anterior de 90°, cotovelo estendido e antebraço supinado. O terapeuta aplica resistência à elevação do braço ou pressão para baixo enquanto o paciente tenta manter a posição.",
+    "positive_sign": "Dor no sulco bicipital durante a resistência é indicativa de tendinopatia do bíceps ou lesão do labrum superior (SLAP).",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Bíceps",
+      "SLAP"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "20% sensibilidade, 78% especificidade",
+    "name_en": "Speed's Test",
+    "media_placeholder_keywords": [
+      "speed's test",
+      "biceps tendon test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "57ee89e3-f2e3-45c1-b405-589eea377be1",
+    "name": "Teste de Yergason",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar estabilidade do tendão do bíceps (ligamento transverso) e possível lesão SLAP ou tendinopatia bicipital",
+    "execution": "Paciente sentado com cotovelo flexionado a 90° junto ao tronco e antebraço pronado. Terapeuta segura a mão do paciente e pede para ele supinar o antebraço contra resistência, enquanto palpa o tendão do bíceps no sulco bicipital.",
+    "positive_sign": "Dor localizada no sulco bicipital indica tendinopatia do bíceps ou possível lesão SLAP. Sensação de translação ou estalido do tendão do bíceps saindo do sulco indica ruptura do ligamento umeral transverso.",
+    "reference": "Micheroli, 2015",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Bíceps",
+      "SLAP"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "32% sensibilidade, 88% especificidade",
+    "name_en": "Yergason Test",
+    "media_placeholder_keywords": [
+      "yergason test",
+      "biceps tendon test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "d99a2a23-631a-4bd4-b4e6-37851f2e4daf",
+    "name": "Teste de O'Brien (Compressão Ativa)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Detectar lesões do lábio superior (lesão SLAP) e/ou patologia da articulação acromioclavicular",
+    "execution": "Paciente em pé com ombro a 90° de flexão e 10° de adução horizontal. Primeiro, com polegar apontando para baixo (rotação interna do ombro), o paciente resiste à pressão para baixo aplicada pelo terapeuta. Em seguida, com polegar para cima (rotação externa), o paciente resiste novamente à pressão para baixo.",
+    "positive_sign": "Dor profunda no ombro presente na primeira posição de teste (rotação interna) que diminui ou desaparece na segunda posição (rotação externa) sugere lesão SLAP. Dor localizada sobre a articulação acromioclavicular durante o teste pode indicar lesão na articulação AC.",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "SLAP",
+      "AC"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "67% sensibilidade, 37% especificidade (SLAP)",
+    "name_en": "O'Brien Test (Active Compression)",
+    "media_placeholder_keywords": [
+      "obrien test",
+      "SLAP lesion test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "e02c1005-04e2-40eb-ba36-7675a4ba7bea",
+    "name": "Teste de Apreensão Anterior do Ombro",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar instabilidade anterior glenoumeral (propensão à luxação anterior do ombro)",
+    "execution": "Paciente em decúbito dorsal próximo à borda da mesa. Com o ombro abduzido a 90° e cotovelo a 90°, o terapeuta lentamente realiza rotação externa máxima do ombro, observando a reação do paciente. O paciente deve ser instruído a relatar qualquer apreensão ou sensação de instabilidade durante o movimento.",
+    "positive_sign": "Expressão de receio ou apreensão do paciente, ou resistência ao movimento por medo de luxação, indica teste positivo para instabilidade anterior do ombro.",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Instabilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "66% sensibilidade, 95% especificidade",
+    "name_en": "Shoulder Apprehension Test",
+    "media_placeholder_keywords": [
+      "shoulder apprehension test",
+      "anterior instability test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "71160e73-683b-4397-bb94-55219dcbf801",
+    "name": "Teste de Relocação do Ombro",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Confirmar instabilidade anterior do ombro, aliviando os sintomas de apreensão do teste de apreensão",
+    "execution": "Realizado imediatamente após um teste de apreensão anterior positivo. Com o paciente em decúbito dorsal, ombro a 90° de abdução e próximo ao ponto de apreensão (durante rotação externa), o terapeuta aplica uma pressão firme em sentido póstero-lateral sobre a cabeça do úmero (empurrando a cabeça do úmero posteriormente).",
+    "positive_sign": "Redução ou alívio da sensação de apreensão ou dor do paciente quando aplicada a pressão posterior indica teste positivo, confirmando instabilidade anterior glenoumeral.",
+    "reference": "Hegedus, 2012",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Instabilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "65% sensibilidade, 90% especificidade",
+    "name_en": "Shoulder Relocation Test",
+    "media_placeholder_keywords": [
+      "relocation test shoulder",
+      "anterior instability test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "7c1ed36e-8476-406a-9df6-975d95a6a65d",
+    "name": "Teste de Queda do Braço (Drop Arm)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar roturas de espessura total do manguito rotador, especialmente do tendão do supraespinhal (e infraespinhal)",
+    "execution": "Paciente em pé. Terapeuta eleva passivamente o braço do paciente para aproximadamente 90° de abdução. Em seguida, pede-se ao paciente para sustentar essa posição e, então, liberar o suporte do braço, solicitando que o paciente controle lentamente a descida do braço.",
+    "positive_sign": "Incapacidade do paciente de sustentar o braço abduzido ou de controlá-lo lentamente em descida (o braço cai repentinamente) indica possível ruptura completa do tendão do supraespinhal (sinal do braço caído).",
+    "reference": "Miller, 2008",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Manguito Rotador"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "73% sensibilidade, 77% especificidade",
+    "name_en": "Drop Arm Test",
+    "media_placeholder_keywords": [
+      "drop arm test",
+      "rotator cuff tear test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "3ff83da6-ae6e-440c-ab35-d33ad8581e0e",
+    "name": "Teste de Gerber (Lift-Off)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar integridade do músculo subescapular (ruptura ou lesão do tendão do subescapular)",
+    "execution": "Paciente em pé, com o dorso da mão apoiado na região lombar (coluna lombar). Pede-se ao paciente que tente levantar a mão para longe das costas (em direção à posterior). Se conseguir, o terapeuta pode aplicar resistência contra a mão para testar a força.",
+    "positive_sign": "Incapacidade de levantar a mão das costas indica lesão ou ruptura do músculo e/ou tendão subescapular. Movimento anormal da escápula durante o teste também pode indicar compensação por fraqueza do subescapular.",
+    "reference": "Jain, 2017",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Subescapular"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "22% sensibilidade, 94% especificidade",
+    "name_en": "Gerber Lift-Off Test",
+    "media_placeholder_keywords": [
+      "lift off test",
+      "gerber test subscapularis"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "dcec1294-414f-499d-8d97-64b6905b8570",
+    "name": "Teste da Pressão Abdominal (Belly Press)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar lesão do tendão do subescapular, especialmente em casos em que o lift-off não pode ser executado devido à dor ou restrição de movimento",
+    "execution": "Paciente em pé ou sentado. Paciente coloca a palma da mão do ombro avaliado sobre seu abdome, logo abaixo do esterno, e tenta pressionar a mão contra o abdome ativamente. O terapeuta observa a posição do cotovelo do paciente durante a manobra.",
+    "positive_sign": "Incapacidade de manter o cotovelo apontado para frente ou necessidade de flexionar o punho (deslocando o cotovelo posteriormente) para empurrar indica fraqueza/lesão do subescapular (teste positivo, também chamado \"sinal de Napoleão\").",
+    "reference": "Burkhart, 2002",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Subescapular"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "40% sensibilidade, 98% especificidade",
+    "name_en": "Belly Press Test",
+    "media_placeholder_keywords": [
+      "belly press test",
+      "napoleon test subscapularis"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "9b9d5b4a-603f-4653-9ca0-35e5cafcc821",
+    "name": "Teste do Abraço de Urso (Bear Hug)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Avaliar lesão do tendão do subescapular (alternativa para testar subescapular)",
+    "execution": "Paciente em pé. Pede-se para colocar a palma da mão do lado afetado sobre o ombro oposto (tocando o ombro contralateral), com o cotovelo apontado para frente. O terapeuta tenta puxar a mão do paciente para longe do ombro (aplicando força de rotação externa no antebraço) enquanto o paciente resiste tentando manter a mão no ombro.",
+    "positive_sign": "Incapacidade de manter a mão no ombro contralateral contra a resistência ou dor significativa no ombro durante o teste indicam lesão do subescapular.",
+    "reference": "Barth, 2006",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Subescapular"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Bear Hug Test",
+    "media_placeholder_keywords": [
+      "bear hug test",
+      "subscapularis tear test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "6f2ec102-a9b1-4d06-8b93-255416911ceb",
+    "name": "Sinal do Sulco (Sulcus Sign)",
+    "target_joint": "Ombro",
+    "description": null,
+    "purpose": "Identificar instabilidade inferior ou multidirecional do ombro (laxidez capsuloligamentar)",
+    "execution": "Paciente sentado ou em pé, com o braço relaxado ao lado do corpo. O terapeuta segura o braço do paciente distalmente ao cotovelo e aplica tração para baixo (direção inferior) no úmero, observando a região logo abaixo do acrômio.",
+    "positive_sign": "Aparição de um sulco ou depressão evidente abaixo do acrômio (entre a cabeça do úmero e o acrômio) durante a tração indica instabilidade inferior do ombro (teste positivo).",
+    "reference": "Neviaser, 1989",
+    "tags": [
+      "Ortopedia",
+      "Ombro",
+      "Instabilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Sulcus Sign",
+    "media_placeholder_keywords": [
+      "sulcus sign shoulder",
+      "inferior instability test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "340d9b4b-222b-4f92-aa26-b5a03ac2d395",
+    "name": "Teste de Spurling",
+    "target_joint": "Coluna",
+    "description": null,
+    "purpose": "Avaliar radiculopatia cervical",
+    "execution": "Extensão, inclinação lateral da cabeça e compressão axial.",
+    "positive_sign": "Dor irradiada no membro superior.",
+    "reference": "Spurling, 1944",
+    "tags": [
+      "Ortopedia",
+      "Coluna",
+      "Cervical"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Spurling Test",
+    "media_placeholder_keywords": [
+      "spurling test",
+      "cervical radiculopathy test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "8df697f0-0d19-4d1d-98ce-2c6abccb8338",
+    "name": "Teste de Lachman",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar integridade do Ligamento Cruzado Anterior (LCA)",
+    "execution": "Paciente em decúbito dorsal. Joelho testado flexionado em ~30°. Terapeuta estabiliza o fêmur distal com uma mão enquanto a outra mão envolve a tíbia proximal (ligeira rotação externa) e aplica uma translação anterior rápida da tíbia em relação ao fêmur.",
+    "positive_sign": "Movimento excessivo da tíbia para frente (comparado ao lado saudável) ou sensação de fim de curso macio (ausência de end feel firme) indicam ruptura do LCA.",
+    "reference": "Benjaminse, 2006",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCA"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "85% sensibilidade, 94% especificidade",
+    "name_en": "Lachman Test",
+    "media_placeholder_keywords": [
+      "lachman test",
+      "knee ACL test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "5cd794da-4a9c-4a64-b713-46488737f122",
+    "name": "Teste da Gaveta Anterior (Joelho)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar lesão do Ligamento Cruzado Anterior (LCA)",
+    "execution": "Paciente em decúbito dorsal com joelho flexionado a 90° e pé apoiado na maca. Terapeuta senta-se sobre o pé do paciente para estabilizá-lo, posiciona ambas as mãos na porção proximal da tíbia (polegares na linha articular) e puxa a tíbia anteriormente (em direção a si) de forma firme.",
+    "positive_sign": "Deslizamento anterior excessivo da tíbia sob o fêmur em comparação com o joelho contralateral, especialmente com ausência de ponto final firme, indica ruptura do LCA.",
+    "reference": "Benjaminse, 2006",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCA"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "92% sensibilidade, 91% especificidade",
+    "name_en": "Anterior Drawer Test",
+    "media_placeholder_keywords": [
+      "anterior drawer test knee",
+      "ACL tear test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "df9ce42a-0df8-458a-bcd5-743b910e6516",
+    "name": "Teste da Gaveta Posterior",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar integridade do Ligamento Cruzado Posterior (LCP)",
+    "execution": "Paciente em decúbito dorsal com joelho flexionado a 90° e pé apoiado. Terapeuta estabiliza o pé do paciente (sentando sobre o pé) e coloca as mãos na tíbia proximal. Em seguida, empurra a tíbia posteriormente (para trás) em relação ao fêmur, aplicando força na linha articular do joelho.",
+    "positive_sign": "Translação posterior excessiva da tíbia (deslocamento para trás) comparada ao lado oposto indica lesão/ruptura do LCP.",
+    "reference": "Rubinstein, 1994",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCP"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "89% sensibilidade, 98% especificidade",
+    "name_en": "Posterior Drawer Test",
+    "media_placeholder_keywords": [
+      "posterior drawer test knee",
+      "PCL tear test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "a6101a9a-8d13-4e6b-8b52-b9606eb5cca7",
+    "name": "Teste de Pivot-Shift",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar instabilidade rotatória ântero-lateral do joelho (ruptura do LCA)",
+    "execution": "Paciente em decúbito dorsal. Terapeuta segura a perna do paciente estendida pelo calcanhar, aplica rotação interna na tíbia e um estresse em valgo no joelho. Em seguida, flexiona-se lentamente o joelho a partir da extensão completa. O examinador sente/observa o comportamento da tíbia durante a flexão.",
+    "positive_sign": "Em um joelho com LCA rompido, a tíbia subluxa anteriormente quando o joelho está quase em extensão e, ao iniciar a flexão (~30°), a tíbia reduz subitamente com um \"clunk\" ou ressalto palpável. Esse salto indica um teste de pivot-shift positivo.",
+    "reference": "Benjaminse, 2006",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCA"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "24% sensibilidade, 98% especificidade",
+    "name_en": "Pivot Shift Test",
+    "media_placeholder_keywords": [
+      "pivot shift test",
+      "ACL instability test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ce4e2b5e-bf76-406b-ae4f-b95cee18ee2f",
+    "name": "Teste de Estresse em Valgo (Joelho)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar integridade do Ligamento Colateral Medial (LCM) do joelho",
+    "execution": "Paciente em decúbito dorsal. Com o joelho inicialmente em extensão completa (0°) e depois em ~30° de flexão, o terapeuta estabiliza o tornozelo com uma mão e posiciona a outra mão na face lateral do joelho. Aplica-se então uma força em valgo no joelho para abrir a articulação medialmente.",
+    "positive_sign": "Dor excessiva na linha articular medial ou aumento da abertura (folga) medial do joelho em comparação com o lado contralateral indica lesão do LCM.",
+    "reference": "Kastelein, 2008",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCM"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "78% sensibilidade, 67% especificidade",
+    "name_en": "Valgus Stress Test",
+    "media_placeholder_keywords": [
+      "valgus stress test knee",
+      "MCL test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "b466ff7f-85e3-4d06-8138-a546f96420cb",
+    "name": "Teste de Estresse em Varo (Joelho)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar integridade do Ligamento Colateral Lateral (LCL) do joelho",
+    "execution": "Paciente em decúbito dorsal. Com o joelho inicialmente em extensão total e depois levemente flexionado (~30°), o terapeuta estabiliza o tornozelo e posiciona a outra mão na face medial do joelho. Aplica uma força em varo para estressar o compartimento lateral do joelho.",
+    "positive_sign": "Dor localizada na linha articular lateral ou instabilidade (abertura lateral aumentada) comparada ao outro joelho indica lesão do LCL.",
+    "reference": "LaPrade, 2014",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCL"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Baixa sensibilidade (~25%)",
+    "name_en": "Varus Stress Test",
+    "media_placeholder_keywords": [
+      "varus stress test knee",
+      "LCL test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "aaac1b44-54f2-4c2a-bd05-9e086b80f74e",
+    "name": "Teste de McMurray",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar lesões de menisco (medial ou lateral)",
+    "execution": "Paciente em decúbito dorsal. Com o joelho em flexão máxima, o terapeuta realiza rotação da tíbia (interna para lateral, externa para medial) e estende lentamente o joelho.",
+    "positive_sign": "Um estalido audível ou palpável, ou dor aguda na linha articular correspondente durante o movimento de extensão do joelho, indica um teste de McMurray positivo.",
+    "reference": "Smith, 2015",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "Menisco"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "61% sensibilidade, 84% especificidade",
+    "name_en": "McMurray Test",
+    "media_placeholder_keywords": [
+      "mcmurray test",
+      "meniscus test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ebe506a2-5a85-409e-b42b-3491fa942624",
+    "name": "Teste de Apley (Grinding Test)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Diferenciar lesão de menisco vs. lesão ligamentar colateral no joelho",
+    "execution": "Paciente em decúbito ventral com joelho a ~90°. Terapeuta aplica tração com rotação (ligamento) e compressão com rotação (menisco).",
+    "positive_sign": "Dor ao movimento com compressão axial, que alivia com a tração, sugere lesão meniscal. Se a dor for maior com tração e rotação, sugere lesão ligamentar.",
+    "reference": "Hegedus, 2007",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "Menisco"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "61% sensibilidade, 70% especificidade",
+    "name_en": "Apley Grind Test",
+    "media_placeholder_keywords": [
+      "apley test",
+      "meniscus test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "e25c8f8f-be9f-4f4a-8817-68e3f444e98d",
+    "name": "Teste de Thessaly",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar lesões de menisco de forma dinâmica com carga",
+    "execution": "Paciente em pé apoiado pelo terapeuta e em apoio unipodal com joelho a 20°. Realiza rotações do tronco para a direita e esquerda 3 vezes.",
+    "positive_sign": "Dor na linha articular medial ou lateral do joelho, ou sensação de falseio/click durante a rotação em apoio monopodal.",
+    "reference": "Goossens, 2015",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "Menisco"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "64% sensibilidade, 53% especificidade",
+    "name_en": "Thessaly Test",
+    "media_placeholder_keywords": [
+      "thessaly test",
+      "meniscus test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "83095f1b-365a-4516-be94-bdf90a8a6ae7",
+    "name": "Teste de Apreensão Patelar (Sinal de Fairbank)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar instabilidade patelar lateral",
+    "execution": "Paciente em decúbito dorsal. Terapeuta desliza a patela lateralmente. Pode ser repetido a 30° de flexão.",
+    "positive_sign": "Expressão de apreensão, contracção súbita do quadríceps ou relutância do paciente indicando medo de deslocamento da patela.",
+    "reference": "Näslund, 2006",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "Patela"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "61% sensibilidade, 84% especificidade",
+    "name_en": "Patellar Apprehension Test",
+    "media_placeholder_keywords": [
+      "patellar apprehension test",
+      "patella dislocation test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "cd7c8801-9490-47bf-be8b-f5d704f05763",
+    "name": "Sinal de Clarke (Patellar Grind Test)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Detectar condromalácia patelar ou síndrome da dor patelofemoral",
+    "execution": "Paciente em decúbito dorsal. Terapeuta pressiona a patela distalmente e pede contração do quadríceps.",
+    "positive_sign": "Dor retropatelar significativa ou desconforto durante a contração do quadríceps.",
+    "reference": "Cook, 2012",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "Patela"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Clarke's Sign",
+    "media_placeholder_keywords": [
+      "clarke sign",
+      "patellar grind test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "0c79bc93-4976-4e4b-8e5c-c1f0f03d409a",
+    "name": "Sinal de Gaveta Posterior (Sinal de Godfrey)",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Identificar translação posterior anormal da tíbia (LCP)",
+    "execution": "Paciente em decúbito dorsal, quadris e joelhos flexionados a 90°. Observa-se a tuberosidade tibial.",
+    "positive_sign": "Desnível posterior da tuberosidade tibial no joelho lesionado (tíbia \"afunda\").",
+    "reference": "Rubinstein, 1994",
+    "tags": [
+      "Ortopedia",
+      "Joelho",
+      "LCP"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "79% sensibilidade, 100% especificidade",
+    "name_en": "Godfrey's Test (Sag Sign)",
+    "media_placeholder_keywords": [
+      "sag sign knee",
+      "Godfrey test PCL"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "57909525-8945-49a5-bd86-3cf8c09beafc",
+    "name": "Teste de Thomas",
+    "target_joint": "Quadril",
+    "description": null,
+    "purpose": "Avaliar encurtamento ou contratura dos flexores de quadril",
+    "execution": "Paciente em decúbito dorsal. Flexiona um joelho ao peito e segura. Observa-se a perna oposta estendida.",
+    "positive_sign": "Se a coxa do membro oposto levantar-se da maca.",
+    "reference": "Harvey, 1998",
+    "tags": [
+      "Ortopedia",
+      "Quadril",
+      "Flexibilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Thomas Test",
+    "media_placeholder_keywords": [
+      "thomas test hip",
+      "hip flexor tightness test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "90e1a0c7-a1f3-4d56-9ff9-dabe02e5677a",
+    "name": "Teste de FABER (Patrick)",
+    "target_joint": "Quadril",
+    "description": null,
+    "purpose": "Avaliar patologia do quadril ou disfunção sacroilíaca",
+    "execution": "Posição de \"4\" (Flexão, Abdução, Rot. Externa). Pressão no joelho em direção à maca.",
+    "positive_sign": "Dor inguinal (quadril) ou sacroilíaca (posterior).",
+    "reference": "Manion, 2008",
+    "tags": [
+      "Ortopedia",
+      "Quadril",
+      "Sacroilíaca"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "FABER Test",
+    "media_placeholder_keywords": [
+      "FABER test",
+      "Patrick test hip"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ae7e1234-ff84-4cb8-a787-248fb24d1e47",
+    "name": "Teste de FADIR",
+    "target_joint": "Quadril",
+    "description": null,
+    "purpose": "Avaliar impacto femoroacetabular anterior (FAI) e lesões labrais",
+    "execution": "Flexão 90°, Adução e Rotação Interna do quadril.",
+    "positive_sign": "Dor na virilha ou sensação de pinçamento.",
+    "reference": "Martin, 2011",
+    "tags": [
+      "Ortopedia",
+      "Quadril",
+      "Impacto"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "FADIR Test",
+    "media_placeholder_keywords": [
+      "FADIR test",
+      "hip impingement test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "7f461ce6-2147-4b8c-8265-3c5a94e39991",
+    "name": "Teste de Ely",
+    "target_joint": "Quadril",
+    "description": null,
+    "purpose": "Avaliar encurtamento do músculo reto femoral",
+    "execution": "Paciente em decúbito ventral. Flexão passiva do joelho com calcanhar na nádega.",
+    "positive_sign": "Elevação da pelve (antecversão) no lado testado.",
+    "reference": "Worrel, 1991",
+    "tags": [
+      "Ortopedia",
+      "Quadril",
+      "Flexibilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Ely's Test",
+    "media_placeholder_keywords": [
+      "ely's test",
+      "rectus femoris tightness"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "5f8e21d6-0675-41c5-a2d8-5146c3159e78",
+    "name": "Teste de Ober",
+    "target_joint": "Quadril",
+    "description": null,
+    "purpose": "Avaliar contratura da banda iliotibial e tensor da fáscia lata",
+    "execution": "Decúbito lateral. Abdução e extensão da perna superior, depois solta em adução.",
+    "positive_sign": "Perna permanece elevada e não aduz até a linha do corpo.",
+    "reference": "Gajdosik, 2003",
+    "tags": [
+      "Ortopedia",
+      "Quadril",
+      "Flexibilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Ober Test",
+    "media_placeholder_keywords": [
+      "ober test",
+      "IT band tightness test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "9beb8a33-3255-4f2c-a3b8-e598aa3ca5a4",
+    "name": "Sinal de Trendelenburg",
+    "target_joint": "Quadril",
+    "description": null,
+    "purpose": "Avaliar fraqueza dos abdutores (glúteo médio)",
+    "execution": "Apoio unipodal por 30s.",
+    "positive_sign": "Queda da pelve do lado oposto ou inclinação do tronco.",
+    "reference": "Hardcastle, 1984",
+    "tags": [
+      "Ortopedia",
+      "Quadril",
+      "Força"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Trendelenburg Sign",
+    "media_placeholder_keywords": [
+      "trendelenburg sign",
+      "gluteus medius weakness"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "d46fabbc-2af7-44af-af73-edcb34575e15",
+    "name": "Teste de Lasègue (SLR)",
+    "target_joint": "Coluna",
+    "description": null,
+    "purpose": "Avaliar irritação do nervo ciático (radiculopatia)",
+    "execution": "Elevação passiva da perna estendida em decúbito dorsal.",
+    "positive_sign": "Dor ciática entre 30°-70° de elevação.",
+    "reference": "DeLasègue, 1864",
+    "tags": [
+      "Ortopedia",
+      "Coluna",
+      "Ciático"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Straight Leg Raise (SLR)",
+    "media_placeholder_keywords": [
+      "straight leg raise test",
+      "Lasegue test sciatica"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "8421a67f-8fd0-4ccb-9fd9-595ef05f50e3",
+    "name": "Teste de Slump",
+    "target_joint": "Coluna",
+    "description": null,
+    "purpose": "Avaliar tensão neural e raízes nervosas",
+    "execution": "Sentado, flexão torácica/lombar e cervical. Extensão do joelho e dorsiflexão.",
+    "positive_sign": "Reprodução de dor ciática que alivia com extensão cervical.",
+    "reference": "Maitland, 1985",
+    "tags": [
+      "Ortopedia",
+      "Coluna",
+      "Neural"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Slump Test",
+    "media_placeholder_keywords": [
+      "slump test",
+      "neural tension test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "7d5555da-357c-4233-8670-08b9e679dd07",
+    "name": "Teste de Gaenslen",
+    "target_joint": "Coluna",
+    "description": null,
+    "purpose": "Avaliar disfunção sacroilíaca",
+    "execution": "Decúbito dorsal na borda. Uma perna flexionada ao peito, outra estendida para fora da maca.",
+    "positive_sign": "Dor na região sacroilíaca do lado estendido.",
+    "reference": "Laslett, 2005",
+    "tags": [
+      "Ortopedia",
+      "Coluna",
+      "Sacroilíaca"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Gaenslen Test",
+    "media_placeholder_keywords": [
+      "gaenslen test",
+      "SI joint test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ad4ac4c4-d318-4ea3-8a45-002ed21cb8c9",
+    "name": "Teste da Gaveta Anterior do Tornozelo",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Avaliar lesão do ligamento talofibular anterior (LTFA)",
+    "execution": "Estabiliza tíbia, puxa calcâneo anteriormente.",
+    "positive_sign": "Translação anterior excessiva do tálus.",
+    "reference": "van Dijk, 1996",
+    "tags": [
+      "Ortopedia",
+      "Tornozelo",
+      "Instabilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Anterior Drawer Test (Ankle)",
+    "media_placeholder_keywords": [
+      "ankle anterior drawer test",
+      "ATFL tear test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "6807a1ac-d32b-4269-b9ad-c05ee115705e",
+    "name": "Teste de Inclinação Talar (Talar Tilt)",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Avaliar ligamentos colaterais (lateral e medial)",
+    "execution": "Inversão (lateral) ou eversão (medial) forçada do retropé.",
+    "positive_sign": "Dor ou amplitude excessiva comparada ao lado oposto.",
+    "reference": "Krause, 1995",
+    "tags": [
+      "Ortopedia",
+      "Tornozelo",
+      "Instabilidade"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Talar Tilt Test",
+    "media_placeholder_keywords": [
+      "talar tilt test",
+      "ankle instability test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "a6b8613f-0b30-4864-b110-fc95729eaca1",
+    "name": "Teste de Thompson",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Detectar ruptura do tendão de Aquiles",
+    "execution": "Decúbito ventral. Compressão da panturrilha.",
+    "positive_sign": "Ausência de flexão plantar do pé.",
+    "reference": "Matles, 1975",
+    "tags": [
+      "Ortopedia",
+      "Tornozelo",
+      "Aquiles"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "96% sensibilidade, 93% especificidade",
+    "name_en": "Thompson Test",
+    "media_placeholder_keywords": [
+      "thompson test",
+      "achilles tendon rupture test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "17fd9264-0cf0-4b36-8b94-91cce03e3468",
+    "name": "Teste de Kleiger (Rotação Externa)",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Avaliar sindesmose ou ligamento deltóide",
+    "execution": "Rotação externa forçada do pé.",
+    "positive_sign": "Dor na sindesmose (lateral) ou deltóide (medial).",
+    "reference": "Kleiger, 1956",
+    "tags": [
+      "Ortopedia",
+      "Tornozelo",
+      "Sindesmose"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Kleiger Test",
+    "media_placeholder_keywords": [
+      "kleiger test",
+      "external rotation stress ankle"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "eeee4659-e6be-419f-aa8d-9edfff99e10b",
+    "name": "Teste de Squeeze",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Detectar lesão da sindesmose",
+    "execution": "Compressão de tíbia e fíbula na panturrilha.",
+    "positive_sign": "Dor distal na sindesmose.",
+    "reference": "Hopkinson, 1990",
+    "tags": [
+      "Ortopedia",
+      "Tornozelo",
+      "Sindesmose"
+    ],
+    "youtube_link": null,
+    "type": "special_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "result",
+        "type": "select",
+        "label": "Resultado",
+        "options": [
+          "Positivo",
+          "Negativo"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Ortopedia",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Squeeze Test",
+    "media_placeholder_keywords": [
+      "squeeze test ankle",
+      "syndesmosis test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "d4d8d067-3fe6-4dbf-b1e3-bfde5a6f6b2b",
+    "name": "Single Leg Hop for Distance",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar capacidade funcional (retorno ao esporte pós-LCA)",
+    "execution": "Salto horizontal máximo em uma perna.",
+    "positive_sign": "Simetria < 90% comparado ao lado oposto.",
+    "reference": "Noyes, 1991",
+    "tags": [
+      "Esportiva",
+      "Pós-Operatório",
+      "Joelho"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "distance_cm",
+        "type": "number",
+        "unit": "cm",
+        "label": "Distância (cm)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Pós-Operatório",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Single Leg Hop for Distance",
+    "media_placeholder_keywords": [
+      "single leg hop test",
+      "ACL return to sport test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "b6540eb3-bf89-42e2-9ea6-2003cc7b5be1",
+    "name": "Triple Hop for Distance",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar potência e estabilidade (3 saltos)",
+    "execution": "Três saltos consecutivos em uma perna.",
+    "positive_sign": "Simetria < 90%.",
+    "reference": "Noyes, 1991",
+    "tags": [
+      "Esportiva",
+      "Pós-Operatório",
+      "Joelho"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "distance_cm",
+        "type": "number",
+        "unit": "cm",
+        "label": "Distância Total (cm)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Pós-Operatório",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Triple Hop for Distance",
+    "media_placeholder_keywords": [
+      "triple hop test",
+      "ACL functional test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ae451dca-c798-4d3f-8d24-b3934953ebb2",
+    "name": "Crossover Hop Test",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar agilidade e estabilidade com mudança de direção",
+    "execution": "Três saltos cruzando uma linha.",
+    "positive_sign": "Simetria < 90%.",
+    "reference": "Noyes, 1991",
+    "tags": [
+      "Esportiva",
+      "Pós-Operatório",
+      "Joelho"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "distance_cm",
+        "type": "number",
+        "unit": "cm",
+        "label": "Distância Total (cm)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Pós-Operatório",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Crossover Hop Test",
+    "media_placeholder_keywords": [
+      "crossover hop test",
+      "ACL functional test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "c6c98830-f7a3-450f-9bfc-a759d9968d5b",
+    "name": "6m Timed Hop Test",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar velocidade e potência em 6 metros",
+    "execution": "Tempo para saltar 6m em uma perna.",
+    "positive_sign": "Tempo > 10% mais lento que o lado oposto.",
+    "reference": "Barber-Westin, 2011",
+    "tags": [
+      "Esportiva",
+      "Pós-Operatório",
+      "Joelho"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "time_seconds",
+        "step": "0.1",
+        "type": "number",
+        "unit": "s",
+        "label": "Tempo (s)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Pós-Operatório",
+    "sensitivity_specificity": "Variável",
+    "name_en": "6m Timed Hop Test",
+    "media_placeholder_keywords": [
+      "6m timed hop test",
+      "ACL hop test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "6c5a317a-afbe-47f7-b7a7-e776f78ba6a6",
+    "name": "Star Excursion Balance Test (SEBT)",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Avaliar equilíbrio dinâmico em 8 direções",
+    "execution": "Alcance máximo em 8 direções em apoio unipodal.",
+    "positive_sign": "Assimetria > 4cm.",
+    "reference": "Kinzey, 1998",
+    "tags": [
+      "Esportiva",
+      "Tornozelo",
+      "Equilíbrio"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "anterior",
+        "type": "number",
+        "label": "Anterior (cm)",
+        "required": true
+      },
+      {
+        "id": "posteromedial",
+        "type": "number",
+        "label": "Posteromedial (cm)",
+        "required": true
+      },
+      {
+        "id": "posterolateral",
+        "type": "number",
+        "label": "Posterolateral (cm)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Esportiva",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Star Excursion Balance Test (SEBT)",
+    "media_placeholder_keywords": [
+      "star excursion balance test",
+      "balance reach test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "e3f59076-8a83-436a-92c2-e62fb1f4ce01",
+    "name": "Teste Y-Balance",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Avaliar equilíbrio dinâmico simplificado (3 direções)",
+    "execution": "Alcance em Y (Anterior, PM, PL) em apoio unipodal.",
+    "positive_sign": "Assimetria > 4cm.",
+    "reference": "Plisky, 2009",
+    "tags": [
+      "Esportiva",
+      "Tornozelo",
+      "Equilíbrio"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "anterior_cm",
+        "type": "number",
+        "label": "Anterior (cm)",
+        "required": true
+      },
+      {
+        "id": "pm_cm",
+        "type": "number",
+        "label": "Posteromedial (cm)",
+        "required": true
+      },
+      {
+        "id": "pl_cm",
+        "type": "number",
+        "label": "Posterolateral (cm)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Esportiva",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Y-Balance Test",
+    "media_placeholder_keywords": [
+      "y balance test",
+      "balance reach test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ec016453-5822-4007-97f0-ebb8a220068b",
+    "name": "Drop Jump Test",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar valgo dinâmico e risco de LCA",
+    "execution": "Salto de caixa com salto vertical imediato.",
+    "positive_sign": "Valgo dinâmico excessivo.",
+    "reference": "Hewett, 2005",
+    "tags": [
+      "Esportiva",
+      "Joelho",
+      "Preventivo"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "valgus_quality",
+        "type": "select",
+        "label": "Qualidade do Valgo",
+        "options": [
+          "Bom",
+          "Moderado",
+          "Ruim"
+        ],
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Esportiva",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Drop Jump Test",
+    "media_placeholder_keywords": [
+      "drop jump test",
+      "dynamic knee valgus test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "086424da-a6a0-4cce-929d-b0477b9178d4",
+    "name": "Tuck Jump Assessment",
+    "target_joint": "Joelho",
+    "description": null,
+    "purpose": "Avaliar padrões de movimento em saltos repetitivos",
+    "execution": "10 saltos contínuos puxando joelhos ao peito.",
+    "positive_sign": "Valgo, assimetria, fadiga, barulho na aterrissagem.",
+    "reference": "Myer, 2011",
+    "tags": [
+      "Esportiva",
+      "Joelho",
+      "Pliometria"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "score",
+        "max": 10,
+        "min": 0,
+        "type": "number",
+        "label": "Pontuação de Falhas",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Esportiva",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Tuck Jump Assessment",
+    "media_placeholder_keywords": [
+      "tuck jump assessment",
+      "knee valgus jump test"
+    ],
+    "regularity_sessions": null
+  },
+  {
+    "id": "ace3c405-b8fe-4531-9636-0bbcc47bf9b4",
+    "name": "Lunge Test (Knee to Wall)",
+    "target_joint": "Tornozelo",
+    "description": null,
+    "purpose": "Mensurar amplitude de dorsiflexão",
+    "execution": "Tentar tocar o joelho na parede sem tirar calcanhar.",
+    "positive_sign": "Distância reduzida comparada ao lado oposto.",
+    "reference": "Bennell, 1998",
+    "tags": [
+      "Esportiva",
+      "Tornozelo",
+      "Mobilidade"
+    ],
+    "youtube_link": null,
+    "type": "functional_test",
+    "media_urls": [],
+    "fields_definition": [
+      {
+        "id": "distance_cm",
+        "type": "number",
+        "unit": "cm",
+        "label": "Distância (cm)",
+        "required": true
+      }
+    ],
+    "calculation_formula": null,
+    "created_by": null,
+    "organization_id": null,
+    "created_at": "2026-01-09T03:30:15.04032+00:00",
+    "updated_at": "2026-01-09T03:30:15.04032+00:00",
+    "category": "Esportiva",
+    "sensitivity_specificity": "Variável",
+    "name_en": "Lunge Test (Knee to Wall)",
+    "media_placeholder_keywords": [
+      "knee to wall test",
+      "ankle dorsiflexion test"
+    ],
+    "regularity_sessions": null
+  }
+]

@@ -73,7 +73,7 @@ export function ExerciseViewModal({
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
-        title: exercise.name,
+        title: exercise?.name ?? 'Exercício',
         text: exercise.description || '',
         url: window.location.href,
       });
@@ -97,7 +97,7 @@ export function ExerciseViewModal({
         <div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4">
           <div className="space-y-1.5 pt-1">
             <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              {exercise.name}
+              {exercise?.name ?? 'Exercício'}
             </h2>
             <div className="flex items-center gap-2 flex-wrap">
               {exercise.category && (
@@ -221,7 +221,7 @@ export function ExerciseViewModal({
                     <div className="relative w-full h-full flex items-center justify-center bg-white/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
                       <img
                         src={exercise.image_url!}
-                        alt={exercise.name}
+                        alt={exercise?.name ?? 'Exercício'}
                         className="max-w-full max-h-full object-contain"
                       />
                     </div>

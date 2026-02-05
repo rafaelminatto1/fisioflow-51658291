@@ -158,7 +158,7 @@ export function TemplateDetailsModal({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <DialogTitle className="flex items-center gap-2 flex-wrap">
-                {template.name}
+                {template?.name ?? 'Sem nome'}
                 <Badge variant="outline">{template.condition_name}</Badge>
                 {template.template_variant && (
                   <Badge>{template.template_variant}</Badge>
@@ -224,7 +224,7 @@ export function TemplateDetailsModal({
                     <SelectContent>
                       {filteredExercises.map((ex) => (
                         <SelectItem key={ex.id} value={ex.id}>
-                          {ex.name} {ex.category && `(${ex.category})`}
+                          {ex?.name ?? 'Exercício'} {ex?.category && `(${ex.category})`}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -23,13 +23,13 @@ import {
   PatientActions,
   PatientAdvancedFilters,
   PatientAnalytics,
+  PatientPageInsights,
   PatientsPageHeader,
   countActiveFilters,
   matchesFilters,
   type PatientFilters
 } from '@/components/patients';
 import { usePatientsPaginated } from '@/hooks/usePatientCrud';
-import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import { useMultiplePatientStats, formatFirstEvaluationDate, PATIENT_CLASSIFICATIONS } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,14 +41,14 @@ import { toast } from '@/hooks/use-toast';
 
 function formatLastActivity(stats?: PatientStats): string {
   if (!stats) return '—';
-  if (stats.sessionsCompleted === 0 && stats.totalAppointments === 0) return 'Nenhuma sessão';
+  if (stats.sessionsCompleted === 0 && stats.totalAppointments === 0) return 'Sem sessões';
   const days = stats.daysSinceLastAppointment;
-  if (days === 0) return 'Sessão hoje';
-  if (days === 1) return 'Sessão ontem';
-  if (days < 7) return `Há ${days}d`;
-  if (days < 30) return `Há ${Math.floor(days / 7)} sem`;
-  if (days < 365) return `Há ${Math.floor(days / 30)}m`;
-  return `Há ${Math.floor(days / 365)}a`;
+  if (days === 0) return 'Hoje';
+  if (days === 1) return 'Ontem';
+  if (days < 7) return `${days}d atrás`;
+  if (days < 30) return `${Math.floor(days / 7)} sem. atrás`;
+  if (days < 365) return `${Math.floor(days / 30)} mês(es)`;
+  return `${Math.floor(days / 365)} ano(s)`;
 }
 
 const Patients = () => {
@@ -62,44 +62,8 @@ const Patients = () => {
   const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
   const [showAnalytics, setShowAnalytics] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
-  // const [currentPage, setCurrentPage] = useState(1); // Manage state in hook now
   const pageSize = 20;
 
-  // --- DATA CONNECT (POSTGRES) IMPLEMENTATION ---
-  /* DATA CONNECT (POSTGRES) IMPLEMENTATION - TEMPORARILY DISABLED
-  const { data: allPatientsPostgres, isLoading: loadingPostgres } = usePatientsPostgres(organizationId);
-  
-  // Filtragem no cliente (extremamente rápida para < 1000 pacientes)
-  const filteredAllPatients = useMemo(() => {
-    if (!allPatientsPostgres) return [];
-    return allPatientsPostgres.filter((p: any) => {
-      const searchLower = debouncedSearch.toLowerCase();
-      const matchesSearch = !debouncedSearch || 
-        p.name.toLowerCase().includes(searchLower) ||
-        p.email?.toLowerCase().includes(searchLower) ||
-        p.phone?.includes(searchLower);
-        
-      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [allPatientsPostgres, debouncedSearch, statusFilter]);
-
-  // Paginação no cliente
-  const totalCount = filteredAllPatients.length;
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const patients = filteredAllPatients.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  
-  const hasNextPage = currentPage < totalPages;
-  const hasPreviousPage = currentPage > 1;
-  const loading = loadingPostgres;
-
-  const goToPage = (page: number) => setCurrentPage(page);
-  const nextPage = () => setCurrentPage(p => Math.min(totalPages, p + 1));
-  const previousPage = () => setCurrentPage(p => Math.max(1, p - 1));
-  */
-
-  // LEGACY FIRESTORE PAGINATION (Restored)
   const {
     data: patients = [],
     totalCount,
@@ -119,41 +83,21 @@ const Patients = () => {
     // currentPage managed internally by the hook
   });
 
-  // Sync hook page with local state if needed, or rely on hook's rendering
-  // Ideally usePatientsPaginated handles page state internally via the hook param? 
-  // Checking the hook source: it takes initialPage but manages state internally.
-  // Wait, looking at src/hooks/usePatientCrud.ts: 
-  // It returns currentPage and goToPage. 
-  // BUT in Patients.tsx line 68: const [currentPage, setCurrentPage] = useState(1);
-  // We need to decide who owns the state. 
-  // The 'usePatientsPaginated' hook manages its own 'currentPage' state if we don't lift it up properly 
-  // OR the current usage in Patients.tsx line 68 might conflict.
-
-  // Let's verify 'usePatientsPaginated' implementation again from previous turn...
-  // It has: const [currentPage, setCurrentPage] = useState(initialPage);
-  // So the hook owns the state.
-  // We should remove the local 'currentPage' state in Patients.tsx OR sync them.
-  // The simplest way to restore is to use the variables returned from the hook.
-  // Note: 'currentPage' variable name collision.
-  // We commented out the local pagination logic above, so 'patients' variable is free.
-  // But 'currentPage' on line 68 is still there. 
-  // Check line 68 removal needs.
-
   // Buscar estatísticas de múltiplos pacientes
   const patientIds = useMemo(() => patients.map(p => p.id), [patients]);
   const { data: statsMap = {} } = useMultiplePatientStats(patientIds);
 
   const navigate = useNavigate();
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 quando filtros mudam
   useEffect(() => {
     goToPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, debouncedSearch, conditionFilter]);
+  }, [statusFilter, debouncedSearch, conditionFilter, advancedFilters.classification]);
 
   // Get unique conditions and statuses for filters (from current page)
   const uniqueConditions = useMemo(() => {
-    const conditions = [...new Set(patients.map(p => p.main_condition).filter(Boolean))];
+    const conditions = [...new Set(patients.map(p => p.main_condition).filter((c): c is string => !!c))];
     return conditions.sort();
   }, [patients]);
 
@@ -295,6 +239,7 @@ const Patients = () => {
     activeCount: patients.filter((p) => p.status === 'Em Tratamento').length,
     newCount: patients.filter((p) => p.status === 'Inicial').length,
     completedCount: patients.filter((p) => p.status === 'Concluído').length,
+    activeByClassification: filteredStats.active,
     inactive7: filteredStats.inactive7,
     inactive30: filteredStats.inactive30,
     inactive60: filteredStats.inactive60,
@@ -322,9 +267,9 @@ const Patients = () => {
           activeAdvancedFiltersCount={activeAdvancedFiltersCount}
           totalFilteredLabel={
             statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm || activeAdvancedFiltersCount > 0
-              ? activeAdvancedFiltersCount > 0 && advancedFilters.classification
-                ? `${filteredPatients.length} paciente(s) na página (filtro por classificação)`
-                : `${totalCount} paciente(s) encontrado(s) no total`
+              ? advancedFilters.classification
+                ? `${filteredPatients.length} nesta página (filtro: classificação)`
+                : `${totalCount} encontrado(s)`
               : undefined
           }
           onClearAllFilters={handleClearAllFilters}
@@ -364,19 +309,20 @@ const Patients = () => {
         ) : filteredPatients.length === 0 ? (
           <EmptyState
             icon={Users}
-            title={searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
+            title={
+              searchTerm || statusFilter !== 'all' || conditionFilter !== 'all' || activeAdvancedFiltersCount > 0
+                ? 'Nenhum paciente encontrado'
+                : 'Nenhum paciente cadastrado'
+            }
             description={
-              searchTerm
-                ? 'Tente ajustar os filtros de busca.'
+              searchTerm || statusFilter !== 'all' || conditionFilter !== 'all' || activeAdvancedFiltersCount > 0
+                ? 'Nenhum paciente corresponde aos filtros aplicados. Tente ajustar ou limpar os filtros.'
                 : 'Comece adicionando seu primeiro paciente.'
             }
             action={
-              !searchTerm
-                ? {
-                  label: 'Novo Paciente',
-                  onClick: () => setIsNewPatientModalOpen(true)
-                }
-                : undefined
+              searchTerm || statusFilter !== 'all' || conditionFilter !== 'all' || activeAdvancedFiltersCount > 0
+                ? { label: 'Limpar filtros', onClick: handleClearAllFilters }
+                : { label: 'Novo Paciente', onClick: () => setIsNewPatientModalOpen(true) }
             }
           />
         ) : (
@@ -455,17 +401,19 @@ const Patients = () => {
                               {patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`}
                             </p>
 
-                            {/* Linha 3: sessões | última consulta | progresso */}
+                            {/* Linha 3: sessões | última atividade */}
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[10px] text-muted-foreground">
                               {sessionsInfo && (
                                 <span className="flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
+                                  <Calendar className="w-3 h-3 shrink-0" />
                                   {sessionsInfo}
                                 </span>
                               )}
-                              <span className="truncate">{formatLastActivity(patientStats)}</span>
+                              <span className="truncate" title={patientStats?.lastAppointmentDate}>
+                                {formatLastActivity(patientStats)}
+                              </span>
                               {firstEvaluationInfo && (
-                                <span className="truncate">{firstEvaluationInfo}</span>
+                                <span className="truncate hidden sm:inline">{firstEvaluationInfo}</span>
                               )}
                             </div>
                             {((patient.progress ?? 0) > 0) && (
@@ -505,8 +453,12 @@ const Patients = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-6" role="navigation" aria-label="Navegação de páginas de pacientes">
-                <Pagination>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6" role="navigation" aria-label="Navegação de páginas de pacientes">
+                <p className="text-sm text-muted-foreground order-2 sm:order-1">
+                  Mostrando {((currentPage - 1) * pageSize) + 1}–
+                  {Math.min(currentPage * pageSize, totalCount)} de {totalCount}
+                </p>
+                <Pagination className="order-1 sm:order-2">
                   <PaginationContent aria-label={`Página ${currentPage} de ${totalPages}`}>
                     <PaginationItem>
                       <PaginationPrevious
@@ -562,6 +514,11 @@ const Patients = () => {
                   </PaginationContent>
                 </Pagination>
               </div>
+            )}
+            {totalPages <= 1 && filteredPatients.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-4 text-center">
+                {filteredPatients.length} paciente(s) na lista
+              </p>
             )}
           </>
         )}

@@ -30,7 +30,7 @@ const aspectRatioClasses = {
  * - Aspect ratio mantido
  * - Suporte a srcset/sizes para responsive images
  */
-/** URLs válidas para imagem: http, https, data ou caminho absoluto/relativo começando com / */
+/** URLs válidas para imagem: http, https, data, blob ou caminho absoluto/relativo começando com / */
 function isValidImageSrc(src: string): boolean {
   const s = src?.trim();
   if (!s) return false;
@@ -38,6 +38,7 @@ function isValidImageSrc(src: string): boolean {
     s.startsWith('http:') ||
     s.startsWith('https:') ||
     s.startsWith('data:') ||
+    s.startsWith('blob:') ||
     s.startsWith('/')
   );
 }

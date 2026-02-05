@@ -173,13 +173,23 @@ export async function callFunctionHttp<TRequest, TResponse>(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      let serverMessage = errorText;
+      try {
+        const errJson = JSON.parse(errorText) as { error?: string };
+        if (errJson?.error) serverMessage = errJson.error;
+      } catch {
+        // keep errorText as-is
+      }
+      const err = new Error(`HTTP ${response.status}: ${serverMessage}`);
+      (err as Error & { status?: number }).status = response.status;
+      throw err;
     }
 
     const result = await response.json();
     return result as TResponse;
   } catch (error) {
-    throw new FunctionCallError(functionName, error);
+    const message = error instanceof Error ? error.message : String(error);
+    throw new FunctionCallError(functionName, error, message);
   }
 }
 
