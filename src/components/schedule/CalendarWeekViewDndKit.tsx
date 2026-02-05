@@ -63,8 +63,8 @@ const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
-const OVERLAP_LAYOUT_MARGIN_PX = 4;
-const OVERLAP_LAYOUT_GAP_PX = 4;
+const OVERLAP_LAYOUT_MARGIN_PX = 1;
+const OVERLAP_LAYOUT_GAP_PX = 1;
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -265,16 +265,16 @@ export const CalendarWeekViewDndKit = memo(({
       index = origin.index;
     }
 
-    const margin = OVERLAP_LAYOUT_MARGIN_PX;
-    const gap = OVERLAP_LAYOUT_GAP_PX;
-    const totalGutter = (count + 1) * margin;
+    // Usar percentuais puros para que os cards fiquem colados
+    const cardWidthPercent = 100 / count;
+    const leftPercent = index * cardWidthPercent;
 
     return {
       gridColumn: `${dayIndex + 2} / span 1`,
       gridRow: `${startRowIndex + 1}`,
       height: `${heightInPixels}px`,
-      width: `calc((100% - ${totalGutter}px) / ${count})`,
-      left: `calc(${margin}px + ${index} * ((100% - ${totalGutter}px) / ${count} + ${gap}px))`,
+      width: `${cardWidthPercent}%`,
+      left: `${leftPercent}%`,
       top: '0px',
       zIndex: 10 + index
     };
@@ -507,19 +507,20 @@ export const CalendarWeekViewDndKit = memo(({
                         isDragging={isDraggingThisOne}
                         isDragDisabled={!isDraggable || isMobile || selectionMode}
                         dragData={{ appointment: apt }}
+                        isPopoverOpen={openPopoverId === apt.id}
                       >
                         <CalendarAppointmentCard
                           appointment={apt}
-                          style={style}
+                          style={{ ...style, width: '100%', left: '0' }} // Card preenche o wrapper (posicionamento feito pelo DraggableAppointment)
                           isDraggable={false} // Disabled - handled by DraggableAppointment wrapper
                           isDragging={isDraggingThisOne}
                           isSaving={apt.id === savingAppointmentId}
                           isDropTarget={!!isDropTarget}
                           hideGhostWhenSiblings={hideGhostWhenSiblings}
-                          onDragStart={() => {}} // No-op - handled by DraggableAppointment
-                          onDragEnd={() => {}} // No-op
-                          onDragOver={() => {}} // No-op
-                          onDrop={() => {}} // No-op
+                          onDragStart={() => { }} // No-op - handled by DraggableAppointment
+                          onDragEnd={() => { }} // No-op
+                          onDragOver={() => { }} // No-op
+                          onDrop={() => { }} // No-op
                           onEditAppointment={onEditAppointment}
                           onDeleteAppointment={onDeleteAppointment}
                           onOpenPopover={setOpenPopoverId}
