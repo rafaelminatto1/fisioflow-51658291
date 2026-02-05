@@ -535,6 +535,109 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ============================================================================================
+    // MARKETING COLLECTIONS (Marketing Module v2.0)
+    // ============================================================================================
+
+    // Consentimentos de Marketing (LGPD)
+    match /marketing_consents/{patientId} {
+      // Leitura: profissionais precisam verificar consentimento
+      allow read: if isProfessional() || isAdmin() || (isPatient() && request.auth.uid == patientId);
+      // Criação/Atualização: profissionais podem criar/atualizar
+      allow create, update: if isProfessional() || isAdmin();
+      // Deleção: apenas admin (para compliance LGPD)
+      allow delete: if isAdmin();
+    }
+
+    // Exportações de Marketing (vídeos, imagens)
+    match /marketing_exports/{exportId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isProfessional() && isValidSize();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Configurações de Marketing (automações)
+    match /marketing_configs/{configId} {
+      allow read: if isProfessional() || isAdmin();
+      allow write: if isAdmin() || (isProfessional() && canManageSchedule());
+    }
+
+    // Campanhas de Recall
+    match /recall_campaigns/{campaignId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isProfessional() && isValidSize();
+      allow update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Códigos de Indicação (MGM - Member Get Member)
+    match /referral_codes/{codeId} {
+      allow read: if isAuthenticated();
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Resgates de Códigos de Indicação
+    match /referral_redemptions/{redemptionId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isAuthenticated() && isValidSize(); //任何人都可以redeem
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // FisioLink (link na bio)
+    match /fisio_links/{slug} {
+      allow read: if isAuthenticated();
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Analytics do FisioLink
+    match /fisio_link_analytics/{analyticId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isAuthenticated(); // anonymous tracking
+      allow update, delete: if isAdmin();
+    }
+
+    // Calendário de Conteúdo
+    match /content_calendar/{contentId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Pontos de Gamificação de Adesão
+    match /gamification_points/{patientId} {
+      allow read: if isProfessional() || isAdmin() || (isPatient() && request.auth.uid == patientId);
+      allow create, update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Conquistas de Marketing desbloqueadas
+    match /marketing_achievements/{achievementId} {
+      allow read: if isAuthenticated();
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Logs de conquistas de marketing
+    match /marketing_achievement_log/{logId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isProfessional() || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Rankings de marketing (leaderboards)
+    match /marketing_leaderboards/{leaderboardId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
