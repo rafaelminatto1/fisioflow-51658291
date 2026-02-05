@@ -37,6 +37,8 @@
   padding: 2em;
 }
 
+/* Fixed contrast for WCAG AA compliance (4.5:1 minimum) */
+/* Using CSS variable for consistency with design system */
 .read-the-docs {
-  color: #888;
+  color: hsl(var(--muted-foreground));
 }
