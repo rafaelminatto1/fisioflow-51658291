@@ -66,7 +66,7 @@ export default function TelemedicineRoom() {
               </Button>
             </div>
             
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               O link abrirá em uma nova aba segura do Google Meet.
             </p>
           </div>
