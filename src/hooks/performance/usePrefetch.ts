@@ -1,6 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, QueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import React from 'react';
+import { fetchSoapRecords, soapKeys } from '@/hooks/useSoapRecords';
+import { fetchPatientSurgeries, fetchPatientGoals, fetchPatientPathologies } from '@/hooks/usePatientEvolution';
 
 /**
  * Hook para prefetching inteligente de dados
@@ -120,6 +122,42 @@ export function usePrefetchOnProximity<T>(
 }
 
 /**
+ * Prefetch data for the patient dashboard.
+ * Designed to be called on hover or interaction before navigation.
+ */
+export const prefetchPatientDashboard = async (queryClient: QueryClient, patientId: string) => {
+  const PREFETCH_STALE_TIME = 1000 * 60 * 5; // 5 minutes
+
+  // Prefetch recent SOAP records (limit 5 for dashboard)
+  queryClient.prefetchQuery({
+    queryKey: soapKeys.list(patientId, { limit: 5 }),
+    queryFn: () => fetchSoapRecords(patientId, 5),
+    staleTime: PREFETCH_STALE_TIME,
+  });
+
+  // Prefetch surgeries
+  queryClient.prefetchQuery({
+    queryKey: ['patient-surgeries', patientId],
+    queryFn: () => fetchPatientSurgeries(patientId),
+    staleTime: PREFETCH_STALE_TIME,
+  });
+
+  // Prefetch goals
+  queryClient.prefetchQuery({
+    queryKey: ['patient-goals', patientId],
+    queryFn: () => fetchPatientGoals(patientId),
+    staleTime: PREFETCH_STALE_TIME,
+  });
+
+  // Prefetch pathologies
+  queryClient.prefetchQuery({
+    queryKey: ['patient-pathologies', patientId],
+    queryFn: () => fetchPatientPathologies(patientId),
+    staleTime: PREFETCH_STALE_TIME,
+  });
+};
+
+/**
  * Hook para prefetch de dados de paciente
  * Específico para o fluxo de pacientes do FisioFlow
  */
@@ -132,41 +170,10 @@ export function usePrefetchPatientData(
   useEffect(() => {
     if (!patientId || !enabled) return;
 
-    // Prefetch dados relacionados ao paciente em paralelo
-    const prefetchData = async () => {
-      // Prefetch evoluções do paciente
-      queryClient.prefetchQuery({
-        queryKey: ['patient-evolutions', patientId],
-        queryFn: async () => {
-          const { data } = await fetch(`/api/patients/${patientId}/evolutions`).then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 2,
-      });
-
-      // Prefetch mapas de dor
-      queryClient.prefetchQuery({
-        queryKey: ['pain-maps', patientId],
-        queryFn: async () => {
-          const { data } = await fetch(`/api/patients/${patientId}/pain-maps`).then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 5,
-      });
-
-      // Prefetch estatísticas
-      queryClient.prefetchQuery({
-        queryKey: ['patient-stats', patientId],
-        queryFn: async () => {
-          const { data } = await fetch(`/api/patients/${patientId}/stats`).then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 10,
-      });
-    };
-
     // Delay pequeno para não interferir com navegação
-    const timer = setTimeout(prefetchData, 300);
+    const timer = setTimeout(() => {
+      prefetchPatientDashboard(queryClient, patientId);
+    }, 300);
     return () => clearTimeout(timer);
   }, [patientId, enabled, queryClient]);
 }
@@ -185,8 +192,13 @@ export function usePrefetchUpcomingAppointments(enabled: boolean = true) {
       queryClient.prefetchQuery({
         queryKey: ['appointments', 'upcoming'],
         queryFn: async () => {
-          const { data } = await fetch('/api/appointments/upcoming').then(r => r.json());
-          return data;
+          // Fallback to fetch if not migrated to firebase hooks yet
+          try {
+             const { data } = await fetch('/api/appointments/upcoming').then(r => r.json());
+             return data;
+          } catch (e) {
+             return [];
+          }
         },
         staleTime: 1000 * 60 * 1, // 1 minuto - agendamentos mudam frequentemente
       });
@@ -210,8 +222,12 @@ export function usePrefetchEvolutionTemplates(enabled: boolean = true) {
       queryClient.prefetchQuery({
         queryKey: ['evolution-templates'],
         queryFn: async () => {
-          const { data } = await fetch('/api/evolution-templates').then(r => r.json());
-          return data;
+           try {
+              const { data } = await fetch('/api/evolution-templates').then(r => r.json());
+              return data;
+           } catch (e) {
+              return [];
+           }
         },
         staleTime: 1000 * 60 * 15, // 15 minutos - templates mudam pouco
       });
