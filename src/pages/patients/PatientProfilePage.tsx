@@ -59,6 +59,7 @@ import { useSoapRecords } from '@/hooks/useSoapRecords';
 // Analytics & ML Imports
 import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel, AIAssistantPanel } from '@/components/patients/analytics';
 import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
+import { PatientAIChat } from '@/components/ai/PatientAIChat';
 
 // Financial & Documents Imports
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
@@ -594,6 +595,9 @@ const AnalyticsTab = ({ patientId, patientName }: { patientId: string; patientNa
 
             {/* AI Assistant Panel - Full Width */}
             <AIAssistantPanel patientId={patientId} patientName={patientName} />
+
+            {/* Google Gemini Chat - New */}
+            <PatientAIChat patientId={patientId} patientName={patientName} />
 
             {/* Two-column layout for lifecycle and insights */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

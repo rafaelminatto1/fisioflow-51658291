@@ -1,5 +1,32 @@
-# Query para listar exercícios prescritos para um paciente
-query getPatientExercises($patientId: UUID!) @auth(level: PUBLIC) {
+# Query para listar pacientes de uma organização
+# Alterado de PUBLIC para USER (Segurança)
+query listPatientsByOrg($organizationId: UUID!) @auth(level: USER) {
+  patients(where: { organizationId: { eq: $organizationId } }, orderBy: [{ name: ASC }]) {
+    id
+    name
+    email
+    phone
+    mainCondition
+  }
+}
+
+# Query para buscar detalhes de um paciente
+query getPatientById($id: UUID!) @auth(level: USER) {
+  patient(id: $id) {
+    id
+    name
+    email
+    phone
+    cpf
+    address
+    birthDate
+    mainCondition
+    medicalHistory
+  }
+}
+
+# Query para listar exercícios prescritos
+query getPatientExercises($patientId: UUID!) @auth(level: USER) {
   prescribedExercises(where: { patientId: { eq: $patientId } }, orderBy: [{ createdAt: DESC }]) {
     id
     exerciseId

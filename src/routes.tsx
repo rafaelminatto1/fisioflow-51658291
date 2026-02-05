@@ -48,6 +48,7 @@ const NewEvaluationPage = lazy(() => import(/* webpackChunkName: "evaluation-new
 const PatientProfilePage = lazy(() => import(/* webpackChunkName: "patient-profile" */ "./pages/patients/PatientProfilePage"));
 const NewPatientPage = lazy(() => import(/* webpackChunkName: "patient-new" */ "./pages/patients/NewPatientPage"));
 const Communications = lazy(() => import(/* webpackChunkName: "communications" */ "./pages/Communications"));
+const EmailTest = lazy(() => import(/* webpackChunkName: "email-test" */ "./pages/communications/EmailTest"));
 
 // Settings & configuration pages
 const ScheduleSettings = lazy(() => import(/* webpackChunkName: "settings-schedule" */ "./pages/ScheduleSettings"));
@@ -229,6 +230,7 @@ export function AppRoutes() {
             <Route path="/patients/:patientId/evaluations/new/:formId" element={<ProtectedRoute><NewEvaluationPage /></ProtectedRoute>} />
             <Route path="/patients/:patientId/evaluations/new" element={<ProtectedRoute><NewEvaluationPage /></ProtectedRoute>} />
             <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+            <Route path="/communications/email-test" element={<ProtectedRoute><EmailTest /></ProtectedRoute>} />
             <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
             <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
             <Route path="/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
