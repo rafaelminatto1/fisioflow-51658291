@@ -466,8 +466,13 @@ export default function Auth() {
 
       <p className="text-center text-xs text-muted-foreground px-4">
         Ao continuar, você concorda com nossos{' '}
-        <a href="#" className="underline hover:text-foreground transition-colors">Termos de Serviço</a>{' '}
-        e <a href="#" className="underline hover:text-foreground transition-colors">Política de Privacidade</a>.
+        <button type="button" className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer text-inherit">
+          Termos de Serviço
+        </button>{' '}
+        e{' '}
+        <button type="button" className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer text-inherit">
+          Política de Privacidade
+        </button>.
       </p>
     </AuthLayout>
   );
