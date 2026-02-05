@@ -70,24 +70,33 @@ const CLICKABLE_AREA_WIDTH_PX = 16;
  *
  * @param count - Número de cards sobrepostos
  * @param index - Índice do card atual (0-based)
- * @returns Objeto com width e left para CSS
+ * @returns Objeto com width e left para CSS (usando percentuais)
  */
 const calculateOverlapStyle = (count: number, index: number) => {
-    // Espaço fixo que não pode ser usado pelos cards:
-    // - margem à esquerda (2px)
-    // - área clicável à direita (16px)
-    // - gaps entre cards: (count - 1) * gap (2px cada)
-    const reservedSpace = OVERLAP_LAYOUT_MARGIN_PX + CLICKABLE_AREA_WIDTH_PX;
-    const gapsSpace = Math.max(0, (count - 1) * OVERLAP_LAYOUT_GAP_PX);
-    const totalReserved = reservedSpace + gapsSpace;
+    // Espaço total disponível para cards (exclui área clicável à direita)
+    // Usamos percentuais para que funcione corretamente dentro da célula da grid
+    const availableWidthPercent = 99; // 99% da largura disponível
 
-    // Cada card recebe uma fatia igual do espaço disponível
-    const cardWidth = `calc((100% - ${totalReserved}px) / ${count})`;
+    // Gap mínimo entre cards (praticamente colados)
+    const gapPercent = 0.1; // ~0.1% por gap - mínimo para separação visual
+    const totalGapsPercent = Math.max(0, (count - 1) * gapPercent);
 
-    // Posição: margem + index * (largura_do_card + gap)
-    const left = `calc(${OVERLAP_LAYOUT_MARGIN_PX}px + ${index} * ((100% - ${totalReserved}px) / ${count} + ${OVERLAP_LAYOUT_GAP_PX}px))`;
+    // Margem esquerda mínima
+    const marginLeftPercent = 0.1;
 
-    return { width: cardWidth, left };
+    // Largura disponível após margens e gaps
+    const usableWidth = availableWidthPercent - marginLeftPercent - totalGapsPercent;
+
+    // Cada card recebe uma fatia igual
+    const cardWidthPercent = usableWidth / count;
+
+    // Posição do card: margem + (index * (largura + gap))
+    const leftPercent = marginLeftPercent + (index * (cardWidthPercent + gapPercent));
+
+    return {
+        width: `${cardWidthPercent}%`,
+        left: `${leftPercent}%`
+    };
 };
 
 // =====================================================================
