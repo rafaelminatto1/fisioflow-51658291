@@ -58,7 +58,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
 
   const handleComplete = (patientId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    navigate(`/patients?edit=${patientId}`);
+    navigate(`/patients/${patientId}`);
   };
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
