@@ -346,7 +346,7 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                                                     ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700"
                                                     : count >= config.maxCapacity * 0.75
                                                         ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700"
-                                                        : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600"
+                                                        : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-gray-500 border border-slate-200 dark:border-slate-600"
                                             )}
                                         >
                                             <Users className="w-3 h-3" />
@@ -354,7 +354,7 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                                         </div>
                                     ))}
                                 </div>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                <p className="text-xs text-slate-500 dark:text-gray-500">
                                     Este indicador aparece no calendário mostrando ocupação em tempo real
                                 </p>
                             </div>
@@ -364,7 +364,7 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                     {/* Days Tab */}
                     <TabsContent value="days" className="space-y-6">
                         <div className="space-y-3">
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                            <p className="text-sm text-slate-500 dark:text-gray-500">
                                 Selecione os dias da semana em que a clínica funciona
                             </p>
 

@@ -107,7 +107,7 @@ export function ClinicalTestsGrid({
                         </div>
 
                         <div className="p-5 flex-1 flex flex-col">
-                            <div className="text-[11px] text-slate-400 font-bold mb-1.5 uppercase tracking-wider flex items-center justify-between">
+                            <div className="text-[11px] text-gray-500 font-bold mb-1.5 uppercase tracking-wider flex items-center justify-between">
                                 <span>{test.target_joint}</span>
                                 <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300 text-teal-600" />
                             </div>
@@ -115,7 +115,7 @@ export function ClinicalTestsGrid({
                             <h3 className="font-bold text-slate-800 text-lg mb-2 group-hover:text-teal-700 transition-colors leading-tight">
                                 {test.name}
                                 {test.name_en && (
-                                    <span className="block text-xs font-normal text-slate-400 mt-1 italic">
+                                    <span className="block text-xs font-normal text-gray-500 mt-1 italic">
                                         {test.name_en}
                                     </span>
                                 )}

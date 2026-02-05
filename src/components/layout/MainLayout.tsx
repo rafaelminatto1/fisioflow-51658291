@@ -147,7 +147,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                       </div>
                       <div className="hidden lg:flex flex-col items-start text-sm">
                         <span className="font-semibold text-gray-700 dark:text-gray-200 leading-none">{displayName}</span>
-                        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-500 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
                       </div>
                     </>
                   )}

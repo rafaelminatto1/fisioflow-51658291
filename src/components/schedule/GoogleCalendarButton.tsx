@@ -115,7 +115,7 @@ export function GoogleCalendarButton({
             <>
               <div className="px-2 py-1.5 text-sm">
                 <p className="font-medium text-slate-900 dark:text-slate-100">Conectado</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{email}</p>
+                <p className="text-xs text-slate-500 dark:text-gray-500 truncate">{email}</p>
               </div>
 
               <DropdownMenuSeparator />
@@ -154,7 +154,7 @@ export function GoogleCalendarButton({
 
               <DropdownMenuSeparator />
 
-              <div className="px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <div className="px-2 py-1.5 text-xs text-slate-500 dark:text-gray-500">
                 <p>Sincronize seus agendamentos automaticamente</p>
               </div>
             </>
@@ -201,11 +201,11 @@ export function GoogleCalendarStatus({ className }: GoogleCalendarStatusProps) {
   return (
     <div className={cn('flex items-center gap-1.5 text-xs', className)}>
       {isLoading ? (
-        <Loader2 className="w-3 h-3 animate-spin text-slate-400" />
+        <Loader2 className="w-3 h-3 animate-spin text-gray-500" />
       ) : (
         <>
           <CheckCircle2 className="w-3 h-3 text-green-600" />
-          <span className="text-slate-600 dark:text-slate-400">Google Calendar</span>
+          <span className="text-slate-600 dark:text-gray-500">Google Calendar</span>
         </>
       )}
     </div>
