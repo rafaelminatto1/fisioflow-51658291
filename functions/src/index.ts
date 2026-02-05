@@ -14,6 +14,7 @@ import {
     DB_HOST_IP_SECRET,
     DB_HOST_IP_PUBLIC_SECRET,
     CLOUD_SQL_CONNECTION_NAME_SECRET,
+    RESEND_API_KEY_SECRET,
     CORS_ORIGINS
 } from './init';
 import {
@@ -32,12 +33,13 @@ setGlobalOptions({
         DB_HOST_IP_SECRET,
         DB_HOST_IP_PUBLIC_SECRET,
         WHATSAPP_PHONE_NUMBER_ID_SECRET,
-        WHATSAPP_ACCESS_TOKEN_SECRET
+        WHATSAPP_ACCESS_TOKEN_SECRET,
+        RESEND_API_KEY_SECRET
     ],
-    // Reduced maxInstances to prevent cost spikes (most functions don't need 100)
-    maxInstances: 10,
+    // Reduced maxInstances to prevent cost spikes and CPU Quota errors
+    maxInstances: 2,
     // Set default memory for all functions
-    memory: '512MiB',
+    memory: '256MiB', // Reduced from 512 to save resources
     // Set timeout for all functions (default is 60s for Gen 2)
     timeoutSeconds: 60,
     // Keep minimum instances warm for critical functions (reduces cold starts)
@@ -435,6 +437,11 @@ export { migrateClinicalSchema } from './migrations/clinical-setup';
 export { dailyPatientDigest } from './crons/scheduled-tasks';
 export { analyzeProgress } from './ai/flows';
 
+export const aiFastProcessing = onCall(async (request) => {
+    const { aiFastProcessingHandler } = await import('./ai/groq-service');
+    return aiFastProcessingHandler(request);
+});
+
 // ============================================================================
 // WEBHOOK MANAGEMENT
 // ============================================================================
@@ -792,6 +799,15 @@ export { appointmentReminders, onAppointmentCreatedWorkflow, onAppointmentUpdate
 
 // Patient Reactivation Workflow
 export { patientReactivation } from './workflows/reactivation';
+
+// ============================================================================
+// COMMUNICATIONS (Email, WhatsApp)
+// ============================================================================
+
+export const sendEmail = onCall(async (request) => {
+    const { sendEmailHandler } = await import('./communications/email-service');
+    return sendEmailHandler(request);
+});
 
 // WhatsApp Test Functions
 export { testWhatsAppMessage, testWhatsAppTemplate } from './communications/whatsapp';
