@@ -47,6 +47,7 @@ export const dicomWebClient = {
         }
     },
 
+    /**
      * Get WADO-URI compatible URL for the Proxy
      * Used by Cornerstone Image Loaders
      */
@@ -79,6 +80,7 @@ export const dicomWebClient = {
         return '/dicom-proxy'; // Fallback to relative path
     },
 
+    /**
      * Store Instances (STOW-RS)
      * Uploads DICOM files
      */

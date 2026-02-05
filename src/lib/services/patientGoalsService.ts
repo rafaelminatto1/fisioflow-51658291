@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
-from '@/types/evolution';
+import { PatientGoal, PatientGoalFormData } from '@/types/evolution';
 import { differenceInDays } from 'date-fns';
 
 export class PatientGoalsService {

@@ -111,8 +111,6 @@ export default function ExercisesScreen() {
   */
 
   const onRefresh = async () => {
-
-  const onRefresh = async () => {
     setRefreshing(true);
     // Force refresh by re-subscribing
     setRefreshing(false);

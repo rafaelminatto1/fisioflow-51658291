@@ -174,7 +174,10 @@ service cloud.firestore {
 
       // Atualização: apenas o próprio usuário ou admin
       // Admin pode atualizar qualquer perfil
-      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      // Usuário comum não pode alterar campos sensíveis
+      allow update: if isAdmin() || 
+                      (isAuthenticated() && request.auth.uid == userId && 
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'organization_id', 'permissions']));
 
       // Deleção: apenas admin
       allow delete: if isAdmin();

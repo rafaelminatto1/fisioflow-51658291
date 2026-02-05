@@ -196,5 +196,5 @@ export function APIErrorFallback({
           )}
         </CardContent>
       </Card>
-    </div  );
+    </div>);
 }

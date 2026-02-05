@@ -166,10 +166,12 @@ export function GlobalSearch() {
   return (
     <>
       <button
+        id="search"
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent"
+        aria-label="Abrir busca global (⌘K)"
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-4 w-4" aria-hidden="true" />
         <span className="hidden md:inline">Buscar...</span>
         <kbd className="hidden md:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
           <span className="text-xs">⌘</span>K

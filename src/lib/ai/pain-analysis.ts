@@ -14,7 +14,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db, collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
-olutionData } from '@/types/painMap';
+import { PainEvolutionData, PainMapRecord, PainMapPoint } from '@/types/painMap';
 
 // ============================================================================
 // TYPES
@@ -763,7 +763,7 @@ async function getPainAssessments(
   endDate?: Date
 ): Promise<PainEvolutionData[]> {
 
-  let q = query(
+  const q = query(
     collection(db, 'patients', patientId, 'pain-maps'),
     orderBy('recorded_at', 'asc')
   );

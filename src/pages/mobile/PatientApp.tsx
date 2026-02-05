@@ -8,7 +8,7 @@ import { Calendar, MessageSquare, Activity, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db, collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
-rs/logger';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Define interface for appointment data
 interface Appointment {

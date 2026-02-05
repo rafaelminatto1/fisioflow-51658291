@@ -614,6 +614,15 @@ const PatientEvolution = () => {
 
   // ========== RENDERIZAÇÃO ==========
 
+  // Main content - custom breadcrumb: último segmento (UUID) mostra nome do paciente
+  const customBreadcrumbLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    if (appointmentId && patient) {
+      labels[`/patient-evolution/${appointmentId}`] = PatientHelpers.getName(patient);
+    }
+    return labels;
+  }, [appointmentId, patient]);
+
   // Validação inicial do appointmentId
   if (!appointmentId) {
     return (
@@ -754,15 +763,6 @@ const PatientEvolution = () => {
       </MainLayout>
     );
   }
-
-  // Main content - custom breadcrumb: último segmento (UUID) mostra nome do paciente
-  const customBreadcrumbLabels = useMemo(() => {
-    const labels: Record<string, string> = {};
-    if (appointmentId && patient) {
-      labels[`/patient-evolution/${appointmentId}`] = PatientHelpers.getName(patient);
-    }
-    return labels;
-  }, [appointmentId, patient]);
 
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>

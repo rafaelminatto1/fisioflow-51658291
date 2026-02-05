@@ -204,7 +204,7 @@ export const Assertions = {
 
   assertTextExists: (getByText: any, text: string) => {
     try {
-      const element = getByByText(text);
+      const element = getByText(text);
       expect(element).toBeDefined();
     } catch (error) {
       throw new Error(`Text "${text}" should exist: ${error}`);

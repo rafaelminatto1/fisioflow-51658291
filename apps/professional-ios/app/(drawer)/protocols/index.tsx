@@ -362,7 +362,8 @@ function StatCardLarge({ icon, label, value, colors }: { icon: string; label: st
       <Icon name={icon as any} size={24} color={colors.primary} />
       <Text style={[styles.statCardValue, { color: colors.text }]}>{value}</Text>
       <Text style={[styles.statCardLabel, { color: colors.textSecondary }]}>{label}</Text>
-    </View  );
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

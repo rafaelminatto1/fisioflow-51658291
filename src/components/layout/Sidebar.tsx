@@ -465,7 +465,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation - Com scrollbar personalizada e efeitos melhorados */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden relative">
+      <nav id="main-navigation" className="flex-1 overflow-y-auto overflow-x-hidden relative" aria-label="Navegação principal">
         {/* Efeito de glow no topo */}
         <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
 
