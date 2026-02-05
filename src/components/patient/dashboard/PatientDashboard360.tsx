@@ -441,7 +441,7 @@ export const PatientDashboard360 = ({
                                         <div
                                             key={achievement.id}
                                             className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                                isUnlocked ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-400'
+                                                isUnlocked ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500'
                                             }`}
                                         >
                                             <Star className="w-5 h-5" />

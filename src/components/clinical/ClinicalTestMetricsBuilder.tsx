@@ -200,7 +200,7 @@ export function ClinicalTestMetricsBuilder({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => removeOption(index, optIndex)}
-                                                className="text-slate-400 hover:text-red-500 p-1"
+                                                className="text-gray-500 hover:text-red-500 p-1"
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>

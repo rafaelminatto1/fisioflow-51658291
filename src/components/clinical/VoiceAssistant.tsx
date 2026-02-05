@@ -496,7 +496,7 @@ export function VoiceAssistant({
                         </div>
                       </div>
                     ) : (
-                      <MicOff className="h-8 w-8 text-slate-400" />
+                      <MicOff className="h-8 w-8 text-gray-500" />
                     )}
                   </div>
                   <span className="text-sm font-medium text-slate-600">
@@ -519,7 +519,7 @@ export function VoiceAssistant({
                         </div>
                       </div>
                     ) : (
-                      <VolumeX className="h-8 w-8 text-slate-400" />
+                      <VolumeX className="h-8 w-8 text-gray-500" />
                     )}
                   </div>
                   <span className="text-sm font-medium text-slate-600">
@@ -545,7 +545,7 @@ export function VoiceAssistant({
             <ScrollArea className="h-64 p-4">
               <div className="space-y-4">
                 {transcripts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                  <div className="flex flex-col items-center justify-center h-40 text-gray-500">
                     <Activity className="h-8 w-8 mb-2" />
                     <p className="text-sm">
                       {isActive
@@ -693,7 +693,7 @@ export function VoiceAssistant({
 
         <CardContent className="p-4">
           {keyPoints.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+            <div className="flex flex-col items-center justify-center h-40 text-gray-500">
               <CheckCircle2 className="h-8 w-8 mb-2" />
               <p className="text-sm text-center">
                 {isActive
