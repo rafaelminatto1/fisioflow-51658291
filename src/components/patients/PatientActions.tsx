@@ -68,11 +68,11 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
   };
 
   const handleSchedule = () => {
-    navigate(`/agenda?patientId=${patient.id}`);
+    navigate('/');
   };
 
   const handleViewEvolution = () => {
-    navigate(`/patients/${patient.id}?tab=evolution`);
+    navigate(`/patients/${patient.id}?tab=clinical`);
   };
 
   const handleStatusChange = async (status: 'Inicial' | 'Em Tratamento' | 'Recuperação' | 'Concluído') => {

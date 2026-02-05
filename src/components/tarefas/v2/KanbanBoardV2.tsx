@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, Suspense } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import {
   Filter,
@@ -44,11 +44,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { KanbanColumnV2 } from './KanbanColumnV2';
-import { TaskDetailModal } from './TaskDetailModal';
-import { TaskQuickCreateModal } from './TaskQuickCreateModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { LazyKanbanColumnWrapper, LazyTaskDetailModal, LazyTaskQuickCreateModal } from './LazyComponents';
 import {
   Tarefa,
   TarefaStatus,
@@ -556,7 +554,7 @@ export function KanbanBoardV2({
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-6 overflow-x-auto pb-4">
           {statuses.map(status => (
-            <KanbanColumnV2
+            <LazyKanbanColumnWrapper
               key={status}
               status={status}
               tarefas={groupedTarefas[status] || []}
@@ -567,27 +565,33 @@ export function KanbanBoardV2({
               onDeleteTask={handleDeleteTask}
               onDuplicateTask={handleDuplicateTask}
               onArchiveTask={handleArchiveTask}
-            />
+            >
+              <KanbanColumnV2 />
+            </LazyKanbanColumnWrapper>
           ))}
         </div>
       </DragDropContext>
 
       {/* Quick Create Modal */}
-      <TaskQuickCreateModal
-        open={quickCreateOpen}
-        onOpenChange={setQuickCreateOpen}
-        defaultStatus={defaultStatus}
-        defaultProjectId={projectId}
-        initialData={selectedTarefa || undefined}
-      />
+      <Suspense fallback={<LoadingSkeleton type="card" className="w-full h-64" />}>
+        <LazyTaskQuickCreateModal
+          open={quickCreateOpen}
+          onOpenChange={setQuickCreateOpen}
+          defaultStatus={defaultStatus}
+          defaultProjectId={projectId}
+          initialData={selectedTarefa || undefined}
+        />
+      </Suspense>
 
       {/* Detail Modal */}
-      <TaskDetailModal
-        open={detailModalOpen}
-        onOpenChange={setDetailModalOpen}
-        tarefa={selectedTarefa}
-        teamMembers={teamMembers || []}
-      />
+      <Suspense fallback={<LoadingSkeleton type="card" className="w-full h-64" />}>
+        <LazyTaskDetailModal
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          tarefa={selectedTarefa}
+          teamMembers={teamMembers || []}
+        />
+      </Suspense>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

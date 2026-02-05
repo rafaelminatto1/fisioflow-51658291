@@ -52,6 +52,8 @@ const SLOT_DURATION_MINUTES = 30;
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
 const OVERLAP_LAYOUT_MARGIN_PX = 4;
 const OVERLAP_LAYOUT_GAP_PX = 4;
+/** Espaço reservado à direita para clique em células com múltiplos cards. */
+const CLICKABLE_AREA_WIDTH_PX = 28;
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -221,7 +223,8 @@ export const CalendarWeekView = memo(({
 
         const margin = OVERLAP_LAYOUT_MARGIN_PX;
         const gap = OVERLAP_LAYOUT_GAP_PX;
-        const totalGutter = (count + 1) * margin;
+        // Cálculo correto: margem esquerda + área clicável + gaps entre cards
+        const totalGutter = margin + CLICKABLE_AREA_WIDTH_PX + (count - 1) * gap;
 
         return {
             gridColumn: `${dayIndex + 2} / span 1`,
@@ -386,7 +389,13 @@ export const CalendarWeekView = memo(({
                                     const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
                                     const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];
                                     const overlapCount = getOverlapStackPosition(dayAppointmentsForGhost, apt).count;
-                                    const hideGhostWhenSiblings = isDraggingThis(apt.id) && overlapCount > 1;
+                                    // dragHandleOnly=false significa que o drag pode ser iniciado de qualquer parte do card
+                                    // Quando true, drag só pode ser iniciado pelo grip handle
+                                    const dragHandleOnly = false;
+                                    const hideGhostWhenSiblings = isDraggingThis(apt.id) && overlapCount > 1 && !dragHandleOnly;
+                                    // Quando dragHandleOnly é true, NÃO esconder cards irmãos
+                                    // O handle (24x24px) é pequeno, então cards vizinhos devem permanecer visíveis
+                                    // para que dragOver seja propagado pelo card raiz durante a transição
 
                                     return (
                                         <CalendarAppointmentCard
@@ -419,6 +428,7 @@ export const CalendarWeekView = memo(({
                                             selectionMode={selectionMode}
                                             isSelected={selectedIds?.has(apt.id)}
                                             onToggleSelection={onToggleSelection}
+                                            dragHandleOnly={dragHandleOnly}
                                         />
                                     );
                                 })}

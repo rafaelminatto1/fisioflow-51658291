@@ -33,6 +33,9 @@ import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { usePatientPackages } from '@/hooks/usePackages';
 import { useTherapists, formatTherapistLabel, getTherapistById, THERAPIST_SELECT_NONE } from '@/hooks/useTherapists';
 import { useUpdateAppointment } from '@/hooks/useAppointments';
+import { prefetchRoute, RouteKeys } from '@/lib/routing/routePrefetch';
+import { useQueryClient } from '@tanstack/react-query';
+import { appointmentsApi } from '@/integrations/firebase/functions';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import type { Appointment } from '@/types/appointment';
@@ -64,6 +67,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const { data: patientPackages = [] } = usePatientPackages(appointment.patientId);
   const { therapists = [] } = useTherapists();
   const { mutateAsync: updateAppointment } = useUpdateAppointment();
+  const queryClient = useQueryClient();
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
   // Local state for optimistic updates - syncs with appointment
@@ -112,11 +116,30 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleStartAttendance = () => {
     if (localStatus === 'avaliacao') {
+      // Prefetch para página de avaliação
+      prefetchRoute(
+        () => import('../../pages/patients/NewEvaluationPage').then(m => ({ default: m.NewEvaluationPage })),
+        'evaluation-new'
+      );
+
       navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
       toast.success('Iniciando avaliação', {
         description: `Avaliação de ${appointment.patientName}`,
       });
     } else {
+      // Prefetch do chunk da página de evolução (alto impacto)
+      prefetchRoute(
+        () => import('../../pages/PatientEvolution').then(m => ({ default: m.PatientEvolution })),
+        RouteKeys.PATIENT_EVOLUTION
+      );
+
+      // Prefetch dos dados críticos (appointment e paciente)
+      queryClient.prefetchQuery({
+        queryKey: ['appointment', appointment.id],
+        queryFn: () => appointmentsApi.get(appointment.id),
+        staleTime: 1000 * 60 * 2, // 2 minutos
+      });
+
       navigate(`/patient-evolution/${appointment.id}`);
       toast.success('Iniciando atendimento', {
         description: `Atendimento de ${appointment.patientName}`,
