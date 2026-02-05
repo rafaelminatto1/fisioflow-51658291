@@ -2,8 +2,8 @@
  * Patient Profile Page - Migrated to Firebase
  */
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useQuery } from '@tanstack/react-query';
 import { PatientHelpers, Patient } from '@/types';
@@ -699,6 +699,7 @@ const GamificationTab = ({ patientId }: { patientId: string }) => {
 export const PatientProfilePage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const { data: patient, isLoading } = useQuery({
         queryKey: ['patient', id],
@@ -715,8 +716,25 @@ export const PatientProfilePage = () => {
     const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
+    // Valid tab values
+    const validTabs = ['overview', 'analytics', 'personal', 'clinical', 'financial', 'gamification', 'documents'] as const;
+    type TabValue = typeof validTabs[number];
+
+    // Get initial tab from URL or default to 'overview'
+    const [activeTab, setActiveTab] = useState<TabValue>(() => {
+        const tabFromUrl = searchParams.get('tab');
+        return (tabFromUrl && validTabs.includes(tabFromUrl as TabValue)) ? tabFromUrl as TabValue : 'overview';
+    });
+
     // Fetch evaluation forms for the modal
     const { data: evaluationForms = [] } = useEvaluationForms();
+
+    // Auto-open edit modal if patient has incomplete registration
+    useEffect(() => {
+        if (patient && patient.incomplete_registration) {
+            setEditingPatient(true);
+        }
+    }, [patient]);
 
     const handleStartEvaluation = () => {
         setEvaluationModalOpen(true);
@@ -852,7 +870,7 @@ export const PatientProfilePage = () => {
                 </div>
 
                 {/* Content Tabs - Sticky */}
-                <Tabs defaultValue="overview" className="w-full">
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="w-full">
                     <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-2 pt-2 -mx-4 px-4 border-b">
                         <TabsList className="w-full justify-start h-auto p-1 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-2">
                             <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
@@ -915,6 +933,7 @@ export const PatientProfilePage = () => {
                     open={editingPatient}
                     onOpenChange={setEditingPatient}
                     patientId={id}
+                    patient={patient}
                 />
 
                 {/* Evaluation Template Selection Modal */}
