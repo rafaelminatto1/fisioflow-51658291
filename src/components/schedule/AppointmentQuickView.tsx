@@ -31,6 +31,8 @@ import { toast } from 'sonner';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { usePatientPackages } from '@/hooks/usePackages';
+import { useTherapists, formatTherapistLabel, getTherapistById, THERAPIST_SELECT_NONE } from '@/hooks/useTherapists';
+import { useUpdateAppointment } from '@/hooks/useAppointments';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import type { Appointment } from '@/types/appointment';
@@ -60,10 +62,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const { updateStatus, isUpdatingStatus } = useAppointmentActions();
   const { getInterestCount } = useWaitlistMatch();
   const { data: patientPackages = [] } = usePatientPackages(appointment.patientId);
+  const { therapists = [] } = useTherapists();
+  const { mutateAsync: updateAppointment } = useUpdateAppointment();
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
-  // Local state for optimistic status updates - syncs with appointment.status
+  // Local state for optimistic updates - syncs with appointment
   const [localStatus, setLocalStatus] = useState(appointment.status);
+  const [localPaymentStatus, setLocalPaymentStatus] = useState(() =>
+    ((appointment.payment_status ?? 'pending') as string).toLowerCase()
+  );
+  const [localTherapistId, setLocalTherapistId] = useState(appointment.therapistId ?? '');
 
   // Pacote vinculado a este agendamento (session_package_id = id do patient_packages)
   const linkedPackage = useMemo(() => {
@@ -73,14 +81,15 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const sessionNumber = linkedPackage ? linkedPackage.sessions_used + 1 : null;
   const sessionTotal = linkedPackage ? linkedPackage.sessions_purchased : null;
-  const paymentStatus = (appointment.payment_status ?? 'pending').toLowerCase();
-  const isPaid = paymentStatus === 'paid' || paymentStatus === 'pago';
   const paymentAmount = appointment.payment_amount != null ? Number(appointment.payment_amount) : null;
+  const isPaid = localPaymentStatus === 'paid' || localPaymentStatus === 'pago';
 
-  // Sync local status when appointment prop changes
+  // Sync local state when appointment prop changes
   useEffect(() => {
     setLocalStatus(appointment.status);
-  }, [appointment.status]);
+    setLocalPaymentStatus(((appointment.payment_status ?? 'pending') as string).toLowerCase());
+    setLocalTherapistId(appointment.therapistId ?? '');
+  }, [appointment.status, appointment.payment_status, appointment.therapistId]);
 
   const appointmentDate = useMemo((): Date => {
     const d = appointment.date as Date | string | null | undefined;
@@ -142,6 +151,33 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     onOpenChange?.(false);
   };
 
+  const handleTherapistChange = async (therapistId: string) => {
+    if (therapistId === localTherapistId) return;
+    setLocalTherapistId(therapistId);
+    try {
+      await updateAppointment({
+        appointmentId: appointment.id,
+        updates: { therapist_id: therapistId || null },
+      });
+    } catch {
+      setLocalTherapistId(appointment.therapistId ?? '');
+    }
+  };
+
+  const handlePaymentStatusChange = async (value: string) => {
+    const newStatus = value === 'paid' ? 'paid' : 'pending';
+    if (newStatus === localPaymentStatus) return;
+    setLocalPaymentStatus(newStatus);
+    try {
+      await updateAppointment({
+        appointmentId: appointment.id,
+        updates: { payment_status: newStatus },
+      });
+    } catch {
+      setLocalPaymentStatus(((appointment.payment_status ?? 'pending') as string).toLowerCase());
+    }
+  };
+
   // Calculate end time
   // Safety check for time - handle null, undefined, or empty string
   const time = appointment.time && appointment.time.trim() ? appointment.time : '00:00';
@@ -154,7 +190,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   // Content component shared between Popover and Dialog
   const Content = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-w-0 max-w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-muted/50 to-muted/30">
         <div className="flex items-center gap-3">
@@ -200,11 +236,29 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
       {/* Content */}
       <div className="p-5 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto">
-        {/* Quem: Fisioterapeuta + Paciente */}
+        {/* Quem: Fisioterapeuta (editável) + Paciente */}
         <div className="space-y-3">
-          <div className="flex items-start gap-4">
-            <span className="text-base font-medium text-muted-foreground min-w-[110px]">Fisioterapeuta:</span>
-            <span className="text-base font-semibold text-foreground">Activity Fisioterapia</span>
+          <div className="flex items-center gap-4">
+            <span className="text-base font-medium text-muted-foreground min-w-[110px] shrink-0">Fisioterapeuta:</span>
+            <Select
+              value={localTherapistId || THERAPIST_SELECT_NONE}
+              onValueChange={(v) => handleTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
+              aria-label="Alterar fisioterapeuta"
+            >
+              <SelectTrigger className="h-9 flex-1 min-w-0 max-w-[180px]" aria-label="Fisioterapeuta do agendamento">
+                <SelectValue placeholder="Escolher fisioterapeuta">
+                  {getTherapistById(therapists, localTherapistId)?.name ?? 'Activity Fisioterapia'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={THERAPIST_SELECT_NONE}>Activity Fisioterapia</SelectItem>
+                {therapists.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {formatTherapistLabel(t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-start gap-3">
             <span className="text-base font-medium text-muted-foreground min-w-[110px]">Paciente:</span>
@@ -212,27 +266,49 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           </div>
         </div>
 
-        {/* Pagamento: status + valor */}
-        <div className="space-y-2">
-          <span className="text-base font-medium text-muted-foreground block">Pagamento:</span>
-          <div className="flex items-center gap-2 flex-wrap">
-            {isPaid ? (
-              <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                Pago
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200 gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5" aria-hidden />
-                Pendente
-              </Badge>
-            )}
-            {paymentAmount != null && paymentAmount > 0 && (
-              <span className="text-sm font-medium text-foreground" aria-label={`Valor: ${formatCurrency(paymentAmount)}`}>
-                {formatCurrency(paymentAmount)}
-              </span>
-            )}
-          </div>
+        {/* Pagamento: status (editável) + valor na mesma linha */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-base font-medium text-muted-foreground shrink-0">Pagamento:</span>
+          <Select
+            value={isPaid ? 'paid' : 'pending'}
+            onValueChange={handlePaymentStatusChange}
+            aria-label="Alterar status de pagamento"
+          >
+            <SelectTrigger className="h-9 w-auto min-w-[120px] max-w-[140px]" aria-label="Status de pagamento">
+              <SelectValue>
+                {isPaid ? (
+                  <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                    Pago
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                    <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                    Pendente
+                  </span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="paid">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+                  Pago
+                </span>
+              </SelectItem>
+              <SelectItem value="pending">
+                <span className="flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-600" aria-hidden />
+                  Pendente
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          {paymentAmount != null && paymentAmount > 0 && (
+            <span className="text-sm font-medium text-foreground" aria-label={`Valor: ${formatCurrency(paymentAmount)}`}>
+              {formatCurrency(paymentAmount)}
+            </span>
+          )}
         </div>
 
         {/* Pacote: Sessão X de Y (quando vinculado) */}
@@ -302,13 +378,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
       {/* Actions */}
       <div className="p-4 space-y-3 bg-muted/20">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           {onEdit && (
             <>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 touch-target bg-background"
+                className="h-9 w-9 touch-target bg-background shrink-0"
                 onClick={handleEdit}
                 aria-label="Editar agendamento"
               >
@@ -331,7 +407,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 touch-target bg-background"
+              className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 touch-target bg-background shrink-0"
               onClick={handleDelete}
               aria-label="Excluir agendamento"
             >
@@ -342,17 +418,17 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           {canStartAttendance && (
             <Button
               onClick={handleStartAttendance}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="flex-1 min-w-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
               size="sm"
               aria-label={localStatus === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
             >
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 truncate">
                 {localStatus === 'avaliacao' ? (
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4 shrink-0" />
                 ) : (
-                  <Play className="h-4 w-4" />
+                  <Play className="h-4 w-4 shrink-0" />
                 )}
-                {localStatus === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}
+                <span className="truncate">{localStatus === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}</span>
               </span>
             </Button>
           )}

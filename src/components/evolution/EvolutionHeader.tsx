@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import {
     ArrowLeft, Calendar, FileText,
     Zap, Eye, EyeOff, Save, Clock, Keyboard, CheckCircle2, UserCog,
-    MoreVertical, BarChart2, Loader2
+    MoreVertical, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,11 +26,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import {
   type TherapistOption,
   THERAPIST_SELECT_NONE,
   THERAPIST_PLACEHOLDER,
@@ -38,7 +33,6 @@ import {
 } from '@/hooks/useTherapists';
 import { PatientHelpers } from '@/types';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
-import { EvolutionStats } from '@/components/evolution/EvolutionStats';
 import { parseResponseDate } from '@/utils/dateUtils';
 import type { Patient, Appointment } from '@/types';
 
@@ -250,26 +244,6 @@ export const EvolutionHeader = memo(({
                 <SessionTimer startTime={sessionStartTime} className="shrink-0" />
                 <div className="flex-1" />
                 <div className="flex items-center gap-1 shrink-0">
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-9 px-3 hover:bg-primary/10"
-                                aria-label="Ver resumo da evolução"
-                                title="Resumo"
-                            >
-                                <BarChart2 className="h-4 w-4" />
-                                <span className="hidden sm:inline ml-2 text-sm">Resumo</span>
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto min-w-[320px] max-w-[95vw] p-4" align="end" sideOffset={8}>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                                Resumo
-                            </p>
-                            <EvolutionStats stats={evolutionStats} />
-                        </PopoverContent>
-                    </Popover>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button

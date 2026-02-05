@@ -106,7 +106,7 @@ export function TemplateModal({
   useEffect(() => {
     if (template) {
       form.reset({
-        name: template.name,
+        name: template?.name ?? '',
         description: template.description || '',
         category: template.category,
         condition_name: template.condition_name,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense, useEffect } from 'react';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { Card } from '@/components/ui/card';
@@ -8,11 +8,12 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { GaitMetrics } from '@/types/analysis/schemas';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
+import ClinicalPostureAnalysis from '../posture/ClinicalPostureAnalysis';
+
 // Lazy-loaded heavy components for code-splitting
 const DicomViewer = lazy(() => import('../dicom/DicomViewer'));
 const PoseAnalyzer = lazy(() => import('../posture/PoseAnalyzer'));
 const AssetViewer = lazy(() => import('../viewer/AssetViewer'));
-const ClinicalPostureAnalysis = lazy(() => import('../posture/ClinicalPostureAnalysis'));
 const DynamicAnalysisViewer = lazy(() => import('../dynamic/DynamicAnalysisViewer'));
 // const DicomBrowser = lazy(() => import('../dicom/DicomBrowser'));
 const DynamicComparisonPage = lazy(() => import('../dynamic/DynamicComparisonPage'));
@@ -61,23 +62,22 @@ const MOCK_GAIT_DATA: GaitMetrics = {
 
 type ViewerMode = 'upload' | 'dicom' | 'pose' | 'image' | 'clinical_posture' | 'dynamic_demo' | 'dynamic_compare';
 
+function getModeFromFile(file: File): ViewerMode | null {
+    if (file.name.toLowerCase().endsWith('.dcm') || file.type === 'application/dicom') return 'dicom';
+    if (file.type.startsWith('video/')) return 'pose';
+    if (file.type.startsWith('image/')) return 'image';
+    return null;
+}
+
 const ImageAnalysisDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const initialMode = (searchParams.get('mode') as ViewerMode) || 'upload';
+    const urlMode = (searchParams.get('mode') as ViewerMode) || null;
 
     const [file, setFile] = useState<File | null>(null);
-    const [mode, setMode] = useState<ViewerMode>(initialMode);
 
-    useEffect(() => {
-        const urlMode = searchParams.get('mode') as ViewerMode;
-        if (urlMode && urlMode !== mode) {
-            setMode(urlMode);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams]);
+    const mode: ViewerMode = (file ? getModeFromFile(file) : null) ?? urlMode ?? 'upload';
 
     const handleModeChange = (newMode: ViewerMode) => {
-        setMode(newMode);
         if (newMode === 'upload') {
             setSearchParams({});
         } else {
@@ -91,15 +91,8 @@ const ImageAnalysisDashboard = () => {
 
         setFile(selected);
 
-        // Determine mode based on file type
-        if (selected.name.toLowerCase().endsWith('.dcm') || selected.type === 'application/dicom') {
-            setMode('dicom');
-        } else if (selected.type.startsWith('video/')) {
-            setMode('pose');
-        } else if (selected.type.startsWith('image/')) {
-            setMode('image');
-        } else {
-            // Default fallbacks or error
+        const fileMode = getModeFromFile(selected);
+        if (!fileMode) {
             logger.warn("Unknown file type", { type: selected?.type }, 'ImageAnalysisDashboard');
         }
     }, []);
@@ -200,11 +193,9 @@ const ImageAnalysisDashboard = () => {
                 )}
 
                 {mode === 'clinical_posture' && (
-                    <Suspense fallback={<LoadingFallback />}>
-                        <div className="flex-1 overflow-hidden border rounded-lg bg-white">
-                            <ClinicalPostureAnalysis />
-                        </div>
-                    </Suspense>
+                    <div className="flex-1 overflow-hidden border rounded-lg bg-white">
+                        <ClinicalPostureAnalysis />
+                    </div>
                 )}
 
                 {mode === 'dynamic_demo' && (

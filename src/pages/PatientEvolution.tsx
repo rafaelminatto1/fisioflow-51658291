@@ -28,6 +28,7 @@ import {
 import { EvolutionDebugInfo } from '@/components/evolution/EvolutionDebugInfo';
 import { MedicalReturnCard } from '@/components/evolution/MedicalReturnCard';
 import { SurgeriesCard } from '@/components/evolution/SurgeriesCard';
+import { EvolutionSummaryCard } from '@/components/evolution/EvolutionSummaryCard';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -841,13 +842,14 @@ const PatientEvolution = () => {
 
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <MedicalReturnCard
                   patient={patient}
                   patientId={patientId || undefined}
                   onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
                 />
                 <SurgeriesCard patientId={patientId || undefined} />
+                <EvolutionSummaryCard stats={evolutionStats} />
               </div>
               <EvolutionDraggableGrid
                 soapData={soapData}

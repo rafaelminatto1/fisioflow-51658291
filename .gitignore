@@ -181,6 +181,7 @@ iOSInjectionProject/
 *-firebase-admin.json
 firebase-admin*.json
 *fisioflow-firebase-admin.json
+*-firebase-adminsdk-*.json
 functions/service-account-key.json
 .env.yaml
 

@@ -102,7 +102,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
         {exercise.image_url ? (
           <OptimizedImage
             src={exercise.image_url}
-            alt={exercise.name}
+            alt={exercise.name ?? 'Exercício'}
             className="h-full w-full transition-transform duration-500 group-hover:scale-110"
             aspectRatio="4:3"
             fallback="/placeholder.svg"
@@ -168,7 +168,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
       <div className="p-4 space-y-3">
         <div className="space-y-1">
           <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">
-            {exercise.name}
+            {exercise.name ?? 'Sem nome'}
           </h3>
           {exercise.description && (
             <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
@@ -310,7 +310,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
           {exercise.image_url ? (
             <OptimizedImage
               src={exercise.image_url}
-              alt={exercise.name}
+              alt={exercise.name ?? 'Exercício'}
               className="w-full h-full object-cover"
               aspectRatio="1:1"
               fallback="/placeholder.svg"
@@ -326,7 +326,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
-              {exercise.name}
+              {exercise.name ?? 'Sem nome'}
             </h3>
             {exercise.video_url && (
               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs">
@@ -429,7 +429,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredExercises = useMemo(() => {
-    return exercises.filter(exercise => {
+    return exercises
+      .filter((ex): ex is Exercise => ex != null && typeof ex === 'object')
+      .filter(exercise => {
       // Text search
       const matchesSearch = (exercise.name?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase()) ||
         (exercise.description?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase());

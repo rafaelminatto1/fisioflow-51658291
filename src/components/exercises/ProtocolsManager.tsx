@@ -185,7 +185,7 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <h4 className="font-medium group-hover:text-primary transition-colors">
-                              {protocol.name}
+                              {protocol?.name ?? 'Sem nome'}
                             </h4>
                             {protocol.weeks_total && (
                               <Badge variant="secondary" className="mt-1">

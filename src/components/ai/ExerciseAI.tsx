@@ -19,13 +19,20 @@
  * @module components/ai/ExerciseAI
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
   Dumbbell,
   TrendingUp,
@@ -37,19 +44,23 @@ import {
   Loader2,
   Copy,
   BookOpen,
-  ChevronRight
+  ChevronRight,
+  Users,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Exercise, Patient, SOAPRecord } from '@/types';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+
+const NO_PATIENT_ERROR_MSG =
+  'Abra a IA Assistente no perfil de um paciente para recomendações personalizadas.';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface ExerciseAIProps {
-  /** Patient information */
-  patient: Pick<Patient, 'id' | 'name' | 'birthDate' | 'gender' | 'mainCondition' | 'medicalHistory'> & {
+  /** Patient information (optional when used from Exercises page without patient context) */
+  patient?: Pick<Patient, 'id' | 'name' | 'birthDate' | 'gender' | 'mainCondition' | 'medicalHistory'> & {
     age: number;
   };
   /** Clinical history for context */
@@ -111,6 +122,11 @@ export function ExerciseAI({
   exerciseLibrary = [],
   onExerciseSelect
 }: ExerciseAIProps) {
+  const navigate = useNavigate();
+  const patientName = useMemo(() => patient?.name ?? 'recomendações gerais', [patient?.name]);
+  const patientId = patient?.id;
+  const hasPatient = Boolean(patientId);
+
   // State management
   const [loading, setLoading] = useState(false);
   const [optimisticResult, setOptimisticResult] = useState<ExerciseProgramResponse | null>(null);
@@ -127,6 +143,12 @@ export function ExerciseAI({
     setError(null);
     setProgress(10);
 
+    if (!patientId) {
+      setError('Use a IA Assistente a partir do perfil de um paciente para recomendações personalizadas.');
+      setLoading(false);
+      return;
+    }
+
     // Optimistic UI update
     setOptimisticResult({
       exercises: [],
@@ -139,14 +161,14 @@ export function ExerciseAI({
     try {
       setProgress(30);
 
-      // Build request payload
+      // Build request payload (only when patient exists)
       const payload = {
         patient: {
-          id: patient.id,
-          name: patient.name,
-          age: patient.age,
-          gender: patient.gender,
-          mainCondition: patient.mainCondition,
+          id: patient!.id,
+          name: patient?.name ?? '',
+          age: patient!.age,
+          gender: patient!.gender,
+          mainCondition: patient!.mainCondition,
         },
         soapHistory: soapHistory.slice(-3),
         painMap,
@@ -161,7 +183,7 @@ export function ExerciseAI({
       // Firebase Cloud Functions - aiExerciseSuggestion
       const { getExerciseSuggestions } = await import('@/services/ai/firebaseAIService');
       const result = await getExerciseSuggestions({
-        patientId: patient.id,
+        patientId,
         goals: goals ?? [],
         availableEquipment: availableEquipment ?? [],
         treatmentPhase,
@@ -184,7 +206,7 @@ export function ExerciseAI({
 
       toast({
         title: 'Recomendações geradas!',
-        description: `${data.exercises.length} exercícios sugeridos para ${patient.name}`,
+        description: `${data.exercises.length} exercícios sugeridos para ${patientName}`,
       });
     } catch (err) {
       logger.error('[ExerciseAI] Error', err, 'ExerciseAI');
@@ -200,7 +222,7 @@ export function ExerciseAI({
       setLoading(false);
       setProgress(0);
     }
-  }, [patient, soapHistory, painMap, goals, availableEquipment, treatmentPhase, sessionCount]);
+  }, [patientId, patientName, soapHistory, painMap, goals, availableEquipment, treatmentPhase, sessionCount]);
 
   /**
    * Toggle exercise selection
@@ -245,14 +267,14 @@ export function ExerciseAI({
     if (!finalResult) return;
 
     const text = `
-Programa de Exercícios - ${patient.name}
+Programa de Exercícios - ${patientName}
 
 RACIONAL:
 ${finalResult.programRationale}
 
 EXERCÍCIOS:
 ${finalResult.exercises.map((ex, i) => `
-${i + 1}. ${ex.name}
+${i + 1}. ${ex?.name ?? 'Exercício'}
    - Categoria: ${ex.category}
    - Dificuldade: ${ex.difficulty}
    - Área alvo: ${ex.targetArea}
@@ -281,7 +303,7 @@ ${finalResult.redFlags.map(r => `- ${r}`).join('\n')}
       title: 'Programa copiado!',
       description: 'O programa foi copiado para a área de transferência',
     });
-  }, [finalResult, patient.name]);
+  }, [finalResult, patientName]);
 
   /**
    * Get difficulty badge color
@@ -320,7 +342,22 @@ ${finalResult.redFlags.map(r => `- ${r}`).join('\n')}
 
   return (
     <div className="space-y-6">
-      {/* Header Card */}
+      {/* Sem paciente: estado vazio com CTA para Pacientes */}
+      {!hasPatient && (
+        <Card className="border-2 border-dashed border-muted">
+          <CardContent className="p-6">
+            <EmptyState
+              icon={Users}
+              title="Recomendações personalizadas"
+              description="Para gerar exercícios com IA é preciso estar no perfil de um paciente. Abra um paciente e use a aba IA Assistente na evolução ou no perfil."
+              actionLabel="Ver Pacientes"
+              onAction={() => navigate('/patients')}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Header Card (quando tem paciente ou sempre para manter título) */}
       <Card className="border-2 border-blue-200 dark:border-blue-800">
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -330,30 +367,45 @@ ${finalResult.redFlags.map(r => `- ${r}`).join('\n')}
             <div className="flex-1">
               <CardTitle className="text-2xl">IA de Exercícios</CardTitle>
               <CardDescription>
-                Recomendações personalizadas para {patient.name}
+                {hasPatient
+                  ? `Recomendações personalizadas para ${patientName}`
+                  : 'Selecione um paciente na lista para habilitar a geração.'}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Button
-            onClick={generateRecommendations}
-            disabled={loading}
-            className="w-full"
-            size="lg"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando recomendações...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Gerar Exercícios com IA
-              </>
-            )}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block w-full">
+                  <Button
+                    onClick={generateRecommendations}
+                    disabled={loading || !hasPatient}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Gerando recomendações...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Gerar Exercícios com IA
+                      </>
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                {!hasPatient
+                  ? 'Abra a IA Assistente no perfil de um paciente para gerar recomendações.'
+                  : 'Gera sugestões de exercícios com base no perfil e evolução do paciente.'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {loading && progress > 0 && (
             <div className="mt-4">
@@ -371,18 +423,33 @@ ${finalResult.redFlags.map(r => `- ${r}`).join('\n')}
         <Card className="border-destructive">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-              <div>
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
                 <h3 className="font-semibold">Erro ao gerar recomendações</h3>
-                <p className="text-sm text-muted-foreground">{error}</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={generateRecommendations}
-                >
-                  Tentar novamente
-                </Button>
+                <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {error === NO_PATIENT_ERROR_MSG ? (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setError(null)}>
+                        Entendi
+                      </Button>
+                      <Button size="sm" onClick={() => navigate('/patients')}>
+                        Ver Pacientes
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setError(null);
+                        generateRecommendations();
+                      }}
+                    >
+                      Tentar novamente
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -468,7 +535,7 @@ ${finalResult.redFlags.map(r => `- ${r}`).join('\n')}
                         <div className="flex items-start gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold">{exercise.name}</h4>
+                              <h4 className="font-semibold">{exercise?.name ?? 'Exercício'}</h4>
                               <Badge variant={getDifficultyColor(exercise.difficulty)}>
                                 {getDifficultyLabel(exercise.difficulty)}
                               </Badge>

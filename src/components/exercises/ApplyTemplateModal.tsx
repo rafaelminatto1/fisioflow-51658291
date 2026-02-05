@@ -181,7 +181,7 @@ export function ApplyTemplateModal({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-medium truncate">
-                                  {template.name}
+                                  {template?.name ?? 'Sem nome'}
                                 </h4>
                                 {template.template_variant && (
                                   <Badge variant="secondary" className="text-xs">

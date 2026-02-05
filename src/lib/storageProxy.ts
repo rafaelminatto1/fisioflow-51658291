@@ -22,8 +22,18 @@ export function toProxyUrl(storageUrl: string | null | undefined): string {
   // Check if it's a Firebase Storage URL
   const match = storageUrl.match(FIREBASE_STORAGE_PATTERN);
   if (match && match[1]) {
+    // The encoded path looks like: exercise-media%2Fid%2Ffile.png
+    // Decode it to: exercise-media/id/file.png
     const encodedPath = match[1];
-    return `${PROXY_BASE}/${encodedPath}`;
+    const decodedPath = decodeURIComponent(encodedPath);
+
+    // Always remove the 'exercise-media/' prefix if present
+    // The proxy expects: /api/exercise-image/id/filename
+    const pathWithoutPrefix = decodedPath.startsWith('exercise-media/')
+      ? decodedPath.substring('exercise-media/'.length)
+      : decodedPath;
+
+    return `${PROXY_BASE}/${pathWithoutPrefix}`;
   }
 
   // Not a Firebase Storage URL, return as-is

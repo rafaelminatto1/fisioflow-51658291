@@ -33,45 +33,59 @@ export const exerciseImageProxy = onRequest(
     }
 
     try {
-      // Extract image path from URL: /api/exercise-image/:encodedPath
-      // Normalize to string (Express query can be string | ParsedQs | string[])
-      const raw = request.params[0] || request.query.path;
-      const encodedPath =
-        typeof raw === 'string' ? raw : Array.isArray(raw) ? String(raw[0] ?? '') : '';
+      // Extract image path from URL: /api/exercise-image/{path}
+      // The path can be either:
+      // - id/filename (new format, without exercise-media prefix)
+      // - exercise-media/id/filename (old format, with prefix)
+      const fullPath = request.path || '';
+      console.log('Exercise image proxy - fullPath:', fullPath);
 
-      if (!encodedPath) {
+      let pathSegment = fullPath.replace('/api/exercise-image/', '');
+      console.log('Exercise image proxy - pathSegment:', pathSegment);
+
+      if (!pathSegment) {
         response.status(400).send('Bad Request: Missing image path');
         return;
       }
 
-      // Decode the path (it might be double-encoded)
-      let imagePath: string;
+      // Decode the path if it's URL-encoded
+      let decodedPath: string;
       try {
-        imagePath = decodeURIComponent(encodedPath);
+        decodedPath = decodeURIComponent(pathSegment);
         // If still encoded, decode again
-        if (imagePath.includes('%')) {
-          imagePath = decodeURIComponent(imagePath);
+        if (decodedPath.includes('%')) {
+          decodedPath = decodeURIComponent(decodedPath);
         }
       } catch {
-        imagePath = encodedPath;
+        decodedPath = pathSegment;
       }
 
-      // Validate path format (should be exercise-media/{id}/{filename})
-      if (!imagePath.startsWith('exercise-media/')) {
-        response.status(400).send('Bad Request: Invalid image path format');
-        return;
+      console.log('Exercise image proxy - decodedPath:', decodedPath);
+
+      // Ensure the path starts with 'exercise-media/'
+      let imagePath: string;
+      if (decodedPath.startsWith('exercise-media/')) {
+        imagePath = decodedPath;
+      } else {
+        imagePath = 'exercise-media/' + decodedPath;
       }
+
+      console.log('Exercise image proxy - imagePath:', imagePath);
 
       // Get the bucket
       const bucketName = process.env.STORAGE_BUCKET_NAME || 'fisioflow-migration.firebasestorage.app';
+      console.log('Exercise image proxy - bucketName:', bucketName);
       const bucket = getStorage().bucket(`gs://${bucketName}`);
 
       // Get the file
       const file = bucket.file(imagePath);
+      console.log('Exercise image proxy - file path:', imagePath);
 
       // Check if file exists
       const [exists] = await file.exists();
+      console.log('Exercise image proxy - file exists:', exists);
       if (!exists) {
+        console.log('Exercise image proxy - file not found:', imagePath);
         response.status(404).send('Not Found');
         return;
       }
@@ -89,10 +103,13 @@ export const exerciseImageProxy = onRequest(
       };
       const contentType = contentTypes[extension || ''] || 'image/png';
       response.set('Content-Type', contentType);
+      console.log('Exercise image proxy - content type:', contentType);
 
       // Stream the file to response
+      console.log('Exercise image proxy - starting stream');
       const stream = file.createReadStream();
       stream.pipe(response);
+      console.log('Exercise image proxy - stream piped');
 
       stream.on('error', (error) => {
         console.error('Error streaming image:', error);

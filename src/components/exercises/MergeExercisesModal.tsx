@@ -103,7 +103,7 @@ export function MergeExercisesModal({
                                                 {exercise.image_url ? (
                                                     <img
                                                         src={exercise.image_url}
-                                                        alt={exercise.name}
+                                                        alt={exercise?.name ?? 'Exercício'}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
@@ -116,7 +116,7 @@ export function MergeExercisesModal({
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-medium truncate">{exercise.name}</span>
+                                                    <span className="font-medium truncate">{exercise?.name ?? 'Exercício'}</span>
                                                     {selectedKeepId === exercise.id && (
                                                         <Badge className="bg-primary text-primary-foreground">
                                                             <Check className="h-3 w-3 mr-1" />
@@ -169,7 +169,7 @@ export function MergeExercisesModal({
                                     <div className="space-y-1">
                                         {exercisesToMerge.map((e) => (
                                             <Badge key={e.id} variant="secondary" className="text-xs block">
-                                                {e.name}
+                                                {e?.name ?? 'Exercício'}
                                             </Badge>
                                         ))}
                                     </div>
@@ -178,7 +178,7 @@ export function MergeExercisesModal({
                                 <div className="flex-1 text-center">
                                     <div className="text-sm text-muted-foreground mb-1">Será mantido</div>
                                     <Badge className="bg-primary text-primary-foreground">
-                                        {selectedExercise.name}
+                                        {selectedExercise?.name ?? 'Exercício'}
                                     </Badge>
                                 </div>
                             </div>

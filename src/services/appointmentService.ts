@@ -255,6 +255,8 @@ export class AppointmentService {
             if (updates.notes !== undefined) updateData.notes = updates.notes;
             if (updates.therapist_id !== undefined) updateData.therapist_id = updates.therapist_id;
             if (updates.room !== undefined) updateData.room = updates.room;
+            if (updates.payment_status !== undefined) updateData.payment_status = updates.payment_status;
+            if (updates.payment_amount !== undefined) updateData.payment_amount = updates.payment_amount;
 
             // Handle Date/Time updates
             const updateDate = updates.appointment_date || updates.date;
