@@ -43,7 +43,7 @@ export function ClinicalTestProtocolDialog({
                 </DialogHeader>
                 <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto pr-2">
                     {protocols.length === 0 && !isLoading && (
-                        <p className="text-center py-8 text-slate-400 text-sm italic">
+                        <p className="text-center py-8 text-gray-500 text-sm italic">
                             Nenhum protocolo encontrado.
                         </p>
                     )}

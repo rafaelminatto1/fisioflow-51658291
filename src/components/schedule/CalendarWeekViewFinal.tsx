@@ -168,7 +168,7 @@ export const CalendarWeekViewFinal = memo(({
                     <div className="grid grid-cols-[80px_repeat(7,1fr)] divide-x divide-slate-200">
                         {/* Time Column Header */}
                         <div className="h-24 flex items-center justify-center bg-slate-50">
-                            <Clock className="w-5 h-5 text-slate-400" />
+                            <Clock className="w-5 h-5 text-gray-500" />
                         </div>
 
                         {/* Day Headers */}
@@ -223,7 +223,7 @@ export const CalendarWeekViewFinal = memo(({
                                             </Badge>
                                         )}
                                         {dayAppointments.length > 0 && (
-                                            <span className="text-[10px] text-slate-400">
+                                            <span className="text-[10px] text-gray-500">
                                                 {dayAppointments.length} total
                                             </span>
                                         )}
@@ -257,7 +257,7 @@ export const CalendarWeekViewFinal = memo(({
                                 >
                                     <span className={cn(
                                         "text-xs font-medium",
-                                        isHalfHour ? "text-slate-400" : "text-slate-600"
+                                        isHalfHour ? "text-gray-500" : "text-slate-600"
                                     )}>
                                         {time}
                                     </span>

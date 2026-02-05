@@ -287,7 +287,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       onClick={isRecording ? onStopRecording : onStartRecording}
       className={`p-2 rounded-full transition-colors ${isRecording
         ? 'bg-red-500 text-white animate-pulse'
-        : 'text-gray-400 hover:text-gray-600'
+        : 'text-gray-500 hover:text-gray-600'
         }`}
       title={isRecording ? 'Parar gravação' : 'Gravar mensagem de voz'}
     >
@@ -534,7 +534,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                       <span className="truncate max-w-32">{file.name}</span>
                       <button
                         onClick={() => removeAttachment(index)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-gray-500 hover:text-red-500"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -551,7 +551,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                   <div className="flex items-center space-x-2 mb-2">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
+                      className="p-2 text-gray-500 hover:text-gray-600 rounded-full transition-colors"
                       title="Anexar arquivo"
                     >
                       <Paperclip className="w-5 h-5" />
@@ -569,7 +569,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
 
                     <button
                       onClick={handleExportChat}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
+                      className="p-2 text-gray-500 hover:text-gray-600 rounded-full transition-colors"
                       title="Exportar conversa"
                     >
                       <Download className="w-5 h-5" />
@@ -577,7 +577,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
 
                     <button
                       onClick={() => setShowSatisfactionRating(true)}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
+                      className="p-2 text-gray-500 hover:text-gray-600 rounded-full transition-colors"
                       title="Avaliar atendimento"
                     >
                       <Star className="w-5 h-5" />

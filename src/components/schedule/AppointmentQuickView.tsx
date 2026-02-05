@@ -414,25 +414,25 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
-
-          {canStartAttendance && (
-            <Button
-              onClick={handleStartAttendance}
-              className="flex-1 min-w-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-              size="sm"
-              aria-label={localStatus === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
-            >
-              <span className="flex items-center gap-1.5 truncate">
-                {localStatus === 'avaliacao' ? (
-                  <FileText className="h-4 w-4 shrink-0" />
-                ) : (
-                  <Play className="h-4 w-4 shrink-0" />
-                )}
-                <span className="truncate">{localStatus === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}</span>
-              </span>
-            </Button>
-          )}
         </div>
+
+        {canStartAttendance && (
+          <Button
+            onClick={handleStartAttendance}
+            className="w-full min-w-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+            size="sm"
+            aria-label={localStatus === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              {localStatus === 'avaliacao' ? (
+                <FileText className="h-4 w-4 shrink-0" />
+              ) : (
+                <Play className="h-4 w-4 shrink-0" />
+              )}
+              <span className="truncate">{localStatus === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}</span>
+            </span>
+          </Button>
+        )}
 
         {/* Add to Waitlist Button */}
         <Button
