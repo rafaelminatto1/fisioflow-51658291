@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { prefetchPatientDashboard } from '@/hooks/performance/usePrefetch';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,6 +54,7 @@ function formatLastActivity(stats?: PatientStats): string {
 }
 
 const Patients = () => {
+  const queryClient = useQueryClient();
   const { profile } = useAuth();
   const organizationId = profile?.organization_id;
 
@@ -401,6 +404,7 @@ const Patients = () => {
                     rootMargin="200px"
                   >
                     <Card
+                      onMouseEnter={() => prefetchPatientDashboard(queryClient, patient.id)}
                       className="group flex flex-col gap-3 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors border border-transparent hover:border-border dark:hover:border-slate-700"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
