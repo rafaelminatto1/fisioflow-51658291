@@ -36,7 +36,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
                 "flex flex-col items-center justify-center gap-1 w-[60px] sm:w-16 touch-target transition-all duration-200",
                 isActive
                   ? "text-primary"
-                  : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 active:scale-95"
+                  : "text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 active:scale-95"
               )}
             >
               <div className={cn(
@@ -80,7 +80,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
                 "flex flex-col items-center justify-center gap-1 w-[60px] sm:w-16 touch-target transition-all duration-200",
                 isActive
                   ? "text-primary"
-                  : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 active:scale-95"
+                  : "text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 active:scale-95"
               )}
             >
               <div className={cn(
