@@ -116,20 +116,45 @@ const getCurrentUser = () => {
   return auth.currentUser;
 };
 
+// Fetchers
+export const fetchPatientSurgeries = async (patientId: string) => {
+  const q = firestoreQuery(
+    collection(db, 'patient_surgeries'),
+    where('patient_id', '==', patientId),
+    orderBy('surgery_date', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSurgery[];
+};
+
+export const fetchPatientGoals = async (patientId: string) => {
+  const q = firestoreQuery(
+    collection(db, 'patient_goals'),
+    where('patient_id', '==', patientId),
+    orderBy('created_at', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoal[];
+};
+
+export const fetchPatientPathologies = async (patientId: string) => {
+  const q = firestoreQuery(
+    collection(db, 'patient_pathologies'),
+    where('patient_id', '==', patientId),
+    orderBy('created_at', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPathology[];
+};
+
 // Hook para cirurgias
 export const usePatientSurgeries = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-surgeries', patientId],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_surgeries'),
-        where('patient_id', '==', patientId),
-        orderBy('surgery_date', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSurgery[];
-    },
+    queryFn: () => fetchPatientSurgeries(patientId),
     enabled: !!patientId
   });
 };
@@ -138,16 +163,7 @@ export const usePatientSurgeries = (patientId: string) => {
 export const usePatientGoals = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-goals', patientId],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_goals'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoal[];
-    },
+    queryFn: () => fetchPatientGoals(patientId),
     enabled: !!patientId
   });
 };
@@ -156,16 +172,7 @@ export const usePatientGoals = (patientId: string) => {
 export const usePatientPathologies = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-pathologies', patientId],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_pathologies'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPathology[];
-    },
+    queryFn: () => fetchPatientPathologies(patientId),
     enabled: !!patientId
   });
 };

@@ -131,7 +131,7 @@ export interface SessionTemplate {
 }
 
 // Helper: Convert Firestore doc to SoapRecord
-const convertDocToSoapRecord = (doc: { id: string; data: () => Record<string, unknown> }): SoapRecord => {
+export const convertDocToSoapRecord = (doc: { id: string; data: () => Record<string, unknown> }): SoapRecord => {
   const data = doc.data();
   return {
     id: doc.id,
@@ -140,21 +140,24 @@ const convertDocToSoapRecord = (doc: { id: string; data: () => Record<string, un
   } as SoapRecord;
 };
 
+// Fetcher function for SOAP records
+export const fetchSoapRecords = async (patientId: string, limitValue = 10) => {
+  const q = firestoreQuery(
+    collection(db, 'soap_records'),
+    where('patient_id', '==', patientId),
+    orderBy('record_date', 'desc'),
+    limit(limitValue)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(convertDocToSoapRecord);
+};
+
 // Hook para buscar registros SOAP de um paciente
 export const useSoapRecords = (patientId: string, limitValue = 10) => {
   return useQuery({
     queryKey: soapKeys.list(patientId, { limit: limitValue }),
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'soap_records'),
-        where('patient_id', '==', patientId),
-        orderBy('record_date', 'desc'),
-        limit(limitValue)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToSoapRecord);
-    },
+    queryFn: () => fetchSoapRecords(patientId, limitValue),
     enabled: !!patientId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
