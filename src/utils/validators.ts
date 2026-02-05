@@ -43,6 +43,18 @@ export function parseBrazilianDate(dateStr: string): Date | null {
   return date;
 }
 
+/**
+ * Converte string de data (DD/MM/YYYY ou ISO YYYY-MM-DD) para Date.
+ * Usado quando a API pode retornar formato ISO.
+ */
+export function parseDateFlexible(dateStr: string): Date | null {
+  if (!dateStr || typeof dateStr !== 'string') return null;
+  const brazilian = parseBrazilianDate(dateStr);
+  if (brazilian) return brazilian;
+  const iso = new Date(dateStr);
+  return Number.isNaN(iso.getTime()) ? null : iso;
+}
+
 export function stripNonDigits(value: string): string {
   return value.replace(/\D/g, '');
 }
