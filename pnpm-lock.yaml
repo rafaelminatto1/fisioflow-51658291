@@ -28,7 +28,7 @@ importers:
         version: 3.0.35(react@19.1.0)(zod@3.25.76)
       '@axe-core/playwright':
         specifier: ^4.10.2
-        version: 4.11.0(playwright-core@1.58.0)
+        version: 4.11.0(playwright-core@1.58.1)
       '@capacitor/android':
         specifier: ^7.4.3
         version: 7.4.4(@capacitor/core@8.0.0)
@@ -328,7 +328,7 @@ importers:
         version: 6.2.2
       inngest:
         specifier: ^3.49.1
-        version: 3.49.1(@opentelemetry/core@2.3.0(@opentelemetry/api@1.9.0))(@vercel/node@5.5.16(@swc/core@1.15.10(@swc/helpers@0.5.18))(rollup@2.79.2))(express@5.2.1)(hono@4.11.3)(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.9.3)(zod@3.25.76)
+        version: 3.49.1(@opentelemetry/core@2.3.0(@opentelemetry/api@1.9.0))(@vercel/node@5.5.16(@swc/core@1.15.10(@swc/helpers@0.5.18))(rollup@2.79.2))(express@5.2.1)(hono@4.11.3)(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.9.3)(zod@3.25.76)
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -358,7 +358,7 @@ importers:
         version: 0.462.0(react@19.1.0)
       next:
         specifier: ^16.1.1
-        version: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       next-themes:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -419,6 +419,9 @@ importers:
       react-router-dom:
         specifier: ^6.30.1
         version: 6.30.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-virtualized:
+        specifier: ^9.22.6
+        version: 9.22.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-webcam:
         specifier: ^7.2.0
         version: 7.2.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -499,8 +502,8 @@ importers:
         specifier: ^9.32.0
         version: 9.34.0
       '@playwright/test':
-        specifier: ^1.58.0
-        version: 1.58.0
+        specifier: ^1.58.1
+        version: 1.58.1
       '@sentry/vite-plugin':
         specifier: ^4.6.1
         version: 4.6.1
@@ -585,6 +588,9 @@ importers:
       lovable-tagger:
         specifier: ^1.1.13
         version: 1.1.13(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@22.19.3)(typescript@5.9.3))(vite@5.4.19(@types/node@22.19.3)(lightningcss@1.31.1)(terser@5.44.1))
+      playwright:
+        specifier: ^1.58.1
+        version: 1.58.1
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -3758,8 +3764,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.58.0':
-    resolution: {integrity: sha512-fWza+Lpbj6SkQKCrU6si4iu+fD2dD3gxNHFhUPxsfXBPhnv3rRSQVd0NtBUT9Z/RhF/boCBcuUaMUSTRTopjZg==}
+  '@playwright/test@1.58.1':
+    resolution: {integrity: sha512-6LdVIUERWxQMmUSSQi0I53GgCBYgM2RpGngCPY7hSeju+VrKjq3lvs7HpJoPbDiY5QM5EYRtRX5fvrinnMAz3w==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -6745,6 +6751,10 @@ packages:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
+  clsx@1.2.1:
+    resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
+    engines: {node: '>=6'}
+
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
@@ -8599,6 +8609,7 @@ packages:
   glob@11.1.0:
     resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@13.0.0:
@@ -10847,13 +10858,13 @@ packages:
     resolution: {integrity: sha512-/E57AYkoeQ25qkxMj5PBOVgF8Kiu/h7cYS30Z5+R7WaiCCBfLq58ZI/dSeaEKb9WVJV5n/03QwrN3IeWIFllvw==}
     engines: {node: '>=6'}
 
-  playwright-core@1.58.0:
-    resolution: {integrity: sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==}
+  playwright-core@1.58.1:
+    resolution: {integrity: sha512-bcWzOaTxcW+VOOGBCQgnaKToLJ65d6AqfLVKEWvexyS3AS6rbXl+xdpYRMGSRBClPvyj44njOWoxjNdL/H9UNg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.58.0:
-    resolution: {integrity: sha512-2SVA0sbPktiIY/MCOPX8e86ehA/e+tDNq+e5Y8qjKYti2Z/JG7xnronT/TXTIkKbYGWlCbuucZ6dziEgkoEjQQ==}
+  playwright@1.58.1:
+    resolution: {integrity: sha512-+2uTZHxSCcxjvGc5C891LrS1/NlxglGxzrC4seZiVjcYVQfUa87wBL6rTDqzGjuoWNjnBzRqKmF6zRYGMvQUaQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -11229,6 +11240,9 @@ packages:
       react: 19.1.0
       react-dom: 19.1.0
 
+  react-lifecycles-compat@3.0.4:
+    resolution: {integrity: sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==}
+
   react-markdown@10.1.0:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
@@ -11409,6 +11423,12 @@ packages:
 
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
+    peerDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0
+
+  react-virtualized@9.22.6:
+    resolution: {integrity: sha512-U5j7KuUQt3AaMatlMJ0UJddqSiX+Km0YJxSqbAzIiGw5EmNz0khMyqP2hzgu4+QUtm+QPIrxzUX4raJxmVJnHg==}
     peerDependencies:
       react: 19.1.0
       react-dom: 19.1.0
@@ -13664,10 +13684,10 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@axe-core/playwright@4.11.0(playwright-core@1.58.0)':
+  '@axe-core/playwright@4.11.0(playwright-core@1.58.1)':
     dependencies:
       axe-core: 4.11.0
-      playwright-core: 1.58.0
+      playwright-core: 1.58.1
 
   '@babel/code-frame@7.10.4':
     dependencies:
@@ -17344,9 +17364,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.58.0':
+  '@playwright/test@1.58.1':
     dependencies:
-      playwright: 1.58.0
+      playwright: 1.58.1
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -21291,6 +21311,8 @@ snapshots:
 
   clone@2.1.2: {}
 
+  clsx@1.2.1: {}
+
   clsx@2.1.1: {}
 
   cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
@@ -23693,7 +23715,7 @@ snapshots:
 
   inline-style-parser@0.2.7: {}
 
-  inngest@3.49.1(@opentelemetry/core@2.3.0(@opentelemetry/api@1.9.0))(@vercel/node@5.5.16(@swc/core@1.15.10(@swc/helpers@0.5.18))(rollup@2.79.2))(express@5.2.1)(hono@4.11.3)(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.9.3)(zod@3.25.76):
+  inngest@3.49.1(@opentelemetry/core@2.3.0(@opentelemetry/api@1.9.0))(@vercel/node@5.5.16(@swc/core@1.15.10(@swc/helpers@0.5.18))(rollup@2.79.2))(express@5.2.1)(hono@4.11.3)(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.9.3)(zod@3.25.76):
     dependencies:
       '@bufbuild/protobuf': 2.10.2
       '@inngest/ai': 0.1.7
@@ -23724,7 +23746,7 @@ snapshots:
       '@vercel/node': 5.5.16(@swc/core@1.15.10(@swc/helpers@0.5.18))(rollup@2.79.2)
       express: 5.2.1
       hono: 4.11.3
-      next: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next: 16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       typescript: 5.9.3
     transitivePeerDependencies:
       - '@opentelemetry/core'
@@ -25535,7 +25557,7 @@ snapshots:
 
   next-tick@1.1.0: {}
 
-  next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@next/env': 16.1.1
       '@swc/helpers': 0.5.15
@@ -25555,7 +25577,7 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 16.1.1
       '@next/swc-win32-x64-msvc': 16.1.1
       '@opentelemetry/api': 1.9.0
-      '@playwright/test': 1.58.0
+      '@playwright/test': 1.58.1
       babel-plugin-react-compiler: 1.0.0
       sharp: 0.34.5
     transitivePeerDependencies:
@@ -25978,11 +26000,11 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.58.0: {}
+  playwright-core@1.58.1: {}
 
-  playwright@1.58.0:
+  playwright@1.58.1:
     dependencies:
-      playwright-core: 1.58.0
+      playwright-core: 1.58.1
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -26413,6 +26435,8 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
+  react-lifecycles-compat@3.0.4: {}
+
   react-markdown@10.1.0(@types/react@19.2.9)(react@19.1.0):
     dependencies:
       '@types/hast': 3.0.4
@@ -26677,6 +26701,17 @@ snapshots:
       prop-types: 15.8.1
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+
+  react-virtualized@9.22.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      '@babel/runtime': 7.28.4
+      clsx: 1.2.1
+      dom-helpers: 5.2.1
+      loose-envify: 1.4.0
+      prop-types: 15.8.1
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-lifecycles-compat: 3.0.4
 
   react-webcam@7.2.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
