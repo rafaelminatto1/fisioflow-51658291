@@ -173,15 +173,14 @@ const CalendarAppointmentCardBase = ({
     const rootDraggable = draggable;
 
     const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-
         if (selectionMode && onToggleSelection) {
+            e.stopPropagation();
             onToggleSelection(appointment.id);
             return;
         }
 
-        // NOTA: O onOpenPopover é tratado pelo AppointmentQuickView wrapper
-        // Removemos a chamada direta aqui para evitar duplicação
+        // NÃO usar stopPropagation aqui - permite que o clique chegue ao PopoverTrigger
+        // do AppointmentQuickView wrapper, que é responsável por abrir o popover
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {

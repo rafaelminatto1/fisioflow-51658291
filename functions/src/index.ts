@@ -380,10 +380,23 @@ export const createPerformanceIndexes = onCall(async (request) => {
 });
 
 // AI FUNCTIONS
-// Temporarily commented out due to Genkit API breaking changes
-// TODO: Update to latest Genkit API
-// import { generateExercisePlan } from './ai/flows/exerciseGenerator';
-// export { generateExercisePlan };
+import { generateExercisePlan as generateExercisePlanFlow } from './ai/flows/exerciseGenerator';
+
+export const generateExercisePlan = onCall(
+    { 
+        timeoutSeconds: 120,
+        memory: '1GiB'
+    },
+    async (request) => {
+        try {
+            const result = await generateExercisePlanFlow(request.data);
+            return result;
+        } catch (e: any) {
+            console.error("AI Flow Error:", e);
+            throw new functions.https.HttpsError('internal', e.message || 'Erro na geração do plano');
+        }
+    }
+);
 
 export const aiExerciseSuggestion = onCall(async (request) => {
     const { exerciseSuggestionHandler } = await import('./ai/exercise-suggestion');
