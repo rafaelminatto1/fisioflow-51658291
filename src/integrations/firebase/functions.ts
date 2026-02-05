@@ -669,30 +669,30 @@ export const clinicalApi = {
 export const appointmentsApi = {
   /**
    * Lista agendamentos com filtros opcionais
-   * Usa função callable (listAppointments) em vez de HTTP
+   * Usa HTTP para evitar problemas de CORS com callable functions
    */
   list: (params: AppointmentApi.ListParams = {}): Promise<FunctionResponse<AppointmentApi.Appointment[]>> =>
-    callFunction<AppointmentApi.ListParams, FunctionResponse<AppointmentApi.Appointment[]>>('listAppointments', params),
+    callFunctionHttpWithResponse('listAppointments', params),
 
   /**
    * Obtém um agendamento por ID
-   * Usa função callable (getAppointment) em vez de HTTP (getAppointmentV2)
+   * Usa HTTP para evitar problemas de CORS com callable functions
    */
   get: async (appointmentId: string): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunction<{ id: string }, { data: AppointmentApi.Appointment }>(
-      'getAppointment',
-      { id: appointmentId }
+    const res = await callFunctionHttp<{ appointmentId: string }, { data: AppointmentApi.Appointment }>(
+      'getAppointmentV2',
+      { appointmentId }
     );
     return res.data;
   },
 
   /**
    * Cria um novo agendamento
-   * Usa função callable (createAppointment) em vez de HTTP (createAppointmentV2)
+   * Usa HTTP para evitar problemas de CORS com callable functions
    */
   create: async (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunction<AppointmentApi.CreateData, { data: AppointmentApi.Appointment }>(
-      'createAppointment',
+    const res = await callFunctionHttp<AppointmentApi.CreateData, { data: AppointmentApi.Appointment }>(
+      'createAppointmentV2',
       appointment
     );
     return res.data;
@@ -700,11 +700,11 @@ export const appointmentsApi = {
 
   /**
    * Atualiza um agendamento existente
-   * Usa função callable (updateAppointment) em vez de HTTP (updateAppointmentV2)
+   * Usa HTTP para evitar problemas de CORS com callable functions
    */
   update: async (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunction<{ appointmentId: string } & AppointmentApi.UpdateData, { data: AppointmentApi.Appointment }>(
-      'updateAppointment',
+    const res = await callFunctionHttp<{ appointmentId: string } & AppointmentApi.UpdateData, { data: AppointmentApi.Appointment }>(
+      'updateAppointmentV2',
       { appointmentId, ...updates }
     );
     return res.data;
@@ -712,17 +712,17 @@ export const appointmentsApi = {
 
   /**
    * Cancela um agendamento
-   * Usa função callable (cancelAppointment) em vez de HTTP (cancelAppointmentV2)
+   * Usa HTTP para evitar problemas de CORS com callable functions
    */
   cancel: (appointmentId: string, reason?: string): Promise<{ success: boolean }> =>
-    callFunction('cancelAppointment', { appointmentId, reason }),
+    callFunctionHttp('cancelAppointmentV2', { appointmentId, reason }),
 
   /**
    * Verifica conflitos de horário
-   * Usa função callable (checkTimeConflict) em vez de HTTP (checkTimeConflictV2)
+   * Usa HTTP para evitar problemas de CORS com callable functions
    */
   checkTimeConflict: (params: AppointmentApi.CheckConflictParams): Promise<AppointmentApi.ConflictResult> =>
-    callFunction('checkTimeConflict', params),
+    callFunctionHttp('checkTimeConflictV2', params),
 };
 
 /**
