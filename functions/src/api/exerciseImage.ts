@@ -5,13 +5,15 @@
 
 import { onRequest } from 'firebase-functions/v2/https';
 import { getStorage } from 'firebase-admin/storage';
+import { CORS_ORIGINS } from '../init';
 
 export const exerciseImageProxy = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 50,
-    cors: true,
+    cors: CORS_ORIGINS,
+    invoker: 'public',
   },
   async (request, response) => {
     // Set CORS headers
