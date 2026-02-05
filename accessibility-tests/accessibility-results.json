@@ -1,0 +1,226 @@
+[
+  {
+    "category": "Skip Links",
+    "test": "Skip link present",
+    "passed": true,
+    "details": "Found 6 potential skip link(s)",
+    "severity": "moderate"
+  },
+  {
+    "category": "Skip Links",
+    "test": "Skip link visible on focus",
+    "passed": true,
+    "details": "Skip link becomes visible when focused",
+    "severity": "moderate"
+  },
+  {
+    "category": "Skip Links",
+    "test": "Skip to main content link",
+    "passed": true,
+    "details": "Found link to main content",
+    "severity": "serious"
+  },
+  {
+    "category": "Skip Links",
+    "test": "Skip to navigation link",
+    "passed": false,
+    "details": "Consider adding link to skip to navigation",
+    "severity": "moderate"
+  },
+  {
+    "category": "ARIA Labels",
+    "test": "Icon buttons have accessible names",
+    "passed": true,
+    "details": "All icon buttons have accessible names",
+    "severity": "critical"
+  },
+  {
+    "category": "ARIA Labels",
+    "test": "Form inputs have labels",
+    "passed": true,
+    "details": "All inputs have proper labels",
+    "severity": "critical"
+  },
+  {
+    "category": "ARIA Labels",
+    "test": "Navigation landmarks",
+    "passed": false,
+    "details": "Found 0 navigation landmark(s)",
+    "severity": "serious"
+  },
+  {
+    "category": "ARIA Labels",
+    "test": "ARIA hidden used appropriately",
+    "passed": true,
+    "details": "Found 1 element(s) with aria-hidden=\"true\"",
+    "severity": "moderate"
+  },
+  {
+    "category": "ARIA Labels",
+    "test": "Links have text or aria-label",
+    "passed": true,
+    "details": "Found 0 link(s) without accessible text",
+    "severity": "minor"
+  },
+  {
+    "category": "Keyboard Navigation",
+    "test": "Tab navigation works",
+    "passed": true,
+    "details": "Can navigate through 14 focusable element(s)",
+    "severity": "minor"
+  },
+  {
+    "category": "Keyboard Navigation",
+    "test": "No hidden focus traps",
+    "passed": true,
+    "details": "No visible modals detected",
+    "severity": "moderate"
+  },
+  {
+    "category": "Focus Management",
+    "test": "Visible focus indicators",
+    "passed": true,
+    "details": "Focus indicators are visible",
+    "severity": "critical"
+  },
+  {
+    "category": "Focus Management",
+    "test": "Uses :focus-visible",
+    "passed": true,
+    "details": "Modern focus-visible implementation found",
+    "severity": "moderate"
+  },
+  {
+    "category": "Focus Management",
+    "test": "Focus outlines not removed",
+    "passed": false,
+    "details": "CSS removes outline on :focus - ensure alternative focus indicator is provided",
+    "severity": "serious"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Single h1 per page",
+    "passed": true,
+    "details": "Exactly one h1 found",
+    "severity": "minor"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Proper heading hierarchy",
+    "passed": true,
+    "details": "Headings follow proper hierarchy",
+    "severity": "minor"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Header landmark",
+    "passed": false,
+    "details": "Missing header/banner landmark",
+    "severity": "serious"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Main landmark",
+    "passed": false,
+    "details": "Missing main landmark - critical for screen reader users",
+    "severity": "critical"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Footer landmark",
+    "passed": false,
+    "details": "Missing footer/contentinfo landmark",
+    "severity": "moderate"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Navigation landmark",
+    "passed": false,
+    "details": "Missing navigation landmark",
+    "severity": "serious"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Navigation uses lists",
+    "passed": true,
+    "details": "Navigation(s) use proper list structure",
+    "severity": "minor"
+  },
+  {
+    "category": "Semantic HTML",
+    "test": "Links are properly semantic",
+    "passed": false,
+    "details": "Found 5 placeholder link(s) - consider using button elements",
+    "severity": "moderate"
+  },
+  {
+    "category": "Alt Text",
+    "test": "Images have alt attribute",
+    "passed": true,
+    "details": "All images have alt attribute",
+    "severity": "minor"
+  },
+  {
+    "category": "Alt Text",
+    "test": "Decorative images use empty alt",
+    "passed": true,
+    "details": "0 decorative image(s) with empty alt",
+    "severity": "minor"
+  },
+  {
+    "category": "Alt Text",
+    "test": "SVG icons have accessible names",
+    "passed": false,
+    "details": "Found 4 visible SVG(s) without title/desc or aria-label",
+    "severity": "moderate"
+  },
+  {
+    "category": "Alt Text",
+    "test": "Decorative images marked appropriately",
+    "passed": true,
+    "details": "0 image(s) with role=\"presentation\"",
+    "severity": "minor"
+  },
+  {
+    "category": "Color Contrast",
+    "test": "Text meets WCAG AA standards",
+    "passed": false,
+    "details": "Found 1 potential contrast issue(s)",
+    "severity": "serious"
+  },
+  {
+    "category": "Form Accessibility",
+    "test": "Forms present",
+    "passed": true,
+    "details": "Found 1 form(s)",
+    "severity": "minor"
+  },
+  {
+    "category": "Mobile Accessibility",
+    "test": "Touch targets >= 44x44px",
+    "passed": false,
+    "details": "Found 6 small touch target(s) - WCAG recommends 44x44px minimum",
+    "severity": "moderate"
+  },
+  {
+    "category": "Mobile Accessibility",
+    "test": "Viewport meta tag present",
+    "passed": true,
+    "details": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
+    "severity": "minor"
+  },
+  {
+    "category": "ARIA Validation",
+    "test": "Only valid ARIA attributes used",
+    "passed": true,
+    "details": "All ARIA attributes appear valid",
+    "severity": "minor"
+  },
+  {
+    "category": "ARIA Validation",
+    "test": "Aria-live regions for dynamic content",
+    "passed": true,
+    "details": "Found 1 aria-live region(s) - important for dynamic content updates",
+    "severity": "minor"
+  }
+]
