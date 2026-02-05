@@ -186,15 +186,15 @@ export const TimeSlotCell = memo(({
       {/* z-50 garante que fique acima dos cards de agendamento (que têm z-10+) */}
       {!isBlocked && !isClosed && !isInvalidDrop && !showPreview && (
         <div
-          className="absolute right-0 top-0 bottom-0 w-[28px] z-50 border-l border-transparent hover:border-primary/30 hover:bg-primary/10 transition-all cursor-pointer group/add"
-          aria-label="Adicionar agendamento"
+          className="absolute right-0 top-0 bottom-0 w-[32px] z-50 border-l border-slate-200/50 dark:border-slate-700/50 hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group/add"
+          aria-label="Clique para adicionar agendamento"
           onClick={(e) => {
             e.stopPropagation();
             onTimeSlotClick(day, time);
           }}
         >
           {/* Indicador "+" que aparece no hover */}
-          <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/add:opacity-100 transition-opacity text-primary font-bold text-sm">
+          <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/add:opacity-100 transition-opacity text-primary/70 hover:text-primary font-medium text-lg leading-none">
             +
           </span>
         </div>
