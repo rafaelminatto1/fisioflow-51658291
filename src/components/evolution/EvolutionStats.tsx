@@ -11,6 +11,8 @@ interface EvolutionStatsProps {
         totalMeasurements: number;
         completionRate: number;
     };
+    /** Layout compacto para cards em linha - 2 colunas, fontes maiores, dados visíveis */
+    compact?: boolean;
 }
 
 const STAT_CONFIG = [
@@ -22,21 +24,32 @@ const STAT_CONFIG = [
     { label: 'Sucesso', getVal: (s: EvolutionStatsProps['stats']) => `${s.completionRate}%`, icon: CheckCircle2, colorClasses: { bg: 'from-emerald-500/5', text: 'text-emerald-600 dark:text-emerald-400', icon: 'text-emerald-500/40 group-hover:text-emerald-500/60' } },
 ] as const;
 
-export const EvolutionStats = memo(({ stats }: EvolutionStatsProps) => {
+export const EvolutionStats = memo(({ stats, compact = false }: EvolutionStatsProps) => {
     return (
-        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
+        <div className={compact
+            ? 'grid grid-cols-2 gap-2'
+            : 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4'
+        }>
             {STAT_CONFIG.map((config, idx) => (
                 <div
                     key={idx}
                     className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-2 sm:p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
                 >
                     <div className={ `absolute inset-0 bg-gradient-to-br ${config.colorClasses.bg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity` } />
-                    <div className="relative flex items-center justify-between gap-1">
+                    <div className="relative flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                            <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium truncate">{config.label}</p>
-                            <p className={`text-sm sm:text-lg font-bold ${config.colorClasses.text} mt-0.5 truncate`}>{config.getVal(stats)}</p>
+                            <p className={
+                                compact
+                                    ? 'text-[11px] uppercase tracking-wider text-muted-foreground font-medium'
+                                    : 'text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium truncate'
+                            }>{config.label}</p>
+                            <p className={
+                                compact
+                                    ? `text-base font-bold ${config.colorClasses.text} mt-0.5`
+                                    : `text-sm sm:text-lg font-bold ${config.colorClasses.text} mt-0.5 truncate`
+                            }>{config.getVal(stats)}</p>
                         </div>
-                        <config.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${config.colorClasses.icon} transition-colors flex-shrink-0`} />
+                        <config.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${config.colorClasses.icon} transition-colors flex-shrink-0 shrink-0`} />
                     </div>
                 </div>
             ))}

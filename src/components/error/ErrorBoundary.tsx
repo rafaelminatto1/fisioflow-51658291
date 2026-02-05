@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { trackError } from '../../lib/analytics';
-import { AlertTriangle, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
+import { Bandage, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -108,7 +108,7 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleGoHome = () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/';
   };
 
   handleGoBack = () => {
@@ -178,45 +178,97 @@ ${errorInfo?.componentStack || 'No component stack'}
     };
   };
 
+  /** Detecta o tipo de erro para mensagens e ações contextuais */
+  getErrorType = (): 'chunk' | 'network' | 'data' | 'generic' => {
+    const msg = this.state.error?.message?.toLowerCase() || '';
+    if (msg.includes('failed to fetch dynamically imported module') || msg.includes('importing a module script failed')) {
+      return 'chunk';
+    }
+    if (msg.includes('fetch failed') || msg.includes('network') || msg.includes('failed to fetch')) {
+      return 'network';
+    }
+    if (msg.includes('cannot read properties of undefined') || msg.includes('cannot read property') || msg.includes('of null')) {
+      return 'data';
+    }
+    return 'generic';
+  };
+
+  /** Mensagem contextual baseada no tipo de erro */
+  getErrorMessage = (): string => {
+    switch (this.getErrorType()) {
+      case 'chunk':
+        return 'Atualização disponível. Recarregue a página para obter a versão mais recente.';
+      case 'network':
+        return 'Problema de conexão. Verifique sua internet e tente novamente.';
+      case 'data':
+        return 'Dados incompletos. Tente novamente ou volte ao início.';
+      default:
+        return 'Não se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.';
+    }
+  };
+
+  /** Indica se o botão Voltar faz sentido (histórico com páginas anteriores) */
+  canGoBack = (): boolean => {
+    return typeof window !== 'undefined' && window.history.length > 1;
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
+      const errorType = this.getErrorType();
+      const showReload = errorType === 'chunk' || errorType === 'network' || errorType === 'generic';
+      const showReset = errorType === 'data' || errorType === 'network' || errorType === 'generic';
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
           <Card className="w-full max-w-lg border-0 shadow-2xl bg-white/80 backdrop-blur-sm ring-1 ring-gray-900/5">
             <CardHeader className="text-center pb-2">
-              <div className="mx-auto mb-6 h-20 w-20 bg-red-50 rounded-2xl flex items-center justify-center shadow-inner">
-                <AlertTriangle className="h-10 w-10 text-red-500" />
+              <div className="mx-auto mb-6 h-20 w-20 bg-amber-50 rounded-2xl flex items-center justify-center shadow-inner">
+                <Bandage className="h-10 w-10 text-amber-600" />
               </div>
               <CardTitle className="text-2xl font-bold text-gray-900">
                 Ops! Algo deu errado
               </CardTitle>
               <CardDescription className="text-gray-600 text-base mt-2 max-w-sm mx-auto">
-                Não se preocupe, seus dados estão seguros. Ocorreu um erro inesperado ao processar sua solicitação.
+                {this.getErrorMessage()}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="flex flex-col gap-3">
-                <Button
-                  onClick={this.handleReload}
-                  className="h-12 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-[1.02] text-lg font-medium"
-                >
-                  <RefreshCw className="h-5 w-5 mr-2" />
-                  Recarregar Página
-                </Button>
-
-                <div className="grid grid-cols-2 gap-3">
+                {showReset && (
                   <Button
-                    onClick={this.handleGoBack}
-                    variant="outline"
-                    className="h-11 hover:bg-gray-50 transition-colors border-gray-200"
+                    onClick={this.handleReset}
+                    className="h-12 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-[1.02] text-lg font-medium"
                   >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar
+                    <RefreshCw className="h-5 w-5 mr-2" />
+                    Tentar novamente
                   </Button>
+                )}
+                {showReload && (
+                  <Button
+                    onClick={this.handleReload}
+                    variant={showReset ? 'outline' : 'default'}
+                    className="h-11"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Recarregar Página
+                  </Button>
+                )}
+
+                <div className={`grid gap-3 ${this.canGoBack() ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {this.canGoBack() && (
+                    <Button
+                      onClick={this.handleGoBack}
+                      variant="outline"
+                      className="h-11 hover:bg-gray-50 transition-colors border-gray-200"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar
+                    </Button>
+                  )}
                   <Button
                     onClick={this.handleGoHome}
                     variant="outline"

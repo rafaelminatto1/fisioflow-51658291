@@ -21,6 +21,7 @@ import {
   Clock,
   DollarSign,
   Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 import type { PatientClassification } from '@/hooks/usePatientStats';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ export interface PatientsPageHeaderStats {
   activeCount: number;
   newCount: number;
   completedCount: number;
+  activeByClassification: number;
   inactive7: number;
   inactive30: number;
   inactive60: number;
@@ -175,7 +177,16 @@ export function PatientsPageHeader({
           <AlertTriangle className="h-4 w-4" aria-hidden />
           Resumo por classificação
         </h3>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-7">
+          <StatChip
+            label="Ativos"
+            value={stats.activeByClassification}
+            icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+            variant="success"
+            classification="active"
+            isSelected={classificationFilter === 'active'}
+            onClick={onClassificationFilterChange}
+          />
           <StatChip
             label="Inativos 7d"
             value={stats.inactive7}
@@ -310,7 +321,7 @@ interface StatChipProps {
   label: string;
   value: number;
   icon: React.ReactNode;
-  variant: 'warning' | 'danger' | 'info';
+  variant: 'success' | 'warning' | 'danger' | 'info';
   classification?: PatientClassification;
   isSelected?: boolean;
   onClick?: (classification: PatientClassification | 'all') => void;
@@ -318,6 +329,8 @@ interface StatChipProps {
 
 function StatChip({ label, value, icon, variant, classification, isSelected, onClick }: StatChipProps) {
   const variantClasses = {
+    success:
+      'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200',
     warning:
       'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200',
     danger:

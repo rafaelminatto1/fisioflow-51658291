@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parseBrazilianDate, isValidCPF, isValidPhone, isValidEmail, isValidName } from '@/utils/validators';
+import { parseBrazilianDate, parseDateFlexible, isValidCPF, isValidPhone, isValidEmail, isValidName } from '@/utils/validators';
 
 // ============================================================================
 // VALIDADORES BRASILEIROS
@@ -29,11 +29,11 @@ const nameValidator = z.string().refine(
   { message: 'Nome completo obrigatório (nome + sobrenome)' }
 );
 
-/** Valida data de nascimento (pessoa entre 0 e 120 anos) */
+/** Valida data de nascimento (aceita DD/MM/YYYY ou ISO; pessoa entre 0 e 120 anos) */
 const birthDateValidator = z.string().refine(
   (val) => {
     if (!val) return true; // Opcional
-    const parsed = parseBrazilianDate(val);
+    const parsed = parseDateFlexible(val);
     if (!parsed) return false;
 
     const now = new Date();

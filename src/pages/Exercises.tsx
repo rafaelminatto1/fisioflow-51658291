@@ -17,6 +17,7 @@ import { ExerciseVideoLibrary } from '@/components/exercises/ExerciseVideoLibrar
 import { ExerciseVideoUpload } from '@/components/exercises/ExerciseVideoUpload';
 import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
 import { ExerciseAI } from '@/components/ai/ExerciseAI';
+import { ComponentErrorBoundary } from '@/components/error/ComponentErrorBoundary';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
@@ -332,28 +333,38 @@ export default function Exercises() {
             </div>
 
             <TabsContent value="library" className="m-0 p-3 sm:p-4 md:p-6">
-              <ExerciseLibrary onEditExercise={handleEditExercise} />
+              <ComponentErrorBoundary componentName="ExerciseLibrary">
+                <ExerciseLibrary onEditExercise={handleEditExercise} />
+              </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="videos" className="m-0 p-3 sm:p-4 md:p-6">
-              <ExerciseVideoLibrary onUploadClick={handleUploadClick} />
+              <ComponentErrorBoundary componentName="ExerciseVideoLibrary">
+                <ExerciseVideoLibrary onUploadClick={handleUploadClick} />
+              </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="templates" className="m-0 p-3 sm:p-4 md:p-6">
-              <TemplateManager />
+              <ComponentErrorBoundary componentName="TemplateManager">
+                <TemplateManager />
+              </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="protocols" className="m-0 p-3 sm:p-4 md:p-6">
-              <ProtocolsManager />
+              <ComponentErrorBoundary componentName="ProtocolsManager">
+                <ProtocolsManager />
+              </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="ai" className="m-0 p-0 sm:p-0">
+              <ComponentErrorBoundary componentName="ExerciseAI">
               <ExerciseAI
-                exercises={exercises}
+                exerciseLibrary={exercises}
                 onExerciseSelect={(selectedExercises) => {
                   logger.debug('Exercises selected', { selectedExercises }, 'Exercises');
                 }}
               />
+              </ComponentErrorBoundary>
             </TabsContent>
           </Tabs>
         </Card>

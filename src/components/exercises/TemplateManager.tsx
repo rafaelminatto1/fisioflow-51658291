@@ -40,7 +40,7 @@ const TemplateCard = memo(({
   >
     <div className="flex items-start justify-between mb-2">
       <div className="flex-1">
-        <h4 className="font-medium">{template.name}</h4>
+        <h4 className="font-medium">{template?.name ?? 'Sem nome'}</h4>
         {template.template_variant && (
           <Badge variant="outline" className="mt-1">
             {template.template_variant}

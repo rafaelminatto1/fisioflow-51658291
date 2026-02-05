@@ -54,6 +54,7 @@ import {
   FlaskConical,
   UserCircle,
   MoreHorizontal,
+  Star,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -119,6 +120,7 @@ const financeiroSubmenu = [
 
 const relatoriosSubmenu = [
   { icon: BarChart3, label: 'Dashboard', href: '/reports' },
+  { icon: BarChart3, label: 'BI Avançado (Looker)', href: '/analytics/bi' },
   { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
   { icon: TrendingUp, label: 'Taxa de Comparecimento', href: '/relatorios/comparecimento' },
   { icon: Trophy, label: 'Performance da Equipe', href: '/performance-equipe' },
@@ -132,15 +134,27 @@ const crmSubmenu = [
   { icon: Mail, label: 'Campanhas', href: '/crm/campanhas' },
 ];
 
+const marketingSubmenu = [
+  { icon: Star, label: 'Avaliações Google', href: '/marketing/reviews' },
+];
+
 const configuracoesSubmenu = [
   { icon: Settings, label: 'Geral', href: '/settings' },
   { icon: Calendar, label: 'Google Calendar', href: '/configuracoes/calendario' },
+  { icon: LinkIcon, label: 'Integrações Google', href: '/integrations' },
 ];
 
 const dashboardIaSubmenu = [
   { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
+];
+
+// Google AI Suite - Novas ferramentas integradas
+const googleAiSubmenu = [
+  { icon: Brain, label: 'IA Clínica (Genkit)', href: '/ai/clinical' },
+  { icon: Video, label: 'Lab Movimento (Vision)', href: '/ai/movement' },
+  { icon: FileText, label: 'Scanner Laudos', href: '/ai/scanner' },
 ];
 
 const adminSubmenu = [
@@ -183,6 +197,7 @@ export function Sidebar() {
   const [crmOpen, setCrmOpen] = useState(false);
   const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
   const [dashboardIaOpen, setDashboardIaOpen] = useState(false);
+  const [googleAiOpen, setGoogleAiOpen] = useState(false); // Novo estado
   const [adminOpen, setAdminOpen] = useState(false);
   const [operacionaisOpen, setOperacionaisOpen] = useState(false);
   const [gamificacaoOpen, setGamificacaoOpen] = useState(false);
@@ -200,6 +215,7 @@ export function Sidebar() {
   const isCrmActive = location.pathname.startsWith('/crm');
   const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
+  const isGoogleAiActive = location.pathname.startsWith('/ai/'); // Novo active state
   const isAdminActive = location.pathname.startsWith('/admin');
   const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
@@ -564,6 +580,18 @@ export function Sidebar() {
             location
           })}
 
+          {/* Marketing Submenu */}
+          {renderSubmenu({
+            icon: Star,
+            label: 'Marketing',
+            items: marketingSubmenu,
+            isOpen: false, // Simplificado, pode criar state se quiser
+            onOpenChange: () => {},
+            isActive: location.pathname.startsWith('/marketing'),
+            collapsed,
+            location
+          })}
+
           {/* Operacionais Submenu */}
           {renderSubmenu({
             icon: Layers,
@@ -636,6 +664,18 @@ export function Sidebar() {
             isOpen: dashboardIaOpen || isDashboardIaActive,
             onOpenChange: setDashboardIaOpen,
             isActive: isDashboardIaActive,
+            collapsed,
+            location
+          })}
+
+          {/* Google AI Suite Submenu */}
+          {renderSubmenu({
+            icon: Brain,
+            label: 'Google AI Suite',
+            items: googleAiSubmenu,
+            isOpen: googleAiOpen || isGoogleAiActive,
+            onOpenChange: setGoogleAiOpen,
+            isActive: isGoogleAiActive,
             collapsed,
             location
           })}
