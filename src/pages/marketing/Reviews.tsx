@@ -38,7 +38,7 @@ export default function ReviewsPage() {
                   ))}
                 </div>
               </div>
-              <div className="text-xs text-gray-400">{review.date}</div>
+              <div className="text-xs text-gray-500">{review.date}</div>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700">{review.comment}</p>
