@@ -141,14 +141,19 @@ export default function MedicalRecord() {
                   <Pagination className="mt-4">
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
+                        <button
+                          onClick={() => {
                             if (hasPreviousPage) previousPage();
                           }}
-                          className={!hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
+                          disabled={!hasPreviousPage}
+                          className={!hasPreviousPage
+                            ? 'pointer-events-none opacity-50 flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                            : 'flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer'
+                          }
+                          aria-label="Página anterior"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                        </button>
                       </PaginationItem>
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let pageNum: number;
@@ -158,28 +163,34 @@ export default function MedicalRecord() {
                         else pageNum = currentPage - 2 + i;
                         return (
                           <PaginationItem key={pageNum}>
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                goToPage(pageNum);
-                              }}
-                              isActive={currentPage === pageNum}
+                            <button
+                              onClick={() => goToPage(pageNum)}
+                              aria-label={`Ir para página ${pageNum}`}
+                              aria-current={currentPage === pageNum ? 'page' : undefined}
+                              className={currentPage === pageNum
+                                ? 'flex h-9 w-9 items-center justify-center rounded-md border border-input bg-primary text-primary-foreground hover:bg-primary/90'
+                                : 'flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                              }
                             >
                               {pageNum}
-                            </PaginationLink>
+                            </button>
                           </PaginationItem>
                         );
                       })}
                       <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
+                        <button
+                          onClick={() => {
                             if (hasNextPage) nextPage();
                           }}
-                          className={!hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
+                          disabled={!hasNextPage}
+                          className={!hasNextPage
+                            ? 'pointer-events-none opacity-50 flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                            : 'flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer'
+                          }
+                          aria-label="Próxima página"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>

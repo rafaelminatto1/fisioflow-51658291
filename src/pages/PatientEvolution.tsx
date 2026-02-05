@@ -28,6 +28,7 @@ import {
 import { EvolutionDebugInfo } from '@/components/evolution/EvolutionDebugInfo';
 import { MedicalReturnCard } from '@/components/evolution/MedicalReturnCard';
 import { SurgeriesCard } from '@/components/evolution/SurgeriesCard';
+import { MetasCard } from '@/components/evolution/MetasCard';
 import { EvolutionSummaryCard } from '@/components/evolution/EvolutionSummaryCard';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,15 +61,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
 // Componentes de Evolução
-import { MeasurementForm } from '@/components/evolution/MeasurementForm';
 import { GoalsTracker } from '@/components/evolution/GoalsTracker';
 import { PathologyStatus } from '@/components/evolution/PathologyStatus';
-import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
-import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
-import { EvolutionHistoryTab } from '@/components/evolution/EvolutionHistoryTab';
-import { EvolutionDraggableGrid } from '@/components/evolution/EvolutionDraggableGrid';
 import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
 import {
   EvolutionKeyboardShortcuts,
@@ -84,6 +80,11 @@ const LazyTreatmentAssistant = lazy(() => import('@/components/ai/TreatmentAssis
 const LazyWhatsAppIntegration = lazy(() => import('@/components/whatsapp/WhatsAppIntegration').then(m => ({ default: m.WhatsAppIntegration })));
 const LazyPatientGamification = lazy(() => import('@/components/gamification/PatientGamification').then(m => ({ default: m.PatientGamification })));
 const LazyMeasurementCharts = lazy(() => import('@/components/evolution/MeasurementCharts').then(m => ({ default: m.MeasurementCharts })));
+const LazyEvolutionDraggableGrid = lazy(() => import('@/components/evolution/EvolutionDraggableGrid').then(m => ({ default: m.EvolutionDraggableGrid })));
+const LazyEvolutionHistoryTab = lazy(() => import('@/components/evolution/EvolutionHistoryTab').then(m => ({ default: m.EvolutionHistoryTab })));
+const LazySessionExercisesPanel = lazy(() => import('@/components/evolution/SessionExercisesPanel').then(m => ({ default: m.SessionExercisesPanel })));
+const LazyMeasurementForm = lazy(() => import('@/components/evolution/MeasurementForm').then(m => ({ default: m.MeasurementForm })));
+const LazyPainMapManager = lazy(() => import('@/components/evolution/PainMapManager').then(m => ({ default: m.PainMapManager })));
 
 // Tipo para escala de dor
 export interface PainScaleData {
@@ -842,75 +843,82 @@ const PatientEvolution = () => {
 
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <MedicalReturnCard
                   patient={patient}
                   patientId={patientId || undefined}
                   onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
                 />
                 <SurgeriesCard patientId={patientId || undefined} />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <MetasCard patientId={patientId || undefined} />
                 <EvolutionSummaryCard stats={evolutionStats} />
               </div>
-              <EvolutionDraggableGrid
-                soapData={soapData}
-                onSoapChange={setSoapDataStable}
-                painScaleData={painScale}
-                onPainScaleChange={setPainScale}
-                painHistory={painHistory}
-                showPainTrend={true}
-                onAISuggest={() => setActiveTab('assistente')}
-                onCopyLast={(section) => {
-                  if (previousEvolutions.length > 0) {
-                    const last = previousEvolutions[0];
-                    if (section === 'subjective') setSubjective(last.subjective || '');
-                    if (section === 'objective') setObjective(last.objective || '');
-                    if (section === 'assessment') setAssessment(last.assessment || '');
-                    if (section === 'plan') setPlan(last.plan || '');
+              <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyEvolutionDraggableGrid
+                  soapData={soapData}
+                  onSoapChange={setSoapDataStable}
+                  painScaleData={painScale}
+                  onPainScaleChange={setPainScale}
+                  painHistory={painHistory}
+                  showPainTrend={true}
+                  onAISuggest={() => setActiveTab('assistente')}
+                  onCopyLast={(section) => {
+                    if (previousEvolutions.length > 0) {
+                      const last = previousEvolutions[0];
+                      if (section === 'subjective') setSubjective(last.subjective || '');
+                      if (section === 'objective') setObjective(last.objective || '');
+                      if (section === 'assessment') setAssessment(last.assessment || '');
+                      if (section === 'plan') setPlan(last.plan || '');
+                      toast({
+                        title: 'Copiado',
+                        description: `Texto de ${section} copiado da última sessão.`
+                      });
+                    }
+                  }}
+                  patientId={patientId}
+                  patientPhone={patient?.phone}
+                  soapRecordId={currentSoapRecordId}
+                  requiredMeasurements={requiredMeasurements}
+                  exercises={sessionExercises}
+                  onExercisesChange={setSessionExercises}
+                  onSuggestExercises={() => {
+                    const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, assessment || '');
+                    setSessionExercises(suggestions);
                     toast({
-                      title: 'Copiado',
-                      description: `Texto de ${section} copiado da última sessão.`
+                      title: 'Sugestões Aplicadas',
+                      description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
                     });
-                  }
-                }}
-                patientId={patientId}
-                patientPhone={patient?.phone}
-                soapRecordId={currentSoapRecordId}
-                requiredMeasurements={requiredMeasurements}
-                exercises={sessionExercises}
-                onExercisesChange={setSessionExercises}
-                onSuggestExercises={() => {
-                  const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, assessment || '');
-                  setSessionExercises(suggestions);
-                  toast({
-                    title: 'Sugestões Aplicadas',
-                    description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
-                  });
-                }}
-                onRepeatLastSession={() => {
-                  if (lastSession?.exercises_performed) {
-                    setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
-                    toast({
-                      title: 'Exercícios Repetidos',
-                      description: 'Os exercícios da sessão anterior foram carregados.'
-                    });
-                  }
-                }}
-                lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
-                previousEvolutions={previousEvolutions}
-                onCopyLastEvolution={(evolution) => {
-                  handleCopyPreviousEvolution(evolution);
-                }}
-              />
+                  }}
+                  onRepeatLastSession={() => {
+                    if (lastSession?.exercises_performed) {
+                      setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
+                      toast({
+                        title: 'Exercícios Repetidos',
+                        description: 'Os exercícios da sessão anterior foram carregados.'
+                      });
+                    }
+                  }}
+                  lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
+                  previousEvolutions={previousEvolutions}
+                  onCopyLastEvolution={(evolution) => {
+                    handleCopyPreviousEvolution(evolution);
+                  }}
+                />
+              </Suspense>
             </TabsContent>
 
             {/* ABA 2: AVALIAÇÃO (Medições + Mapa de Dor + Gráficos) */}
             <TabsContent value="avaliacao" className="mt-4 space-y-4">
               {/* Mapa de Dor */}
-              <PainMapManager
-                patientId={patientId || ''}
-                appointmentId={appointmentId}
-                sessionId={currentSoapRecordId}
-              />
+              <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyPainMapManager
+                  patientId={patientId || ''}
+                  appointmentId={appointmentId}
+                  sessionId={currentSoapRecordId}
+                />
+              </Suspense>
 
               {/* Alerta de Medições Pendentes */}
               {pendingRequiredMeasurements.length > 0 && (
@@ -947,11 +955,13 @@ const PatientEvolution = () => {
 
               {/* Formulário de Medição */}
               {patientId && (
-                <MeasurementForm
-                  patientId={patientId}
-                  soapRecordId={currentSoapRecordId}
-                  requiredMeasurements={requiredMeasurements}
-                />
+                <Suspense fallback={<LoadingSkeleton type="card" />}>
+                  <LazyMeasurementForm
+                    patientId={patientId}
+                    soapRecordId={currentSoapRecordId}
+                    requiredMeasurements={requiredMeasurements}
+                  />
+                </Suspense>
               )}
 
               {/* Gráficos de Evolução */}
@@ -964,24 +974,28 @@ const PatientEvolution = () => {
 
             {/* ABA 3: TRATAMENTO (Exercícios + Metas) */}
             <TabsContent value="tratamento" className="mt-4 space-y-4">
-              <SessionExercisesPanel
-                exercises={sessionExercises}
-                onChange={setSessionExercises}
-              />
+              <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazySessionExercisesPanel
+                  exercises={sessionExercises}
+                  onChange={setSessionExercises}
+                />
+              </Suspense>
               <GoalsTracker goals={goals} />
               <PathologyStatus pathologies={pathologies} />
             </TabsContent>
 
             {/* ABA 4: HISTÓRICO (Timeline + Evoluções Anteriores) */}
             <TabsContent value="historico">
-              <EvolutionHistoryTab
-                patientId={patientId || ''}
-                surgeries={surgeries}
-                previousEvolutions={previousEvolutions}
-                onCopyEvolution={handleCopyPreviousEvolution}
-                showComparison={showComparison}
-                onToggleComparison={() => setShowComparison(!showComparison)}
-              />
+              <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyEvolutionHistoryTab
+                  patientId={patientId || ''}
+                  surgeries={surgeries}
+                  previousEvolutions={previousEvolutions}
+                  onCopyEvolution={handleCopyPreviousEvolution}
+                  showComparison={showComparison}
+                  onToggleComparison={() => setShowComparison(!showComparison)}
+                />
+              </Suspense>
             </TabsContent>
 
             {/* ABA 5: ASSISTENTE (IA + WhatsApp + Gamificação) */}

@@ -1,5 +1,5 @@
 import AdvancedAnalytics from "@/components/analytics/AdvancedAnalytics";
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AdvancedReportGenerator } from '@/components/reports/AdvancedReportGenerator';
+
+// Lazy load AdvancedReportGenerator (contém jsPDF - 442KB) - só carrega quando a tab é acessada
+const AdvancedReportGenerator = lazy(() => import('@/components/reports/AdvancedReportGenerator').then(m => ({ default: m.AdvancedReportGenerator })));
 import {
   FileText,
   Download,
@@ -276,7 +278,16 @@ const Reports = () => {
           </TabsList>
 
           <TabsContent value="advanced" className="space-y-6">
-            <AdvancedReportGenerator />
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center space-y-4">
+                  <BarChart3 className="h-12 w-12 text-primary animate-pulse mx-auto" />
+                  <p className="text-muted-foreground">Carregando gerador de relatórios...</p>
+                </div>
+              </div>
+            }>
+              <AdvancedReportGenerator />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
