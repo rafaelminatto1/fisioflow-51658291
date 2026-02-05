@@ -14,6 +14,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getAdminDb, deleteByQuery } from '../init';
 import { FieldPath } from 'firebase-admin/firestore';
+import { sendVoucherExpiringEmail, sendBirthdayEmail } from '../communications/resend-templates';
 
 // ============================================================================
 // EXPIRING VOUCHERS
@@ -99,12 +100,23 @@ export const expiringVouchers = onSchedule({
         };
 
         try {
-          // TODO: Send email reminder
+          // Send email reminder
           if (patient.email) {
-            logger.info('[expiringVouchers] Enviando lembrete por email', {
+            const emailResult = await sendVoucherExpiringEmail(patient.email, {
+              customerName: patient.name || 'Paciente',
+              voucherName: voucher.name || 'Voucher',
+              sessionsRemaining: voucher.sessions_remaining || 0,
+              expirationDate: voucher.expiration_date || sevenDaysFromNow.toISOString(),
+              daysUntilExpiration: 7,
+              organizationName: organization.name || 'FisioFlow',
+            });
+
+            logger.info('[expiringVouchers] Email reminder sent', {
               voucherId: voucher.id,
               patientId: patient.id,
               patientEmail: patient.email,
+              success: emailResult.success,
+              error: emailResult.error,
             });
           }
 
@@ -324,7 +336,7 @@ export const birthdays = onSchedule({
         const therapist = therapistByOrg.get(patient.organization_id);
 
         try {
-          // TODO: Send WhatsApp message
+          // Send WhatsApp message
           if (whatsappEnabled && preferredChannel === 'whatsapp' && patient.phone) {
             logger.info('[birthdays] Enviando mensagem WhatsApp', {
               patientId: patient.id,
@@ -333,13 +345,24 @@ export const birthdays = onSchedule({
             messagesQueued++;
           }
 
-          // TODO: Send email
+          // Send birthday email
           if (emailEnabled && patient.email) {
-            logger.info('[birthdays] Enviando email', {
+            const emailResult = await sendBirthdayEmail(patient.email, {
+              patientName: patient.name || 'Paciente',
+              therapistName: therapist?.displayName || therapist?.name || 'Equipe FisioFlow',
+              clinicName: org?.name || 'FisioFlow',
+            });
+
+            logger.info('[birthdays] Birthday email sent', {
               patientId: patient.id,
               patientEmail: patient.email,
+              success: emailResult.success,
+              error: emailResult.error,
             });
-            messagesQueued++;
+
+            if (emailResult.success) {
+              messagesQueued++;
+            }
           }
 
           // Log birthday greeting sent
