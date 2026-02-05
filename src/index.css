@@ -499,6 +499,12 @@ All colors MUST be HSL.
      ======================================== */
 
   /* Focus visible styles - better keyboard navigation */
+  /* This implementation preserves accessibility while providing a cleaner visual experience:
+   * - :focus-visible shows outline for keyboard navigation (WCAG 2.4.7)
+   * - :focus:not(:focus-visible) hides outline for mouse/touch users
+   * - Screen readers still announce focus state regardless of visual outline
+   * - This follows WCAG's "Focus Visible" understanding document guidelines
+   */
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
