@@ -20,6 +20,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db, collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
 import { PainEvolutionData, PainMapRecord, PainMapPoint } from '@/types/painMap';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PainMigrationPattern {
   fromRegion: string;
@@ -774,7 +775,7 @@ async function getPainAssessments(
   }
 
   const snapshot = await getDocs(q);
-  const records: PainMapRecord[] = snapshot.docs.map(doc => doc.data() as PainMapRecord);
+  const records: PainMapRecord[] = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()) as PainMapRecord);
 
   // Converter para PainEvolutionData
   return records.map(record => ({

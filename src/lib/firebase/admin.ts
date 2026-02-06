@@ -8,6 +8,7 @@
  */
 
 import * as admin from 'firebase-admin';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 let dbInstance: admin.firestore.Firestore | null = null;
 let authInstance: admin.auth.Auth | null = null;
@@ -141,7 +142,7 @@ export async function getDocumentOrThrow<T = Record<string, unknown>>(
     throw new Error(errorMessage || `Document ${collectionPath}/${docId} not found`);
   }
 
-  return { id: doc.id, ...doc.data() } as T;
+  return { id: doc.id, ...normalizeFirestoreData(doc.data()) } as T;
 }
 
 /**

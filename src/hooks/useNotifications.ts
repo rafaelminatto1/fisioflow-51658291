@@ -8,6 +8,7 @@ import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, w
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
@@ -26,7 +27,7 @@ export interface Notification {
 
 // Helper: Convert Firestore doc to Notification
 const convertDocToNotification = (doc: QueryDocumentSnapshot): Notification => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

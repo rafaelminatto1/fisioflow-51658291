@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, orderBy, limit, getDocs, db } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface LoginAttempt {
   id: string;
@@ -29,7 +30,7 @@ export function useSecurityMonitoring() {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as LoginAttempt[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as LoginAttempt[];
     },
     staleTime: 30 * 1000,
   });
@@ -40,7 +41,7 @@ export function useSecurityMonitoring() {
       const q = firestoreQuery(collection(db, 'suspicious_login_activity'));
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SuspiciousActivity[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as SuspiciousActivity[];
     },
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000, // Refresh every minute

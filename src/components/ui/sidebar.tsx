@@ -8,14 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { sidebarMenuButtonVariants } from "@/lib/ui-variants"
-import { useSidebar, useSidebarProvider, SidebarContext } from "@/hooks/useSidebar"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { sidebarMenuButtonVariants } from '@/lib/ui-variants';
+import { useSidebar, useSidebarProvider, SidebarContext } from '@/hooks/useSidebar';
 
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"

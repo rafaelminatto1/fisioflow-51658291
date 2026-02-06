@@ -10,6 +10,7 @@
 import { getPool } from '../../init';
 import { logger } from 'firebase-functions';
 
+import {
   Migration,
   MigrationRecord,
   MigrationResult,

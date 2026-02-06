@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Convenio {
   id: string;
@@ -26,7 +27,7 @@ export type ConvenioFormData = Pick<Convenio, 'nome' | 'cnpj' | 'telefone' | 'em
 
 // Helper: Convert Firestore doc to Convenio
 const convertDocToConvenio = (doc: { id: string; data: () => Record<string, unknown> }): Convenio => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

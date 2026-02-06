@@ -2,6 +2,7 @@ import { db, collection, addDoc, getDocs, query as firestoreQuery } from '@/inte
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface WhatsAppMessage {
   to: string;
@@ -183,7 +184,7 @@ export class WhatsAppService {
       const snapshot = await getDocs(q);
 
       return snapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         return {
           id: doc.id,
           template_key: data.template_key,
@@ -477,7 +478,7 @@ Bem-vindo! 💙`;
       );
       const snapshot = await getDocs(q);
 
-      const metrics = snapshot.docs.map(doc => doc.data());
+      const metrics = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const totalSent = metrics.length;
       const delivered = metrics.filter(m => m.status === 'entregue' || m.status === 'enviado').length;

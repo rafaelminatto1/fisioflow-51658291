@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type CommunicationType = 'email' | 'whatsapp' | 'sms' | 'push';
 
@@ -47,7 +48,7 @@ const convertDocToCommunication = (
   doc: { id: string; data: () => Record<string, unknown> },
   patientData?: { id: string; full_name: string; email: string | null; phone: string | null } | null
 ): Communication => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -67,7 +68,7 @@ export function useCommunications(filters?: { channel?: string; status?: string 
 
       // Apply filters via client-side filtering after query
       const snapshot = await getDocs(baseQuery);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Communication[];
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Communication[];
 
       // Filter by channel
       if (filters?.channel && filters.channel !== 'all') {
@@ -109,7 +110,7 @@ export function useCommunicationStats() {
     queryKey: ['communication-stats'],
     queryFn: async () => {
       const snapshot = await getDocs(collection(db, 'communication_logs'));
-      const data = snapshot.docs.map(doc => doc.data()) as Array<{
+      const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())) as Array<{
         status?: CommunicationStatus;
         type?: CommunicationType;
         [key: string]: unknown;

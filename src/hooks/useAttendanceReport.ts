@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type PeriodFilter = 'week' | 'month' | 'quarter' | 'year' | 'custom';
 export type StatusFilter = 'all' | 'concluido' | 'faltou' | 'cancelado';
@@ -169,7 +170,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       );
 
       const snapshot = await getDocs(baseQuery);
-      let appointmentsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let appointmentsList = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Apply therapist filter
       if (filters.therapistId && filters.therapistId !== 'all') {
@@ -433,7 +434,7 @@ export const useTherapists = () => {
       );
 
       const snapshot = await getDocs(q);
-      const userRoles = snapshot.docs.map(doc => doc.data()) as UserRole[];
+      const userRoles = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())) as UserRole[];
 
       const userIds = [...new Set(userRoles.map((ur: UserRole) => ur.user_id))];
 

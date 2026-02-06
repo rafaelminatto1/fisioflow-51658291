@@ -19,6 +19,7 @@ import { weeklySummaryWorkflow } from '../../inngest/workflows/weekly-summary.js
 import { expiringVouchersWorkflow } from '../../inngest/workflows/expiring-vouchers.js';
 import { dataIntegrityWorkflow } from '../../inngest/workflows/data-integrity.js';
 import { sendNotificationWorkflow } from '../../inngest/workflows/notifications.js';
+import {
 
   sendEmailWorkflow,
   sendAppointmentConfirmationWorkflow,

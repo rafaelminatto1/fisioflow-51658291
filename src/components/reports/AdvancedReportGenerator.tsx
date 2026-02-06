@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
 
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ import { parseResponseDate } from '@/utils/dateUtils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type ReportType = 'appointments' | 'financial' | 'patients' | 'analytics' | 'complete';
 type ExportFormat = 'pdf' | 'csv' | 'json';
@@ -61,7 +63,7 @@ export function AdvancedReportGenerator() {
     const snapshot = await getDocs(q);
     const data: AppointmentData[] = [];
     snapshot.forEach((doc) => {
-      const appointmentData = doc.data();
+      const appointmentData = normalizeFirestoreData(doc.data());
       // For now, we'll just get the basic data. Patient names would need to be fetched separately.
       data.push({
         id: doc.id,

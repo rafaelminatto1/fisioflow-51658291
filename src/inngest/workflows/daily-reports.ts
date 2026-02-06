@@ -9,6 +9,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Organization {
   id: string;
@@ -54,7 +55,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
         .where('active', '==', true)
         .get();
 
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
     });
 
     if (organizations.length === 0) {
@@ -96,7 +97,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
                 .where('receive_daily_reports', '==', true)
                 .get();
 
-              const therapists = therapistsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              const therapists = therapistsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
               if (therapists.length === 0) {
                 return {
@@ -116,7 +117,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
                 .where('created_at', '<', today.toISOString())
                 .get();
 
-              const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
               // Generate report data
               const reportData = {

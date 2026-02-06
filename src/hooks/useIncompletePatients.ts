@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query as firestoreQuery, where, orderBy, onSnapshot, db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface IncompletePatient {
   id: string;
@@ -33,7 +34,7 @@ export const useIncompletePatients = () => {
         try {
           // Map full_name to name for the frontend
           const mappedPatients = snapshot.docs.map(doc => {
-            const data = doc.data();
+            const data = normalizeFirestoreData(doc.data());
             return {
               id: doc.id,
               name: data.full_name,

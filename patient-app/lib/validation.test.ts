@@ -2,6 +2,7 @@
  * Validation Utilities Tests
  */
 
+import {
   validators,
   isValidEmail,
   getPasswordStrength,

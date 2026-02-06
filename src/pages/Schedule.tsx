@@ -27,6 +27,7 @@ import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
+import {
 
   AlertDialog,
   AlertDialogAction,

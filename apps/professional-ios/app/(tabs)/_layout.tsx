@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 
+import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, orderBy, addDoc, db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
@@ -30,7 +31,7 @@ export const useStandardizedTests = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       interface TestItem {
         test_type?: 'oswestry' | 'lysholm' | 'dash';

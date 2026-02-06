@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
+import {
 
   CommandDialog,
   CommandEmpty,
@@ -12,6 +13,7 @@ import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } fr
 import { Search, Calendar, Users, Briefcase } from 'lucide-react';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface EventoRecord {
   id: string;
@@ -80,7 +82,7 @@ export function GlobalSearch() {
         const eventosSnapshot = await getDocs(eventosQuery);
 
         eventosSnapshot.forEach((doc) => {
-          const evento = { id: doc.id, ...doc.data() } as EventoRecord;
+          const evento = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as EventoRecord;
           if (
             evento.nome?.toLowerCase().includes(queryLower) ||
             evento.local?.toLowerCase().includes(queryLower)
@@ -107,7 +109,7 @@ export function GlobalSearch() {
         const participantesSnapshot = await getDocs(participantesQuery);
 
         participantesSnapshot.forEach((doc) => {
-          const participante = { id: doc.id, ...doc.data() } as ParticipanteRecord;
+          const participante = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as ParticipanteRecord;
           if (participante.nome?.toLowerCase().includes(queryLower)) {
             filteredEventResults.push({
               id: participante.id,
@@ -128,7 +130,7 @@ export function GlobalSearch() {
         const prestadoresSnapshot = await getDocs(prestadoresQuery);
 
         prestadoresSnapshot.forEach((doc) => {
-          const prestador = { id: doc.id, ...doc.data() } as PrestadorRecord;
+          const prestador = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as PrestadorRecord;
           if (prestador.nome?.toLowerCase().includes(queryLower)) {
             filteredEventResults.push({
               id: prestador.id,

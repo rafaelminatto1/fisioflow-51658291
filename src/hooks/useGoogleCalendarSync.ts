@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Appointment } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import {
 
   GoogleCalendarSync,
   GoogleOAuthToken,

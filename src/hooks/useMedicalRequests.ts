@@ -12,8 +12,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
 
 export interface MedicalRequestFile {
   id: string;

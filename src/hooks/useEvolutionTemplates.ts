@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface EvolutionTemplate {
   id: string;
@@ -25,7 +26,7 @@ export type EvolutionTemplateFormData = Omit<EvolutionTemplate, 'id' | 'created_
 
 // Helper to convert Firestore doc to EvolutionTemplate
 const convertDocToEvolutionTemplate = (doc: { id: string; data: () => Record<string, unknown> }): EvolutionTemplate => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

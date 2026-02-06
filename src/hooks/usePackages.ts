@@ -8,12 +8,13 @@ import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestore
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { FinancialService } from '@/services/financialService';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
 // Helper to convert doc
 const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T =>
-  ({ id: doc.id, ...doc.data() } as T);
+  ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
 
 export interface SessionPackage {
   id: string;
@@ -76,7 +77,7 @@ export function useSessionPackages() {
       const snapshot = await getDocs(q);
 
       return snapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         return {
           id: doc.id,
           name: data.package_name || data.name,
@@ -435,4 +436,3 @@ export function useDeactivatePackage() {
     },
   });
 }
-
