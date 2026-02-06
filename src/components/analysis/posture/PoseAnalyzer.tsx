@@ -1,3 +1,6 @@
+
+// Type definitions for @mediapipe/pose (UMD module)
+
 import React, { useEffect, useRef, useState } from 'react';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { calculateAngle, POSE_LANDMARKS } from '@/utils/geometry';
@@ -7,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause, Camera, Upload } from 'lucide-react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Type definitions for @mediapipe/pose (UMD module)
 interface PoseOptions {
     locateFile?: (file: string) => string;
 }

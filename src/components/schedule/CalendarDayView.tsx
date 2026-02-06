@@ -10,7 +10,7 @@ import { DropTargetPreviewCard } from './DropTargetPreviewCard';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 import { getOverlapStackPosition, DEFAULT_APPOINTMENT_DURATION_MINUTES } from '@/lib/calendar';
-import {
+
   calculateCardWidthPercent,
   calculateCardOffsetPercent,
   shouldShowText,

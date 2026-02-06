@@ -1,3 +1,6 @@
+
+// Importação dinâmica para não quebrar no Expo Go sem prebuild
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -5,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
 
-// Importação dinâmica para não quebrar no Expo Go sem prebuild
 const HealthConnect: any = null;
 try {
   // HealthConnect = require('react-native-health-connect');

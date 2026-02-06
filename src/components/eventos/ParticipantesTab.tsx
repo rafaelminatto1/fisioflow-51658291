@@ -8,7 +8,7 @@ import { Plus, Trash2, Download, FileText } from 'lucide-react';
 import { exportParticipantesPDF } from '@/lib/export/pdfExport';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import {
+
   Table,
   TableBody,
   TableCell,

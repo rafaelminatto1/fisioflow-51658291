@@ -8,14 +8,16 @@
  * @module lib/validation-utils
  */
 
-import { z } from 'zod';
-import type { UnknownError } from '@/types';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Safe parse wrapper that returns null on validation failure
  * Useful for optional data that may not always be present
  */
+
+import { z } from 'zod';
+import type { UnknownError } from '@/types';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export function validateOrNull<T>(
   schema: z.ZodType<T>,
   data: unknown,

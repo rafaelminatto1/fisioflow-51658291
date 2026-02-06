@@ -3,9 +3,7 @@
  * Gerencia webhooks de entrada com verificação de assinatura
  */
 
-import { createHmac, timingSafeEqual } from 'crypto';
 
-import type { Webhook, WebhookDelivery, WebhookEvent } from '@/types/integrations';
 
 // ============================================================================
 // Webhook Signature Verification
@@ -14,6 +12,10 @@ import type { Webhook, WebhookDelivery, WebhookEvent } from '@/types/integration
 /**
  * Gera assinatura HMAC para webhook
  */
+
+import { createHmac, timingSafeEqual } from 'crypto';
+import type { Webhook, WebhookDelivery, WebhookEvent } from '@/types/integrations';
+
 export function generateWebhookSignature(
   payload: string,
   secret: string,

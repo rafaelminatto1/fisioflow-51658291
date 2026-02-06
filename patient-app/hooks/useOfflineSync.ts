@@ -3,10 +3,10 @@
  * Integrates offline manager and network status
  */
 
-import {useState, useEffect} from 'react';
-import {getOfflineManager, SyncStatus} from '@/lib/offlineManager';
-import {useNetworkStatus} from './useNetworkStatus';
-import {useAuthStore} from '@/store/auth';
+import { useState, useEffect } from 'react';
+import { getOfflineManager, SyncStatus } from '@/lib/offlineManager';
+import { useNetworkStatus } from './useNetworkStatus';
+import { useAuthStore } from '@/store/auth';
 
 export function useOfflineSync() {
   const {user} = useAuthStore();

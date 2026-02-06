@@ -3,12 +3,14 @@
  * Testa as operações CRUD e APIs do Supabase
  */
 
+
+// Carregar variáveis de ambiente manualmente
+
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-// Carregar variáveis de ambiente manualmente
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const envPath = join(__dirname, '.env');

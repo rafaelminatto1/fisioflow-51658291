@@ -10,11 +10,6 @@
  * @version 1.0.0 - Firebase Functions v2
  */
 
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { logger } from 'firebase-functions';
-import { getAdminDb, deleteByQuery } from '../init';
-import { FieldPath } from 'firebase-admin/firestore';
-import { sendVoucherExpiringEmail, sendBirthdayEmail } from '../communications/resend-templates';
 
 // ============================================================================
 // EXPIRING VOUCHERS
@@ -29,6 +24,13 @@ import { sendVoucherExpiringEmail, sendBirthdayEmail } from '../communications/r
  *
  * Schedule: "every day 10:00"
  */
+
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { logger } from 'firebase-functions';
+import { getAdminDb, deleteByQuery } from '../init';
+import { FieldPath } from 'firebase-admin/firestore';
+import { sendVoucherExpiringEmail, sendBirthdayEmail } from '../communications/resend-templates';
+
 export const expiringVouchers = onSchedule({
   schedule: 'every day 10:00',
   region: 'southamerica-east1',

@@ -4,7 +4,6 @@
  * Evita erros em runtime quando JSON está malformado ou corrompido.
  */
 
-import { fisioLogger } from '@/lib/errors/logger';
 
 /**
  * Parse seguro de JSON com fallback
@@ -13,6 +12,9 @@ import { fisioLogger } from '@/lib/errors/logger';
  * @param fallback - Valor a retornar em caso de erro
  * @returns Objeto parseado ou fallback
  */
+
+import { fisioLogger } from '@/lib/errors/logger';
+
 export function safeJsonParse<T>(json: string | null | undefined, fallback: T): T {
   if (json === null || json === undefined) {
     return fallback;

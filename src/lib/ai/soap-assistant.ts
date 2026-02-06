@@ -8,10 +8,6 @@
  * @version 2.0.0
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { z } from 'zod';
-import type { SOAPRecord, Patient } from '@/types';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
@@ -20,6 +16,12 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 /**
  * Patient context for SOAP generation
  */
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { z } from 'zod';
+import type { SOAPRecord, Patient } from '@/types';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export interface PatientSOAPContext {
   /** Patient basic information */
   patient: Pick<Patient, 'id' | 'name' | 'birthDate' | 'gender' | 'mainCondition' | 'medicalHistory'> & {

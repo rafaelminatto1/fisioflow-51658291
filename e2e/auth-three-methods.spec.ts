@@ -3,6 +3,7 @@
  * - Login por email: fluxo completo com credenciais.
  * - Botões OAuth (Google, Apple): presença e acessibilidade; popup não é concluído em E2E.
  */
+
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 

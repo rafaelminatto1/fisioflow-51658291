@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Timestamp } from '@/integrations/firebase/app';
 import { fisioLogger } from '@/lib/errors/logger';
 
-import {
   createTimeEntry,
   updateTimeEntry,
   deleteTimeEntry,

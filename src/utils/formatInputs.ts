@@ -2,7 +2,6 @@
  * Utilitários para formatação de inputs (CPF, telefone, etc)
  */
 
-import { cleanCPF, cleanPhone } from '@/lib/validations';
 
 /**
  * Formata CPF com máscara: 000.000.000-00
@@ -13,6 +12,9 @@ import { cleanCPF, cleanPhone } from '@/lib/validations';
  * formatCPF('123.456.789-01') // '123.456.789-01'
  * formatCPF('') // ''
  */
+
+import { cleanCPF, cleanPhone } from '@/lib/validations';
+
 export const formatCPF = (value: string | null | undefined): string => {
   if (!value || typeof value !== 'string') return '';
 

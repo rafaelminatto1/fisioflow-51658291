@@ -1,11 +1,13 @@
 
+
+// Re-export specific hook type
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { exerciseService, type ExerciseFilters } from '@/services/exercises';
 import type { Exercise } from '@/types';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Re-export specific hook type
 export type { Exercise };
 
 export const useExercises = (filters?: ExerciseFilters) => {

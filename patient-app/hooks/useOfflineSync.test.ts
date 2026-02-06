@@ -2,9 +2,11 @@
  * useOfflineSync Hook Tests
  */
 
-import { useOfflineSync } from './useOfflineSync';
 
 // Mock dependencies
+
+import { useOfflineSync } from './useOfflineSync';
+
 jest.mock('@/lib/offlineManager', () => ({
   getOfflineManager: jest.fn(() => Promise.resolve({
     initialize: jest.fn(),

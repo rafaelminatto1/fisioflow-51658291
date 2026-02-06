@@ -2,12 +2,10 @@
  * useEmpresasParceiras - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export interface EmpresaParceira {
   id: string;

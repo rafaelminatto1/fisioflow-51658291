@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMedicalRequests } from '@/hooks/useMedicalRequests';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

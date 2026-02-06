@@ -3,14 +3,16 @@
  * Translation and localization support
  */
 
+
+/**
+ * Supported languages
+ */
+
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { AppStorage } from './storage';
 import { log } from './logger';
 
-/**
- * Supported languages
- */
 export const SUPPORTED_LANGUAGES = {
   'pt-BR': { name: 'Português (Brasil)', flag: '🇧🇷' },
   'en-US': { name: 'English (US)', flag: '🇺🇸' },

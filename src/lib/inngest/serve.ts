@@ -7,10 +7,11 @@
  * Works with Firebase Hosting or any Node.js server
  */
 
-import { serve } from 'inngest/next';
-import { inngest } from './client.js';
 
 // Import all workflows
+
+import { serve } from 'inngest/next';
+import { inngest } from './client.js';
 import { cleanupWorkflow } from '../../inngest/workflows/cleanup.js';
 import { birthdayMessagesWorkflow } from '../../inngest/workflows/birthdays.js';
 import { dailyReportsWorkflow } from '../../inngest/workflows/daily-reports.js';
@@ -18,7 +19,7 @@ import { weeklySummaryWorkflow } from '../../inngest/workflows/weekly-summary.js
 import { expiringVouchersWorkflow } from '../../inngest/workflows/expiring-vouchers.js';
 import { dataIntegrityWorkflow } from '../../inngest/workflows/data-integrity.js';
 import { sendNotificationWorkflow } from '../../inngest/workflows/notifications.js';
-import {
+
   sendEmailWorkflow,
   sendAppointmentConfirmationWorkflow,
   sendAppointmentReminderEmailWorkflow,

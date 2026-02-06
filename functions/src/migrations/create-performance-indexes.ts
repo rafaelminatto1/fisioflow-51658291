@@ -3,10 +3,12 @@
  * Otimiza queries comuns no PostgreSQL
  */
 
+
+// Firebase Functions v2 CORS - explicitly list allowed origins
+
 import { onCall } from 'firebase-functions/v2/https';
 import { getPool, DB_PASS_SECRET, DB_USER_SECRET, DB_NAME_SECRET, DB_HOST_IP_SECRET, DB_HOST_IP_PUBLIC_SECRET } from '../init';
 
-// Firebase Functions v2 CORS - explicitly list allowed origins
 const CORS_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
   /moocafisio\.com\.br$/,

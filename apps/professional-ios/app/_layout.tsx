@@ -1,10 +1,12 @@
+
+// Custom themes with FisioFlow brand colors
+// Based on Activity Fisioterapia logo - Baby Blue palette
+
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 
-// Custom themes with FisioFlow brand colors
-// Based on Activity Fisioterapia logo - Baby Blue palette
 const FisioFlowLightTheme = {
   ...DefaultTheme,
   colors: {

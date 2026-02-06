@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, XCircle, MinusCircle, Info } from 'lucide-react';
-
 import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';
 import { goalProfiles } from '@/lib/goals/goalProfiles';
 import { evaluateGoals } from '@/lib/goals/goalEngine';

@@ -6,13 +6,15 @@
  * @module integrations/telemedicine
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { firestore } from 'firebase-admin';
-import * as logger from 'firebase-functions/logger';
 
 /**
  * Cloud Function: Criar sala de telemedicina
  */
+
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { firestore } from 'firebase-admin';
+import * as logger from 'firebase-functions/logger';
+
 export const createTelemedicineRoom = onCall({
   cors: true,
   memory: '256MiB',

@@ -2,6 +2,7 @@
  * Firebase Multi-Factor Authentication (MFA) Implementation
  *
  */
+
 import { multiFactor } from 'firebase/auth';
 import { getFirebaseAuth, db, doc, getDoc, updateDoc, query as firestoreQuery, where, getDocs, collection, limit } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';

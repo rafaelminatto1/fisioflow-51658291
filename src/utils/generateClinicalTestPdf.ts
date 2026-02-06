@@ -1,9 +1,11 @@
+
+// Type extension for jsPDF with getNumberOfPages method
+
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-// Type extension for jsPDF with getNumberOfPages method
 interface jsPDFWithPageCount extends jsPDF {
   getNumberOfPages(): number;
 }

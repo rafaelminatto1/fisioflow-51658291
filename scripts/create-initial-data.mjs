@@ -1,7 +1,9 @@
+
+// Initialize with your service account
+
 import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 
-// Initialize with your service account
 const serviceAccount = JSON.parse(
   readFileSync('./fisioflow-migration-firebase-adminsdk.json', 'utf8')
 );

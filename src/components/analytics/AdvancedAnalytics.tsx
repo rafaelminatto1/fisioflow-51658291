@@ -5,6 +5,7 @@ import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from
 import type { Timestamp } from '@/integrations/firebase/app';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
+
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 // Types for analytics data

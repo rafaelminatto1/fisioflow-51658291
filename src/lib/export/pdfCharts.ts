@@ -1,4 +1,5 @@
 // Utilitário para adicionar gráficos aos PDFs usando Chart.js e html2canvas
+
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { fisioLogger as logger } from '@/lib/errors/logger';

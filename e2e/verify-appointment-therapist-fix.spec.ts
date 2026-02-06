@@ -5,6 +5,7 @@
  *
  * Usa testUsers.rafael (Firebase válido); fallback admin se .env.test tiver credenciais.
  */
+
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 

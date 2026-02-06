@@ -1,6 +1,8 @@
-import { test, expect } from '@playwright/test';
 
 // Usar a URL de produção
+
+import { test, expect } from '@playwright/test';
+
 const PRODUCTION_URL = 'https://www.moocafisio.com.br';
 
 // Gerar email aleatório para evitar duplicatas

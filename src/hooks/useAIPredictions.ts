@@ -2,9 +2,9 @@
  * useAIPredictions - Migrated to Firebase
  *
  */
+
 import { useMutation } from '@tanstack/react-query';
-import { httpsCallable } from 'firebase/functions';
-import { getFunctions } from 'firebase/functions';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 import { toast } from '@/hooks/use-toast';
 import { getFirebaseApp } from '@/integrations/firebase/app';
 

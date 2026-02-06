@@ -3,7 +3,6 @@
  * Middleware para verificação de tokens do Firebase App Check
  */
 
-import { HttpsError } from 'firebase-functions/v2/https';
 
 /**
  * Verifica se a requisição possui um token do App Check válido
@@ -24,6 +23,9 @@ import { HttpsError } from 'firebase-functions/v2/https';
  * });
  * ```
  */
+
+import { HttpsError } from 'firebase-functions/v2/https';
+
 export function verifyAppCheck(request: { app?: any; rawRequest?: any }): void {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.FUNCTIONS_EMULATOR !== 'true';
 

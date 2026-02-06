@@ -1,5 +1,5 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { ErrorPageLayout } from '@/components/error/ErrorPageLayout';
 

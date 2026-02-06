@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { collection, query, getDocs, orderBy as firestoreOrderBy, deleteDoc, doc } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import {
+
     AlertCircle,
     HeartPulse,
     Plus,

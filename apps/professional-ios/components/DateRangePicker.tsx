@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, differenceInMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { useTheme } from '@/hooks/useTheme';

@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, TrendingDown, TrendingUp, AlertCircle, RefreshCw, Lightbulb } from 'lucide-react';
-import { useAI } from '@/integrations/firebase/ai';
+import { useAI, AIFeatureCategory } from '@/integrations/firebase/ai';
 import { DashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AIFeatureCategory } from '@/integrations/firebase/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface AIInsightsWidgetProps {

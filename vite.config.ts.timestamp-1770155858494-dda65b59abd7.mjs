@@ -1,11 +1,13 @@
 // vite.config.ts
-import { sentryVitePlugin } from "file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@sentry+vite-plugin@4.6.1/node_modules/@sentry/vite-plugin/dist/esm/index.mjs";
-import { defineConfig } from "file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.19.3_lightningcss@1.31.1_terser@5.44.1/node_modules/vite/dist/node/index.js";
-import react from "file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitejs+plugin-react-swc@3.11.0_@swc+helpers@0.5.18_vite@5.4.19_@types+node@22.19.3_lightningcss@1.31.1_terser@5.44.1_/node_modules/@vitejs/plugin-react-swc/index.js";
-import path from "path";
-import { componentTagger } from "file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/lovable-tagger@1.1.13_ts-node@10.9.1_@swc+core@1.15.10_@swc+helpers@0.5.18__@types+node@22.19_4jcoo2lacvjpud4ddxaht6qlhe/node_modules/lovable-tagger/dist/index.js";
-import { visualizer } from "file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/rollup-plugin-visualizer@6.0.5_rolldown@1.0.0-beta.52_rollup@2.79.2/node_modules/rollup-plugin-visualizer/dist/plugin/index.js";
-import viteCompression from "file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/vite-plugin-compression@0.5.1_vite@5.4.19_@types+node@22.19.3_lightningcss@1.31.1_terser@5.44.1_/node_modules/vite-plugin-compression/dist/index.mjs";
+
+import { sentryVitePlugin } from 'file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@sentry+vite-plugin@4.6.1/node_modules/@sentry/vite-plugin/dist/esm/index.mjs';
+import { defineConfig } from 'file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.19.3_lightningcss@1.31.1_terser@5.44.1/node_modules/vite/dist/node/index.js';
+import react from 'file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitejs+plugin-react-swc@3.11.0_@swc+helpers@0.5.18_vite@5.4.19_@types+node@22.19.3_lightningcss@1.31.1_terser@5.44.1_/node_modules/@vitejs/plugin-react-swc/index.js';
+import path from 'path';
+import { componentTagger } from 'file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/lovable-tagger@1.1.13_ts-node@10.9.1_@swc+core@1.15.10_@swc+helpers@0.5.18__@types+node@22.19_4jcoo2lacvjpud4ddxaht6qlhe/node_modules/lovable-tagger/dist/index.js';
+import { visualizer } from 'file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/rollup-plugin-visualizer@6.0.5_rolldown@1.0.0-beta.52_rollup@2.79.2/node_modules/rollup-plugin-visualizer/dist/plugin/index.js';
+import viteCompression from 'file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/vite-plugin-compression@0.5.1_vite@5.4.19_@types+node@22.19.3_lightningcss@1.31.1_terser@5.44.1_/node_modules/vite-plugin-compression/dist/index.mjs';
+
 var __vite_injected_original_dirname = "/home/rafael/antigravity/fisioflow/fisioflow-51658291";
 function htmlPlugin(appVersion, buildTime, isProduction) {
   return {
