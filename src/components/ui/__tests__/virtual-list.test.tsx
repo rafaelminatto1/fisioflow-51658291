@@ -7,7 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, renderHook, act } from '@testing-library/react';
-import { VirtualizedList, useVirtualizedList } from '@/components/ui/virtualized-list';
+import { VirtualizedList } from '@/components/ui/virtualized-list';
+import { useVirtualizedList } from '@/hooks/ui/useVirtualizedList';
 
 global.IntersectionObserver = vi.fn(() => ({
   observe: vi.fn(),

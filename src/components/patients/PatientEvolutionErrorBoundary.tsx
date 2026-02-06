@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, ArrowLeft, Bug, Copy, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -121,7 +120,7 @@ const OS_PATTERNS: Record<string, RegExp> = {
  * </PatientEvolutionErrorBoundary>
  * ```
  */
-export class PatientEvolutionErrorBoundary extends Component<Props, State> {
+class PatientEvolutionErrorBoundaryImpl extends Component<Props, State> {
   private resetTimer?: ReturnType<typeof setTimeout>;
 
   constructor(props: Props) {
@@ -461,6 +460,10 @@ ${errorInfo?.componentStack || 'No component stack'}
       </div>
     );
   }
+}
+
+export function PatientEvolutionErrorBoundary(props: Props) {
+  return <PatientEvolutionErrorBoundaryImpl {...props} />;
 }
 
 // ============================================================================

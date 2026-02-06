@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 
 /**
  * Wrapper para testes que precisam de QueryClient
