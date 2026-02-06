@@ -2,6 +2,7 @@
  * Gantt Chart - Cálculo de Caminho Crítico
  * Algoritmo para identificar tarefas críticas que determinam a duração mínima do projeto
  */
+import {
 
   GanttTask,
   GanttDependency,

@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface SurveyData {
   nps_score?: number | null;
@@ -89,7 +90,7 @@ export interface OccupancyReport {
 
 // Helper function to convert Firestore doc
 const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => {
-  return { id: doc.id, ...doc.data() };
+  return { id: doc.id, ...normalizeFirestoreData(doc.data()) };
 };
 
 // Função auxiliar para calcular NPS
@@ -99,7 +100,7 @@ async function calculateNPS(): Promise<number> {
       collection(db, 'satisfaction_surveys')
     );
     const snapshot = await getDocs(q);
-    const surveys = snapshot.docs.map(doc => doc.data());
+    const surveys = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
     if (!surveys || surveys.length === 0) {
       return 0;
@@ -182,7 +183,7 @@ async function calculateExerciseAdherence(patientId?: string): Promise<number> {
       return sessionSnap.size > 0 ? 50 : 0; // Valor base se tem histórico mas sem agendamentos recentes
     }
 
-    const appts = apptSnapshot.docs.map(doc => doc.data());
+    const appts = apptSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
     const completed = appts.filter((a: any) =>
       ['concluido', 'atendido', 'completed', 'realizado'].includes((a.status || '').toLowerCase())
@@ -227,7 +228,7 @@ export function useDashboardKPIs(period: string = 'month') {
         where('paid_at', '<=', endDate)
       );
       const paymentsSnap = await getDocs(paymentsQ);
-      const payments = paymentsSnap.docs.map(doc => doc.data());
+      const payments = paymentsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const monthlyRevenue = payments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
 
@@ -238,7 +239,7 @@ export function useDashboardKPIs(period: string = 'month') {
         where('start_time', '<=', endDate)
       );
       const appointmentsSnap = await getDocs(appointmentsQ);
-      const appointments = appointmentsSnap.docs.map(doc => doc.data());
+      const appointments = appointmentsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const totalAppointments = appointments.length;
       const completedAppointments = appointments.filter((a: AppointmentData) => a.status === 'atendido').length;
@@ -290,7 +291,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
         where('paid_at', '<=', endDate + 'T23:59:59')
       );
       const paymentsSnap = await getDocs(paymentsQ);
-      const payments = paymentsSnap.docs.map(doc => doc.data());
+      const payments = paymentsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const totalRevenue = payments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
 
@@ -309,7 +310,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
         where('started_at', '<=', endDate + 'T23:59:59')
       );
       const sessionsSnap = await getDocs(sessionsQ);
-      const sessions = sessionsSnap.docs.map(doc => doc.data());
+      const sessions = sessionsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const therapistMap: Record<string, { name: string; revenue: number; sessions: number }> = {};
       sessions.forEach((s: SessionData) => {
@@ -344,7 +345,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
         where('created_at', '<=', endDate + 'T23:59:59')
       );
       const pendingSnap = await getDocs(pendingQ);
-      const pendingPayments = pendingSnap.docs.map(doc => doc.data());
+      const pendingPayments = pendingSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const totalPending = pendingPayments.reduce((sum: number, p: PaymentData) => sum + (p.amount || 0), 0);
       const delinquencyRate = (totalRevenue + totalPending) > 0
@@ -391,7 +392,7 @@ export function usePatientEvolution(patientId: string | undefined) {
         orderBy('started_at', 'asc')
       );
       const sessionsSnap = await getDocs(sessionsQ);
-      const sessions = sessionsSnap.docs.map(doc => doc.data());
+      const sessions = sessionsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const totalSessions = sessions.length;
 
@@ -459,7 +460,7 @@ export function useOccupancyReport(startDate: string, endDate: string) {
         where('start_time', '<=', endDate + 'T23:59:59')
       );
       const appointmentsSnap = await getDocs(appointmentsQ);
-      const appointments = appointmentsSnap.docs.map(doc => doc.data());
+      const appointments = appointmentsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const dayOccupancy: Record<string, { total: number; occupied: number }> = {
         'Segunda': { total: 0, occupied: 0 },
@@ -550,7 +551,7 @@ async function getRevenueChart(
     where('paid_at', '<=', endDate)
   );
   const snapshot = await getDocs(q);
-  const data = snapshot.docs.map(doc => doc.data());
+  const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
   const revenueByDate: Record<string, number> = {};
   data.forEach((p: PaymentData) => {

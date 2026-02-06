@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, getDocs, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ContaFinanceira {
   id: string;
@@ -63,7 +64,7 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
         }
 
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
+        return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ContaFinanceira[];
       } catch (error) {
         // Se a coleção não existir ainda, retorna array vazio
         logger.warn('[useContasFinanceiras] Collection does not exist yet', error, 'useContasFinanceiras');
@@ -198,7 +199,7 @@ export function useResumoFinanceiro() {
     queryKey: ['resumo-financeiro'],
     queryFn: async () => {
       const snapshot = await getDocs(collection(db, 'contas_financeiras'));
-      const contas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContaFinanceira[];
+      const contas = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ContaFinanceira[];
 
       const hoje = new Date().toISOString().split('T')[0];
 

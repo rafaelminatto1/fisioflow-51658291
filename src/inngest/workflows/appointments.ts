@@ -6,6 +6,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type AppointmentWithRelations = {
   id: string;
@@ -48,8 +49,8 @@ async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Pro
   }
 
   // Buscar dados relacionados em lote
-  const patientIds = snapshot.docs.map(doc => doc.data().patient_id).filter(Boolean);
-  const orgIds = snapshot.docs.map(doc => doc.data().organization_id).filter(Boolean);
+  const patientIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).patient_id).filter(Boolean);
+  const orgIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).organization_id).filter(Boolean);
 
   const [patientMap, orgMap] = await Promise.all([
     batchFetchDocuments('patients', patientIds),

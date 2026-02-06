@@ -16,6 +16,7 @@ import { GlobalSearch } from '@/components/eventos/GlobalSearch';
 import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
 
   DropdownMenu,
   DropdownMenuContent,

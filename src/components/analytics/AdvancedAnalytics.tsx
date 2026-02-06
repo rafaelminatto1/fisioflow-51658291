@@ -65,7 +65,7 @@ export default function AdvancedAnalytics() {
       ]);
 
       const transactions: TransactionRecord[] = [];
-      transactionsSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() } as TransactionRecord));
+      transactionsSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as TransactionRecord));
 
       const totalRevenue = transactions.reduce((sum, t) =>
         t.tipo === 'receita' ? sum + (t.valor || 0) : sum, 0
@@ -76,7 +76,7 @@ export default function AdvancedAnalytics() {
       ) || 0;
 
       const appointments: AppointmentRecord[] = [];
-      appointmentsSnapshot.forEach((doc) => appointments.push({ id: doc.id, ...doc.data() } as AppointmentRecord));
+      appointmentsSnapshot.forEach((doc) => appointments.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as AppointmentRecord));
 
       const thisMonth = new Date();
       thisMonth.setDate(1);
@@ -110,7 +110,7 @@ export default function AdvancedAnalytics() {
 
       const snapshot = await getDocs(q);
       const data: AppointmentRecord[] = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() } as AppointmentRecord));
+      snapshot.forEach((doc) => data.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as AppointmentRecord));
 
       const monthlyData: Record<string, { total: number; completed: number; cancelled: number }> = {};
 
@@ -134,7 +134,7 @@ export default function AdvancedAnalytics() {
 
       const statusCount: Record<string, number> = {};
       snapshot.forEach((doc) => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         const status = data.status || 'unknown';
         statusCount[status] = (statusCount[status] || 0) + 1;
       });
@@ -156,7 +156,7 @@ export default function AdvancedAnalytics() {
 
       const snapshot = await getDocs(q);
       const data: TransactionRecord[] = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() } as TransactionRecord));
+      snapshot.forEach((doc) => data.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as TransactionRecord));
 
       const monthlyData: Record<string, { receita: number; despesa: number }> = {};
 
@@ -234,6 +234,7 @@ export default function AdvancedAnalytics() {
 
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
 import { Sparkles, Brain, AlertCircle, TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
       <Tabs defaultValue="appointments" className="w-full">
         <TabsList className="grid w-full grid-cols-4">

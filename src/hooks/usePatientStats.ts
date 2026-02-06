@@ -12,6 +12,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { differenceInDays } from 'date-fns';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PatientStats {
   sessionsCompleted: number;
@@ -284,7 +285,7 @@ function classifyPatient(stats: ClassificationStats): PatientClassification {
 
 // Helper to convert Firestore doc to Appointment
 const convertDocToAppointment = (doc: { id: string; data: () => Record<string, unknown> }): Appointment => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -293,7 +294,7 @@ const convertDocToAppointment = (doc: { id: string; data: () => Record<string, u
 
 // Helper to convert Firestore doc to SOAPRecord
 const convertDocToSOAPRecord = (doc: { id: string; data: () => Record<string, unknown> }): SOAPRecord => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
