@@ -15,6 +15,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface OptimizedQueryOptions {
   table: string; // Maps to Collection
@@ -239,7 +240,7 @@ export function useOptimizedQuery<T = unknown>(
 
       const q = firestoreQuery(collection(db, table), ...constraints);
       const snapshot = await getDocs(q);
-      const result = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
+      const result = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as T[];
 
       if (isMounted.current) {
         setData(result);
@@ -363,7 +364,7 @@ export function usePaginatedQuery<T = unknown>(
 
     const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
     const snapshot = await getDocs(q);
-    const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
+    const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as T[];
 
     const from = (page - 1) * pageSize;
     const to = from + pageSize;
@@ -488,7 +489,7 @@ export function useInfiniteQuery<T = unknown>(
 
       const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
       const snapshot = await getDocs(q);
-      const newData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
+      const newData = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as T[];
 
       if (!snapshot.empty) {
         setLastDoc(snapshot.docs[snapshot.docs.length - 1]);

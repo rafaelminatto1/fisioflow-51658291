@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
 
     Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
 } from '@/components/ui/tooltip';
@@ -26,6 +27,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { useQuery } from '@tanstack/react-query';
 import { ClipboardCheck } from 'lucide-react';
 import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface ProtocolDetailViewProps {
     protocol: ExerciseProtocol;
@@ -76,9 +78,9 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                 const snapshot = await getDocs(q);
                 results.push(...snapshot.docs.map(doc => ({
                     id: doc.id,
-                    name: doc.data().name,
-                    target_joint: doc.data().target_joint,
-                    category: doc.data().category,
+                    name: normalizeFirestoreData(doc.data()).name,
+                    target_joint: normalizeFirestoreData(doc.data()).target_joint,
+                    category: normalizeFirestoreData(doc.data()).category,
                 })));
             }
 

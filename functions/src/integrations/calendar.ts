@@ -10,7 +10,8 @@
 // Configuração do Google Calendar
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import * as admin, { firestore } from 'firebase-admin';
+import * as admin from 'firebase-admin';
+import { firestore } from 'firebase-admin';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as logger from 'firebase-functions/logger';

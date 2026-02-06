@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Cake, Gift, Phone, Mail, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Aniversariante {
   id: string;
@@ -46,7 +47,7 @@ export default function AniversariantesPage() {
 
       // Filtrar por mês e calcular dados
       return snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
         .filter((p: PatientDocument) => {
           if (!p.birth_date) return false;
           const birthMonth = new Date(p.birth_date).getMonth() + 1;

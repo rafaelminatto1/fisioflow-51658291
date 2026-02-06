@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PatientObjective {
   id: string;
@@ -41,7 +42,7 @@ export function usePatientObjectives() {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientObjective[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientObjective[];
     },
   });
 }
@@ -59,7 +60,7 @@ export function usePatientAssignedObjectives(patientId: string | undefined) {
       );
 
       const snapshot = await getDocs(q);
-      const assignments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const assignments = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Fetch objective data for each assignment
       const assignmentsWithObjectives = await Promise.all(

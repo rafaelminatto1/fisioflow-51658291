@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { BusinessHour, BlockedTime } from './useScheduleSettings';
 import { useAuth } from './useAuth';
 import { generateTimeSlots, TimeSlotInfo } from '@/utils/scheduleHelpers';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type { TimeSlotInfo };
 
@@ -40,7 +41,7 @@ export function useAvailableTimeSlots(date: Date | null) {
         orderBy('day_of_week')
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as BusinessHour[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as BusinessHour[];
     },
     enabled: !!organizationId,
   });
@@ -54,7 +55,7 @@ export function useAvailableTimeSlots(date: Date | null) {
         where('organization_id', '==', organizationId)
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as BlockedTime[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as BlockedTime[];
     },
     enabled: !!organizationId,
   });

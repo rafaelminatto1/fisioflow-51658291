@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface EmpresaParceira {
   id: string;
@@ -22,7 +23,7 @@ export interface EmpresaParceira {
 
 // Helper to convert Firestore doc to EmpresaParceira
 const convertDocToEmpresaParceira = (doc: { id: string; data: () => Record<string, unknown> }): EmpresaParceira => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

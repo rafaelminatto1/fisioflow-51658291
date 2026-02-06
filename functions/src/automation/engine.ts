@@ -10,6 +10,7 @@ import * as logger from 'firebase-functions/logger';
 import * as admin from 'firebase-admin';
 import { Firestore } from 'firebase-admin/firestore';
 
+import {
   Automation,
   AutomationAction,
   AutomationExecutionLog,

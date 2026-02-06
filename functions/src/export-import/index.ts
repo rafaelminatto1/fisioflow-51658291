@@ -3,14 +3,14 @@
  * Functions for exporting and importing patient data
  */
 
-// @ts-expect-error - csv-writer may not have types
-// @ts-expect-error - csv-parser may not have types
-
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
 import { getPool } from '../init';
+
+// @ts-expect-error - csv-writer may not have types
 import * as csv from 'csv-writer';
+// @ts-expect-error - csv-parser may not have types
 import * as parser from 'csv-parser';
 
 const logger = getLogger('export-import');

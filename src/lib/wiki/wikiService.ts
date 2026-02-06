@@ -2,6 +2,7 @@
  * Wiki Service - Firebase Firestore Integration
  * Serviço para gerenciamento de páginas wiki
  */
+import {
 
   collection,
   doc,
@@ -25,6 +26,7 @@ import type {
   WikiPageVersion,
   WikiComment,
 } from '@/types/wiki';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const COLLECTION_NAME = 'wiki_pages';
 const VERSIONS_COLLECTION = 'wiki_versions';
@@ -105,7 +107,7 @@ export async function getWikiPageBySlug(
   }
 
   const doc = querySnapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as WikiPage;
+  return { id: doc.id, ...normalizeFirestoreData(doc.data()) } as WikiPage;
 }
 
 /**
@@ -196,7 +198,7 @@ export async function getWikiPages(
 
   return querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
   })) as WikiPage[];
 }
 
@@ -234,7 +236,7 @@ export function listenToWikiPages(
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const pages = snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     })) as WikiPage[];
     callback(pages);
   });
@@ -284,7 +286,7 @@ export async function getWikiPageVersions(
 
   return querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
   })) as WikiPageVersion[];
 }
 
@@ -358,7 +360,7 @@ export async function getWikiComments(
 
   return querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
   })) as WikiComment[];
 }
 
@@ -380,7 +382,7 @@ export function listenToWikiComments(
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const comments = snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     })) as WikiComment[];
     callback(comments);
   });

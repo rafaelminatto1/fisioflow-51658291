@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface AuditLog {
   id: string;
@@ -37,7 +38,7 @@ export interface AuditFilters {
 
 // Helper to convert Firestore doc to AuditLog
 const convertDocToAuditLog = (doc: { id: string; data: () => Record<string, unknown> }): AuditLog => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -248,7 +249,7 @@ export function useBackups() {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as BackupLog[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as BackupLog[];
     },
     staleTime: 60 * 1000, // 1 minuto
   });

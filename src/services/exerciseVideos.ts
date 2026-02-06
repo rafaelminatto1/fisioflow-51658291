@@ -6,6 +6,7 @@ import { db, collection, getDocs, query, where, orderBy, limit as limitClause, a
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const storage = getFirebaseStorage();
 const auth = getFirebaseAuth();
@@ -155,7 +156,7 @@ export const exerciseVideosService = {
       const q = firestoreQuery(collection(db, 'exercise_videos'), ...constraints);
       const querySnapshot = await getDocs(q);
 
-      let videos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ExerciseVideo[];
+      let videos = querySnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ExerciseVideo[];
 
       // Client-side filtering for search term (Firestore doesn't support ILIKE)
       if (filters?.searchTerm) {
@@ -204,7 +205,7 @@ export const exerciseVideosService = {
       );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ExerciseVideo[];
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ExerciseVideo[];
     } catch (error) {
       logger.error('[exerciseVideosService] getVideosByExerciseId error', error, 'exerciseVideos');
       throw error;

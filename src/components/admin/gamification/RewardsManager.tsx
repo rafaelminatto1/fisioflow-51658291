@@ -11,6 +11,7 @@ import { Loader2, Plus, Pencil, Trash2, Gift, Package } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type Reward = {
     id: string;
@@ -52,7 +53,7 @@ export default function RewardsManager() {
             querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
                 rewards.push({
                     id: doc.id,
-                    ...doc.data()
+                    ...normalizeFirestoreData(doc.data())
                 } as Reward);
             });
 
