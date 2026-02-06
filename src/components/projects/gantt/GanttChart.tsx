@@ -212,7 +212,6 @@ export function GanttChart({
   const handleExport = useCallback(() => {
     try {
       const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 20;
 
       // Header
@@ -250,7 +249,7 @@ export function GanttChart({
         variant: 'destructive',
       });
     }
-  }, [tasks, toast]);
+  }, [tasks]);
 
   // Render
   const totalWidth = timeCells.length * getColumnWidth(zoom);

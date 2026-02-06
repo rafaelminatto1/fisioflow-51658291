@@ -16,7 +16,7 @@ import { ptBR } from 'date-fns/locale';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
@@ -53,18 +53,21 @@ export default function StartSessionScreen() {
   });
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    loadAppointment();
-    subscribeToAppointment();
-
-    return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
+  const loadAppointment = useCallback(async () => {
+    try {
+      const docRef = doc(db, 'appointments', appointmentId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setAppointment({ id: docSnap.id, ...docSnap.data() } as Appointment);
       }
-    };
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading appointment:', error);
+      setLoading(false);
+    }
   }, [appointmentId]);
 
-  const subscribeToAppointment = () => {
+  const subscribeToAppointment = useCallback(() => {
     const docRef = doc(db, 'appointments', appointmentId);
     return onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -77,8 +80,6 @@ export default function StartSessionScreen() {
         if (apt.status === 'em_andamento' && data.started_at) {
           const startedAt = data.started_at.toDate();
           const now = new Date();
-          const elapsed = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
-
           setTimerState({
             status: 'running',
             startedAt,
@@ -96,7 +97,19 @@ export default function StartSessionScreen() {
         }
       }
     });
-  };
+  }, [appointmentId]);
+
+  useEffect(() => {
+    loadAppointment();
+    const unsubscribe = subscribeToAppointment();
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      unsubscribe?.();
+    };
+  }, [loadAppointment, subscribeToAppointment]);
 
   const startTimerInterval = (startedAt: Date, pausedAt: Date | null, totalPausedTime: number) => {
     if (timerIntervalRef.current) {
@@ -432,13 +445,13 @@ function ActionCard({
   loading,
   colors,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   description: string;
   color: string;
   onPress: () => void;
   loading?: boolean;
-  colors: any;
+  colors: { text: string; textSecondary: string };
 }) {
   return (
     <Pressable onPress={onPress} disabled={loading}>
