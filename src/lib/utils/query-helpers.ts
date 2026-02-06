@@ -8,7 +8,7 @@
 // TIMEOUT & RETRY HELPERS
 // ==============================================================================
 
-import { db, query as firestoreQuery, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
+import { query as firestoreQuery, where, orderBy, limit, startAfter, Query, CollectionReference } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 

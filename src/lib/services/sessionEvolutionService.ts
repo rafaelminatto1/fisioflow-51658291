@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
-import type { SessionEvolution, EvolutionChartFormData } from '@/types/evolution';
+import type { SessionEvolution } from '@/types/evolution';
 
 export class SessionEvolutionService {
   static async calculateSessionNumber(patientId: string, recordDate: string): Promise<number> {

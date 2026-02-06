@@ -18,8 +18,7 @@
  */
 
 import React, { ComponentType, ReactNode } from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import ErrorBoundary, { ErrorBoundaryProps } from './ErrorBoundary';
+import ErrorBoundary from './ErrorBoundary';
 
 interface WithErrorBoundaryOptions {
   /** Custom fallback component or render prop */

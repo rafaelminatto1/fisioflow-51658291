@@ -295,7 +295,7 @@ export function validateEnvVars<T extends Record<string, unknown>>(
   const result = schema.safeParse(env);
 
   if (!result.success) {
-    const missingVars = result.error.errors
+    const _missingVars = result.error.errors
       .filter(e => e.code === 'invalid_type')
       .map(e => e.path.join('.'));
 

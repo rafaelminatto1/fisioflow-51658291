@@ -24,7 +24,6 @@ import { Save, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TemplateField } from './EvaluationTemplateSelector';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db, collection, addDoc, doc, setDoc } from '@/integrations/firebase/app';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 

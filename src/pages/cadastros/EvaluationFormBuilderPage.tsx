@@ -243,7 +243,7 @@ export default function EvaluationFormBuilderPage() {
                                         <Label className="text-sm font-medium text-muted-foreground">Campos Disponíveis</Label>
 
                                         <div className="flex flex-col gap-2">
-                                            {QUESTION_TYPES.map((type, index) => (
+                                            {QUESTION_TYPES.map((type, _index) => (
                                                 <Card
                                                     key={type.type}
                                                     className="p-3 cursor-pointer hover:bg-accent/50 transition-colors flex items-start gap-3 border-dashed border-transparent hover:border-primary/20"

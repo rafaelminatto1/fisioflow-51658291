@@ -595,7 +595,7 @@ const Settings = () => {
         title: 'Horários salvos!',
         description: 'Seu horário de funcionamento foi atualizado.',
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar seus horários. Tente novamente.',
@@ -613,7 +613,7 @@ const Settings = () => {
         await mfaService.unenrollMFA(user.uid);
         setMfaEnabled(false);
         toast({ title: '2FA desativado', description: 'Autenticação em duas etapas foi desativada.' });
-      } catch (e) {
+      } catch (_e) {
         toast({ title: 'Erro', description: 'Não foi possível desativar 2FA.', variant: 'destructive' });
       } finally {
         setMfaLoading(false);
@@ -643,7 +643,7 @@ const Settings = () => {
       setMfaEnabled(true);
       setShowMfaModal(false);
       toast({ title: '2FA ativado', description: 'Autenticação em duas etapas está ativa.' });
-    } catch (e) {
+    } catch (_e) {
       toast({ title: 'Código inválido', description: 'Verifique o código do aplicativo e tente novamente.', variant: 'destructive' });
     } finally {
       setMfaVerifying(false);

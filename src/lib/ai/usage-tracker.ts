@@ -12,7 +12,7 @@
  * Usage statistics for a period
  */
 
-import { db, collection, doc, setDoc, getDoc, getDocs, query as firestoreQuery, where, sum, orderBy, limit } from '@/integrations/firebase/app';
+import { db, collection, doc, setDoc, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { AIUsageRecord, AIFeatureCategory, AIModelType } from '@/integrations/firebase/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
@@ -513,7 +513,7 @@ class AIUsageMonitorService {
   /**
    * Invalidate cache entries
    */
-  private invalidateCache(userId: string, feature: AIFeatureCategory): void {
+  private invalidateCache(userId: string, _feature: AIFeatureCategory): void {
     // Invalidate all user-related cache entries
     for (const [key] of this.cache) {
       if (key.startsWith(userId) || key.startsWith(`stats_${userId}`)) {

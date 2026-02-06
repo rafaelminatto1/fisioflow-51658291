@@ -7,7 +7,6 @@ import {
   GanttTask,
   GanttDependency,
   CriticalPath,
-  DependencyType,
 } from '@/types/gantt';
 
 /**
@@ -25,7 +24,7 @@ export function calculateCriticalPath(
   const { earliestStart, earliestFinish } = calculateEarliestTimes(tasks, depMap);
 
   // Calculate latest start (LS) and latest finish (LF) - Backward Pass
-  const { latestStart, latestFinish } = calculateLatestTimes(
+  const { latestStart, _latestFinish } = calculateLatestTimes(
     tasks,
     depMap,
     earliestFinish

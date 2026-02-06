@@ -35,7 +35,7 @@ const Partner = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
 
-  const { data: empresas = [], refetch } = useEmpresasParceiras();
+  const { data: empresas = [], _refetch } = useEmpresasParceiras();
   const createEmpresa = useCreateEmpresaParceira();
   const updateEmpresa = useUpdateEmpresaParceira();
   const deleteEmpresa = useDeleteEmpresaParceira();
@@ -98,7 +98,7 @@ const Partner = () => {
       }
 
       resetForm();
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       // Error handled by mutation toast
     }
   };
@@ -120,7 +120,7 @@ const Partner = () => {
   const handleDelete = async (id: string) => {
     try {
       await deleteEmpresa.mutateAsync(id);
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       // Error handled by mutation toast
     }
   };

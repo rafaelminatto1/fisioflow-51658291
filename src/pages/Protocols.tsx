@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
 
-  Search, Calendar, SortAsc, Grid3X3, List, Filter, Download, PlusCircle, Target, Shield, Users, Zap, Heart
+  Search, SortAsc, Grid3X3, List, Filter, Download, PlusCircle, Target
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { useProtocolFilters } from '@/hooks/useProtocolFilters';
@@ -28,7 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
-import { PROTOCOL_CATEGORIES, MUSCULATURE_FILTERS, QUICK_TEMPLATES, getProtocolCategory, SEED_PROTOCOLS_DATA } from '@/data/protocols';
+import { PROTOCOL_CATEGORIES, MUSCULATURE_FILTERS, QUICK_TEMPLATES, SEED_PROTOCOLS_DATA } from '@/data/protocols';
 import { ProtocolCardEnhanced } from '@/components/protocols/ProtocolCardEnhanced';
 import { ProtocolDetailView } from '@/components/protocols/ProtocolDetailView';
 import { useToast } from '@/hooks/use-toast';

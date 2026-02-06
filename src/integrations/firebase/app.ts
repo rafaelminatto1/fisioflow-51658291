@@ -11,18 +11,17 @@ import {
   Firestore,
   doc,
   getDoc,
-  setDoc,
-  updateDoc,
+  setDoc as firestoreSetDoc,
+  updateDoc as firestoreUpdateDoc,
   collection,
   collectionGroup,
   getDocs,
   query,
   where,
   limit,
-  addDoc,
+  addDoc as firestoreAddDoc,
   deleteDoc,
   enableMultiTabIndexedDbPersistence,
-  enableIndexedDbPersistence,
   orderBy,
   onSnapshot,
   getDocsFromCache,
@@ -57,6 +56,7 @@ import {
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { cleanForFirestore } from '@/utils/firestoreData';
 
 // Configuração do Firebase (carregada das variáveis de ambiente)
 const firebaseConfig = {
@@ -70,7 +70,7 @@ const firebaseConfig = {
 };
 
 // Nome único da aplicação para isolarar de outros projetos Firebase locais
-const APP_NAME = 'fisioflow-app';
+const _APP_NAME = 'fisioflow-app';
 
 // Validar configuração
 const requiredKeys: (keyof typeof firebaseConfig)[] = [
@@ -257,7 +257,7 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
  * Expor instâncias do Firebase no window para diagnóstico em desenvolvimento
  */
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  (window as any).__fisioflow_firebase__ = {
+  (window as unknown).__fisioflow_firebase__ = {
     app,
     auth,
     db,
@@ -269,19 +269,35 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
 
 /**
  * Re-export Firestore functions for convenience
+ * Wraps addDoc, updateDoc and setDoc to remove undefined values automatically
  */
+export const addDoc = (reference: CollectionReference<unknown>, data: unknown) => {
+  return firestoreAddDoc(reference, cleanForFirestore(data));
+};
+
+export const updateDoc = (reference: DocumentReference<unknown>, ...args: unknown[]) => {
+  if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+    return firestoreUpdateDoc(reference, cleanForFirestore(args[0]));
+  }
+  return (firestoreUpdateDoc as unknown)(reference, ...args);
+};
+
+export const setDoc = (reference: DocumentReference<unknown>, data: unknown, options?: unknown) => {
+  if (options) {
+    return firestoreSetDoc(reference, cleanForFirestore(data), options);
+  }
+  return firestoreSetDoc(reference, cleanForFirestore(data));
+};
+
 export {
   doc,
   getDoc,
-  setDoc,
-  updateDoc,
   collection,
   collectionGroup,
   getDocs,
   query,
   where,
   limit,
-  addDoc,
   deleteDoc,
   orderBy,
   onSnapshot,

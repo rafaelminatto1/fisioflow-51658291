@@ -311,7 +311,7 @@ export const deleteMarketingExport = async (exportId: string): Promise<void> => 
 /**
  * Get marketing exports for a patient
  */
-export const getPatientMarketingExports = async (patientId: string): Promise<any[]> => {
+export const getPatientMarketingExports = async (patientId: string): Promise<unknown[]> => {
   try {
     const q = query(
       collection(db, 'marketing_exports'),
@@ -721,8 +721,8 @@ export const trackFisioLinkClick = async (
  */
 export const getFisioLinkAnalytics = async (
   slug: string,
-  startDate?: Date,
-  endDate?: Date
+  _startDate?: Date,
+  _endDate?: Date
 ): Promise<{ totalClicks: number; clicksByButton: Record<string, number> }> => {
   try {
     const q = query(collection(db, 'fisio_link_analytics'), where('slug', '==', slug));
@@ -806,7 +806,7 @@ export const updateBirthdayAutomationConfig = async (
 /**
  * Get patients with birthday today
  */
-export const getTodayBirthdays = async (organizationId: string): Promise<Array<{ id: string; name: string; phone: string; email: string }>> => {
+export const getTodayBirthdays = async (_organizationId: string): Promise<Array<{ id: string; name: string; phone: string; email: string }>> => {
   try {
     // This would require a properly indexed query or a Cloud Function
     // For now, return empty array

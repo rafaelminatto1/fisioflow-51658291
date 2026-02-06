@@ -18,7 +18,7 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { db, collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+import { db, collection, query, orderBy, getDocs } from '@/integrations/firebase/app';
 import { PainEvolutionData, PainMapRecord, PainMapPoint } from '@/types/painMap';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -512,7 +512,7 @@ function analyzeTrend(assessments: PainEvolutionData[]): PainTrendAnalysis {
 function evaluateTreatmentResponse(
   initial: PainEvolutionData,
   current: PainEvolutionData,
-  allAssessments: PainEvolutionData[]
+  _allAssessments: PainEvolutionData[]
 ): TreatmentResponse {
 
   const painReduction = initial.globalPainLevel - current.globalPainLevel;
@@ -606,7 +606,7 @@ function generateVisualAnnotations(
   const annotations: VisualAnnotation[] = [];
 
   const initialMap = new Map(initial.painPoints.map(p => [p.region, p]));
-  const currentMap = new Map(current.painPoints.map(p => [p.region, p]));
+  const _currentMap = new Map(current.painPoints.map(p => [p.region, p]));
 
   current.painPoints.forEach(point => {
     const initialPoint = initialMap.get(point.region);
@@ -762,7 +762,7 @@ Respond in valid JSON:
 async function getPainAssessments(
   patientId: string,
   startDate?: Date,
-  endDate?: Date
+  _endDate?: Date
 ): Promise<PainEvolutionData[]> {
 
   const q = query(

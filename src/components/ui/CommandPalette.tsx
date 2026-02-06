@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
 
@@ -24,7 +25,6 @@ import {
   Clock,
   BarChart3,
   FolderOpen,
-  Tag,
   Command,
   type LucideIcon
 } from 'lucide-react';
@@ -407,7 +407,7 @@ export function CommandPalette({ open, onOpenChange, patientId, patientName }: C
                     {categoryInfo.label}
                   </div>
                   <div className="mt-1 space-y-1">
-                    {items.map((item, index) => {
+                    {items.map((item, _index) => {
                       const globalIndex = filteredItems.indexOf(item);
                       const isSelected = globalIndex === selectedIndex;
                       const Icon = item.icon;

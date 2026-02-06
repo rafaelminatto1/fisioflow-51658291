@@ -3,7 +3,7 @@
  * Exibe informações de erro quando navegada via state (ex: navigate('/error', { state: { message, type } }))
  */
 
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ErrorPageLayout } from '@/components/error/ErrorPageLayout';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';

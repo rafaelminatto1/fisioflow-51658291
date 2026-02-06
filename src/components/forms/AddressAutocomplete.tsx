@@ -8,7 +8,7 @@ import { Loader2, MapPin } from 'lucide-react';
 interface Props {
   value: string;
   onChange: (value: string) => void;
-  onSelect?: (address: any) => void;
+  onSelect?: (address: unknown) => void;
   className?: string;
   placeholder?: string;
   label?: string;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function AddressAutocomplete({ value, onChange, onSelect, className, placeholder = "Digite o endereço...", label, id = "address-input" }: Props) {
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedSearch = useDebounce(value, 500);
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +32,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, className, plac
       try {
         const searchPlaces = httpsCallable(functions, 'searchPlaces');
         const result = await searchPlaces({ query: debouncedSearch });
-        setSuggestions((result.data as any[]) || []);
+        setSuggestions((result.data as unknown[]) || []);
         setIsOpen(true);
       } catch (error) {
         console.error(error);
@@ -44,7 +44,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, className, plac
     fetchPlaces();
   }, [debouncedSearch]);
 
-  const handleSelect = (place: any) => {
+  const handleSelect = (place: unknown) => {
     onChange(place.description);
     if (onSelect) onSelect(place);
     setSuggestions([]);
@@ -84,7 +84,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, className, plac
           className="absolute z-50 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg mt-1 max-h-60 overflow-auto"
           role="listbox"
         >
-          {suggestions.map((place, index) => (
+          {suggestions.map((place, _index) => (
             <li
               key={place.place_id}
               className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer flex items-center gap-2 text-sm"

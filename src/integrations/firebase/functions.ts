@@ -20,7 +20,7 @@ import { API_URLS } from '@/lib/api/v2/config';
 const DEFAULT_REGION = 'southamerica-east1';
 
 /** Timeout padrão para chamadas de função (em segundos) */
-const DEFAULT_TIMEOUT = 60;
+const _DEFAULT_TIMEOUT = 60;
 
 /** Firebase Functions instance (exported for callers that need the raw instance, e.g. httpsCallable) */
 export const functionsInstance = getFunctions(app, DEFAULT_REGION);
@@ -149,7 +149,7 @@ export async function callFunctionWithResponse<TRequest, TData>(
 export async function callFunctionHttp<TRequest, TResponse>(
   functionName: string,
   data: TRequest,
-  options?: CallFunctionOptions
+  _options?: CallFunctionOptions
 ): Promise<TResponse> {
   const auth = getFirebaseAuth();
   const token = await auth.currentUser?.getIdToken();

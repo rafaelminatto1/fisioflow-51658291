@@ -1,5 +1,5 @@
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface CameraOptions {
@@ -16,13 +16,13 @@ export function useCamera(options: CameraOptions = {}) {
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const defaultOptions: CameraOptions = {
+  const defaultOptions: CameraOptions = useMemo(() => ({
     quality: 90,
     allowEditing: true,
     correctOrientation: true,
     saveToGallery: false,
     ...options,
-  };
+  }), [options]);
 
   /**
    * Tira uma foto usando a câmera do dispositivo

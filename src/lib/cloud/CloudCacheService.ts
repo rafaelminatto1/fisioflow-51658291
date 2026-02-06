@@ -9,7 +9,7 @@
  * Migrated from Vercel Blob to Firebase Storage
  */
 
-import { ref, uploadBytes, getDownloadURL, getBytes } from 'firebase/storage';
+import { ref, uploadBytes, getBytes } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import type { AppointmentBase } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';

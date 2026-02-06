@@ -408,7 +408,7 @@ export function useReducedMotion(): boolean {
  */
 export function useKeyboardOnlyFocus() {
   useEffect(() => {
-    let isUsingKeyboard = false;
+    const _isUsingKeyboard = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab') {

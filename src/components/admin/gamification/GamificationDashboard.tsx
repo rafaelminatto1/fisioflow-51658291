@@ -1,28 +1,27 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
 
-  Trophy, Target, Flame, Star, Users, TrendingUp, AlertTriangle,
-  Award, Zap, Activity, TrendingDown, Calendar
+  Trophy, Flame, Star, Users, TrendingUp, AlertTriangle,
+  Award, Activity, Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps, AreaChart, Area } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps, AreaChart, Area } from 'recharts';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { cn } from '@/lib/utils';
 
 // Custom Tooltip Component
-const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<any, any>) => {
+const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<unknown, unknown>) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-border bg-card p-3 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
         <p className="text-sm font-medium mb-2">{label}</p>
         <div className="space-y-1.5">
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: unknown, index: number) => (
             <div key={index} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <div
@@ -77,7 +76,7 @@ export const GamificationDashboard: React.FC = () => {
     statsLoading,
     engagementData,
     engagementLoading,
-    atRiskPatients,
+    _atRiskPatients,
     popularAchievements,
   } = useGamificationAdmin(parseInt(period));
 

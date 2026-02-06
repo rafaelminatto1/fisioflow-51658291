@@ -10,8 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import {
 
   Select,
@@ -23,26 +21,20 @@ import {
 import {
   Users,
   Gift,
-  Copy,
-  Share2,
-  QrCode,
   TrendingUp,
   Award,
   CheckCircle2,
   UserPlus,
-  Calendar,
   Percent,
   DollarSign,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  getPatientReferralCode,
   createReferralCode,
   redeemReferralCode,
   generateReferralCode,
-  type ReferralCode,
 } from '@/services/marketing/marketingService';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ReferralStats {
@@ -104,7 +96,7 @@ export default function ReferralPage() {
 
   const handleCreateCode = async (patientId: string) => {
     try {
-      const codeId = await createReferralCode(
+      const _codeId = await createReferralCode(
         patientId,
         'default-org', // Replace with actual org ID
         newCodeConfig
@@ -112,7 +104,7 @@ export default function ReferralPage() {
       toast.success('Código de indicação criado com sucesso');
       setCreateMode(false);
       loadReferralStats();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao criar código de indicação');
     }
   };
@@ -137,7 +129,7 @@ export default function ReferralPage() {
     toast.success('Copiado para a área de transferência');
   };
 
-  const shareCode = (code: string) => {
+  const _shareCode = (code: string) => {
     const text = `Use meu código de indicação ${code} para ganhar desconto na FisioFlow!`;
     if (navigator.share) {
       navigator.share({ text });
@@ -255,7 +247,7 @@ export default function ReferralPage() {
                     <Label>Tipo de Recompensa</Label>
                     <Select
                       value={newCodeConfig.reward_type}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value: unknown) =>
                         setNewCodeConfig({ ...newCodeConfig, reward_type: value })
                       }
                     >
@@ -295,7 +287,7 @@ export default function ReferralPage() {
                       <Label className="text-xs">Tipo</Label>
                       <Select
                         value={newCodeConfig.referrer_reward_type}
-                        onValueChange={(value: any) =>
+                        onValueChange={(value: unknown) =>
                           setNewCodeConfig({ ...newCodeConfig, referrer_reward_type: value })
                         }
                       >

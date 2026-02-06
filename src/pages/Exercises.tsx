@@ -28,7 +28,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
-  const { favorites } = useExerciseFavorites();
+  const { _favorites } = useExerciseFavorites();
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 

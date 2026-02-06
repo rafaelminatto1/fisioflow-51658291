@@ -4,7 +4,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db, collection, getDoc, doc, addDoc, updateDoc, query as firestoreQuery } from '@/integrations/firebase/app';
+import { db, collection, getDoc, doc, addDoc, updateDoc } from '@/integrations/firebase/app';
 
 export function useWhatsAppIntegration() {
   const sendMessage = useMutation({

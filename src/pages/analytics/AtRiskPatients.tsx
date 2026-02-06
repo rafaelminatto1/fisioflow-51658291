@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,6 @@ import {
   UserX,
   Filter,
   Download,
-  Bell,
   CheckCircle2,
   Clock,
 } from 'lucide-react';
@@ -32,8 +31,6 @@ import {
   where,
   orderBy,
   getDocs,
-  doc,
-  getDoc,
 } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
 import { differenceInDays, format, subDays } from 'date-fns';
@@ -367,7 +364,7 @@ export default function AtRiskPatientsPage() {
                 />
               </div>
 
-              <Select value={riskFilter} onValueChange={(v: any) => setRiskFilter(v)}>
+              <Select value={riskFilter} onValueChange={(v: unknown) => setRiskFilter(v)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filtrar por risco" />
                 </SelectTrigger>

@@ -9,29 +9,17 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-
-  Video,
-  Image as ImageIcon,
   Upload,
   Play,
   Pause,
-  Download,
-  Sparkles,
   Film,
   Trash2,
-  Plus,
-  Clock,
-  Calendar,
-  X,
-  MoveVertical,
   Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface TimelineImage {
   id: string;
@@ -46,7 +34,7 @@ interface JourneyTimelapseProps {
   onSave?: (blob: Blob) => void;
 }
 
-const TRANSITION_TYPES = [
+const _TRANSITION_TYPES = [
   { value: 'fade', label: 'Fade Suave', duration: 500 },
   { value: 'cut', label: 'Corte Direto', duration: 200 },
   { value: 'dissolve', label: 'Dissolver', duration: 800 },
@@ -61,20 +49,20 @@ const FRAME_RATES = [
 ];
 
 export function JourneyTimelapse({
-  patientName = 'Paciente',
-  onSave,
+  _patientName = 'Paciente',
+  _onSave,
 }: JourneyTimelapseProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [images, setImages] = useState<TimelineImage[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
   const [fps, setFps] = useState(2);
-  const [transition, setTransition] = useState('fade');
-  const [durationPerImage, setDurationPerImage] = useState(1000);
+  const [_transition, _setTransition] = useState('fade');
+  const [_durationPerImage, _setDurationPerImage] = useState(1000);
   const [showDates, setShowDates] = useState(true);
   const [showProgress, setShowProgress] = useState(true);
   const [watermark, setWatermark] = useState('');
-  const [generating, setGenerating] = useState(false);
+  const [_generating, _setGenerating] = useState(false);
 
   const animationRef = useRef<number>();
   const lastFrameTime = useRef<number>(0);

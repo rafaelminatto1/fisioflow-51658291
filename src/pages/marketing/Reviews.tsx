@@ -16,15 +16,12 @@ import {
 } from '@/components/ui/select';
 import {
   Star,
-  TrendingUp,
   MessageSquare,
   Search,
-  Filter,
   ExternalLink,
   ThumbsUp,
   AlertCircle,
   Share2,
-  Reply,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -62,7 +59,7 @@ export default function ReviewsPage() {
         setError(null);
         const getReviews = httpsCallable(functions, 'getBusinessReviews');
         const result = await getReviews();
-        const data = result.data as any;
+        const data = result.data as unknown;
         setReviews(data.reviews || []);
       } catch (err) {
         console.error('Error fetching reviews:', err);

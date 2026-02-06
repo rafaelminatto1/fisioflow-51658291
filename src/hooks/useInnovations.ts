@@ -4,11 +4,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy, limit, setDoc, writeBatch, db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { collection, getDocs, getDoc, addDoc, updateDoc, doc, query as firestoreQuery, where, orderBy, limit, db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const auth = getFirebaseAuth();
+const _auth = getFirebaseAuth();
 
 // Helper
 const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);

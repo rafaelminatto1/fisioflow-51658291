@@ -17,9 +17,6 @@ import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from '@/components/ui/pagination';
 import { usePatientsPaginated, type Patient } from '@/hooks/usePatientCrud';
 import { useAuth } from '@/contexts/AuthContext';
@@ -53,6 +50,7 @@ export default function MedicalRecord() {
 
   useEffect(() => {
     goToPage(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   const handleViewRecord = (patientId: string) => {

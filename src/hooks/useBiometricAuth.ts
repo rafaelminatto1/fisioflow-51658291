@@ -17,7 +17,7 @@ export interface BiometricAuthState {
 export function useBiometricAuth(): BiometricAuthState {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [deviceType, setDeviceType] = useState<'faceId' | 'touchId' | 'none'>('none');
+  const [deviceType, _setDeviceType] = useState<'faceId' | 'touchId' | 'none'>('none');
 
   /**
    * Verifica se a autenticação biométrica está disponível no dispositivo
@@ -35,7 +35,7 @@ export function useBiometricAuth(): BiometricAuthState {
             reason: 'Verificar tipo de biometria',
             title: 'Configuração Biométrica',
           });
-        } catch (error: unknown) {
+        } catch (_error: unknown) {
           // Se falhar, ainda pode estar disponível, só não autenticou ainda
         }
       } else {

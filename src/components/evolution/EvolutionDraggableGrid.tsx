@@ -12,7 +12,7 @@ import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { User, Eye, Brain, ClipboardList, Sparkles, Copy, LayoutDashboard, Save, RotateCcw, Undo, Activity, TrendingDown, TrendingUp, Minus, ChevronUp, ChevronDown, ImageIcon, Dumbbell, House, History } from 'lucide-react';
+import { User, Eye, Brain, ClipboardList, Sparkles, Copy, LayoutDashboard, Save, RotateCcw, Activity, TrendingDown, TrendingUp, Minus, ChevronUp, ChevronDown, ImageIcon, Dumbbell, House, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { PainScaleWidget, PainScaleData, PainHistory, calculatePainTrend } from '@/components/evolution/PainScaleWidget';
@@ -142,7 +142,7 @@ const SOAPSectionWidget = React.memo(({
             setLocalValue(value || '');
             lastSentValue.current = value || '';
         }
-    }, [value]);
+    }, [value, localValue]);
 
     // Cleanup timeout on unmount
     React.useEffect(() => {
@@ -409,7 +409,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         }, 350); // Slightly longer than transition duration (usually 300ms)
 
         return () => clearTimeout(timer);
-    }, [showPainDetails]); // Removed storedLayouts from deps to avoid infinite loop
+    }, [showPainDetails, storedLayouts, isEditable]);
 
     const handleLayoutChange = (layout: Layout[]) => {
         if (isEditable) {
@@ -455,7 +455,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         if (user?.id && profile?.preferences?.evolution_layout) {
             try {
                 const profileRef = doc(db, 'profiles', user.id);
-                const { evolution_layout, ...restPreferences } = profile.preferences;
+                const { _evolution_layout, ...restPreferences } = profile.preferences;
                 await updateDoc(profileRef, {
                     preferences: restPreferences,
                     updated_at: new Date().toISOString(),
@@ -834,6 +834,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         onSuggestExercises,
         onAISuggest,
         onCopyLast,
+        onRepeatLastSession,
+        lastSessionExercises.length,
+        gridLayouts,
         // soapData is needed for SOAPSectionWidget props, but each widget is memoized
         soapData,
         handleSoapFieldChange,

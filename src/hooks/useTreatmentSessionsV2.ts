@@ -5,7 +5,7 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 
 export const useCreateTreatmentSessionV2 = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { _toast } = useToast();
 
   return useMutation({
     mutationFn: async (data: {

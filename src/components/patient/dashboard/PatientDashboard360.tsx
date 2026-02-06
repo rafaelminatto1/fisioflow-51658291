@@ -18,8 +18,6 @@ import {
     Sparkles,
     Loader2,
     Clock,
-    ClipboardList,
-    Stethoscope,
     Trophy,
     Flame,
     Star,

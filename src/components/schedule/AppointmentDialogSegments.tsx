@@ -33,7 +33,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { EquipmentSelector, type SelectedEquipment } from './EquipmentSelector';
 import { AppointmentReminder, type AppointmentReminderData } from './AppointmentReminder';
-import { usePatientPackages, type PatientPackage } from '@/hooks/usePackages';
+import { usePatientPackages } from '@/hooks/usePackages';
 
 export const PatientSelectionSection = ({
     patients,

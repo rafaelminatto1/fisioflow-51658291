@@ -3,7 +3,7 @@
  * Componente React para gerenciar autenticação multi-fator
  */
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -27,19 +27,18 @@ export function MFASettings({ userId }: MFASettingsProps) {
   const [success, setSuccess] = useState<string>('');
   const [showEnroll, setShowEnroll] = useState(false);
 
-  useEffect(() => {
-    checkMFAStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
-
-  async function checkMFAStatus() {
+  const checkMFAStatus = useCallback(async () => {
     try {
       const enabled = await mfaService.hasMFAEnabled(userId);
       setHasMFA(enabled);
     } catch (err) {
       logger.error('Error checking MFA status', err, 'MFASettings');
     }
-  }
+  }, [userId]);
+
+  useEffect(() => {
+    checkMFAStatus();
+  }, [checkMFAStatus]);
 
   async function handleEnrollMFA() {
     setLoading(true);

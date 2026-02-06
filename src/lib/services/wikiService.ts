@@ -12,7 +12,6 @@ import {
   updateDoc,
   query,
   where,
-  orderBy,
   serverTimestamp,
 } from '@/integrations/firebase/app';
 import type { WikiPage, WikiCategory } from '@/types/wiki';

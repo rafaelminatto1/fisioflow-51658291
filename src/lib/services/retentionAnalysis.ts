@@ -36,11 +36,11 @@ export interface MonthlyRetentionData {
  * Calculate retention metrics for the practice
  */
 export async function calculateRetentionMetrics(
-  organizationId?: string
+  _organizationId?: string
 ): Promise<RetentionMetrics> {
   const now = new Date();
-  const thirtyDaysAgo = subDays(now, 30);
-  const sixtyDaysAgo = subDays(now, 60);
+  const _thirtyDaysAgo = subDays(now, 30);
+  const _sixtyDaysAgo = subDays(now, 60);
   const ninetyDaysAgo = subDays(now, 90);
   const monthStart = startOfMonth(now);
 
@@ -67,7 +67,7 @@ export async function calculateRetentionMetrics(
     }
   >();
 
-  appointments.forEach((apt: any) => {
+  appointments.forEach((apt: unknown) => {
     const patientId = apt.patient_id;
     if (!patientId) return;
 
@@ -123,7 +123,7 @@ export async function calculateRetentionMetrics(
   const avgDaysBetweenSessions = totalPatientGaps > 0 ? totalDaysBetweenSessions / totalPatientGaps : 0;
 
   // Get new vs returning patients this month
-  const currentMonthAppointments = appointments.filter((apt: any) => {
+  const currentMonthAppointments = appointments.filter((apt: unknown) => {
     const aptDate = new Date(apt.appointment_date);
     return aptDate >= monthStart && aptDate <= now;
   });
@@ -131,7 +131,7 @@ export async function calculateRetentionMetrics(
   const newPatientIds = new Set<string>();
   const returningPatientIds = new Set<string>();
 
-  currentMonthAppointments.forEach((apt: any) => {
+  currentMonthAppointments.forEach((apt: unknown) => {
     const patientId = apt.patient_id;
     if (!patientId) return;
 
@@ -165,7 +165,7 @@ export async function calculateRetentionMetrics(
  * Get detailed retention data for each patient
  */
 export async function getPatientRetentionData(
-  organizationId?: string
+  _organizationId?: string
 ): Promise<PatientRetentionData[]> {
   const now = new Date();
   const ninetyDaysAgo = subDays(now, 90);
@@ -295,7 +295,7 @@ export async function getMonthlyRetentionData(
     const appointmentsSnapshot = await getDocs(appointmentsQuery);
     const appointments = appointmentsSnapshot.docs.map((d) => d.data());
 
-    const patientIds = new Set(appointments.map((a: any) => a.patient_id).filter(Boolean));
+    const patientIds = new Set(appointments.map((a: unknown) => a.patient_id).filter(Boolean));
     const totalPatients = patientIds.size;
 
     // Get new vs returning patients

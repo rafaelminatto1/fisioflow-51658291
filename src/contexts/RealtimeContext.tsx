@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useCallback, useEffect, useRef } from 'react';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { appointmentsApi } from '@/integrations/firebase/functions';
@@ -169,7 +170,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const newData = payload.new as Appointment;
         // Só adiciona se for futuro ou hoje (reduz tamanho do array)
         // Usar parseResponseDate para evitar problemas de timezone com strings "YYYY-MM-DD"
-        const dateStr = newData.start_time || (newData as any).date || '';
+        const dateStr = newData.start_time || (newData as unknown).date || '';
         const apptDate = dateStr ? parseResponseDate(dateStr) : new Date();
         const today = new Date();
         today.setHours(0, 0, 0, 0);

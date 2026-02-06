@@ -29,6 +29,7 @@ export default function PatientApp() {
     if (user) {
       loadAppointments();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function loadAppointments() {
@@ -45,7 +46,7 @@ export default function PatientApp() {
       const snapshotPatient = await getDocs(qPatient);
 
       if (!snapshotPatient.empty) {
-        const patientData = snapshotPatient.docs[0].data();
+        const _patientData = snapshotPatient.docs[0].data();
         const patientId = snapshotPatient.docs[0].id;
 
         // Carregar agendamentos

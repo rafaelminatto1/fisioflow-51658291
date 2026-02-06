@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,6 @@ import {
   Target,
   Sparkles,
   ArrowRight,
-  Activity as VitalIcon,
   Heart,
   Thermometer,
   Wind,
@@ -30,11 +29,11 @@ import {
   FileText,
   CheckSquare
 } from 'lucide-react';
-import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
+import { useCreateMeasurement } from '@/hooks/usePatientEvolution';
 import { ClinicalTestCombobox, type ClinicalTest as ClinicalTestComboboxTest } from '@/components/ui/clinical-test-combobox';
 import { CustomFieldsConfig, DEFAULT_MEASUREMENT_FIELDS, type CustomField } from './CustomFieldsConfig';
 import { SaveMeasurementTemplateModal } from './SaveMeasurementTemplateModal';
-import { MeasurementDiagramYBalance, Y_BALANCE_KEYS, type YBalanceValues } from './MeasurementDiagramYBalance';
+import { MeasurementDiagramYBalance, Y_BALANCE_KEYS } from './MeasurementDiagramYBalance';
 import { TestLibraryModal, type ClinicalTest } from '@/components/clinical/TestLibraryModal';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -69,7 +68,7 @@ interface MeasurementInput {
 }
 
 // Color system constants for consistent styling
-const FORM_COLORS = {
+const _FORM_COLORS = {
   primary: {
     bg: 'bg-teal-600',
     hover: 'hover:bg-teal-700',
@@ -122,7 +121,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
   soapRecordId,
   requiredMeasurements = []
 }) => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const queryClient = useQueryClient();
   const [measurements, setMeasurements] = useState<MeasurementInput[]>([
     {

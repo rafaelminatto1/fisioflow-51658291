@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -241,5 +242,5 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
   );
 };
 
-/* eslint-disable-next-line react-refresh/only-export-components */
+ 
 export { defaultEquipments };

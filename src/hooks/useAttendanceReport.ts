@@ -125,7 +125,7 @@ interface AppointmentWithPatient extends AppointmentFirestore {
   patients?: PatientData | null;
 }
 
-interface Profile {
+interface _Profile {
   id: string;
   full_name?: string;
   [key: string]: unknown;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Trophy, Activity, Brain, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Sparkles, Trophy, Activity, Loader2 } from 'lucide-react';
 import { useAI } from '@/integrations/firebase/ai';
 import { motion } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -37,7 +37,7 @@ export const ExerciseCoachAI: React.FC<ExerciseCoachAIProps> = ({ sessionData })
 
       const result = await generate(prompt, {
         userId: 'patient-coach',
-        feature: 'clinical_analysis' as any,
+        feature: 'clinical_analysis' as unknown,
       });
 
       setFeedback(result.content);

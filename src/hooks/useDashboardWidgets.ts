@@ -73,11 +73,7 @@ export function useDashboardWidgets() {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadWidgets();
-  }, [user]);
-
-  const loadWidgets = async () => {
+  const loadWidgets = useCallback(async () => {
     try {
       if (!user) return;
 
@@ -102,7 +98,11 @@ export function useDashboardWidgets() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadWidgets();
+  }, [loadWidgets]);
 
   const saveWidgets = async (newWidgets: DashboardWidget[]) => {
     try {

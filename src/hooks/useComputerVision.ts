@@ -116,7 +116,7 @@ export const useComputerVision = () => {
   const [isActive, setIsActive] = useState(false);
   const [currentExercise, setCurrentExercise] = useState<string | null>(null);
   const [currentSession, setCurrentSession] = useState<ExerciseSession | null>(null);
-  const [realTimeFeedback, setRealTimeFeedback] = useState<RealTimeFeedback[]>([]);
+  const [realTimeFeedback, _setRealTimeFeedback] = useState<RealTimeFeedback[]>([]);
   const [settings, setSettings] = useState<VisionSettings>({
     modelAccuracy: 'balanced',
     detectionThreshold: 0.5,
@@ -140,7 +140,7 @@ export const useComputerVision = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const landmarkerRef = useRef<any>(null);
+  const landmarkerRef = useRef<unknown>(null);
   const requestRef = useRef<number>();
 
   const { load: loadMediaPipe, isLoaded: mediaPipeLoaded } = useMediaPipeVision();

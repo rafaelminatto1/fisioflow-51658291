@@ -2,7 +2,7 @@
  * Exercise Videos Service - Migrated to Firebase
  */
 
-import { db, collection, getDocs, query, where, orderBy, limit as limitClause, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, QueryConstraint, and as firestoreAnd, or as firestoreOr, getFirebaseAuth } from '@/integrations/firebase/app';
+import { db, collection, getDocs, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, QueryConstraint, getFirebaseAuth } from '@/integrations/firebase/app';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/integrations/firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -582,7 +582,7 @@ export const exerciseVideosService = {
    * Note: Firebase Storage doesn't have built-in signed URLs like Supabase.
    * This would require setting up Firebase Cloud Storage signed URLs via GCS.
    */
-  async getSignedUrl(videoPath: string, expiresIn: number = 3600): Promise<string> {
+  async getSignedUrl(videoPath: string, _expiresIn: number = 3600): Promise<string> {
     // For now, return the public URL
     // In production, you might use Firebase Cloud Functions to generate signed URLs
     const storageRef = ref(storage, `exercise-videos/${videoPath}`);

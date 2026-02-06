@@ -4,7 +4,7 @@ import { DollarSign, TrendingUp, Calendar, AlertCircle, TrendingDown, Activity, 
 import { useFinancial } from '@/hooks/useFinancial';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/utils/format';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DelinquencyList } from './DelinquencyList';
 import { generateTransactionsCSV, downloadCSV } from '@/utils/csvExport';
 import { Button } from '@/components/ui/button';

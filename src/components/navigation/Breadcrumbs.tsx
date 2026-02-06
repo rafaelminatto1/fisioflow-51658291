@@ -84,7 +84,7 @@ export function Breadcrumbs({
 /**
  * Generate breadcrumbs from the current route path
  */
-function generateBreadcrumbsFromPath(pathname: string, location: Location): BreadcrumbItem[] {
+function generateBreadcrumbsFromPath(pathname: string, _location: Location): BreadcrumbItem[] {
   // Remove leading/trailing slashes and split
   const pathSegments = pathname.split('/').filter(Boolean);
 

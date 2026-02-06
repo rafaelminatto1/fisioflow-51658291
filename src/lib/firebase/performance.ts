@@ -54,7 +54,7 @@ export async function initPerformanceMonitoring(): Promise<void> {
     // Dynamically import Performance Monitoring to avoid errors if not available
     const { getPerformance } = await import('firebase/performance');
     const app = getApp();
-    const perf = getPerformance(app);
+    const _perf = getPerformance(app);
 
     // Performance is automatically collected
     logger.debug('Firebase Performance Monitoring initialized');
@@ -104,12 +104,12 @@ export async function startTrace(name: string): Promise<PerformanceTrace> {
  */
 export class PerformanceTrace {
   private readonly name: string;
-  private firebaseTrace: any | null;
+  private firebaseTrace: unknown | null;
   private metrics: Map<string, number> = new Map();
   private attributes: Map<string, string> = new Map();
   private startTime: number;
 
-  constructor(name: string, firebaseTrace?: any) {
+  constructor(name: string, firebaseTrace?: unknown) {
     this.name = name;
     this.firebaseTrace = firebaseTrace || null;
     this.startTime = performance.now();
@@ -262,7 +262,7 @@ export class HttpTrace extends PerformanceTrace {
  * Start a new HTTP trace
  */
 export async function startHttpTrace(url: string, method: string): Promise<HttpTrace> {
-  const trace = await startTrace(`http_${method}_${url}`);
+  const _trace = await startTrace(`http_${method}_${url}`);
   return new HttpTrace(url, method);
 }
 

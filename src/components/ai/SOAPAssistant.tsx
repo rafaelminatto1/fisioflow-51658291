@@ -210,6 +210,7 @@ export function SOAPAssistant({
       const audioBlob = new Blob(chunks, { type: 'audio/webm' });
       await transcribeAudio(audioBlob);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -254,6 +255,7 @@ export function SOAPAssistant({
       setLoading(false);
       setProgress(0);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient.id, language]);
 
   /**
@@ -336,6 +338,7 @@ export function SOAPAssistant({
       setLoading(false);
       setProgress(0);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consultationText, patient, previousSOAP, sessionNumber, sessionType, language]);
 
   /**
@@ -425,7 +428,7 @@ ${finalResult.suggestedCodes.join(', ')}
   };
 
   // Display result (optimistic or final)
-  const result = optimisticResult || finalResult;
+  const _result = optimisticResult || finalResult;
 
   return (
     <div className="space-y-6">

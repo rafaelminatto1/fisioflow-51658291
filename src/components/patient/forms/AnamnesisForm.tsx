@@ -3,7 +3,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
 
@@ -19,10 +18,7 @@ import {
     CheckCircle2,
     Cigarette,
     Wine,
-    ClipboardList,
-    Eye,
-    ClipboardCheck,
-    Dumbbell
+    ClipboardList
 } from 'lucide-react';
 import {
     Table,

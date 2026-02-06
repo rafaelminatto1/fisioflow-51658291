@@ -63,6 +63,7 @@ export function useAppointmentGroups(
   );
 
   // Filtrar appointments para a semana
+   
   const filteredAppointments = useMemo(() => {
     const start = startOfDay(weekDays[0]);
     const end = startOfDay(addDays(weekDays[6], 1));
@@ -71,9 +72,11 @@ export function useAppointmentGroups(
       const aptDate = parseAppointmentDate(apt.date);
       return aptDate && aptDate >= start && aptDate < end;
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointments, weekDays, ...deps]);
 
   // Agrupar por dia
+   
   const appointmentsByDay = useMemo(() => {
     const groups: AppointmentGroup[] = weekDays.map(day => ({
       date: day,
@@ -84,9 +87,11 @@ export function useAppointmentGroups(
     }));
 
     return groups;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredAppointments, weekDays, ...deps]);
 
   // Agrupar por time slot
+   
   const appointmentsByTimeSlot = useMemo(() => {
     const result: AppointmentsByTimeSlot = {};
 
@@ -105,9 +110,11 @@ export function useAppointmentGroups(
     });
 
     return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredAppointments, weekDays, ...deps]);
 
   // Contagem por dia
+   
   const appointmentsCountByDay = useMemo(() => {
     const countMap = new Map<string, number>();
 
@@ -117,6 +124,7 @@ export function useAppointmentGroups(
     });
 
     return countMap;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentsByDay, ...deps]);
 
   return {

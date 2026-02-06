@@ -8,7 +8,7 @@
 // TYPES
 // =====================================================================
 
-import { format, differenceInDays, differenceInWeeks } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 
 export interface PatientRecommendation {
   type: 'follow_up' | 'reschedule' | 'treatment_adjustment' | 'risk_alert';
@@ -202,7 +202,7 @@ export function findOptimalSlots(
   availableSlots: SlotAvailability[],
   therapists: Array<{ id: string; name: string; specialties?: string[] }>
 ): ScheduleRecommendation[] {
-  const recommendations: ScheduleRecommendation[] = [];
+  const _recommendations: ScheduleRecommendation[] = [];
 
   // Filter available slots
   const available = availableSlots.filter(s => s.available);

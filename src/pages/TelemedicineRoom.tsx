@@ -16,7 +16,7 @@ export default function TelemedicineRoom() {
     try {
       const createLink = httpsCallable(functions, 'createMeetLink');
       const result = await createLink({ appointmentId: roomId });
-      setMeetLink((result.data as any).meetLink);
+      setMeetLink((result.data as unknown).meetLink);
     } catch (error) {
       console.error(error);
     } finally {

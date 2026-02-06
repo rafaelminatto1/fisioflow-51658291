@@ -30,7 +30,7 @@ interface GamificationData {
 }
 
 const RANK_ICONS = [Crown, Medal, Award];
-const RANK_COLORS = ['text-yellow-500', 'text-gray-500', 'text-amber-600'];
+const _RANK_COLORS = ['text-yellow-500', 'text-gray-500', 'text-amber-600'];
 const RANK_BG = ['bg-yellow-100 text-yellow-700', 'bg-gray-100 text-gray-600', 'bg-amber-100 text-amber-700'];
 
 const container = {

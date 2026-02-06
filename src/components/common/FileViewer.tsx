@@ -49,6 +49,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
             setUrls(newUrls);
         };
         fetchUrls();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [files]);
 
     const handleNext = (e: React.MouseEvent) => {

@@ -33,7 +33,7 @@ export default function EmailTest() {
         title: "Email Enviado!",
         description: `Verifique a caixa de entrada de ${email}.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       toast({
         title: "Erro no Envio",

@@ -13,9 +13,6 @@ import {
   type AnamnesisRecord,
   type PhysicalExamination,
   type TreatmentPlan,
-  type Attachment,
-  type ConsultationHistory,
-  type MedicalRecordSummary,
   MedicalRecordError,
 } from '@/lib/services/medicalRecordService';
 import { ensureProfile } from '@/lib/database/profiles';

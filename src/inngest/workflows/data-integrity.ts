@@ -25,7 +25,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     const issues: string[] = [];
 
     // OPTIMIZATION: Batch validate documents
-    const validateRefs = async (collectionPath: string, refField: string, targetCollection: string, limit: number) => {
+    const _validateRefs = async (collectionPath: string, refField: string, targetCollection: string, limit: number) => {
       const snapshot = await db.collection(collectionPath).limit(limit).get();
 
       const orphanedIds: string[] = [];

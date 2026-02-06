@@ -57,6 +57,7 @@ export default function Vouchers() {
       verifyPayment.mutate(sessionId);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeVouchers = userVouchers?.filter(v => v.ativo && new Date(v.data_expiracao) > new Date()) || [];

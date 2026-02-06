@@ -2,10 +2,10 @@
  * useLeaderboard - Migrated to Firebase
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { subDays, differenceInCalendarDays } from 'date-fns';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
 
@@ -49,7 +49,7 @@ const DEFAULT_FILTERS: LeaderboardFilters = {
 
 export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): UseLeaderboardResult => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const [filters, setFiltersState] = useState<LeaderboardFilters>({ ...DEFAULT_FILTERS, ...initialFilters });
 
   const setFilters = (newFilters: Partial<LeaderboardFilters>) => {

@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useGamificationNotifications } from '@/hooks/useGamificationNotifications';
-import { Trophy, Zap, Flame, Target, Gift, Check } from 'lucide-react';
+import { Trophy, Zap, Flame, Target, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NOTIFICATION_ICONS = {

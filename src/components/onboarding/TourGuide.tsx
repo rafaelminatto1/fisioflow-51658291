@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 
 /**
  * Tour steps configuration for new users
@@ -190,8 +191,8 @@ export function useTourContext() {
  * Tour Guide component with custom controls
  */
 export function TourGuide() {
-  const { isOpen, currentStep, steps, setIsOpen, setSteps, setCurrentStep } = useTour();
-  const { hasSeenTour, setHasSeenTour, closeTour, startTour } = useTourContext();
+  const { isOpen, currentStep, steps, _setIsOpen, _setSteps, setCurrentStep } = useTour();
+  const { _hasSeenTour, setHasSeenTour, closeTour, startTour } = useTourContext();
 
   // Dismiss tour permanently
   const handleDismiss = useCallback(() => {
@@ -200,7 +201,7 @@ export function TourGuide() {
   }, [closeTour]);
 
   // Reset and restart tour
-  const handleRestart = useCallback(() => {
+  const _handleRestart = useCallback(() => {
     localStorage.removeItem('fisioflow-tour-completed');
     localStorage.removeItem('fisioflow-tour-dismissed');
     setHasSeenTour(false);

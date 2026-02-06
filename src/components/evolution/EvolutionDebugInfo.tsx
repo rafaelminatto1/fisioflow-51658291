@@ -15,7 +15,7 @@ export function EvolutionDebugInfo({ patientId, patient, appointmentId, appointm
     if (!import.meta.env.DEV) return null;
 
     // Get patient_id from appointment for debugging
-    const appointmentPatientId = (appointment as any)?.patient_id;
+    const appointmentPatientId = (appointment as unknown)?.patient_id;
 
     return (
         <Alert className="mb-4 bg-slate-950 text-slate-200 border-slate-800">

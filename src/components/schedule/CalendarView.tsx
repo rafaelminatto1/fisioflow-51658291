@@ -181,7 +181,7 @@ export const CalendarView = memo(({
     );
   }, [appointments]);
 
-  const handleRevertUpdate = useCallback((appointmentId: string) => {
+  const handleRevertUpdate = useCallback((_appointmentId: string) => {
     // Clear optimistic state to revert to original appointments
     setPendingOptimisticUpdate(null);
     setOptimisticAppointments([]);

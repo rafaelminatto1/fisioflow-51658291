@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * DicomViewer - Visualizador DICOM otimizado com lazy loading
  * Carrega o Cornerstone.js apenas quando o componente é montado
@@ -5,7 +6,7 @@
  */
 
 
-/* eslint-disable react-refresh/only-export-components */
+ 
 // Re-export the hook for convenience - this is a valid pattern for organizing related code
 
 import React, { Suspense, lazy } from 'react';
@@ -14,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 import { ComponentErrorBoundary, ComputerVisionFallback } from '@/components/error/ComponentErrorBoundary';
 
 export { usePreloadDicomViewer } from './hooks/usePreloadDicomViewer';
-/* eslint-enable react-refresh/only-export-components */
+ 
 
 interface DicomViewerProps {
   file?: File; // Local mode

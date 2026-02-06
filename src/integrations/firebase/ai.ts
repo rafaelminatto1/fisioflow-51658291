@@ -7,10 +7,8 @@
 
 // AI Model Types (local definitions since shared-api was removed)
 
-import { initializeRemoteConfig, REMOTE_CONFIG_KEYS } from '@/lib/firebase/remote-config';
-import { initAppCheck, getAppCheckToken } from '@/lib/firebase/app-check';
-import { AIUsageMonitor as UsageMonitor } from '@/lib/ai/usage-tracker';
-import { ClinicalPromptBuilder } from '@/lib/ai/prompts/clinical-prompts';
+import { initializeRemoteConfig } from '@/lib/firebase/remote-config';
+import { initAppCheck } from '@/lib/firebase/app-check';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export enum AIModelType {
@@ -79,11 +77,11 @@ export const MODEL_CONFIGS = {
 
 // AI Model Factory (local stub)
 class AIModelFactory {
-  static getModel(modelType: AIModelType, ai: any): any {
+  static getModel(modelType: AIModelType, _ai: unknown): unknown {
     // Stub implementation - returns a mock model
     return {
       modelType,
-      generate: async (prompt: string, options?: AIRequestOptions) => {
+      generate: async (prompt: string, _options?: AIRequestOptions) => {
         logger.warn(`AI Model ${modelType} called but not implemented`, { prompt: prompt.substring(0, 100) }, 'ai-model-factory');
         return {
           content: '',
@@ -118,10 +116,10 @@ interface FirebaseAIModel {
 }
 
 // Temporary stub for AIRemoteConfig compatibility
-const AIRemoteConfig = {
+const _AIRemoteConfig = {
   isAIEnabled: () => true,
-  isFeatureEnabled: (feature: string) => true,
-  getModelForFeature: (feature: string) => 'gemini-2.5-flash' as const,
+  isFeatureEnabled: (_feature: string) => true,
+  getModelForFeature: (_feature: string) => 'gemini-2.5-flash' as const,
   getMaxTokens: () => 8192,
   getDefaultMaxTokens: () => 2048,
   getRequestTimeout: () => 30000,

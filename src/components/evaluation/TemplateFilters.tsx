@@ -15,7 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Search, Star, Grid3x3, List, SlidersHorizontal } from 'lucide-react';
+import { Search, Star, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TemplateFilters as TemplateFiltersType } from '@/types/clinical-forms';
 

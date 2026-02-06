@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Core Web Vitals Monitor
  * Monitora as métricas de performance do Web Vitals em produção

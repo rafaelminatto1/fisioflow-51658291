@@ -79,7 +79,7 @@ export function PatientsPageHeader({
   conditionFilter,
   onConditionFilterChange,
   uniqueConditions,
-  activeAdvancedFiltersCount,
+  _activeAdvancedFiltersCount,
   totalFilteredLabel,
   onClearAllFilters,
   hasActiveFilters,

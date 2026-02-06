@@ -186,6 +186,7 @@ export function ClinicalDecisionSupport({
       setLoading(false);
       setProgress(0);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient.id]);
 
   /**

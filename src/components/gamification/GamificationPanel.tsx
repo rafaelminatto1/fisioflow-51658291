@@ -6,11 +6,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useGamificationNotifications } from '@/hooks/useGamificationNotifications';
-import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { QuestList } from './QuestList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface GamificationPanelProps {
   patientId: string;

@@ -10,14 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import {
 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
 import {
   MessageSquare,
@@ -31,7 +25,6 @@ import {
   Zap,
   Phone,
   CheckCircle2,
-  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -291,7 +284,7 @@ export function WhatsAppScriptGenerator() {
                   key={cat.value}
                   variant={selectedCategory === cat.value ? 'default' : 'outline'}
                   className="cursor-pointer"
-                  onClick={() => setSelectedCategory(cat.value as any)}
+                  onClick={() => setSelectedCategory(cat.value as unknown)}
                 >
                   {cat.label}
                 </Badge>

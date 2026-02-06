@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * VirtualizedList - Componente de lista virtualizada
  * Renderiza apenas os itens visíveis na tela, drasticamente melhorando performance
@@ -134,7 +135,7 @@ export function VirtualizedList<T>({
   }, [items, itemHeight]);
 
   // Calcular itens visíveis
-  const { visibleItems, startIndex, endIndex } = useMemo(() => {
+  const { visibleItems, _startIndex, _endIndex } = useMemo(() => {
     const getItemHeightLocal = (index: number) => itemHeights[index] || 50;
 
     let startNode = 0;

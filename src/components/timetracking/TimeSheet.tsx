@@ -34,7 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { formatDuration, formatHoursDecimal } from '@/lib/timetracking/timeCalculator';
+import { formatDuration } from '@/lib/timetracking/timeCalculator';
 
 import type { TimeEntry } from '@/types/timetracking';
 

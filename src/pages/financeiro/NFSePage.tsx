@@ -15,19 +15,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import {
 
-  FileText, Plus, Download, Send, CheckCircle2, AlertCircle,
-  Settings, Eye, Edit, Trash2, Clock, Calendar, Building2,
-  Search, Filter, RefreshCw, Copy, Printer
+  FileText, Plus, Download, CheckCircle2,
+  Settings, Eye, Edit,
+  Search, Printer
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, doc, getDoc, setDoc, query as firestoreQuery, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 
@@ -450,9 +449,9 @@ export default function NFSePage() {
   const { currentOrganization: orgData } = useOrganizations();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [_isConfigOpen, setIsConfigOpen] = useState(false);
   const [previewNFSe, setPreviewNFSe] = useState<NFSe | null>(null);
-  const [editingNFSe, setEditingNFSe] = useState<NFSe | null>(null);
+  const [_editingNFSe, _setEditingNFSe] = useState<NFSe | null>(null);
   const [activeTab, setActiveTab] = useState<'lista' | 'config'>('lista');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');

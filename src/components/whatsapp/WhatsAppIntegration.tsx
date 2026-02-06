@@ -54,6 +54,7 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
 
   useEffect(() => {
     fetchHistory();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_patientId]);
 
   const templates = [

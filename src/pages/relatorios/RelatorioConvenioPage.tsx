@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,7 +20,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Activity } from 'lucide-react';
 
@@ -767,7 +766,7 @@ export default function RelatorioConvenioPage() {
         await setDoc(docRef, data, { merge: true });
         return data;
       } else {
-        const { id, ...rest } = data;
+        const { _id, ...rest } = data;
         const docRef = await addDoc(collection(db, 'relatorios_convenio'), rest);
         return { id: docRef.id, ...rest };
       }

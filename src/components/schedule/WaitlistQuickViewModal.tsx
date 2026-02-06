@@ -166,7 +166,7 @@ export function WaitlistQuickViewModal({
             ) : (
               <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
-                  {filteredWaitlist.map((entry, index) => (
+                  {filteredWaitlist.map((entry, _index) => (
                     <motion.div
                       key={entry.id}
                       layout

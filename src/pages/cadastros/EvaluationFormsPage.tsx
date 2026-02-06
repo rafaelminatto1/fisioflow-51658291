@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { ClipboardList, Plus, Pencil, Trash2, Search, Eye, Settings, BookOpen, Copy, Download, Upload, Play, Sparkles } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Eye, Settings, BookOpen, Copy, Download, Upload, Play, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import {
 
@@ -23,14 +23,13 @@ import {
   useDuplicateEvaluationForm,
   EvaluationFormFormData
 } from '@/hooks/useEvaluationForms';
-import { EvaluationForm, TemplateFilters, EvaluationTemplate } from '@/types/clinical-forms';
+import { EvaluationForm, TemplateFilters } from '@/types/clinical-forms';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
 import { StandardFormsManager } from '@/components/clinical/StandardFormsManager';
 import { useImportEvaluationForm, EvaluationFormImportData } from '@/hooks/useEvaluationForms';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DynamicFieldRenderer } from '@/components/evaluation/DynamicFieldRenderer';
-import { TemplateField } from '@/components/evaluation/EvaluationTemplateSelector';
 // New components
 import { PageHeader } from '@/components/evaluation/PageHeader';
 import { TemplateGrid } from '@/components/evaluation/TemplateGrid';

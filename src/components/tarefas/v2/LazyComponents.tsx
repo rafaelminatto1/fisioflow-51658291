@@ -19,7 +19,7 @@ export function LazyComponentWrapper({ children }: { children: React.ReactNode }
 }
 
 // Wrapper específico para colunas do Kanban
-export function LazyKanbanColumnWrapper({ children, ...props }: any) {
+export function LazyKanbanColumnWrapper({ children, ...props }: unknown) {
   return (
     <Suspense fallback={<LoadingSkeleton type="card" className="w-[320px] h-[500px]" />}>
       <children.type {...children.props} {...props} />

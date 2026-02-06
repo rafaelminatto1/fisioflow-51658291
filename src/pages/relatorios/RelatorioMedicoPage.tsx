@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -1145,11 +1145,12 @@ export default function RelatorioMedicoPage() {
     if (statePatientId && pacientes.length > 0) {
       criarRelatorioPaciente(statePatientId);
     }
+   
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statePatientId, pacientes.length]);
 
   // Estado para novo relatório
-  const [novoRelatorio] = useState<RelatorioMedicoData>({
+  const [_novoRelatorio] = useState<RelatorioMedicoData>({
     id: '',
     tipo_relatorio: 'inicial',
     paciente: {
@@ -1198,7 +1199,7 @@ export default function RelatorioMedicoPage() {
         const docRef = doc(db, 'relatorios_medicos', data.id);
         await setDoc(docRef, data, { merge: true });
       } else {
-        const { id, ...rest } = data;
+        const { _id, ...rest } = data;
         const docRef = await addDoc(collection(db, 'relatorios_medicos'), rest);
         (data as RelatorioMedicoData & { id: string }).id = docRef.id;
       }

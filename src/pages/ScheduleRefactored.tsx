@@ -2,25 +2,23 @@
 
 // Lazy load CalendarView for better initial load performance
 
-import { memo, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
-import { ScheduleHeaderRefactored } from '@/components/schedule/ScheduleHeaderRefactored';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { AlertTriangle, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, ChevronLeft, ChevronRight, CalendarDays, Users, Clock } from 'lucide-react';
+import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CalendarDays, Users, Clock } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
@@ -143,7 +141,7 @@ const ScheduleRefactored = () => {
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
-  const { totalInWaitlist } = useWaitlistMatch();
+  const { _totalInWaitlist } = useWaitlistMatch();
 
   const {
     isOnline,

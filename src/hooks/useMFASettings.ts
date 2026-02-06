@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, setDoc, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { collection, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { httpsCallable } from 'firebase/functions';

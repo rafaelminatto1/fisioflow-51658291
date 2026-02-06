@@ -37,7 +37,7 @@ interface DespesaFixa {
   tipo: 'mensal' | 'trimestral' | 'anual';
 }
 
-interface Cenario {
+interface _Cenario {
   nome: string;
   aumentoPercentual: number;
   novosAlunos: number;

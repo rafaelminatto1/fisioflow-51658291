@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy, getFirebaseAuth, db, getFirebaseStorage } from '@/integrations/firebase/app';
+import { collection, doc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy, getFirebaseAuth, db, getFirebaseStorage } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import {
 

@@ -318,7 +318,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
       description: 'Sincronizando dados pendentes...',
     });
     syncPendingActions();
-  }, []);
+  }, [syncPendingActions]);
 
   /**
    * Handles offline event - shows warning notification
@@ -346,7 +346,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
   // Load initial cache stats
   useEffect(() => {
     loadCacheStats();
-  }, []);
+  }, [loadCacheStats]);
 
   // ========================================================================
   // PATIENT ANALYTICS CACHE
@@ -373,7 +373,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         throw error;
       }
     },
-    []
+    [loadCacheStats]
   );
 
   /**
@@ -402,7 +402,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         return null;
       }
     },
-    [cacheExpiryMs]
+    [cacheExpiryMs, loadCacheStats]
   );
 
   /**
@@ -424,7 +424,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         throw error;
       }
     },
-    []
+    [loadCacheStats]
   );
 
   /**
@@ -479,7 +479,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
         throw error;
       }
     },
-    []
+    [loadCacheStats]
   );
 
   /**
@@ -578,6 +578,7 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
     }
 
     return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline, pendingActions, getPendingActions, maxRetryAttempts]);
 
   /**

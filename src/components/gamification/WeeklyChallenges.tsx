@@ -4,8 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Zap, Clock, Trophy, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { differenceInDays, differenceInHours, parseISO, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 

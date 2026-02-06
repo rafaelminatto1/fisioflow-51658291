@@ -58,7 +58,7 @@ export function useUsers() {
       queryClient.invalidateQueries({ queryKey: ['admin-users-list'] });
       toast({ title: 'Função do usuário atualizada com sucesso' });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Update role error', error, 'useUsers');
       toast({
         title: 'Erro ao atualizar função',

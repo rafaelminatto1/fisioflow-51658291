@@ -34,12 +34,8 @@ import {
   X,
   AlertTriangle,
   CheckCircle2,
-  FileImage,
   File,
   Loader2,
-  Download,
-  Eye,
-  Trash2,
   AlertCircle,
   Pill,
   Activity,
@@ -550,7 +546,7 @@ export function DocumentAIUploader({
           )}
 
           {/* Resultados por documento */}
-          {results.map((result, resultIndex) => (
+          {results.map((result, _resultIndex) => (
             <Card key={result.documentId} className="overflow-hidden">
               <CardHeader
                 className="cursor-pointer hover:bg-muted/50 transition-colors"

@@ -30,7 +30,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useUsers } from '@/hooks/useUsers';
-import { Search, UserPlus, UserMinus } from 'lucide-react';
+import { Search, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

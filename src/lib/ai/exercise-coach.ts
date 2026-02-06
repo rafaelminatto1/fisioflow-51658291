@@ -35,7 +35,6 @@ import {
   LiveAPIEvent,
   generateSessionId,
   DEFAULT_EXERCISE_COACH_CONFIG,
-  createLiveAPIEvent,
   audioChunkToBase64,
   base64ToAudioChunk,
   formatSessionDuration,
@@ -972,7 +971,7 @@ export class ExerciseCoach {
   /**
    * Update form metrics
    */
-  private updateFormMetrics(formScore: number): void {
+  private updateFormMetrics(_formScore: number): void {
     if (!this.session) return;
 
     const allReps = this.session.completedSets.flatMap(set => set.reps);

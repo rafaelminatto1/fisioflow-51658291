@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -93,7 +93,8 @@ const Patients = () => {
   // Reset to page 1 quando filtros mudam
   useEffect(() => {
     goToPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, debouncedSearch, conditionFilter, advancedFilters.classification]);
 
   // Get unique conditions and statuses for filters (from current page)

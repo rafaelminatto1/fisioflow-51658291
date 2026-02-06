@@ -354,7 +354,7 @@ export class ClinicalDecisionSupport {
     useGrounding?: boolean
   ): Promise<ClinicalAnalysisResponse> {
     try {
-      const startTime = Date.now();
+      const _startTime = Date.now();
       const enableGrounding = useGrounding ?? this.groundingEnabled;
 
       // Build prompt
@@ -552,7 +552,7 @@ Sessão ${s.sessionNumber}:
       ? `
 **Sinais Vitais:**
 ${Object.entries(currentSOAP.vitalSigns)
-  .filter(([k, v]) => v !== undefined)
+  .filter(([_k, v]) => v !== undefined)
   .map(([k, v]) => `- ${k}: ${v}`)
   .join('\n')}
 `

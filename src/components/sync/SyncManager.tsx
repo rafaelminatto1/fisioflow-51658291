@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { useOfflineSync } from '@/services/offlineSync';
-import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function SyncManager() {
-    const { stats, syncNow, isOnline, cacheCriticalData } = useOfflineSync({
+    const { _stats, _syncNow, isOnline, cacheCriticalData } = useOfflineSync({
         syncInterval: 60000, // 1 minute
         showNotifications: true
     });

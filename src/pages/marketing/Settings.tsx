@@ -18,15 +18,11 @@ import {
 
   Settings,
   MessageSquare,
-  Calendar,
   Gift,
   Link2,
   Star,
-  Users,
   Save,
   Sparkles,
-  Bell,
-  BarChart3,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -75,11 +71,12 @@ export default function MarketingSettingsPage() {
     days_without_visit: 180,
     message_template: '',
   });
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+  const [_loadingCampaigns, setLoadingCampaigns] = useState(true);
 
   // Load configs on mount
   useEffect(() => {
     loadConfigs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
 
   const loadConfigs = async () => {
@@ -106,7 +103,7 @@ export default function MarketingSettingsPage() {
     try {
       await updateReviewAutomationConfig(organizationId, reviewConfig);
       toast.success('Configuração de reviews salva com sucesso');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao salvar configuração de reviews');
     } finally {
       setSavingReview(false);
@@ -118,7 +115,7 @@ export default function MarketingSettingsPage() {
     try {
       await updateBirthdayAutomationConfig(organizationId, birthdayConfig);
       toast.success('Configuração de aniversários salva com sucesso');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao salvar configuração de aniversários');
     } finally {
       setSavingBirthday(false);
@@ -132,7 +129,7 @@ export default function MarketingSettingsPage() {
     }
 
     try {
-      const campaignId = await createRecallCampaign(
+      const _campaignId = await createRecallCampaign(
         {
           ...newCampaign,
           enabled: true,
@@ -152,7 +149,7 @@ export default function MarketingSettingsPage() {
         days_without_visit: 180,
         message_template: '',
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao criar campanha de recall');
     }
   };

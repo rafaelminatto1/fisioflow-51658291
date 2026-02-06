@@ -36,12 +36,12 @@ const QUERY_KEYS = {
 // TYPES
 // ============================================================================
 
-interface FirestoreDoc {
+interface _FirestoreDoc {
   id: string;
   [key: string]: unknown;
 }
 
-interface Appointment {
+interface _Appointment {
   id: string;
   patient_id?: string;
   therapist_id?: string;
@@ -61,7 +61,7 @@ interface Patient {
   [key: string]: unknown;
 }
 
-interface Payment {
+interface _Payment {
   id: string;
   date: string;
   amount: number;
@@ -69,14 +69,14 @@ interface Payment {
   [key: string]: unknown;
 }
 
-interface Profile {
+interface _Profile {
   id: string;
   full_name?: string;
   email?: string;
   [key: string]: unknown;
 }
 
-interface LastAppointmentInfo {
+interface _LastAppointmentInfo {
   patientId: string;
   lastAppointment: string | null;
 }
@@ -505,7 +505,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
           where('status', '==', 'paid')
         ));
 
-        const payments = snap.docs.map(convertDoc);
+        const _payments = snap.docs.map(convertDoc);
 
         // Note: Need to join with appointments to get therapist_id
         // This is simplified - in production you'd structure this differently

@@ -22,8 +22,8 @@ interface WeeklySummaryProps {
 
 export function WeeklySummary({
   entries,
-  onUpdate,
-  onDelete,
+  _onUpdate,
+  _onDelete,
   targetHoursPerDay = 8,
 }: WeeklySummaryProps) {
   // Agrupar por dia

@@ -89,7 +89,7 @@ export function useCreateParticipante() {
         variant: 'destructive',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast({
         title: 'Participante adicionado!',
         description: 'Participante cadastrado com sucesso.',
@@ -140,7 +140,7 @@ export function useUpdateParticipante() {
         variant: 'destructive',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast({
         title: 'Participante atualizado!',
         description: 'Alterações salvas com sucesso.',

@@ -32,7 +32,7 @@ import {
 
 import { VoiceAssistant as VoiceAssistantClass, KeyPoint } from '@/lib/ai/voice-assistant';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import type { LiveSessionCallbacks, LiveSessionState } from '@/lib/ai/live-config';
+import type { LiveSessionCallbacks } from '@/lib/ai/live-config';
 
 // ============================================================================
 // TYPES
@@ -99,7 +99,7 @@ export function VoiceAssistant({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [sessionId, setSessionId] = useState<string>('');
+  const [_sessionId, setSessionId] = useState<string>('');
   const [duration, setDuration] = useState(0);
   const [transcripts, setTranscripts] = useState<TranscriptMessage[]>([]);
   const [keyPoints, setKeyPoints] = useState<KeyPoint[]>([]);
@@ -212,6 +212,7 @@ export function VoiceAssistant({
         assistantRef.current.stopSession();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-start
@@ -219,6 +220,7 @@ export function VoiceAssistant({
     if (autoStart && assistantRef.current && !isActive) {
       startSession();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart]);
 
   // Update duration timer

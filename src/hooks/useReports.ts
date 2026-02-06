@@ -135,7 +135,7 @@ async function calculateExerciseAdherence(patientId?: string): Promise<number> {
     let logsSnapshot;
     try {
       logsSnapshot = await getDocs(logsQuery);
-    } catch (e) {
+    } catch (_e) {
       // Se falhar (ex: coleção não existe ou erro de índice), tenta fallback
       logsSnapshot = { empty: true, size: 0, docs: [] };
     }
@@ -146,7 +146,7 @@ async function calculateExerciseAdherence(patientId?: string): Promise<number> {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(now.getDate() - 30);
 
-      const recentLogs = logs.filter((l: any) => {
+      const recentLogs = logs.filter((l: unknown) => {
         const dateStr = l.complete_date || l.timestamp || l.created_at;
         const date = dateStr ? new Date(dateStr) : null;
         return date && date >= thirtyDaysAgo;
@@ -185,11 +185,11 @@ async function calculateExerciseAdherence(patientId?: string): Promise<number> {
 
     const appts = apptSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
-    const completed = appts.filter((a: any) =>
+    const completed = appts.filter((a: unknown) =>
       ['concluido', 'atendido', 'completed', 'realizado'].includes((a.status || '').toLowerCase())
     ).length;
 
-    const missed = appts.filter((a: any) =>
+    const missed = appts.filter((a: unknown) =>
       ['faltou', 'cancelado', 'no_show', 'cancelled', 'missed'].includes((a.status || '').toLowerCase())
     ).length;
 

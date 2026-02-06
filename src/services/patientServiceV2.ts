@@ -9,7 +9,7 @@ export interface PatientV2 {
   cpf?: string;
   birth_date?: string; // YYYY-MM-DD
   gender?: string;
-  address?: any;
+  address?: unknown;
   status: 'Inicial' | 'Em_Tratamento' | 'Recuperacao' | 'Concluido';
   main_condition?: string;
   organization_id: string;

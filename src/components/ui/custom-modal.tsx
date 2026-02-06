@@ -106,6 +106,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 
     contentRef.current.addEventListener('keydown', handleTab);
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       contentRef.current?.removeEventListener('keydown', handleTab);
     };
   }, [open]);

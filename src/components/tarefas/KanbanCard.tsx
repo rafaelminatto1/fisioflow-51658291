@@ -1,6 +1,5 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { format, isPast, isToday } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Calendar, Clock, MoreHorizontal, Pencil, Trash2, User, CheckSquare, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

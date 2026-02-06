@@ -8,7 +8,7 @@ import { getAuth } from 'firebase/auth';
 import { fisioLogger } from '@/lib/errors/logger';
 
 interface RequestOptions extends RequestInit {
-  data?: any;
+  data?: unknown;
   token?: string;
 }
 
@@ -65,15 +65,15 @@ class ApiClient {
     return this.request<T>(url, { ...options, method: 'GET' });
   }
 
-  post<T>(url: string, data: any, options?: RequestOptions) {
+  post<T>(url: string, data: unknown, options?: RequestOptions) {
     return this.request<T>(url, { ...options, method: 'POST', data });
   }
 
-  put<T>(url: string, data: any, options?: RequestOptions) {
+  put<T>(url: string, data: unknown, options?: RequestOptions) {
     return this.request<T>(url, { ...options, method: 'PUT', data });
   }
 
-  delete<T>(url: string, data?: any, options?: RequestOptions) {
+  delete<T>(url: string, data?: unknown, options?: RequestOptions) {
     return this.request<T>(url, { ...options, method: 'DELETE', data });
   }
 }

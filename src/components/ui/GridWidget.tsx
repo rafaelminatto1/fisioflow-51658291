@@ -1,7 +1,7 @@
 import React, { forwardRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { GripHorizontal, Maximize2, X, GripVertical, MoveDiagonal2 } from 'lucide-react';
+import { X, GripVertical, MoveDiagonal2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 

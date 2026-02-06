@@ -9,12 +9,11 @@
 // ============================================================================
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, getCountFromServer, QueryConstraint, onSnapshot, db } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, getCountFromServer, QueryConstraint, onSnapshot, db } from '@/integrations/firebase/app';
 import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import type { UnknownError } from '@/types/common';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface UserRole {

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,15 +15,11 @@ import {
 import {
   DollarSign,
   TrendingUp,
-  Calendar,
-  CreditCard,
-  AlertCircle,
   Plus,
   Download,
   Filter,
   Edit,
   Check,
-  Package,
   Sparkles,
   RefreshCw,
   Clock
@@ -70,7 +66,7 @@ const Financial = () => {
     markAsPaid,
     isCreating,
     isUpdating,
-    isDeleting,
+    _isDeleting,
   } = useFinancial();
 
   const generateFinancialAdvice = async () => {
@@ -89,7 +85,7 @@ const Financial = () => {
       `;
       const result = await generate(prompt, { 
         userId: "financial-module", 
-        feature: "clinical_analysis" as any 
+        feature: "clinical_analysis" as unknown 
       });
       setAiSummary(result.content);
     } catch (error) {
@@ -104,6 +100,7 @@ const Financial = () => {
     if (stats && !aiSummary && !isGenerating) {
       generateFinancialAdvice();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats]);
 
   const handleNewTransaction = () => {

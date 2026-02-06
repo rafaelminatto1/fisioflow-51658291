@@ -5,7 +5,6 @@ import {
   exercisesApi,
   clinicalApi
 } from '@/integrations/firebase/functions';
-import { getPatientName } from '@/lib/constants/patient-queries';
 
 interface PatientApiData {
   id: string;

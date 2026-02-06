@@ -9,16 +9,10 @@ import {
   Clock,
   Calendar,
   TrendingDown,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   X,
   Sparkles,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
   generateDashboardInsights,

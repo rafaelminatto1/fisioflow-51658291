@@ -8,7 +8,7 @@ import {
 
   Brain, TrendingUp, AlertTriangle, Users, DollarSign,
   Calendar, BarChart3, CheckCircle,
-  MessageSquare, Sparkles, Package,
+  MessageSquare, Sparkles,
   LayoutDashboard, Save, RotateCcw, Stethoscope, FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ import { useEventos } from '@/hooks/useEventos';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Area, AreaChart } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
@@ -64,7 +64,7 @@ export default function SmartDashboard() {
   const { data: medicalReturnsUpcoming = [] } = useMedicalReturnsUpcoming(14);
   const navigate = useNavigate();
   const { data: forecasts = [] } = useRevenueForecasts();
-  const { data: staffPerformance = [] } = useStaffPerformance();
+  const { data: _staffPerformance = [] } = useStaffPerformance();
   const { data: inventory = [] } = useInventory();
   const { data: eventos = [] } = useEventos();
   const { notifications } = useNotifications(5);
@@ -87,7 +87,7 @@ export default function SmartDashboard() {
   const highRiskAppointments = predictions.filter(p => p.no_show_probability > 0.3);
 
   // Low stock items
-  const lowStockItems = inventory.filter(i => i.current_quantity <= i.minimum_quantity);
+  const _lowStockItems = inventory.filter(i => i.current_quantity <= i.minimum_quantity);
 
   // Revenue forecast data
   const revenueChartData = forecasts.slice(-30).map(f => ({
@@ -97,7 +97,7 @@ export default function SmartDashboard() {
   }));
 
   // Determine displayed values based on View Mode
-  const getDisplayValue = (type: 'appointments' | 'completed' | 'new_patients' | 'revenue') => {
+  const _getDisplayValue = (type: 'appointments' | 'completed' | 'new_patients' | 'revenue') => {
     if (!metrics) return 0;
 
     switch (viewMode) {

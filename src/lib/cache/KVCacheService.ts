@@ -7,7 +7,7 @@
  * @version 3.0.0 - Migrated to Firebase Realtime Database
  */
 
-import { getDatabase, ref, set, get, remove, child, update, onValue, off } from 'firebase/database';
+import { getDatabase, ref, set, get, remove, child } from 'firebase/database';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { firebaseApp } from '@/integrations/firebase/app';
 
@@ -300,7 +300,7 @@ export async function rateLimit(
 ): Promise<{ allowed: boolean; remaining: number; reset: number }> {
   const key = getKey(`ratelimit:${identifier}`, config.prefix || 'fisioflow');
   const now = Date.now();
-  const windowStart = now - config.window * 1000;
+  const _windowStart = now - config.window * 1000;
 
   const cacheRef = ref(db, key);
   const snapshot = await get(cacheRef);

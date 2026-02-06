@@ -3,19 +3,17 @@
  * Persiste entre páginas e permite controle rápido do timer
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
 
   Play,
-  Pause,
   Square,
   Clock,
   MoreVertical,
   X,
   Edit2,
   DollarSign,
-  Tag,
   ChevronUp,
   ChevronDown,
 } from 'lucide-react';
@@ -26,13 +24,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -182,7 +175,7 @@ function MinimizedTimer({
   isRunning,
   formattedTime,
   onExpand,
-  onStop,
+  _onStop,
 }: MinimizedTimerProps) {
   return (
     <motion.div
@@ -245,7 +238,7 @@ function ExpandedTimer({
   onMinimize,
   onGoToTimeTracking,
 }: ExpandedTimerProps) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [_isSettingsOpen, _setIsSettingsOpen] = useState(false);
 
   return (
     <motion.div

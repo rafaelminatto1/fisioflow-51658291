@@ -225,7 +225,7 @@ export async function generateAIResponse(
       throw new Error(`Failed to initialize ${primaryProvider} client`);
     }
 
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     const result = await generateText({
       model: client(modelName),

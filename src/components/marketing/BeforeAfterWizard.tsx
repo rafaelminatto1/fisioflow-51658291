@@ -21,15 +21,6 @@ import {
   Sparkles,
   Grid3x3,
   X,
-  Plus,
-  Minus,
-  RotateCw,
-  FlipHorizontal,
-  Eye,
-  EyeOff,
-  WaterDrop,
-  Scissors,
-  Move,
   Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -87,7 +78,7 @@ export function BeforeAfterWizard({
   const [blurFaces, setBlurFaces] = useState(false);
   const [splitView, setSplitView] = useState(true);
   const [sliderPosition, setSliderPosition] = useState(50);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, _setIsProcessing] = useState(false);
 
   const handleImageUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after') => {
@@ -313,6 +304,7 @@ export function BeforeAfterWizard({
     if (images.before && images.after) {
       renderCanvas();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [renderCanvas]);
 
   const handleDownload = () => {

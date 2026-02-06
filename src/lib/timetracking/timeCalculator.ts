@@ -130,7 +130,7 @@ export function groupByDay(entries: TimeEntry[], timeZone: string = 'UTC'): Dail
 
   return Array.from(grouped.entries())
     .map(([date, dayEntries]) => {
-      const { billableSeconds, nonBillableSeconds } = splitBillableTime(dayEntries);
+      const { billableSeconds, _nonBillableSeconds } = splitBillableTime(dayEntries);
       return {
         date,
         total_seconds: sumDurations(dayEntries),
@@ -239,7 +239,7 @@ export function calculateTimeStats(
     now.getFullYear(),
     getWeekNumber(now)
   );
-  const { week_start: lastWeekStart } = getWeekBounds(
+  const { week_start: _lastWeekStart } = getWeekBounds(
     now.getFullYear(),
     getWeekNumber(now) - 1
   );
@@ -351,7 +351,7 @@ function formatDateKey(date: Date, timeZone: string): string {
 /**
  * Obtém chave da semana YYYY-Www
  */
-function getWeekKey(date: Date, timeZone: string): string {
+function getWeekKey(date: Date, _timeZone: string): string {
   const year = date.getFullYear();
   const week = getWeekNumber(date);
   return `${year}-W${week.toString().padStart(2, '0')}`;

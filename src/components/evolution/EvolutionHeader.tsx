@@ -36,7 +36,6 @@ import { PatientHelpers } from '@/types';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { parseResponseDate } from '@/utils/dateUtils';
 import type { Patient, Appointment } from '@/types';
-import { TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 const FIRST_EVOLUTION_DISMISS_KEY = 'fisioflow-first-evolution-header-dismissed';

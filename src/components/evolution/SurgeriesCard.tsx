@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Card de Cirurgias na página de Evolução
  * Lista cirurgias de forma compacta

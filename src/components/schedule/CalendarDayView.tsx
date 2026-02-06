@@ -117,7 +117,7 @@ const CalendarDayView = memo(({
     }
 
     // Calculate total grid height for proper scroll container
-    const totalGridHeight = timeSlots.length * slotHeightMobile;
+    const _totalGridHeight = timeSlots.length * slotHeightMobile;
 
     return (
         <div className="flex flex-col flex-1 overflow-hidden bg-gradient-to-br from-background to-muted/20">
@@ -189,7 +189,7 @@ const CalendarDayView = memo(({
                             <Clock className="h-4 md:h-5 w-4 md:w-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 overflow-hidden">
-                            {timeSlots.map((time, slotIndex) => (
+                            {timeSlots.map((time, _slotIndex) => (
                                 <div
                                     key={time}
                                     className="border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
@@ -214,7 +214,7 @@ const CalendarDayView = memo(({
 
                         {/* Time slots */}
                         <div className="relative" role="grid" data-calendar-drop-zone>
-                            {timeSlots.map((time, slotIndex) => {
+                            {timeSlots.map((time, _slotIndex) => {
                         const hour = parseInt(time.split(':')[0]);
                         const isCurrentHour = hour === currentTime.getHours();
                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;

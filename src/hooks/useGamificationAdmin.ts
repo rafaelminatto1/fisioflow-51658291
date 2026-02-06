@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
-import { subDays, subMonths, startOfDay, differenceInDays } from 'date-fns';
+import { subDays, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
 
@@ -16,8 +16,6 @@ import {
   LevelConfig,
   LevelReward,
   ProgressionType,
-  LeaderboardEntry,
-  LeaderboardFilters,
 } from '@/types/gamification';
 import { db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
@@ -74,8 +72,8 @@ export interface UseGamificationAdminResult {
 // ============================================================================
 
 export const useGamificationAdmin = (days: number = 30): UseGamificationAdminResult => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { _toast } = useToast();
+  const _queryClient = useQueryClient();
 
   // -------------------------------------------------------------------------
   // 1. Statistics Query
@@ -89,7 +87,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
 
       // Parallel queries using Promise.all
       const [
-        totalPatientsSnap,
+        _totalPatientsSnap,
         xpDataSnap,
         profilesSnap,
         achievementsSnap,

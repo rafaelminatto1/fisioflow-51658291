@@ -16,8 +16,8 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
     videoUrlA,
     videoUrlB,
     watermarkText = "FisioFlow",
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    metricsOverlay = [],
+     
+    _metricsOverlay = [],
     onExportComplete,
     isAnonymized = false
 }) => {

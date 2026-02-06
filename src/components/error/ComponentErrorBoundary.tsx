@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * ComponentErrorBoundary - Error Boundary para componentes individuais
  *

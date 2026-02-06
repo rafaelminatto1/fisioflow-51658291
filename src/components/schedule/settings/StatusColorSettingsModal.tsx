@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useStatusConfig, CustomStatusConfig } from '@/hooks/useStatusConfig';
-import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
 import { Palette, Plus, RotateCcw, Trash2, Check, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -253,7 +252,7 @@ export function StatusColorSettingsModal({ open, onOpenChange }: StatusColorSett
         deleteStatus,
         resetToDefaults,
         resetStatusColor,
-        isCustomStatus,
+        _isCustomStatus,
         hasCustomColors,
         customStatuses,
     } = useStatusConfig();

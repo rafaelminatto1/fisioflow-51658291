@@ -20,7 +20,6 @@ import { useSatisfactionSurveys, useSurveyStats, useDeleteSurvey } from '@/hooks
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Star, TrendingUp, Users, MessageSquare, Trash2, Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
   AlertDialogAction,

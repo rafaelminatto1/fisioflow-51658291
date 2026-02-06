@@ -67,7 +67,7 @@ export interface SurveyFilters {
 }
 
 export function useSatisfactionSurveys(filters?: SurveyFilters) {
-  const { user } = useAuth();
+  const { _user } = useAuth();
   return useQuery({
     queryKey: ['satisfaction-surveys', filters],
     queryFn: async () => {

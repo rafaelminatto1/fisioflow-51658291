@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Plus, Minus, Clock, Loader2, Users, CheckCircle2, Info, Calendar } from 'lucide-react';
+import { Trash2, Plus, Minus, Loader2, Users, CheckCircle2, Info, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -34,7 +34,7 @@ const DAY_SHORT_LABELS: Record<number, string> = {
 function formatDaysLabel(days: number[]): string {
   if (days.length === 0) return '';
   const sorted = [...days].sort((a, b) => a - b);
-  const labels = sorted.map((d) => DAY_SHORT_LABELS[d] ?? '');
+  const _labels = sorted.map((d) => DAY_SHORT_LABELS[d] ?? '');
   const runs: number[][] = [];
   let run: number[] = [sorted[0]];
   for (let i = 1; i < sorted.length; i++) {

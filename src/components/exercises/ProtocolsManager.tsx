@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useEffect } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { Card } from '@/components/ui/card';

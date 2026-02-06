@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
+import { collection, getDocs, getCountFromServer, query as firestoreQuery, db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Evento {

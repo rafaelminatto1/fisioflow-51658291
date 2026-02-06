@@ -3,17 +3,15 @@
  * Visualização timeline de tarefas com drag-and-drop e dependências
  */
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
 
   format,
   startOfDay,
-  endOfDay,
   eachDayOfInterval,
   differenceInDays,
   addDays,
 } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   DndContext,
   DragEndEvent,
@@ -24,7 +22,6 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
@@ -49,7 +46,6 @@ import type {
   GanttTask,
   GanttDependency,
   GanttZoomLevel,
-  CriticalPath,
   TaskPosition,
   TimeCell,
 } from '@/types/gantt';
@@ -74,7 +70,7 @@ export function GanttChart({
   tasks,
   dependencies,
   onTaskMove,
-  onTaskResize,
+  _onTaskResize,
   onDependencyClick,
   onTaskClick,
   zoom: controlledZoom,
@@ -98,7 +94,7 @@ export function GanttChart({
     }
   );
 
-  const [activeTask, setActiveTask] = useState<GanttTask | null>(null);
+  const [_activeTask, _setActiveTask] = useState<GanttTask | null>(null);
   const [draggedTask, setDraggedTask] = useState<GanttTask | null>(null);
 
   // Calcular caminho crítico
@@ -387,7 +383,7 @@ export function GanttChart({
                 })}
 
                 {/* Task Bars */}
-                {tasks.map((task, index) => {
+                {tasks.map((task, _index) => {
                   const pos = taskPositions[task.id];
                   if (!pos) return null;
 

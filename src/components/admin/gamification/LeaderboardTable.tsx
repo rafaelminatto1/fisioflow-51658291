@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
 
   Table,
@@ -13,9 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Trophy, Flame, Star, Eye, Plus, Minus, RefreshCw, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Trophy, Flame, Star, Eye, RefreshCw, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
-import { LeaderboardFilters } from '@/types/gamification';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { PatientGamificationDetails } from './PatientGamificationDetails';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
@@ -40,6 +39,7 @@ export const LeaderboardTable: React.FC = () => {
   // Update filters when debounced search changes
   useEffect(() => {
     setFilters({ search: debouncedSearch || undefined });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   const {
@@ -211,7 +211,7 @@ export const LeaderboardTable: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leaderboard.map((entry, index) => (
+                    {leaderboard.map((entry, _index) => (
                       <TableRow
                         key={entry.patient_id}
                         className="hover:bg-accent/50 cursor-pointer"

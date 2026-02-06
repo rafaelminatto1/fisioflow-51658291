@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, FileSearch, Loader2, Save } from 'lucide-react';
+import { Camera, FileSearch, Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/api/v2/client';
 import { API_URLS } from '@/lib/api/v2/config';
 import { useToast } from '@/hooks/use-toast';
@@ -40,7 +40,7 @@ export const DocumentScanner = ({ onScanComplete }: { onScanComplete: (text: str
 
       onScanComplete(response.data.text);
       setPreview(null);
-    } catch (err) {
+    } catch (_err) {
       toast({
         title: 'Erro no Scanner',
         description: 'Não foi possível ler o documento.',

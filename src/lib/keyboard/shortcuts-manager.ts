@@ -492,7 +492,7 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions) {
       managerRef.current = null;
       stopRef.current = null;
     };
-  }, []);
+  }, [options]);
 
   // Update shortcuts when dependencies change
   useEffect(() => {
@@ -505,7 +505,7 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions) {
       // Register new shortcuts
       managerRef.current.registerShortcuts(options.shortcuts);
     }
-  }, [options.shortcuts, ...(options.dependencies || [])]);
+  }, [options.shortcuts, options.dependencies]);
 
   // Actions
   const registerShortcut = useCallback((shortcut: KeyboardShortcut) => {

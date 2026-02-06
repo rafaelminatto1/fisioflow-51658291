@@ -11,7 +11,6 @@ import {
 
   generatePatientRecommendations,
   generateBulkPatientRecommendations,
-  findOptimalSlots,
   generateTreatmentInsights,
   suggestNextAppointment,
   PatientRecommendation,
@@ -211,7 +210,7 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
       // Fetch patient data
       const patientDoc = await getDoc(doc(db, 'patients', options.patientId));
       if (!patientDoc.exists()) throw new Error('Patient not found');
-      const patient = convertDoc(patientDoc);
+      const _patient = convertDoc(patientDoc);
 
       // Fetch last therapist
       const lastAptQuery = firestoreQuery(
@@ -222,7 +221,7 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
         queryLimit(1)
       );
       const lastAptSnap = await getDocs(lastAptQuery);
-      const lastApt = lastAptSnap.docs.map(convertDoc)[0];
+      const _lastApt = lastAptSnap.docs.map(convertDoc)[0];
 
       // Fetch therapists
       const therapistsQuery = firestoreQuery(
@@ -230,7 +229,7 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
         where('status', '==', 'active')
       );
       const therapistsSnap = await getDocs(therapistsQuery);
-      const therapists = therapistsSnap.docs.map(convertDoc);
+      const _therapists = therapistsSnap.docs.map(convertDoc);
 
       // For now, return empty recommendations since we need availability data
       // This would be enhanced with actual availability data from the schedule

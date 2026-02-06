@@ -13,7 +13,7 @@
 // ============================================================================
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -170,7 +170,7 @@ export function useOptimizedQuery<T = unknown>(
 ): QueryResult<T> {
   const {
     table,
-    columns = '*',
+    columns: _columns = '*',
     filter,
     orderBy,
     limit = 50,
@@ -271,7 +271,7 @@ export function useOptimizedQuery<T = unknown>(
         setIsLoading(false);
       }
     }
-  }, [table, columns, filter, orderBy, limit, enabled, cacheTtl, onError]);
+  }, [table, filter, orderBy, limit, enabled, cacheTtl, onError]);
 
   const refetch = useCallback(async () => {
     invalidateQueryCache(table);
@@ -321,7 +321,7 @@ export function usePaginatedQuery<T = unknown>(
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalCount, setTotalCount] = useState(0);
   const [allData, setAllData] = useState<T[]>([]);
-  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null);
+  const [_lastVisible, _setLastVisible] = useState<QueryDocumentSnapshot | null>(null);
 
   // Firestore pagination usually needs cursors.
   // Emulating 'page number' pagination is inefficient in NoSQL.

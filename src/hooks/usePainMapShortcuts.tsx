@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useCallback } from 'react';
 
 interface ShortcutConfig {
@@ -115,7 +116,20 @@ export function usePainMapShortcuts(config: ShortcutConfig, enabled: boolean = t
         // Deixar o comportamento padrão do Escape
         break;
     }
-  }, [enabled, config]);
+  }, [
+    enabled,
+    intensityUp,
+    intensityDown,
+    onAddPoint,
+    onUndo,
+    onRedo,
+    onClearAll,
+    onSave,
+    onExport,
+    onToggleView,
+    onToggleFilter,
+    onHelp,
+  ]);
 
   useEffect(() => {
     if (enabled) {

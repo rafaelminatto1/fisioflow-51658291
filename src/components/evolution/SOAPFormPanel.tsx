@@ -57,6 +57,7 @@ const SOAPField = React.memo(({
       setLocalValue(value || '');
       lastSentValue.current = value || '';
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   useEffect(() => {

@@ -21,7 +21,7 @@ import { useGamification, type Achievement } from '@/hooks/useGamification';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useGamificationSound } from '@/hooks/useGamificationSound';
 import { JourneyMap } from './JourneyMap';
 import { DailyQuests } from './DailyQuests';

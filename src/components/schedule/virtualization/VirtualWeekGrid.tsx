@@ -11,7 +11,7 @@
 
 import React, { memo, useMemo, useRef, useCallback } from 'react';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
-import { format, isSameDay, startOfDay } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import type { CardSize } from '@/types/agenda';

@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Calendar, Loader2, CheckCircle2, XCircle, LogOut, Settings, RefreshCw } from 'lucide-react';
+import { Calendar, Loader2, CheckCircle2, LogOut, Settings, RefreshCw } from 'lucide-react';
 import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 import { cn } from '@/lib/utils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -222,7 +222,7 @@ interface GoogleCalendarBadgeProps {
 }
 
 export function GoogleCalendarBadge({ className }: GoogleCalendarBadgeProps) {
-  const { isConnected, email, isLoading } = useGoogleCalendarSync();
+  const { isConnected, email, _isLoading } = useGoogleCalendarSync();
 
   if (!isConnected) {
     return null;

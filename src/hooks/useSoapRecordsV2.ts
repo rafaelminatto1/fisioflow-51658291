@@ -16,11 +16,11 @@ export interface SoapRecordV2 {
 }
 
 // Helper to parse content JSON
-const parseSoapContent = (record: any): SoapRecordV2 => {
+const parseSoapContent = (record: unknown): SoapRecordV2 => {
   let content = { subjective: '', objective: '', assessment: '', plan: '' };
   try {
     content = typeof record.content === 'string' ? JSON.parse(record.content) : record.content;
-  } catch (e) {
+  } catch (_e) {
     // Fallback if content is plain text
     content.subjective = record.content;
   }

@@ -42,7 +42,7 @@ export async function uploadFile(path: string, file: File): Promise<string> {
  */
 export async function deleteFile(path: string): Promise<void> {
   const storage = getFirebaseStorage();
-  const storageRef = ref(storage, path);
+  const _storageRef = ref(storage, path);
 
   // Note: This requires proper Firebase Storage security rules
   // import { deleteObject } from 'firebase/storage';

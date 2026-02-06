@@ -8,7 +8,6 @@ import {
     getPatientName,
     type PatientDBStandard
 } from '@/lib/constants/patient-queries';
-import type { UnknownError } from '@/types/common';
 
 // Extended patient DB record with optional gender
 interface PatientDBExtended extends PatientDBStandard {
@@ -48,7 +47,7 @@ export const PatientService = {
         // Ensure birth_date is a string for Zod validation
         let birthDate: string | undefined = undefined;
         if (dbPatient.birth_date) {
-            const rawBirthDate = dbPatient.birth_date as any;
+            const rawBirthDate = dbPatient.birth_date as unknown;
             if (rawBirthDate instanceof Date) {
                 birthDate = rawBirthDate.toISOString().split('T')[0];
             } else {
@@ -63,9 +62,9 @@ export const PatientService = {
             phone: dbPatient.phone ?? undefined,
             cpf: dbPatient.cpf ?? undefined,
             birthDate,
-            gender: (extendedPatient.gender as any) || 'outro',
+            gender: (extendedPatient.gender as unknown) || 'outro',
             mainCondition: dbPatient.observations ?? '',
-            status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+            status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial') as unknown,
             progress: 0,
             incomplete_registration: dbPatient.incomplete_registration ?? false,
             createdAt: dbPatient.created_at ?? new Date().toISOString(),
@@ -124,7 +123,7 @@ export const PatientService = {
 
             // Map from API model to domain model and validate
             const patientsRaw = response.data || [];
-            const patients = this.mapPatientsFromDB(patientsRaw as any);
+            const patients = this.mapPatientsFromDB(patientsRaw as unknown);
 
             logger.info('PatientService: patients mapped and validated', {
                 count: patients.length,
@@ -150,7 +149,7 @@ export const PatientService = {
 
         try {
             const response = await patientsApi.get(id);
-            const mapped = this.mapToApp(response as any);
+            const mapped = this.mapToApp(response as unknown);
             return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
@@ -168,7 +167,7 @@ export const PatientService = {
                 status: patient.status || 'active',
                 progress: patient.progress || 0,
             });
-            const mapped = this.mapToApp(response as any);
+            const mapped = this.mapToApp(response as unknown);
             return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
@@ -184,7 +183,7 @@ export const PatientService = {
                 ...updates,
                 updated_at: new Date().toISOString(),
             });
-            const mapped = this.mapToApp(response as any);
+            const mapped = this.mapToApp(response as unknown);
             return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };

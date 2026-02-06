@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * React Hooks for Statsig Feature Flags
  *
@@ -25,8 +26,7 @@ import {
   StatsigService,
   FeatureFlagName,
   DynamicConfigName,
-  StatsigOptions,
-  StatsigUser
+  StatsigOptions
 } from './statsig';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

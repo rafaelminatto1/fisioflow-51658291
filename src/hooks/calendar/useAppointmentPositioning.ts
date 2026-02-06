@@ -14,7 +14,7 @@ import { Appointment } from '@/types/appointment';
 import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
 import { SLOT_HEIGHT } from '@/lib/calendar/constants';
 
-interface AppointmentPosition {
+interface _AppointmentPosition {
   /** Estilo CSS para posicionamento */
   style: CSSProperties;
   /** Índice da coluna (dia da semana 0-6) */
@@ -224,7 +224,7 @@ export function useAppointmentPositions(
     });
 
     // Calcular estilos
-    appointmentsBySlot.forEach((slotAppointments, key) => {
+    appointmentsBySlot.forEach((slotAppointments, _key) => {
       const count = slotAppointments.length;
 
       slotAppointments.forEach((apt, index) => {
@@ -244,7 +244,7 @@ export function useAppointmentPositions(
 
         const [hours, minutes] = time.split(':').map(Number);
         const totalMinutesFromStart = (hours - START_HOUR) * 60 + minutes;
-        const top = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
+        const _top = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
         const height = (duration / SLOT_DURATION_MINUTES) * slotHeight;
 
         const width = `calc((100% - ${(count + 1) * outerMargin}px) / ${count})`;

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { httpsCallable, getFirebaseFunctions } from '@/integrations/firebase/app';
+import { getFirebaseFunctions } from '@/integrations/firebase/app';
 import { httpsCallable as httpsCallableFromFirebase } from 'firebase/functions';
 import { emailSchema } from '@/lib/validations/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';

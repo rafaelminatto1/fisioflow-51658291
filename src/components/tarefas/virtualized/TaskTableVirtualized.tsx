@@ -31,9 +31,7 @@ import {
   Calendar,
   Paperclip,
   MessageSquare,
-  Link2,
-  AlertTriangle,
-  CheckCircle2
+  Link2
 } from 'lucide-react';
 import { Tarefa } from '@/types/tarefas';
 import { format, isPast, isToday } from 'date-fns';
@@ -283,7 +281,7 @@ export const TaskTableVirtualized: React.FC<TaskTableVirtualizedProps> = ({
   onDeleteTask,
   onDuplicateTask,
   onArchiveTask,
-  onBulkActions
+  _onBulkActions
 }) => {
   const rowHeight = 60; // Aproximate height of each row
   const overscanCount = 5; // Number of extra rows to render outside viewport

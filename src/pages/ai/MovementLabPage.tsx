@@ -42,7 +42,7 @@ export default function MovementLabPage() {
         mediaType: file.type.startsWith('video') ? 'video' : 'image' 
       });
 
-      setAnalysis((result.data as any).analysis);
+      setAnalysis((result.data as unknown).analysis);
 
     } catch (error) {
       console.error(error);

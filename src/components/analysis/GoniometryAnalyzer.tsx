@@ -135,7 +135,7 @@ export const GoniometryAnalyzer = () => {
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
               <div className="bg-black/60 backdrop-blur-md p-3 rounded-lg border border-white/10 pointer-events-auto">
                 <p className="text-[10px] text-blue-300 uppercase font-bold mb-1">Articulação</p>
-                <Select value={jointType} onValueChange={(v: any) => setJointType(v)}>
+                <Select value={jointType} onValueChange={(v: unknown) => setJointType(v)}>
                   <SelectTrigger className="h-8 w-40 bg-white/10 border-none text-white text-xs">
                     <SelectValue />
                   </SelectTrigger>

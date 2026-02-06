@@ -115,7 +115,7 @@ const createSessionExercise = (exercise: Exercise): SessionExercise => ({
     image_url: exercise.image_url,
 });
 
-const formatExerciseSummary = (exercise: SessionExercise): string => {
+const _formatExerciseSummary = (exercise: SessionExercise): string => {
     const parts = [`${exercise.sets}s`, `${exercise.repetitions}r`];
     if (exercise.weight) parts.push(exercise.weight);
     return parts.join(' × ');
@@ -458,7 +458,7 @@ const ExerciseCard = memo<ExerciseCardProps>(({ exercise, index, disabled, onUpd
         handleUpdate('completed', !exercise.completed);
     }, [exercise.completed, handleUpdate]);
 
-    const statusLabel = exercise.completed ? 'Marcar como pendente' : 'Marcar como concluído';
+    const _statusLabel = exercise.completed ? 'Marcar como pendente' : 'Marcar como concluído';
     const statusIcon = exercise.completed ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />;
 
     return (
@@ -694,7 +694,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
     const openLibraryModal = useCallback(() => setIsLibraryModalOpen(true), []);
 
     // Handler para remover exercício (para uso com onClick inline)
-    const handleRemove = useCallback((id: string) => {
+    const _handleRemove = useCallback((id: string) => {
         handleRemoveExercise(id);
     }, [handleRemoveExercise]);
 

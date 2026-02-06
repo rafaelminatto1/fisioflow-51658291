@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { Save, X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -60,8 +59,8 @@ export function WikiEditor({ page, onCancel, onSave }: WikiEditorProps) {
       html_content: undefined,
       view_count: 0,
       attachments: [],
-      created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-      updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+      created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
+      updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
       version: 1,
     });
   };

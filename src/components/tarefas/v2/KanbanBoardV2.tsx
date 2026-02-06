@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   Plus,
   Search,
-  SlidersHorizontal,
   LayoutList,
   Calendar as CalendarIcon,
   BarChart3,
@@ -18,17 +17,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
@@ -178,7 +171,7 @@ export function KanbanBoardV2({
   }, [tarefas, filters, projectId, statuses]);
 
   // Get all unique tags
-  const allTags = useMemo(() => {
+  const _allTags = useMemo(() => {
     if (!tarefas) return [];
     const tags = new Set<string>();
     tarefas.forEach(t => t.tags?.forEach(tag => tags.add(tag)));
@@ -276,7 +269,7 @@ export function KanbanBoardV2({
 
   const handleDuplicateTask = async (tarefa: Tarefa) => {
     // Create a copy of the task
-    const { id, created_at, updated_at, completed_at, ...rest } = tarefa;
+    const { _id, _created_at, _updated_at, _completed_at, ...rest } = tarefa;
     // The create function will be called from the modal
     setSelectedTarefa({ ...rest, titulo: `${tarefa.titulo} (cópia)` } as Tarefa);
     setQuickCreateOpen(true);

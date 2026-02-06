@@ -8,14 +8,11 @@ import { Input } from '@/components/ui/input';
 import {
 
     Clock,
-    Calendar,
-    Phone,
     Search,
     ExternalLink,
     Sun,
     Sunset,
     Moon,
-    ChevronRight,
     MoreVertical
 } from 'lucide-react';
 import { useWaitlist, type WaitlistEntry } from '@/hooks/useWaitlist';

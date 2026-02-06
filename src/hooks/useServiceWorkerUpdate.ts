@@ -52,7 +52,7 @@ export function useServiceWorkerUpdate() {
         wbRef.current = wb;
 
         // Listener para quando o SW encontrar uma atualização e entrar em waiting
-        wb.addEventListener('waiting', (event) => {
+        wb.addEventListener('waiting', (_event) => {
           logger.info('[SW] Nova versão disponível (waiting)', undefined, 'useServiceWorkerUpdate');
 
           if (!mounted) return;
@@ -132,7 +132,7 @@ export function useServiceWorkerUpdate() {
         updateCheckIntervalRef.current = setInterval(() => {
           if (wbRef.current) {
             logger.info('[SW] Verificando atualizações', undefined, 'useServiceWorkerUpdate');
-            wbRef.current.update().catch(err => {
+            wbRef.current.update().catch(_err => {
               logger.debug('[SW] Nenhuma atualização disponível', undefined, 'useServiceWorkerUpdate');
             });
           }

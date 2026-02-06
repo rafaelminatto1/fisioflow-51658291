@@ -14,7 +14,7 @@ import {
   CheckCircle2, Clock, Phone, Mail, Calendar
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, orderBy, doc, getDoc } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 
 interface LeadScoreData {
   id: string;

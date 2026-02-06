@@ -123,7 +123,7 @@ export async function analyzeExerciseForm(
   onProgress?: (progress: AnalysisProgress) => void
 ): Promise<MovementAnalysisResult> {
 
-  const startTime = Date.now();
+  const _startTime = Date.now();
   let patientVideoUrl = '';
   let demoVideoUrl = options.demoVideoUrl || '';
 
@@ -557,7 +557,7 @@ async function saveAnalysisResult(result: MovementAnalysisResult): Promise<void>
 export async function getExerciseAnalysisHistory(
   patientId: string,
   exerciseId: string,
-  limit = 10
+  _limit = 10
 ): Promise<MovementAnalysisResult[]> {
   // Implementar busca no Firestore
   // Por ora, retorna array vazio

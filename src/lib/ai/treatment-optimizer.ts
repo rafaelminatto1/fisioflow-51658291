@@ -268,7 +268,7 @@ export async function optimizeTreatmentPlan(
 ): Promise<TreatmentOptimization> {
   const {
     patientId,
-    patientProfile,
+    _patientProfile,
     currentCondition,
     currentTreatmentPlan,
     progressSoFar,
@@ -558,7 +558,7 @@ async function performGroundedResearch(
 
 function buildProgressionPlan(
   optimizedPlan: z.infer<typeof optimizationSchema>['optimizedPlan'],
-  condition: ConditionInput
+  _condition: ConditionInput
 ): Array<{
   phase: string;
   duration: string;
@@ -591,7 +591,7 @@ function buildProgressionPlan(
 
 function calculateResourceImplications(
   newTechniques: z.infer<typeof optimizationSchema>['newTechniques'],
-  constraints?: OptimizationInput['constraints']
+  _constraints?: OptimizationInput['constraints']
 ): TreatmentOptimization['resourceImplications'] {
   const additionalEquipment: string[] = [];
   const additionalTraining: string[] = [];

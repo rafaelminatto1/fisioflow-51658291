@@ -17,7 +17,6 @@ import {
   onSnapshot,
   serverTimestamp,
   Timestamp,
-  runTransaction,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/integrations/firebase/app';
@@ -26,7 +25,6 @@ import type {
   Automation,
   AutomationTrigger,
   AutomationAction,
-  AutomationCondition,
   AutomationExecutionLog,
 } from '@/types/automation';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
@@ -445,7 +443,7 @@ export const AUTOMATION_RECIPES: AutomationRecipe[] = [
  */
 export function createAutomationFromRecipe(
   recipe: AutomationRecipe,
-  values: Record<string, unknown>
+  _values: Record<string, unknown>
 ): Omit<Automation, 'id' | 'created_at' | 'updated_at' | 'execution_count' | 'last_executed_at'> {
   return {
     name: recipe.name,

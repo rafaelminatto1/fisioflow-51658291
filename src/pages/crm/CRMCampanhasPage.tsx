@@ -56,7 +56,7 @@ export default function CRMCampanhasPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'campanhas' | 'templates' | 'relatorio'>('campanhas');
-  const [selectedCampaign] = useState<EmailCampaign | null>(null);
+  const [_selectedCampaign] = useState<EmailCampaign | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
 

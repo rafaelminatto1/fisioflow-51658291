@@ -29,7 +29,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const [newAnnotation, setNewAnnotation] = useState<Annotation | null>(null);
 
 
-    const handleMouseDown = (e: { target: { getStage: () => any } }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const handleMouseDown = (e: { target: { getStage: () => unknown } }) => {  
         if (activeTool === 'select' || activeTool === 'pan') return;
 
         const stage = e.target.getStage();
@@ -81,7 +81,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         setNewAnnotation(ann);
     };
 
-    const handleMouseMove = (e: { target: { getStage: () => any } }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const handleMouseMove = (e: { target: { getStage: () => unknown } }) => {  
         if (!isDrawing || !newAnnotation) return;
 
         const stage = e.target.getStage();

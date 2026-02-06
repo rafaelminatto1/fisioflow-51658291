@@ -149,7 +149,7 @@ export function useUpdateEvolutionTemplate() {
       queryClient.setQueryData(['evolution-templates'], context?.previousTemplates);
       toast.error('Erro ao atualizar template de evolução.');
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.success('Template de evolução atualizado com sucesso.');
     },
   });

@@ -5,7 +5,6 @@ import {
   MicOff,
   Video,
   VideoOff,
-  Phone,
   PhoneOff,
   Monitor,
   MonitorUp,
@@ -14,8 +13,6 @@ import {
   Users,
   Clock,
   Signal,
-  FullScreen,
-  Minimize2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +29,7 @@ export interface VideoCallProps {
   className?: string;
 }
 
-interface CallStats {
+interface _CallStats {
   duration: number;
   bitRate: number;
   packetLoss: number;
@@ -50,9 +47,9 @@ interface CallStats {
  * - Custom WebRTC implementation
  */
 export function VideoCall({
-  roomId,
+  _roomId,
   patientName = 'Paciente',
-  therapistName = 'Dr(a).',
+  _therapistName = 'Dr(a).',
   onJoin,
   onLeave,
   className,

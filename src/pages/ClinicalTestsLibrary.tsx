@@ -57,7 +57,7 @@ export default function ClinicalTestsLibrary() {
     const [protocolDialogOpen, setProtocolDialogOpen] = useState(false);
     const { protocols, updateProtocol } = useExerciseProtocols();
 
-    const { data: tests = [], isLoading, isError, error, refetch } = useQuery({
+    const { data: tests = [], isLoading, isError, _error, refetch } = useQuery({
         queryKey: ['clinical-tests-library'],
         queryFn: async () => {
             const q = query(

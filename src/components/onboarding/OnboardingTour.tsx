@@ -9,7 +9,7 @@ import {
   MessageSquare, CheckCircle, ArrowRight, X, Heart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 interface OnboardingStep {
   id: string;
@@ -139,6 +139,7 @@ export const OnboardingTour = () => {
     };
 
     initOnboarding();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onboardingData, auth, db]);
 
   // Complete onboarding mutation

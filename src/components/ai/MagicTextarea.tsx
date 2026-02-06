@@ -42,7 +42,7 @@ export function MagicTextarea({ value, onValueChange, className, ...props }: Mag
         const transcribe = httpsCallable(functions, 'transcribeAudio');
         const result = await transcribe({ audio: audioBase64 });
         
-        const transcription = (result.data as any).transcription;
+        const transcription = (result.data as unknown).transcription;
         if (transcription) {
           // Adiciona ao texto existente ou substitui
           const newValue = value ? `${value} ${transcription}` : transcription;
@@ -67,7 +67,7 @@ export function MagicTextarea({ value, onValueChange, className, ...props }: Mag
       const fixText = httpsCallable(functions, 'aiFastProcessing');
       const result = await fixText({ text: value, mode: 'fix_grammar' });
       
-      const correctedText = (result.data as any).result;
+      const correctedText = (result.data as unknown).result;
       if (correctedText) {
         onValueChange(correctedText);
       }

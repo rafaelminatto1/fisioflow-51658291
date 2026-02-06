@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { CheckCircle, XCircle, Settings, RefreshCw, Plug, Unlink } from 'lucide-react';
+import { CheckCircle, Settings, RefreshCw, Plug, Unlink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -168,7 +168,7 @@ export function IntegrationConfig({
 }: {
   provider: IntegrationProvider;
   onClose: () => void;
-  onSave: (config: any) => void;
+  onSave: (config: unknown) => void;
 }) {
   const [config, setConfig] = React.useState({});
   const [isSaving, setIsSaving] = React.useState(false);

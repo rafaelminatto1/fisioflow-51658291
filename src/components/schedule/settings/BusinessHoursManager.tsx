@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Clock, Save, Loader2, Sun, Moon, Copy, CheckCircle2, Briefcase, Zap, Calendar } from 'lucide-react';
+import { Clock, Save, Loader2, Sun, Moon, Copy, CheckCircle2, Briefcase, Zap } from 'lucide-react';
 import { useScheduleSettings, BusinessHour } from '@/hooks/useScheduleSettings';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -159,7 +159,7 @@ export function BusinessHoursManager() {
         </div>
 
         <div className="space-y-4">
-          {daysOfWeek.map((day, index) => {
+          {daysOfWeek.map((day, _index) => {
             const hour = hours.find(h => h.day_of_week === day.value) || DEFAULT_HOURS[day.value];
             const isOpen = hour.is_open;
             const isWeekend = day.value === 0 || day.value === 6;

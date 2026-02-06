@@ -8,7 +8,7 @@ import { StatusColorManager } from '@/components/schedule/settings/StatusColorMa
 import { CardSizeManager } from '@/components/schedule/settings/CardSizeManager';
 import { CalendarViewPresets } from '@/components/schedule/settings/CalendarViewPresets';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame, ArrowLeft, Info, Sparkles, Loader2 } from 'lucide-react';
+import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame, ArrowLeft, Info, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,7 @@ export default function ScheduleSettings() {
   // Pré-carrega dados uma vez na página para que as abas não mostrem "Carregando..." individualmente
   const scheduleSettings = useScheduleSettings();
   const scheduleCapacity = useScheduleCapacity();
-  const isInitialLoading =
+  const _isInitialLoading =
     scheduleSettings.isLoadingHours ||
     scheduleSettings.isLoadingRules ||
     scheduleSettings.isLoadingNotifications ||

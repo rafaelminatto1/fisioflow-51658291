@@ -36,7 +36,6 @@ import {
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   Dumbbell,
-  TrendingUp,
   AlertCircle,
   CheckCircle2,
   Clock,
@@ -45,7 +44,6 @@ import {
   Loader2,
   Copy,
   BookOpen,
-  ChevronRight,
   Users,
   Calendar,
   Zap,
@@ -124,7 +122,7 @@ export function ExerciseAI({
   availableEquipment = [],
   treatmentPhase = 'initial',
   sessionCount = 0,
-  exerciseLibrary = [],
+  _exerciseLibrary = [],
   onExerciseSelect
 }: ExerciseAIProps) {
   const navigate = useNavigate();
@@ -207,7 +205,7 @@ export function ExerciseAI({
       setProgress(30);
 
       // Build request payload (only when patient exists)
-      const payload = {
+      const _payload = {
         patient: {
           id: patient!.id,
           name: patient?.name ?? '',
@@ -267,6 +265,7 @@ export function ExerciseAI({
       setLoading(false);
       setProgress(0);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId, patientName, soapHistory, painMap, goals, availableEquipment, treatmentPhase, sessionCount]);
 
   /**

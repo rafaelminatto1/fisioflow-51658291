@@ -116,7 +116,7 @@ export function NetworkErrorFallback({
 /**
  * Fallback para erros de carregamento de módulos (chunk loading error)
  */
-export function ChunkLoadErrorFallback({ onRetry }: { onRetry?: () => void }) {
+export function ChunkLoadErrorFallback({ _onRetry }: { onRetry?: () => void }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md border-0 shadow-xl">

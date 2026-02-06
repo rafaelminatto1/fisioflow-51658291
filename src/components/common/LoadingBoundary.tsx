@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { Suspense, ComponentType, ReactNode } from 'react';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 

@@ -15,7 +15,7 @@ import {
   OccurrencePreview,
   CreateSeriesResult,
 } from '@/types/recurring-appointment';
-import { addDays, addWeeks, addMonths, addYears, startOfDay, isSameDay } from 'date-fns';
+import { addDays, addWeeks, addMonths, addYears, startOfDay } from 'date-fns';
 import { db } from '@/integrations/firebase/app';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { AppointmentService } from '@/services/appointmentService';

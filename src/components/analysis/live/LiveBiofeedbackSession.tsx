@@ -56,8 +56,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
     useEffect(() => {
         startCamera();
         return () => stopCamera();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [startCamera, stopCamera]);
 
     const handleRecordToggle = () => {
         if (isRecording) {

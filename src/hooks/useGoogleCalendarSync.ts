@@ -4,7 +4,7 @@
  *
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { doc, getDoc, setDoc, deleteDoc, updateDoc } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -189,7 +189,7 @@ export function useSyncToGoogle() {
               expiry_date: token.expiry_date?.toISOString(),
               updated_at: new Date().toISOString()
             });
-          } catch (e) {
+          } catch (_e) {
             throw new Error('Token expirado. Por favor, reconecte sua conta.');
           }
         } else {

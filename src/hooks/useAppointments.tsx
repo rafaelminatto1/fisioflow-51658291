@@ -3,12 +3,9 @@
 // Query keys factory for better cache management
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, onSnapshot, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
-import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { useToast } from '@/hooks/use-toast';
-import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
+import { AppointmentBase, AppointmentFormData, AppointmentStatus } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId } from '@/utils/userHelpers';
 import { useAuth } from '@/contexts/AuthContext';
@@ -277,7 +274,7 @@ import { useRealtimeAppointments } from './useRealtimeAppointments';
 
 // Main hook to fetch appointments with Realtime support
 export function useAppointments() {
-  const { toast } = useToast();
+  const { _toast } = useToast();
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;

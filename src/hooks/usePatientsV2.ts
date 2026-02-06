@@ -43,7 +43,7 @@ const mapPatientV2ToFrontend = (p: PatientV2): Patient => ({
   birthDate: p.birth_date || null,
   gender: p.gender || null,
   // Normalize status to match schema if needed, though schema has generous enums
-  status: p.status as any,
+  status: p.status as unknown,
   mainCondition: p.main_condition || null,
   organization_id: p.organization_id,
   createdAt: p.created_at,
@@ -57,7 +57,7 @@ export const useActivePatientsV2 = () => {
   const { profile } = useAuth();
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
-  const [retryCount, setRetryCount] = useState(0);
+  const [retryCount, _setRetryCount] = useState(0);
 
   // Setup realtime subscription via Ably (Compatible with Backend V2 events)
   useEffect(() => {
@@ -116,7 +116,7 @@ export const useCreatePatientV2 = () => {
         birth_date: patient.birthDate || undefined,
         gender: patient.gender || undefined,
         main_condition: patient.mainCondition || undefined,
-        status: patient.status as any,
+        status: patient.status as unknown,
       };
       
       const { data } = await PatientServiceV2.create(payload);
@@ -149,7 +149,7 @@ export const useUpdatePatientV2 = () => {
         birth_date: updates.birthDate || undefined,
         gender: updates.gender || undefined,
         main_condition: updates.mainCondition || undefined,
-        status: updates.status as any,
+        status: updates.status as unknown,
       };
 
       const { data } = await PatientServiceV2.update(id, payload);
@@ -206,7 +206,7 @@ export const usePaginatedPatients = (options: UsePaginatedPatientsOptions = {}) 
 
   const { profile } = useAuth();
   const organizationId = profile?.organization_id;
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   // Build query key based on options
   const queryKey = useMemo(
@@ -245,7 +245,7 @@ export const usePaginatedPatients = (options: UsePaginatedPatientsOptions = {}) 
       const offset = (page - 1) * pageSize;
 
       // Build query params
-      const params: Record<string, any> = {
+      const params: Record<string, unknown> = {
         limit: pageSize,
         offset,
         order_by: orderBy,
@@ -318,7 +318,7 @@ export function usePrefetchPatients() {
       ],
       queryFn: async () => {
         const offset = (nextPage - 1) * pageSize;
-        const params: Record<string, any> = {
+        const params: Record<string, unknown> = {
           limit: pageSize,
           offset,
           order_by: orderBy,

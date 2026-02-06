@@ -94,7 +94,7 @@ export function VirtualList<T>({
   const getKey = keyExtractor || getDefaultKey;
 
   // Calculate visible range
-  const { startIndex, endIndex, visibleCount } = React.useMemo(() => {
+  const { startIndex, endIndex, _visibleCount } = React.useMemo(() => {
     const effectiveItemHeight = estimatedItemHeight || itemHeight;
     const visibleCount = Math.ceil(height / effectiveItemHeight);
 
@@ -289,8 +289,8 @@ export function VariableVirtualList<T>({
 
   // Calculate visible range
   const { startIndex, endIndex } = React.useMemo(() => {
-    const start = Math.max(0, Math.floor(scrollTop / estimatedHeight) - overscan);
-    const end = Math.min(
+    const _start = Math.max(0, Math.floor(scrollTop / estimatedHeight) - overscan);
+    const _end = Math.min(
       items.length - 1,
       Math.ceil((scrollTop + height) / estimatedHeight) + overscan
     );

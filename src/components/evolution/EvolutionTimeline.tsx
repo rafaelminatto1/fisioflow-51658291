@@ -75,14 +75,11 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type {
   TimelineEvent,
-  TimelineEventData,
   SessionExerciseData,
   MeasurementData,
   AttachmentData,
-  SessionEventData,
   TimelineEventType
 } from '@/types/evolution';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface EvolutionTimelineProps {
   patientId: string;
@@ -189,7 +186,7 @@ const SessionDetailsModal: React.FC<{
     };
 
     fetchSessionExercises();
-  }, [session.appointment_id]);
+  }, [session.appointment_id, session.exercises_performed]);
 
   // Filtrar medições e anexos desta sessão
   const sessionDate = new Date(session.created_at).toISOString().split('T')[0];

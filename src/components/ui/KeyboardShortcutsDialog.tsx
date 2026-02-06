@@ -3,7 +3,7 @@
  * @module components/ui/KeyboardShortcutsDialog
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import {
 
   Dialog,
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Keyboard, Search, Navigation, Calendar, Users, FileText, Zap } from 'lucide-react';
+import { Keyboard, Navigation, Calendar, Users, FileText, Zap } from 'lucide-react';
 import { useKeyboardShortcuts, formatShortcut, groupShortcutsByCategory, DEFAULT_SHORTCUTS } from '@/lib/keyboard/shortcuts-manager';
 import type { KeyboardShortcut } from '@/lib/keyboard/shortcuts-manager';
 
@@ -129,7 +129,7 @@ function CategoryTab({ name, shortcuts }: CategoryTabProps) {
 export function KeyboardShortcutsDialog({
   open,
   onOpenChange,
-  customShortcuts,
+  _customShortcuts,
 }: KeyboardShortcutsDialogProps) {
   const [activeTab, setActiveTab] = useState('global');
 
@@ -167,7 +167,7 @@ export function KeyboardShortcutsDialog({
           <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full h-auto flex-wrap">
             {groupedShortcuts.map((group) => {
               const Icon = CATEGORY_ICONS[group.name.toLowerCase()] || Keyboard;
-              const isActive = activeTab === group.name.toLowerCase();
+              const _isActive = activeTab === group.name.toLowerCase();
 
               return (
                 <TabsTrigger

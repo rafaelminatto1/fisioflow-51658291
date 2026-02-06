@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, FileText, Target, PieChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Download, FileText, Target, PieChart } from 'lucide-react';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart as RechartsPieChart, Pie } from 'recharts';
+import { Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPieChart, Pie } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, query, where, getDocs, orderBy } from '@/integrations/firebase/app';
+import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface DemonstrativoData {
@@ -451,7 +451,7 @@ export default function DemonstrativoMensalPage() {
                     ])).map(cat => {
                       const entrada = demoData.entradasPorCategoria[cat] || 0;
                       const saida = demoData.saidasPorCategoria[cat] || 0;
-                      const total = entrada + saida;
+                      const _total = entrada + saida;
                       return (
                         <TableRow key={cat}>
                           <TableCell className="font-medium">{cat}</TableCell>

@@ -13,7 +13,6 @@ import {
   deleteTimeEntry,
   getTimeEntries,
   getTimeStats,
-  getDailyBreakdown,
   listenToTodayTimeEntries,
   getActiveTimerDraft,
   saveActiveTimerDraft,
@@ -117,7 +116,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
         unsubscribeRef.current();
       }
     };
-  }, [organizationId, userId]);
+  }, [organizationId, userId, loadActiveTimer]);
 
   // ============================================================================
   // Timer Tick
@@ -140,7 +139,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
         return () => clearTimeout(syncTimeout);
       }
     }
-  }, [activeTimer, autoSync]);
+  }, [activeTimer, autoSync, syncActiveTimer]);
 
   // ============================================================================
   // Helpers

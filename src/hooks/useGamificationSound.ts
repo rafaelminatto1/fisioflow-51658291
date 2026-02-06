@@ -77,26 +77,28 @@ const SOUND_URLS: Record<GamificationSoundType, SoundConfig> = {
  * ```
  */
 export function useGamificationSound() {
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const _audioContextRef = useRef<AudioContext | null>(null);
   const soundCacheRef = useRef<Map<GamificationSoundType, HTMLAudioElement>>(new Map());
 
   // Inicializar áudios (preload para evitar delay)
   useEffect(() => {
+    const cache = soundCacheRef.current;
+
     // Pré-carregar todos os sons
     Object.entries(SOUND_URLS).forEach(([type, config]) => {
       const audio = new Audio(config.url);
       audio.volume = config.volume;
       audio.preload = 'auto';
-      soundCacheRef.current.set(type as GamificationSoundType, audio);
+      cache.set(type as GamificationSoundType, audio);
     });
 
     // Cleanup
     return () => {
-      soundCacheRef.current.forEach(audio => {
+      cache.forEach(audio => {
         audio.pause();
         audio.src = '';
       });
-      soundCacheRef.current.clear();
+      cache.clear();
     };
   }, []);
 

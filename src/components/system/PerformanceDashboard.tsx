@@ -5,7 +5,7 @@
  * Only visible in development mode or with specific permissions.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { QueryOptimizer } from '@/hooks/database/useOptimizedQuery';
 import { PerformanceMonitor, type QueryStatistics, type PerformanceReport } from '@/lib/database/performanceMonitor';
 import {

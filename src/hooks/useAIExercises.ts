@@ -125,7 +125,7 @@ export function useAIExercises(
   const [lastError, setLastError] = useState<Error | null>(null);
 
   // Query for cached suggestions
-  const { data: suggestions, isLoading, error, refetch } = useQuery({
+  const { data: suggestions, isLoading, _error, refetch } = useQuery({
     queryKey: aiExercisesQueryKeys.suggestions(patientId),
     queryFn: () => {
       // Return cached data if exists
@@ -235,7 +235,7 @@ export function useAIExercisesWithLibrary(
   /** Generate suggestions with library */
   generateWithLibrary: () => Promise<ExerciseSuggestionResponse>;
 } {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const baseHook = useAIExercises(patientId, options);
 
   // Load exercise library

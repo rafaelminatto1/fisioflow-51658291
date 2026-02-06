@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(_error: Error): Partial<State> {
     // Atualiza o state para que a próxima renderização mostre a UI de fallback
     return { hasError: true };
   }

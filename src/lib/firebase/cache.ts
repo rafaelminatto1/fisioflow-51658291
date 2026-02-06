@@ -110,7 +110,7 @@ function getKey(key: string, prefix: string = 'fisioflow'): string {
 /**
  * Get the Firestore collection reference for cache
  */
-function getCacheCollection() {
+function _getCacheCollection() {
   return collection(db, '_cache');
 }
 
@@ -702,7 +702,7 @@ export async function rateLimit(
 ): Promise<RateLimitResult> {
   const key = `ratelimit:${identifier}`;
   const now = Date.now();
-  const windowStart = now - window * 1000;
+  const _windowStart = now - window * 1000;
 
   try {
     // Get current request count

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package, MessageCircle, MoreVertical, Timer, NotepadText, CreditCard, Calendar } from 'lucide-react';
+import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package, MessageCircle, Timer, NotepadText, CreditCard, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
 
   Popover,
   PopoverContent,
-  PopoverTrigger,
   PopoverAnchor,
 } from '@/components/ui/popover';
 import {
@@ -52,7 +51,6 @@ import { appointmentsApi } from '@/integrations/firebase/functions';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import type { Appointment } from '@/types/appointment';
-import { formatCurrency } from '@/lib/utils';
 
 import { STATUS_CONFIG, normalizeStatus } from '@/lib/config/agenda';
 
@@ -102,7 +100,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const sessionNumber = linkedPackage ? linkedPackage.sessions_used + 1 : null;
   const sessionTotal = linkedPackage ? linkedPackage.sessions_purchased : null;
-  const paymentAmount = appointment.payment_amount != null ? Number(appointment.payment_amount) : null;
+  const _paymentAmount = appointment.payment_amount != null ? Number(appointment.payment_amount) : null;
   const isPaid = localPaymentStatus === 'paid' || localPaymentStatus === 'pago';
 
   // Sync local state when appointment prop changes
@@ -176,7 +174,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     }
 
     // Optimistic update - update local state immediately
-    setLocalStatus(newStatus as any);
+    setLocalStatus(newStatus as unknown);
     // Then call the API
     updateStatus({ appointmentId: appointment.id, status: newStatus });
 
@@ -193,7 +191,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleNoShowConfirm = () => {
     if (pendingStatus) {
-      setLocalStatus(pendingStatus as any);
+      setLocalStatus(pendingStatus as unknown);
       updateStatus({ appointmentId: appointment.id, status: pendingStatus });
       setShowNoShowConfirmDialog(false);
       setPendingStatus(null);
@@ -212,7 +210,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleNoShowRechedule = () => {
     if (pendingStatus) {
-      setLocalStatus(pendingStatus as any);
+      setLocalStatus(pendingStatus as unknown);
       updateStatus({ appointmentId: appointment.id, status: pendingStatus });
       setShowNoShowConfirmDialog(false);
       setPendingStatus(null);

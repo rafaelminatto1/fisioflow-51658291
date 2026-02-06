@@ -82,7 +82,8 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
         description: 'Não foi possível carregar os dados do paciente'
       });
     }
-  }, [appointments, metrics, profile]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointments, metrics, profile]);  
 
   const stats = useMemo(() => ({
     nextAppointments: Math.min(upcomingAppointments.length, 5),

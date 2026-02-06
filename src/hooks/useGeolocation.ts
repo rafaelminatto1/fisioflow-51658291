@@ -1,7 +1,6 @@
 import { Geolocation, Position, PositionOptions } from '@capacitor/geolocation';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { collection, addDoc, db } from '@/integrations/firebase/app';
 
 export interface LocationData {
   latitude: number;
@@ -28,11 +27,11 @@ export function useGeolocation() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const defaultOptions: PositionOptions = {
+  const defaultOptions: PositionOptions = useMemo(() => ({
     enableHighAccuracy: true,
     timeout: 10000,
     maximumAge: 0,
-  };
+  }), []);
 
   /**
    * Obtém a localização atual do dispositivo

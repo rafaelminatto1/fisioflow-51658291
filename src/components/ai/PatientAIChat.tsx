@@ -39,7 +39,7 @@ export function PatientAIChat({ patientId, patientName }: Props) {
         history: messages // Enviar histórico para manter contexto
       });
 
-      const aiResponse = (result.data as any).response;
+      const aiResponse = (result.data as unknown).response;
       setMessages(prev => [...prev, { role: 'model', content: aiResponse }]);
     } catch (error) {
       console.error(error);

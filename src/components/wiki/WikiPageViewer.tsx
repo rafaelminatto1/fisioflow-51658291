@@ -13,7 +13,7 @@ interface WikiPageViewerProps {
   onClose?: () => void;
 }
 
-export function WikiPageViewer({ pageId, content, onEdit, onClose }: WikiPageViewerProps) {
+export function WikiPageViewer({ _pageId, content, onEdit, onClose }: WikiPageViewerProps) {
   return (
     <Card>
       <CardContent className="p-6">

@@ -1,4 +1,4 @@
-import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { WifiOff, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 

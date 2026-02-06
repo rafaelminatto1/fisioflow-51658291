@@ -17,7 +17,6 @@ import {
   onSnapshot,
   serverTimestamp,
   Timestamp,
-  getDocsFromCache,
 } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
 

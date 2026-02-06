@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
@@ -99,8 +98,8 @@ export function TimeEntryModal({ onClose, onSave, entry }: TimeEntryModalProps) 
         user_id: '', // Será preenchido pelo hook
         organization_id: '', // Será preenchido pelo hook
         description: data.description,
-        start_time: { toDate: () => startDate, seconds: 0, nanoseconds: 0 } as any,
-        end_time: { toDate: () => endDate, seconds: 0, nanoseconds: 0 } as any,
+        start_time: { toDate: () => startDate, seconds: 0, nanoseconds: 0 } as unknown,
+        end_time: { toDate: () => endDate, seconds: 0, nanoseconds: 0 } as unknown,
         duration_seconds: durationSeconds,
         is_billable: data.is_billable ?? true,
         hourly_rate: data.hourly_rate,

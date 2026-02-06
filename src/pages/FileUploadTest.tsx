@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Upload, X, CheckCircle2, AlertCircle, FileText, FileImage, FileVideo } from 'lucide-react';
+import { Upload, X, CheckCircle2, AlertCircle, FileText, FileImage } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,6 +83,7 @@ const FileUploadTest = () => {
     newFiles.forEach(uploadedFile => {
       uploadFile(uploadedFile);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

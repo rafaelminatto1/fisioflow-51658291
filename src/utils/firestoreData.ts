@@ -57,3 +57,26 @@ export const normalizeFirestoreValue = (value: unknown): unknown => {
 export const normalizeFirestoreData = <T extends Record<string, unknown>>(data: T): T => {
   return normalizeFirestoreValue(data) as T;
 };
+
+/**
+ * Removes undefined values from an object to prevent Firestore errors.
+ */
+export const cleanForFirestore = <T extends Record<string, unknown>>(data: T): Partial<T> => {
+  if (!data || typeof data !== 'object') return data;
+  
+  const cleaned: unknown = {};
+  
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined) {
+      if (isPlainObject(value)) {
+        cleaned[key] = cleanForFirestore(value);
+      } else if (Array.isArray(value)) {
+        cleaned[key] = value.map(item => isPlainObject(item) ? cleanForFirestore(item) : item);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  });
+  
+  return cleaned;
+};

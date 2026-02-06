@@ -1,5 +1,5 @@
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
-import { differenceInDays, subDays, addDays, format, isBefore } from 'date-fns';
+import { differenceInDays, subDays, addDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface ProactiveSuggestion {
@@ -10,7 +10,7 @@ export interface ProactiveSuggestion {
   description: string;
   actionLabel?: string;
   actionUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
 }
 
@@ -195,7 +195,7 @@ async function generateScheduleOptimization(
 
     // Analyze time slots
     const hourCounts = new Map<number, number>();
-    appointments.forEach((apt: any) => {
+    appointments.forEach((apt: unknown) => {
       const hour = new Date(apt.appointment_date).getHours();
       hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
     });
@@ -243,8 +243,8 @@ async function generateScheduleOptimization(
  */
 async function generateRetentionWarnings(organizationId: string): Promise<ProactiveSuggestion[]> {
   const suggestions: ProactiveSuggestion[] = [];
-  const thirtyDaysAgo = subDays(new Date(), 30);
-  const sixtyDaysAgo = subDays(new Date(), 60);
+  const _thirtyDaysAgo = subDays(new Date(), 30);
+  const _sixtyDaysAgo = subDays(new Date(), 60);
   const ninetyDaysAgo = subDays(new Date(), 90);
 
   // Get patients who haven't returned in 30+ days
@@ -290,17 +290,13 @@ async function generateRetentionWarnings(organizationId: string): Promise<Proact
       const daysSinceLastAppt = differenceInDays(new Date(), new Date(lastAppt.appointment_date));
 
       let priority: ProactiveSuggestion['priority'] = 'low';
-      let daysThreshold = 30;
 
       if (daysSinceLastAppt >= 90) {
         priority = 'high';
-        daysThreshold = 90;
       } else if (daysSinceLastAppt >= 60) {
         priority = 'medium';
-        daysThreshold = 60;
       } else if (daysSinceLastAppt >= 30) {
         priority = 'low';
-        daysThreshold = 30;
       }
 
       suggestions.push({

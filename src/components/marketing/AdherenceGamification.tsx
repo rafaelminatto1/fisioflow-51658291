@@ -4,7 +4,7 @@
  * Gamification system to encourage patients to complete their treatment plans
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -15,18 +15,10 @@ import {
 
   Trophy,
   Award,
-  Flame,
-  Star,
   Target,
-  Zap,
   Gift,
-  TrendingUp,
-  Calendar,
-  CheckCircle2,
-  Medal,
   Crown,
   Sparkles,
-  Users,
   Save,
   Settings,
 } from 'lucide-react';
@@ -154,7 +146,7 @@ export function AdherenceGamification() {
     rewardsEnabled: true,
   });
 
-  const [patientStats, setPatientStats] = useState({
+  const [patientStats, _setPatientStats] = useState({
     totalPoints: 1250,
     currentStreak: 5,
     longestStreak: 12,

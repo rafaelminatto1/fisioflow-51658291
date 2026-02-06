@@ -3,33 +3,22 @@ import {
 
   LayoutGrid,
   LayoutList,
-  Calendar as CalendarIcon,
   BarChart3,
   GanttChart,
   Plus,
-  Filter,
-  Download,
-  Settings,
   RefreshCw,
   Search,
   ChevronDown,
   ChevronRight,
-  MoreHorizontal,
-  Eye,
-  Pencil,
-  Trash2,
   CheckCircle2,
   Clock,
   AlertCircle,
   TrendingUp,
   Target,
-  Users,
   Zap,
   Calendar,
-  Flag,
   ArrowUpRight,
-  ArrowDownRight,
-  Minus
+  ArrowDownRight
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays, addDays, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,26 +27,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+
+
+
 import {
   Select,
   SelectContent,
@@ -76,14 +51,12 @@ import {
   STATUS_LABELS,
   STATUS_COLORS,
   PRIORIDADE_LABELS,
-  PRIORIDADE_COLORS,
-  TIPO_LABELS,
   TaskStats
 } from '@/types/tarefas';
 import { useTarefas, useDeleteTarefa } from '@/hooks/useTarefas';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { cn } from '@/lib/utils';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, PieChart, Pie, Cell, Legend, AreaChart, Area } from 'recharts';
 
 type ViewMode = 'kanban' | 'table' | 'timeline' | 'insights';
 

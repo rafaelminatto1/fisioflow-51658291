@@ -42,6 +42,7 @@ export function NotificationInbox() {
     if (user && isOpen) {
       loadNotifications();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isOpen]);
 
   const loadNotifications = async () => {

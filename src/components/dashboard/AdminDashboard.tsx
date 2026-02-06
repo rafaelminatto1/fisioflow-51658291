@@ -1,21 +1,18 @@
-import React, { useMemo, useCallback, memo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useMemo, memo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
 
   Calendar, Users, DollarSign, Clock, UserCheck, AlertCircle,
-  TrendingUp, TrendingDown, UserX, Activity, Target,
+  TrendingUp, Activity,
   CalendarDays, XCircle
 } from 'lucide-react';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
-import { useQuery } from '@tanstack/react-query';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { AIInsightsWidget } from './AIInsightsWidget';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LazyWidget } from './LazyWidget';
