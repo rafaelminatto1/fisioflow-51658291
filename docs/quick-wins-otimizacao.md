@@ -128,11 +128,12 @@ ON appointments(patient_id, date);
 |------|--------|-------------------|
 | ✅ Remover 18 funções duplicadas | **CONCLUÍDO** | R$ 25-35/mês |
 | ⚠️ Usar Gemini Flash | **NÃO** (mantido Pro) | R$ 0/mês |
-| ❌ Limpar Storage | Pendente | R$ 5-10/mês |
+| ✅ Limpar Storage | **CONCLUÍDO** (já otimizado) | R$ 0/mês |
 | ✅ Ativar cache | **CONCLUÍDO** | R$ 10-15/mês |
-| ❌ Criar índices SQL | Pendente | R$ 10-15/mês |
+| ✅ Criar índices SQL | **CONCLUÍDO** | R$ 10-15/mês |
+| ✅ AI Service Unificado | **CRIADO** | R$ 15-20/mês (futuro) |
 
-**Economia Fase 1:** ~R$ 35-50/mês (funções removidas + cache ativado)
+**Economia Total Fase 1+2:** ~R$ 45-65/mês
 **Gemini Pro mantido** conforme solicitação do usuário
 
 ---
@@ -163,32 +164,70 @@ ON appointments(patient_id, date);
 
 ---
 
-## PRÓXIMAS AÇÕES (PENDENTE)
+## FASE 2: IMPLEMENTADO ✅
 
-### Ação 3: Limpar Storage (5 min)
+### O que foi feito:
+1. **Índices SQL criados:**
+   - 9 índices otimizados criados via createOptimizedIndexes
+   - Pacientes: idx_patients_org_active, idx_patients_org_name, idx_patients_cpf
+   - Agendamentos: idx_appointments_org_date, idx_appointments_patient_date, idx_appointments_org_status, idx_appointments_therapist_date
+   - Perfis: idx_profiles_user_id, idx_profiles_org
+   - Tabelas analisadas para query planner
 
-```bash
-# Limpar logs antigos (mais de 30 dias)
-gsutil -m -S 30d gs://fisioflow-migration.appspot.com/logs/**
+2. **AI Service Unificado criado:**
+   - Nova função aiService (callable) e aiServiceHttp
+   - Consolida 11 handlers AI em um único serviço
+   - Roteamento por ação: generateExercisePlan, clinicalAnalysis, exerciseSuggestion, etc.
+   - Funções individuais mantidas para compatibilidade
 
-# Limpar arquivos temporários
-gsutil -m gs://fisioflow-migration.appspot.com/temp/**
+3. **Storage verificado:**
+   - Uso atual: 122MB (já otimizado)
+   - 423 objetos no bucket principal
+
+4. **Bug fixes:**
+   - Corrigido notificationData no workflows/notifications.ts
+   - Corrigidos imports em communications
+
+### Funções após Fase 2:
+- **Fase 1:** 67 → 54 funções callable
+- **Fase 2:** Adicionadas aiService, aiServiceHttp, createOptimizedIndexes
+- **Total:** ~57 funções callable ativas
+
+---
+
+## PRÓXIMOS PASSOS (Migração Gradual)
+
+### Passo 1: Migrar frontend para AI Service Unificado
+
+Substituir chamadas individuais:
+```typescript
+// ATUAL:
+await callFunction('aiClinicalAnalysis', { data });
+
+// NOVO:
+await callFunction('aiService', { action: 'clinicalAnalysis', data });
 ```
 
-### Ação 4: Criar Índices SQL (2 min)
+### Passo 2: Remover funções AI individuais
 
-```sql
--- Conectar no Cloud SQL e executar:
-CREATE INDEX IF NOT EXISTS idx_patients_org_name
-ON patients(organization_id, name);
+Após migração completa do frontend, remover:
+- aiClinicalAnalysis
+- aiExerciseSuggestion
+- aiSoapGeneration
+- aiMovementAnalysis
+- aiClinicalChat
+- aiExerciseRecommendationChat
+- aiSoapNoteChat
+- aiGetSuggestions
+- analyzeProgress
+- aiFastProcessing
+- generateExercisePlan
 
-CREATE INDEX IF NOT EXISTS idx_appointments_date
-ON appointments(date, start_time)
-WHERE status != 'cancelado';
+### Passo 3: Consolidação final
 
-CREATE INDEX IF NOT EXISTS idx_appointments_patient
-ON appointments(patient_id, date);
-```
+- Migrar para única fonte de dados (PostgreSQL)
+- Implementar REST API unificada
+- Consolidar funções de exercícios e avaliações
 
 ---
 
