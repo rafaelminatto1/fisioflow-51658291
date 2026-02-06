@@ -7,8 +7,9 @@
 /** Formata tempo desde a cirurgia de forma compacta */
 
 import { useState } from 'react';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDetailedDuration } from '@/utils/dateUtils';
 import { Scissors, Plus, Edit2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,19 +18,8 @@ import { usePatientSurgeries } from '@/hooks/usePatientEvolution';
 import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
 import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
-
 function formatTimeSinceSurgery(surgeryDate: string): string {
-  const now = new Date();
-  const date = new Date(surgeryDate);
-  const totalDays = differenceInDays(now, date);
-
-  if (totalDays < 0) return 'Futura';
-  if (totalDays === 0) return 'Hoje';
-  if (totalDays === 1) return '1 dia';
-  if (totalDays < 60) return `${totalDays}d`;
-
-  const totalMonths = Math.floor(totalDays / 30);
-  return totalMonths === 1 ? '1 mês' : `${totalMonths}m`;
+  return formatDetailedDuration(surgeryDate);
 }
 
 interface SurgeriesCardProps {
@@ -93,10 +83,10 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
           ) : (
             <ScrollArea className="h-full pr-1">
               <ul className="space-y-1">
-                {surgeries.map((s) => {
-                  const surgeryDate = (s as Record<string, unknown>).surgery_date as string;
-                  const surgeryType = (s as Record<string, unknown>).surgery_type as string | undefined;
-                  const affectedSide = (s as Record<string, unknown>).affected_side as string | undefined;
+                {surgeries.map((s: any) => {
+                  const surgeryDate = s.surgery_date as string;
+                  const surgeryType = s.surgery_type as string | undefined;
+                  const affectedSide = s.affected_side as string | undefined;
                   const timeSince = surgeryDate ? formatTimeSinceSurgery(surgeryDate) : '—';
 
                   return (
@@ -106,7 +96,7 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-medium truncate">
-                          {(s as Record<string, unknown>).surgery_name as string}
+                          {s.surgery_name as string}
                         </p>
                         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
                           {surgeryDate && (
