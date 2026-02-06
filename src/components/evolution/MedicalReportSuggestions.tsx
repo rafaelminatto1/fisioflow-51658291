@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
-
-  Lightbulb,
   Copy,
   Check,
   TrendingUp,
@@ -67,7 +62,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
 
       const result = await generate(prompt, {
         userId: 'system-therapist',
-        feature: 'clinical_analysis' as any,
+        feature: 'clinical_analysis' as unknown,
       });
 
       // Parse safely
@@ -75,7 +70,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
         const cleanedContent = result.content.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(cleanedContent);
         setInsights(parsed);
-      } catch (e) {
+      } catch (_e) {
         // Fallback if AI doesn't return clean JSON
         setInsights([{
           title: "Análise de Evolução",
@@ -93,6 +88,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
 
   useEffect(() => {
     generateAIInsights();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const copyToClipboard = (text: string, index: number) => {

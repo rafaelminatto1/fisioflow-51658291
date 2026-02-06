@@ -62,7 +62,7 @@ export async function measureAsync<T>(
   metricName: string,
   context?: string
 ): Promise<T> {
-  const startTime = performance.now();
+  const _startTime = performance.now();
   const startMark = `${metricName}-start`;
   const endMark = `${metricName}-end`;
 
@@ -99,7 +99,7 @@ export function measureSync<T>(
   metricName: string,
   context?: string
 ): T {
-  const startTime = performance.now();
+  const _startTime = performance.now();
   const startMark = `${metricName}-start`;
   const endMark = `${metricName}-end`;
 
@@ -190,7 +190,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
         }
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (e) {
+    } catch (_e) {
       // LCP não suportado
     }
 
@@ -203,7 +203,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
         });
       });
       fidObserver.observe({ entryTypes: ['first-input'] });
-    } catch (e) {
+    } catch (_e) {
       // FID não suportado
     }
 
@@ -220,7 +220,7 @@ export function getCoreWebVitals(): Promise<PerformanceMetrics> {
         });
       });
       clsObserver.observe({ entryTypes: ['layout-shift'] });
-    } catch (e) {
+    } catch (_e) {
       // CLS não suportado
     }
 

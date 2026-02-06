@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Plus, Dumbbell } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { cn } from '@/lib/utils';
 import {

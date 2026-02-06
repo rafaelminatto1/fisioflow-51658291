@@ -117,7 +117,7 @@ export function useCreateContaFinanceira() {
       queryClient.setQueryData(['contas-financeiras'], context?.previousContas);
       toast.error('Erro ao criar conta.');
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.success('Conta criada com sucesso.');
     },
   });

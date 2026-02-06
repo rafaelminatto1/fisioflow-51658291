@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useGamification, Achievement } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
-import { Award, Search, Lock, CheckCircle2, Sparkles, Filter } from 'lucide-react';
+import { Award, Search, Lock, CheckCircle2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import AchievementModal from '@/components/gamification/AchievementModal';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const container = {
   hidden: { opacity: 0 },

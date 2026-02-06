@@ -26,21 +26,8 @@ import {
   BarChart3,
   Search
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Cell,
-  PieChart,
-  Pie,
-  Legend,
-  LineChart,
-  Line
-} from 'recharts';
+
+
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
@@ -55,7 +42,7 @@ const Reports = () => {
   // Real data hooks
   const { data = [] } = useAppointments();
   const { data: patients = [] } = usePatients();
-  const { activeTransactions, stats: finStats } = useFinancial();
+  const { _activeTransactions, stats: finStats } = useFinancial();
 
   // Memoized calculations to prevent unnecessary recomputations
   const reportsData = useMemo(() => {

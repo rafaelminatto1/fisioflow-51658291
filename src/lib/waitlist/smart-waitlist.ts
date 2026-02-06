@@ -8,8 +8,7 @@
 // TYPES
 // =====================================================================
 
-import { addDays, format, isSameDay, parseISO, startOfDay, differenceInDays, differenceInHours } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { addDays, format, isSameDay, parseISO, differenceInDays } from 'date-fns';
 import { WaitlistEntry } from '@/hooks/useWaitlist';
 
 export interface TimeSlot {

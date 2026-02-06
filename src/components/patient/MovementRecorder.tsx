@@ -21,7 +21,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
 
   Video,
-  VideoOff,
   Mic,
   MicOff,
   Circle,
@@ -30,9 +29,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Upload,
-  Eye,
   Download,
-  Trash2,
   Camera
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -110,7 +107,7 @@ export function MovementRecorder({
   // Estados
   const [state, setState] = useState<RecordingState>('idle');
   const [progress, setProgress] = useState<AnalysisProgress>({ stage: '', progress: 0, message: '' });
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [_recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -271,6 +268,7 @@ export function MovementRecorder({
       logger.error('Erro ao iniciar gravação', error, 'MovementRecorder');
       toast.error(language === 'pt-BR' ? 'Erro ao iniciar gravação' : 'Error starting recording');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasAudio, maxDuration, language]);
 
   const stopRecording = () => {

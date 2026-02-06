@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * SkipLink - Componente de acessibilidade para navegação por teclado
  *

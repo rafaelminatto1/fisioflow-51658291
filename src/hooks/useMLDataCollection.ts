@@ -8,13 +8,13 @@
 // Helper to convert doc
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, setDoc, db } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import crypto from 'crypto';
 import type { MLTrainingData } from '@/types/patientAnalytics';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) =>
+const _convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) =>
   ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
 
 interface AppointmentFirestore {
@@ -52,7 +52,7 @@ function hashPatientId(patientId: string): string {
       .update(patientId + (import.meta.env.VITE_ML_SALT || 'fisioflow-ml-salt'))
       .digest('hex')
       .substring(0, 16);
-  } catch (e) {
+  } catch (_e) {
     // Fallback for browser if node crypto not available
     return patientId.split('').reverse().join(''); // Simple obfuscation fallback
   }

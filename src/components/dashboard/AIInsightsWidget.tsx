@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, TrendingDown, TrendingUp, AlertCircle, RefreshCw, Lightbulb } from 'lucide-react';
+import { Sparkles, RefreshCw, Lightbulb } from 'lucide-react';
 import { useAI, AIFeatureCategory } from '@/integrations/firebase/ai';
 import { DashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,6 +56,7 @@ export const AIInsightsWidget: React.FC<AIInsightsWidgetProps> = ({ metrics }) =
     if (metrics && !insight && !loading) {
       generateInsights();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metrics]);
 
   return (

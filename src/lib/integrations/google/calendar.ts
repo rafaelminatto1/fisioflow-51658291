@@ -143,7 +143,7 @@ export async function updateCalendarEvent(
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-  const event: any = {};
+  const event: unknown = {};
 
   if (eventData.title) event.summary = eventData.title;
   if (eventData.description) event.description = eventData.description;
@@ -216,7 +216,7 @@ export async function getCalendarEvents(
     orderBy: 'startTime',
   });
 
-  return (response.data.items || []).map((item: any) => ({
+  return (response.data.items || []).map((item: unknown) => ({
     id: item.id || '',
     summary: item.summary || '(Sem título)',
     start: new Date(item.start?.dateTime || item.start?.date),
@@ -267,7 +267,7 @@ export async function syncToGoogleCalendar(
         results.updated++;
       } else {
         // Criar novo evento
-        const eventId = await createCalendarEvent(accessToken, eventData);
+        const _eventId = await createCalendarEvent(accessToken, eventData);
         results.created++;
         // TODO: Salvar eventId no appointment
       }
@@ -312,7 +312,7 @@ export async function syncFromGoogleCalendar(
  */
 export async function handleCalendarWebhook(
   headers: Headers,
-  body: any,
+  body: unknown,
   channelToken: string,
   onEvent: (eventId: string, action: 'create' | 'update' | 'delete') => void
 ): Promise<void> {

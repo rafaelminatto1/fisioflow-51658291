@@ -8,7 +8,7 @@ import { executeQuery } from 'firebase/data-connect';
 import { dc, listPatientsByOrgRef, getPatientByIdRef } from '@/lib/dataconnect';
 import { fisioLogger } from '@/lib/errors/logger';
 
-const mapPatientFromPostgres = (p: any): any => ({
+const mapPatientFromPostgres = (p: unknown): unknown => ({
   id: p.id,
   name: p.name,
   email: p.email,

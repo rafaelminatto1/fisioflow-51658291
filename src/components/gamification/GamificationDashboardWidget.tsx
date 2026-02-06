@@ -109,7 +109,7 @@ export function GamificationDashboardWidget({
         const achievementsSnap = await getDocs(achievementsQuery);
 
         const unlockedAchievements = achievementsSnap.docs.map((doc) => {
-          const log = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as AchievementLog & { achievement_data?: any };
+          const log = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as AchievementLog & { achievement_data?: unknown };
           return {
             id: log.id,
             title: log.achievement_data?.title || 'Conquista',

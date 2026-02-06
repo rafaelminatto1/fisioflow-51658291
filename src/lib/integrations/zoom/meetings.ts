@@ -152,7 +152,7 @@ export class ZoomClient {
       waiting_room?: boolean;
     };
   }): Promise<ZoomMeeting> {
-    const body: any = {
+    const body: unknown = {
       topic: params.topic,
       type: params.startTime ? 2 : 1, // 1=Instant, 2=Scheduled
       duration: params.durationMinutes,
@@ -236,7 +236,7 @@ export class ZoomClient {
     meetingId: string,
     updates: Partial<ZoomMeeting>
   ): Promise<void> {
-    const body: any = {};
+    const body: unknown = {};
 
     if (updates.topic) body.topic = updates.topic;
     if (updates.start_time) {
@@ -297,7 +297,7 @@ export class ZoomClient {
 
     const data = await response.json();
 
-    return (data.meetings || []).map((m: any) => ({
+    return (data.meetings || []).map((m: unknown) => ({
       id: m.id,
       uuid: m.uuid,
       topic: m.topic,
@@ -327,7 +327,7 @@ export class ZoomClient {
 
     const data = await response.json();
 
-    return (data.recording_files || []).map((r: any) => ({
+    return (data.recording_files || []).map((r: unknown) => ({
       id: r.id,
       file_type: r.file_type,
       file_size: r.file_size,
@@ -346,7 +346,7 @@ export class ZoomClient {
   /**
    * Verifica assinatura do webhook
    */
-  verifyWebhook(signature: string, payload: string): boolean {
+  verifyWebhook(signature: string, _payload: string): boolean {
     // TODO: Implementar verificação real HMAC-SHA256
     // zoom webhook secret + payload -> compare com signature
     return signature.length > 0;
@@ -425,10 +425,10 @@ export type ZoomWebhookEvent =
  */
 export async function handleZoomWebhook(
   event: ZoomWebhookEvent,
-  payload: any,
+  payload: unknown,
   handlers: {
-    onMeetingStarted?: (meetingId: string, payload: any) => Promise<void>;
-    onMeetingEnded?: (meetingId: string, payload: any) => Promise<void>;
+    onMeetingStarted?: (meetingId: string, payload: unknown) => Promise<void>;
+    onMeetingEnded?: (meetingId: string, payload: unknown) => Promise<void>;
     onRecordingCompleted?: (meetingId: string, recordingUrl: string) => Promise<void>;
   }
 ): Promise<void> {

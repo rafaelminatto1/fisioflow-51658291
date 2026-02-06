@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 
 /**
  * Wrapper que adiciona safe area insets para iOS (notch e home indicator)

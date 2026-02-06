@@ -19,8 +19,7 @@ import {
   MessageCircle,
   Bell,
   Plus,
-  Sparkles,
-  RefreshCw
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -152,6 +151,7 @@ const PatientPortal = () => {
     if (patient && !aiSummary && !isGeneratingSummary) {
       generateHealthSummary();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient?.id]);
 
   if (isLoadingPatient) {

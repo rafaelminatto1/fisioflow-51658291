@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
@@ -44,7 +44,7 @@ export interface Communication {
 }
 
 // Helper to convert Firestore doc to Communication
-const convertDocToCommunication = (
+const _convertDocToCommunication = (
   doc: { id: string; data: () => Record<string, unknown> },
   patientData?: { id: string; full_name: string; email: string | null; phone: string | null } | null
 ): Communication => {

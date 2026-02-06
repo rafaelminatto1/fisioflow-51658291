@@ -7,8 +7,7 @@ import {
   getDocs,
   doc,
   getDoc,
-  deleteDoc,
-  where
+  deleteDoc
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, getFirebaseStorage } from '@/lib/firebase';
@@ -35,12 +34,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+
 import {
   Video,
   Download,
@@ -51,17 +46,11 @@ import {
   FileVideo,
   Shield,
   ShieldAlert,
-  Search,
-  Filter,
-  MoreVertical,
-  ExternalLink,
-  CheckCircle2,
-  XCircle
+  Search
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 interface MarketingExport {
   id: string;

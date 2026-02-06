@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
 
-  Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Monitor, MonitorOff,
-  Settings, Maximize2, Users, MessageSquare, Share2, ScreenShare
+  Video, VideoOff, Mic, MicOff, Phone, PhoneOff, MonitorOff, Users, MessageSquare, ScreenShare
 } from 'lucide-react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -72,7 +72,7 @@ export function useVideoIntegration(config?: VideoIntegrationConfig) {
 
 // Componente de videochamada embutido
 export function VideoCall({
-  roomId,
+  _roomId,
   patientName,
   config,
   onJoin,
@@ -87,9 +87,9 @@ export function VideoCall({
   const [isConnected, setIsConnected] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [_remoteStream, _setRemoteStream] = useState<MediaStream | null>(null);
 
-  const { provider, isReady, error, canRecord, supportsChat, supportsScreenShare } = useVideoIntegration(config);
+  const { provider, isReady, error, canRecord, _supportsChat, supportsScreenShare } = useVideoIntegration(config);
 
   // Inicializar mídia local
   useEffect(() => {
@@ -119,7 +119,7 @@ export function VideoCall({
         localStream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [provider]);
+  }, [provider, localStream, onError]);
 
   // Timer
   useEffect(() => {
@@ -166,7 +166,7 @@ export function VideoCall({
           screenRef.current.srcObject = null;
         }
       };
-    } catch (err) {
+    } catch (_err) {
       toast.error('Não foi possível compartilhar tela');
     }
   };

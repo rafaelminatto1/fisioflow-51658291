@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { httpsCallable } from 'firebase/functions';
-import { collection, getDocs, query, where, getAggregateFromServer, count, average } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { functions, db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
 
   Star,
   TrendingUp,
-  Users,
   Video,
   MessageSquare,
   Mail,
@@ -69,16 +67,16 @@ export default function MarketingDashboard() {
         try {
           const getReviews = httpsCallable(functions, 'getBusinessReviews');
           const result = await getReviews();
-          reviews = (result.data as any).reviews || [];
+          reviews = (result.data as unknown).reviews || [];
 
           totalReviews = reviews.length;
           if (totalReviews > 0) {
-            averageRating = reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / totalReviews;
-            rating5 = reviews.filter((r: any) => r.rating === 5).length;
-            rating4 = reviews.filter((r: any) => r.rating === 4).length;
-            rating3 = reviews.filter((r: any) => r.rating === 3).length;
-            rating2 = reviews.filter((r: any) => r.rating === 2).length;
-            rating1 = reviews.filter((r: any) => r.rating === 1).length;
+            averageRating = reviews.reduce((sum: number, r: unknown) => sum + r.rating, 0) / totalReviews;
+            rating5 = reviews.filter((r: unknown) => r.rating === 5).length;
+            rating4 = reviews.filter((r: unknown) => r.rating === 4).length;
+            rating3 = reviews.filter((r: unknown) => r.rating === 3).length;
+            rating2 = reviews.filter((r: unknown) => r.rating === 2).length;
+            rating1 = reviews.filter((r: unknown) => r.rating === 1).length;
           }
         } catch (err) {
           console.error('Error fetching reviews:', err);
@@ -138,7 +136,7 @@ export default function MarketingDashboard() {
     fetchMetrics();
   }, []);
 
-  const getRatingColor = (rating: number) => {
+  const _getRatingColor = (rating: number) => {
     if (rating >= 4.5) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
     if (rating >= 4) return 'text-green-600 bg-green-50 border-green-200';
     if (rating >= 3.5) return 'text-yellow-600 bg-yellow-50 border-yellow-200';

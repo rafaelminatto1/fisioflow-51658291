@@ -26,7 +26,7 @@ import { ClinicalFieldType, EvaluationForm } from '@/types/clinical-forms';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 interface FormBuilderProps {
     formId?: string;

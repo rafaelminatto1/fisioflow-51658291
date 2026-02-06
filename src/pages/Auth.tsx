@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth, AuthError } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { callFunction } from '@/integrations/firebase/functions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,15 +47,15 @@ export default function Auth() {
   }, []);
 
   // Memoize input handlers to prevent recreating functions on every render
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
   }, []);
 
-  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
   }, []);
 
-  const handleConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setConfirmPassword(e.target.value);
   }, []);
 
@@ -285,7 +285,7 @@ export default function Auth() {
         return;
       }
 
-      const redirectUrl = `${window.location.origin}/`;
+      const _redirectUrl = `${window.location.origin}/`;
 
       // Dado sensível removido: email completo mascarado para logs (LGPD)
       const maskedEmail = email.trim();

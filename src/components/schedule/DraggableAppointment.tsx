@@ -51,7 +51,7 @@ export const DraggableAppointment = memo(({
   isDragging,
   isDragDisabled = false,
   dragData,
-  isPopoverOpen = false
+  _isPopoverOpen = false
 }: DraggableAppointmentProps) => {
   const {
     setNodeRef,

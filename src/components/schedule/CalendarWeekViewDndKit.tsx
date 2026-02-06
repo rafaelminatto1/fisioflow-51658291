@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
@@ -64,8 +64,8 @@ const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
-const OVERLAP_LAYOUT_MARGIN_PX = 1;
-const OVERLAP_LAYOUT_GAP_PX = 1;
+const _OVERLAP_LAYOUT_MARGIN_PX = 1;
+const _OVERLAP_LAYOUT_GAP_PX = 1;
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -453,7 +453,7 @@ export const CalendarWeekViewDndKit = memo(({
                   })}
 
                   {/* Droppable Time Slots */}
-                  {droppableSlotsMemo.flat().map((slot, idx) => (
+                  {droppableSlotsMemo.flat().map((slot, _idx) => (
                     <DroppableTimeSlot
                       key={`cell-${slot.colIndex}-${slot.rowIndex}`}
                       day={slot.day}
@@ -490,7 +490,7 @@ export const CalendarWeekViewDndKit = memo(({
 
                     const key = `${dayIndex}-${aptTime}`;
                     const cachedBlock = blockedStatusCache.get(key);
-                    const { blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
+                    const { _blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
 
                     const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
                     const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];

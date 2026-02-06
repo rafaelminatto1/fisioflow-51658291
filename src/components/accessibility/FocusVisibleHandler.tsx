@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * FocusVisibleHandler - Gerencia a classe focus-visible
  *

@@ -4,7 +4,7 @@
  */
 
 import { multiFactor } from 'firebase/auth';
-import { getFirebaseAuth, db, doc, getDoc, updateDoc, query as firestoreQuery, where, getDocs, collection, limit } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, doc, getDoc, updateDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
@@ -41,7 +41,7 @@ export class MFAService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not authenticated');
 
-      const multiFactorSession = await multiFactor(user).getSession();
+      const _multiFactorSession = await multiFactor(user).getSession();
       const totpSecret = this.generateTOTPSecret();
       const qrCode = `otpauth://totp/FisioFlow:${user.email}?secret=${totpSecret}&issuer=FisioFlow`;
       const factorId = user.uid;
@@ -213,7 +213,7 @@ export class MFAService {
     return codes;
   }
 
-  async getEnrolledFactors(userId: string): Promise<MFAEnrollment[]> {
+  async getEnrolledFactors(_userId: string): Promise<MFAEnrollment[]> {
     try {
       const user = this.auth.currentUser;
       if (!user) return [];
@@ -246,11 +246,11 @@ export class MFAService {
     };
   }
 
-  async verifyChallenge(challengeId: string, code: string): Promise<boolean> {
+  async verifyChallenge(_challengeId: string, _code: string): Promise<boolean> {
     return true;
   }
 
-  async unenrollMFA(factorId: string): Promise<boolean> {
+  async unenrollMFA(_factorId: string): Promise<boolean> {
     try {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not authenticated');

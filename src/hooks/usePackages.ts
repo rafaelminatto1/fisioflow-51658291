@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, serverTimestamp, db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { FinancialService } from '@/services/financialService';
@@ -137,7 +137,7 @@ export function usePatientPackages(patientId?: string) {
                 created_at: pData.created_at
               } as SessionPackage;
             }
-          } catch (e) {
+          } catch (_e) {
             // Ignore package lookup errors
           }
         }
@@ -149,7 +149,7 @@ export function usePatientPackages(patientId?: string) {
             if (patSnap.exists()) {
               patientName = patSnap.data().name || patSnap.data().full_name;
             }
-          } catch (e) {
+          } catch (_e) {
             // Ignore patient lookup errors
           }
         }

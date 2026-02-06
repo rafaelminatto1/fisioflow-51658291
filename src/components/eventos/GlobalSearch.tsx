@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, collection, getDocs, query, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
+import { db, collection, getDocs, orderBy, limit } from '@/integrations/firebase/app';
 import {
 
   CommandDialog,
@@ -151,6 +151,7 @@ export function GlobalSearch() {
     };
 
     searchAll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery]);
 
   const handleSelect = (result: SearchResult) => {

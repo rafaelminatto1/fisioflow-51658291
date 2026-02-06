@@ -23,7 +23,7 @@ export function useAutoSave<T>({
 }: UseAutoSaveOptions<T>) {
   const { toast } = useToast();
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const maxTimeoutRef = useRef<NodeJS.Timeout>();
+  const _maxTimeoutRef = useRef<NodeJS.Timeout>();
   const lastSavedRef = useRef<string>();
   const lastSaveTimeRef = useRef<number>(Date.now());
   const isSavingRef = useRef(false);

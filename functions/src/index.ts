@@ -468,7 +468,8 @@ export const aiFastProcessing = onCall(async (request) => {
 // WEBHOOK MANAGEMENT
 // ============================================================================
 
-// Webhook Management
+// Webhook Management - TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 export const subscribeWebhook = onCall(async (request) => {
     const { subscribeWebhookHandler } = await import('./webhooks/index');
     return subscribeWebhookHandler(request);
@@ -493,12 +494,14 @@ export const getWebhookEventTypes = onRequest(
         return getWebhookEventTypesHandler(req, res);
     }
 );
+*/
 
 // ============================================================================
 // INTEGRATIONS (Calendar, etc.)
 // ============================================================================
 
-// Integrations (Calendar, etc.)
+// Integrations (Calendar, etc.) - TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 export const syncToGoogleCalendar = onCall(async (request) => {
     const { syncToGoogleCalendarHandler } = await import('./integrations/calendar');
     return syncToGoogleCalendarHandler(request);
@@ -524,53 +527,55 @@ export const getGoogleAuthUrl = onCall(async (request) => {
     return getGoogleAuthUrlHandler(request);
 });
 export { exportToICal } from './integrations/calendar';
+*/
 
 // ============================================================================
 // EXPORT/IMPORT FUNCTIONS
 // ============================================================================
 
 // Export/Import Functions
-export const exportPatients = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '512MiB',
-        maxInstances: 5,
-        timeoutSeconds: 300,
-    },
-    async (request) => {
-        const { exportPatientsHandler } = await import('./export-import/index');
-        return exportPatientsHandler(request);
-    }
-);
-export const importPatients = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '512MiB',
-        maxInstances: 5,
-        timeoutSeconds: 300,
-    },
-    async (request) => {
-        const { importPatientsHandler } = await import('./export-import/index');
-        return importPatientsHandler(request);
-    }
-);
-export const downloadExport = onRequest(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 10,
-    },
-    async (req: any, res: any) => {
-        const { downloadExportHandler } = await import('./export-import/index');
-        return downloadExportHandler(req, res);
-    }
-);
+// TEMPORARILY DISABLED: export const exportPatients = onCall(
+// TEMPORARILY DISABLED:     {
+// TEMPORARILY DISABLED:         region: 'southamerica-east1',
+// TEMPORARILY DISABLED:         memory: '512MiB',
+// TEMPORARILY DISABLED:         maxInstances: 1,
+// TEMPORARILY DISABLED:         timeoutSeconds: 300,
+// TEMPORARILY DISABLED:     },
+// TEMPORARILY DISABLED:     async (request) => {
+// TEMPORARILY DISABLED:         const { exportPatientsHandler } = await import('./export-import/index');
+// TEMPORARILY DISABLED:         return exportPatientsHandler(request);
+// TEMPORARILY DISABLED:     }
+// TEMPORARILY DISABLED: );
+// TEMPORARILY DISABLED: export const importPatients = onCall(
+// TEMPORARILY DISABLED:     {
+// TEMPORARILY DISABLED:         region: 'southamerica-east1',
+// TEMPORARILY DISABLED:         memory: '512MiB',
+// TEMPORARILY DISABLED:         maxInstances: 1,
+// TEMPORARILY DISABLED:         timeoutSeconds: 300,
+// TEMPORARILY DISABLED:     },
+// TEMPORARILY DISABLED:     async (request) => {
+// TEMPORARILY DISABLED:         const { importPatientsHandler } = await import('./export-import/index');
+// TEMPORARILY DISABLED:         return importPatientsHandler(request);
+// TEMPORARILY DISABLED:     }
+// TEMPORARILY DISABLED: );
+// TEMPORARILY DISABLED: export const downloadExport = onRequest(
+// TEMPORARILY DISABLED:     {
+// TEMPORARILY DISABLED:         region: 'southamerica-east1',
+// TEMPORARILY DISABLED:         memory: '256MiB',
+// TEMPORARILY DISABLED:         maxInstances: 1,
+// TEMPORARILY DISABLED:     },
+// TEMPORARILY DISABLED:     async (req: any, res: any) => {
+// TEMPORARILY DISABLED:         const { downloadExportHandler } = await import('./export-import/index');
+// TEMPORARILY DISABLED:         return downloadExportHandler(req, res);
+// TEMPORARILY DISABLED:     }
+// TEMPORARILY DISABLED: );
 
 // ============================================================================
 // MONITORING & OBSERVABILITY
 // ============================================================================
 
-// Monitoring & Observability
+// Monitoring & Observability - TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 // REMOVIDO: setupMonitoring - função de setup não usada em produção
 export const getErrorStats = onCall(
     {
@@ -638,16 +643,19 @@ export const getReport = aiReports.getReport;
 export const downloadReport = aiReports.downloadReport;
 export const scheduledDailyReport = aiReports.scheduledDailyReport;
 export const scheduledWeeklyReport = aiReports.scheduledWeeklyReport;
+*/
 
 // ============================================================================
 // REALTIME FUNCTIONS
 // ============================================================================
 
-// Realtime Functions
+// Realtime Functions - TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 export const realtimePublish = onRequest(async (req: any, res: any) => {
     const { realtimePublishHandler } = await import('./realtime/publisher');
     await realtimePublishHandler(req, res);
 });
+*/
 
 // ============================================================================
 // BACKGROUND TRIGGERS
@@ -689,6 +697,15 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
     }
 );
 
+// [NEW] Sync Firestore changes back to Cloud SQL (Offline/Mobile support)
+export const syncPatientToSql = functions.firestore.onDocumentWritten(
+    'patients/{patientId}',
+    async (event) => {
+        const { handlePatientSync } = await import('./triggers/sync-patients');
+        return handlePatientSync(event as any);
+    }
+);
+
 /**
  * Firestore trigger unificado: publica eventos de agendamento no Ably (INSERT e UPDATE)
  */
@@ -717,8 +734,11 @@ export const onAppointmentWritten = functions.firestore.onDocumentWritten(
 // SCHEDULED FUNCTIONS (Cron Jobs)
 // ============================================================================
 
+// Cron Jobs - TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 export { dailyReports, weeklySummary } from './crons/daily-reports';
 export { expiringVouchers, birthdays, cleanup, dataIntegrity } from './crons/additional-crons';
+*/
 
 // ============================================================================
 // WORKFLOWS (Substituem Inngest)
@@ -761,28 +781,29 @@ import { onUserCreated } from './auth/user-created';
 export { onUserCreated }; // v1 trigger exported directly
 
 export const createUserInvitation = onCall(
-    { cors: true, memory: '512MiB', maxInstances: 10 },
+    { cors: true, memory: '512MiB', maxInstances: 1 },
     async (request) => {
         const { createUserInvitationHandler } = await import('./auth/invitations');
         return createUserInvitationHandler(request);
     }
 );
 export const getInvitationByToken = onCall(
-    { cors: true, memory: '512MiB', maxInstances: 10 },
+    { cors: true, memory: '512MiB', maxInstances: 1 },
     async (request) => {
         const { getInvitationByTokenHandler } = await import('./auth/invitations');
         return getInvitationByTokenHandler(request);
     }
 );
 export const consumeInvitation = onCall(
-    { cors: true, memory: '512MiB', maxInstances: 10 },
+    { cors: true, memory: '512MiB', maxInstances: 1 },
     async (request) => {
         const { consumeInvitationHandler } = await import('./auth/invitations');
         return consumeInvitationHandler(request);
     }
 );
 
-// User Management API
+// User Management API - TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 export const listUsers = onCall(async (request) => {
     const { listUsersHandler } = await import('./api/users');
     return listUsersHandler(request);
@@ -791,11 +812,13 @@ export const updateUserRole = onCall(async (request) => {
     const { updateUserRoleHandler } = await import('./api/users');
     return updateUserRoleHandler(request);
 });
+*/
 
 // ============================================================================
 // STRIPE WEBHOOK
 // ============================================================================
-export { stripeWebhookHttp } from './stripe/webhook';
+// TEMPORARILY DISABLED TO SAVE RESOURCES
+// export { stripeWebhookHttp } from './stripe/webhook';
 
 // ============================================================================
 // GOOGLE CLOUD SERVICES EXPORTS
@@ -804,7 +827,8 @@ export { stripeWebhookHttp } from './stripe/webhook';
 // ============================================================================
 // GOOGLE INTEGRATIONS (Maps, Meet, Calendar)
 // ============================================================================
-
+// TEMPORARILY DISABLED TO SAVE RESOURCES
+/*
 import * as googleIntegrations from './integrations/google';
 export const searchPlaces = googleIntegrations.searchPlaces;
 // export const getGoogleAuthUrl = googleIntegrations.getGoogleAuthUrl; // Already exported in integrations/calendar, using unique name here
@@ -813,6 +837,7 @@ export const googleAuthCallback = googleIntegrations.googleAuthCallback;
 export const createMeetLink = googleIntegrations.createMeetLink;
 export const syncPatientCalendar = googleIntegrations.syncPatientCalendar;
 export const getBusinessReviews = googleIntegrations.getBusinessReviews;
+*/
 
 // Export helper functions (lib) - avoid re-exporting names already exported from api/
 export {
