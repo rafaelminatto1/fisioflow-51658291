@@ -16,6 +16,20 @@ export interface Surgery {
   updated_at: string;
 }
 
+export interface MedicalReturn {
+  id: string;
+  patient_id: string;
+  doctor_name: string;
+  doctor_phone?: string;
+  return_date: string;
+  return_period?: 'manha' | 'tarde' | 'noite';
+  notes?: string;
+  report_done?: boolean;
+  report_sent?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PatientGoal {
   id: string;
   patient_id: string;
@@ -158,6 +172,7 @@ export interface MedicalInsight {
 
 // Form Data Types
 export type SurgeryFormData = Omit<Surgery, 'id' | 'created_at' | 'updated_at'>;
+export type MedicalReturnFormData = Omit<MedicalReturn, 'id' | 'created_at' | 'updated_at'>;
 export type PatientGoalFormData = Omit<PatientGoal, 'id' | 'created_at' | 'updated_at'>;
 export type PathologyFormData = Omit<Pathology, 'id' | 'created_at' | 'updated_at'>;
 export type SessionEvolutionFormData = Omit<SessionEvolution, 'id' | 'created_at' | 'updated_at'>;

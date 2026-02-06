@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, CheckCircle, Activity, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDetailedDuration } from '@/utils/dateUtils';
 
 interface Pathology {
   id: string;
@@ -81,6 +82,7 @@ export const PathologyStatus: React.FC<PathologyStatusProps> = ({ pathologies })
                   {pathology.diagnosis_date && (
                     <p className="text-xs text-muted-foreground">
                       Diagnóstico: {format(new Date(pathology.diagnosis_date), 'dd/MM/yyyy', { locale: ptBR })}
+                      <span className="ml-1 text-primary">({formatDetailedDuration(pathology.diagnosis_date)})</span>
                     </p>
                   )}
                   {pathology.notes && (

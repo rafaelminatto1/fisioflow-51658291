@@ -209,3 +209,55 @@ export function parseResponseDateOrNull(dateStr: string | null | undefined): Dat
     const parsed = new Date(dateStr);
     return isNaN(parsed.getTime()) ? null : parsed;
 }
+
+/**
+ * Formata duração detalhada em dias, semanas, meses e anos
+ * @param date Data de início/fim
+ * @returns String formatada: "há Xd · Ysem · Zm · Wa" ou "em Xd · Ysem · Zm · Wa"
+ */
+export function formatDetailedDuration(date: Date | string): string {
+    if (!date) return '-';
+    const targetDate = typeof date === 'string' ? new Date(date) : date;
+    const now = new Date();
+
+    // Usar o início do dia para ambos para evitar problemas de horas
+    const d1 = new Date(targetDate);
+    d1.setHours(0, 0, 0, 0);
+    const d2 = new Date(now);
+    d2.setHours(0, 0, 0, 0);
+
+    const diffMs = d2.getTime() - d1.getTime();
+    const totalDays = Math.abs(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+    const isPast = diffMs > 0;
+    const isFuture = diffMs < 0;
+
+    if (totalDays === 0) return 'Hoje';
+    if (totalDays === 1) return isPast ? 'há 1 dia' : 'amanhã';
+
+    const years = Math.floor(totalDays / 365);
+    const months = Math.floor(totalDays / 30);
+    const weeks = Math.floor(totalDays / 7);
+
+    const parts: string[] = [];
+
+    // Adicionar total de dias
+    parts.push(`${totalDays}d`);
+
+    // Adicionar total de semanas se >= 1
+    if (weeks >= 1) {
+        parts.push(`${weeks}sem`);
+    }
+
+    // Adicionar total de meses se >= 1
+    if (months >= 1) {
+        parts.push(`${months}m`);
+    }
+
+    // Adicionar total de anos se >= 1
+    if (years >= 1) {
+        parts.push(`${years}a`);
+    }
+
+    const prefix = isPast ? 'há' : (isFuture ? 'em' : '');
+    return `${prefix} ${parts.join(' · ')}`.trim();
+}

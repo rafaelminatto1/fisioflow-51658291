@@ -14,8 +14,9 @@ import { Progress } from '@/components/ui/progress';
 import { usePatientGoals, useCompleteGoal } from '@/hooks/usePatientEvolution';
 import { MetaFormModal } from './MetaFormModal';
 import type { PatientGoal } from '@/types/evolution';
-import { differenceInDays, format, parseISO, isPast, isToday } from 'date-fns';
+import { format, parseISO, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDetailedDuration } from '@/utils/dateUtils';
 
 interface MetasCardProps {
     patientId: string | undefined;
@@ -24,18 +25,11 @@ interface MetasCardProps {
 // Calcula o countdown formatado de forma compacta
 function formatCountdown(targetDate: string | undefined): { text: string; isUrgent: boolean } {
     if (!targetDate) return { text: '-', isUrgent: false };
-
-    const target = parseISO(targetDate);
-    const now = new Date();
-
-    if (isToday(target)) return { text: 'Hoje', isUrgent: true };
-    if (isPast(target)) return { text: 'Atrasada', isUrgent: true };
-
-    const daysLeft = differenceInDays(target, now);
-    if (daysLeft === 1) return { text: '1 dia', isUrgent: false };
-    if (daysLeft < 7) return { text: `${daysLeft}d`, isUrgent: false };
-    if (daysLeft < 30) return { text: `${Math.floor(daysLeft / 7)}sem`, isUrgent: false };
-    return { text: `${Math.floor(daysLeft / 30)}m`, isUrgent: false };
+    const date = parseISO(targetDate);
+    return {
+        text: formatDetailedDuration(targetDate),
+        isUrgent: isPast(date) || isToday(date)
+    };
 }
 
 export function MetasCard({ patientId }: MetasCardProps) {
