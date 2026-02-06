@@ -294,7 +294,7 @@ export const soapGeneration = onCall({
   region: 'southamerica-east1',
   memory: '1GiB',
   cpu: 1,
-  maxInstances: 10,
+  maxInstances: 1,
   timeoutSeconds: 300, // 5 minutes for AI generation
 }, soapGenerationHandler);
 

@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -19,45 +19,9 @@ import { normalizeFirestoreData } from '@/utils/firestoreData';
 const auth = getAuth();
 
 // Types
-export interface PatientSurgery {
-  id: string;
-  patient_id: string;
-  surgery_name: string;
-  surgery_date: string;
-  affected_side: 'direito' | 'esquerdo' | 'bilateral';
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Surgery, MedicalReturn, PatientGoal, Pathology } from '@/types/evolution';
 
-export interface PatientGoal {
-  id: string;
-  patient_id: string;
-  goal_title: string;
-  goal_description?: string;
-  category?: string;
-  target_date?: string;
-  target_value?: string;
-  current_value?: string;
-  current_progress: number;
-  priority: 'baixa' | 'media' | 'alta' | 'critica';
-  status: 'em_andamento' | 'concluido' | 'cancelado';
-  completed_at?: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PatientPathology {
-  id: string;
-  patient_id: string;
-  pathology_name: string;
-  diagnosis_date?: string;
-  status: 'em_tratamento' | 'tratada' | 'cronica';
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
+// Re-using types from @/types/evolution
 
 export interface PathologyRequiredMeasurement {
   id: string;
@@ -112,7 +76,6 @@ export interface SoapRecord {
   objective?: string;
   assessment?: string;
   plan?: string;
-  [key: string]: unknown;
 }
 
 // Helper para obter usuário atual
@@ -132,10 +95,60 @@ export const usePatientSurgeries = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientSurgery[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Surgery[];
     },
     enabled: !!patientId,
     staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
+  });
+};
+
+// Hook para retornos médicos
+export const usePatientMedicalReturns = (patientId: string) => {
+  return useQuery({
+    queryKey: ['patient-medical-returns', patientId],
+    queryFn: async () => {
+      const mapSnapshot = (snapshot: Awaited<ReturnType<typeof getDocs>>) =>
+        snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as MedicalReturn[];
+
+      const sortByReturnDateDesc = (returns: MedicalReturn[]) =>
+        returns.sort(
+          (a, b) => new Date(b.return_date).getTime() - new Date(a.return_date).getTime()
+        );
+
+      try {
+        const q = firestoreQuery(
+          collection(db, 'patient_medical_returns'),
+          where('patient_id', '==', patientId),
+          orderBy('return_date', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        return mapSnapshot(snapshot);
+      } catch (error) {
+        const maybeCode = (error as { code?: string })?.code;
+
+        // Fallback para evitar travamento quando o índice composto ainda não existe.
+        if (maybeCode === 'failed-precondition') {
+          logger.warn(
+            'Missing Firestore index for patient_medical_returns. Falling back to client-side sort.',
+            { patientId },
+            'usePatientEvolution'
+          );
+
+          const fallbackQuery = firestoreQuery(
+            collection(db, 'patient_medical_returns'),
+            where('patient_id', '==', patientId)
+          );
+          const snapshot = await getDocs(fallbackQuery);
+          return sortByReturnDateDesc(mapSnapshot(snapshot));
+        }
+
+        throw error;
+      }
+    },
+    enabled: !!patientId,
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    retry: false,
   });
 };
 
@@ -170,7 +183,7 @@ export const usePatientPathologies = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientPathology[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Pathology[];
     },
     enabled: !!patientId,
     staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
@@ -239,7 +252,7 @@ export const useCreateMeasurement = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      return { id: docSnap.id, ...(docSnap.data() as any) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as EvolutionMeasurement).patient_id] });
@@ -272,7 +285,7 @@ export const useUpdateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() } as PatientGoal;
+      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -298,7 +311,7 @@ export const useCompleteGoal = () => {
       await updateDoc(docRef, updateData);
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() } as PatientGoal;
+      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -326,7 +339,7 @@ export const useCreateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      return { id: docSnap.id, ...(docSnap.data() as any) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -374,15 +387,34 @@ export const useUpdateGoalStatus = () => {
   });
 };
 
+// Hook para excluir objetivo
+export const useDeleteGoal = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (goalId: string) => {
+      const docRef = doc(db, 'patient_goals', goalId);
+      await deleteDoc(docRef);
+      return goalId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-goals'] });
+      toast({ title: 'Objetivo excluído com sucesso' });
+    }
+  });
+};
+
 // Consolidated hook for patient evolution page
 // This hook combines all the logic needed for the PatientEvolution page
 export interface PatientEvolutionData {
   appointment: Appointment | null;
   patient: Patient | null;
   patientId: string | null;
-  surgeries: PatientSurgery[];
+  surgeries: Surgery[];
+  medicalReturns: MedicalReturn[];
   goals: PatientGoal[];
-  pathologies: PatientPathology[];
+  pathologies: Pathology[];
   measurements: EvolutionMeasurement[];
   previousEvolutions: SoapRecord[];
   evolutionStats: {
@@ -411,6 +443,7 @@ export function usePatientEvolutionData() {
   } = useAppointmentData(appointmentId);
 
   const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
+  const { data: medicalReturns = [] } = usePatientMedicalReturns(patientId || '');
   const { data: goals = [] } = usePatientGoals(patientId || '');
   const { data: pathologies = [] } = usePatientPathologies(patientId || '');
   const { data: measurements = [] } = useEvolutionMeasurements(patientId || '');
@@ -497,8 +530,8 @@ export function usePatientEvolutionData() {
       }
 
       return { data: record, error: null };
-    } catch (error) {
-      return { data: null, error };
+    } catch (error: any) {
+      return { data: null, error: error?.message || 'Erro desconhecido' };
     }
   }, [patientId, appointmentId, createSoapRecord]);
 
@@ -508,7 +541,7 @@ export function usePatientEvolutionData() {
     }
 
     const saveResult = await handleSave(soapData);
-    if (saveResult.error) return saveResult;
+    if (!saveResult || saveResult.error) return saveResult || { error: 'Erro ao salvar' };
 
     if (appointmentId) {
       completeAppointment(appointmentId, {
@@ -538,12 +571,13 @@ export function usePatientEvolutionData() {
       patient,
       patientId,
       surgeries,
+      medicalReturns,
       goals,
       pathologies,
       measurements,
       previousEvolutions,
       evolutionStats
-    } as PatientEvolutionData,
+    } as any as PatientEvolutionData,
     loading: dataLoading,
     error: appointmentError || patientError,
     isSaving: createSoapRecord.isPending,
