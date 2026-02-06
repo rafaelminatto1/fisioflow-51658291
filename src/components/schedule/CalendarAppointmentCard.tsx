@@ -256,7 +256,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             }}
             initial={reducedMotion ? false : { opacity: 0, scale: 0.98, y: 2 }}
             animate={{
-                opacity: isDragging && hideGhostWhenSiblings ? 0 : (isDragging ? 0.45 : 1),
+                opacity: isDragging && hideGhostWhenSiblings ? 0 : (isDragging ? 0.2 : 1),
                 scale: reducedMotion ? 1 : (isDragging ? 0.98 : 1),
                 y: 0,
                 boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"

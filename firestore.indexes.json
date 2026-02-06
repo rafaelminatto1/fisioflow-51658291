@@ -725,16 +725,6 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "code",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "referral_codes",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
                     "fieldPath": "organization_id",
                     "order": "ASCENDING"
                 },
@@ -759,16 +749,6 @@
                 {
                     "fieldPath": "redeemed_at",
                     "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "fisio_links",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "slug",
-                    "order": "ASCENDING"
                 }
             ]
         },

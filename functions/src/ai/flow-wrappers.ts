@@ -21,7 +21,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import { logger } from '../lib/logger';
 
 export const analyzeProgress = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 1, memory: "512MiB" },
     async (request: CallableRequest) => {
         if (!request.auth) {
             throw new Error('Unauthorized');
