@@ -22,6 +22,7 @@ import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface RecoveryPrediction {
   patientId: string;
@@ -213,13 +214,13 @@ async function fetchSimilarCases(
 
       return fallbackSnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       }));
     }
 
     return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     }));
   } catch (error) {
     logger.error('[Predictive Analytics] Error fetching similar cases', error, 'predictive-analytics');

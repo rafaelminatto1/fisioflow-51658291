@@ -4,6 +4,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Evento {
   id: string;
@@ -36,7 +37,7 @@ export function useEventosStats() {
       // Fetch eventos
       const eventosQ = firestoreQuery(collection(db, "eventos"));
       const eventosSnap = await getDocs(eventosQ);
-      const eventos = eventosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const eventos = eventosSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       const totalEventos = eventos.length;
       const eventosAtivos = eventos.filter(
@@ -49,7 +50,7 @@ export function useEventosStats() {
       // Fetch pagamentos
       const pagamentosQ = firestoreQuery(collection(db, "pagamentos"));
       const pagamentosSnap = await getDocs(pagamentosQ);
-      const pagamentos = pagamentosSnap.docs.map(doc => doc.data());
+      const pagamentos = pagamentosSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const receitaTotal = pagamentos
         .filter((p: Pagamento) => p.tipo === "receita")

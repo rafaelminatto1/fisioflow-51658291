@@ -10,7 +10,7 @@ import { Loader2, Plus, Pencil, Trash2, Award, Search, CheckSquare, Square, Tras
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type Achievement = {
     id: string;
@@ -62,7 +63,7 @@ export default function AchievementsManager() {
             querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
                 achievements.push({
                     id: doc.id,
-                    ...doc.data()
+                    ...normalizeFirestoreData(doc.data())
                 } as Achievement);
             });
 

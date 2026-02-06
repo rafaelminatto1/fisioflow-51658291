@@ -13,6 +13,7 @@ import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
 import { getAuth } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getAuth();
 
@@ -94,7 +95,7 @@ export const usePatientSurgeries = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSurgery[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientSurgery[];
     },
     enabled: !!patientId
   });
@@ -112,7 +113,7 @@ export const usePatientGoals = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoal[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientGoal[];
     },
     enabled: !!patientId
   });
@@ -130,7 +131,7 @@ export const usePatientPathologies = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPathology[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientPathology[];
     },
     enabled: !!patientId
   });
@@ -152,7 +153,7 @@ export const useRequiredMeasurements = (pathologyNames: string[]) => {
         );
         const snapshot = await getDocs(q);
         snapshot.docs.forEach(doc => {
-          allResults.push({ id: doc.id, ...doc.data() } as PathologyRequiredMeasurement);
+          allResults.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as PathologyRequiredMeasurement);
         });
       }
 
@@ -174,7 +175,7 @@ export const useEvolutionMeasurements = (patientId: string) => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as EvolutionMeasurement[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as EvolutionMeasurement[];
     },
     enabled: !!patientId
   });

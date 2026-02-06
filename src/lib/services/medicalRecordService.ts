@@ -12,6 +12,7 @@ import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, que
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface MedicalRecord {
   id: string;
@@ -120,7 +121,7 @@ export async function getAnamnesisRecords(patientId: string): Promise<AnamnesisR
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...normalizeFirestoreData(doc.data())
     } as AnamnesisRecord));
   } catch (error) {
     logger.error('Error fetching anamnesis records', error, 'medicalRecordService');
@@ -146,7 +147,7 @@ export async function getLatestAnamnesis(patientId: string): Promise<AnamnesisRe
     const doc = snapshot.docs[0];
     return {
       id: doc.id,
-      ...doc.data()
+      ...normalizeFirestoreData(doc.data())
     } as AnamnesisRecord;
   } catch (error) {
     logger.error('Error fetching latest anamnesis', error, 'medicalRecordService');
@@ -237,7 +238,7 @@ export async function getPhysicalExaminations(patientId: string): Promise<Physic
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...normalizeFirestoreData(doc.data())
     } as PhysicalExamination));
   } catch (error) {
     logger.error('Error fetching physical examinations', error, 'medicalRecordService');
@@ -287,7 +288,7 @@ export async function getTreatmentPlans(patientId: string): Promise<TreatmentPla
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...normalizeFirestoreData(doc.data())
     } as TreatmentPlan));
   } catch (error) {
     logger.error('Error fetching treatment plans', error, 'medicalRecordService');
@@ -374,7 +375,7 @@ export async function getPatientAttachments(patientId: string): Promise<Attachme
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...normalizeFirestoreData(doc.data())
     } as Attachment));
   } catch (error) {
     logger.error('Error fetching attachments', error, 'medicalRecordService');
@@ -396,7 +397,7 @@ export async function getRecordAttachments(recordId: string): Promise<Attachment
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...normalizeFirestoreData(doc.data())
     } as Attachment));
   } catch (error) {
     logger.error('Error fetching record attachments', error, 'medicalRecordService');
@@ -461,7 +462,7 @@ export async function getConsultationHistory(patientId: string, startDate?: stri
     const soapSnapshot = await getDocs(soapQuery);
 
     soapSnapshot.docs.forEach(doc => {
-      const data = doc.data();
+      const data = normalizeFirestoreData(doc.data());
       const date = data.record_date || data.created_at;
 
       if (!historyMap.has(date)) {
@@ -537,7 +538,7 @@ export async function generateMedicalRecordSummary(patientId: string, patientDat
     ]);
 
     const recentNotes = soapRecords.docs.map(doc => {
-      const data = doc.data();
+      const data = normalizeFirestoreData(doc.data());
       return {
         date: data.record_date || data.created_at,
         subjective: data.subjective,

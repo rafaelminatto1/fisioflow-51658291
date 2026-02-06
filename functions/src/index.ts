@@ -5,8 +5,10 @@
  * OTIMIZADO - Removido duplicatas e funções desnecessárias
  */
 
-import * as functions, { setGlobalOptions } from 'firebase-functions/v2';
+import * as functions from 'firebase-functions/v2';
+import { setGlobalOptions } from 'firebase-functions/v2';
 
+import {
     DB_PASS_SECRET,
     DB_USER_SECRET,
     DB_NAME_SECRET,

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Calendar, Ban } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { DropTargetPreviewCard } from './DropTargetPreviewCard';
+import {
 
   calculateCardWidthPercent,
   calculateCardOffsetPercent,

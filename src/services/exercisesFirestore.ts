@@ -2,6 +2,7 @@
  * Serviço de exercícios baseado em Firestore.
  * Usado pela web para listar e fazer CRUD na coleção `exercises` (dados migrados do Supabase).
  */
+import {
 
   collection,
   doc,

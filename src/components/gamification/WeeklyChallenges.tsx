@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { differenceInDays, differenceInHours, parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface WeeklyChallenge {
     id: string;
@@ -44,7 +45,7 @@ export default function WeeklyChallenges({ patientId }: WeeklyChallengesProps) {
                 fsOrderBy('end_date', 'asc')
             );
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WeeklyChallenge[];
+            return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WeeklyChallenge[];
         }
     });
 
@@ -58,7 +59,7 @@ export default function WeeklyChallenges({ patientId }: WeeklyChallengesProps) {
             );
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => {
-                const data = doc.data();
+                const data = normalizeFirestoreData(doc.data());
                 return {
                     challenge_id: data.challenge_id,
                     progress: data.progress || 0,

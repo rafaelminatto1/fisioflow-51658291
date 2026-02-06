@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Voucher {
   id: string;
@@ -45,7 +46,7 @@ export function useVouchers() {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Voucher[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Voucher[];
     },
   });
 }
@@ -65,7 +66,7 @@ export function useUserVouchers() {
       );
 
       const snapshot = await getDocs(q);
-      const userVouchers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const userVouchers = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Fetch voucher data for each user voucher
       interface UserVoucherRaw {
@@ -209,7 +210,7 @@ export function useAllVouchers() {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Voucher[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Voucher[];
     },
   });
 }

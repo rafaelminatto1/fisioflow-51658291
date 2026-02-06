@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import {
 
   Sheet,
   SheetContent,
@@ -32,6 +33,7 @@ import { db, collection, doc, getDocs, query as firestoreQuery, where, orderBy, 
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { GamificationProfile, XpTransaction, Achievement } from '@/types/gamification';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 /**
  * Achievement log entry with joined achievement details
@@ -123,7 +125,7 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
       querySnapshot.forEach((doc) => {
         transactions.push({
           id: doc.id,
-          ...doc.data()
+          ...normalizeFirestoreData(doc.data())
         } as XpTransaction);
       });
 

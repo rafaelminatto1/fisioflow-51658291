@@ -2,6 +2,7 @@
  * Firebase Auth Integration
  * Funções de autenticação usando Firebase Authentication
  */
+import {
 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,

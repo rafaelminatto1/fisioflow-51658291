@@ -7,6 +7,7 @@
 
 import { db, collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export const XP_REWARDS = {
   // Session Activities
@@ -77,7 +78,7 @@ interface GamificationSettings {
 
 // Helper to convert Firestore doc to data
 const docToData = <T>(doc: QueryDocumentSnapshot<T>): T => {
-  return doc.data();
+  return normalizeFirestoreData(doc.data());
 };
 
 /**

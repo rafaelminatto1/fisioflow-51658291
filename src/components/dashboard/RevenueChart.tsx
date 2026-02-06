@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface RevenueData {
   date: string;
@@ -39,7 +40,7 @@ export function RevenueChart() {
       const unsubscribe = onSnapshot(paymentsQuery, (snapshot) => {
         const payments: PaymentDocument[] = [];
         snapshot.forEach((doc) => {
-          payments.push(doc.data() as PaymentDocument);
+          payments.push(normalizeFirestoreData(doc.data()) as PaymentDocument);
         });
 
         // Agrupar por dia

@@ -6,12 +6,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import {
 
   generateDashboardMetrics,
   generateTrendData,
   ClinicDashboardMetrics,
   TrendData,
 } from '@/lib/analytics/clinic-metrics';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // =====================================================================
 // CONFIG
@@ -82,7 +84,7 @@ interface LastAppointmentInfo {
 // Helper to convert doc with generic type
 const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => ({
   id: doc.id,
-  ...doc.data()
+  ...normalizeFirestoreData(doc.data())
 });
 
 // =====================================================================
@@ -337,7 +339,7 @@ export function usePatientTrends(options: TrendsOptions = {}) {
       ));
 
       const newPatients = snap.docs.map(doc => ({
-        date: doc.data().created_at || '',
+        date: normalizeFirestoreData(doc.data()).created_at || '',
         value: 1
       }));
 

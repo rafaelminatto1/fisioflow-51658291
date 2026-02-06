@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { getSyncManager, SyncStatus } from './syncManager';
 import { getCacheManager } from './cacheManager';
 
+import {
   collection,
   doc,
   addDoc,

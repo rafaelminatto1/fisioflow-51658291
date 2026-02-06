@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, doc, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PrescribedExercise {
     id: string;
@@ -37,7 +38,7 @@ export const usePrescribedExercises = (patientId: string) => {
             // Fetch exercises separately to join the data
             const prescriptions = snapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data()
+                ...normalizeFirestoreData(doc.data())
             })) as PrescribedExercise[];
 
             // Get unique exercise IDs
@@ -51,7 +52,7 @@ export const usePrescribedExercises = (patientId: string) => {
                 const exercisesSnapshot = await getDocs(exercisesQuery);
                 const exercises = exercisesSnapshot.docs.map(doc => ({
                     id: doc.id,
-                    ...doc.data()
+                    ...normalizeFirestoreData(doc.data())
                 }));
 
                 const exerciseMap = new Map(exercises.map(e => [e.id, e]));

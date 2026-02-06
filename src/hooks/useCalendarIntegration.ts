@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { GoogleAuthProvider, signInWithPopup, linkWithPopup, unlink } from 'firebase/auth';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
@@ -47,7 +48,7 @@ export interface CalendarSettings {
 
 // Helper: Convert Firestore doc to CalendarIntegration
 const convertDocToCalendarIntegration = (doc: { id: string; data: () => Record<string, unknown> }): CalendarIntegration => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -56,7 +57,7 @@ const convertDocToCalendarIntegration = (doc: { id: string; data: () => Record<s
 
 // Helper: Convert Firestore doc to SyncLog
 const convertDocToSyncLog = (doc: { id: string; data: () => Record<string, unknown> }): SyncLog => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

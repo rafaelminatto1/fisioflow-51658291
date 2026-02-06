@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const capacitySchema = z.object({
   day_of_week: z.number().min(0).max(6),
@@ -40,7 +41,7 @@ export interface CapacityGroup {
 }
 
 // Helper to convert doc
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): ScheduleCapacity => ({ id: doc.id, ...doc.data() } as ScheduleCapacity);
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): ScheduleCapacity => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as ScheduleCapacity);
 
 export function useScheduleCapacity() {
   const { toast } = useToast();
@@ -440,4 +441,3 @@ export function useScheduleCapacity() {
     authError: !isValidUserId ? 'Sessão de usuário inválida' : null,
   };
 }
-

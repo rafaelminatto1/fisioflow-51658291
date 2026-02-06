@@ -1,6 +1,7 @@
 /**
  * Marketing Service - Enhanced with LGPD Consent Management
  */
+import {
 
   db,
   collection,
@@ -17,6 +18,7 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirebaseStorage } from '@/lib/firebase';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const storage = getFirebaseStorage();
 
@@ -316,7 +318,7 @@ export const getPatientMarketingExports = async (patientId: string): Promise<any
       where('patient_id', '==', patientId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
   } catch (error) {
     logger.error('[MarketingService] Error getting exports', error, 'marketingService');
     return [];
@@ -386,7 +388,7 @@ export const getRecallCampaigns = async (organizationId: string): Promise<Recall
       where('organization_id', '==', organizationId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecallCampaign));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as RecallCampaign));
   } catch (error) {
     logger.error('[MarketingService] Error getting recall campaigns', error, 'marketingService');
     return [];
@@ -517,7 +519,7 @@ export const getReferralCode = async (code: string): Promise<ReferralCode | null
     }
 
     const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as ReferralCode;
+    return { id: doc.id, ...normalizeFirestoreData(doc.data()) } as ReferralCode;
   } catch (error) {
     logger.error('[MarketingService] Error getting referral code', error, 'marketingService');
     return null;
@@ -589,7 +591,7 @@ export const getPatientReferralCode = async (
     }
 
     const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as ReferralCode;
+    return { id: doc.id, ...normalizeFirestoreData(doc.data()) } as ReferralCode;
   } catch (error) {
     logger.error('[MarketingService] Error getting patient referral code', error, 'marketingService');
     return null;
@@ -644,7 +646,7 @@ export const getFisioLinkConfig = async (slug: string): Promise<FisioLinkConfig 
     }
 
     const doc = snapshot.docs[0];
-    return doc.data() as FisioLinkConfig;
+    return normalizeFirestoreData(doc.data()) as FisioLinkConfig;
   } catch (error) {
     logger.error('[MarketingService] Error getting FisioLink config', error, 'marketingService');
     return null;
@@ -664,7 +666,7 @@ export const getFisioLinkByOrganization = async (organizationId: string): Promis
     }
 
     const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as FisioLinkConfig;
+    return { id: doc.id, ...normalizeFirestoreData(doc.data()) } as FisioLinkConfig;
   } catch (error) {
     logger.error('[MarketingService] Error getting FisioLink by organization', error, 'marketingService');
     return null;
@@ -730,7 +732,7 @@ export const getFisioLinkAnalytics = async (
     let totalClicks = 0;
 
     snapshot.forEach(doc => {
-      const data = doc.data();
+      const data = normalizeFirestoreData(doc.data());
       const button = data.button || 'unknown';
       clicksByButton[button] = (clicksByButton[button] || 0) + 1;
       totalClicks++;
@@ -846,7 +848,7 @@ export const calculateMarketingROI = async (
 
     // Get converted leads (became paying patients)
     const convertedLeads = snapshot.docs.filter(doc => {
-      const data = doc.data();
+      const data = normalizeFirestoreData(doc.data());
       return data.status === 'active' || data.has_paid === true;
     }).length;
 

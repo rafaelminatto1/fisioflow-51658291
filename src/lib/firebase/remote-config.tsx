@@ -6,6 +6,7 @@
  *
  * @module lib/firebase/remote-config
  */
+import {
 
   getRemoteConfig,
   fetchAndActivate,

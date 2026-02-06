@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
 
   Select,
   SelectContent,
@@ -122,7 +123,7 @@ export default function ContentCalendarPage() {
       const snapshot = await getDocs(q);
       const items = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       } as ContentItem));
       setContentItems(items);
     } catch (error) {
@@ -550,3 +551,4 @@ export default function ContentCalendarPage() {
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { addDays } from 'date-fns';
+import { normalizeFirestoreData } from '@/utils/firestoreData';

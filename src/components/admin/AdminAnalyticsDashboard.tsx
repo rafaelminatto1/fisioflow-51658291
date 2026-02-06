@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
 
   Users,
   AlertTriangle,
@@ -57,6 +58,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // ============================================================================
 // TYPES
@@ -151,10 +153,10 @@ function useAdminAnalytics() {
       const patientsSnap = await getDocs(patientsQuery);
       const patients = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        full_name: doc.data().full_name || '',
-        email: doc.data().email,
-        phone: doc.data().phone,
-        created_at: doc.data().created_at || new Date().toISOString(),
+        full_name: normalizeFirestoreData(doc.data()).full_name || '',
+        email: normalizeFirestoreData(doc.data()).email,
+        phone: normalizeFirestoreData(doc.data()).phone,
+        created_at: normalizeFirestoreData(doc.data()).created_at || new Date().toISOString(),
       }));
 
       // Get session counts per patient
@@ -171,7 +173,7 @@ function useAdminAnalytics() {
         );
         const appointmentsSnap = await getDocs(appointmentsQuery);
         appointmentsSnap.forEach(doc => {
-          const data = doc.data();
+          const data = normalizeFirestoreData(doc.data());
           if (data.patient_id && data.appointment_date) {
             appointments.push({
               patient_id: data.patient_id,
@@ -192,7 +194,7 @@ function useAdminAnalytics() {
         );
         const riskSnap = await getDocs(riskQuery);
         riskSnap.forEach(doc => {
-          const data = doc.data();
+          const data = normalizeFirestoreData(doc.data());
           if (data.patient_id) {
             riskScores.push({
               patient_id: data.patient_id,
@@ -215,7 +217,7 @@ function useAdminAnalytics() {
         );
         const evolutionSnap = await getDocs(evolutionQuery);
         evolutionSnap.forEach(doc => {
-          const data = doc.data();
+          const data = normalizeFirestoreData(doc.data());
           if (data.patient_id && data.pathology) {
             evolutions.push({
               patient_id: data.patient_id,

@@ -3,6 +3,7 @@ import { format, differenceInYears, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { parseResponseDate } from '@/utils/dateUtils';
+import {
 
   Dialog,
   DialogContent,
@@ -66,6 +67,7 @@ import {
   formatTherapistLabel,
   THERAPIST_PLACEHOLDER,
 } from '@/hooks/useTherapists';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
@@ -156,7 +158,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       const snapshot = await getDocs(q);
 
       return snapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         return {
           id: doc.id,
           patientId: data.patient_id,

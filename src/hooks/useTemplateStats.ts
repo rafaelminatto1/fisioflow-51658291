@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit as limitFn, db } from '@/integrations/firebase/app';
 import { EvaluationForm } from '@/types/clinical-forms';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function useTemplateStats() {
   return useQuery({
@@ -18,7 +19,7 @@ export function useTemplateStats() {
       );
 
       const snapshot = await getDocs(q);
-      const forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const forms = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Calculate stats
       const total = forms.length;
@@ -92,7 +93,7 @@ export function useMostUsedTemplates(limitNum = 10) {
       );
 
       const snapshot = await getDocs(q);
-      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Filter and sort by usage_count client-side
       interface FormWithUsage {
@@ -120,7 +121,7 @@ export function useRecentlyUsedTemplates(limitNum = 6) {
       );
 
       const snapshot = await getDocs(q);
-      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Filter and sort by last_used_at client-side
       interface FormWithLastUsed {

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type GamificationSettingValue = string | number | boolean;
 
@@ -32,7 +33,7 @@ export default function GamificationSettings() {
             querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
                 settings.push({
                     key: doc.id,
-                    ...doc.data()
+                    ...normalizeFirestoreData(doc.data())
                 } as GamificationSetting);
             });
 

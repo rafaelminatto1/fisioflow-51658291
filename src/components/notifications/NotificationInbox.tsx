@@ -3,6 +3,7 @@ import { Bell, Check, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
 
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import { db } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Notification {
   id: string;
@@ -57,7 +59,7 @@ export function NotificationInbox() {
       const snapshot = await getDocs(q);
       const notificationList = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       })) as Notification[];
 
       setNotifications(notificationList);

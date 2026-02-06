@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
-import * as Icons, { Loader2, ShoppingCart, Zap, Shield, Palette, Award, Lock } from 'lucide-react';
+import * as Icons from 'lucide-react';
+import { Loader2, ShoppingCart, Zap, Shield, Palette, Award, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 

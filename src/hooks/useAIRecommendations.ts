@@ -7,6 +7,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit as queryLimit, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import {
 
   generatePatientRecommendations,
   generateBulkPatientRecommendations,
@@ -17,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
   ScheduleRecommendation,
   TreatmentInsight,
 } from '@/lib/ai/recommendations';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 
 // ============================================================================
@@ -69,7 +71,7 @@ const AI_KEYS = {
 
 // Helper to convert doc to data
 const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => {
-  return { id: doc.id, ...doc.data() };
+  return { id: doc.id, ...normalizeFirestoreData(doc.data()) };
 };
 
 // =====================================================================

@@ -1,5 +1,6 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
 import type { TestEvolutionData, TestStatistics, AssessmentTestConfig } from '@/types/evolution';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export class TestEvolutionService {
   static async getTestEvolutionData(patientId: string, testName: string): Promise<TestEvolutionData[]> {
@@ -88,7 +89,7 @@ export class TestEvolutionService {
 
     if (pathSnapshot.empty) return [];
 
-    const pathologyNames = pathSnapshot.docs.map(doc => doc.data().pathology_name);
+    const pathologyNames = pathSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()).pathology_name);
 
     // Get mandatory tests for these pathologies
     // NOTE: Firestore doesn't support 'in' queries well with arrays
@@ -131,7 +132,7 @@ export class TestEvolutionService {
     );
     const snapshot = await getDocs(q);
 
-    const completedTests = new Set(snapshot.docs.map(doc => doc.data().measurement_name));
+    const completedTests = new Set(snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).measurement_name));
     const mandatoryTests = await this.getMandatoryTests(patientId, 1); // Simplified
     const criticalTests = mandatoryTests
       .filter(t => t.alert_level === 'critico')

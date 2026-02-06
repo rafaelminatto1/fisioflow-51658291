@@ -10,6 +10,7 @@ import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { generateSmartQuests, GeneratedQuest } from '@/lib/gamification/quest-generator';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import {
 
   DailyQuestItem,
   GamificationProfile,
@@ -27,6 +28,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
   type BuyItemParams,
 } from '@/types/gamification';
 import { db } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 
 // Level Calculation Constants - buscar do banco se disponível
@@ -112,7 +114,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ShopItem[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ShopItem[];
     },
     staleTime: 1000 * 60 * 30, // 30 mins
   });
@@ -126,7 +128,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserInventoryItem[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UserInventoryItem[];
     },
     enabled: !!patientId,
   });
@@ -283,8 +285,8 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       ]);
 
       return {
-        all: allSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Achievement[],
-        unlocked: unlockedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UnlockedAchievement[]
+        all: allSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Achievement[],
+        unlocked: unlockedSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UnlockedAchievement[]
       };
     },
     enabled: !!patientId,
@@ -305,7 +307,7 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) || [];
     },
     enabled: !!patientId
   });

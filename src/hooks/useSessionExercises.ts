@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, orderBy, limit, getDocs, db } from '@/integrations/firebase/app';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export const useSessionExercises = (patientId: string) => {
     // Fetch the most recent treatment session to get previous exercises
@@ -25,7 +26,7 @@ export const useSessionExercises = (patientId: string) => {
             const doc = snapshot.docs[0];
             return {
                 id: doc.id,
-                ...doc.data()
+                ...normalizeFirestoreData(doc.data())
             };
         },
         enabled: !!patientId

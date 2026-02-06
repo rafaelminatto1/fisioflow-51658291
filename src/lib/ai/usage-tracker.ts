@@ -15,6 +15,7 @@
 import { db, collection, doc, setDoc, getDoc, getDocs, query as firestoreQuery, where, sum, orderBy, limit } from '@/integrations/firebase/app';
 import { AIUsageRecord, AIFeatureCategory, AIModelType } from '@/integrations/firebase/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface UsageStats {
   /** Total requests */
@@ -288,8 +289,8 @@ class AIUsageMonitorService {
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({
-        ...doc.data(),
-        timestamp: new Date(doc.data().timestamp as string),
+        ...normalizeFirestoreData(doc.data()),
+        timestamp: new Date(normalizeFirestoreData(doc.data()).timestamp as string),
       })) as AIUsageRecord[];
     } catch (error) {
       logger.error('Failed to get recent records', error, 'usage-tracker');
@@ -451,8 +452,8 @@ class AIUsageMonitorService {
       const snapshot = await getDocs(q);
 
       let records = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        timestamp: new Date(doc.data().timestamp as string),
+        ...normalizeFirestoreData(doc.data()),
+        timestamp: new Date(normalizeFirestoreData(doc.data()).timestamp as string),
       })) as AIUsageRecord[];
 
       if (feature) {

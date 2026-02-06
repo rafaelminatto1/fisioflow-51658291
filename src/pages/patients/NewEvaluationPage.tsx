@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
+import {
 
     EvaluationTemplateSelector,
     DynamicFieldRenderer,
@@ -23,6 +24,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppointmentService } from '@/services/appointmentService';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
@@ -71,10 +73,10 @@ export default function NewEvaluationPage() {
             return {
                 id: patientDoc.id,
                 ...patientDoc.data(),
-                goals: goalsQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-                pathologies: pathologiesQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-                surgeries: surgeriesQuery.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-                appointments: appointmentsQuery.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                goals: goalsQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })),
+                pathologies: pathologiesQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })),
+                surgeries: surgeriesQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })),
+                appointments: appointmentsQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
             };
         },
         enabled: !!patientId

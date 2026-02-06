@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { appointmentsApi } from '@/integrations/firebase/functions';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface WhatsAppMessage {
   id: string;
@@ -34,7 +35,7 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
       );
 
       const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WhatsAppMessage[];
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WhatsAppMessage[];
 
       // Filter by appointment_id if provided
       if (appointmentId) {
@@ -59,7 +60,7 @@ export const useWhatsAppConfirmations = (appointmentId?: string) => {
       );
 
       const snapshot = await getDocs(q);
-      const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Fetch patient data for each appointment
       interface AppointmentFirestore {

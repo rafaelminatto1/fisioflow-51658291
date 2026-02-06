@@ -15,6 +15,7 @@ import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-f
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { UnknownError } from '@/types/common';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface UserRole {
   user_id: string;
@@ -144,7 +145,7 @@ export const useDashboardMetrics = () => {
           }
           const q = firestoreQuery(collection(db, collectionName), ...constraints);
           const snapshot = await getDocs(q);
-          return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
         } catch (error: UnknownError) {
           // Se a coleção não existir ou houver permissão negada, retorna array vazio
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -325,7 +326,7 @@ export const useDashboardMetrics = () => {
         );
         const profileSnap = await getDocs(profileQ);
         profileSnap.forEach(doc => {
-          const profileData = doc.data();
+          const profileData = normalizeFirestoreData(doc.data());
           if (profileData && profileData.user_id) {
             therapistProfiles.set(profileData.user_id, profileData);
           }

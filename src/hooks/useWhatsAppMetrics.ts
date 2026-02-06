@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, addDoc, updateDoc, doc, db } from '@/integrations/firebase/app';
 import { WhatsAppService } from '@/lib/services/WhatsAppService';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface WhatsAppMetric {
   id: string;
@@ -70,7 +71,7 @@ export function useWhatsAppMetricsSummary(days: number = 30) {
       );
 
       const snapshot = await getDocs(q);
-      const metrics = snapshot.docs.map(doc => doc.data() as WhatsAppMetric);
+      const metrics = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()) as WhatsAppMetric);
 
       const totalSent = metrics.length;
       const delivered = metrics.filter(m => m.delivered_at).length;
@@ -125,7 +126,7 @@ export function useWhatsAppMessages(limitCount: number = 50) {
       // ideally 'patient_name' should be stored in 'whatsapp_metrics' or fetched.
       // Let's assume we return data and if UI breaks we'll add 'patient_name' fetch.
 
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
     },
     staleTime: 60 * 1000, // 1 minute
   });
@@ -138,7 +139,7 @@ export function useWhatsAppTemplates() {
     queryFn: async () => {
       const q = firestoreQuery(collection(db, 'whatsapp_templates'), orderBy('name'));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WhatsAppTemplate[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WhatsAppTemplate[];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -155,7 +156,7 @@ export function useWhatsAppWebhookLogs(limitCount: number = 100) {
         limit(limitCount)
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
     },
     staleTime: 30 * 1000, // 30 seconds
   });
@@ -219,7 +220,7 @@ export function useWhatsAppDailyStats(days: number = 7) {
         where('message_type', '==', 'outbound')
       );
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => doc.data());
+      const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       // Group by date
       const grouped = new Map<string, { sent: number; delivered: number; read: number; failed: number }>();

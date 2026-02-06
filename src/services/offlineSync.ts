@@ -490,7 +490,7 @@ class OfflineSyncService {
           where('appointment_date', '<=', tomorrowStr)
         );
         const appointmentsSnapshot = await getDocs(appointmentsQ);
-        appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
           logger.debug('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.', undefined, 'offlineSync');
@@ -525,7 +525,7 @@ class OfflineSyncService {
           limitClause(100)
         );
         const exercisesSnapshot = await getDocs(exercisesQ);
-        exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
           logger.debug('[OfflineSyncService] Permission denied for exercises. Skipping.', undefined, 'offlineSync');
@@ -742,6 +742,7 @@ export function resetOfflineSyncService(): void {
 
 import { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 /**
  * React hook for offline sync
@@ -840,4 +841,3 @@ export function useOfflineSync(config?: SyncConfig) {
 // ============================================================================
 
 export { OfflineSyncService };
-

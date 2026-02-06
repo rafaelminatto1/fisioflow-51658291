@@ -23,6 +23,7 @@ import {
   LifecycleEventType,
   PredictionType,
 } from '@/types/patientAnalytics';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // ============================================================================
 // QUERY KEYS
@@ -87,7 +88,7 @@ export function usePatientLifecycleEvents(patientId: string) {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientLifecycleEvent[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientLifecycleEvent[];
     },
     enabled: !!patientId,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -209,12 +210,12 @@ export function usePatientOutcomeMeasures(
       if (limitValue) {
         // Firestore doesn't have a direct limit after where, need to apply client-side
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
           .slice(0, limitValue) as PatientOutcomeMeasure[];
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientOutcomeMeasure[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientOutcomeMeasure[];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -333,7 +334,7 @@ export function usePatientSessionMetrics(patientId: string, limitValue?: number)
       );
 
       const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientSessionMetrics[];
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientSessionMetrics[];
 
       if (limitValue) {
         data = data.slice(-limitValue);
@@ -400,7 +401,7 @@ export function usePatientPredictions(patientId: string, predictionType?: Predic
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientPrediction[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientPrediction[];
     },
     enabled: !!patientId,
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -467,7 +468,7 @@ export function usePatientGoals(patientId: string) {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientGoalTracking[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientGoalTracking[];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -577,7 +578,7 @@ export function usePatientInsights(patientId: string, includeAcknowledged = fals
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientInsight[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientInsight[];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -634,7 +635,7 @@ export function useClinicalBenchmarks(benchmarkCategory?: string) {
       }
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ClinicalBenchmark[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ClinicalBenchmark[];
     },
     staleTime: 60 * 60 * 1000, // 1 hour
   });

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { PrestadorCreate, PrestadorUpdate } from '@/lib/validations/prestador';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Prestador {
   id: string;
@@ -17,7 +18,7 @@ interface Prestador {
 
 // Helper to convert doc
 const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T =>
-  ({ id: doc.id, ...doc.data() } as T);
+  ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
 
 export function usePrestadores(eventoId: string) {
   return useQuery({
@@ -158,4 +159,3 @@ export function useMarcarPagamento() {
     },
   });
 }
-

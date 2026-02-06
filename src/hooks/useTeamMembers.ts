@@ -7,6 +7,7 @@ import { collection, getDocs, query, where, db, getFirebaseAuth } from '@/integr
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { TeamMember } from '@/types/tarefas';
 import { fisioLogger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
@@ -31,7 +32,7 @@ export function useTeamMembers() {
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         return {
           id: doc.id,
           full_name: data.full_name || data.email || 'Usuário',

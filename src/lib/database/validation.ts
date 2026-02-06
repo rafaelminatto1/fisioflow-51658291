@@ -4,6 +4,7 @@
  * Provides runtime validation functions for database operations.
  * Use these to validate data before sending to Firebase Firestore.
  */
+import {
 
   PatientStatus,
   AppointmentStatus,

@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Servico {
   id: string;
@@ -26,7 +27,7 @@ export type ServicoFormData = Omit<Servico, 'id' | 'created_at' | 'updated_at'>;
 
 // Helper to convert Firestore doc to Servico
 const convertDocToServico = (doc: { id: string; data: () => Record<string, unknown> }): Servico => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

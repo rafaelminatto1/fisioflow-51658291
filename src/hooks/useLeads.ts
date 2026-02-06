@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, serverTimestamp, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Lead {
   id: string;
@@ -34,7 +35,7 @@ export interface LeadHistorico {
 }
 
 // Helper
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
 
 export function useLeads(estagio?: string) {
   return useQuery({
@@ -194,4 +195,3 @@ export function useLeadMetrics() {
     },
   });
 }
-

@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface CRMTarefa {
   id: string;
@@ -81,7 +82,7 @@ export interface NPSPesquisa {
 }
 
 // Helper to convert doc to type with id
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
 
 // ========== TAREFAS ==========
 export function useCRMTarefas(leadId?: string) {
@@ -442,7 +443,7 @@ export function useCRMAnalytics() {
       // Get all leads
       const q = firestoreQuery(collection(db, 'leads'));
       const snapshot = await getDocs(q);
-      const leads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Array<{ id: string; origem?: string; estagio?: string }>[];
+      const leads = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Array<{ id: string; origem?: string; estagio?: string }>[];
 
       // Conversion by source
       const conversionBySource = Object.entries(

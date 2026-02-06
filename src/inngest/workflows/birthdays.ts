@@ -9,6 +9,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Patient {
   id: string;
@@ -81,7 +82,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
           .where('birthday_MMDD', '==', todayMMDD)
           .get();
 
-        birthdayPatients = fullSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        birthdayPatients = fullSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
       } else {
         // Fall back to client-side filtering (less efficient)
         logger.warn('[Birthday] birthday_MMDD field not found, using client-side filtering', undefined, 'birthdays-workflow');
@@ -91,7 +92,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
           .get();
 
         birthdayPatients = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
           .filter((patient: Patient) => {
             const dob = patient.date_of_birth;
             return dob && dob.includes(`-${todayMMDD}`);
@@ -137,7 +138,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
       // Create a map: organizationId -> therapist
       const therapistByOrg = new Map<string, Therapist>();
       therapistsSnapshot.docs.forEach(doc => {
-        const therapist = { id: doc.id, ...doc.data() };
+        const therapist = { id: doc.id, ...normalizeFirestoreData(doc.data()) };
         therapistByOrg.set(therapist.organization_id, therapist);
       });
 

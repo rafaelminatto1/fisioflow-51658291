@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface TherapistOccupancyData {
   id: string;
@@ -76,7 +77,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
         where('role', 'in', ['admin', 'fisioterapeuta'])
       );
       const rolesSnap = await getDocs(rolesQ);
-      const therapistUserIds = [...new Set(rolesSnap.docs.map(doc => doc.data().user_id))];
+      const therapistUserIds = [...new Set(rolesSnap.docs.map(doc => normalizeFirestoreData(doc.data()).user_id))];
 
       if (therapistUserIds.length === 0) {
         return {
@@ -150,7 +151,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           )
         );
         appointments = periodAppointmentsResults.flatMap(snapshot =>
-          snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
         ).filter(a => a.status !== 'cancelado');
 
         // Buscar agendamentos de hoje para dados horários
@@ -166,7 +167,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           )
         );
         todayAppointments = todayAppointmentsResults.flatMap(snapshot =>
-          snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
         ).filter(a => a.status !== 'cancelado');
       }
 

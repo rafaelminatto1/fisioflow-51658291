@@ -2,6 +2,7 @@
  * Time Tracking Service - Firebase Firestore Integration
  * Serviço para gerenciamento de entradas de tempo no Firestore
  */
+import {
 
   collection,
   doc,
@@ -25,6 +26,7 @@ import type {
   TimeEntryFilters,
   ActiveTimer,
 } from '@/types/timetracking';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const COLLECTION_NAME = 'time_entries';
 
@@ -149,7 +151,7 @@ export async function getTimeEntries(
 
   return querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
   })) as TimeEntry[];
 }
 
@@ -194,7 +196,7 @@ export function listenToUserTimeEntries(
     (snapshot) => {
       const entries = snapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       })) as TimeEntry[];
       callback(entries);
     },

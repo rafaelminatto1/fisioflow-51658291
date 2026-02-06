@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import {
 
   MessageCircle, Send, Plus, CheckCircle2, Clock, Users,
   Settings, FileText, Zap, Check, X
@@ -21,6 +22,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useWhatsAppIntegration } from './hooks/useWhatsAppIntegration';
 import { db, collection, getDocs, getDoc, doc, query as firestoreQuery, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface WhatsAppMessage {
   id: string;
@@ -75,7 +77,7 @@ export default function WhatsAppIntegration() {
         fsLimit(50)
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as WhatsAppMessage[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WhatsAppMessage[];
     },
   });
 

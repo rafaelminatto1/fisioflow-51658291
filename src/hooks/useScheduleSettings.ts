@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface BusinessHour {
   id: string;
@@ -72,7 +73,7 @@ const DAYS_OF_WEEK = [
 ];
 
 // Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
 
 export function useScheduleSettings() {
   const { toast } = useToast();

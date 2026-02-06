@@ -8,6 +8,7 @@ import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query a
 import { useToast } from '@/hooks/use-toast';
 import { EventoCreate, EventoUpdate } from '@/lib/validations/evento';
 import { mockEventos } from '@/lib/mockData';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Evento {
   id: string;
@@ -29,7 +30,7 @@ export interface Evento {
 
 // Helper: Convert Firestore doc to Evento
 const convertDocToEvento = (doc: { id: string; data: () => Record<string, unknown> }): Evento => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

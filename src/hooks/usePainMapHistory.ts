@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, orderBy, getDocs, db } from '@/integrations/firebase/app';
 import type { PainMapRecord, BodyRegion, PainMapPoint } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PainMapInsight {
   type: 'improvement' | 'stable' | 'worsening';
@@ -54,7 +55,7 @@ export function usePainMapHistory(patientId: string) {
       const snapshot = await getDocs(q);
       const painMaps = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       })) as PainMapRecord[];
 
       // Calculate evolution data

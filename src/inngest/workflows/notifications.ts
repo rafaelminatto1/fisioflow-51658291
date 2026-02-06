@@ -7,6 +7,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type NotificationResult = { sent: boolean; channel: string; error?: string };
 
@@ -74,7 +75,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
             return { sent: false, channel: 'push', error: 'No tokens found' };
           }
 
-          const tokens = tokensSnapshot.docs.map(doc => doc.data().token).filter(t => !!t);
+          const tokens = tokensSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()).token).filter(t => !!t);
 
           if (tokens.length === 0) {
             return { sent: false, channel: 'push', error: 'No valid tokens' };

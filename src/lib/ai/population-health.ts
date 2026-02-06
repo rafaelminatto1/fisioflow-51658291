@@ -22,6 +22,7 @@ import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PopulationHealthAnalysis {
   clinicId: string;
@@ -237,7 +238,7 @@ async function aggregatePopulationData(
 
     const patients = patientsSnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     }));
 
     // Fetch session/progress data
@@ -247,7 +248,7 @@ async function aggregatePopulationData(
       .where('data_collection_period_end', '<=', endDate.toISOString())
       .get();
 
-    const mlData = mlDataSnapshot.docs.map(doc => doc.data());
+    const mlData = mlDataSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
     // Fetch appointments for volume analysis
     const appointmentsSnapshot = await db
@@ -256,7 +257,7 @@ async function aggregatePopulationData(
       .where('date', '<=', endDate.toISOString())
       .get();
 
-    const appointments = appointmentsSnapshot.docs.map(doc => doc.data());
+    const appointments = appointmentsSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
     return {
       patients,

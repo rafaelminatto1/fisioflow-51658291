@@ -1,3 +1,4 @@
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 /**
  * Database Schema Documentation
  *
@@ -28,7 +29,7 @@
  *   where('status', '==', 'active')
  * );
  * const snapshot = await getDocs(q);
- * const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+ * const data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
  * ```
  */
 export const PATIENTS_TABLE_SCHEMA = {

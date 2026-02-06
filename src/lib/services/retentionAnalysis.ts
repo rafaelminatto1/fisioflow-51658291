@@ -1,6 +1,7 @@
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { differenceInDays, subDays, startOfMonth, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface RetentionMetrics {
   totalPatients: number;
@@ -52,7 +53,7 @@ export async function calculateRetentionMetrics(
 
   const appointmentsSnapshot = await getDocs(appointmentsQuery);
   const appointments = appointmentsSnapshot.docs.map((doc) => ({
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
     id: doc.id,
   }));
 
@@ -209,7 +210,7 @@ export async function getPatientRetentionData(
   >();
 
   appointmentsSnapshot.docs.forEach((doc) => {
-    const apt = doc.data();
+    const apt = normalizeFirestoreData(doc.data());
     const patientId = apt.patient_id;
     if (!patientId) return;
 

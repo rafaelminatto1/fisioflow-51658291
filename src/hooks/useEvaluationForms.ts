@@ -8,6 +8,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query a
 import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -21,7 +22,7 @@ export type EvaluationFormFieldFormData = Omit<EvaluationFormField, 'id' | 'crea
 
 // Helper to convert Firestore doc to EvaluationForm
 const convertDocToEvaluationForm = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationForm => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -30,7 +31,7 @@ const convertDocToEvaluationForm = (doc: { id: string; data: () => Record<string
 
 // Helper to convert Firestore doc to EvaluationFormField
 const convertDocToEvaluationFormField = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationFormField => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

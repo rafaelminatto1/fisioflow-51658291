@@ -36,16 +36,55 @@ export {
 } from '@/types/tarefas';
 
 import type { Tarefa, TarefaStatus } from '@/types/tarefas';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // Query key para cache e prefetch
 export const TAREFAS_QUERY_KEY = ['tarefas'] as const;
 
+const toIsoDateString = (value: unknown): string | undefined => {
+  if (!value) return undefined;
+  if (typeof value === 'string') return value;
+  if (value instanceof Date) return value.toISOString();
+  if (value && typeof value === 'object' && typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    try {
+      return (value as { toDate: () => Date }).toDate().toISOString();
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof value === 'number') return new Date(value).toISOString();
+  return undefined;
+};
+
+const toNumberSafe = (value: unknown, fallback = 0): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (value && typeof value === 'object' && typeof (value as { toString?: () => string }).toString === 'function') {
+    try {
+      const parsed = Number((value as { toString: () => string }).toString());
+      return Number.isFinite(parsed) ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+};
+
 // Helper: Convert Firestore doc to Tarefa
 const convertDocToTarefa = (doc: { id: string; data: () => Record<string, unknown> }): Tarefa => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
+    created_at: toIsoDateString(data.created_at) || new Date().toISOString(),
+    updated_at: toIsoDateString(data.updated_at) || new Date().toISOString(),
+    start_date: toIsoDateString(data.start_date),
+    data_vencimento: toIsoDateString(data.data_vencimento),
+    completed_at: toIsoDateString(data.completed_at),
+    order_index: toNumberSafe(data.order_index, 0),
   } as Tarefa;
 };
 

@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type WeeklyChallenge = {
     id: string;
@@ -51,7 +52,7 @@ export default function ChallengesManager() {
             querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
                 challenges.push({
                     id: doc.id,
-                    ...doc.data()
+                    ...normalizeFirestoreData(doc.data())
                 } as WeeklyChallenge);
             });
 

@@ -4,6 +4,7 @@ import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface AppointmentData {
   payment_amount?: number;
@@ -35,7 +36,7 @@ export function FinancialAnalytics() {
         );
 
         const snapshot = await getDocs(q);
-        const appointments = snapshot.docs.map(doc => doc.data());
+        const appointments = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
         const receita = appointments.reduce((sum, appt: AppointmentData) => sum + (appt.payment_amount || 0), 0);
 
@@ -60,7 +61,7 @@ export function FinancialAnalytics() {
       );
 
       const snapshot = await getDocs(q);
-      const payments = snapshot.docs.map(doc => doc.data());
+      const payments = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const paymentMap = new Map<string, number>();
 

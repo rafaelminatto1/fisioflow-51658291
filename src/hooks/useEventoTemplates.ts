@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type EventoTemplate = {
   id: string;
@@ -20,7 +21,7 @@ export type EventoTemplate = {
 
 // Helper to convert Firestore doc to EventoTemplate
 const convertDocToEventoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): EventoTemplate => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -61,7 +62,7 @@ export function useCreateTemplateFromEvento() {
         where('evento_id', '==', eventoId)
       );
       const checklistSnapshot = await getDocs(checklistQ);
-      const checklistItems = checklistSnapshot.docs.map(doc => doc.data());
+      const checklistItems = checklistSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const templateData = {
         nome,

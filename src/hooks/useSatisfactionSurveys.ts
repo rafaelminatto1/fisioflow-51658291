@@ -8,6 +8,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query a
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsApi } from '@/integrations/firebase/functions';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface SatisfactionSurvey {
   id: string;
@@ -76,7 +77,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       );
 
       const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Apply filters
       if (filters?.patient_id) {
@@ -150,7 +151,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
         const profilesQ = firestoreQuery(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
         const profilesSnap = await getDocs(profilesQ);
         profilesSnap.forEach(doc => {
-          therapistMap.set(doc.data().user_id as string, doc.data().full_name as string);
+          therapistMap.set(normalizeFirestoreData(doc.data()).user_id as string, normalizeFirestoreData(doc.data()).full_name as string);
         });
       }
 
@@ -173,7 +174,7 @@ export function useSurveyStats() {
     queryKey: ['survey-stats'],
     queryFn: async () => {
       const snapshot = await getDocs(collection(db, 'satisfaction_surveys'));
-      const surveys = snapshot.docs.map(doc => doc.data()) as SatisfactionSurvey[];
+      const surveys = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())) as SatisfactionSurvey[];
 
       const total = surveys.length || 0;
       const respondedSurveys = surveys.filter((s) => s.responded_at !== null);

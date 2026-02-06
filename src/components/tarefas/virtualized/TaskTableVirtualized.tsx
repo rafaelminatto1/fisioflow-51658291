@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
 
   DropdownMenu,
   DropdownMenuContent,
@@ -55,8 +56,8 @@ interface TaskRowProps {
   index: number;
   style: React.CSSProperties;
   data: {
-    task: Tarefa;
-    isSelected: boolean;
+    tasks: Tarefa[];
+    selectedTasks: Set<string>;
     toggleTaskSelection: (id: string) => void;
     onViewTask: (tarefa: Tarefa) => void;
     onEditTask: (tarefa: Tarefa) => void;
@@ -67,7 +68,10 @@ interface TaskRowProps {
 }
 
 const TaskRow: React.FC<TaskRowProps> = ({ index, style, data }) => {
-  const { task, isSelected, toggleTaskSelection, onViewTask, onEditTask, onDeleteTask, onDuplicateTask, onArchiveTask } = data;
+  const { tasks, selectedTasks, toggleTaskSelection, onViewTask, onEditTask, onDeleteTask, onDuplicateTask, onArchiveTask } = data;
+  const task = tasks[index];
+  if (!task) return null;
+  const isSelected = selectedTasks.has(task.id);
   
   const isOverdue = task.data_vencimento && 
     isPast(new Date(task.data_vencimento)) && 
@@ -285,6 +289,8 @@ export const TaskTableVirtualized: React.FC<TaskTableVirtualizedProps> = ({
   const overscanCount = 5; // Number of extra rows to render outside viewport
   
   const rowData = {
+    tasks,
+    selectedTasks,
     toggleTaskSelection,
     onViewTask,
     onEditTask,
@@ -303,11 +309,7 @@ export const TaskTableVirtualized: React.FC<TaskTableVirtualizedProps> = ({
             itemCount={tasks.length}
             itemSize={rowHeight}
             overscanCount={overscanCount}
-            itemData={tasks.map(task => ({
-              task,
-              isSelected: selectedTasks.has(task.id),
-              ...rowData
-            }))}
+            itemData={rowData}
           >
             {TaskRow}
           </List>

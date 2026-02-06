@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
+import {
 
   Trophy, TrendingUp, Plus, Trash2, Save, RefreshCw,
   Settings, Info, Sparkles

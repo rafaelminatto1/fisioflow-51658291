@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { ChecklistItemCreate, ChecklistItemUpdate } from '@/lib/validations/checklist';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function useChecklist(eventoId: string) {
   return useQuery({
@@ -19,7 +20,7 @@ export function useChecklist(eventoId: string) {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
     },
     enabled: !!eventoId,
   });

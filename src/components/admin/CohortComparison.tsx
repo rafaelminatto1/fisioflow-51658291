@@ -17,6 +17,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, subMonths, differenceInYears } from 'date-fns';
+import {
 
   BarChart,
   Bar,
@@ -43,6 +44,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -474,9 +476,9 @@ export function CohortComparison({
       const patientsSnap = await getDocs(patientsQuery);
       let data = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        full_name: doc.data().full_name || '',
-        created_at: doc.data().created_at || new Date().toISOString(),
-        birth_date: doc.data().birth_date,
+        full_name: normalizeFirestoreData(doc.data()).full_name || '',
+        created_at: normalizeFirestoreData(doc.data()).created_at || new Date().toISOString(),
+        birth_date: normalizeFirestoreData(doc.data()).birth_date,
       }));
 
       // Filter by time range client-side

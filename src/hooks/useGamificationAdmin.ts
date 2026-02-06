@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import {
 
   GamificationStats,
   EngagementData,
@@ -19,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
   LeaderboardFilters,
 } from '@/types/gamification';
 import { db } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 
 
@@ -112,12 +114,12 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
       ]);
 
       // Calculate statistics
-      const allProfiles = profilesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const allProfiles = profilesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
       const totalPatients = allProfiles.length;
 
       // Support both 'amount' and 'xp_amount' column names
       const totalXpAwarded = xpDataSnap.docs.reduce((sum, doc) => {
-        const data = doc.data() as { amount?: number; xp_amount?: number };
+        const data = normalizeFirestoreData(doc.data()) as { amount?: number; xp_amount?: number };
         const amount = data.amount || data.xp_amount || 0;
         return sum + (typeof amount === 'number' ? amount : 0);
       }, 0);
@@ -186,7 +188,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
 
       if (snapshot.empty) return [];
 
-      const transactions = snapshot.docs.map(doc => doc.data());
+      const transactions = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       // Group by date
       interface TransactionData {
@@ -258,7 +260,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
       // Fetch patient names for each at-risk patient
       const results: AtRiskPatient[] = [];
       for (const doc of snapshot.docs) {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         const patientId = doc.id;
 
         // Fetch patient info
@@ -310,7 +312,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
 
       // Count unlocks per achievement - support both UUID and TEXT achievement_id
       const unlockCounts = unlockedSnap.docs.reduce((acc, doc) => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         const key = data.achievement_id || data.achievement_title || 'unknown';
         acc[key] = (acc[key] || 0) + 1;
         return acc;
@@ -320,7 +322,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
 
       return achievementsSnap.docs
         .map(doc => {
-          const data = doc.data();
+          const data = normalizeFirestoreData(doc.data());
           // Try to match by id, then by code, then by title
           const count = unlockCounts[doc.id] || unlockCounts[data.code] || unlockCounts[data.title] || 0;
           return {
@@ -360,7 +362,7 @@ export const useGamificationAdmin = (days: number = 30): UseGamificationAdminRes
       if (snapshot.empty) return null;
 
       const getSetting = (key: string, defaultValue: unknown) => {
-        const settingDoc = snapshot.docs.find(doc => doc.data().key === key);
+        const settingDoc = snapshot.docs.find(doc => normalizeFirestoreData(doc.data()).key === key);
         if (!settingDoc?.data()?.value) return defaultValue;
         try {
           const value = settingDoc.data().value;

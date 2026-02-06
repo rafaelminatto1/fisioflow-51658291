@@ -10,8 +10,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useSoapRecords } from './useSoapRecords';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
 
 export interface ConductSuggestion {
   id: string;

@@ -6,6 +6,7 @@ import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit
 import { Users, UserMinus, UserPlus, DollarSign, Calendar, TrendingUp, Clock, CreditCard } from 'lucide-react';
 import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
 
   Table,
   TableBody,
@@ -17,6 +18,7 @@ import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { PatientHelpers } from '@/types';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 function InternalDashboardComponent() {
   // Pacientes ativos (com consulta nos últimos 30 dias)
@@ -32,7 +34,7 @@ function InternalDashboardComponent() {
 
       const snapshot = await getDocs(q);
       const patientIds = new Set(
-        snapshot.docs.map(doc => (doc.data() as { patient_id?: string }).patient_id).filter(Boolean)
+        snapshot.docs.map(doc => (normalizeFirestoreData(doc.data()) as { patient_id?: string }).patient_id).filter(Boolean)
       );
 
       return patientIds.size;
@@ -51,7 +53,7 @@ function InternalDashboardComponent() {
         orderBy("full_name")
       );
       const allPatientsSnapshot = await getDocs(allPatientsQuery);
-      const allPatients = allPatientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const allPatients = allPatientsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Buscar pacientes com agendamentos recentes
       const recentAppointmentsQuery = firestoreQuery(
@@ -61,7 +63,7 @@ function InternalDashboardComponent() {
       const recentAppointmentsSnapshot = await getDocs(recentAppointmentsQuery);
 
       const activePatientIds = new Set(
-        recentAppointmentsSnapshot.docs.map(doc => (doc.data() as { patient_id?: string }).patient_id).filter(Boolean)
+        recentAppointmentsSnapshot.docs.map(doc => (normalizeFirestoreData(doc.data()) as { patient_id?: string }).patient_id).filter(Boolean)
       );
 
       // Filtrar inativos

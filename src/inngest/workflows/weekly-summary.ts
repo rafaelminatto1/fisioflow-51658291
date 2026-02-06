@@ -7,6 +7,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type DateRange = { start: string; end: string };
 type Organization = { id: string; name?: string };
@@ -53,7 +54,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
         .where('active', '==', true)
         .get();
 
-      const organizations = orgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const organizations = orgSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       return await Promise.all(
         organizations.map(async (org: Organization) => {
@@ -65,7 +66,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
               .where('created_at', '<=', lastWeek.end)
               .get();
 
-            const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
             // Get new patients for the week
             const patientsSnapshot = await db.collection('patients')
@@ -74,7 +75,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
               .where('created_at', '<=', lastWeek.end)
               .get();
 
-            const newPatients = patientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const newPatients = patientsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
             return {
               organizationId: org.id,

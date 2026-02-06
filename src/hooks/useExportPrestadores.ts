@@ -5,6 +5,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function useExportPrestadores() {
   const { toast } = useToast();
@@ -19,7 +20,7 @@ export function useExportPrestadores() {
 
       const snapshot = await getDocs(q);
 
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Criar CSV
       const headers = ['Nome', 'Contato', 'CPF/CNPJ', 'Valor Acordado', 'Status Pagamento'];

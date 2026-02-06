@@ -2,6 +2,7 @@
  * Automation Service - Firebase Firestore Integration
  * Serviço para gerenciamento de automações
  */
+import {
 
   collection,
   doc,
@@ -28,6 +29,7 @@ import type {
   AutomationCondition,
   AutomationExecutionLog,
 } from '@/types/automation';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const COLLECTION_NAME = 'automations';
 const LOGS_COLLECTION = 'automation_logs';
@@ -139,7 +141,7 @@ export async function getAutomations(
 
   return querySnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
   })) as Automation[];
 }
 
@@ -160,7 +162,7 @@ export function listenToAutomations(
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const automations = snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     })) as Automation[];
     callback(automations);
   });
@@ -249,7 +251,7 @@ export async function getAutomationLogs(
   return querySnapshot.docs
     .map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     }))
     .slice(0, limit) as AutomationExecutionLog[];
 }
@@ -273,7 +275,7 @@ export function listenToAutomationLogs(
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const logs = snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...normalizeFirestoreData(doc.data()),
     })) as AutomationExecutionLog[];
     callback(logs);
   });

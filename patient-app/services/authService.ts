@@ -3,6 +3,7 @@
  * Handles all authentication-related operations
  */
 
+import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,

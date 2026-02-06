@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface ActivityEvent {
   id: string;
@@ -76,7 +77,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         // Manually fetch patient names to avoid relationship errors
         const patientIds = new Set<string>();
         appointmentsSnapshot.forEach((doc) => {
-          const data = doc.data();
+          const data = normalizeFirestoreData(doc.data());
           appointments.push({ id: doc.id, ...data });
           if (data.patient_id) {
             patientIds.add(data.patient_id);
@@ -143,7 +144,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
       for (const change of snapshot.docChanges()) {
         if (change.type === 'added') {
-          const apt = change.doc.data();
+          const apt = change.normalizeFirestoreData(doc.data());
           const patientId = apt.patient_id;
 
           let patientName = 'Paciente';
@@ -193,7 +194,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
-          const patient = change.doc.data();
+          const patient = change.normalizeFirestoreData(doc.data());
           const newActivity: ActivityEvent = {
             id: `patient-${change.doc.id}-${Date.now()}`,
             type: 'patient',

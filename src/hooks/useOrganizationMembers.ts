@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface OrganizationMember {
   id: string;
@@ -41,7 +42,7 @@ export const useOrganizationMembers = (organizationId?: string) => {
       // Fetch profile data for all members
       const membersWithProfiles = await Promise.all(
         snapshot.docs.map(async (doc) => {
-          const data = { id: doc.id, ...doc.data() };
+          const data = { id: doc.id, ...normalizeFirestoreData(doc.data()) };
           let profileData = null;
 
           if (data.user_id) {

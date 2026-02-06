@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Sala {
   id: string;
@@ -24,7 +25,7 @@ export type SalaFormData = Pick<Sala, 'nome' | 'capacidade' | 'descricao' | 'cor
 
 // Helper to convert Firestore doc to Sala
 const convertDocToSala = (doc: { id: string; data: () => Record<string, unknown> }): Sala => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

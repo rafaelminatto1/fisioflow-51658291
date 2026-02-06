@@ -7,6 +7,7 @@ import { collection, query as firestoreQuery, where, orderBy, getDocs, addDoc, u
 import { subDays, subMonths, format, differenceInDays, startOfMonth, parseISO } from 'date-fns';
 import { CACHE_TIMES, STALE_TIMES } from '@/lib/queryConfig';
 import { PatientHelpers } from '@/types';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const RETENTION_KEYS = {
   all: ['retention'] as const,
@@ -147,7 +148,7 @@ export function useRetentionMetrics() {
 
       const patients = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       // Get appointments for each patient
@@ -159,7 +160,7 @@ export function useRetentionMetrics() {
 
       const appointments = appointmentsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       // Group appointments by patient
@@ -248,7 +249,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
 
       const patients = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       const appointmentsQuery = firestoreQuery(
@@ -258,7 +259,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
 
       const appointments = appointmentsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       const appointmentsByPatient = new Map<string, typeof appointments>();
@@ -345,7 +346,7 @@ export function useCohortAnalysis(months: number = 12) {
 
       const patients = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       // Get all appointments
@@ -357,7 +358,7 @@ export function useCohortAnalysis(months: number = 12) {
 
       const appointments = appointmentsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       const appointmentsByPatient = new Map<string, Set<string>>();
@@ -442,7 +443,7 @@ export function useChurnTrends(months: number = 12) {
 
       const patients = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       // Get all completed appointments
@@ -455,7 +456,7 @@ export function useChurnTrends(months: number = 12) {
 
       const appointments = appointmentsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       // Group appointments by patient and month
@@ -566,7 +567,7 @@ export function useSendReactivationCampaign() {
 
       const allPatients = patientsSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       const filteredPatients = allPatients.filter(p => patientIds.includes(p.id));

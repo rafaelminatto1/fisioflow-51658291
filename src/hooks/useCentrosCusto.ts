@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface CentroCusto {
   id: string;
@@ -21,7 +22,7 @@ export type CentroCustoFormData = Pick<CentroCusto, 'nome' | 'descricao' | 'ativ
 
 // Helper to convert Firestore doc to CentroCusto
 const convertDocToCentroCusto = (doc: { id: string; data: () => Record<string, unknown> }): CentroCusto => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

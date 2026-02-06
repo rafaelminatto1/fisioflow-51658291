@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import {
 
   Trophy,
   Medal,
@@ -20,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useState, useMemo } from 'react';
 import type { LeaderboardEntry } from '@/types/gamification';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 /**
  * Tipos de filtros do leaderboard
@@ -58,7 +60,7 @@ export function EnhancedLeaderboard({
       let entries: LeaderboardEntry[] = [];
 
       querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         entries.push({
           patient_id: doc.id,
           display_name: data.display_name || 'Paciente',

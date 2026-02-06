@@ -4,6 +4,7 @@ import { ArrowLeft, Save, X, Loader2, AlertTriangle, UserCog } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
 
   Select,
   SelectContent,
@@ -42,6 +43,7 @@ import { appointmentsApi } from '@/integrations/firebase/functions';
 import { PatientService } from '@/lib/services/PatientService';
 import { useQueryClient } from '@tanstack/react-query';
 import { soapKeys } from '@/hooks/useSoapRecords';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -223,7 +225,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           where('patient_id', '==', currentPatientId)
         );
         const surgeriesSnap = await getDocs(surgeriesQuery);
-        setSurgeries(surgeriesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setSurgeries(surgeriesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })));
 
         // Load pathologies
         const pathologiesQuery = query(
@@ -231,7 +233,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           where('patient_id', '==', currentPatientId)
         );
         const pathologiesSnap = await getDocs(pathologiesQuery);
-        setPathologies(pathologiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setPathologies(pathologiesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })));
 
         // Load goals
         const goalsQuery = query(
@@ -239,7 +241,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           where('patient_id', '==', currentPatientId)
         );
         const goalsSnap = await getDocs(goalsQuery);
-        setGoals(goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setGoals(goalsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })));
 
         // Check mandatory tests
         const result = await MandatoryTestAlertService.checkMandatoryTests(

@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, getDocsFromCache, getDocsFromServer, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface WaitlistEntry {
   id: string;
@@ -110,7 +111,7 @@ export function useWaitlist(filters?: {
       const snapshot = await getDocs(q);
       const waitlistData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       })) as WaitlistEntry[];
 
       // Fetch patient data for each entry
@@ -163,7 +164,7 @@ export function useWaitlistCounts() {
     queryKey: ['waitlist', 'counts'],
     queryFn: async () => {
       const snapshot = await getDocs(collection(db, 'waitlist'));
-      const data = snapshot.docs.map(doc => doc.data());
+      const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const counts = {
         total: data.length || 0,

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import {
 
   Play, Plus, Heart, Share2, ExternalLink,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon

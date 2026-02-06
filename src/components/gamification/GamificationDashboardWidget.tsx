@@ -8,6 +8,7 @@ import { DailyQuestsWidget } from './widgets/DailyQuestsWidget';
 import { GamificationTriggerService, type LevelCalculationResult } from '@/lib/services/gamificationTriggers';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db, doc, getDoc, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface GamificationDashboardWidgetProps {
   patientId: string;
@@ -108,7 +109,7 @@ export function GamificationDashboardWidget({
         const achievementsSnap = await getDocs(achievementsQuery);
 
         const unlockedAchievements = achievementsSnap.docs.map((doc) => {
-          const log = { id: doc.id, ...doc.data() } as AchievementLog & { achievement_data?: any };
+          const log = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as AchievementLog & { achievement_data?: any };
           return {
             id: log.id,
             title: log.achievement_data?.title || 'Conquista',

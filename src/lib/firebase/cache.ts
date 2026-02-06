@@ -20,6 +20,7 @@
 
 import { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, writeBatch } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface CacheOptions {
   /**
@@ -300,7 +301,7 @@ export async function invalidatePattern(
     // Filter by pattern and delete in batches
     const matchingRefs = snapshot.docs
       .filter((doc) => {
-        const entry = doc.data() as CacheEntry;
+        const entry = normalizeFirestoreData(doc.data()) as CacheEntry;
         return entry.key.includes(pattern);
       })
       .map((doc) => doc.ref);

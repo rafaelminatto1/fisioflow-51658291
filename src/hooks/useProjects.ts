@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc, db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Project {
     id: string;
@@ -33,7 +34,7 @@ interface Profile {
 }
 
 // Helper to convert doc
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): Project => ({ id: doc.id, ...doc.data() } as Project);
+const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): Project => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as Project);
 
 export function useProjects() {
     return useQuery({
