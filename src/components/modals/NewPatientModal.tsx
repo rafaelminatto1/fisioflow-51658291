@@ -20,8 +20,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { formatCPF, formatPhoneInput } from '@/utils/formatInputs';
 import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeString, sanitizeEmail } from '@/lib/validations';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { collection, addDoc, serverTimestamp } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
+import { collection, addDoc, serverTimestamp, db } from '@/integrations/firebase/app';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(200, 'Nome muito longo'),

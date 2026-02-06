@@ -9,14 +9,16 @@
  * Solução: parsear manualmente a string YYYY-MM-DD e criar o Date usando componentes locais.
  */
 
-import { z } from "zod";
-import { fisioLogger } from "@/lib/errors/logger";
 
 // ============================================================================
 // CONSTANTES E UTILITÁRIOS
 // ============================================================================
 
 /** Regex para validação de formato de hora (HH:MM ou HH:MM:SS) */
+
+import { z } from 'zod';
+import { fisioLogger } from '@/lib/errors/logger';
+
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
 
 /** Limites razoáveis para validação de datas */

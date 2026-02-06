@@ -2,12 +2,10 @@
  * useAuditLogs - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export interface AuditLog {
   id: string;

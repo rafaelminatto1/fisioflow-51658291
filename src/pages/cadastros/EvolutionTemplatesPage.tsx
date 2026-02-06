@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FileText, Plus, Pencil, Trash2, Search, Copy } from 'lucide-react';
-import { 
+
   useEvolutionTemplates, 
   useCreateEvolutionTemplate, 
   useUpdateEvolutionTemplate, 

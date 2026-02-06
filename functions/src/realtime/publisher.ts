@@ -3,10 +3,12 @@
  * Publica eventos em tempo real usando Ably
  */
 
+
+// Cliente Ably REST (para publicação do servidor)
+
 import * as Ably from 'ably';
 import { logger } from '../lib/logger';
 
-// Cliente Ably REST (para publicação do servidor)
 let ablyRest: Ably.Rest | null = null;
 
 function getAblyRest(): Ably.Rest {

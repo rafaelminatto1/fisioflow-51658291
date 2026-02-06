@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { FinancialService, FinancialReport } from "@/services/financialService";
+import { useQuery } from '@tanstack/react-query';
+import { FinancialService, FinancialReport } from '@/services/financialService';
 
 export type { FinancialReport };
 

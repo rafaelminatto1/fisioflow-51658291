@@ -1,10 +1,8 @@
-import { CORS_ORIGINS } from "../init";
+import { CORS_ORIGINS, getPool } from '../init';
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Exercise } from '../types/models';
 import { logger } from '../lib/logger';
-
 import { setCorsHeaders } from '../lib/cors';
 
 function getAuthHeader(req: any): string | undefined {

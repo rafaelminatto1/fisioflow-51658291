@@ -1,5 +1,3 @@
-import { onCall } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from './init';
 
 /**
  * Run organizations table migration
@@ -8,6 +6,10 @@ import { getPool, CORS_ORIGINS } from './init';
  * Usage from Firebase Functions shell:
  * const data = await runMigration({ data: null });
  */
+
+import { onCall } from 'firebase-functions/v2/https';
+import { getPool, CORS_ORIGINS } from './init';
+
 export const runMigration = onCall({ cors: CORS_ORIGINS }, async (request) => {
   const pool = getPool();
   const client = await pool.connect();

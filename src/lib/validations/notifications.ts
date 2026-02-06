@@ -1,7 +1,8 @@
-import { z } from 'zod'
-import { NotificationType, NotificationStatus } from '@/types/notifications'
 
 // Validation schemas for notification system
+
+import { z } from 'zod';
+import { NotificationType, NotificationStatus } from '@/types/notifications';
 
 export const notificationActionSchema = z.object({
   action: z.string().min(1, 'Action is required'),

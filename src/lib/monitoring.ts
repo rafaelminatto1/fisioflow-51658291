@@ -7,11 +7,12 @@
  * @see https://developers.google.com/analytics/devguides/collection/ga4
  */
 
-import { logger } from './errors/logger';
 
 // ============================================================================
 // GOOGLE ANALYTICS 4 (GA4) SETUP
 // ============================================================================
+
+import { logger } from './errors/logger';
 
 declare global {
   interface Window {

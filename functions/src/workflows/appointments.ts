@@ -8,15 +8,16 @@
  * @version 1.0.0 - Firebase Functions v2
  */
 
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import { getAdminDb, batchFetchDocuments } from '../init';
 import { sendAppointmentReminderEmail, sendAppointmentConfirmationEmail } from '../communications/resend-templates';
-
-// ============================================================================
-// TYPES
-// ============================================================================
 
 interface AppointmentWithRelations {
   id: string;

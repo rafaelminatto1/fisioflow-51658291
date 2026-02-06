@@ -1,3 +1,6 @@
+
+// Pagination types
+
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
@@ -9,7 +12,6 @@ import { fisioLogger } from '@/lib/errors/logger';
 import { isOnline } from '@/lib/utils/query-helpers';
 import { type Patient } from '@/schemas/patient';
 
-// Pagination types
 export interface PaginatedPatientsResult {
   data: Patient[];
   pagination: {

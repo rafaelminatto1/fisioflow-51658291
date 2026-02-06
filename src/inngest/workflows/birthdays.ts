@@ -2,12 +2,14 @@
  * Birthday Messages Workflow - Migrated to Firebase
  *
  */
+
+// Types for birthday workflow
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
 
-// Types for birthday workflow
 interface Patient {
   id: string;
   name: string;

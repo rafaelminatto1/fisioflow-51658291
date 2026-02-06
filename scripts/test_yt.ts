@@ -1,5 +1,4 @@
-import * as YTAll from 'youtube-sr';
-import YTDefault from 'youtube-sr';
+import YTDefault, * as YTAll from 'youtube-sr';
 
 console.log('Import * as:', YTAll);
 console.log('Import default:', YTDefault);

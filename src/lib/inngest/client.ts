@@ -4,8 +4,6 @@
  * Centralized Inngest client setup for FisioFlow
  */
 
-import { Inngest } from 'inngest';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Create Inngest client with proper configuration
@@ -13,6 +11,10 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
  * In development, this will use the Inngest Dev Server
  * In production, it connects to Inngest Cloud
  */
+
+import { Inngest } from 'inngest';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export const inngest = new Inngest({
   id: 'fisioflow',
   name: 'FisioFlow',

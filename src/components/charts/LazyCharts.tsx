@@ -5,10 +5,12 @@
  * Reduz significativamente o tamanho inicial do bundle
  */
 
+
+// Lazy load dos componentes do Recharts
+
 import { lazy, Suspense, ComponentType } from 'react';
 import { Loader2 } from 'lucide-react';
 
-// Lazy load dos componentes do Recharts
 const LineChart = lazy(() => import('recharts').then(m => ({ default: m.LineChart as ComponentType<unknown> })));
 const BarChart = lazy(() => import('recharts').then(m => ({ default: m.BarChart as ComponentType<unknown> })));
 const AreaChart = lazy(() => import('recharts').then(m => ({ default: m.AreaChart as ComponentType<unknown> })));

@@ -2,6 +2,7 @@
  * Notification Workflow - Migrated to Firebase
  *
  */
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';

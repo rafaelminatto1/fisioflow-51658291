@@ -2,9 +2,11 @@
  * useNetworkStatus Hook Tests
  */
 
-import { useNetworkStatus } from './useNetworkStatus';
 
 // Mock NetInfo
+
+import { useNetworkStatus } from './useNetworkStatus';
+
 jest.mock('@react-native-community/netinfo', () => ({
   fetch: jest.fn(),
   addEventListener: jest.fn(),

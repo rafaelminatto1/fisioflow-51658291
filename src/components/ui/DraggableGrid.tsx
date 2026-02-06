@@ -1,11 +1,12 @@
-import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
-import { Layout } from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import { cn } from '@/lib/utils';
 
 // Import the legacy ResponsiveReactGridLayout to support the old API with draggableHandle
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - Using internal module
+
+import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { Layout } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import { cn } from '@/lib/utils';
 import { ResponsiveReactGridLayout as Responsive } from 'react-grid-layout/dist/legacy';
 
 export interface GridItem {

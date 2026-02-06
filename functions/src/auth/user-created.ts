@@ -1,5 +1,3 @@
-import { logger } from 'firebase-functions';
-import { getAdminDb, getPool } from '../init';
 // import { sendNotification } from '../workflows/notifications';
 
 // Use v1 trigger for now as v2 onUserCreated is still in preview/beta in some regions
@@ -7,13 +5,17 @@ import { getAdminDb, getPool } from '../init';
 // However, since we are mixing v1 and v2, let's try to use v1 for auth triggers
 // to avoid complexity with Identity Platform restrictions.
 
-import * as functions from 'firebase-functions/v1';
 
 /**
  * Trigger fired when a new user is created in Firebase Auth.
  * Creates the user profile in Firestore with 'pending' role.
  * Notifies the admin about the new registration.
  */
+
+import { logger } from 'firebase-functions';
+import { getAdminDb, getPool } from '../init';
+import * as functions from 'firebase-functions/v1';
+
 export const onUserCreated = functions
     .region('southamerica-east1')
     .auth.user()

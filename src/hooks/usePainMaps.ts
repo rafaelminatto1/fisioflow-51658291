@@ -2,15 +2,13 @@
  * usePainMaps - Migrated to Firebase
  *
  */
+
 import { useCallback } from 'react';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, delete as deleteDocs, writeBatch, documentId } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, delete as deleteDocs, writeBatch, documentId, db } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { PainPoint } from '@/components/pain-map';
-import { db } from '@/integrations/firebase/app';
-
-
 
 interface PainMap {
   id: string;

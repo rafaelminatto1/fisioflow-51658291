@@ -3,7 +3,6 @@
  * Serviço para gerenciamento de páginas wiki
  */
 
-import {
   collection,
   doc,
   getDoc,

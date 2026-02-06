@@ -3,11 +3,12 @@
  * @module lib/ai/recommendations
  */
 
-import { format, differenceInDays, differenceInWeeks } from 'date-fns';
 
 // =====================================================================
 // TYPES
 // =====================================================================
+
+import { format, differenceInDays, differenceInWeeks } from 'date-fns';
 
 export interface PatientRecommendation {
   type: 'follow_up' | 'reschedule' | 'treatment_adjustment' | 'risk_alert';

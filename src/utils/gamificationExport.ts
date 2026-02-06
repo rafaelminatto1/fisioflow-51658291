@@ -1,9 +1,11 @@
-import { downloadCSV } from './csvExport';
-import { LeaderboardEntry, EngagementData } from '@/types/gamification';
 
 /**
  * Export leaderboard data to CSV
  */
+
+import { downloadCSV } from './csvExport';
+import { LeaderboardEntry, EngagementData } from '@/types/gamification';
+
 export const exportLeaderboardToCSV = (data: LeaderboardEntry[]): void => {
   if (data.length === 0) {
     throw new Error('No data to export');

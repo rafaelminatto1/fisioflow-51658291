@@ -3,10 +3,8 @@
  */
 
 import { useState } from 'react';
-import { doc, getDoc, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
+import { doc, getDoc, getDocs, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
-
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function useDataExport() {

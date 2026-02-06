@@ -3,7 +3,6 @@
  * @module calendar/types
  */
 
-import { ReactNode } from 'react';
 
 // =====================================================================
 // TIPOS BÁSICOS
@@ -12,6 +11,9 @@ import { ReactNode } from 'react';
 /**
  * Tipo de visualização do calendário
  */
+
+import { ReactNode } from 'react';
+
 export type CalendarViewType = 'day' | 'week' | 'month';
 
 /**

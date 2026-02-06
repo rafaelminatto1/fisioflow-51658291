@@ -1,6 +1,6 @@
-import { DynamicCompareMetrics } from "@/generated/types/dynamic_compare_metrics";
-import dynamicCompareMetricsSchema from "@/generated/zod/dynamic_compare_metrics.zod";
-import { validateDynamicCompare } from "./ajv";
+import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';
+import dynamicCompareMetricsSchema from '@/generated/zod/dynamic_compare_metrics.zod';
+import { validateDynamicCompare } from './ajv';
 
 export const parseDynamicCompare = (data: unknown): DynamicCompareMetrics => {
     // 1. AJV Validation (Schema Compliance)

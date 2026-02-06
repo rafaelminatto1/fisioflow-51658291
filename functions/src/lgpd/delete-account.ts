@@ -7,14 +7,16 @@
  * mantendo apenas registros mínimos obrigatórios por lei (fiscais, médicos).
  */
 
+
+/**
+ * Níveis de retenção de dados conforme LGPD e leis brasileiras
+ */
+
 import { firestore, auth } from 'firebase-admin';
 import { getStorage } from 'firebase-admin/storage';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 
-/**
- * Níveis de retenção de dados conforme LGPD e leis brasileiras
- */
 enum RetentionPolicy {
   IMMEDIATE = 'immediate',           // Deletar imediatamente
   DAYS_30 = '30_days',              // Manter por 30 dias (direito de arrependimento)

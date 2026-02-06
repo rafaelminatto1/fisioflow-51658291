@@ -2,8 +2,9 @@
  * useAppointmentData - Updated to use PostgreSQL via Firebase Functions
  *
  */
+
 import { useQuery } from '@tanstack/react-query';
-import {
+
     PATIENT_SELECT,
     devValidate as devValidatePatient,
     type PatientDBStandard

@@ -3,12 +3,14 @@
  * Consistent formatting functions for dates, numbers, strings, etc.
  */
 
-import { format, formatDistanceToNow, differenceInDays, differenceInMonths, differenceInYears, isValid } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 /**
  * Date formatting functions
  */
+
+import { format, formatDistanceToNow, differenceInDays, differenceInMonths, differenceInYears, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 export const DateFormatter = {
   /**
    * Format date as "dd/MM/yyyy"

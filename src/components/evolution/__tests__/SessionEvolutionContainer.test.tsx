@@ -1,12 +1,14 @@
+
+
+// Mock do Supabase
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-
 import { SessionEvolutionContainer } from '../SessionEvolutionContainer';
 import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 
-// Mock do Supabase
 const mockInsert = vi.fn().mockReturnThis();
 const mockUpdate = vi.fn().mockReturnThis();
 const mockSelect = vi.fn().mockReturnThis();

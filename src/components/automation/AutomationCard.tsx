@@ -6,12 +6,11 @@ import React from 'react';
 import { Play, Pause, MoreVertical, Edit2, Copy, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import {
+
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,

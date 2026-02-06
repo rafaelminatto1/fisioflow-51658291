@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Calendar, Ban } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
-import {
+
   calculateCardWidthPercent,
   calculateCardOffsetPercent,
   shouldShowText,

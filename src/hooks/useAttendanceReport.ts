@@ -2,13 +2,11 @@
  * useAttendanceReport - Migrated to Firebase
  *
  */
+
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export type PeriodFilter = 'week' | 'month' | 'quarter' | 'year' | 'custom';
 export type StatusFilter = 'all' | 'concluido' | 'faltou' | 'cancelado';

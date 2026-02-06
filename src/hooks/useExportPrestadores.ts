@@ -3,10 +3,8 @@
  */
 
 import { useMutation } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
-
 
 export function useExportPrestadores() {
   const { toast } = useToast();

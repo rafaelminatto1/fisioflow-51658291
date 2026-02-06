@@ -12,14 +12,15 @@
  * @module lib/ai/movement-analysis
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { storage, db, doc, setDoc, collection, serverTimestamp } from '@/integrations/firebase/app';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { storage, db, doc, setDoc, collection, serverTimestamp } from '@/integrations/firebase/app';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ExerciseFormDeviation {
   timestamp: number; // em segundos

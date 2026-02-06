@@ -3,11 +3,9 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, Unsubscribe, getDocs,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot, updateDoc, deleteDoc, doc, Unsubscribe, getDocs, db } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type NotificationType = 'achievement' | 'level_up' | 'quest_complete' | 'streak_milestone' | 'reward_unlocked';

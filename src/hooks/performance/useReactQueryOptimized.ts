@@ -5,7 +5,6 @@
  * reduzindo chamadas desnecessárias à API
  */
 
-import {
   useQuery,
   useMutation,
   useQueryClient,

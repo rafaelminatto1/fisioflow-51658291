@@ -1,6 +1,8 @@
-import { test, expect } from '@playwright/test';
 
 // Credentials provided by user for verification
+
+import { test, expect } from '@playwright/test';
+
 const LOGIN_EMAIL = 'rafael.minatto@yahoo.com.br';
 const LOGIN_PASSWORD = 'Yukari30@';
 

@@ -3,12 +3,14 @@
  * Middleware para registrar ações sensíveis no sistema
  */
 
-import { getPool } from '../init';
-import { logger } from '../lib/logger';
 
 /**
  * Tipos de ações auditadas
  */
+
+import { getPool } from '../init';
+import { logger } from '../lib/logger';
+
 export enum AuditAction {
   // Pacientes
   PATIENT_CREATE = 'patient.create',

@@ -3,13 +3,14 @@
  * @module lib/waitlist/smart-waitlist
  */
 
-import { addDays, format, isSameDay, parseISO, startOfDay, differenceInDays, differenceInHours } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { WaitlistEntry } from '@/hooks/useWaitlist';
 
 // =====================================================================
 // TYPES
 // =====================================================================
+
+import { addDays, format, isSameDay, parseISO, startOfDay, differenceInDays, differenceInHours } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { WaitlistEntry } from '@/hooks/useWaitlist';
 
 export interface TimeSlot {
   date: Date;

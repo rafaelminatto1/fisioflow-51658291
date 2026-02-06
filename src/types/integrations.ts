@@ -3,11 +3,13 @@
  * Sistema de integrações com serviços terceiros
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
 
 /**
  * Integração configurada
  */
+
+import { Timestamp } from '@/integrations/firebase/app';
+
 export interface Integration {
   id: string;
   organization_id: string;
