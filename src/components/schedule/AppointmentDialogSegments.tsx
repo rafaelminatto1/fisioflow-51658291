@@ -77,7 +77,7 @@ export const DateTimeSection = ({
     timeSlots,
     isCalendarOpen,
     setIsCalendarOpen,
-    getCapacityForTime,
+    getMinCapacityForInterval,
     conflictCount,
     onAutoSchedule,
     watchedDateStr,
@@ -88,7 +88,7 @@ export const DateTimeSection = ({
     timeSlots: string[],
     isCalendarOpen: boolean,
     setIsCalendarOpen: (open: boolean) => void,
-    getCapacityForTime: (day: number, time: string) => number,
+    getMinCapacityForInterval: (day: number, time: string, duration: number) => number,
     conflictCount: number,
     onAutoSchedule?: () => void,
     watchedDateStr?: string,
@@ -103,7 +103,7 @@ export const DateTimeSection = ({
 
     const watchedDate = _watchedDateStr ? (typeof _watchedDateStr === 'string' ? parseISO(_watchedDateStr) : _watchedDateStr as Date) : null;
 
-    const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 0;
+    const maxCapacity = watchedDate && _watchedTime && _watchedDuration ? getMinCapacityForInterval(watchedDate.getDay(), _watchedTime, _watchedDuration) : 0;
     const availableSlots = maxCapacity - conflictCount;
     const exceedsCapacity = conflictCount >= maxCapacity;
 
