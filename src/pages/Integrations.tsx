@@ -1,4 +1,5 @@
 import React from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Video, MapPin, BarChart3, CheckCircle2 } from 'lucide-react';
@@ -22,7 +23,8 @@ export default function Integrations() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <MainLayout>
+      <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Integrações Google</h1>
         <p className="text-gray-500">Conecte o FisioFlow ao ecossistema Google Workspace.</p>
@@ -108,6 +110,7 @@ export default function Integrations() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

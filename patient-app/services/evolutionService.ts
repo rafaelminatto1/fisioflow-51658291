@@ -50,7 +50,7 @@ export async function getEvolutions(
     perf.start('firestore_get_evolutions');
 
     const evolutionsRef = collection(db, 'users', userId, 'evolutions');
-    let q = query(evolutionsRef, orderBy('date', 'desc'));
+    const q = query(evolutionsRef, orderBy('date', 'desc'));
 
     // Note: Firestore doesn't support multiple range queries
     // If filtering by date is needed, it should be done client-side

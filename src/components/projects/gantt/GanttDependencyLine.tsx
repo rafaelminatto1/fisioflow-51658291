@@ -32,7 +32,7 @@ export function GanttDependencyLine({
   const offset = 10; // Espaço para a linha sair da tarefa
 
   // Path SVG baseado no tipo de dependência
-  const get pathD() {
+  const pathD = (() => {
     switch (type) {
       case 'finish_to_start':
         // FS: Linha sai da direita da origem, entra na esquerda do destino
@@ -65,7 +65,7 @@ export function GanttDependencyLine({
       default:
         return `M ${fromX} ${fromY} L ${toX} ${toY}`;
     }
-  }
+  })();
 
   // Cor baseada em criticidade
   const strokeColor = isCritical

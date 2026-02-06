@@ -525,7 +525,7 @@ export class VoiceAssistant {
       const message = JSON.parse(data);
 
       switch (message.type) {
-        case 'audio':
+        case 'audio': {
           // Received audio from AI
           const audioChunk = base64ToAudioChunk(
             message.data,
@@ -534,8 +534,9 @@ export class VoiceAssistant {
           );
           await this.playAudio(audioChunk.data as ArrayBuffer);
           break;
+        }
 
-        case 'transcript':
+        case 'transcript': {
           // Received transcript
           const isFinal = message.isFinal || false;
           this.addTranscript('assistant', message.text, isFinal);
@@ -547,6 +548,7 @@ export class VoiceAssistant {
 
           this.callbacks.onTranscript(message.text, isFinal);
           break;
+        }
 
         case 'user_transcript':
           // User's speech was transcribed

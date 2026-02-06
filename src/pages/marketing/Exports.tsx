@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { db, getFirebaseStorage } from '@/lib/firebase';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -183,19 +184,22 @@ export default function MarketingExportsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-4">
-            <Video className="h-8 w-8 animate-pulse text-primary" />
-            <p className="text-muted-foreground">Carregando exportações...</p>
+      <MainLayout>
+        <div className="p-6 max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center gap-4">
+              <Video className="h-8 w-8 animate-pulse text-primary" />
+              <p className="text-muted-foreground">Carregando exportações...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <MainLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -443,6 +447,7 @@ export default function MarketingExportsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

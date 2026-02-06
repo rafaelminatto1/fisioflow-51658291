@@ -31,7 +31,6 @@ export const DateInputBR = forwardRef<HTMLInputElement, DateInputBRProps>(
     if (newValue.length > 0) {
       if (newValue.length <= 2) {
         // DD
-        newValue = newValue;
       } else if (newValue.length <= 4) {
         // DD/MM
         newValue = newValue.substring(0, 2) + '/' + newValue.substring(2, 4);

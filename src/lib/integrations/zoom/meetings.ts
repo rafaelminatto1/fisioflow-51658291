@@ -443,10 +443,11 @@ export async function handleZoomWebhook(
       await handlers.onMeetingEnded?.(meetingId, payload);
       break;
 
-    case 'recording.completed':
+    case 'recording.completed': {
       const downloadUrl = payload.object?.download_url;
       await handlers.onRecordingCompleted?.(meetingId, downloadUrl);
       break;
+    }
 
     default:
       console.log(`Unhandled Zoom event: ${event}`);
