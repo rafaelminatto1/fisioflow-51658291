@@ -8,6 +8,7 @@ import { Clock, Save, Loader2, Sun, Moon, Copy, CheckCircle2, Briefcase, Zap } f
 import { useScheduleSettings, BusinessHour } from '@/hooks/useScheduleSettings';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 const DEFAULT_HOURS: Partial<BusinessHour>[] = [
   { day_of_week: 0, is_open: false, open_time: '08:00', close_time: '18:00', break_start: undefined, break_end: undefined },
@@ -97,10 +98,34 @@ export function BusinessHoursManager() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    upsertBusinessHours(hours);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const invalidOpenDays = hours.filter((h) => {
+    if (!h.is_open) return false;
+    const open = h.open_time || '07:00';
+    const close = h.close_time || '21:00';
+    return timeToMinutes(open) >= timeToMinutes(close);
+  });
+
+  const handleSave = async () => {
+    if (invalidOpenDays.length > 0) {
+      const labels = invalidOpenDays
+        .map((h) => daysOfWeek.find((d) => d.value === h.day_of_week)?.label)
+        .filter(Boolean)
+        .join(', ');
+      toast({
+        title: 'Horário inválido',
+        description: `Abertura deve ser antes do fechamento em: ${labels}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await upsertBusinessHours.mutateAsync(hours);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // Erro já tratado no hook via toast
+    }
   };
 
   if (isLoadingHours) {
@@ -157,6 +182,12 @@ export function BusinessHoursManager() {
             })}
           </div>
         </div>
+
+        {invalidOpenDays.length > 0 && (
+          <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300">
+            Existem dias com horário inválido. Ajuste para que a abertura seja anterior ao fechamento.
+          </div>
+        )}
 
         <div className="space-y-4">
           {daysOfWeek.map((day, _index) => {
@@ -301,7 +332,7 @@ export function BusinessHoursManager() {
         <div className="sticky bottom-0 pt-4 bg-background/95 backdrop-blur border-t">
           <Button
             onClick={handleSave}
-            disabled={isSavingHours || saved}
+            disabled={isSavingHours || saved || invalidOpenDays.length > 0}
             className={cn(
               "w-full h-12 text-base font-semibold transition-all",
               saved && "bg-green-600 hover:bg-green-700"

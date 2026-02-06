@@ -20,8 +20,14 @@ export const useAppointmentActions = () => {
   });
 
   const cancelAppointment = useMutation({
-    mutationFn: async (appointmentId: string) => {
-      await AppointmentService.updateStatus(appointmentId, 'cancelado');
+    mutationFn: async ({
+      appointmentId,
+      reason,
+    }: {
+      appointmentId: string;
+      reason?: string;
+    }) => {
+      await AppointmentService.cancelAppointment(appointmentId, reason);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -89,6 +95,10 @@ export const useAppointmentActions = () => {
 
   const updateStatus = useMutation({
     mutationFn: async ({ appointmentId, status }: { appointmentId: string; status: string }) => {
+      if (String(status).toLowerCase() === 'cancelado') {
+        await AppointmentService.cancelAppointment(appointmentId);
+        return;
+      }
       await AppointmentService.updateStatus(appointmentId, status);
     },
     onSuccess: () => {

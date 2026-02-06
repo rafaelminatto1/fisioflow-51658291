@@ -49,6 +49,7 @@ import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from '
 import { useToast } from '@/hooks/use-toast';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import ReactMarkdown from 'react-markdown';
+import { UnknownError, getErrorMessage } from '@/types';
 
 // Tipos para dados extraídos
 interface ExtractedData {
@@ -101,6 +102,23 @@ interface DocumentTag {
   confidence: number;
 }
 
+interface Patient {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  [key: string]: unknown;
+}
+
+interface MedicalRecord {
+  id: string;
+  patientId: string;
+  type: string;
+  date: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
 export default function DocumentScannerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -116,7 +134,7 @@ export default function DocumentScannerPage() {
   const [activeTab, setActiveTab] = useState('scan');
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [translateLanguage, setTranslateLanguage] = useState('pt');
-  const [previousExams, setPreviousExams] = useState<any[]>([]);
+  const [previousExams, setPreviousExams] = useState<MedicalRecord[]>([]);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,7 +199,7 @@ export default function DocumentScannerPage() {
         limit(5)
       );
       const snapshot = await getDocs(q);
-      const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MedicalRecord[];
       setPreviousExams(exams);
       return exams;
     } catch (error) {
@@ -345,7 +363,7 @@ export default function DocumentScannerPage() {
     setSaving(true);
 
     try {
-      const patient = patients?.find((p: any) => p.id === selectedPatient);
+      const patient = (patients as Patient[] | undefined)?.find((p) => p.id === selectedPatient);
 
       // Salvar como registro médico com dados estruturados
       const createRecord = httpsCallable(functions, 'createMedicalRecordV2');
@@ -530,7 +548,7 @@ export default function DocumentScannerPage() {
                             <SelectValue placeholder="Selecione o paciente..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {patients?.map((p: any) => (
+                            {(patients as Patient[] | undefined)?.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
                                 {p.name}
                               </SelectItem>

@@ -666,7 +666,7 @@ const Settings = () => {
         </div>
 
         {/* Tabs for different settings sections */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full" aria-label="Configurações do sistema">
           <TabsList className="grid w-full grid-cols-5 h-9 sm:h-10 gap-0.5">
             <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
               <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

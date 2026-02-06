@@ -17,6 +17,13 @@ import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import { logger } from 'firebase-functions';
 import { getAdminDb, getAdminMessaging } from '../init';
 import { FieldValue } from 'firebase-admin/firestore';
+import { sendAppointmentConfirmationEmail, sendAppointmentReminderEmail, sendEmail } from '../communications/resend-templates';
+import {
+  WhatsAppTemplate,
+  formatPhoneForWhatsApp,
+  sendWhatsAppTemplateMessageInternal,
+  sendWhatsAppTextMessageInternal,
+} from '../communications/whatsapp';
 
 const CORS_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
@@ -59,6 +66,34 @@ interface NotificationDocument {
   retry_count?: number;
 }
 
+type AppointmentNotificationKind = 'scheduled' | 'rescheduled' | 'cancelled' | 'reminder_24h' | 'reminder_2h';
+
+export interface ScheduleNotificationSettings {
+  send_confirmation_email?: boolean;
+  send_confirmation_whatsapp?: boolean;
+  send_reminder_24h?: boolean;
+  send_reminder_2h?: boolean;
+  send_cancellation_notice?: boolean;
+  custom_confirmation_message?: string;
+  custom_reminder_message?: string;
+}
+
+export interface DispatchAppointmentNotificationInput {
+  kind: AppointmentNotificationKind;
+  organizationId: string;
+  patientId: string;
+  appointmentId: string;
+  date: string;
+  time: string;
+  patientName?: string;
+  therapistName?: string;
+}
+
+export interface DispatchAppointmentNotificationResult {
+  email: NotificationResult;
+  whatsapp: NotificationResult;
+}
+
 // ============================================================================
 // COLLECTION REFERENCES
 // ============================================================================
@@ -66,6 +101,253 @@ interface NotificationDocument {
 function getNotificationsCollection() {
   const db = getAdminDb();
   return db.collection('notifications');
+}
+
+const DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS: Required<Pick<
+  ScheduleNotificationSettings,
+  'send_confirmation_email' | 'send_confirmation_whatsapp' | 'send_reminder_24h' | 'send_reminder_2h' | 'send_cancellation_notice'
+>> = {
+  send_confirmation_email: true,
+  send_confirmation_whatsapp: true,
+  send_reminder_24h: true,
+  send_reminder_2h: true,
+  send_cancellation_notice: true,
+};
+
+function formatDatePtBr(dateValue: string): string {
+  const parsed = new Date(dateValue);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateValue;
+  }
+  return parsed.toLocaleDateString('pt-BR');
+}
+
+function renderTemplateMessage(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce((acc, [key, value]) => {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return acc.replace(new RegExp(escapedKey, 'g'), value);
+  }, template);
+}
+
+function getDefaultMessage(kind: AppointmentNotificationKind, patientName: string, date: string, time: string): string {
+  if (kind === 'cancelled') {
+    return `Olá ${patientName}, sua consulta de ${date} às ${time} foi cancelada.`;
+  }
+  if (kind === 'reminder_24h' || kind === 'reminder_2h') {
+    return `Olá ${patientName}, lembrete da sua consulta em ${date} às ${time}.`;
+  }
+  if (kind === 'rescheduled') {
+    return `Olá ${patientName}, sua consulta foi reagendada para ${date} às ${time}.`;
+  }
+  return `Olá ${patientName}, sua consulta foi confirmada para ${date} às ${time}.`;
+}
+
+export async function dispatchAppointmentNotification(
+  input: DispatchAppointmentNotificationInput
+): Promise<DispatchAppointmentNotificationResult> {
+  const db = getAdminDb();
+  const patientSnap = await db.collection('patients').doc(input.patientId).get();
+  const patientData = patientSnap.exists ? (patientSnap.data() as Record<string, any>) : {};
+  const resolvedOrganizationId = (
+    input.organizationId && input.organizationId !== 'system'
+      ? input.organizationId
+      : String(patientData.organization_id || input.organizationId || 'system')
+  );
+  const [settingsSnap, organizationSnap] = await Promise.all([
+    db.collection('schedule_notification_settings').doc(resolvedOrganizationId).get(),
+    db.collection('organizations').doc(resolvedOrganizationId).get(),
+  ]);
+  const settings = {
+    ...DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS,
+    ...(settingsSnap.exists ? (settingsSnap.data() as ScheduleNotificationSettings) : {}),
+  };
+  const organizationData = organizationSnap.exists ? (organizationSnap.data() as Record<string, any>) : {};
+
+  const patientName = input.patientName || String(patientData.full_name || patientData.name || 'Paciente');
+  const therapistName = input.therapistName || 'Seu fisioterapeuta';
+  const clinicName = String(organizationData.name || 'FisioFlow');
+  const clinicAddress = organizationData.address ? String(organizationData.address) : undefined;
+  const dateLabel = formatDatePtBr(input.date);
+  const templateVars = {
+    '{nome}': patientName,
+    '{data}': dateLabel,
+    '{hora}': input.time,
+    '{tipo}': 'Fisioterapia',
+    '{terapeuta}': therapistName,
+  };
+
+  const eventAllowsEmail = input.kind === 'cancelled'
+    ? !!settings.send_cancellation_notice
+    : (input.kind === 'reminder_24h'
+      ? !!settings.send_reminder_24h
+      : (input.kind === 'reminder_2h'
+        ? !!settings.send_reminder_2h
+        : !!settings.send_confirmation_email));
+  const eventAllowsWhatsApp = input.kind === 'cancelled'
+    ? !!settings.send_cancellation_notice
+    : (input.kind === 'reminder_24h'
+      ? !!settings.send_reminder_24h
+      : (input.kind === 'reminder_2h'
+        ? !!settings.send_reminder_2h
+        : !!settings.send_confirmation_whatsapp));
+
+  const email = patientData.email ? String(patientData.email) : '';
+  const phone = patientData.phone ? String(patientData.phone) : '';
+
+  const emailResult: NotificationResult = {
+    sent: false,
+    channel: 'email',
+  };
+  if (!eventAllowsEmail) {
+    emailResult.error = 'Disabled by schedule settings';
+  } else if (!email) {
+    emailResult.error = 'Patient has no email';
+  } else {
+    try {
+      if (input.kind === 'cancelled') {
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111827;">
+            <h2 style="margin: 0 0 12px;">Consulta cancelada</h2>
+            <p>Olá <strong>${patientName}</strong>,</p>
+            <p>Sua consulta de <strong>${dateLabel}</strong> às <strong>${input.time}</strong> foi cancelada.</p>
+            <p style="color: #6b7280; margin-top: 16px;">${clinicName}</p>
+          </div>
+        `;
+        const sendResult = await sendEmail({
+          to: email,
+          subject: 'Consulta cancelada',
+          html,
+        });
+        emailResult.sent = !!sendResult.success;
+        emailResult.error = sendResult.error;
+      } else if (input.kind === 'reminder_24h' || input.kind === 'reminder_2h') {
+        const customTemplate = (settings.custom_reminder_message || '').trim();
+        if (customTemplate) {
+          const rendered = renderTemplateMessage(customTemplate, templateVars);
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111827;">
+              <p style="white-space: pre-wrap;">${rendered}</p>
+              <p style="color: #6b7280; margin-top: 16px;">${clinicName}</p>
+            </div>
+          `;
+          const sendResult = await sendEmail({
+            to: email,
+            subject: 'Lembrete de consulta',
+            html,
+          });
+          emailResult.sent = !!sendResult.success;
+          emailResult.error = sendResult.error;
+        } else {
+          const sendResult = await sendAppointmentReminderEmail(email, {
+            patientName,
+            therapistName,
+            date: input.date,
+            time: input.time,
+            clinicName,
+          });
+          emailResult.sent = !!sendResult.success;
+          emailResult.error = sendResult.error;
+        }
+      } else {
+        const customTemplate = (settings.custom_confirmation_message || '').trim();
+        if (customTemplate) {
+          const rendered = renderTemplateMessage(customTemplate, templateVars);
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111827;">
+              <p style="white-space: pre-wrap;">${rendered}</p>
+              <p style="color: #6b7280; margin-top: 16px;">${clinicName}</p>
+            </div>
+          `;
+          const sendResult = await sendEmail({
+            to: email,
+            subject: input.kind === 'rescheduled' ? 'Consulta reagendada' : 'Consulta confirmada',
+            html,
+          });
+          emailResult.sent = !!sendResult.success;
+          emailResult.error = sendResult.error;
+        } else {
+          const sendResult = await sendAppointmentConfirmationEmail(email, {
+            patientName,
+            therapistName,
+            date: input.date,
+            time: input.time,
+            clinicName,
+            clinicAddress,
+          });
+          emailResult.sent = !!sendResult.success;
+          emailResult.error = sendResult.error;
+        }
+      }
+    } catch (error) {
+      emailResult.sent = false;
+      emailResult.error = error instanceof Error ? error.message : 'Failed to send email';
+    }
+  }
+
+  const whatsappResult: NotificationResult = {
+    sent: false,
+    channel: 'whatsapp',
+  };
+  if (!eventAllowsWhatsApp) {
+    whatsappResult.error = 'Disabled by schedule settings';
+  } else if (!phone) {
+    whatsappResult.error = 'Patient has no phone';
+  } else {
+    const to = formatPhoneForWhatsApp(phone);
+    const fallbackMessage = getDefaultMessage(input.kind, patientName, dateLabel, input.time);
+    const customTemplate = ((
+      input.kind === 'reminder_24h' || input.kind === 'reminder_2h'
+        ? settings.custom_reminder_message
+        : settings.custom_confirmation_message
+    ) || '').trim();
+
+    try {
+      if (customTemplate && input.kind !== 'cancelled') {
+        await sendWhatsAppTextMessageInternal({
+          to,
+          message: renderTemplateMessage(customTemplate, templateVars),
+        });
+        whatsappResult.sent = true;
+      } else {
+        const template = input.kind === 'cancelled'
+          ? WhatsAppTemplate.APPOINTMENT_CANCELLED
+          : (input.kind === 'reminder_24h' || input.kind === 'reminder_2h'
+            ? WhatsAppTemplate.APPOINTMENT_REMINDER
+            : WhatsAppTemplate.APPOINTMENT_CONFIRMATION);
+        await sendWhatsAppTemplateMessageInternal({
+          to,
+          template,
+          language: 'pt_BR',
+          components: [
+            {
+              type: 'body',
+              parameters: [
+                { type: 'text', text: patientName },
+                { type: 'text', text: dateLabel },
+                { type: 'text', text: input.time },
+              ],
+            },
+          ],
+        });
+        whatsappResult.sent = true;
+      }
+    } catch (templateError) {
+      try {
+        await sendWhatsAppTextMessageInternal({ to, message: fallbackMessage });
+        whatsappResult.sent = true;
+      } catch (textError) {
+        whatsappResult.sent = false;
+        whatsappResult.error = textError instanceof Error
+          ? textError.message
+          : (templateError instanceof Error ? templateError.message : 'Failed to send WhatsApp');
+      }
+    }
+  }
+
+  return {
+    email: emailResult,
+    whatsapp: whatsappResult,
+  };
 }
 
 // ============================================================================
@@ -207,17 +489,16 @@ export const notifyAppointmentScheduled = onCall(
     }
 
     const db = getAdminDb();
-
-    const notificationData: SendNotificationData['data'] = {
-      to: patientId,
-      subject: 'Lembrete de Consulta',
-      body: `Olá ${patientName || 'paciente'}, você tem uma consulta agendada para ${new Date(date).toLocaleDateString('pt-BR')} às ${time}.`,
-      appointmentId,
-      action: 'appointment_reminder',
-    };
-
     const notificationRef = getNotificationsCollection().doc();
     const notificationId = notificationRef.id;
+
+    const notificationData = {
+      appointmentId,
+      patientId,
+      date,
+      time,
+      patientName,
+    };
 
     const notificationDoc: NotificationDocument = {
       user_id: patientId,
@@ -232,12 +513,43 @@ export const notifyAppointmentScheduled = onCall(
 
     await notificationRef.create(notificationDoc);
 
-    const result = await sendNotificationByType('push', notificationData, db, patientId);
+    const channelDispatch = await dispatchAppointmentNotification({
+      kind: 'scheduled',
+      organizationId: organizationId || 'system',
+      patientId,
+      appointmentId,
+      date,
+      time,
+      patientName,
+    });
+
+    const pushData: SendNotificationData['data'] = {
+      to: patientId,
+      subject: 'Lembrete de Consulta',
+      body: `Olá ${patientName || 'paciente'}, você tem uma consulta agendada para ${new Date(date).toLocaleDateString('pt-BR')} às ${time}.`,
+      appointmentId,
+      action: 'appointment_reminder',
+    };
+    const pushResult = await sendNotificationByType('push', pushData, db, patientId);
+    const result: NotificationResult = {
+      sent: channelDispatch.email.sent || channelDispatch.whatsapp.sent || pushResult.sent,
+      channel: 'appointment_multichannel',
+      error: [
+        channelDispatch.email.error,
+        channelDispatch.whatsapp.error,
+        pushResult.error,
+      ].filter(Boolean).join(' | ') || undefined,
+    };
 
     await notificationRef.update({
       status: result.sent ? 'sent' : 'failed',
       sent_at: FieldValue.serverTimestamp(),
       error_message: result.error || null,
+      channel_results: {
+        email: channelDispatch.email,
+        whatsapp: channelDispatch.whatsapp,
+        push: pushResult,
+      },
     });
 
     return {
@@ -278,17 +590,16 @@ export const notifyAppointmentReschedule = onCall(
     }
 
     const db = getAdminDb();
-
-    const notificationData: SendNotificationData['data'] = {
-      to: patientId,
-      subject: 'Consulta Reagendada',
-      body: `Olá ${patientName || 'paciente'}, sua consulta foi reagendada para ${new Date(newDate).toLocaleDateString('pt-BR')} às ${newTime}.`,
-      appointmentId,
-      action: 'appointment_reschedule',
-    };
-
     const notificationRef = getNotificationsCollection().doc();
     const notificationId = notificationRef.id;
+
+    const notificationData = {
+      appointmentId,
+      patientId,
+      date: newDate,
+      time: newTime,
+      patientName,
+    };
 
     const notificationDoc: NotificationDocument = {
       user_id: patientId,
@@ -303,12 +614,43 @@ export const notifyAppointmentReschedule = onCall(
 
     await notificationRef.create(notificationDoc);
 
-    const result = await sendNotificationByType('push', notificationData, db, patientId);
+    const channelDispatch = await dispatchAppointmentNotification({
+      kind: 'rescheduled',
+      organizationId: organizationId || 'system',
+      patientId,
+      appointmentId,
+      date: newDate,
+      time: newTime,
+      patientName,
+    });
+
+    const pushData: SendNotificationData['data'] = {
+      to: patientId,
+      subject: 'Consulta Reagendada',
+      body: `Olá ${patientName || 'paciente'}, sua consulta foi reagendada para ${new Date(newDate).toLocaleDateString('pt-BR')} às ${newTime}.`,
+      appointmentId,
+      action: 'appointment_reschedule',
+    };
+    const pushResult = await sendNotificationByType('push', pushData, db, patientId);
+    const result: NotificationResult = {
+      sent: channelDispatch.email.sent || channelDispatch.whatsapp.sent || pushResult.sent,
+      channel: 'appointment_multichannel',
+      error: [
+        channelDispatch.email.error,
+        channelDispatch.whatsapp.error,
+        pushResult.error,
+      ].filter(Boolean).join(' | ') || undefined,
+    };
 
     await notificationRef.update({
       status: result.sent ? 'sent' : 'failed',
       sent_at: FieldValue.serverTimestamp(),
       error_message: result.error || null,
+      channel_results: {
+        email: channelDispatch.email,
+        whatsapp: channelDispatch.whatsapp,
+        push: pushResult,
+      },
     });
 
     return {
@@ -349,17 +691,16 @@ export const notifyAppointmentCancellation = onCall(
     }
 
     const db = getAdminDb();
-
-    const notificationData: SendNotificationData['data'] = {
-      to: patientId,
-      subject: 'Consulta Cancelada',
-      body: `Olá ${patientName || 'paciente'}, sua consulta de ${new Date(date).toLocaleDateString('pt-BR')} às ${time} foi cancelada.`,
-      appointmentId,
-      action: 'appointment_cancellation',
-    };
-
     const notificationRef = getNotificationsCollection().doc();
     const notificationId = notificationRef.id;
+
+    const notificationData = {
+      appointmentId,
+      patientId,
+      date,
+      time,
+      patientName,
+    };
 
     const notificationDoc: NotificationDocument = {
       user_id: patientId,
@@ -374,12 +715,43 @@ export const notifyAppointmentCancellation = onCall(
 
     await notificationRef.create(notificationDoc);
 
-    const result = await sendNotificationByType('push', notificationData, db, patientId);
+    const channelDispatch = await dispatchAppointmentNotification({
+      kind: 'cancelled',
+      organizationId: organizationId || 'system',
+      patientId,
+      appointmentId,
+      date,
+      time,
+      patientName,
+    });
+
+    const pushData: SendNotificationData['data'] = {
+      to: patientId,
+      subject: 'Consulta Cancelada',
+      body: `Olá ${patientName || 'paciente'}, sua consulta de ${new Date(date).toLocaleDateString('pt-BR')} às ${time} foi cancelada.`,
+      appointmentId,
+      action: 'appointment_cancellation',
+    };
+    const pushResult = await sendNotificationByType('push', pushData, db, patientId);
+    const result: NotificationResult = {
+      sent: channelDispatch.email.sent || channelDispatch.whatsapp.sent || pushResult.sent,
+      channel: 'appointment_multichannel',
+      error: [
+        channelDispatch.email.error,
+        channelDispatch.whatsapp.error,
+        pushResult.error,
+      ].filter(Boolean).join(' | ') || undefined,
+    };
 
     await notificationRef.update({
       status: result.sent ? 'sent' : 'failed',
       sent_at: FieldValue.serverTimestamp(),
       error_message: result.error || null,
+      channel_results: {
+        email: channelDispatch.email,
+        whatsapp: channelDispatch.whatsapp,
+        push: pushResult,
+      },
     });
 
     return {
@@ -478,20 +850,39 @@ async function sendNotificationByType(
   userId: string
 ): Promise<NotificationResult> {
   switch (type) {
-    case 'email':
-      // TODO: Integrate with SendGrid, Mailgun, or similar
-      logger.info('[Notification] Email queued', {
-        to: data.to,
-        subject: data.subject,
-      });
-      return { sent: true, channel: 'email' };
+    case 'email': {
+      const to = String(data.to || data.email || '').trim();
+      if (!to || !to.includes('@')) {
+        return { sent: false, channel: 'email', error: 'Invalid email recipient' };
+      }
+      const subject = String(data.subject || 'FisioFlow');
+      const body = String(data.body || '');
+      const html = typeof data.html === 'string' && data.html.trim()
+        ? data.html
+        : `<div style="font-family: Arial, sans-serif; line-height: 1.5;"><p style="white-space: pre-wrap;">${body}</p></div>`;
+      const result = await sendEmail({ to, subject, html });
+      return { sent: !!result.success, channel: 'email', error: result.error };
+    }
 
-    case 'whatsapp':
-      // TODO: Integrate with Twilio, Z-API, or similar
-      logger.info('[Notification] WhatsApp queued', {
-        to: data.to,
-      });
-      return { sent: true, channel: 'whatsapp' };
+    case 'whatsapp': {
+      const to = String(data.to || data.phone || '').trim();
+      if (!to) {
+        return { sent: false, channel: 'whatsapp', error: 'Missing recipient phone' };
+      }
+      try {
+        await sendWhatsAppTextMessageInternal({
+          to: formatPhoneForWhatsApp(to),
+          message: String(data.body || ''),
+        });
+        return { sent: true, channel: 'whatsapp' };
+      } catch (error) {
+        return {
+          sent: false,
+          channel: 'whatsapp',
+          error: error instanceof Error ? error.message : 'Failed to send WhatsApp',
+        };
+      }
+    }
 
     case 'push': {
       const messaging = getAdminMessaging();
