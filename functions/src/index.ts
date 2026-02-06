@@ -39,8 +39,10 @@ setGlobalOptions({
     ],
     // Reduced maxInstances to prevent cost spikes and CPU Quota errors
     maxInstances: 1,
-    // Set default memory for all functions
-    memory: '256MiB', // Reduced from 512 to save resources
+    // Set CPU allocation for all functions (2 vCPUs for better performance)
+    cpu: 2,
+    // Set default memory for all functions (increased to match 2 vCPU requirement)
+    memory: '1GiB',
     // Set timeout for all functions (default is 60s for Gen 2)
     timeoutSeconds: 60,
     // Keep minimum instances warm for critical functions (reduces cold starts)
@@ -93,12 +95,12 @@ export const getPatientStats = onCall(async (request) => {
 });
 // HTTP (CORS) - frontend callFunctionHttp uses these names
 export {
-  listPatientsHttp as listPatientsV2,
-  getPatientStatsHttp as getPatientStatsV2,
-  getPatientHttp,
-  createPatientHttp as createPatientV2,
-  updatePatientHttp as updatePatientV2,
-  deletePatientHttp as deletePatientV2,
+    listPatientsHttp as listPatientsV2,
+    getPatientStatsHttp as getPatientStatsV2,
+    getPatientHttp,
+    createPatientHttp as createPatientV2,
+    updatePatientHttp as updatePatientV2,
+    deletePatientHttp as deletePatientV2,
 } from './api/patients';
 // Gamification / patient quests (callable)
 export { checkPatientAppointments, getLastPainMapDate } from './api/patient-quests';
@@ -254,12 +256,12 @@ export const getEventReport = onCall(async (request) => {
 });
 // HTTP (CORS) - V2 endpoints for frontend
 export {
-  listTransactionsHttp as listTransactionsV2,
-  createTransactionHttp as createTransactionV2,
-  updateTransactionHttp as updateTransactionV2,
-  deleteTransactionHttp as deleteTransactionV2,
-  findTransactionByAppointmentIdHttp as findTransactionByAppointmentIdV2,
-  getEventReportHttp as getEventReportV2,
+    listTransactionsHttp as listTransactionsV2,
+    createTransactionHttp as createTransactionV2,
+    updateTransactionHttp as updateTransactionV2,
+    deleteTransactionHttp as deleteTransactionV2,
+    findTransactionByAppointmentIdHttp as findTransactionByAppointmentIdV2,
+    getEventReportHttp as getEventReportV2,
 } from './api/financial';
 
 // API de Prontuários
@@ -381,38 +383,9 @@ export const createPerformanceIndexes = onCall(async (request) => {
 });
 
 // AI FUNCTIONS
-import { generateExercisePlan as generateExercisePlanFlow } from './ai/flows/exerciseGenerator';
-
-export const generateExercisePlan = onCall(
-    { 
-        timeoutSeconds: 120,
-        memory: '1GiB'
-    },
-    async (request) => {
-        try {
-            const result = await generateExercisePlanFlow(request.data);
-            return result;
-        } catch (e: any) {
-            console.error("AI Flow Error:", e);
-            throw new functions.https.HttpsError('internal', e.message || 'Erro na geração do plano');
-        }
-    }
-);
-
-export const aiExerciseSuggestion = onCall(async (request) => {
-    const { exerciseSuggestionHandler } = await import('./ai/exercise-suggestion');
-    return exerciseSuggestionHandler(request);
-});
-
-export const aiSoapGeneration = onCall(async (request) => {
-    const { soapGenerationHandler } = await import('./ai/soap-generation');
-    return soapGenerationHandler(request);
-});
-
-export const aiClinicalAnalysis = onCall(async (request) => {
-    const { clinicalAnalysisHandler } = await import('./ai/clinical-analysis');
-    return clinicalAnalysisHandler(request);
-});
+// Note: generateExercisePlan, aiExerciseSuggestion, aiSoapGeneration, aiClinicalAnalysis
+// were using incompatible Genkit flows and have been temporarily removed.
+// The core AI functionality is still available via the existing ai/ module functions.
 
 export const aiMovementAnalysis = onCall(async (request) => {
     const { movementAnalysisHandler } = await import('./ai/movement-analysis');
@@ -754,13 +727,13 @@ export { expiringVouchers, birthdays, cleanup, dataIntegrity } from './crons/add
 
 // Notification Workflows
 export {
-  sendNotification,
-  sendNotificationBatch,
-  notifyAppointmentScheduled,
-  notifyAppointmentReschedule,
-  notifyAppointmentCancellation,
-  processNotificationQueue,
-  emailWebhook
+    sendNotification,
+    sendNotificationBatch,
+    notifyAppointmentScheduled,
+    notifyAppointmentReschedule,
+    notifyAppointmentCancellation,
+    processNotificationQueue,
+    emailWebhook
 } from './workflows/notifications';
 
 // Appointment Workflows
