@@ -16,17 +16,20 @@ export async function callableWithAppCheck<T = unknown, R = unknown>(
   name: string,
   data?: T
 ): Promise<R> {
+  const isAppCheckEnabled = import.meta.env.VITE_ENABLE_APPCHECK === 'true';
   const app = getApp();
   const functions = getFunctions(app, 'southamerica-east1');
   const _region = functions.region || 'southamerica-east1';
 
   // Obter token do App Check
   let appCheckToken: string | undefined;
-  try {
-    const appCheck = getAppCheck(app);
-    appCheckToken = await appCheck.getToken();
-  } catch (error) {
-    logger.warn('Could not get AppCheck token', error, 'callableWithAppCheck');
+  if (isAppCheckEnabled) {
+    try {
+      const appCheck = getAppCheck(app);
+      appCheckToken = await appCheck.getToken();
+    } catch (error) {
+      logger.warn('Could not get AppCheck token', error, 'callableWithAppCheck');
+    }
   }
 
   // Obter token de autenticação
