@@ -48,9 +48,18 @@ export class AppointmentService {
     /**
      * Fetch all appointments for an organization
      */
-    static async fetchAppointments(_organizationId: string): Promise<AppointmentBase[]> {
+    static async fetchAppointments(
+        organizationId: string,
+        options: { limit?: number; dateFrom?: string; dateTo?: string } = {}
+    ): Promise<AppointmentBase[]> {
         try {
-            const response = await appointmentsApi.list({ limit: 1000 });
+            // Default limit increased to 3000 to cover more history/future without breaking
+            const limit = options.limit || 3000;
+            const response = await appointmentsApi.list({ 
+                limit,
+                dateFrom: options.dateFrom,
+                dateTo: options.dateTo
+            });
             const data = response.data || [];
 
             // Validar e transformar dados

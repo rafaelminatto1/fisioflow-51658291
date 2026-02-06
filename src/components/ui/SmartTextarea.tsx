@@ -431,9 +431,9 @@ const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTe
                             props.onBlur?.(e);
                         }}
                         className={cn(
-                            "resize-y border-0 focus-visible:ring-0 bg-transparent p-3 text-sm sm:text-base leading-relaxed placeholder:text-muted-foreground/30 tabular-nums transition-all duration-300",
+                            "resize-y border-0 focus-visible:ring-0 bg-transparent p-4 text-base sm:text-lg leading-relaxed placeholder:text-muted-foreground/30 tabular-nums transition-all duration-300",
                             showToolbar && (!showToolbarOnFocus || isFocused || isFullScreen) ? "rounded-t-none" : "rounded-t-lg",
-                            isFullScreen ? "flex-1 resize-none h-full text-base p-8 max-w-5xl mx-auto" : "flex-1 resize-none h-full min-h-0",
+                            isFullScreen ? "flex-1 resize-none h-full text-lg p-8 max-w-5xl mx-auto" : "flex-1 resize-none h-full min-h-0",
                             className
                         )}
                         placeholder={props.placeholder || "Comece a digitar... Use Ctrl+B para negrito, Ctrl+I para itálico, etc."}

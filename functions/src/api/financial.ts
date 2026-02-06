@@ -1,5 +1,6 @@
 
 // --- Utilitários de Auxílio ---
+// OTIMIZADO - Configurações de performance e cache
 
 import { CORS_ORIGINS, getPool } from '../init';
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
@@ -7,15 +8,18 @@ import { setCorsHeaders } from '../lib/cors';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Transaction } from '../types/models';
 import { logger } from '../lib/logger';
+import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
 
-function parseBody(req: any): any { 
-    return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); 
+function parseBody(req: any): any {
+    return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
 }
-function getAuthHeader(req: any): string | undefined { 
-    const h = req.headers?.authorization || req.headers?.Authorization; 
-    return Array.isArray(h) ? h[0] : h; 
+function getAuthHeader(req: any): string | undefined {
+    const h = req.headers?.authorization || req.headers?.Authorization;
+    return Array.isArray(h) ? h[0] : h;
 }
-const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' as const };
+
+// OTIMIZADO: Configuração com mais instâncias e melhor performance
+const httpOpts = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
 
 /**
  * Helper para centralizar o tratamento de erros e evitar repetição
