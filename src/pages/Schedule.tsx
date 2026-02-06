@@ -133,6 +133,9 @@ const Schedule = () => {
     therapists: []
   });
 
+  // Patient search filter
+  const [patientFilter, setPatientFilter] = useState<string | null>(null);
+
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
@@ -198,6 +201,10 @@ const Schedule = () => {
 
   const filteredAppointments = useMemo(() => {
     return appointments.filter(apt => {
+      // Filter by patient name
+      if (patientFilter && apt.patientName !== patientFilter) {
+        return false;
+      }
       // Filter by status
       if (filters.status.length > 0 && !filters.status.includes(apt.status)) {
         return false;
@@ -206,15 +213,13 @@ const Schedule = () => {
       if (filters.types.length > 0 && !filters.types.includes(apt.type)) {
         return false;
       }
-      // Filter by therapist (assuming we have therapist info in apt, if not skip)
-      // Note: Current Appointment type might not have therapistId or Name fully populated for filtering
-      // Adding basic check if field exists
+      // Filter by therapist
       if (filters.therapists.length > 0 && apt.therapistId && !filters.therapists.includes(apt.therapistId)) {
         return false;
       }
       return true;
     });
-  }, [appointments, filters]);
+  }, [appointments, filters, patientFilter]);
 
   // ===================================================================
   // HANDLERS
@@ -594,6 +599,8 @@ const Schedule = () => {
                   onFiltersChange={setFilters}
                   onClearFilters={() => setFilters({ status: [], types: [], therapists: [] })}
                   totalAppointmentsCount={appointments.length}
+                  patientFilter={patientFilter}
+                  onPatientFilterChange={setPatientFilter}
                 />
               </Suspense>
             </div>
