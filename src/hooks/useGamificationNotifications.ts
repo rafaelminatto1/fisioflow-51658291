@@ -7,6 +7,7 @@ import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot,
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type NotificationType = 'achievement' | 'level_up' | 'quest_complete' | 'streak_milestone' | 'reward_unlocked';
 
@@ -75,7 +76,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data(),
+          ...normalizeFirestoreData(doc.data()),
         })) as GamificationNotification[];
       } catch (err) {
         logger.error('Failed to fetch notifications', err, 'useGamificationNotifications');
@@ -193,7 +194,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
           if (change.type === 'added') {
             const newNotification = {
               id: change.doc.id,
-              ...change.doc.data(),
+              ...change.normalizeFirestoreData(doc.data()),
             } as GamificationNotification;
 
             // Verificar se é uma notificação nova (nos últimos 5 segundos)
@@ -255,5 +256,4 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
     refetch,
   };
 };
-
 

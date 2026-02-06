@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart as RechartsPieChart, Pie } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, query, where, getDocs, orderBy } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface DemonstrativoData {
   entradas: number;
@@ -58,7 +59,7 @@ export default function DemonstrativoMensalPage() {
       );
 
       const snapshotMovs = await getDocs(qMovs);
-      const movs = snapshotMovs.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Array<{ id: string; tipo: string; valor: string | number; categoria?: string; forma_pagamento?: string; data: string }>;
+      const movs = snapshotMovs.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Array<{ id: string; tipo: string; valor: string | number; categoria?: string; forma_pagamento?: string; data: string }>;
 
       const movimentacoes = movs || [];
       const entradas = movimentacoes.filter(m => m.tipo === 'entrada');
@@ -91,7 +92,7 @@ export default function DemonstrativoMensalPage() {
         where('status', '==', 'pendente')
       );
       const snapshotContasReceber = await getDocs(qContasReceber);
-      const contasReceber = snapshotContasReceber.docs.map(doc => doc.data());
+      const contasReceber = snapshotContasReceber.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const qContasPagar = query(
         collection(db, 'contas_financeiras'),
@@ -99,7 +100,7 @@ export default function DemonstrativoMensalPage() {
         where('status', '==', 'pendente')
       );
       const snapshotContasPagar = await getDocs(qContasPagar);
-      const contasPagar = snapshotContasPagar.docs.map(doc => doc.data());
+      const contasPagar = snapshotContasPagar.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       // Buscar total de atendimentos (sessões concluídas)
       const qAppointments = query(
@@ -160,7 +161,7 @@ export default function DemonstrativoMensalPage() {
         where('data', '<=', endDayAnterior)
       );
       const snapshotMovsAnterior = await getDocs(qMovsAnterior);
-      const movs = snapshotMovsAnterior.docs.map(doc => doc.data()) as Array<{ tipo: string; valor: string | number }>;
+      const movs = snapshotMovsAnterior.docs.map(doc => normalizeFirestoreData(doc.data())) as Array<{ tipo: string; valor: string | number }>;
 
       const movimentacoes = movs || [];
       const totalEntradas = movimentacoes.filter(m => m.tipo === 'entrada').reduce((acc, m) => acc + Number(m.valor), 0);

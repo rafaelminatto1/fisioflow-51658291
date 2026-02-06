@@ -6,6 +6,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Appointment {
   date: string;
@@ -79,7 +80,7 @@ export const reactivationWorkflow = inngest.createFunction(
       // Create a map: patientId -> latest appointment
       const latestAppointmentByPatient = new Map<string, Appointment>();
       appointmentsSnapshot.docs.forEach(doc => {
-        const appt = { id: doc.id, ...doc.data() } as Appointment;
+        const appt = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as Appointment;
         const existing = latestAppointmentByPatient.get(appt.patient_id || '');
         if (!existing || new Date(appt.date) > new Date(existing.date)) {
           latestAppointmentByPatient.set(appt.patient_id || '', appt);

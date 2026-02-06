@@ -7,6 +7,7 @@ import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } f
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subDays, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import {
 
   LeaderboardEntry,
   LeaderboardFilters,
@@ -14,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 } from '@/types/gamification';
 import { downloadCSV } from '@/utils/csvExport';
 import { db } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 
 // ============================================================================
@@ -79,7 +81,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       // Get all gamification data
       let gamificationData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...normalizeFirestoreData(doc.data())
       }));
 
       // Apply period filter (client-side for date range + sort combo)
@@ -282,7 +284,7 @@ export const useEngagementData = (defaultDays: number = 30): UseEngagementDataRe
       if (snapshot.empty) return [];
 
       const transactions = snapshot.docs.map(doc => ({
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
         id: doc.id
       }));
 

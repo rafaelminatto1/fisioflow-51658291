@@ -3,6 +3,7 @@
  * Handles exercise plan and exercise-related operations
  */
 
+import {
   collection,
   doc,
   getDoc,

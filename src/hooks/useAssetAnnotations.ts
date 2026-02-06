@@ -7,6 +7,7 @@ import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, addDo
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Annotation {
   id: string;
@@ -61,10 +62,10 @@ export const useAssetAnnotations = (assetId: string | null) => {
 
         if (!snapshot.empty) {
           const versionDocs = snapshot.docs.map(doc => ({
-            version: doc.data().version,
-            data: doc.data().data,
-            created_at: doc.data().created_at,
-            author_id: doc.data().author_id
+            version: normalizeFirestoreData(doc.data()).version,
+            data: normalizeFirestoreData(doc.data()).data,
+            created_at: normalizeFirestoreData(doc.data()).created_at,
+            author_id: normalizeFirestoreData(doc.data()).author_id
           }));
 
           setVersions(versionDocs);

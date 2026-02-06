@@ -10,6 +10,7 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getAdminDb } from '../../lib/firebase/admin.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type PatientData = {
   id: string;
@@ -66,7 +67,7 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
         .limit(10)
         .get();
 
-      const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       return {
         ...patientData,

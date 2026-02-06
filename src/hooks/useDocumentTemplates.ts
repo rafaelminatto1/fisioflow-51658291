@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface AtestadoTemplate {
   id: string;
@@ -45,7 +46,7 @@ export type ContratoTemplateFormData = Partial<Pick<ContratoTemplate, 'organizat
 
 // Helper to convert Firestore doc to AtestadoTemplate
 const convertDocToAtestadoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): AtestadoTemplate => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -54,7 +55,7 @@ const convertDocToAtestadoTemplate = (doc: { id: string; data: () => Record<stri
 
 // Helper to convert Firestore doc to ContratoTemplate
 const convertDocToContratoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ContratoTemplate => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

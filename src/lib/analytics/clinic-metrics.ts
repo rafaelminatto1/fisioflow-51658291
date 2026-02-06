@@ -2,6 +2,7 @@
  * Biblioteca de métricas e analytics para clínica
  * @module lib/analytics/clinic-metrics
  */
+import {
 
   startOfDay,
   endOfDay,

@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import {
 
     Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
     Maximize2, AlertCircle

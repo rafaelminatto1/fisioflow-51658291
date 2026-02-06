@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, QueryConstraint, serverTimestamp, Timestamp } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
+import {
 
   getFirebaseAuth,
   getFirebaseStorage
@@ -14,6 +15,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { ensureProfile } from '@/lib/database/profiles';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 const storage = getFirebaseStorage();
@@ -133,7 +135,7 @@ export interface SessionTemplate {
 
 // Helper: Convert Firestore doc to SoapRecord
 const convertDocToSoapRecord = (doc: { id: string; data: () => Record<string, unknown> }): SoapRecord => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -463,7 +465,7 @@ export const useDraftSoapRecordByAppointment = (patientId: string, appointmentId
 
 // Helper: Convert Firestore doc to SessionAttachment
 const convertDocToSessionAttachment = (doc: { id: string; data: () => Record<string, unknown> }): SessionAttachment => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -622,7 +624,7 @@ export const useDeleteSessionAttachment = () => {
 
 // Helper: Convert Firestore doc to SessionTemplate
 const convertDocToSessionTemplate = (doc: { id: string; data: () => Record<string, unknown> }): SessionTemplate => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

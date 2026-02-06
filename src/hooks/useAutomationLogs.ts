@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query, orderBy, limit, db } from '@/integrations/firebase/app';
 import type { Timestamp } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface AutomationLogEntry {
   id: string;
@@ -18,7 +19,7 @@ export interface AutomationLogEntry {
 }
 
 function parseLogDoc(doc: { id: string; data: () => Record<string, unknown> }): AutomationLogEntry {
-  const d = doc.data();
+  const d = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     automation_id: (d.automation_id as string) ?? '',
@@ -41,7 +42,7 @@ export function useAutomationLogs(organizationId: string | null | undefined, opt
       const ref = collection(db, 'organizations', organizationId, 'automation_logs');
       const q = query(ref, orderBy('started_at', 'desc'), limit(limitCount));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => parseLogDoc({ id: doc.id, data: () => doc.data() }));
+      return snapshot.docs.map((doc) => parseLogDoc({ id: doc.id, data: () => normalizeFirestoreData(doc.data()) }));
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60, // 1 minute
