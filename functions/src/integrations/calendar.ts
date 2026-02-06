@@ -37,6 +37,9 @@ export const syncToGoogleCalendarHandler = async (request: any) => {
   }
 
   const appointment = appointmentDoc.data();
+  if (!appointment?.date || !appointment?.startTime) {
+    throw new HttpsError('failed-precondition', 'Agendamento sem data ou horário inicial');
+  }
 
   // Buscar dados do paciente
   const patientDoc = await firestore()
@@ -93,11 +96,11 @@ export const syncToGoogleCalendarHandler = async (request: any) => {
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client as any });
 
     // Preparar dados do evento
-    const dateTime = new Date(appointment?.date);
-    const [hours, minutes] = appointment?.startTime.split(':');
+    const dateTime = new Date(appointment.date);
+    const [hours, minutes] = appointment.startTime.split(':');
     dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    const endTime = appointment?.endTime
+    const endTime = appointment.endTime
       ? (() => {
         const [endHours, endMinutes] = appointment.endTime.split(':');
         const endDateTime = new Date(dateTime);

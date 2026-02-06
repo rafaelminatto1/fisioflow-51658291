@@ -35,7 +35,7 @@ function formatDaysLabel(days: number[]): string {
   if (days.length === 0) return '';
   const sorted = [...days].sort((a, b) => a - b);
   const labels = sorted.map((d) => DAY_SHORT_LABELS[d] ?? '');
-  let runs: number[][] = [];
+  const runs: number[][] = [];
   let run: number[] = [sorted[0]];
   for (let i = 1; i < sorted.length; i++) {
     if (sorted[i] === run[run.length - 1] + 1) {

@@ -32,7 +32,7 @@ test.describe('Integração FisioFlow Google Cloud', () => {
       }
     });
     
-    expect(response.status()).toBe(222 || 202); // Aceito para processamento
+    expect([202, 222]).toContain(response.status()); // Aceito para processamento
     const data = await response.json();
     expect(data.status).toBe('processing_started');
     

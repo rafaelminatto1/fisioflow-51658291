@@ -140,10 +140,10 @@ export default function ProtocolTemplatesScreen() {
               <Pressable
                 key={protocol.id}
                 onPress={() => handleSelectProtocol(protocol)}
-              style={({ pressed }) => [
-                styles.protocolCard,
-                { opacity: pressed ? 0.9 : 1 },
-              ]}
+                style={({ pressed }) => [
+                  styles.protocolCard,
+                  { opacity: pressed ? 0.9 : 1 },
+                ]}
               >
                 {/* Protocol Header */}
                 <View style={styles.protocolHeader}>
@@ -187,19 +187,20 @@ export default function ProtocolTemplatesScreen() {
                 {protocol.exercises.length > 0 && (
                   <View style={styles.exercisesPreview}>
                     <Text style={[styles.exercisesLabel, { color: colors.text }]}>Exercícios incluídos:</Text>
-                  <View style={styles.exercisesList}>
-                    {protocol.exercises.slice(0, 4).map((exercise, index) => (
-                      <Text key={index} style={[styles.exerciseName, { color: colors.textSecondary }]}>
-                        • {exercise.exercise_name} ({exercise.sets}x{exercise.reps})
-                      </Text>
-                    ))}
-                    {protocol.exercises.length > 4 && (
-                      <Text style={[styles.exercisesMore, { color: colors.textSecondary }]}>
-                        +{protocol.exercises.length - 4} outros
-                      </Text>
-                    )}
+                    <View style={styles.exercisesList}>
+                      {protocol.exercises.slice(0, 4).map((exercise, index) => (
+                        <Text key={index} style={[styles.exerciseName, { color: colors.textSecondary }]}>
+                          • {exercise.exercise_name} ({exercise.sets}x{exercise.reps})
+                        </Text>
+                      ))}
+                      {protocol.exercises.length > 4 && (
+                        <Text style={[styles.exercisesMore, { color: colors.textSecondary }]}>
+                          +{protocol.exercises.length - 4} outros
+                        </Text>
+                      )}
+                    </View>
                   </View>
-                </View>
+                )}
               </Pressable>
             ))}
           </View>
@@ -340,7 +341,6 @@ export default function ProtocolTemplatesScreen() {
               </View>
             </Pressable>
           </View>
-        </View>
       </Modal>
     )}
     </SafeAreaView>

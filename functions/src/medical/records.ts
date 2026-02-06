@@ -9,6 +9,7 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
+import { getStorage } from 'firebase-admin/storage';
 import * as logger from 'firebase-functions/logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -411,7 +412,7 @@ export const generateEvolutionReport = onCall({
   });
 
   // Salvar no Storage
-  const storage = require('firebase-admin/storage').bucket();
+  const storage = getStorage().bucket();
   const fileName = `reports/evolution_${patientId}_${Date.now()}.pdf`;
   const file = storage.file(fileName);
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from "@/lib/utils";
-import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package, MessageCircle, MoreVertical, Timer, NotepadText, CreditCard } from 'lucide-react';
+import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package, MessageCircle, MoreVertical, Timer, NotepadText, CreditCard, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -17,6 +17,16 @@ import {
   DrawerDescription,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Select,
@@ -43,7 +53,7 @@ import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import type { Appointment } from '@/types/appointment';
 import { formatCurrency } from '@/lib/utils';
 
-import { STATUS_CONFIG } from '@/lib/config/agenda';
+import { STATUS_CONFIG, normalizeStatus } from '@/lib/config/agenda';
 
 interface AppointmentQuickViewProps {
   appointment: Appointment;
@@ -74,6 +84,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const queryClient = useQueryClient();
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
+  const [showNoShowConfirmDialog, setShowNoShowConfirmDialog] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   // Local state for optimistic updates - syncs with appointment
   const [localStatus, setLocalStatus] = useState(appointment.status);
   const [localPaymentStatus, setLocalPaymentStatus] = useState(() =>
@@ -94,7 +106,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   // Sync local state when appointment prop changes
   useEffect(() => {
-    setLocalStatus(appointment.status);
+    setLocalStatus(normalizeStatus(appointment.status));
     setLocalPaymentStatus(((appointment.payment_status ?? 'pending') as string).toLowerCase());
     setLocalTherapistId(appointment.therapistId ?? '');
   }, [appointment.status, appointment.payment_status, appointment.therapistId]);
@@ -153,19 +165,68 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   };
 
   const handleStatusChange = (newStatus: string) => {
-    if (newStatus !== appointment.status) {
-      // Optimistic update - update local state immediately
-      setLocalStatus(newStatus as any);
-      // Then call the API
-      updateStatus({ appointmentId: appointment.id, status: newStatus });
+    if (newStatus === appointment.status) return;
 
-      // If cancelling and there are interested patients, show notification
-      if ((newStatus === 'cancelado' || newStatus === 'falta') && hasWaitlistInterest) {
+    // Se for "falta", mostrar diálogo de confirmação para reagendar
+    if (newStatus === 'falta') {
+      setPendingStatus(newStatus);
+      setShowNoShowConfirmDialog(true);
+      return;
+    }
+
+    // Optimistic update - update local state immediately
+    setLocalStatus(newStatus as any);
+    // Then call the API
+    updateStatus({ appointmentId: appointment.id, status: newStatus });
+
+    // Fechar o popover automaticamente após mudar o status
+    onOpenChange?.(false);
+
+    // If cancelling and there are interested patients, show notification
+    if ((newStatus === 'cancelado' || newStatus === 'falta') && hasWaitlistInterest) {
+      setTimeout(() => {
+        setShowWaitlistNotification(true);
+      }, 500);
+    }
+  };
+
+  const handleNoShowConfirm = () => {
+    if (pendingStatus) {
+      setLocalStatus(pendingStatus as any);
+      updateStatus({ appointmentId: appointment.id, status: pendingStatus });
+      setShowNoShowConfirmDialog(false);
+      setPendingStatus(null);
+
+      // Fechar o popover
+      onOpenChange?.(false);
+
+      // Se houver interessados na lista de espera, mostrar notificação
+      if (hasWaitlistInterest) {
         setTimeout(() => {
           setShowWaitlistNotification(true);
         }, 500);
       }
     }
+  };
+
+  const handleNoShowRechedule = () => {
+    if (pendingStatus) {
+      setLocalStatus(pendingStatus as any);
+      updateStatus({ appointmentId: appointment.id, status: pendingStatus });
+      setShowNoShowConfirmDialog(false);
+      setPendingStatus(null);
+
+      // Fechar o popover e abrir edição para reagendar
+      onOpenChange?.(false);
+      setTimeout(() => {
+        onEdit?.();
+      }, 100);
+    }
+  };
+
+  const handleNoShowCancel = () => {
+    setShowNoShowConfirmDialog(false);
+    setPendingStatus(null);
   };
 
   const handleEdit = () => {
@@ -357,16 +418,21 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   <SelectValue>
                     <div className="flex items-center gap-2 truncate">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.color || '#94a3b8' }} />
-                      <span className="truncate">{STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.label || localStatus}</span>
+                      <span className="truncate">
+                        {STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.label ||
+                         localStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) ||
+                         'Status'}
+                      </span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(STATUS_CONFIG)
                     .filter(([key]) => [
-                      'agendado', 'confirmado', 'em_andamento', 'realizado',
-                      'cancelado', 'falta', 'remarcado', 'aguardando_confirmacao',
-                      'em_espera', 'avaliacao'
+                      'agendado', 'confirmado', 'em_andamento',
+                      'concluido',
+                      'cancelado', 'falta',
+                      'reagendado', 'aguardando_confirmacao', 'em_espera', 'avaliacao', 'atrasado'
                     ].includes(key))
                     .map(([value, config]) => (
                       <SelectItem key={value} value={value}>
@@ -601,6 +667,57 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         date={appointmentDate}
         time={time}
       />
+
+      {/* No-Show Confirmation Dialog */}
+      <AlertDialog open={showNoShowConfirmDialog} onOpenChange={handleNoShowCancel}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <Calendar className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <AlertDialogTitle>Paciente Faltou?</AlertDialogTitle>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {appointment.patientName}
+                </p>
+              </div>
+            </div>
+          </AlertDialogHeader>
+
+          <AlertDialogDescription className="sr-only">
+            Confirmação de falta - deseja reagendar o atendimento?
+          </AlertDialogDescription>
+
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              O status será alterado para <span className="font-semibold text-red-600 dark:text-red-400">Falta</span>. Deseja reagendar este atendimento?
+            </p>
+          </div>
+
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel
+              onClick={handleNoShowCancel}
+              className="flex-1"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={handleNoShowConfirm}
+              className="flex-1"
+            >
+              Apenas registrar falta
+            </Button>
+            <AlertDialogAction
+              onClick={handleNoShowRechedule}
+              className="flex-1 bg-primary hover:bg-primary/90"
+            >
+              Registrar e reagendar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

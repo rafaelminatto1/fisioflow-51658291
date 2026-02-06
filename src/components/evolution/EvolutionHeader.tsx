@@ -35,8 +35,18 @@ import { PatientHelpers } from '@/types';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { parseResponseDate } from '@/utils/dateUtils';
 import type { Patient, Appointment } from '@/types';
+import { TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 const FIRST_EVOLUTION_DISMISS_KEY = 'fisioflow-first-evolution-header-dismissed';
+
+export interface TabConfig {
+  value: string;
+  label: string;
+  shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
 
 interface EvolutionHeaderProps {
     patient: Patient;
@@ -67,6 +77,12 @@ interface EvolutionHeaderProps {
     selectedTherapistId?: string;
     onTherapistChange?: (therapistId: string) => void;
     previousEvolutionsCount?: number;
+    // Props das abas
+    tabsConfig?: TabConfig[];
+    activeTab?: string;
+    onTabChange?: (tab: string) => void;
+    pendingRequiredMeasurements?: number;
+    upcomingGoalsCount?: number;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -143,6 +159,11 @@ export const EvolutionHeader = memo(({
     selectedTherapistId = '',
     onTherapistChange,
     previousEvolutionsCount = 0,
+    tabsConfig = [],
+    activeTab = '',
+    onTabChange,
+    pendingRequiredMeasurements = 0,
+    upcomingGoalsCount = 0,
 }: EvolutionHeaderProps) => {
     const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();
@@ -254,8 +275,8 @@ export const EvolutionHeader = memo(({
                 </div>
             </div>
 
-            {/* Linha 2: Fisioterapeuta | Cronômetro | Resumo | Menu */}
-            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border/50">
+            {/* Linha 2: Fisioterapeuta | Cronômetro | Abas | Menu */}
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border/50 flex-wrap">
                 {therapists.length > 0 && onTherapistChange && (
                     <div className="flex items-center gap-2 shrink-0">
                         <UserCog className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -290,9 +311,57 @@ export const EvolutionHeader = memo(({
                         )}
                     </div>
                 )}
-                <div className="h-6 w-px bg-border shrink-0" aria-hidden />
+                <div className="h-6 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
                 <SessionTimer startTime={sessionStartTime} className="shrink-0" />
-                <div className="flex-1" />
+
+                {/* Abas de navegação - à direita do timer */}
+                {tabsConfig.length > 0 && onTabChange && (
+                    <>
+                        <div className="h-6 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
+                        <nav
+                            className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/30 p-1 gap-0.5"
+                            role="tablist"
+                            aria-label="Abas de evolução"
+                        >
+                            {tabsConfig.map((tab) => {
+                                const isActive = activeTab === tab.value;
+                                const avaliacaoBadge = tab.value === 'avaliacao' && pendingRequiredMeasurements > 0;
+                                const tratamentoBadge = tab.value === 'tratamento' && upcomingGoalsCount > 0;
+                                const badgeCount = tab.value === 'avaliacao' ? pendingRequiredMeasurements : tab.value === 'tratamento' ? upcomingGoalsCount : 0;
+
+                                return (
+                                    <button
+                                        key={tab.value}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={isActive}
+                                        aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ''}`}
+                                        onClick={() => onTabChange(tab.value)}
+                                        className={cn(
+                                            "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium transition-all",
+                                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                                            "disabled:pointer-events-none disabled:opacity-50",
+                                            isActive
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                                        )}
+                                    >
+                                        <tab.icon className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="hidden sm:inline">{tab.label}</span>
+                                        <span className="sm:hidden">{tab.shortLabel}</span>
+                                        {(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
+                                            <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-0.5 h-4.5 min-w-4.5 px-1 text-[9px]">
+                                                {badgeCount}
+                                            </Badge>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </>
+                )}
+
+                <div className="flex-1 min-w-4" />
                 <div className="flex items-center gap-1 shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

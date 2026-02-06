@@ -49,7 +49,7 @@ export function useMovimentacoesCaixa(dataInicio?: string, dataFim?: string) {
   return useQuery({
     queryKey: ['movimentacoes-caixa', dataInicio, dataFim],
     queryFn: async () => {
-      let q = firestoreQuery(
+      const q = firestoreQuery(
         collection(db, 'movimentacoes_caixa'),
         orderBy('data', 'desc')
       );

@@ -23,7 +23,7 @@ export enum PostgresErrorCode {
   FOREIGN_KEY_VIOLATION = '23503',   // foreign_key_violation
   NOT_NULL_VIOLATION = '23502',      // not_null_violation
   CHECK_VIOLATION = '23514',         // check_violation
-  EXCLUSION_VIOLATION = '23503',     // exclusion_violation
+  EXCLUSION_VIOLATION = '23P01',     // exclusion_violation
 
   // Class 40 - Transaction Rollback
   SERIALIZATION_FAILURE = '40001',   // serialization_failure
@@ -37,7 +37,7 @@ export enum PostgresErrorCode {
 
   // Class 53 - Insufficient Resources
   INSUFFICIENT_RESOURCES = '53000',  // insufficient_resources
-  DISK_FULL = '54000',               // disk_full
+  DISK_FULL = '53100',               // disk_full
   OUT_OF_MEMORY = '53200',           // out_of_memory
 
   // Class 54 - Program Limit Exceeded

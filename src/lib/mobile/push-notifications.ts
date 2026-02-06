@@ -2,6 +2,9 @@ import { PushNotifications, PushNotificationSchema, Token, ActionPerformed } fro
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { db, getFirebaseAuth, doc, setDoc } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
+/**
  * Serviço para gerenciar Push Notifications no iOS
  */
 

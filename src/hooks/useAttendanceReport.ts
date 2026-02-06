@@ -163,7 +163,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       const endDateStr = format(end, 'yyyy-MM-dd');
 
       // Build base query
-      let baseQuery = firestoreQuery(
+      const baseQuery = firestoreQuery(
         collection(db, 'appointments'),
         where('appointment_date', '>=', startDateStr),
         where('appointment_date', '<=', endDateStr),

@@ -518,7 +518,7 @@ const Schedule = () => {
     const handleNavigate = (e: CustomEvent) => {
       const { direction } = e.detail;
       const daysToAdd = direction === 'next' ? 1 : -1;
-      let newDate = new Date(currentDate);
+      const newDate = new Date(currentDate);
 
       switch (viewType) {
         case 'day':

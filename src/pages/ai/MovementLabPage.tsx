@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,7 +57,8 @@ export default function MovementLabPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <MainLayout>
+      <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-8">
         <div className="p-3 bg-blue-100 rounded-lg">
           <ScanFace className="w-8 h-8 text-blue-600" />
@@ -117,6 +119,7 @@ export default function MovementLabPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

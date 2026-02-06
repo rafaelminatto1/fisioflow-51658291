@@ -30,6 +30,8 @@ const updateSchema = z.object({
   local: z.string().min(2, 'Local é obrigatório'),
   data_inicio: z.string(),
   data_fim: z.string(),
+  hora_inicio: z.string().optional().or(z.literal('')),
+  hora_fim: z.string().optional().or(z.literal('')),
   gratuito: z.boolean(),
   link_whatsapp: z.string().optional(),
   valor_padrao_prestador: z.number().nonnegative().default(0),
@@ -49,6 +51,8 @@ interface EditEventoModalProps {
     local: string;
     data_inicio: string;
     data_fim: string;
+    hora_inicio?: string | null;
+    hora_fim?: string | null;
     gratuito: boolean;
     link_whatsapp: string | null;
     valor_padrao_prestador: number;
@@ -80,6 +84,8 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
         local: evento.local,
         data_inicio: evento.data_inicio,
         data_fim: evento.data_fim,
+        hora_inicio: evento.hora_inicio || '',
+        hora_fim: evento.hora_fim || '',
         gratuito: evento.gratuito,
         link_whatsapp: evento.link_whatsapp || '',
         valor_padrao_prestador: Number(evento.valor_padrao_prestador),
@@ -178,6 +184,18 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
             <div>
               <Label htmlFor="data_fim">Data Fim *</Label>
               <Input id="data_fim" type="date" {...register('data_fim')} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="hora_inicio">Horário Início</Label>
+              <Input id="hora_inicio" type="time" {...register('hora_inicio')} />
+            </div>
+
+            <div>
+              <Label htmlFor="hora_fim">Horário Fim</Label>
+              <Input id="hora_fim" type="time" {...register('hora_fim')} />
             </div>
           </div>
 

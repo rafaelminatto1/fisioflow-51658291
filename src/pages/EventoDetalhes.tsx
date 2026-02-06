@@ -10,6 +10,7 @@ import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';
 import { ParticipantesTab } from '@/components/eventos/ParticipantesTab';
 import { FinanceiroTab } from '@/components/eventos/FinanceiroTab';
+import { ContratadosTab } from '@/components/eventos/ContratadosTab';
 import { EventoFinancialReportButton } from '@/components/eventos/EventoFinancialReportButton';
 import { SaveAsTemplateButton } from '@/components/eventos/SaveAsTemplateButton';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
@@ -26,6 +27,7 @@ const categoriaLabels = {
   corrida: 'Corrida',
   corporativo: 'Corporativo',
   ativacao: 'Ativação',
+  workshop: 'Workshop',
   outro: 'Outro',
 };
 
@@ -116,6 +118,11 @@ export default function EventoDetalhes() {
             <p className="text-sm">
               {new Date(evento.data_inicio).toLocaleDateString('pt-BR')} até{' '}
               {new Date(evento.data_fim).toLocaleDateString('pt-BR')}
+              {(evento.hora_inicio || evento.hora_fim) && (
+                <span className="text-muted-foreground">
+                  {' '}• {evento.hora_inicio || '--:--'} às {evento.hora_fim || '--:--'}
+                </span>
+              )}
             </p>
           </CardContent>
         </Card>
@@ -159,8 +166,9 @@ export default function EventoDetalhes() {
 
       {/* Tabs responsivos */}
       <Tabs defaultValue="prestadores" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto gap-1">
           <TabsTrigger value="prestadores" className="text-sm">Prestadores</TabsTrigger>
+          <TabsTrigger value="contratados" className="text-sm">Contratados</TabsTrigger>
           <TabsTrigger value="checklist" className="text-sm">Checklist</TabsTrigger>
           <TabsTrigger value="participantes" className="text-sm">Participantes</TabsTrigger>
           <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
@@ -168,6 +176,18 @@ export default function EventoDetalhes() {
 
         <TabsContent value="prestadores">
           <PrestadoresTab eventoId={id!} />
+        </TabsContent>
+
+        <TabsContent value="contratados">
+          <ContratadosTab
+            eventoId={id!}
+            evento={{
+              data_inicio: evento.data_inicio,
+              data_fim: evento.data_fim,
+              hora_inicio: evento.hora_inicio,
+              hora_fim: evento.hora_fim,
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="checklist">

@@ -5,6 +5,7 @@
  * @module integrations/firebase/functions
  */
 
+/* eslint-disable @typescript-eslint/no-namespace */
 import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
 import { app, getFirebaseAuth } from './app';
 import { API_URLS } from '@/lib/api/v2/config';
@@ -576,7 +577,7 @@ export const exercisesApi = {
   searchSimilar: (params: { exerciseId?: string; query?: string; limit?: number }): Promise<ExerciseApi.Exercise[]> =>
     callFunctionHttp('searchSimilarExercisesV2', params).then((r: { data: ExerciseApi.Exercise[] }) => r.data),
   getCategories: async (): Promise<ExerciseApi.Category[]> => {
-    const res = await callFunctionHttp<{}, { data: ExerciseApi.Category[] }>('getExerciseCategoriesV2', {});
+    const res = await callFunctionHttp<Record<string, never>, { data: ExerciseApi.Category[] }>('getExerciseCategoriesV2', {});
     return res.data;
   },
   getPrescribedExercises: async (patientId: string): Promise<ExerciseApi.PrescribedExercise[]> => {

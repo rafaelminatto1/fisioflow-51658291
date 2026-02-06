@@ -2,6 +2,8 @@
  * Script para executar migração de performance indexes
  */
 
+import { execSync } from 'child_process';
+
 const PROJECT_ID = 'fisioflow-migration';
 const FUNCTION_URL = 'https://us-central1-fisioflow-migration.cloudfunctions.net/createPerformanceIndexes';
 
@@ -21,7 +23,6 @@ interface MigrationResponse {
 }
 
 async function getAuthToken(): Promise<string> {
-  const { execSync } = require('child_process');
   try {
     // Try to get token from gcloud
     const token = execSync('gcloud auth print-access-token', { encoding: 'utf-8' }).trim();

@@ -79,7 +79,7 @@ export function MedicalReturnCard({ patient, patientId, onPatientUpdated }: Medi
   if (!patientId) return null;
 
   return (
-    <Card className="border-primary/20 bg-primary/5 shadow-sm h-full">
+    <Card className="border-primary/20 bg-primary/5 shadow-sm">
       <CardHeader className="pb-1.5 pt-2.5 px-3 flex flex-row items-center justify-between">
         <CardTitle className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
           <Stethoscope className="h-3 w-3 text-primary" />

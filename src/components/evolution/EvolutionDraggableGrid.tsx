@@ -136,14 +136,12 @@ const SOAPSectionWidget = React.memo(({
 
     // Sync local value when prop changes (handling external updates like AI or database load)
     // We only update if the new value is different from what we have AND different from what we last sent.
-    // This prevents race conditions where a parent re-render with "stale" data (before our debounce fired)
-    // would overwrite the user's current typing.
     React.useEffect(() => {
         if (value !== localValue && value !== lastSentValue.current) {
-            setLocalValue(value);
-            lastSentValue.current = value;
+            setLocalValue(value || '');
+            lastSentValue.current = value || '';
         }
-    }, [value]); // Intentionally not including localValue/lastSentValue to avoid loops
+    }, [value]);
 
     // Cleanup timeout on unmount
     React.useEffect(() => {
@@ -167,7 +165,7 @@ const SOAPSectionWidget = React.memo(({
                 lastSentValue.current = newValue;
                 onChange(section.key, newValue);
             }
-        }, 300); // 300ms delay for performance
+        }, 1000); // Increased to 1000ms for better typing performance
     }, [onChange, section.key]);
 
     const wordCount = React.useMemo(() =>
@@ -304,6 +302,30 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     previousEvolutions = [],
     onCopyLastEvolution
 }) => {
+    const forceDefaultLayout = true; // Layout padrão travado para todos
+    const normalizeLayout = React.useCallback((layout: Layout[], cols = 12) => {
+        if (!Array.isArray(layout)) return [];
+        return layout.map((item) => {
+            const safeW = Math.max(1, Math.min(item.w ?? 1, cols));
+            const safeH = Math.max(1, item.h ?? 1);
+            let safeX = item.x ?? 0;
+            const safeY = Math.max(0, item.y ?? 0);
+
+            if (safeX < 0) safeX = 0;
+            if (safeX + safeW > cols) {
+                safeX = Math.max(0, cols - safeW);
+            }
+
+            return {
+                ...item,
+                w: safeW,
+                h: safeH,
+                x: safeX,
+                y: safeY,
+            };
+        });
+    }, []);
+
     // State initialization with lazy loading for performance
     const [isEditable, setIsEditable] = useState(false);
     const [showPainDetails, setShowPainDetails] = useState(false);
@@ -318,7 +340,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             try {
                 const parsed = JSON.parse(saved);
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                    return { lg: parsed };
+                    return { lg: normalizeLayout(parsed) };
                 }
             } catch (e) {
                 logger.error('Failed to parse saved layout', e, 'EvolutionDraggableGrid');
@@ -326,7 +348,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         }
 
         if (profile?.preferences?.evolution_layout) {
-            return { lg: profile.preferences.evolution_layout };
+            return { lg: normalizeLayout(profile.preferences.evolution_layout) };
         }
 
         return undefined;
@@ -335,11 +357,12 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     // Update stored layouts when profile loads (if not already set by localStorage)
     useEffect(() => {
         if (!storedLayouts && profile?.preferences?.evolution_layout) {
-            setStoredLayouts({ lg: profile.preferences.evolution_layout });
+            const normalized = normalizeLayout(profile.preferences.evolution_layout);
+            setStoredLayouts({ lg: normalized });
             // Sync to local storage for faster subsequent loads
-            localStorage.setItem('evolution_layout_v1', JSON.stringify(profile.preferences.evolution_layout));
+            localStorage.setItem('evolution_layout_v1', JSON.stringify(normalized));
         }
-    }, [profile, storedLayouts]);
+    }, [normalizeLayout, profile, storedLayouts]);
 
     // Calculate Trend
     const trend = React.useMemo(() => {
@@ -389,15 +412,16 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 
     const handleLayoutChange = (layout: Layout[]) => {
         if (isEditable) {
-            setCurrentLayout(layout);
+            setCurrentLayout(normalizeLayout(layout));
         }
     };
 
     const handleSaveLayout = async () => {
         if (currentLayout.length > 0) {
+            const normalized = normalizeLayout(currentLayout);
             // 1. Save to local storage
-            localStorage.setItem('evolution_layout_v1', JSON.stringify(currentLayout));
-            setStoredLayouts({ lg: currentLayout });
+            localStorage.setItem('evolution_layout_v1', JSON.stringify(normalized));
+            setStoredLayouts({ lg: normalized });
             setIsEditable(false);
             toast.success('Layout salvo com sucesso!');
 
@@ -406,7 +430,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 try {
                     const profileRef = doc(db, 'profiles', user.id);
                     await updateDoc(profileRef, {
-                        'preferences.evolution_layout': currentLayout,
+                        'preferences.evolution_layout': normalized,
                         updated_at: new Date().toISOString(),
                     });
                     logger.info('Layout preference saved to Firestore', { userId: user.id }, 'EvolutionDraggableGrid');
@@ -468,6 +492,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     }, [onExercisesChange]);
 
     const toggleEditMode = () => {
+        if (forceDefaultLayout) {
+            return;
+        }
         if (!isEditable) {
             // When entering edit mode, initialize currentLayout with the current state of gridItems
             const initialLayout = gridItems.map(item => ({
@@ -822,9 +849,11 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         }));
 
         // Use stored layout when available (localStorage or Firestore), otherwise default
-        const desktopLayout = (storedLayouts?.lg && storedLayouts.lg.length > 0)
-            ? storedLayouts.lg
-            : lgLayout;
+        const desktopLayout = forceDefaultLayout
+            ? lgLayout
+            : (storedLayouts?.lg && storedLayouts.lg.length > 0)
+                ? normalizeLayout(storedLayouts.lg)
+                : lgLayout;
 
         // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 1 for xxs as per DraggableGrid config)
         // and stack them vertically
@@ -862,7 +891,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             xs: xsLayout,
             xxs: xxsLayout
         };
-    }, [gridItems, storedLayouts]);
+    }, [gridItems, normalizeLayout, storedLayouts, forceDefaultLayout]);
 
     return (
         <TooltipProvider>
@@ -898,10 +927,12 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                             </>
                         ) : (
                             <>
-                                <Button variant="outline" size="sm" onClick={toggleEditMode} className="h-8.5 px-3 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
-                                    <LayoutDashboard className="h-3.5 w-3.5 text-primary" />
-                                    <span className="font-semibold">Personalizar</span>
-                                </Button>
+                                {!forceDefaultLayout && (
+                                    <Button variant="outline" size="sm" onClick={toggleEditMode} className="h-8.5 px-3 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                        <LayoutDashboard className="h-3.5 w-3.5 text-primary" />
+                                        <span className="font-semibold">Personalizar</span>
+                                    </Button>
+                                )}
                             </>
                         )}
                     </div>

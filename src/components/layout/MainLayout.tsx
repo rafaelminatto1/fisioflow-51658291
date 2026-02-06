@@ -202,19 +202,23 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           tabIndex={-1}
           aria-label="Conteúdo principal"
           className={cn(
-            "flex-1 overflow-x-hidden bg-gray-50/50 dark:bg-background/50",
+            "flex-1 bg-gray-50/50 dark:bg-background/50",
             noPadding
               ? "pt-[60px] md:pt-0 pb-24 md:pb-0"
               : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
           )}
         >
           <div className={cn(
-            "mx-auto transition-all duration-300",
-            fullWidth
-              ? "w-full px-0"
-              : maxWidth
-                ? `max-w-${maxWidth} mx-auto w-full`
-                : "max-w-7xl mx-auto w-full"
+            "mx-auto transition-all duration-300 w-full",
+            fullWidth && "px-0",
+            maxWidth === 'sm' && "max-w-sm",
+            maxWidth === 'md' && "max-w-md",
+            maxWidth === 'lg' && "max-w-lg",
+            maxWidth === 'xl' && "max-w-xl",
+            maxWidth === '2xl' && "max-w-2xl",
+            maxWidth === '7xl' && "max-w-7xl",
+            maxWidth === 'full' && "max-w-full",
+            !fullWidth && !maxWidth && "max-w-7xl"
           )}>
             {showBreadcrumbs && (
               <div className="mb-6 animate-fade-in">

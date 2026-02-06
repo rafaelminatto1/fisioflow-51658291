@@ -17,7 +17,7 @@ export function useTheme(): Theme & {
   const baseColors = useBaseColors();
   const systemScheme = useColorScheme();
 
-  const theme = useMemo(() => getTheme('auto'), [baseColors, systemScheme]);
+  const theme = useMemo(() => getTheme('auto', systemScheme), [baseColors, systemScheme]);
 
   const setTheme = async (mode: 'light' | 'dark' | 'auto') => {
     await ThemePersistence.saveTheme(mode);

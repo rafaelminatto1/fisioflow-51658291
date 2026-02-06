@@ -42,10 +42,10 @@ const COLOR_CLASSES: Record<string, {
 };
 
 export const EvolutionStats = memo(({ stats, compact = false, vertical = false }: EvolutionStatsProps) => {
-    // Layout vertical para o card grande de Resumo
+    // Layout vertical para o card grande de Resumo - 2 linhas com 3 itens cada
     if (vertical) {
         return (
-            <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
                 {STAT_CONFIG.map((config, idx) => {
                     const colors = COLOR_CLASSES[config.color];
                     const rawValue = config.getVal(stats);
@@ -55,11 +55,11 @@ export const EvolutionStats = memo(({ stats, compact = false, vertical = false }
                     return (
                         <div
                             key={idx}
-                            className={`group relative overflow-hidden rounded-lg border ${colors.border} bg-card/30 backdrop-blur-sm p-3 hover:bg-card/50 transition-all`}
+                            className={`group relative overflow-hidden rounded-2xl border ${colors.border} bg-card/30 backdrop-blur-sm p-3 hover:bg-card/50 transition-all`}
                         >
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                    <div className={`p-1.5 rounded-md bg-gradient-to-br ${colors.bg}`}>
+                                    <div className={`p-1.5 rounded-xl bg-gradient-to-br ${colors.bg}`}>
                                         <config.icon className={`h-4 w-4 ${colors.text}`} />
                                     </div>
                                     <span className="text-sm font-medium text-muted-foreground">{config.label}</span>

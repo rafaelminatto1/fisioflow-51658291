@@ -33,9 +33,8 @@ import { EvolutionSummaryCard } from '@/components/evolution/EvolutionSummaryCar
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/components/ui/CommandPalette';
@@ -56,7 +55,6 @@ import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useTherapists } from '@/hooks/useTherapists';
-import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
@@ -66,6 +64,7 @@ import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
 import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
 import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
+import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts,
@@ -104,11 +103,12 @@ const PatientEvolution = () => {
   // ========== ESTADOS ==========
   // Estados SOAP
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
-  const [subjective, setSubjective] = useState('');
-  const [objective, setObjective] = useState('');
-  const [assessment, setAssessment] = useState('');
-  const [plan, setPlan] = useState('');
-  const [measurementEvolution, setMeasurementEvolution] = useState<Array<{ name: string; initial: { value: number | string; unit: string; date: string }; current: { value: number | string; unit: string; date: string }; improvement: number | string }>>([]);
+  const [soapData, setSoapData] = useState({
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: ''
+  });
 
   // Estados de UI
   const [sessionStartTime] = useState(new Date());
@@ -130,7 +130,6 @@ const PatientEvolution = () => {
   const [selectedTherapistId, setSelectedTherapistId] = useState('');
 
   // ========== HOOKS ==========
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { therapists } = useTherapists();
   // Ações de agendamento (completar atendimento)
@@ -176,20 +175,19 @@ const PatientEvolution = () => {
 
   // ========== CALLBACKS ==========
   const setSoapDataStable = useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
-    setSubjective(data.subjective);
-    setObjective(data.objective);
-    setAssessment(data.assessment);
-    setPlan(data.plan);
+    setSoapData(data);
   }, []);
 
   // ========== EFFECTS ==========
   // Carregar draft existente ao abrir a página (evolução em progresso para este agendamento)
   useEffect(() => {
     if (!draftByAppointment || currentSoapRecordId !== undefined) return;
-    setSubjective(draftByAppointment.subjective ?? '');
-    setObjective(draftByAppointment.objective ?? '');
-    setAssessment(draftByAppointment.assessment ?? '');
-    setPlan(draftByAppointment.plan ?? '');
+    setSoapData({
+      subjective: draftByAppointment.subjective ?? '',
+      objective: draftByAppointment.objective ?? '',
+      assessment: draftByAppointment.assessment ?? '',
+      plan: draftByAppointment.plan ?? ''
+    });
     if (draftByAppointment.pain_level !== undefined) {
       setPainScale({
         level: draftByAppointment.pain_level,
@@ -335,15 +333,6 @@ const PatientEvolution = () => {
     [sessionStartTime]
   );
 
-  // ========== MEMOIZED SOAP DATA (Performance Optimization) ==========
-  // Memoize soapData object to prevent unnecessary re-renders of EvolutionDraggableGrid
-  const soapData = useMemo(() => ({
-    subjective,
-    objective,
-    assessment,
-    plan
-  }), [subjective, objective, assessment, plan]);
-
   // Memoize painHistory array to prevent recreation on every render
   const painHistory = useMemo(() =>
     previousEvolutions
@@ -391,7 +380,7 @@ const PatientEvolution = () => {
 
   // ========== AUTO-SAVE ==========
   const { lastSavedAt } = useAutoSave({
-    data: { subjective, objective, assessment, plan },
+    data: soapData,
     onSave: async (data) => {
       if (!patientId || !appointmentId) return;
       if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
@@ -428,10 +417,12 @@ const PatientEvolution = () => {
     pain_location?: string;
     pain_character?: string;
   }) => {
-    setSubjective(evolution.subjective || '');
-    setObjective(evolution.objective || '');
-    setAssessment(evolution.assessment || '');
-    setPlan(evolution.plan || '');
+    setSoapData({
+      subjective: evolution.subjective || '',
+      objective: evolution.objective || '',
+      assessment: evolution.assessment || '',
+      plan: evolution.plan || ''
+    });
 
     if (evolution.pain_level !== undefined) {
       setPainScale({
@@ -463,7 +454,7 @@ const PatientEvolution = () => {
       return;
     }
 
-    if (!subjective && !objective && !assessment && !plan) {
+    if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
       toast({
         title: 'Campos vazios',
         description: 'Preencha pelo menos um campo antes de salvar.',
@@ -482,10 +473,7 @@ const PatientEvolution = () => {
         patient_id: patientId,
         appointment_id: appointmentId,
         recordId: currentSoapRecordId,
-        subjective,
-        objective,
-        assessment,
-        plan,
+        ...soapData,
         pain_level: painScale.level,
         pain_location: painScale.location,
         pain_character: painScale.character
@@ -545,7 +533,7 @@ const PatientEvolution = () => {
   };
 
   const handleCompleteSession = async () => {
-    if (!subjective && !objective && !assessment && !plan) {
+    if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
       toast({
         title: 'Complete a evolução',
         description: 'Preencha os campos SOAP antes de concluir o atendimento.',
@@ -791,6 +779,11 @@ const PatientEvolution = () => {
             selectedTherapistId={selectedTherapistId}
             onTherapistChange={setSelectedTherapistId}
             previousEvolutionsCount={previousEvolutions.length}
+            tabsConfig={tabsConfig}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            pendingRequiredMeasurements={pendingRequiredMeasurements.length}
+            upcomingGoalsCount={upcomingGoals.length}
           />
 
           {/* Alerta de Testes Obrigatórios */}
@@ -817,51 +810,26 @@ const PatientEvolution = () => {
 
           {/* Abas de Navegação */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
-            <TabsList className="inline-flex h-11 sm:h-12 items-center justify-start rounded-xl border-b border-border/50 bg-muted/30 p-1.5 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide sticky top-[8.5rem] z-20 backdrop-blur-sm">
-              {tabsConfig.map(tab => {
-                const avaliacaoBadge = tab.value === 'avaliacao' && pendingRequiredMeasurements.length > 0;
-                const tratamentoBadge = tab.value === 'tratamento' && upcomingGoals.length > 0;
-                const badgeCount = tab.value === 'avaliacao' ? pendingRequiredMeasurements.length : tab.value === 'tratamento' ? upcomingGoals.length : 0;
-                return (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ''}`}
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md data-[state=active]:border-b-2 data-[state=active]:border-primary gap-1.5 sm:gap-2 min-w-fit touch-target"
-                  >
-                    <tab.icon className="h-4 w-4 shrink-0" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden">{tab.shortLabel}</span>
-                    {(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
-                      <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-1 h-5 min-w-5 px-1.5 text-[10px]">
-                        {badgeCount}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
-              {/* Layout: 3 cards à esquerda em 2 linhas | 1 card de Resumo à direita ocupando 2 linhas */}
-              <div className="grid grid-cols-1 lg:grid-cols-[192px_192px_1fr] lg:grid-rows-[auto_auto] gap-3">
-                {/* Linha 1, Coluna 1: Retorno Médico */}
+              {/* Layout: 3 cards na linha 1 | Metas na linha 2 | Resumo ocupando 2 linhas à direita */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-[auto_auto] gap-3">
+                {/* Linha 1, Coluna 1: Retorno Médico (25%) */}
                 <MedicalReturnCard
                   patient={patient}
                   patientId={patientId || undefined}
                   onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
                 />
-                {/* Linha 1, Coluna 2: Cirurgias */}
+                {/* Linha 1, Coluna 2: Cirurgias (25%) */}
                 <SurgeriesCard patientId={patientId || undefined} />
-                {/* Linha 1-2, Coluna 3: Resumo - ocupa 2 linhas */}
-                <div className="lg:row-span-2">
+                {/* Linha 1-2, Coluna 3-4: Resumo (50% lateralmente, 2 linhas verticalmente) */}
+                <div className="lg:col-span-2 lg:row-span-2">
                   <EvolutionSummaryCard stats={evolutionStats} />
                 </div>
-                {/* Linha 2, Coluna 1: Metas */}
-                <MetasCard patientId={patientId || undefined} />
-                {/* Linha 2, Coluna 2: espaço vazio */}
-                <div></div>
+                {/* Linha 2, Coluna 1-2: Metas (50%) */}
+                <div className="lg:col-span-2">
+                  <MetasCard patientId={patientId || undefined} />
+                </div>
               </div>
               <Suspense fallback={<LoadingSkeleton type="card" />}>
                 <LazyEvolutionDraggableGrid
@@ -875,10 +843,7 @@ const PatientEvolution = () => {
                   onCopyLast={(section) => {
                     if (previousEvolutions.length > 0) {
                       const last = previousEvolutions[0];
-                      if (section === 'subjective') setSubjective(last.subjective || '');
-                      if (section === 'objective') setObjective(last.objective || '');
-                      if (section === 'assessment') setAssessment(last.assessment || '');
-                      if (section === 'plan') setPlan(last.plan || '');
+                      setSoapData(prev => ({ ...prev, [section]: last[section] || '' }));
                       toast({
                         title: 'Copiado',
                         description: `Texto de ${section} copiado da última sessão.`
@@ -892,7 +857,7 @@ const PatientEvolution = () => {
                   exercises={sessionExercises}
                   onExercisesChange={setSessionExercises}
                   onSuggestExercises={() => {
-                    const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, assessment || '');
+                    const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, soapData.assessment || '');
                     setSessionExercises(suggestions);
                     toast({
                       title: 'Sugestões Aplicadas',
@@ -1014,10 +979,7 @@ const PatientEvolution = () => {
                   patientId={patientId!}
                   patientName={PatientHelpers.getName(patient)}
                   onApplyToSoap={(field, content) => {
-                    if (field === 'subjective') setSubjective(prev => prev + content);
-                    if (field === 'objective') setObjective(prev => prev + content);
-                    if (field === 'assessment') setAssessment(prev => prev + content);
-                    if (field === 'plan') setPlan(prev => prev + content);
+                    setSoapData(prev => ({ ...prev, [field]: prev[field] + content }));
                     setActiveTab('evolucao');
                     toast({
                       title: 'Sugestão aplicada',

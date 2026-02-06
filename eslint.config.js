@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "**/*.mjs", "test-*.js", "manual-test.js", "create-test-users.mjs", "public/sw.js", "scripts/**", "supabase/**", "src/test/**", "src/**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "e2e/**", "vitest.setup.ts"] },
+  { ignores: ["dist", "**/dist/**", "**/*.mjs", "test-*.js", "manual-test.js", "create-test-users.mjs", "public/sw.js", "scripts/**", "supabase/**", "src/test/**", "src/**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "e2e/**", "vitest.setup.ts"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

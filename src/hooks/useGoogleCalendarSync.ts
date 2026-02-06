@@ -279,6 +279,7 @@ export function useGoogleCalendarSync(options: UseGoogleCalendarSyncOptions = {}
     window.location.href = authUrl;
   }, [getAuthUrl]);
 
+  /**
    * Sincronizar um appointment
    */
   const syncAppointment = useCallback(async (appointment: Appointment) => {

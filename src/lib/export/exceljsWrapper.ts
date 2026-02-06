@@ -92,7 +92,7 @@ class ExcelJSUtils implements Utils {
   }
 
   book_append_sheet(wb: WorkBook, ws: WorkSheet, name: string): void {
-    const safeName = name.replace(/[\\/?*\[\]]/g, '').slice(0, 31);
+    const safeName = name.replace(/[\\/?*\u005B\u005D]/g, '').slice(0, 31);
     wb.SheetNames.push(safeName);
     wb.Sheets[safeName] = ws;
   }

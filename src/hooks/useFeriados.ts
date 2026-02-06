@@ -36,7 +36,7 @@ export function useFeriados(year?: number) {
   return useQuery({
     queryKey: ['feriados', year],
     queryFn: async () => {
-      let q = firestoreQuery(
+      const q = firestoreQuery(
         collection(db, 'feriados'),
         orderBy('data')
       );

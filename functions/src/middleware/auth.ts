@@ -117,7 +117,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
 
   try {
     // First try PostgreSQL
-    let result = await pool.query<ProfileData>(
+    const result = await pool.query<ProfileData>(
       `SELECT id, user_id, organization_id, role, full_name, email, is_active
        FROM profiles
        WHERE user_id = $1`,

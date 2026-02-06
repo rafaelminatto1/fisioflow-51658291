@@ -3,8 +3,6 @@
  * Auto-generated clinical and administrative reports using Vertex AI
  */
 
-// @ts-nocheck - TypeScript strict mode issues, not critical for monitoring functionality
-
 import { onCall, onRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { VertexAI } from '@google-cloud/vertexai';
@@ -246,7 +244,7 @@ export const getReport = onCall(
         throw new HttpsError('not-found', 'Report not found');
       }
 
-      const reportData = doc.data();
+      const reportData = doc.data() as Record<string, any>;
 
       return {
         success: true,
@@ -309,7 +307,7 @@ export const downloadReport = onRequest(
         return;
       }
 
-      const report = doc.data();
+      const report = doc.data() as Record<string, any>;
 
       // Determine content type
       let contentType = 'text/markdown';
@@ -592,10 +590,10 @@ async function generateReportContent(
   const systemPrompt = getSystemPromptForReportType(type);
   const userPrompt = buildPromptForReportType(type, data, options);
 
-  const result = await model.generateContent({
-    systemInstruction: systemPrompt,
-    contents: userPrompt,
-  });
+    const result = await model.generateContent({
+      systemInstruction: systemPrompt,
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    });
 
   const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
@@ -763,7 +761,7 @@ function markdownToHtml(markdown: string): string {
   html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
 
   // Lists
-  html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
   html = html.replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>');
 
   // Line breaks

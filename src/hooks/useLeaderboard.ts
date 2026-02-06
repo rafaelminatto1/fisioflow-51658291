@@ -69,7 +69,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
     queryFn: async (): Promise<{ leaderboard: LeaderboardEntry[]; totalCount: number }> => {
       // Build base query
       const sortColumn = filters.sortBy === 'total_xp' ? 'total_points' : filters.sortBy;
-      let baseQuery = firestoreQuery(
+      const baseQuery = firestoreQuery(
         collection(db, 'patient_gamification'),
         orderBy(sortColumn, filters.order === 'asc' ? 'asc' : 'desc')
       );

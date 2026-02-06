@@ -103,20 +103,22 @@ export default function TimeTrackingPage() {
         startDate = startOfWeek(now, { locale: ptBR });
         endDate = endOfWeek(now, { locale: ptBR });
         break;
-      case 'last_week':
+      case 'last_week': {
         const lastWeek = subDays(now, 7);
         startDate = startOfWeek(lastWeek, { locale: ptBR });
         endDate = endOfWeek(lastWeek, { locale: ptBR });
         break;
+      }
       case 'this_month':
         startDate = startOfMonth(now);
         endDate = endOfMonth(now);
         break;
-      case 'last_month':
+      case 'last_month': {
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
         startDate = startOfMonth(lastMonth);
         endDate = endOfMonth(lastMonth);
         break;
+      }
       case 'all_time':
         startDate = new Date(0);
         endDate = now;

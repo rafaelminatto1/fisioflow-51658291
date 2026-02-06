@@ -108,7 +108,7 @@ async function generateNoShowAlerts(organizationId: string): Promise<ProactiveSu
       where('patient_id', '==', patientId),
       where('status', '==', 'falta'),
       orderBy('appointment_date', 'desc'),
-      // @ts-ignore
+      // @ts-expect-error - firestore limit typing mismatch
       limit(5)
     );
 
@@ -120,7 +120,7 @@ async function generateNoShowAlerts(organizationId: string): Promise<ProactiveSu
       collection(db, 'appointments'),
       where('patient_id', '==', patientId),
       orderBy('appointment_date', 'desc'),
-      // @ts-ignore
+      // @ts-expect-error - firestore limit typing mismatch
       limit(1)
     );
 
@@ -280,7 +280,7 @@ async function generateRetentionWarnings(organizationId: string): Promise<Proact
       collection(db, 'appointments'),
       where('patient_id', '==', patientId),
       orderBy('appointment_date', 'desc'),
-      // @ts-ignore
+      // @ts-expect-error - firestore limit typing mismatch
       limit(1)
     );
 

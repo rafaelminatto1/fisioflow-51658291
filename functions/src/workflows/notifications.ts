@@ -176,6 +176,219 @@ export const sendNotification = onCall(
 );
 
 // ============================================================================
+// CALLABLE FUNCTION: Schedule Appointment Notification
+// ============================================================================
+
+export const notifyAppointmentScheduled = onCall(
+  {
+    cors: CORS_ORIGINS,
+    region: 'southamerica-east1',
+  },
+  async (request): Promise<{ success: boolean; notificationId?: string; result?: NotificationResult }> => {
+    const { data, auth } = request;
+
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { appointmentId, patientId, date, time, patientName, organizationId } = data as {
+      appointmentId: string;
+      patientId: string;
+      date: string;
+      time: string;
+      patientName?: string;
+      organizationId?: string;
+    };
+
+    if (!appointmentId || !patientId || !date || !time) {
+      throw new HttpsError('invalid-argument', 'Missing required fields');
+    }
+
+    const db = getAdminDb();
+
+    const notificationData: SendNotificationData['data'] = {
+      to: patientId,
+      subject: 'Lembrete de Consulta',
+      body: `Olá ${patientName || 'paciente'}, você tem uma consulta agendada para ${new Date(date).toLocaleDateString('pt-BR')} às ${time}.`,
+      appointmentId,
+      action: 'appointment_reminder',
+    };
+
+    const notificationRef = getNotificationsCollection().doc();
+    const notificationId = notificationRef.id;
+
+    const notificationDoc: NotificationDocument = {
+      user_id: patientId,
+      organization_id: organizationId || 'system',
+      type: 'push',
+      channel: 'push',
+      status: 'pending',
+      data: notificationData,
+      created_at: new Date().toISOString(),
+      retry_count: 0,
+    };
+
+    await notificationRef.create(notificationDoc);
+
+    const result = await sendNotificationByType('push', notificationData, db, patientId);
+
+    await notificationRef.update({
+      status: result.sent ? 'sent' : 'failed',
+      sent_at: FieldValue.serverTimestamp(),
+      error_message: result.error || null,
+    });
+
+    return {
+      success: result.sent,
+      notificationId,
+      result,
+    };
+  }
+);
+
+// ============================================================================
+// CALLABLE FUNCTION: Reschedule Appointment Notification
+// ============================================================================
+
+export const notifyAppointmentReschedule = onCall(
+  {
+    cors: CORS_ORIGINS,
+    region: 'southamerica-east1',
+  },
+  async (request): Promise<{ success: boolean; notificationId?: string; result?: NotificationResult }> => {
+    const { data, auth } = request;
+
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { appointmentId, patientId, newDate, newTime, patientName, organizationId } = data as {
+      appointmentId: string;
+      patientId: string;
+      newDate: string;
+      newTime: string;
+      patientName?: string;
+      organizationId?: string;
+    };
+
+    if (!appointmentId || !patientId || !newDate || !newTime) {
+      throw new HttpsError('invalid-argument', 'Missing required fields');
+    }
+
+    const db = getAdminDb();
+
+    const notificationData: SendNotificationData['data'] = {
+      to: patientId,
+      subject: 'Consulta Reagendada',
+      body: `Olá ${patientName || 'paciente'}, sua consulta foi reagendada para ${new Date(newDate).toLocaleDateString('pt-BR')} às ${newTime}.`,
+      appointmentId,
+      action: 'appointment_reschedule',
+    };
+
+    const notificationRef = getNotificationsCollection().doc();
+    const notificationId = notificationRef.id;
+
+    const notificationDoc: NotificationDocument = {
+      user_id: patientId,
+      organization_id: organizationId || 'system',
+      type: 'push',
+      channel: 'push',
+      status: 'pending',
+      data: notificationData,
+      created_at: new Date().toISOString(),
+      retry_count: 0,
+    };
+
+    await notificationRef.create(notificationDoc);
+
+    const result = await sendNotificationByType('push', notificationData, db, patientId);
+
+    await notificationRef.update({
+      status: result.sent ? 'sent' : 'failed',
+      sent_at: FieldValue.serverTimestamp(),
+      error_message: result.error || null,
+    });
+
+    return {
+      success: result.sent,
+      notificationId,
+      result,
+    };
+  }
+);
+
+// ============================================================================
+// CALLABLE FUNCTION: Cancel Appointment Notification
+// ============================================================================
+
+export const notifyAppointmentCancellation = onCall(
+  {
+    cors: CORS_ORIGINS,
+    region: 'southamerica-east1',
+  },
+  async (request): Promise<{ success: boolean; notificationId?: string; result?: NotificationResult }> => {
+    const { data, auth } = request;
+
+    if (!auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { appointmentId, patientId, date, time, patientName, organizationId } = data as {
+      appointmentId: string;
+      patientId: string;
+      date: string;
+      time: string;
+      patientName?: string;
+      organizationId?: string;
+    };
+
+    if (!appointmentId || !patientId || !date || !time) {
+      throw new HttpsError('invalid-argument', 'Missing required fields');
+    }
+
+    const db = getAdminDb();
+
+    const notificationData: SendNotificationData['data'] = {
+      to: patientId,
+      subject: 'Consulta Cancelada',
+      body: `Olá ${patientName || 'paciente'}, sua consulta de ${new Date(date).toLocaleDateString('pt-BR')} às ${time} foi cancelada.`,
+      appointmentId,
+      action: 'appointment_cancellation',
+    };
+
+    const notificationRef = getNotificationsCollection().doc();
+    const notificationId = notificationRef.id;
+
+    const notificationDoc: NotificationDocument = {
+      user_id: patientId,
+      organization_id: organizationId || 'system',
+      type: 'push',
+      channel: 'push',
+      status: 'pending',
+      data: notificationData,
+      created_at: new Date().toISOString(),
+      retry_count: 0,
+    };
+
+    await notificationRef.create(notificationDoc);
+
+    const result = await sendNotificationByType('push', notificationData, db, patientId);
+
+    await notificationRef.update({
+      status: result.sent ? 'sent' : 'failed',
+      sent_at: FieldValue.serverTimestamp(),
+      error_message: result.error || null,
+    });
+
+    return {
+      success: result.sent,
+      notificationId,
+      result,
+    };
+  }
+);
+
+// ============================================================================
 // CALLABLE FUNCTION: Send Batch Notifications
 // ============================================================================
 

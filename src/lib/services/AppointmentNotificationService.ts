@@ -1,6 +1,4 @@
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { inngest } from '@/lib/inngest/client';
-import { Events } from '@/lib/inngest/types';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
@@ -33,21 +31,15 @@ export class AppointmentNotificationService {
 
       logger.info('Agendando notificação para consulta', { appointmentId, date, time }, 'AppointmentNotificationService');
 
-      // Trigger Inngest Event
-      await inngest.send({
-        name: Events.NOTIFICATION_SEND,
-        data: {
-          userId: patientId,
-          organizationId: 'system', // or derive from context
-          type: 'push',
-          data: {
-            to: patientId, // For push, 'to' is userId usually, or handled by logic
-            subject: 'Lembrete de Consulta',
-            body: `Olá ${patientName}, você tem uma consulta agendada para ${date.toLocaleDateString('pt-BR')} às ${time}.`,
-            appointmentId,
-            action: 'appointment_reminder'
-          }
-        }
+      // Call Firebase Cloud Function to schedule reminder notification (if implemented)
+      const functions = getFirebaseFunctions();
+      const notifyScheduleFn = httpsCallable(functions, 'notifyAppointmentScheduled');
+      await notifyScheduleFn({
+        appointmentId,
+        patientId,
+        date: date.toISOString(),
+        time,
+        patientName,
       });
 
       logger.info('Notificação agendada com sucesso (placeholder)', { appointmentId }, 'AppointmentNotificationService');

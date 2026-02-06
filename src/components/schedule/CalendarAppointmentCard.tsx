@@ -1,6 +1,6 @@
 import React, { memo, useState, forwardRef } from 'react';
 import { Appointment } from '@/types/appointment';
-import { CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
+import { CARD_SIZE_CONFIGS, normalizeStatus } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
 import { MoreVertical, GripVertical, CheckCircle2, Circle, Loader2 } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
@@ -97,6 +97,42 @@ const getStatusStyles = (status: string) => {
             accent: 'bg-teal-600',
             indicator: 'text-teal-700'
         },
+        reagendado: {
+            border: 'border-lime-500',
+            bg: 'bg-lime-50/95 dark:bg-lime-500/20',
+            hoverBg: 'hover:bg-lime-100/95 dark:hover:bg-lime-500/30',
+            text: 'text-lime-900 dark:text-lime-400',
+            subtext: 'text-lime-800/90 dark:text-lime-300/90',
+            accent: 'bg-lime-600',
+            indicator: 'text-lime-700'
+        },
+        atrasado: {
+            border: 'border-orange-500',
+            bg: 'bg-orange-50/95 dark:bg-orange-500/20',
+            hoverBg: 'hover:bg-orange-100/95 dark:hover:bg-orange-500/30',
+            text: 'text-orange-900 dark:text-orange-400',
+            subtext: 'text-orange-800/90 dark:text-orange-300/90',
+            accent: 'bg-orange-600',
+            indicator: 'text-orange-700'
+        },
+        aguardando_confirmacao: {
+            border: 'border-amber-500',
+            bg: 'bg-amber-50/95 dark:bg-amber-500/20',
+            hoverBg: 'hover:bg-amber-100/95 dark:hover:bg-amber-500/30',
+            text: 'text-amber-900 dark:text-amber-400',
+            subtext: 'text-amber-800/90 dark:text-amber-300/90',
+            accent: 'bg-amber-600',
+            indicator: 'text-amber-700'
+        },
+        em_espera: {
+            border: 'border-blue-500',
+            bg: 'bg-blue-50/95 dark:bg-blue-500/20',
+            hoverBg: 'hover:bg-blue-100/95 dark:hover:bg-blue-500/30',
+            text: 'text-blue-900 dark:text-blue-400',
+            subtext: 'text-blue-800/90 dark:text-blue-300/90',
+            accent: 'bg-blue-600',
+            indicator: 'text-blue-700'
+        },
         avaliacao: {
             border: 'border-violet-500',
             bg: 'bg-violet-50/95 dark:bg-violet-500/20',
@@ -116,7 +152,7 @@ const getStatusStyles = (status: string) => {
             indicator: 'text-slate-700'
         }
     };
-    return styles[status as keyof typeof styles] || styles.default;
+    return styles[normalizeStatus(status) as keyof typeof styles] || styles.default;
 };
 
 const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointmentCardProps>(({

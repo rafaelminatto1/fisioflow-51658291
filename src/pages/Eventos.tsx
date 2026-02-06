@@ -61,6 +61,9 @@ interface Evento {
   status: string;
   categoria: string;
   data_inicio: string;
+  data_fim?: string;
+  hora_inicio?: string | null;
+  hora_fim?: string | null;
   local: string;
   gratuito: boolean;
 }

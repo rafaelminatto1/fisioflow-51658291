@@ -397,10 +397,11 @@ export function useKeyboardNavigation(
         break;
 
       case KEYS.ENTER:
-      case KEYS.SPACE:
+      case KEYS.SPACE: {
         const focusedItem = items[focusedIndex];
         focusedItem?.element?.click();
         break;
+      }
     }
   };
 

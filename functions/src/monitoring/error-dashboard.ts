@@ -6,6 +6,7 @@
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
+import * as crypto from 'crypto';
 
 const logger = getLogger('error-dashboard');
 const db = admin.firestore();
@@ -113,7 +114,6 @@ export async function logError(error: {
  * Generate error hash for deduplication
  */
 function generateErrorHash(func: string, type: string, message: string): string {
-  const crypto = require('crypto');
   const data = `${func}:${type}:${message}`;
   return crypto.createHash('sha256').update(data).digest('hex').substring(0, 16);
 }
@@ -700,4 +700,3 @@ function getTimeBuckets(period: string): TimeBucket[] {
 
   return buckets;
 }
-

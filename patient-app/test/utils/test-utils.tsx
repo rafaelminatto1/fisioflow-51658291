@@ -178,7 +178,7 @@ export const MockFirebase = {
 export const MockAsync = {
   delay: (ms: number = 100) => new Promise(resolve => setTimeout(resolve, ms)),
 
-  success: async <T>(data: T, delay: number = 100): Promise<T> => {
+  success: async <T,>(data: T, delay: number = 100): Promise<T> => {
     await MockAsync.delay(delay);
     return data;
   },

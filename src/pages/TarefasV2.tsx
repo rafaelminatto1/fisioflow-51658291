@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import {
   LayoutGrid,
   LayoutList,
@@ -65,8 +65,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { KanbanBoardV2 } from '@/components/tarefas/v2';
-import { TaskDetailModal } from '@/components/tarefas/v2/TaskDetailModal';
-import { TaskQuickCreateModal } from '@/components/tarefas/v2/TaskQuickCreateModal';
+import { LazyTaskDetailModal, LazyTaskQuickCreateModal } from '@/components/tarefas/v2/LazyComponents';
 import { TaskTableVirtualized } from '@/components/tarefas/virtualized/TaskTableVirtualized';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import {
@@ -1233,18 +1232,22 @@ export default function TarefasV2() {
       </div>
 
       {/* Modals */}
-      <TaskQuickCreateModal
-        open={quickCreateOpen}
-        onOpenChange={setQuickCreateOpen}
-        defaultStatus="A_FAZER"
-      />
+      <Suspense fallback={<LoadingSkeleton type="card" className="w-full h-64" />}>
+        <LazyTaskQuickCreateModal
+          open={quickCreateOpen}
+          onOpenChange={setQuickCreateOpen}
+          defaultStatus="A_FAZER"
+        />
+      </Suspense>
 
-      <TaskDetailModal
-        open={detailModalOpen}
-        onOpenChange={setDetailModalOpen}
-        tarefa={selectedTarefa}
-        teamMembers={teamMembers || []}
-      />
+      <Suspense fallback={<LoadingSkeleton type="card" className="w-full h-64" />}>
+        <LazyTaskDetailModal
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          tarefa={selectedTarefa}
+          teamMembers={teamMembers || []}
+        />
+      </Suspense>
     </MainLayout>
   );
 }

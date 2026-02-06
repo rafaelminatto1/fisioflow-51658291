@@ -31,6 +31,16 @@ const eventoBaseSchema = z.object({
     required_error: 'Data de fim é obrigatória',
     invalid_type_error: 'Data de fim inválida',
   }),
+  hora_inicio: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, 'Horário inválido (use HH:MM)')
+    .optional()
+    .or(z.literal('')),
+  hora_fim: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, 'Horário inválido (use HH:MM)')
+    .optional()
+    .or(z.literal('')),
   gratuito: z.boolean().default(false),
   link_whatsapp: z
     .string()
@@ -51,13 +61,21 @@ const eventoBaseSchema = z.object({
 });
 
 // Schema para criar evento com validação de datas
-export const eventoCreateSchema = eventoBaseSchema.refine(
-  (data) => data.data_fim >= data.data_inicio,
-  {
+export const eventoCreateSchema = eventoBaseSchema
+  .refine((data) => data.data_fim >= data.data_inicio, {
     message: 'Data de fim deve ser posterior ou igual à data de início',
     path: ['data_fim'],
-  }
-);
+  })
+  .refine(
+    (data) => {
+      if (!data.hora_inicio || !data.hora_fim) return true;
+      return data.hora_fim >= data.hora_inicio;
+    },
+    {
+      message: 'Horário de fim deve ser posterior ao de início',
+      path: ['hora_fim'],
+    }
+  );
 
 // Schema para atualizar evento (baseado no schema base, não no refinado)
 export const eventoUpdateSchema = eventoBaseSchema.partial().extend({

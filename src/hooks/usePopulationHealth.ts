@@ -59,7 +59,7 @@ export function usePopulationHealthAnalysis(options: UsePopulationHealthOptions 
 
   // Calculate date range
   let startDateCalculated: Date;
-  let endDateCalculated = endDate || new Date();
+  const endDateCalculated = endDate || new Date();
 
   if (startDate) {
     startDateCalculated = startDate;

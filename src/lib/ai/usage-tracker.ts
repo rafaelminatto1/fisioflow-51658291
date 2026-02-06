@@ -440,7 +440,7 @@ class AIUsageMonitorService {
     feature?: AIFeatureCategory
   ): Promise<AIUsageRecord[]> {
     try {
-      let q = firestoreQuery(
+      const q = firestoreQuery(
         collection(db, this.collectionName),
         where('userId', '==', userId),
         where('timestamp', '>=', startDate.toISOString())

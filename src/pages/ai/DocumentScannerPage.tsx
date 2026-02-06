@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,7 +73,8 @@ export default function DocumentScannerPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <MainLayout>
+      <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-8">
         <div className="p-3 bg-green-100 rounded-lg">
           <FileSearch className="w-8 h-8 text-green-600" />
@@ -163,6 +165,7 @@ export default function DocumentScannerPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

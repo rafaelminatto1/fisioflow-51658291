@@ -21,7 +21,7 @@ interface EvolutionSummaryCardProps {
 
 export function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
   return (
-    <Card className="border-primary/20 bg-primary/5 flex flex-col h-full shadow-sm overflow-hidden">
+    <Card className="border-primary/20 bg-primary/5 flex flex-col shadow-sm overflow-hidden">
       <CardHeader className="pb-3 pt-4 px-4 flex-shrink-0">
         <CardTitle className="text-sm flex items-center gap-2">
           <BarChart2 className="h-4 w-4 text-primary" />

@@ -8,6 +8,7 @@
  */
 
 import { firestore, auth } from 'firebase-admin';
+import { getStorage } from 'firebase-admin/storage';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 
@@ -270,7 +271,7 @@ export const executeAccountDeletion = onCall({
 async function deleteUserData(userId: string) {
   logger.info(`Processando deleção de dados para usuário: ${userId}`);
 
-  const storage = require('firebase-admin/storage').bucket();
+  const storage = getStorage().bucket();
   const batch = firestore().batch();
   const deletedCollections: string[] = [];
   const anonymizedCollections: string[] = [];

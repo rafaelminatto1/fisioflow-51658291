@@ -3,8 +3,6 @@
  * Comprehensive theme configuration with light/dark modes
  */
 
-import { useColorScheme } from 'react-native';
-import { useColorScheme as useReactNativeColorScheme } from '@/hooks/useColorScheme';
 import { AsyncStorage } from '@/lib/storage';
 
 /**
@@ -258,8 +256,10 @@ export interface Theme {
 /**
  * Get theme based on color scheme
  */
-export function getTheme(mode: 'light' | 'dark' | 'auto' = 'auto'): Theme {
-  const systemScheme = useReactNativeColorScheme();
+export function getTheme(
+  mode: 'light' | 'dark' | 'auto' = 'auto',
+  systemScheme?: 'light' | 'dark' | null
+): Theme {
   const resolvedMode = mode === 'auto' ? systemScheme || 'light' : mode;
 
   return {

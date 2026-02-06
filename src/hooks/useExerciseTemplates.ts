@@ -77,7 +77,7 @@ export const useExerciseTemplates = (category?: string) => {
   const { data: templates = [], isLoading, error } = useQuery({
     queryKey: ['exercise-templates', category],
     queryFn: async () => {
-      let q = firestoreQuery(
+      const q = firestoreQuery(
         collection(db, 'exercise_templates'),
         orderBy('condition_name')
       );

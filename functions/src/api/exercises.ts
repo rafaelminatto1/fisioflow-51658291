@@ -523,7 +523,7 @@ export const getExerciseCategoriesHandler = async (request: any) => {
   }
 };
 
-export const getExerciseCategories = onCall<{}, Promise<GetExerciseCategoriesResponse>>(
+export const getExerciseCategories = onCall<Record<string, never>, Promise<GetExerciseCategoriesResponse>>(
   { cors: CORS_ORIGINS },
   getExerciseCategoriesHandler
 );
