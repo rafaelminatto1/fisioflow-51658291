@@ -39,10 +39,10 @@ setGlobalOptions({
     ],
     // Reduced maxInstances to prevent cost spikes and CPU Quota errors
     maxInstances: 1,
-    // Set CPU allocation for all functions (2 vCPUs for better performance)
-    cpu: 2,
-    // Set default memory for all functions (increased to match 2 vCPU requirement)
-    memory: '1GiB',
+    // Set default memory for all functions
+    memory: '512MiB',
+    // Set default CPU for all functions (1 vCPU is enough for most tasks)
+    cpu: 1,
     // Set timeout for all functions (default is 60s for Gen 2)
     timeoutSeconds: 60,
     // Keep minimum instances warm for critical functions (reduces cold starts)
@@ -387,55 +387,82 @@ export const createPerformanceIndexes = onCall(async (request) => {
 // were using incompatible Genkit flows and have been temporarily removed.
 // The core AI functionality is still available via the existing ai/ module functions.
 
-export const aiMovementAnalysis = onCall(async (request) => {
-    const { movementAnalysisHandler } = await import('./ai/movement-analysis');
-    return movementAnalysisHandler(request);
-});
+export const aiMovementAnalysis = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { movementAnalysisHandler } = await import('./ai/movement-analysis');
+        return movementAnalysisHandler(request);
+    }
+);
 
 // New AI Functions (Clinical Assistant)
-export const aiClinicalChat = onCall(async (request) => {
-    const { aiClinicalChatHandler } = await import('./ai/clinical-chat');
-    return aiClinicalChatHandler(request);
-});
+export const aiClinicalChat = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { aiClinicalChatHandler } = await import('./ai/clinical-chat');
+        return aiClinicalChatHandler(request);
+    }
+);
 
-export const aiExerciseRecommendationChat = onCall(async (request) => {
-    const { aiExerciseRecommendationChatHandler } = await import('./ai/clinical-chat');
-    return aiExerciseRecommendationChatHandler(request);
-});
+export const aiExerciseRecommendationChat = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { aiExerciseRecommendationChatHandler } = await import('./ai/clinical-chat');
+        return aiExerciseRecommendationChatHandler(request);
+    }
+);
 
-export const aiSoapNoteChat = onCall(async (request) => {
-    const { aiSoapNoteChatHandler } = await import('./ai/clinical-chat');
-    return aiSoapNoteChatHandler(request);
-});
+export const aiSoapNoteChat = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { aiSoapNoteChatHandler } = await import('./ai/clinical-chat');
+        return aiSoapNoteChatHandler(request);
+    }
+);
 
-export const aiGetSuggestions = onCall(async (request) => {
-    const { aiGetSuggestionsHandler } = await import('./ai/clinical-chat');
-    return aiGetSuggestionsHandler(request);
-});
+export const aiGetSuggestions = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { aiGetSuggestionsHandler } = await import('./ai/clinical-chat');
+        return aiGetSuggestionsHandler(request);
+    }
+);
 
-export const getPatientAISummaryHttp = onRequest(async (req: any, res: any) => {
-    const { getPatientAISummaryHttpHandler } = await import('./api/ai-assistant');
-    return getPatientAISummaryHttpHandler(req, res);
-});
+export const getPatientAISummaryHttp = onRequest(
+    { cpu: 2, memory: '1GiB' },
+    async (req: any, res: any) => {
+        const { getPatientAISummaryHttpHandler } = await import('./api/ai-assistant');
+        return getPatientAISummaryHttpHandler(req, res);
+    }
+);
 
-export const getClinicalInsightsHttp = onRequest(async (req: any, res: any) => {
-    const { getClinicalInsightsHttpHandler } = await import('./api/clinical-insights');
-    return getClinicalInsightsHttpHandler(req, res);
-});
+export const getClinicalInsightsHttp = onRequest(
+    { cpu: 2, memory: '1GiB' },
+    async (req: any, res: any) => {
+        const { getClinicalInsightsHttpHandler } = await import('./api/clinical-insights');
+        return getClinicalInsightsHttpHandler(req, res);
+    }
+);
 
-export const scanMedicalReportHttp = onRequest(async (req: any, res: any) => {
-    const { scanMedicalReportHttpHandler } = await import('./api/ocr-scanner');
-    return scanMedicalReportHttpHandler(req, res);
-});
+export const scanMedicalReportHttp = onRequest(
+    { cpu: 2, memory: '1GiB' },
+    async (req: any, res: any) => {
+        const { scanMedicalReportHttpHandler } = await import('./api/ocr-scanner');
+        return scanMedicalReportHttpHandler(req, res);
+    }
+);
 
 // REMOVIDO: migrateClinicalSchema - migração já executada
 export { dailyPatientDigest } from './crons/scheduled-tasks';
-export { analyzeProgress } from './ai/flows';
+export { analyzeProgress } from './ai/flow-wrappers';
 
-export const aiFastProcessing = onCall(async (request) => {
-    const { aiFastProcessingHandler } = await import('./ai/groq-service');
-    return aiFastProcessingHandler(request);
-});
+export const aiFastProcessing = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { aiFastProcessingHandler } = await import('./ai/groq-service');
+        return aiFastProcessingHandler(request);
+    }
+);
 
 // ============================================================================
 // WEBHOOK MANAGEMENT
