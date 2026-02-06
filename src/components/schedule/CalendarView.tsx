@@ -8,12 +8,13 @@
 import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, CheckSquare, Settings as SettingsIcon, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
+import { AdvancedFilters } from './AdvancedFilters';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekView } from './CalendarWeekView';
@@ -23,6 +24,9 @@ import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
+import { Link } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const USE_DND_KIT = true;
 
@@ -46,6 +50,14 @@ interface CalendarViewProps {
   rescheduleSuccessMessage?: string | null;
   /** Optional: called when user clicks an appointment (e.g. open quick edit). Not used by day/week views; kept for API compatibility. */
   onAppointmentClick?: (appointment: Appointment) => void;
+  // Toolbar action props (merged from ScheduleToolbar)
+  onCreateAppointment?: () => void;
+  onToggleSelectionMode?: () => void;
+  onCancelAllToday?: () => void;
+  filters?: { status: string[]; types: string[]; therapists: string[] };
+  onFiltersChange?: (filters: { status: string[]; types: string[]; therapists: string[] }) => void;
+  onClearFilters?: () => void;
+  totalAppointmentsCount?: number;
 }
 
 export const CalendarView = memo(({
@@ -63,6 +75,13 @@ export const CalendarView = memo(({
   onToggleSelection,
   rescheduleSuccessMessage = null,
   onAppointmentClick: _onAppointmentClick,
+  onCreateAppointment,
+  onToggleSelectionMode,
+  onCancelAllToday,
+  filters,
+  onFiltersChange,
+  onClearFilters,
+  totalAppointmentsCount,
 }: CalendarViewProps) => {
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
@@ -463,8 +482,9 @@ export const CalendarView = memo(({
       ) : null}
       <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]" role="region" aria-label="Calendário de agendamentos">
         <CardContent className="p-2 md:p-3 lg:p-4 flex flex-col h-full">
-          {/* Header - Mobile Optimized */}
-          <div className="p-2 sm:p-3 border-b bg-gradient-to-r from-muted/30 to-muted/10" role="toolbar" aria-label="Navegação do calendário">
+          {/* Unified Header - Navigation + Actions */}
+          <div className="px-3 sm:px-4 py-2.5 border-b bg-white dark:bg-slate-900" role="toolbar" aria-label="Navegação do calendário">
+            {/* Mobile Header */}
             <div className="flex items-center justify-between sm:hidden gap-2 w-full">
               <div className="flex items-center gap-1">
                 <Button
@@ -475,11 +495,9 @@ export const CalendarView = memo(({
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-
                 <div className="text-sm font-semibold text-foreground/80 text-center min-w-[100px]">
                   {getHeaderTitle()}
                 </div>
-
                 <Button
                   variant="ghost"
                   size="sm"
@@ -490,44 +508,67 @@ export const CalendarView = memo(({
                 </Button>
               </div>
 
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Seleção de visualização">
-                {(['day', 'week'] as CalendarViewType[]).map(type => (
+              <div className="flex items-center gap-1.5">
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg" role="group" aria-label="Seleção de visualização">
+                  {(['day', 'week'] as CalendarViewType[]).map(type => (
+                    <button
+                      key={type}
+                      onClick={() => onViewTypeChange(type)}
+                      className={cn(
+                        "px-2 py-1 text-xs font-medium rounded-md",
+                        viewType === type
+                          ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                          : "text-gray-600 dark:text-gray-400"
+                      )}
+                      aria-pressed={viewType === type}
+                    >
+                      {type === 'day' ? 'D' : 'S'}
+                    </button>
+                  ))}
+                </div>
+                {onToggleSelectionMode && (
                   <Button
-                    key={type}
-                    variant={viewType === type ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => onViewTypeChange(type)}
-                    className="capitalize text-[10px] px-1.5 py-1 h-7 min-w-[28px] touch-target"
-                    aria-pressed={viewType === type}
-                    aria-label={`Visualizar por ${type === 'day' ? 'dia' : 'semana'}`}
+                    variant={selectionMode ? "default" : "outline"}
+                    size="icon"
+                    className={cn("h-8 w-8", selectionMode && "bg-primary")}
+                    onClick={onToggleSelectionMode}
                   >
-                    {type === 'day' ? 'Dia' : 'Sem'}
+                    <CheckSquare className="w-3.5 h-3.5" />
                   </Button>
-                ))}
+                )}
+                {onCreateAppointment && (
+                  <Button
+                    onClick={onCreateAppointment}
+                    className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </div>
 
             {/* Desktop Header Layout */}
             <div className="hidden sm:flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Navegação por data">
+              {/* Left: Navigation */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => navigateCalendar('prev')}
-                    className="h-9 w-9 p-0 hover-scale touch-target"
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                     aria-label={`Navegar para ${viewType === 'day' ? 'ontem' : viewType === 'week' ? 'semana anterior' : 'mês anterior'}`}
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => navigateCalendar('next')}
-                    className="h-9 w-9 p-0 hover-scale touch-target"
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                     aria-label={`Navegar para ${viewType === 'day' ? 'amanhã' : viewType === 'week' ? 'próxima semana' : 'próximo mês'}`}
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -535,32 +576,126 @@ export const CalendarView = memo(({
                   variant="outline"
                   size="sm"
                   onClick={goToToday}
-                  className="hover-scale font-medium touch-target"
+                  className="h-8 px-3 rounded-lg font-medium"
                   aria-label="Ir para hoje"
                 >
                   Hoje
                 </Button>
 
-                <h2 className="text-lg font-semibold" aria-live="polite" aria-atomic="true">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white" aria-live="polite" aria-atomic="true">
                   {getHeaderTitle()}
                 </h2>
+
+                {/* Appointments count badge */}
+                {totalAppointmentsCount !== undefined && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-800">
+                    <Sparkles className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-xs font-medium text-cyan-900 dark:text-cyan-100">
+                      {totalAppointmentsCount}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="radiogroup" aria-label="Seleção de visualização">
-                {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
+              {/* Right: Actions + View Switcher + CTA */}
+              <div className="flex items-center gap-2">
+                {/* Cancel All */}
+                {onCancelAllToday && (
                   <Button
-                    key={type}
-                    variant={viewType === type ? "default" : "ghost"}
+                    variant="outline"
                     size="sm"
-                    onClick={() => onViewTypeChange(type)}
-                    className="capitalize text-xs sm:text-sm px-2 sm:px-3 touch-target"
-                    role="radio"
-                    aria-checked={viewType === type}
-                    aria-label={`Visualizar por ${type === 'day' ? 'dia' : type === 'week' ? 'semana' : 'mês'}`}
+                    onClick={onCancelAllToday}
+                    className="h-8 px-2.5 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50"
+                    title="Cancelar todos os agendamentos da data exibida"
                   >
-                    {type === 'day' ? 'Dia' : type === 'week' ? 'Semana' : 'Mês'}
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden lg:inline ml-1.5 text-xs">Cancelar todos</span>
                   </Button>
-                ))}
+                )}
+
+                {/* Settings */}
+                <Link to="/schedule/settings">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    title="Configurações da Agenda"
+                  >
+                    <SettingsIcon className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+
+                {/* Filters */}
+                {filters && onFiltersChange && onClearFilters && (
+                  <AdvancedFilters
+                    filters={filters}
+                    onChange={onFiltersChange}
+                    onClear={onClearFilters}
+                  />
+                )}
+
+                {/* AI Optimization */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2.5 rounded-lg border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hidden xl:flex"
+                  onClick={() => toast({
+                    title: "IA Analisando...",
+                    description: "Verificando disponibilidade e padrões de agendamento."
+                  })}
+                >
+                  <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                  <span className="hidden 2xl:inline text-xs">Otimizar</span>
+                </Button>
+
+                {/* Selection Mode Toggle */}
+                {onToggleSelectionMode && (
+                  <Button
+                    variant={selectionMode ? "default" : "outline"}
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8 rounded-lg",
+                      selectionMode && "bg-primary"
+                    )}
+                    onClick={onToggleSelectionMode}
+                    title="Modo de Seleção (atalho: A)"
+                  >
+                    <CheckSquare className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+
+                {/* View Switcher */}
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg" role="radiogroup" aria-label="Seleção de visualização">
+                  {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
+                    <button
+                      key={type}
+                      onClick={() => onViewTypeChange(type)}
+                      className={cn(
+                        "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                        viewType === type
+                          ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50"
+                      )}
+                      role="radio"
+                      aria-checked={viewType === type}
+                      aria-label={`Visualizar por ${type === 'day' ? 'dia' : type === 'week' ? 'semana' : 'mês'}`}
+                    >
+                      {type === 'day' ? 'Dia' : type === 'week' ? 'Semana' : 'Mês'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* New Appointment - Primary CTA */}
+                {onCreateAppointment && (
+                  <Button
+                    onClick={onCreateAppointment}
+                    size="sm"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-1.5 shadow-md rounded-lg px-3 h-8"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden lg:inline text-xs">Novo Agendamento</span>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
