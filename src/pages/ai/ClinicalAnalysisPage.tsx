@@ -13,7 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardTabs, CardTabsContent, CardTabsList, CardTabsTrigger } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -28,7 +28,6 @@ import {
   TrendingUp,
   FileText,
   Download,
-  Mic,
   Volume2,
   Calendar,
   AlertTriangle,
@@ -37,7 +36,6 @@ import { httpsCallable } from 'firebase/functions';
 import { functions, db } from '@/lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import ReactMarkdown from 'react-markdown';
 import { ChatInterface } from '@/components/ai/ChatInterface';
 import { ProgressTimeline } from '@/components/ai/ProgressTimeline';
 
@@ -66,8 +64,6 @@ interface Alert {
 export default function ClinicalAnalysisPage() {
   const { data: patients } = usePatientsPostgres('default');
   const [selectedPatient, setSelectedPatient] = useState<string>('');
-  const [selectedPatientData, setSelectedPatientData] = useState<Patient | null>(null);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistory[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -87,10 +83,7 @@ export default function ClinicalAnalysisPage() {
 
     const patient = patients?.find((p: Patient) => p.id === selectedPatient);
     if (patient) {
-      setSelectedPatientData(patient);
-      
       const fetchHistory = async () => {
-        setLoading(true);
         try {
           const soapRef = collection(db, 'soap_records');
           const q = query(
@@ -133,8 +126,6 @@ export default function ClinicalAnalysisPage() {
             description: 'Não foi possível buscar as sessões anteriores.',
             variant: 'destructive'
           });
-        } finally {
-          setLoading(false);
         }
       };
 
