@@ -106,14 +106,16 @@ export interface PoseAnalysis {
  */
 export class GoogleAIService {
   private apiKey: string;
-  private projectId: string;
-  private location: string;
 
   constructor() {
     // Configurações do Google Cloud
     this.apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '';
-    this.projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT || '';
-    this.location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT || '';
+    const location = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+
+    // Log das configurações (não usado mas pode ser útil no futuro)
+    if (projectId) console.log(`Google AI Service inicializado para projeto: ${projectId}`);
+    if (location) console.log(`Location: ${location}`);
 
     if (!this.apiKey) {
       console.warn('Google API Key não configurada. Usando modo mock.');
