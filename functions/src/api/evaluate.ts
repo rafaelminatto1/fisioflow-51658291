@@ -107,7 +107,7 @@ export const apiEvaluateHandler = async (req: any, res: any) => {
 export const apiEvaluate = onRequest({
   region: 'southamerica-east1',
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
   cors: CORS_ORIGINS,
   invoker: 'public',
 }, apiEvaluateHandler);

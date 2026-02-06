@@ -69,7 +69,7 @@ export const createVoucherCheckout = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -185,7 +185,7 @@ export const createVoucherCheckout = onCall({
 export const stripeWebhook = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   // Este endpoint deve ser acessível publicamente pelo Stripe
   // Usar verificação de assinatura é crítico
@@ -240,7 +240,7 @@ export const listAvailableVouchers = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async () => {
   const vouchers = Object.values(VoucherType).map(type => ({
     type,
@@ -261,7 +261,7 @@ export const getUserVouchers = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
