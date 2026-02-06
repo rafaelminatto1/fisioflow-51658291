@@ -1,10 +1,12 @@
 // Mock data centralizado para desenvolvimento e testes
 
+
+// ============= PACIENTES MOCK =============
+
 import { AppointmentBase, AppointmentType, AppointmentStatus } from '@/types/appointment';
 import { Patient } from '@/types';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// ============= PACIENTES MOCK =============
 export const mockPatients: Patient[] = [
   {
     id: '1',

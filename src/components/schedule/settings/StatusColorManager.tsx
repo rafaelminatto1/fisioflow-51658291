@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Palette, Plus, RotateCcw, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
+
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,

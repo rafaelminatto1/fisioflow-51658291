@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
 
 /**
  * Hook para preload inteligente de rotas mais acessadas
  * Usa requestIdleCallback para não bloquear a UI
  */
+
+import { useEffect } from 'react';
+
 export const useIntelligentPreload = () => {
   useEffect(() => {
     // Rotas prioritárias para preload (baseado em padrões de uso)

@@ -13,7 +13,7 @@
  */
 
 import React, { memo, useEffect } from 'react';
-import {
+
   Dialog,
   DialogContent,
   DialogDescription,

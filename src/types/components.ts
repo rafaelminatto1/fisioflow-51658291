@@ -8,12 +8,14 @@
  * @module types/components
  */
 
-import type { ReactNode, CSSProperties, MouseEvent, KeyboardEvent, FocusEvent, ChangeEvent } from 'react';
-import type { ClassName, IconComponent, StyleProp, ChildrenProp, EntityId, ErrorHandler } from './common';
 
 /**
  * Base component props
  */
+
+import type { ReactNode, CSSProperties, MouseEvent, KeyboardEvent, FocusEvent, ChangeEvent } from 'react';
+import type { ClassName, IconComponent, StyleProp, ChildrenProp, EntityId, ErrorHandler } from './common';
+
 export interface BaseComponentProps {
   /**
    * CSS className to apply

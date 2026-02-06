@@ -1,7 +1,3 @@
-import { useEffect, useState, useRef } from 'react';
-import { toast } from 'sonner';
-import { Workbox } from 'workbox-window';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Hook para gerenciar atualizações do Service Worker
@@ -14,6 +10,11 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
  * useServiceWorkerUpdate();
  * ```
  */
+
+import { useEffect, useState, useRef } from 'react';
+import { toast } from 'sonner';
+import { Workbox } from 'workbox-window';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface UpdateState {
   hasUpdate: boolean;

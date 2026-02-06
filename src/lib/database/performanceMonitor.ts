@@ -2,13 +2,14 @@
  * Performance Monitoring Utilities for Firebase
  *
  */
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
 
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db } from '@/integrations/firebase/app';
 
 export interface SlowQuery {
   queryId: string;

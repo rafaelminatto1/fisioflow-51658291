@@ -2,19 +2,19 @@
  * Dashboard Metrics Hook - Migrated to Firebase
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, getCountFromServer, QueryConstraint, onSnapshot } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
 
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, getCountFromServer, QueryConstraint, onSnapshot, db } from '@/integrations/firebase/app';
 import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { UnknownError } from '@/types/common';
-
-// ============================================================================
-// TYPES
-// ============================================================================
 
 interface UserRole {
   user_id: string;

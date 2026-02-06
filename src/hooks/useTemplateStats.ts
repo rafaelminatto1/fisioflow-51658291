@@ -2,12 +2,10 @@
  * useTemplateStats - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit as limitFn,  } from '@/integrations/firebase/app';
+import { collection, getDocs, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, limit as limitFn, db } from '@/integrations/firebase/app';
 import { EvaluationForm } from '@/types/clinical-forms';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export function useTemplateStats() {
   return useQuery({

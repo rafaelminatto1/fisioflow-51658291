@@ -3,6 +3,11 @@
  * @module components/schedule/RecurringAppointmentModal
  */
 
+
+// =====================================================================
+// TYPES
+// =====================================================================
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -19,10 +24,6 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { RecurringAppointmentFormData, RecurrenceType, RecurrenceEndType, DayOfWeek } from '@/types/recurring-appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
-// =====================================================================
-// TYPES
-// =====================================================================
 
 interface RecurringAppointmentModalProps {
   /** Indica se o modal está aberto */

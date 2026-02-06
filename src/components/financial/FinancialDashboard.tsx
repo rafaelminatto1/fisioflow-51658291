@@ -1,13 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingUp, Calendar, AlertCircle, TrendingDown, Activity } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar, AlertCircle, TrendingDown, Activity, Download } from 'lucide-react';
 import { useFinancial } from '@/hooks/useFinancial';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/utils/format';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DelinquencyList } from './DelinquencyList';
 import { generateTransactionsCSV, downloadCSV } from '@/utils/csvExport';
-import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
+
   Play, Search, Edit, Trash2, Heart, Dumbbell,
   Video, Clock, Repeat, LayoutGrid, List, VideoOff,
   Eye, MoreVertical, Merge, Plus, CheckCircle2
@@ -96,9 +96,9 @@ const ExerciseCard = React.memo(function ExerciseCard({
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation">
+    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation h-full flex flex-col">
       {/* Image Section */}
-      <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+      <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden flex-shrink-0">
         {exercise.image_url ? (
           <OptimizedImage
             src={exercise.image_url}
@@ -165,8 +165,8 @@ const ExerciseCard = React.memo(function ExerciseCard({
       </div>
 
       {/* Content Section */}
-      <div className="p-4 space-y-3">
-        <div className="space-y-1">
+      <div className="p-4 space-y-3 flex-1 flex flex-col">
+        <div className="space-y-1 flex-1">
           <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">
             {exercise.name ?? 'Sem nome'}
           </h3>
@@ -195,8 +195,8 @@ const ExerciseCard = React.memo(function ExerciseCard({
         </div>
 
         {/* Parameters */}
-        {(exercise.sets || exercise.repetitions || exercise.duration) && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/50">
+        {(exercise.sets || exercise.repetitions || exercise.duration) ? (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/50 min-h-[28px]">
             {exercise.sets && (
               <span className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
                 <Repeat className="h-3 w-3" />
@@ -215,6 +215,8 @@ const ExerciseCard = React.memo(function ExerciseCard({
               </span>
             )}
           </div>
+        ) : (
+          <div className="min-h-[28px]" />
         )}
 
         {/* Actions */}
@@ -702,9 +704,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
         // ... (existing EmptyState)
         <EmptyState icon={Dumbbell} title="Nenhum exercício" />
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
           {filteredExercises.map((exercise, index) => (
-            <div key={exercise.id} className="relative group">
+            <div key={exercise.id} className="relative group h-full">
               <ExerciseCard
                 exercise={exercise}
                 isFavorite={isFavorite(exercise.id)}

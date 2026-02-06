@@ -1,6 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import React from 'react';
 
 /**
  * Hook para prefetching inteligente de dados
@@ -18,6 +15,10 @@ import React from 'react';
  * Hook para prefetch de dados ao passar o mouse (hover)
  * Útil para links e botões que levam a outras páginas
  */
+
+import { useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+
 export function usePrefetchOnHover<T>(
   queryKey: string[],
   queryFn: () => Promise<T>,

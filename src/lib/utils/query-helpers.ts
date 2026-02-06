@@ -3,12 +3,13 @@
  * Reusable helpers for common query patterns
  *
  */
-import { db, query as firestoreQuery, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ==============================================================================
 // TIMEOUT & RETRY HELPERS
 // ==============================================================================
+
+import { db, query as firestoreQuery, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([

@@ -2,12 +2,10 @@
  * useIncompletePatients - Migrated to Firebase
  *
  */
+
 import { useState, useEffect } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, onSnapshot } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, onSnapshot, db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
-
-
 
 interface IncompletePatient {
   id: string;

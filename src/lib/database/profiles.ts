@@ -2,6 +2,7 @@
  * ensureProfile - Migrated to Firebase
  *
  */
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db, doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from '@/integrations/firebase/app';
 

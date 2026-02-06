@@ -6,14 +6,15 @@
  * @module integrations/calendar
  */
 
+
+// Configuração do Google Calendar
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
-import { firestore } from 'firebase-admin';
+import * as admin, { firestore } from 'firebase-admin';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as logger from 'firebase-functions/logger';
 
-// Configuração do Google Calendar
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
 
 export const syncToGoogleCalendarHandler = async (request: any) => {

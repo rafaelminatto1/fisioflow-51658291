@@ -1,3 +1,6 @@
+
+// ===== Schema de validação =====
+
 import React, { useCallback, useEffect, useTransition, memo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,7 +16,6 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { patientsApi } from '@/integrations/firebase/functions';
 
-// ===== Schema de validação =====
 const quickPatientSchema = z.object({
   name: z.string()
     .min(2, 'Nome deve ter pelo menos 2 caracteres')

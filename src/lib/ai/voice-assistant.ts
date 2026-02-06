@@ -19,7 +19,6 @@
 // IMPORTS
 // ============================================================================
 
-import {
   LiveSessionConfig,
   LiveSessionState,
   LiveSessionCallbacks,

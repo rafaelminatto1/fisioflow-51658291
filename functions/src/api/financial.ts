@@ -1,12 +1,13 @@
-import { CORS_ORIGINS } from "../init";
+
+// --- Utilitários de Auxílio ---
+
+import { CORS_ORIGINS, getPool } from '../init';
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
 import { setCorsHeaders } from '../lib/cors';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Transaction } from '../types/models';
 import { logger } from '../lib/logger';
 
-// --- Utilitários de Auxílio ---
 function parseBody(req: any): any { 
     return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); 
 }

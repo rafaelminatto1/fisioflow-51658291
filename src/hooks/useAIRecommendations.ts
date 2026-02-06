@@ -3,12 +3,11 @@
  * @module hooks/useAIRecommendations
  *
  */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit as queryLimit,  } from '@/integrations/firebase/app';
-import { toast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
 
-import {
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit as queryLimit, db } from '@/integrations/firebase/app';
+import { toast } from '@/hooks/use-toast';
+
   generatePatientRecommendations,
   generateBulkPatientRecommendations,
   findOptimalSlots,

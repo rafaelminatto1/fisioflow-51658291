@@ -4,11 +4,13 @@
  * Fornece traduções específicas para o sistema de gamificação
  */
 
-import { useTranslation, SupportedLocale } from '@/lib/i18n';
 
 /**
  * Chave de tradução de gamificação
  */
+
+import { useTranslation, SupportedLocale } from '@/lib/i18n';
+
 type GamificationTranslationKey = `gamification.${string}`;
 
 /**

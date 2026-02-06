@@ -3,11 +3,13 @@
  * Sistema de documentação colaborativa estilo Notion
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
 
 /**
  * Página da Wiki
  */
+
+import { Timestamp } from '@/integrations/firebase/app';
+
 export interface WikiPage {
   id: string;
   slug: string;                    // URL-friendly, único por organização

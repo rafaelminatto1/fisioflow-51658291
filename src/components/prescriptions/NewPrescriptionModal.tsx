@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Dumbbell, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import {
   Dialog,
   DialogContent,
   DialogDescription,

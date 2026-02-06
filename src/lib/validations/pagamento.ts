@@ -1,6 +1,8 @@
-import { z } from 'zod';
 
 // Schema para criar pagamento
+
+import { z } from 'zod';
+
 export const pagamentoCreateSchema = z.object({
   evento_id: z.string().uuid(),
   tipo: z.enum(['prestador', 'insumo', 'outro']),

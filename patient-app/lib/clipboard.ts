@@ -3,13 +3,15 @@
  * Helper functions for clipboard operations
  */
 
-import * as Clipboard from 'expo-clipboard';
-import { log } from './logger';
-import { asyncResult, Result } from './async';
 
 /**
  * Copy text to clipboard
  */
+
+import * as Clipboard from 'expo-clipboard';
+import { log } from './logger';
+import { asyncResult, Result } from './async';
+
 export async function copyToClipboard(text: string): Promise<Result<void>> {
   return asyncResult(async () => {
     await Clipboard.setStringAsync(text);

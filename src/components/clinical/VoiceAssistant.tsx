@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
-import {
+
   Mic,
   MicOff,
   Volume2,

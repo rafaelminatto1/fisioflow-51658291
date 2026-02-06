@@ -6,7 +6,6 @@
  * e a experiência visual para usuários de navegação por teclado.
  */
 
-import { useEffect } from 'react';
 
 /**
  * Hook que configura o comportamento de focus-visible
@@ -14,6 +13,9 @@ import { useEffect } from 'react';
  * Detecta se o usuário está navegando por teclado e adiciona a classe
  * 'focus-visible' apenas nesses casos.
  */
+
+import { useEffect } from 'react';
+
 export function useFocusVisibleHandler() {
   useEffect(() => {
     let isUsingKeyboard = false;

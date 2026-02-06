@@ -2,8 +2,9 @@
  * Hook para listar fisioterapeutas (profiles com role fisioterapeuta).
  * Retorna id, nome e CREFITO para uso em selects e exibição em evoluções/agenda.
  */
+
 import { useQuery } from '@tanstack/react-query';
-import {
+
   collection,
   query as firestoreQuery,
   where,

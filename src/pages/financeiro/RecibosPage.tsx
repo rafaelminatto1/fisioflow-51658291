@@ -1,3 +1,6 @@
+
+// Type definitions
+
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -20,7 +23,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, collection, query as firestoreQuery, orderBy, getDocs, doc, getDoc, limit } from '@/integrations/firebase/app';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
-// Type definitions
 interface PatientSelect {
   id: string;
   full_name: string;

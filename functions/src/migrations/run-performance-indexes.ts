@@ -1,5 +1,3 @@
-import { onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
 
 /**
  * HTTP endpoint to run performance indexes migration
@@ -7,6 +5,10 @@ import { getPool } from '../init';
  *
  * Usage: curl -X POST "https://REGION-PROJECT.cloudfunctions.net/runPerformanceIndexes?key=YOUR_API_KEY"
  */
+
+import { onRequest } from 'firebase-functions/v2/https';
+import { getPool } from '../init';
+
 export const runPerformanceIndexes = onRequest({
   secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
   memory: '512MiB',

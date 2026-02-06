@@ -1,12 +1,14 @@
-import { getDataConnect, type DataConnect } from 'firebase/data-connect';
-import { app } from '@/integrations/firebase/app';
-import { connectorConfig } from '@/lib/dataconnect-sdk';
-import { fisioLogger } from '@/lib/errors/logger';
 
 /**
  * Instância do Data Connect com inicialização preguiçosa (lazy)
  * Só inicializa quando realmente for necessário
  */
+
+import { getDataConnect, type DataConnect } from 'firebase/data-connect';
+import { app } from '@/integrations/firebase/app';
+import { connectorConfig } from '@/lib/dataconnect-sdk';
+import { fisioLogger } from '@/lib/errors/logger';
+
 let _dc: DataConnect | null = null;
 
 export const dc = (): DataConnect => {

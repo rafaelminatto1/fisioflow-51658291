@@ -3,8 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, orderBy, limit } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
+import { collection, getDocs, query, orderBy, limit, db } from '@/integrations/firebase/app';
 import type { Timestamp } from '@/integrations/firebase/app';
 
 export interface AutomationLogEntry {

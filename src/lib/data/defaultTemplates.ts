@@ -1,6 +1,8 @@
-import { ExerciseTemplate, ExerciseTemplateItem } from '@/hooks/useExerciseTemplates';
 
 // We define a partial type for the template data we want to seed
+
+import { ExerciseTemplate, ExerciseTemplateItem } from '@/hooks/useExerciseTemplates';
+
 export interface DefaultTemplateData extends Omit<ExerciseTemplate, 'id' | 'created_at' | 'updated_at' | 'organization_id' | 'created_by'> {
     items: Omit<ExerciseTemplateItem, 'id' | 'template_id' | 'created_at' | 'exercise_id'>[]; // Items contain search criteria or placeholders
 }

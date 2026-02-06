@@ -6,15 +6,17 @@
  */
 
 /* eslint-disable @typescript-eslint/no-namespace */
-import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
-import { app, getFirebaseAuth } from './app';
-import { API_URLS } from '@/lib/api/v2/config';
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 /** Região padrão para as Cloud Functions */
+
+import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
+import { app, getFirebaseAuth } from './app';
+import { API_URLS } from '@/lib/api/v2/config';
+
 const DEFAULT_REGION = 'southamerica-east1';
 
 /** Timeout padrão para chamadas de função (em segundos) */

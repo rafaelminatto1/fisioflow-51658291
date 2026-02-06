@@ -14,7 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { VoucherModal } from '@/components/vouchers/VoucherModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
+
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,

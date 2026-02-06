@@ -1,7 +1,9 @@
 // Centralized validation utilities
-import { z } from 'zod';
 
 // ============= CPF Validation =============
+
+import { z } from 'zod';
+
 export const cleanCPF = (cpf: string): string => cpf.replace(/\D/g, '');
 
 export const validateCPFFormat = (cpf: string): boolean => {

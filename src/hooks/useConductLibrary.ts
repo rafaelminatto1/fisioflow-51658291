@@ -2,13 +2,11 @@
  * useConductLibrary - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export interface ConductTemplate {
   id: string;

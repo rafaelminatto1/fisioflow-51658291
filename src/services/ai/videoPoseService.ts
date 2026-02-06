@@ -1,5 +1,5 @@
-import { FilesetResolver, PoseLandmarker, PoseLandmarkerResult } from "@mediapipe/tasks-vision";
-import { Point3D, UnifiedLandmark, POSE_LANDMARKS } from "@/utils/geometry";
+import { FilesetResolver, PoseLandmarker, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
+import { Point3D, UnifiedLandmark, POSE_LANDMARKS } from '@/utils/geometry';
 
 let poseLandmarker: PoseLandmarker | null = null;
 

@@ -3,12 +3,14 @@
  * Script para migrar dados do Supabase para Cloud SQL
  */
 
+
+// Configuração
+
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Configuração
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const CLOUD_SQL_CONNECTION_STRING = process.env.CLOUD_SQL_CONNECTION_STRING;

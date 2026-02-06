@@ -2,13 +2,12 @@
  * usePatientExams - Migrated to Firebase
  *
  */
+
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/integrations/firebase/app';
 import { getStorage, ref, uploadBytes, deleteObject } from 'firebase/storage';
-
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const storage = getStorage();

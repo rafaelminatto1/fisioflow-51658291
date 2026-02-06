@@ -1,9 +1,11 @@
-import { useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 /**
  * Tipo genérico para variáveis de mutação
  */
+
+import { useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
 export type MutationVariables<T = unknown> = T;
 
 /**

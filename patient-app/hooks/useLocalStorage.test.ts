@@ -2,9 +2,11 @@
  * useLocalStorage Hook Tests
  */
 
-import { useLocalStorage } from './useLocalStorage';
 
 // Mock AsyncStorage
+
+import { useLocalStorage } from './useLocalStorage';
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),

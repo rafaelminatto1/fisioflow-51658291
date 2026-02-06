@@ -2,11 +2,14 @@
  * Auth Page - Migrated to Firebase
  */
 
+
+
+// Demo credentials removed for security - no hardcoded credentials in production
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth, AuthError } from '@/contexts/AuthContext';
 import { callFunction } from '@/integrations/firebase/functions';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -16,8 +19,6 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
-
-// Demo credentials removed for security - no hardcoded credentials in production
 
 export default function Auth() {
   const navigate = useNavigate();

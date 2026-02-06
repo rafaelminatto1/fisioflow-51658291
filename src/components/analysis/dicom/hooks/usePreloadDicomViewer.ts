@@ -1,4 +1,3 @@
-import { useState } from 'react';
 
 /**
  * Hook para pré-carregar o DicomViewer
@@ -8,6 +7,9 @@ import { useState } from 'react';
  * const preloadDicomViewer = usePreloadDicomViewer();
  * <button onMouseEnter={preloadDicomViewer}>Ver DICOM</button>
  */
+
+import { useState } from 'react';
+
 export function usePreloadDicomViewer() {
   const [isLoaded, setIsLoaded] = useState(false);
 

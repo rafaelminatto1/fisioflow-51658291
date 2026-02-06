@@ -1,4 +1,7 @@
 // App móvel para pacientes - Versão simplificada
+
+// Define interface for appointment data
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +13,6 @@ import { ptBR } from 'date-fns/locale';
 import { db, collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Define interface for appointment data
 interface Appointment {
   id: string;
   start_time: string;

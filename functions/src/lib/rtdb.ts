@@ -1,10 +1,12 @@
-import * as admin from 'firebase-admin';
-import { logger } from './logger';
 
 /**
  * Publica atualizações no Firebase Realtime Database
  * Usado para sincronizar estado entre clientes (substitui Ably)
  */
+
+import * as admin from 'firebase-admin';
+import { logger } from './logger';
+
 export const publishRealtime = async (path: string, data: any) => {
   try {
     const db = admin.database();

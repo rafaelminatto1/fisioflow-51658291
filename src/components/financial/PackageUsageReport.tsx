@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { usePatientPackages } from "@/hooks/usePackages";
-import { formatCurrency } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Package, TrendingUp, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { usePatientPackages } from '@/hooks/usePackages';
+import { formatCurrency } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Package, TrendingUp, AlertCircle } from 'lucide-react';
 
 export function PackageUsageReport() {
     // Fetch all packages (admin view)

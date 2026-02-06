@@ -12,12 +12,14 @@
  * - TTFB (Time to First Byte): Tempo até o primeiro byte do servidor
  */
 
+
+// Extend Window interface for analytics globals
+
 import { useState, useEffect } from 'react';
 import type { Metric } from 'web-vitals';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getRating, getRatingColor, THRESHOLDS } from './web-vitals-ratings';
 
-// Extend Window interface for analytics globals
 declare global {
   interface Window {
     gtag?: (command: 'event' | 'config', targetId: string, config?: Record<string, unknown>) => void;

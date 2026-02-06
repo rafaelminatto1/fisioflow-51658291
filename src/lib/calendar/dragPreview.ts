@@ -1,4 +1,3 @@
-import { Appointment } from '@/types/appointment';
 
 /**
  * Utilitários para preview de drag and drop na agenda.
@@ -15,6 +14,9 @@ import { Appointment } from '@/types/appointment';
 /**
  * Gap percentual entre cards no mesmo slot
  */
+
+import { Appointment } from '@/types/appointment';
+
 export const CARD_GAP_PERCENT = 2;
 
 /**

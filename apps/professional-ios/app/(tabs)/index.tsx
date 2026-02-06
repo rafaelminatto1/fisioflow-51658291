@@ -7,7 +7,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';

@@ -2,16 +2,16 @@
  * useReports - Migrated to Firebase
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { PatientHelpers } from '@/types';
-import { db } from '@/integrations/firebase/app';
 
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+import { PatientHelpers } from '@/types';
 
 interface SurveyData {
   nps_score?: number | null;

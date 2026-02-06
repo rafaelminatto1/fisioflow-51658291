@@ -3,8 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, where } from '@/integrations/firebase/app';
-import { db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { TeamMember } from '@/types/tarefas';
 import { fisioLogger } from '@/lib/errors/logger';

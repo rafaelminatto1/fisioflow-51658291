@@ -1,4 +1,3 @@
-import { test, expect } from '@playwright/test';
 
 /**
  * Exercise Video Player E2E Tests
@@ -10,6 +9,8 @@ import { test, expect } from '@playwright/test';
  * - Keyboard shortcuts
  * - Picture-in-Picture
  */
+
+import { test, expect } from '@playwright/test';
 
 test.describe('Exercise Video Player', () => {
   test.beforeEach(async ({ page }) => {

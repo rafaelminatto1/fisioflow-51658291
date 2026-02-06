@@ -1,14 +1,14 @@
 import { lazy, Suspense, useEffect, useMemo } from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
-import { DataProvider } from "@/contexts/DataContext";
-import { RealtimeProvider } from "@/contexts/RealtimeContext";
-import { AuthContextProvider } from "@/contexts/AuthContextProvider";
-import { useAuth } from "@/contexts/AuthContext";
-import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { DataProvider } from '@/contexts/DataContext';
+import { RealtimeProvider } from '@/contexts/RealtimeContext';
+import { AuthContextProvider } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 let _loggedAppInit = false;

@@ -15,10 +15,6 @@
  * @module useOfflineStorage
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { toast } from 'sonner';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -27,6 +23,12 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 /**
  * IndexedDB schema for FisioFlow offline storage
  */
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { toast } from 'sonner';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 interface FisioFlowDB extends DBSchema {
   /** Stores cached patient analytics data */
   patient_analytics: {

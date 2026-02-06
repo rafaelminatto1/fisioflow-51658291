@@ -1,7 +1,9 @@
+
+// Lazy load dos componentes pesados para melhorar o desempenho inicial
+
 import { lazy, Suspense } from 'react';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
-// Lazy load dos componentes pesados para melhorar o desempenho inicial
 export const LazyKanbanColumnV2 = lazy(() => import('./KanbanColumnV2'));
 // KanbanCardV2 removido do lazy load pois é necessário imediatamente em KanbanColumnV2
 export const LazyTaskDetailModal = lazy(() => import('./TaskDetailModal'));

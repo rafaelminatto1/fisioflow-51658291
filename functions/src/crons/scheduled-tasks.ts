@@ -1,11 +1,13 @@
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { getPool } from '../init';
-import { logger } from '../lib/logger';
 
 /**
  * Job Agendado: Roda todo dia às 08:00 (Brasília)
  * Gera um resumo de pacientes que precisam de atenção hoje
  */
+
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { getPool } from '../init';
+import { logger } from '../lib/logger';
+
 export const dailyPatientDigest = onSchedule({
   schedule: 'every day 08:00',
   timeZone: 'America/Sao_Paulo',

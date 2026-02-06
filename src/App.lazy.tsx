@@ -2,9 +2,11 @@
  * Lazy loaded routes para otimização de performance
  * Reduz o bundle inicial e melhora o tempo de carregamento
  */
-import { lazy } from 'react';
 
 // Páginas principais (eager load)
+
+import { lazy } from 'react';
+
 export { default as Index } from '@/pages/Index';
 export { default as Auth } from '@/pages/Auth';
 

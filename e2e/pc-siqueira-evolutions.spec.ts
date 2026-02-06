@@ -1,9 +1,11 @@
-import { test, expect } from '@playwright/test';
 
 /**
  * Teste para criar 10 evoluções completas do paciente PC Siqueira
  * com imagens, medições e exercícios para verificar o histórico e auto-save
  */
+
+import { test, expect } from '@playwright/test';
+
 test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   const patientName = 'PC Siqueira';
   const evolutionData = [

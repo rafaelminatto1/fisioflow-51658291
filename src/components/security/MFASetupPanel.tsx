@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Shield, Lock, Key, Copy, Check, Mail, Send } from "lucide-react";
-import { useMFASettings } from "@/hooks/useMFASettings";
-import { toast } from "sonner";
-import {
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Shield, Lock, Key, Copy, Check, Mail, Send } from 'lucide-react';
+import { useMFASettings } from '@/hooks/useMFASettings';
+import { toast } from 'sonner';
+
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,

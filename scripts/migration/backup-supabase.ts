@@ -3,11 +3,13 @@
  * Script para fazer backup completo do Supabase antes da migração
  */
 
+
+// Configuração
+
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Configuração
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

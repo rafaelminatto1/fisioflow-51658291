@@ -1,6 +1,9 @@
+
+
+// Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
+
 import { useState, useCallback } from 'react';
 import { List, Save, Trash2 } from 'lucide-react';
-
 import { BodyMap, PainPoint } from './BodyMap';
 import { PainGauge } from './PainGauge';
 import { EvaScaleBar } from './EvaScaleBar';
@@ -14,7 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
-// Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
 
 interface PainMapEditorProps {

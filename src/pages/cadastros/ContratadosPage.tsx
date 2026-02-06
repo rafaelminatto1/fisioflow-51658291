@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, Edit, Trash2, UserCheck, Phone, IdCard } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import {
+
   useContratados,
   useCreateContratado,
   useUpdateContratado,

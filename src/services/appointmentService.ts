@@ -1,4 +1,7 @@
 
+
+// Type for appointment item from API
+
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
@@ -9,7 +12,6 @@ import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
 import type { UnknownError } from '@/types/common';
 
-// Type for appointment item from API
 interface AppointmentApiItem {
     id: string;
     patient_id?: string;

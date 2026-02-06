@@ -1,6 +1,8 @@
-import { z } from 'genkit';
 
 // Definição do Exercício Individual
+
+import { z } from 'genkit';
+
 export const ExerciseSchema = z.object({
   name: z.string().describe('Nome do exercício, ex: "Agachamento Livre"'),
   sets: z.number().int().min(1).describe('Número de séries'),

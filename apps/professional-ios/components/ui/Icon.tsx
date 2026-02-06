@@ -1,8 +1,10 @@
+
+// Icon name type - export all available icon names
+
 import React from 'react';
 import { ViewStyle } from 'react-native';
 import { LucideIcons } from '@/types/icons';
 
-// Icon name type - export all available icon names
 export type IconName = keyof typeof LucideIcons;
 
 export interface IconProps {

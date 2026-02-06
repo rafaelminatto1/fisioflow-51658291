@@ -7,10 +7,12 @@
  * @module lib/monitoring
  */
 
+
+// Tipos de eventos customizados
+
 import * as Sentry from '@sentry/react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Tipos de eventos customizados
 export enum MetricType {
   // Performance
   PAGE_LOAD = 'page_load',

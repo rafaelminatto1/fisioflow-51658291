@@ -3,14 +3,16 @@
  * Provides structured error handling with logging and context
  */
 
+
+/**
+ * Error categories for classification
+ */
+
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getLogger, LogContext } from '../lib/logger';
 import { AuthContext } from './auth';
 import { logAudit, AuditAction, AuditCategory } from './audit-log';
 
-/**
- * Error categories for classification
- */
 export enum ErrorCategory {
   AUTHENTICATION = 'authentication',
   AUTHORIZATION = 'authorization',

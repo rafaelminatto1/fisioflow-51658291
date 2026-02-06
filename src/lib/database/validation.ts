@@ -5,7 +5,6 @@
  * Use these to validate data before sending to Firebase Firestore.
  */
 
-import type {
   PatientStatus,
   AppointmentStatus,
   SessionStatus,

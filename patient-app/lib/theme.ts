@@ -3,12 +3,14 @@
  * Comprehensive theme configuration with light/dark modes
  */
 
-import { AsyncStorage } from '@/lib/storage';
 
 /**
  * Theme colors for light mode
  * Based on Activity Fisioterapia logo - Baby Blue palette
  */
+
+import { AsyncStorage } from '@/lib/storage';
+
 const lightColors = {
   // Primary - Baby Blue (cor principal da marca)
   primary: '#0284C7',

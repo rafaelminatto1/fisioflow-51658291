@@ -3,7 +3,6 @@
  * Serviço para gerenciamento de entradas de tempo no Firestore
  */
 
-import {
   collection,
   doc,
   getDoc,

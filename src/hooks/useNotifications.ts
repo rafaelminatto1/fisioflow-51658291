@@ -2,13 +2,12 @@
  * useNotifications - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, onSnapshot, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, onSnapshot, writeBatch, QueryDocumentSnapshot, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
 
 const auth = getFirebaseAuth();
 

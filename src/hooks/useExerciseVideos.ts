@@ -1,8 +1,10 @@
+
+// Query key factory for better cache management
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { exerciseVideosService, ExerciseVideo, UploadVideoData, VideoFilterOptions } from '@/services/exerciseVideos';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Query key factory for better cache management
 export const exerciseVideoKeys = {
   all: ['exercise-videos'] as const,
   lists: () => [...exerciseVideoKeys.all, 'list'] as const,

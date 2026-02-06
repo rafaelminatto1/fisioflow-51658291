@@ -2,14 +2,15 @@
  * useTeamPerformance - Migrated to Firebase
  *
  */
-import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc } from '@/integrations/firebase/app';
-import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { db } from '@/integrations/firebase/app';
 
 
 // Helper to convert doc
+
+import { useQuery } from '@tanstack/react-query';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, db } from '@/integrations/firebase/app';
+import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export type PerformancePeriod = 'month' | '3months' | '6months' | 'year' | 'custom';

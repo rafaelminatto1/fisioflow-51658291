@@ -2,6 +2,7 @@
  * Appointment Reminder Workflow - Migrated to Firebase
  *
  */
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';

@@ -1,11 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { format, addDays, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, addDays, subDays, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function PredictiveAnalytics() {
   const { data: predictions } = useQuery({

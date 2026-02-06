@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from 'react';
 
 export function useIsTouch() {
     const [isTouch, setIsTouch] = React.useState<boolean | undefined>(undefined)

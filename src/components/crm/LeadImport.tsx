@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { useCallback } from 'react';
 import { useImportLeads } from '@/hooks/useCRM';
 import XLSX from '@/lib/export/exceljsWrapper';
 import { fisioLogger as logger } from '@/lib/errors/logger';

@@ -7,8 +7,6 @@
  * @module lib/postgres-errors
  */
 
-import { HttpsError } from 'firebase-functions/v2/https';
-import * as logger from 'firebase-functions/logger';
 
 // ============================================================================
 // POSTGRESQL ERROR CODES
@@ -17,6 +15,10 @@ import * as logger from 'firebase-functions/logger';
 /**
  * PostgreSQL error codes that we handle specifically
  */
+
+import { HttpsError } from 'firebase-functions/v2/https';
+import * as logger from 'firebase-functions/logger';
+
 export enum PostgresErrorCode {
   // Class 23 - Integrity Constraint Violation
   UNIQUE_VIOLATION = '23505',        // unique_violation

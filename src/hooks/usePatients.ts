@@ -21,7 +21,7 @@ import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { PatientService } from '@/services/patientService';
-import {
+
   PATIENT_QUERY_CONFIG,
   PATIENT_SELECT,
   devValidate,

@@ -2,15 +2,13 @@
  * useAnalyticsSummary - Migrated to Firebase
  *
  */
-import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query as firestoreQuery, where,  } from '@/integrations/firebase/app';
+
+import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
-import { queryConfigs } from "@/lib/queryConfig";
-import { fisioLogger as logger } from "@/lib/errors/logger";
-import { db } from '@/integrations/firebase/app';
-
-
+import { queryConfigs } from '@/lib/queryConfig';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface AnalyticsSummary {
   totalAppointments: number;

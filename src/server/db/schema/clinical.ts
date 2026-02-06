@@ -1,6 +1,5 @@
 import { pgTable, text, timestamp, uuid, boolean, integer, jsonb } from 'drizzle-orm/pg-core';
-import { patients } from './patients';
-import { organizations } from './patients'; // Assuming organizations is in patients.ts or index.ts
+import { patients, organizations } from './patients';
 
 export const patientGoals = pgTable('patient_goals', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -1,11 +1,12 @@
-import { Share } from '@capacitor/share';
-import { Capacitor } from '@capacitor/core';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Serviço para compartilhamento nativo (Share Sheet)
  * Funciona apenas em dispositivos nativos (iOS/Android)
  */
+
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ShareOptions {
   title?: string;

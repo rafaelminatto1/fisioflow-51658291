@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePatientAnalyticsDashboard, useUpdatePatientRiskScore } from '@/hooks/usePatientAnalytics';
-import {
+
   LineChart,
   Line,
   AreaChart,

@@ -1,8 +1,10 @@
+
+// Helper for consistent case-insensitive checking
+
 import { useState, useMemo } from 'react';
 import { ExerciseProtocol } from './useExerciseProtocols';
 import { getProtocolCategory } from '@/data/protocols';
 
-// Helper for consistent case-insensitive checking
 const includesTerm = (text: string, term: string) =>
     text.toLowerCase().includes(term.toLowerCase());
 

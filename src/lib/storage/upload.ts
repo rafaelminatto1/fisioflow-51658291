@@ -12,7 +12,6 @@
  * This file is kept for backward compatibility
  */
 
-import {
   uploadFile,
   uploadFiles,
   uploadBase64,

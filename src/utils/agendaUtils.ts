@@ -1,8 +1,10 @@
-import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO, isWithinInterval, addWeeks } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import type { Appointment, WeeklyCalendarData } from "@/types/agenda";
 
 // Date formatting utilities
+
+import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO, isWithinInterval, addWeeks } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import type { Appointment, WeeklyCalendarData } from '@/types/agenda';
+
 export const formatDate = (date: Date | string, formatStr: string = "yyyy-MM-dd"): string => {
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
   return format(dateObj, formatStr, { locale: ptBR });

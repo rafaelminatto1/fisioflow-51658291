@@ -2,12 +2,14 @@
  * Tests for useAnalyticsExport hook
  */
 
+
+// Mock jsPDF
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAnalyticsExport, useBatchAnalyticsExport } from '../useAnalyticsExport';
 
-// Mock jsPDF
 vi.mock('jspdf', () => ({
   default: vi.fn(function () {
     this.text = vi.fn();

@@ -4,10 +4,12 @@
  * Implementa gerenciamento de consentimento de dados conforme LGPD
  */
 
+
+// Tipos de consentimento LGPD
+
 import { firestore } from 'firebase-admin';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 
-// Tipos de consentimento LGPD
 export enum ConsentType {
   PERSONAL_DATA = 'personal_data',           // Dados pessoais básicos
   HEALTH_DATA = 'health_data',               // Dados de saúde

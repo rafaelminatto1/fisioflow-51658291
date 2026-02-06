@@ -3,7 +3,6 @@
  * Serviço para gerenciamento de automações
  */
 
-import {
   collection,
   doc,
   getDoc,

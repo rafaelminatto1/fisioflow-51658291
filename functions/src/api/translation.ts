@@ -8,9 +8,8 @@
  * @method onRequest
  */
 
-import { onRequest } from 'firebase-functions/v2/https';
-import { HttpsError } from 'firebase-functions/v2/https';
-import {
+import { onRequest, HttpsError } from 'firebase-functions/v2/https';
+
   getTranslationClient,
   detectLanguage as detectLang,
 } from '../lib/translation';

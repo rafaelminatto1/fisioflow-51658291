@@ -7,13 +7,14 @@
  * Adapts Supabase-style query options to Firestore.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, DocumentData, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface OptimizedQueryOptions {
   table: string; // Maps to Collection

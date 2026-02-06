@@ -8,11 +8,13 @@
  * @module types/api
  */
 
-import type { Dictionary, JsonObject } from './common';
 
 /**
  * Generic API response wrapper
  */
+
+import type { Dictionary, JsonObject } from './common';
+
 export interface ApiResponse<T = unknown> {
   data: T;
   success: boolean;

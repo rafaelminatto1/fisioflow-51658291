@@ -2,14 +2,15 @@
  * useStandardForms - Migrated to Firebase
  *
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, query as firestoreQuery, where, limit } from '@/integrations/firebase/app';
-import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
 
 
 
 // Definição das fichas padrão
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, query as firestoreQuery, where, limit, db } from '@/integrations/firebase/app';
+import { toast } from 'sonner';
+
 export const STANDARD_FORMS = {
   ANAMNESE: {
     nome: 'Anamnese Completa',

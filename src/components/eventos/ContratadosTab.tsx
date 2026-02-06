@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Check, Edit, Plus, Trash2, X } from 'lucide-react';
 import { ContratadoCombobox } from '@/components/ui/contratado-combobox';
 import { usePermissions } from '@/hooks/usePermissions';
-import {
+
   ContratadoCreate,
   contratadoCreateSchema,
   ContratadoUpdate,

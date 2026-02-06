@@ -1,4 +1,4 @@
-import { Exercise } from "@/types";
+import { Exercise } from '@/types';
 import { NO_EQUIPMENT_GROUP_ID, EQUIPMENT, HOME_EQUIPMENT_GROUP } from '@/lib/constants/exerciseConstants';
 import { exercisesFirestore } from './exercisesFirestore';
 

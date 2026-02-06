@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 // Tipos para dados SOAP
+
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+
 export interface SoapData {
   subjective: string;
   objective: string;

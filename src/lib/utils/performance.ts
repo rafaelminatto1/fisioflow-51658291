@@ -5,10 +5,12 @@
  * Core Web Vitals, tempo de renderização, e métricas customizadas
  */
 
+
+// Types for Performance API entries
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useEffect, useRef, useCallback } from 'react';
 
-// Types for Performance API entries
 interface PerformanceEntryLCP extends PerformanceEntry {
   startTime: number;
 }

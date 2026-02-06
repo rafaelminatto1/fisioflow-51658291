@@ -6,11 +6,13 @@
  * @module communications/email
  */
 
+
+// Configuração do provedor de email
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 
-// Configuração do provedor de email
 const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'resend'; // 'sendgrid' ou 'resend'
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY!;

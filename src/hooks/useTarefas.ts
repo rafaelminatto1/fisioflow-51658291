@@ -3,10 +3,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, writeBatch, documentId, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { getUserOrganizationId } from '@/utils/userHelpers';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { fisioLogger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();

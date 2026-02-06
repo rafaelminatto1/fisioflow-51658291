@@ -1,6 +1,8 @@
-import { z } from 'zod';
 
 // Schema para criar item de checklist
+
+import { z } from 'zod';
+
 export const checklistItemCreateSchema = z.object({
   evento_id: z.string().uuid(),
   titulo: z.string().min(2, 'Título deve ter pelo menos 2 caracteres'),

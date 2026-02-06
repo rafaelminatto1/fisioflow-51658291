@@ -2,6 +2,7 @@
  * Hook for managing offline data synchronization.
  * Provides utilities for syncing data when coming back online.
  */
+
 import { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { fisioLogger as logger } from '@/lib/errors/logger';

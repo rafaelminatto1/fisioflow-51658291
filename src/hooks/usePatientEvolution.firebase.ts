@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -11,9 +11,7 @@ import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
-import { db } from '@/integrations/firebase/app';
 import { getAuth } from 'firebase/auth';
-
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const auth = getAuth();

@@ -1,12 +1,14 @@
+
+/**
+ * Lista pagamentos de um paciente
+ */
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Payment, PatientSessionPackage } from '../types/models';
 import { logger } from '../lib/logger';
 
-/**
- * Lista pagamentos de um paciente
- */
 interface ListPaymentsRequest {
   patientId?: string;
   limit?: number;

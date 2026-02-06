@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
-import {
+
   Pagination,
   PaginationContent,
   PaginationEllipsis,

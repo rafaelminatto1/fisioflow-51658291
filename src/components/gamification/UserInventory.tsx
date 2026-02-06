@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
-import { Loader2, Package, Zap } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import * as Icons, { Loader2, Package, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UserInventoryProps {

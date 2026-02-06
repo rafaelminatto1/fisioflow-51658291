@@ -1,7 +1,9 @@
+
+// Interfaces para Analytics
+
 import { useState, useEffect, useMemo } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Interfaces para Analytics
 interface MetricData {
   id: string;
   name: string;

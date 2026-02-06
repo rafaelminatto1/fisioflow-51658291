@@ -1,6 +1,3 @@
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
 /**
  * NOTE: This service uses Firebase Cloud Functions for appointment notifications.
@@ -11,6 +8,11 @@ import { getFirebaseFunctions } from '@/integrations/firebase/functions';
  *
  * The current implementation uses Inngest for scheduling.
  */
+
+import { fisioLogger as logger } from '@/lib/errors/logger';
+import { httpsCallable } from 'firebase/functions';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+
 export class AppointmentNotificationService {
   /**
    * Schedule notification for an appointment

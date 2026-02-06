@@ -1,4 +1,5 @@
 // Script para testar o fluxo de cadastro incompleto
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

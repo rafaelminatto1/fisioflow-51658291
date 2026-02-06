@@ -7,7 +7,6 @@
  * @version 1.0.0 - Firebase Migration
  */
 
-import {
   ref,
   uploadBytes,
   uploadBytesResumable,

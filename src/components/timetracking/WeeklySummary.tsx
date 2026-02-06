@@ -7,11 +7,9 @@ import React from 'react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, Target } from 'lucide-react';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-
 import type { TimeEntry } from '@/types/timetracking';
 import { groupByDay, formatDuration, formatHoursDecimal } from '@/lib/timetracking/timeCalculator';
 

@@ -1,9 +1,11 @@
 
-import { sql } from "drizzle-orm";
-import { pgTable, uuid, text, integer, timestamp, jsonb, date, unique } from "drizzle-orm/pg-core";
-import { patients } from "./patients";
 
 // Patient Gamification Table
+
+import { sql } from 'drizzle-orm';
+import { pgTable, uuid, text, integer, timestamp, jsonb, date, unique } from 'drizzle-orm/pg-core';
+import { patients } from './patients';
+
 export const patientGamification = pgTable("patient_gamification", {
     id: uuid("id").defaultRandom().primaryKey(),
     patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: 'cascade' }),

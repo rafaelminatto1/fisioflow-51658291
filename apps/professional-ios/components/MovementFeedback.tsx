@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import { Card } from './Card';
 import { Button } from './Button';
 import { Badge } from './Badge';

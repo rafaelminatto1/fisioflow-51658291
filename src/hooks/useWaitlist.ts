@@ -3,12 +3,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, getDocsFromCache, getDocsFromServer } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, getDocsFromCache, getDocsFromServer, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export interface WaitlistEntry {
   id: string;

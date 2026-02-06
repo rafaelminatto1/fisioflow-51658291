@@ -12,13 +12,14 @@
  * @module lib/ai/pain-analysis
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { db, collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
-import { PainEvolutionData, PainMapRecord, PainMapPoint } from '@/types/painMap';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { db, collection, query, where, orderBy, getDocs } from '@/integrations/firebase/app';
+import { PainEvolutionData, PainMapRecord, PainMapPoint } from '@/types/painMap';
 
 export interface PainMigrationPattern {
   fromRegion: string;

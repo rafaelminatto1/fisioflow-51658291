@@ -4,14 +4,16 @@
  * Implementa exportação de dados do usuário conforme LGPD Art. 18
  */
 
+
+/**
+ * Interface para dados exportados do usuário
+ */
+
 import { firestore } from 'firebase-admin';
 import { Timestamp as FirestoreTimestamp } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 
-/**
- * Interface para dados exportados do usuário
- */
 export interface UserDataExport {
   personalInfo: {
     userId: string;

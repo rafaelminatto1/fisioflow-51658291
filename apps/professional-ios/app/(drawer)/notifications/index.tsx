@@ -7,7 +7,6 @@ import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useTheme } from '@/hooks/useTheme';
 import { Header } from '@/components/ui/Header';

@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Pose, Results } from '@mediapipe/pose';
+import { Pose, Results, POSE_CONNECTIONS } from '@mediapipe/pose';
 import * as cam from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-import { POSE_CONNECTIONS } from '@mediapipe/pose';
 import { calculateAngle, JOINT_INDICES } from '@/utils/goniometryUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

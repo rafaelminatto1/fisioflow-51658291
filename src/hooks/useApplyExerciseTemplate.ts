@@ -3,12 +3,9 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDoc, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDoc, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
-import { db } from '@/integrations/firebase/app';
-
-
 
 interface ApplyTemplateParams {
   templateId: string;

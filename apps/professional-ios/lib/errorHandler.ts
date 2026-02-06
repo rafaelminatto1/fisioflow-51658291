@@ -1,9 +1,11 @@
-import { Alert } from 'react-native';
-import { HapticFeedback } from './haptics';
 
 /**
  * Error types for better handling
  */
+
+import { Alert } from 'react-native';
+import { HapticFeedback } from './haptics';
+
 export enum ErrorType {
   NETWORK = 'network',
   PERMISSION = 'permission',

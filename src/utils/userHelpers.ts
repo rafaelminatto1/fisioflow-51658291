@@ -2,16 +2,17 @@
  * Helpers para operações relacionadas ao usuário e organização
  */
 
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
-import { doc, getDoc } from '@/integrations/firebase/app';
 
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Obtém o organization_id do usuário atual
  * @returns Promise com o organization_id ou null se não encontrado
  * @throws Error se o usuário não estiver autenticado
  */
+
+import { getFirebaseAuth, db, doc, getDoc } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export async function getUserOrganizationId(): Promise<string | null> {
   const auth = getFirebaseAuth();
   const user = auth.currentUser;

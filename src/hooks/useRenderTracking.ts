@@ -2,6 +2,7 @@
  * Hook para capturar erros de renderização em componentes React
  * Útil para debugging de erros que ocorrem durante a renderização
  */
+
 import { useEffect, useRef } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

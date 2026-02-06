@@ -1,10 +1,12 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useRef, useState, useEffect } from 'react';
 
 /**
  * Gerenciador de deduplicação de queries
  * Evita requisições duplicadas para a mesma query key
  */
+
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useRef, useState, useEffect } from 'react';
+
 class QueryDeduplicationManager {
   private pendingQueries = new Map<string, Promise<unknown>>();
   private completedQueries = new Map<string, { data: unknown; timestamp: number }>();

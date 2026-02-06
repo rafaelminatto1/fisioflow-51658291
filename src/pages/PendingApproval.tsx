@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, LogOut } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, LogOut } from 'lucide-react';
 
 export default function PendingApproval() {
     const { user, signOut } = useAuth();

@@ -1,9 +1,11 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Tipos de sons de gamificação
  */
+
+import { useCallback, useRef, useEffect } from 'react';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export type GamificationSoundType =
   | 'levelUp'           // Subiu de nível
   | 'achievement'       // Achievement desbloqueado

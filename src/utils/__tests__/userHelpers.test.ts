@@ -1,8 +1,10 @@
+
+// Mock do Supabase
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { getUserOrganizationId, requireUserOrganizationId } from '../userHelpers';
 import { supabase } from '@/integrations/supabase/client';
 
-// Mock do Supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {

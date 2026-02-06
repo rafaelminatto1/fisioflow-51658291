@@ -3,9 +3,6 @@
  * Endpoint genérico para avaliações via HTTP
  */
 
-import { onRequest } from 'firebase-functions/v2/https';
-import { logger } from '../lib/logger';
-import { CORS_ORIGINS } from '../init';
 
 /**
  * Endpoint HTTP para avaliações
@@ -14,6 +11,11 @@ import { CORS_ORIGINS } from '../init';
 /**
  * Handler HTTP para avaliações
  */
+
+import { onRequest } from 'firebase-functions/v2/https';
+import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
+
 export const apiEvaluateHandler = async (req: any, res: any) => {
   // CORS headers
   res.set('Access-Control-Allow-Origin', '*');

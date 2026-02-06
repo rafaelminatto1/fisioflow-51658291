@@ -2,12 +2,11 @@
  * usePatientDocuments - Migrated to Firebase
  *
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth, db, getFirebaseStorage } from '@/integrations/firebase/app';
 
-import {
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy, getFirebaseAuth, db, getFirebaseStorage } from '@/integrations/firebase/app';
+import { useToast } from '@/hooks/use-toast';
+
   ref,
   uploadBytes,
   getDownloadURL,

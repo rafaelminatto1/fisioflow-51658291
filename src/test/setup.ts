@@ -1,11 +1,13 @@
-import { beforeAll, afterEach, afterAll, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
-import '@testing-library/jest-dom'
 
 // Fix for "Right-hand side of 'instanceof' is not an object" error in React 18
 // This is caused by jsdom's implementation not being compatible with React 18's instanceof checks
 
 // Store original Node class
+
+import { beforeAll, afterEach, afterAll, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
 const OriginalNode = global.Node
 
 // Monkey patch to prevent instanceof errors

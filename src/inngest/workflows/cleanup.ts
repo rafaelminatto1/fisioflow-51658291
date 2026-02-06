@@ -2,10 +2,10 @@
  * Cleanup Workflow - Migrated to Firebase
  *
  */
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, CleanupPayload, CleanupResult, InngestStep } from '../../lib/inngest/types.js';
-import { getAdminDb } from '../../lib/firebase/admin.js';
-import { deleteByQuery } from '../../lib/firebase/admin.js';
+import { getAdminDb, deleteByQuery } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
 
 export const cleanupWorkflow = inngest.createFunction(

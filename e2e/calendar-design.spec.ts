@@ -1,9 +1,11 @@
-import { test, expect } from '@playwright/test';
 
 /**
  * Testes E2E para validar o novo design dos cards da agenda
  * Foco: Alto contraste, legibilidade, alinhamento de grid
  */
+
+import { test, expect } from '@playwright/test';
+
 test.describe('Agenda - Novo Design dos Cards', () => {
   test.beforeEach(async ({ page }) => {
     // Login - usar URL completa para evitar problemas de porta

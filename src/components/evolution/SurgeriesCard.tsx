@@ -3,6 +3,9 @@
  * Lista cirurgias de forma compacta
  */
 
+
+/** Formata tempo desde a cirurgia de forma compacta */
+
 import { useState } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,7 +18,6 @@ import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
 import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
 
-/** Formata tempo desde a cirurgia de forma compacta */
 export function formatTimeSinceSurgery(surgeryDate: string): string {
   const now = new Date();
   const date = new Date(surgeryDate);

@@ -6,11 +6,13 @@
  * @module communications/resend-templates
  */
 
+
+// Resend instance
+
 import { Resend } from 'resend';
 import { RESEND_API_KEY_SECRET } from '../init';
 import * as logger from 'firebase-functions/logger';
 
-// Resend instance
 let resendInstance: Resend | null = null;
 
 const getResend = (): Resend => {

@@ -1,9 +1,11 @@
 
+
+// Load environment variables
+
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables
 dotenv.config({ path: '.env' });
 
 // Credentials

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import {
+
   MessageCircle, Send, Plus, CheckCircle2, Clock, Users,
   Settings, FileText, Zap, Check, X
 } from 'lucide-react';

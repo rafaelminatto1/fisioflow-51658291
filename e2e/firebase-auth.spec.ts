@@ -5,10 +5,12 @@
  * Incluindo login, logout, navegação e notificações
  */
 
+
+// Helper para aguardar carregamento
+
 import { test, expect, Page } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
-// Helper para aguardar carregamento
 async function waitForPageLoad(page: Page, timeout = 10000) {
   await page.waitForLoadState('domcontentloaded', { timeout });
   await page.waitForTimeout(500); // Pequeno delay para hydration

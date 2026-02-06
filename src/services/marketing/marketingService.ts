@@ -2,7 +2,6 @@
  * Marketing Service - Enhanced with LGPD Consent Management
  */
 
-import {
   db,
   collection,
   addDoc,

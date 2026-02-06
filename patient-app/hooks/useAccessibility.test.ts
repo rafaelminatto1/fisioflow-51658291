@@ -2,9 +2,11 @@
  * useAccessibility Hooks Tests
  */
 
-import { useAccessibility, useAnimationDuration, useScreenAnnouncement } from './useAccessibility';
 
 // Mock react-native AccessibilityInfo
+
+import { useAccessibility, useAnimationDuration, useScreenAnnouncement } from './useAccessibility';
+
 jest.mock('react-native', () => ({
   AccessibilityInfo: {
     addEventListener: jest.fn(() => ({ remove: jest.fn() })),

@@ -8,10 +8,6 @@
  * @module middleware/api-key
  */
 
-import { HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
-import { logger } from 'firebase-functions';
-import * as crypto from 'crypto';
 
 // ============================================================================================
 // TYPES
@@ -20,6 +16,12 @@ import * as crypto from 'crypto';
 /**
  * API Key scopes for permission management
  */
+
+import { HttpsError } from 'firebase-functions/v2/https';
+import { getPool } from '../init';
+import { logger } from 'firebase-functions';
+import * as crypto from 'crypto';
+
 export enum ApiKeyScope {
   /** Full access to all resources */
   FULL = 'full',

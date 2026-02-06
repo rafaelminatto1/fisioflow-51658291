@@ -3,7 +3,7 @@
  * Monitors network connection status
  */
 
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 
 export interface NetworkStatus {

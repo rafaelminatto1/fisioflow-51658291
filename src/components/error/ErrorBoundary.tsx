@@ -1,3 +1,9 @@
+
+/**
+ * Hook para configurar listener global de erros de preload do Vite
+ * Detecta erros "504 (Outdated Optimize Dep)" e recarrega a página automaticamente
+ */
+
 import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { trackError } from '../../lib/analytics';
 import { Bandage, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
@@ -5,10 +11,6 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-/**
- * Hook para configurar listener global de erros de preload do Vite
- * Detecta erros "504 (Outdated Optimize Dep)" e recarrega a página automaticamente
- */
 function useVitePreloadErrorHandler() {
   useEffect(() => {
     const handleVitePreloadError = (event: Event) => {

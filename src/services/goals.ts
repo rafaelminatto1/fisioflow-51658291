@@ -2,16 +2,17 @@
  * Goals Service - Migrated to Firebase
  */
 
-import { db } from '@/integrations/firebase/app';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
+
+
+// Types matching the DB schema manually for now (until types.ts is regenerated)
+
+import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
+import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-
-// Types matching the DB schema manually for now (until types.ts is regenerated)
 export type GoalProfileStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export interface GoalProfile {

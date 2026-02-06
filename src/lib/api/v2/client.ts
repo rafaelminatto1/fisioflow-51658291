@@ -1,10 +1,11 @@
-import { getAuth } from 'firebase/auth';
-import { fisioLogger } from '@/lib/errors/logger';
 
 /**
  * Cliente HTTP genérico para consumir Cloud Functions V2
  * Gerencia automaticamente o token de autenticação do Firebase
  */
+
+import { getAuth } from 'firebase/auth';
+import { fisioLogger } from '@/lib/errors/logger';
 
 interface RequestOptions extends RequestInit {
   data?: any;

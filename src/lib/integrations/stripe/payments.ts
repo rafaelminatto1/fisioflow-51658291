@@ -5,7 +5,6 @@
 
 import Stripe from 'stripe';
 
-import type {
   CheckoutSession,
   Customer,
   Subscription,

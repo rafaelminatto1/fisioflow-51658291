@@ -1,10 +1,11 @@
-import { Platform } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
 /**
  * Haptic feedback utilities
  * Provides consistent haptic feedback across the app
  */
+
+import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 export const HapticFeedback = {
   /**

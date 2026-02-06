@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, QueryDocumentSnapshot } from '@/integrations/firebase/app';
-import type {
+
   PainMapRecord,
   PainEvolutionData,
   PainStatistics,

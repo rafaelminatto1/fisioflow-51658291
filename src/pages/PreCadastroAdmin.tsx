@@ -1,10 +1,8 @@
 import { MainLayout } from '@/components/layout/MainLayout';
-import { collection, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, doc, writeBatch } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, doc, writeBatch, db } from '@/integrations/firebase/app';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { PreCadastroStats } from '@/components/precadastro/PreCadastroStats';

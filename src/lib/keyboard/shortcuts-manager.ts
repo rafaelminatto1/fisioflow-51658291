@@ -3,12 +3,13 @@
  * @module lib/keyboard/shortcuts-manager
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // =====================================================================
 // TYPES
 // =====================================================================
+
+import { useCallback, useEffect, useRef } from 'react';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface KeyboardShortcut {
   key: string;

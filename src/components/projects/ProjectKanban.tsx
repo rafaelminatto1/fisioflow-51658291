@@ -1,4 +1,4 @@
-import { KanbanBoard } from "@/components/tarefas/KanbanBoard";
+import { KanbanBoard } from '@/components/tarefas/KanbanBoard';
 
 interface ProjectKanbanProps {
     projectId: string;

@@ -3,13 +3,10 @@
  */
 
 import { useEffect } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, limit, onSnapshot, db } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();

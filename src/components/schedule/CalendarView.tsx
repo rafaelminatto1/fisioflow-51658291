@@ -1,3 +1,10 @@
+
+
+/**
+ * Feature flag to enable @dnd-kit implementation for drag and drop.
+ * Set to true to use the new @dnd-kit implementation, false to use HTML5 native.
+ */
+
 import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -5,7 +12,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Appointment } from '@/types/appointment';
-
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
@@ -18,10 +24,6 @@ import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 
-/**
- * Feature flag to enable @dnd-kit implementation for drag and drop.
- * Set to true to use the new @dnd-kit implementation, false to use HTML5 native.
- */
 const USE_DND_KIT = true;
 
 export type CalendarViewType = 'day' | 'week' | 'month';

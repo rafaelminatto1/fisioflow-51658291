@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { EmpresaModal } from '@/components/admin/crud/EmpresaModal';
-import {
+
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,

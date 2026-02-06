@@ -5,6 +5,7 @@
  * Rodar com app na porta 8084:
  *   BASE_URL=http://127.0.0.1:8084 npx playwright test e2e/appointment-full-flow.spec.ts --project=chromium
  */
+
 import { test, expect } from '@playwright/test';
 
 test.describe('Fluxo completo: agendamento → agenda → editar → evolução', () => {

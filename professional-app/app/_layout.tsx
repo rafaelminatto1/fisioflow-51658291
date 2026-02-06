@@ -1,3 +1,6 @@
+
+// Prevent the splash screen from auto-hiding
+
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +10,6 @@ import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import * as SplashScreen from 'expo-splash-screen';
 import { registerForPushNotificationsAsync } from '@/lib/notifications';
 
-// Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

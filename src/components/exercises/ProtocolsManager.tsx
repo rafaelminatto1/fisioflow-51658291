@@ -1,4 +1,3 @@
-
 import { useState, useMemo, memo, useEffect } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { useDebounce } from '@/hooks/performance/useDebounce';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
+
   Plus, Edit, Trash2, Search, ChevronRight, Calendar,
   AlertTriangle, CheckCircle2, Clock, Target, Milestone
 } from 'lucide-react';

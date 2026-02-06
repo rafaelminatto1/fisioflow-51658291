@@ -1,4 +1,3 @@
-import {
     Grid3X3, Activity, Heart, Layers, Dumbbell, Target,
     Calendar, Zap, Users
 } from 'lucide-react';

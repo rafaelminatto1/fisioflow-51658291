@@ -1,9 +1,11 @@
+
+// Definir a chave secreta
+
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { defineString } from 'firebase-functions/params';
 import { Resend } from 'resend';
 import * as logger from 'firebase-functions/logger';
 
-// Definir a chave secreta
 const RESEND_API_KEY = defineString('RESEND_API_KEY');
 const RESEND_FROM_EMAIL = defineString('RESEND_FROM_EMAIL');
 

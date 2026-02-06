@@ -8,12 +8,14 @@
  * @module lib/validations/api
  */
 
-import { z } from 'zod';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Common validation schemas
  */
+
+import { z } from 'zod';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export const commonSchemas = {
   /**
    * Entity ID validation (UUID or string ID)

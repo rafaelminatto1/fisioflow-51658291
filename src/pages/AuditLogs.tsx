@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
+
   Table,
   TableBody,
   TableCell,

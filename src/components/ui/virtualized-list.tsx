@@ -12,14 +12,16 @@
  * />
  */
 
-import { useMemo, useRef, useCallback, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { useDebouncedCallback } from '@/hooks/performance/useDebounce';
 
 /**
  * Throttle otimizado para scroll usando requestAnimationFrame
  * Mais eficiente que setTimeout para eventos de scroll
  */
+
+import { useMemo, useRef, useCallback, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useDebouncedCallback } from '@/hooks/performance/useDebounce';
+
 function useScrollThrottle(callback: (scrollTop: number) => void, delay: number = 16) {
   const rafRef = useRef<number>();
   const lastRunRef = useRef<number>(Date.now());

@@ -1,9 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function AppointmentAnalytics() {
   const { data: dailyData } = useQuery({

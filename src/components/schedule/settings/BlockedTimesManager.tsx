@@ -9,7 +9,7 @@ import { CalendarOff, Plus, Trash2, Loader2, Calendar, Clock, Info, CheckCircle2
 import { useScheduleSettings, BlockedTime } from '@/hooks/useScheduleSettings';
 import { format, parseISO, isToday, isThisWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
+
   Dialog,
   DialogContent,
   DialogDescription,

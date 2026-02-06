@@ -3,7 +3,6 @@
  * @module lib/accessibility/a11y-utils
  */
 
-import { useEffect, useRef, useCallback, useState } from 'react';
 
 // =====================================================================
 // FOCUS MANAGEMENT
@@ -12,6 +11,9 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 /**
  * Tenta focar em um elemento por seletor
  */
+
+import { useEffect, useRef, useCallback, useState } from 'react';
+
 export function focusBySelector(selector: string, fallbackIndex?: number): boolean {
   const element = document.querySelector(selector) as HTMLElement | null;
 

@@ -1,11 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Download, Trash2, Clock, CheckCircle, AlertCircle, FileArchive } from "lucide-react";
-import { useDataExport } from "@/hooks/useDataExport";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Download, Trash2, Clock, CheckCircle, AlertCircle, FileArchive } from 'lucide-react';
+import { useDataExport } from '@/hooks/useDataExport';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function DataExportPanel() {
   const {

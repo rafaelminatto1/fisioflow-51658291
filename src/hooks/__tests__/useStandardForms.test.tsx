@@ -1,10 +1,12 @@
+
+// Mock do supabase
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCreateStandardForm, STANDARD_FORMS } from '../useStandardForms';
 
-// Mock do supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(),

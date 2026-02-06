@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
 import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import {
+
   LayoutDashboard,
   Users,
   Calendar,

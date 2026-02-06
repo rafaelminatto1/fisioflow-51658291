@@ -2,10 +2,9 @@
  * useNotificationPreferences - Migrated to Firebase
  *
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, setDoc } from '@/integrations/firebase/app';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, setDoc, getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 const auth = getFirebaseAuth();
 

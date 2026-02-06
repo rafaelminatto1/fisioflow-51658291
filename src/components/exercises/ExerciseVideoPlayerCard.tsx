@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Keyboard, RotateCcw, RotateCw, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import {
+
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import {
+
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,

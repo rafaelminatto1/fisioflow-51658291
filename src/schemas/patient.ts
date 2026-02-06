@@ -1,11 +1,13 @@
-import { z } from 'zod';
-import { parseBrazilianDate, parseDateFlexible, isValidCPF, isValidPhone, isValidEmail, isValidName } from '@/utils/validators';
 
 // ============================================================================
 // VALIDADORES BRASILEIROS
 // ============================================================================
 
 /** Valida CPF brasileiro */
+
+import { z } from 'zod';
+import { parseBrazilianDate, parseDateFlexible, isValidCPF, isValidPhone, isValidEmail, isValidName } from '@/utils/validators';
+
 const cpfValidator = z.string().refine(
   (val) => !val || isValidCPF(val),
   { message: 'CPF inválido' }

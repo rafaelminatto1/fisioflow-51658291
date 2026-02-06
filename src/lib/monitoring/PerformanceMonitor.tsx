@@ -3,10 +3,12 @@
  * Fornece métricas em tempo real durante o desenvolvimento
  */
 
+
+// Só ativo em desenvolvimento
+
 import { useEffect, useRef } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Só ativo em desenvolvimento
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 interface MetricEntry {

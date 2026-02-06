@@ -1,5 +1,5 @@
-import { toast } from "sonner";
-import * as Sentry from "@sentry/react";
+import { toast } from 'sonner';
+import * as Sentry from '@sentry/react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface ErrorReportOptions {

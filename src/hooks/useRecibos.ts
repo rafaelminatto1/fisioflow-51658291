@@ -2,12 +2,10 @@
  * useRecibos - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export interface Recibo {
   id: string;

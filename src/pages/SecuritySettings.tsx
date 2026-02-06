@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, FileCheck, Lock, Key, Activity } from "lucide-react";
-import { LGPDConsentModal } from "@/components/security/LGPDConsentModal";
-import { DataExportPanel } from "@/components/security/DataExportPanel";
-import { MFASettings } from "@/components/auth/MFASettings";
-import { useAuth } from "@/hooks/useAuth";
-import { useLGPDConsents } from "@/hooks/useLGPDConsents";
+import { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Shield, FileCheck, Lock, Key, Activity } from 'lucide-react';
+import { LGPDConsentModal } from '@/components/security/LGPDConsentModal';
+import { DataExportPanel } from '@/components/security/DataExportPanel';
+import { MFASettings } from '@/components/auth/MFASettings';
+import { useAuth } from '@/hooks/useAuth';
+import { useLGPDConsents } from '@/hooks/useLGPDConsents';
 
 export default function SecuritySettings() {
   const [consentModalOpen, setConsentModalOpen] = useState(false);

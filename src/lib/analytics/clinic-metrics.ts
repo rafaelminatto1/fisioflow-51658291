@@ -3,7 +3,6 @@
  * @module lib/analytics/clinic-metrics
  */
 
-import {
   startOfDay,
   endOfDay,
   startOfWeek,

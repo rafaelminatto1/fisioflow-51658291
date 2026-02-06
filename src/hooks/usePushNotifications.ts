@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query as firestoreQuery, where, addDoc, deleteDoc } from '@/integrations/firebase/app';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/integrations/firebase/app';
 
 /**
  * usePushNotifications - Migrated to Firebase
  */
+
+import { useState, useEffect } from 'react';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query as firestoreQuery, where, addDoc, deleteDoc, db } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PushSubscription {
   id: string;

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useGamification, Achievement } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
-import {
+
   TrendingUp,
   Star, Crown, Medal, Award, CheckCircle2,
   Flame,

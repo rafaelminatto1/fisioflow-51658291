@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
+
   Search, Calendar, SortAsc, Grid3X3, List, Filter, Download, PlusCircle, Target, Shield, Users, Zap, Heart
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';

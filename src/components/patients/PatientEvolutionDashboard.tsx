@@ -1,10 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Calendar, TrendingDown, TrendingUp, Clock, Target, CheckCircle2 } from "lucide-react";
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Activity, Calendar, TrendingDown, TrendingUp, Clock, Target, CheckCircle2 } from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface SessionRecord {
   id: string;

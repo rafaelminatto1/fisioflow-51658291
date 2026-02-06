@@ -3,7 +3,7 @@ import { Bell, Check, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
+
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,

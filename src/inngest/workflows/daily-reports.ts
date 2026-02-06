@@ -2,12 +2,14 @@
  * Daily Reports Workflow - Migrated to Firebase
  *
  */
+
+// Types for organizations and sessions
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 
-// Types for organizations and sessions
 interface Organization {
   id: string;
   name?: string;

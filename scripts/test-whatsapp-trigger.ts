@@ -1,7 +1,9 @@
 
-import { Inngest } from "inngest";
 
 // Initialize Inngest client (matches your project's setup)
+
+import { Inngest } from 'inngest';
+
 const inngest = new Inngest({ id: "fisioflow-notifications" });
 
 async function testWhatsApp() {

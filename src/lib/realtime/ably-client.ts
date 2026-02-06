@@ -3,12 +3,14 @@
  * Cliente para conexão em tempo real com Ably
  */
 
-import * as Ably from 'ably';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Configuração do Ably
  */
+
+import * as Ably from 'ably';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 const ABLY_API_KEY = import.meta.env.VITE_ABLY_API_KEY;
 
 if (!ABLY_API_KEY) {

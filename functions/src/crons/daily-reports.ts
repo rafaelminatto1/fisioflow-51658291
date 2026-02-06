@@ -7,10 +7,6 @@
  * @version 1.0.0 - Firebase Functions v2
  */
 
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { logger } from 'firebase-functions';
-import { getAdminDb } from '../init';
-import { sendDailyReportEmail, sendWeeklySummaryEmail } from '../communications/resend-templates';
 
 /**
  * Daily Reports Scheduled Function
@@ -23,6 +19,12 @@ import { sendDailyReportEmail, sendWeeklySummaryEmail } from '../communications/
  * Schedule: "every day 08:00"
  * Region: southamerica-east1
  */
+
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { logger } from 'firebase-functions';
+import { getAdminDb } from '../init';
+import { sendDailyReportEmail, sendWeeklySummaryEmail } from '../communications/resend-templates';
+
 export const dailyReports = onSchedule({
   schedule: 'every day 08:00',
   region: 'southamerica-east1',

@@ -4,8 +4,6 @@
  * Convenience functions to send events to Inngest from anywhere in the app
  */
 
-import { inngest } from './client';
-import { Events } from './types';
 
 // ============================================================================
 // NOTIFICATION HELPERS
@@ -14,6 +12,10 @@ import { Events } from './types';
 /**
  * Send a notification (email, WhatsApp, or push)
  */
+
+import { inngest } from './client';
+import { Events } from './types';
+
 export async function sendNotification(data: {
   userId: string;
   organizationId: string;

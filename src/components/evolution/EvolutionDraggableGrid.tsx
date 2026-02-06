@@ -1,3 +1,8 @@
+
+// ============================================================================================
+// TYPES & INTERFACES
+// ============================================================================================
+
 import React, { useState, useEffect } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
@@ -18,10 +23,6 @@ import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db, doc, updateDoc } from '@/integrations/firebase/app';
-
-// ============================================================================================
-// TYPES & INTERFACES
-// ============================================================================================
 
 export interface SOAPData {
     subjective: string;

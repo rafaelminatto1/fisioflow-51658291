@@ -1,8 +1,10 @@
+
+// Interfaces para Computer Vision
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useMediaPipeVision } from '@/hooks/performance';
 
-// Interfaces para Computer Vision
 export interface PoseKeypoint {
   x: number;
   y: number;

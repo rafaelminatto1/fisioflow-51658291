@@ -2,6 +2,7 @@
  * Service for caching appointments data offline.
  * Provides methods for managing appointment data in local storage for offline use.
  */
+
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppointmentBase } from '@/types/appointment';
 

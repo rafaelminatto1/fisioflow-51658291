@@ -7,7 +7,7 @@ import { doc, updateDoc } from '@/integrations/firebase/app';
 import { useState, useCallback } from 'react';
 import { addDays, format, isSameDay, parseISO } from 'date-fns';
 import { useWaitlist, WaitlistEntry } from './useWaitlist';
-import {
+
   generateAvailableSlots,
   generateWaitlistRecommendations,
   findBestSlotForPatient,

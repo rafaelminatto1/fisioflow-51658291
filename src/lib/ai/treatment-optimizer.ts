@@ -12,15 +12,16 @@
  * @version 1.0.0
  */
 
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
 import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
-// ============================================================================
-// TYPES
-// ============================================================================
 
 export type EvidenceLevel = 'strong' | 'moderate' | 'limited' | 'expert_opinion';
 export type RecommendationType = 'add' | 'modify' | 'remove' | 'replace';

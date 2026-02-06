@@ -8,6 +8,7 @@
  * Executar (com navegador visível): BASE_URL=http://localhost:8084 pnpm exec playwright test e2e/fluxo-evolucao-visual.spec.ts --project=chromium --headed
  * Screenshots: fisioflow-screenshots/fluxo-evolucao/
  */
+
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 import path from 'path';

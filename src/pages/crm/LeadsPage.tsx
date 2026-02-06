@@ -6,12 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Plus, Phone, Mail, Search, Kanban, BarChart3, Download } from 'lucide-react';
-import { useLeads, useLeadMetrics } from '@/hooks/useLeads';
+import { useLeads, useLeadMetrics, useUpdateLead, Lead } from '@/hooks/useLeads';
 import { LeadDialog } from '@/components/crm/LeadDialog';
 import { LeadDetailSheet } from '@/components/crm/LeadDetailSheet';
 import { LeadFunnel } from '@/components/crm/LeadFunnel';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { useUpdateLead, Lead } from '@/hooks/useLeads';
 import { toast } from 'sonner';
 
 const ESTAGIOS = [

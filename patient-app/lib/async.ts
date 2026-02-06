@@ -3,12 +3,14 @@
  * Helper functions for handling async operations with better error handling
  */
 
-import { Alert } from 'react-native';
-import { log } from './logger';
 
 /**
  * Result type for operations that can fail
  */
+
+import { Alert } from 'react-native';
+import { log } from './logger';
+
 export type Result<T, E = Error> =
   | { success: true; data: T }
   | { success: false; error: E };

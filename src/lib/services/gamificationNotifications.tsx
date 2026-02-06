@@ -1,10 +1,12 @@
-import { toast } from '@/hooks/use-toast';
-import { Trophy, Flame, Zap, Star, Award, Target, Gift } from 'lucide-react';
 
 /**
  * Gamification Notification Service
  * Provides pre-configured toast notifications for gamification events
  */
+
+import { toast } from '@/hooks/use-toast';
+import { Trophy, Flame, Zap, Star, Award, Target, Gift } from 'lucide-react';
+
 export class GamificationNotificationService {
   /**
    * Show XP awarded notification

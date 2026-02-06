@@ -8,13 +8,15 @@
  * @module types/common
  */
 
-import type { ComponentType } from 'react';
-import type { LucideIcon } from 'lucide-react';
 
 /**
  * JSON-serializable value types
  * Use this instead of `any` for data that comes from/to JSON
  */
+
+import type { ComponentType } from 'react';
+import type { LucideIcon } from 'lucide-react';
+
 export type JsonValue =
   | string
   | number

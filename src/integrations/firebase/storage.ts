@@ -4,12 +4,14 @@
  * Provides access to Firebase Storage for file uploads.
  */
 
-import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
-import { getFirebaseApp } from './app';
 
 /**
  * Get Firebase Storage instance
  */
+
+import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
+import { getFirebaseApp } from './app';
+
 export function getFirebaseStorage() {
   const app = getFirebaseApp();
   return getStorage(app);

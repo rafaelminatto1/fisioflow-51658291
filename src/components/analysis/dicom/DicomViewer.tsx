@@ -4,13 +4,15 @@
  * Reduz significativamente o tamanho inicial do bundle
  */
 
+
+/* eslint-disable react-refresh/only-export-components */
+// Re-export the hook for convenience - this is a valid pattern for organizing related code
+
 import React, { Suspense, lazy } from 'react';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ComponentErrorBoundary, ComputerVisionFallback } from '@/components/error/ComponentErrorBoundary';
 
-/* eslint-disable react-refresh/only-export-components */
-// Re-export the hook for convenience - this is a valid pattern for organizing related code
 export { usePreloadDicomViewer } from './hooks/usePreloadDicomViewer';
 /* eslint-enable react-refresh/only-export-components */
 

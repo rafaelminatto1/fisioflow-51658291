@@ -1,7 +1,9 @@
+
+// Ler credenciais do .env
+
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 
-// Ler credenciais do .env
 let SUPABASE_URL = 'https://ycvbtjfrchcyvmkvuocu.supabase.co';
 let SUPABASE_ANON_KEY = '';
 

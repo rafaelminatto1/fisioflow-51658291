@@ -18,12 +18,13 @@
 // IMPORTS (para uso interno)
 // =====================================================================
 
-import { BUSINESS_HOURS, SLOT_HEIGHT, DEFAULT_LIST_HEIGHT, VIEW_TYPES, STATUS_COLORS } from './constants';
-import { normalizeTime, calculateEndTime, formatTime } from './utils';
 
 // =====================================================================
 // EXPORTS DE MÓDULOS
 // =====================================================================
+
+import { BUSINESS_HOURS, SLOT_HEIGHT, DEFAULT_LIST_HEIGHT, VIEW_TYPES, STATUS_COLORS } from './constants';
+import { normalizeTime, calculateEndTime, formatTime } from './utils';
 
 export * from './constants';
 export * from './types';

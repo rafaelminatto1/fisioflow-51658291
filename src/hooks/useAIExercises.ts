@@ -11,7 +11,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import type { Exercise } from '@/types';
-import type {
+
   PatientProfileContext,
   ExerciseProgramRecommendation,
   ExerciseSuggestionResponse,

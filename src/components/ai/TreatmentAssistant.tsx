@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
-import {
+
   Brain,
   Sparkles,
   TrendingUp,

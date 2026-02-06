@@ -1,4 +1,3 @@
-import { test, expect } from '@playwright/test';
 
 /**
  * Grid Margin and Box-Sizing CSS Tests
@@ -12,6 +11,9 @@ import { test, expect } from '@playwright/test';
  * - box-sizing: border-box to prevent width calculation issues
  * - z-index: 10 on resize handles
  */
+
+import { test, expect } from '@playwright/test';
+
 test.describe('DraggableGrid - CSS and Layout Properties', () => {
     test.beforeEach(async ({ page }) => {
         // Navigate to auth page

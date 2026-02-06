@@ -1,10 +1,12 @@
+
+// Configure notification behavior
+
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { app } from './firebase';
 
-// Configure notification behavior
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

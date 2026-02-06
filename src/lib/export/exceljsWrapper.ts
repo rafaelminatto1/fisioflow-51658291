@@ -3,9 +3,11 @@
  * This allows us to use exceljs (secure) without rewriting all calling code
  */
 
-import ExcelJS from 'exceljs';
 
 // Types to match xlsx API
+
+import ExcelJS from 'exceljs';
+
 export interface WorkSheet {
   [key: string]: any;
   '!cols'?: ColInfo[];

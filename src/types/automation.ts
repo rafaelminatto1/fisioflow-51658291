@@ -3,11 +3,13 @@
  * Sistema de automações visuais (estilo monday.com/Make)
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
 
 /**
  * Automação completa
  */
+
+import { Timestamp } from '@/integrations/firebase/app';
+
 export interface Automation {
   id: string;
   name: string;

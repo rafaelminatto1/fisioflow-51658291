@@ -3,11 +3,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy,  } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import {
+
   RecurringAppointmentSeries,
   RecurringAppointmentOccurrence,
   RecurringAppointmentFormData,

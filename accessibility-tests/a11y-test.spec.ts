@@ -1,8 +1,10 @@
+
+// Test configuration
+
 import { test, expect, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
-// Test configuration
 const BASE_URL = 'https://fisioflow-migration.web.app';
 const LOGIN_URL = 'https://moocafisio.com.br';
 const EMAIL = 'rafael.minatto@yahoo.com.br';

@@ -4,11 +4,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
-import { db } from '@/integrations/firebase/app';
 
-import {
   generateDashboardMetrics,
   generateTrendData,
   ClinicDashboardMetrics,

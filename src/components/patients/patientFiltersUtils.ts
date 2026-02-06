@@ -1,8 +1,10 @@
-import type { PatientStats } from '@/hooks/usePatientStats';
 
 /**
  * Filtros disponíveis para busca de pacientes
  */
+
+import type { PatientStats } from '@/hooks/usePatientStats';
+
 export type PatientFilters = {
   classification?: PatientStats['classification'] | 'all';
   sessionsRange?: [number, number];

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import {
+
   Heart, Share2, ExternalLink, Edit,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,
   AlertTriangle, Printer, X, CheckCircle2, ChevronRight

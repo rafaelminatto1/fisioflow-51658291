@@ -4,7 +4,6 @@
 
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppointmentService } from '@/services/appointmentService';

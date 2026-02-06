@@ -1,11 +1,13 @@
-import { db, collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * XP Rewards Configuration
  * Centralized configuration for all XP rewards in the system
  * These values can be overridden by database settings
  */
+
+import { db, collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export const XP_REWARDS = {
   // Session Activities
   SESSION_COMPLETION: 50,

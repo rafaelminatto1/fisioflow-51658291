@@ -8,14 +8,15 @@
  * @version 1.0.0
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { subDays, startOfMonth, endOfMonth } from 'date-fns';
-import { analyzeClinicPopulation, PopulationHealthAnalysis, PopulationAnalysisOptions } from '@/lib/ai/population-health';
 
 // ============================================================================
 // QUERY KEYS
 // ============================================================================
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { analyzeClinicPopulation, PopulationHealthAnalysis, PopulationAnalysisOptions } from '@/lib/ai/population-health';
 
 export const POPULATION_HEALTH_KEYS = {
   all: ['population-health'] as const,

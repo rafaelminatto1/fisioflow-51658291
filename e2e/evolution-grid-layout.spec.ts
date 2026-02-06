@@ -1,5 +1,3 @@
-import { test, expect } from '@playwright/test';
-import { testUsers } from './fixtures/test-data';
 
 /**
  * Evolution Grid Layout Tests
@@ -7,6 +5,10 @@ import { testUsers } from './fixtures/test-data';
  * Tests to verify the correct layout of widgets on the Evolution page,
  * ensuring no overlaps and correct positioning when Pain Scale is expanded/collapsed.
  */
+
+import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
+
 test.describe('Evolution Grid Layout - Widget Positioning', () => {
     test.beforeEach(async ({ page }) => {
         // 1. Login

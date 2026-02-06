@@ -3,15 +3,16 @@
  * @module hooks/calendar/useAppointmentPositioning
  */
 
+
+// =====================================================================
+// TYPES
+// =====================================================================
+
 import { useMemo, useCallback, CSSProperties } from 'react';
 import { isSameDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
 import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
 import { SLOT_HEIGHT } from '@/lib/calendar/constants';
-
-// =====================================================================
-// TYPES
-// =====================================================================
 
 interface AppointmentPosition {
   /** Estilo CSS para posicionamento */

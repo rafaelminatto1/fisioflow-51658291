@@ -2,12 +2,14 @@
  * Tests for AIAssistantPanel component
  */
 
+
+// Mock dependencies
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AIAssistantPanel, AIAssistantMini } from '../AIAssistantPanel';
 import * as useAIInsightsModule from '@/hooks/useAIInsights';
 
-// Mock dependencies
 vi.mock('@/hooks/usePatientAnalytics', () => ({
   usePatientAnalyticsDashboard: vi.fn(() => ({
     data: {

@@ -1,5 +1,3 @@
-import { test, expect } from '@playwright/test';
-import * as fs from 'fs';
 
 /**
  * FINAL COMPREHENSIVE TEST FOR setValue ERROR
@@ -14,6 +12,9 @@ import * as fs from 'fs';
  * 4. Wait 10+ seconds for all errors to appear
  * 5. Report findings
  */
+
+import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
 
 test.describe('Paciente Role - Final setValue Error Check', () => {
   test.setTimeout(180000); // 3 minutes

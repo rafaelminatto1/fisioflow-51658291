@@ -1,3 +1,6 @@
+
+// Dynamic import to avoid bundling heavily if not used or duplicate chunk warning
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Upload, Video, Brain, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-
 import DualVideoPlayer from './DualVideoPlayer';
-// Dynamic import to avoid bundling heavily if not used or duplicate chunk warning
+
 const DynamicAnalysisViewer = React.lazy(() => import('./DynamicAnalysisViewer'));
 import AIReportView from '../reports/AIReportView';
 import ShareReportModal from '../reports/ShareReportModal';

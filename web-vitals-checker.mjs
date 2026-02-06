@@ -1,8 +1,10 @@
+
+// Configuration
+
 import { createServer } from 'http';
 import { parse } from 'url';
 import { chromium } from 'playwright';
 
-// Configuration
 const PAGES = [
   { path: '/dashboard', name: 'Dashboard' },
   { path: '/patients', name: 'Patients' },

@@ -1,3 +1,6 @@
+
+// Lazy load LeadImport (contém exceljs - ~946KB) - só carrega quando a tab é acessada
+
 import { useState, lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,7 +11,6 @@ import { CRMCampanhas } from '@/components/crm/CRMCampanhas';
 import { CRMAutomacoes } from '@/components/crm/CRMAutomacoes';
 import { CRMAnalytics } from '@/components/crm/CRMAnalytics';
 
-// Lazy load LeadImport (contém exceljs - ~946KB) - só carrega quando a tab é acessada
 const LeadImport = lazy(() => import('@/components/crm/LeadImport').then(m => ({ default: m.LeadImport })));
 
 export default function CRMDashboard() {

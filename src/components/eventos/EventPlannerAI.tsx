@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Sparkles, Package, Loader2, Checklist, Info } from 'lucide-react';
 import { useAI } from '@/integrations/firebase/ai';
-import { 
+
   Select, 
   SelectContent, 
   SelectItem, 

@@ -7,7 +7,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertTriangle, Download, Copy } from 'lucide-react';
-
 import VideoComposer from './VideoComposer';
 import { checkMarketingConsent, createMarketingExportRecord, generateSocialCaption } from '@/services/marketing/marketingService';
 

@@ -9,12 +9,14 @@
  * - Pathologies with status tracking
  */
 
+
+// ===== ENUMS =====
+
 import { pgTable, uuid, varchar, text, date, boolean, timestamp, jsonb, pgEnum, integer, numeric } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { appointments } from './appointments';
 import { sessions } from './sessions';
 
-// ===== ENUMS =====
 export const genderEnum = pgEnum('gender', ['M', 'F', 'O']);
 export const pathologyStatusEnum = pgEnum('pathology_status', ['active', 'treated', 'monitoring']);
 export const goalStatusEnum = pgEnum('goal_status', ['pending', 'in_progress', 'achieved', 'abandoned']);

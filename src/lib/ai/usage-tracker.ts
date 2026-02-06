@@ -7,13 +7,15 @@
  * @module lib/ai/usage-monitor
  */
 
-import { db, collection, doc, setDoc, getDoc, getDocs, query as firestoreQuery, where, sum, orderBy, limit } from '@/integrations/firebase/app';
-import { AIUsageRecord, AIFeatureCategory, AIModelType } from '@/integrations/firebase/ai';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Usage statistics for a period
  */
+
+import { db, collection, doc, setDoc, getDoc, getDocs, query as firestoreQuery, where, sum, orderBy, limit } from '@/integrations/firebase/app';
+import { AIUsageRecord, AIFeatureCategory, AIModelType } from '@/integrations/firebase/ai';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export interface UsageStats {
   /** Total requests */
   totalRequests: number;

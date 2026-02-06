@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import { format, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { Avatar } from './Avatar';

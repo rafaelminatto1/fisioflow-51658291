@@ -2,8 +2,9 @@
  * usePatientEvolution - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -12,9 +13,7 @@ import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
 import { getAuth } from 'firebase/auth';
-
 
 const auth = getAuth();
 

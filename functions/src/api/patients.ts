@@ -3,6 +3,11 @@
  * Cloud Functions para gestão de pacientes
  */
 
+
+/**
+ * Lista pacientes com filtros opcionais
+ */
+
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { getPool, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
@@ -13,9 +18,6 @@ import { setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
 import * as admin from 'firebase-admin';
 
-/**
- * Lista pacientes com filtros opcionais
- */
 interface ListPatientsRequest {
   status?: string;
   search?: string;

@@ -1,10 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, addDoc, updateDoc, doc, db } from '@/integrations/firebase/app';
 import { WhatsAppService } from '@/lib/services/WhatsAppService';
 import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
-
-
 
 export interface WhatsAppMetric {
   id: string;

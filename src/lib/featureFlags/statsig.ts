@@ -5,12 +5,13 @@
  * to verify if Statsig was causing production issues.
  */
 
-import * as React from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import * as React from 'react';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type FeatureFlagName =
   // Dashboard

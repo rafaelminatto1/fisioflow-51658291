@@ -2,11 +2,13 @@
  * Tests for usePatientsPaginated hook
  */
 
+
+// Mock Supabase (needed because the hook imports it)
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePatientsPaginated } from '../usePatientCrud';
 
-// Mock Supabase (needed because the hook imports it)
 const { mockSupabase } = vi.hoisted(() => {
   return {
     mockSupabase: {

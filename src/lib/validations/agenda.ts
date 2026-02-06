@@ -1,6 +1,8 @@
-import { z } from "zod";
 
 // Enum schemas
+
+import { z } from 'zod';
+
 export const sessionStatusSchema = z.enum([
   'agendado',
   'confirmado',

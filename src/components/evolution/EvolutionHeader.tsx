@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
+
     ArrowLeft, Calendar, FileText,
     Zap, Eye, EyeOff, Save, Clock, Keyboard, CheckCircle2, UserCog,
     MoreVertical, Loader2, Brain, X

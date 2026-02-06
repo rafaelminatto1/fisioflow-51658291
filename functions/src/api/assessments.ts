@@ -1,13 +1,14 @@
-import { CORS_ORIGINS } from '../init';
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
-import { authorizeRequest } from '../middleware/auth';
-import { AssessmentTemplate, AssessmentSection, PatientAssessment } from '../types/models';
-import { logger } from '../lib/logger';
 
 /**
  * Lista templates de avaliação
  */
+
+import { CORS_ORIGINS, getPool } from '../init';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { authorizeRequest } from '../middleware/auth';
+import { AssessmentTemplate, AssessmentSection, PatientAssessment } from '../types/models';
+import { logger } from '../lib/logger';
+
 interface ListAssessmentTemplatesResponse {
   data: AssessmentTemplate[];
 }

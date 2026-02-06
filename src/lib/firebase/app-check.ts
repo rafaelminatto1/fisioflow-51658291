@@ -1,8 +1,10 @@
+
+// Extend global self type for Firebase App Check debug token
+
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Extend global self type for Firebase App Check debug token
 declare global {
   interface Window {
     FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;

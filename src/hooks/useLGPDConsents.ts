@@ -2,12 +2,11 @@
  * useLGPDConsents - Migrated to Firebase
  *
  */
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { collection, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
-import { toast } from "sonner";
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, orderBy, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { toast } from 'sonner';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
 

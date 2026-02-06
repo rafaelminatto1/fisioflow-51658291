@@ -2,6 +2,7 @@
  * Weekly Summary Workflow - Migrated to Firebase
  *
  */
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';

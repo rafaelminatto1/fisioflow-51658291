@@ -1,4 +1,7 @@
-import AdvancedAnalytics from "@/components/analytics/AdvancedAnalytics";
+
+// Lazy load AdvancedReportGenerator (contém jsPDF - 442KB) - só carrega quando a tab é acessada
+
+import AdvancedAnalytics from '@/components/analytics/AdvancedAnalytics';
 import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -9,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Lazy load AdvancedReportGenerator (contém jsPDF - 442KB) - só carrega quando a tab é acessada
 const AdvancedReportGenerator = lazy(() => import('@/components/reports/AdvancedReportGenerator').then(m => ({ default: m.AdvancedReportGenerator })));
 import {
   FileText,

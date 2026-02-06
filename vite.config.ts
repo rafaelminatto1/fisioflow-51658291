@@ -1,14 +1,16 @@
-import { sentryVitePlugin } from "@sentry/vite-plugin";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+
+// Plugin para substituir placeholders no HTML
+// Note: Let Vite handle automatic script injection, we just replace version placeholders
+
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+import { componentTagger } from 'lovable-tagger';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 
-// Plugin para substituir placeholders no HTML
-// Note: Let Vite handle automatic script injection, we just replace version placeholders
 function htmlPlugin(appVersion: string, buildTime: string, isProduction: boolean): any {
   return {
     name: 'html-transform',

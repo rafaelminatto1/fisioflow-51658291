@@ -2,13 +2,12 @@
  * usePackages - Migrated to Firebase
  *
  */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, serverTimestamp } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, serverTimestamp, db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { FinancialService } from '@/services/financialService';
-import { db, getFirebaseAuth } from '@/integrations/firebase/app';
-
 
 const auth = getFirebaseAuth();
 

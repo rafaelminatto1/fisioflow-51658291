@@ -2,11 +2,9 @@
  * usePatientEvolutionReport - Migrated to Firebase
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query as firestoreQuery, where, orderBy, doc, getDoc,  } from '@/integrations/firebase/app';
-import { toast } from "sonner";
-import { db } from '@/integrations/firebase/app';
-
+import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, doc, getDoc, db } from '@/integrations/firebase/app';
+import { toast } from 'sonner';
 
 export interface PatientEvolutionData {
   sessions: {

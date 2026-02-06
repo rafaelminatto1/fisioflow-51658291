@@ -2,11 +2,8 @@
  * useEventosStats - Migrated to Firebase
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, getCountFromServer, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { db } from "@/integrations/firebase/app";
-
-
+import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, getCountFromServer, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 
 interface Evento {
   id: string;

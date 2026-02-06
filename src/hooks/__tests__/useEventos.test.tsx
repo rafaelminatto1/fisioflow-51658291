@@ -1,9 +1,11 @@
+
+// Type for Supabase query mock
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEventos } from '../useEventos';
 
-// Type for Supabase query mock
 type SupabaseQueryMock = {
   select: ReturnType<typeof vi.fn>;
   insert: ReturnType<typeof vi.fn>;

@@ -1,8 +1,9 @@
-import { chromium } from 'playwright';
 
 /**
  * FASE 3: Testes Funcionais - Simplified version
  */
+
+import { chromium } from 'playwright';
 
 (async () => {
   console.log('🚀 Starting FASE 3: Functional Tests (Simplified)');

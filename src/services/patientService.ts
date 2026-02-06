@@ -1,10 +1,9 @@
-
 import { patientsApi } from '@/integrations/firebase/functions';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import {
+
     getPatientName,
     type PatientDBStandard
 } from '@/lib/constants/patient-queries';

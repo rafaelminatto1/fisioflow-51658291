@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
-import {
+
   Search, Video, Upload, Trash2, Play,
   X, Clock, Edit, AlertCircle, Check,
   Download, ListVideo, ChevronRight, ChevronLeft,

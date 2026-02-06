@@ -7,7 +7,6 @@ import React from 'react';
 import { format, isSameDay, startOfWeek, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-
 import type { TimeCell, GanttZoomLevel } from '@/types/gantt';
 
 interface GanttTimelineHeaderProps {

@@ -6,13 +6,14 @@
  * @module lib/services/translation
  */
 
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface TranslationOptions {
   text: string | string[];

@@ -9,12 +9,14 @@
  * - Payment status
  */
 
+
+// ===== ENUMS =====
+
 import { pgTable, uuid, varchar, text, date, time, boolean, timestamp, integer, pgEnum, numeric } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { patients } from './patients';
 import { sessions } from './sessions';
 
-// ===== ENUMS =====
 export const appointmentStatusEnum = pgEnum('appointment_status', [
     'scheduled',    // Created, pending confirmation
     'confirmed',    // Confirmed via WhatsApp or phone

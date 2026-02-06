@@ -3,12 +3,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, addDoc, updateDoc, orderBy,  } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, addDoc, updateDoc, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
-
 
 export interface Annotation {
   id: string;

@@ -1,6 +1,8 @@
-import { z } from 'zod';
 
 // Sanitização de string
+
+import { z } from 'zod';
+
 const sanitizeString = (str: string) => str.trim().replace(/[<>]/g, '');
 
 // Schema base para criar evento (sem refinement)

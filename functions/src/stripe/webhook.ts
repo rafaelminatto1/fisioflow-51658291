@@ -7,12 +7,14 @@
  * @module stripe/webhook
  */
 
+
+// Firebase Functions v2 CORS - explicitly list allowed origins
+
 import { onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
 
-// Firebase Functions v2 CORS - explicitly list allowed origins
 const CORS_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
   /moocafisio\.com\.br$/,

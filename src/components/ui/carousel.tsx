@@ -1,5 +1,5 @@
-import * as React from "react"
-import useEmblaCarousel, {
+import * as React from 'react';
+
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
 import { ArrowLeft, ArrowRight } from "lucide-react"

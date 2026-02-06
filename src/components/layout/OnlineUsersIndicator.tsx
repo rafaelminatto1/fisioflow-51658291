@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Users, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import {
+
   Popover,
   PopoverContent,
   PopoverTrigger,

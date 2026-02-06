@@ -1,7 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, onSnapshot, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
 
+
+// Query keys factory for better cache management
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, onSnapshot, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
@@ -15,7 +17,6 @@ import { AppointmentService } from '@/services/appointmentService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { isAppointmentConflictError } from '@/utils/appointmentErrors';
 
-// Query keys factory for better cache management
 export const appointmentKeys = {
   all: ['appointments'] as const,
   lists: () => [...appointmentKeys.all, 'list'] as const,

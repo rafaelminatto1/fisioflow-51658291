@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
+
   Bell,
   Check,
   CheckCheck,

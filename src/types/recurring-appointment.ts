@@ -3,7 +3,6 @@
  * @module types/recurring-appointment
  */
 
-import { Appointment } from './appointment';
 
 // =====================================================================
 // ENUMS
@@ -12,6 +11,9 @@ import { Appointment } from './appointment';
 /**
  * Tipo de recorrência
  */
+
+import { Appointment } from './appointment';
+
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 /**

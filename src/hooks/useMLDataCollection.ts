@@ -2,16 +2,17 @@
  * Patient ML Data Collection Hook - Migrated to Firebase
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, setDoc } from '@/integrations/firebase/app';
-import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
 
-import crypto from 'crypto';
-import type { MLTrainingData } from '@/types/patientAnalytics';
 
 
 // Helper to convert doc
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, limit, addDoc, updateDoc, setDoc, db } from '@/integrations/firebase/app';
+import { toast } from 'sonner';
+import crypto from 'crypto';
+import type { MLTrainingData } from '@/types/patientAnalytics';
+
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) =>
   ({ id: doc.id, ...doc.data() });
 

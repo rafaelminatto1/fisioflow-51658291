@@ -1,15 +1,16 @@
-import { CORS_ORIGINS } from "../init";
 /**
  * Admin Function: Create Firebase User
  * Executar uma vez para criar usuário inicial
  */
 
-import { onCall } from 'firebase-functions/v2/https';
-import { getAuth } from 'firebase-admin/auth';
-import { initializeApp } from 'firebase-admin/app';
-import { getApps } from 'firebase-admin/app';
 
 // Initialize Firebase Admin
+
+import { CORS_ORIGINS } from '../init';
+import { onCall } from 'firebase-functions/v2/https';
+import { getAuth } from 'firebase-admin/auth';
+import { initializeApp, getApps } from 'firebase-admin/app';
+
 if (!getApps().length) {
   initializeApp();
 }

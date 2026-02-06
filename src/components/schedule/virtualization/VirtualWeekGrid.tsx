@@ -4,6 +4,11 @@
  * @module schedule/virtualization/VirtualWeekGrid
  */
 
+
+// =====================================================================
+// TYPES
+// =====================================================================
+
 import React, { memo, useMemo, useRef, useCallback } from 'react';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import { format, isSameDay, startOfDay } from 'date-fns';
@@ -17,10 +22,6 @@ import { CalendarAppointmentCard } from '../CalendarAppointmentCard';
 import { TimeSlotCell } from '../TimeSlotCell';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
-
-// =====================================================================
-// TYPES
-// =====================================================================
 
 interface VirtualWeekGridProps {
   /** Dias da semana para renderizar */

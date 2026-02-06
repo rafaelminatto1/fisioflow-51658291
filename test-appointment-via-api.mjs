@@ -1,7 +1,9 @@
+
+// Ler do .env ou usar valores padrão
+
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 
-// Ler do .env ou usar valores padrão
 let SUPABASE_URL = 'https://ycvbtjfrchcyvmkvuocu.supabase.co';
 let SUPABASE_ANON_KEY = '';
 

@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import {
+
   isScreenReaderEnabled,
   isReduceMotionEnabled,
   isBoldTextEnabled,

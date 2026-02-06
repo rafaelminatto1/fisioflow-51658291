@@ -1,7 +1,3 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getAppCheck } from 'firebase/app-check';
-import { getApp } from 'firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Wrapper para httpsCallable que inclui token do App Check
@@ -10,6 +6,12 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
  * o envio de tokens do App Check. Este wrapper usa fetch diretamente
  * para incluir o token no header.
  */
+
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getAppCheck } from 'firebase/app-check';
+import { getApp } from 'firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export async function callableWithAppCheck<T = any, R = any>(
   name: string,
   data?: T

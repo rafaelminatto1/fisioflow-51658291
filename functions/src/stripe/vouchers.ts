@@ -6,13 +6,15 @@
  * @module stripe/vouchers
  */
 
+
+// Configuração do Stripe
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import Stripe from 'stripe';
 import * as logger from 'firebase-functions/logger';
 import { sendVoucherConfirmationEmail, sendPaymentFailedEmail } from '../communications/resend-templates';
 
-// Configuração do Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
   typescript: true,

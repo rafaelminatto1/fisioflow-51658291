@@ -3,12 +3,12 @@
  * Shows offline/sync status at the top of the screen
  */
 
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
-import {useColors} from '@/hooks/useColorScheme';
-import {useOfflineSync} from '@/hooks/useOfflineSync';
-import {format} from 'date-fns';
-import {ptBR} from 'date-fns/locale';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useColors } from '@/hooks/useColorScheme';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function SyncIndicator() {
   const colors = useColors();

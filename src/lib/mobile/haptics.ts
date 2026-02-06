@@ -1,6 +1,3 @@
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { Capacitor } from '@capacitor/core';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Serviço para feedback tátil (vibrações hápticas)
@@ -10,6 +7,11 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 /**
  * Verifica se haptics está disponível
  */
+
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Capacitor } from '@capacitor/core';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export function isHapticsAvailable(): boolean {
   return Capacitor.isNativePlatform();
 }

@@ -2,16 +2,16 @@
  * usePatientStats - Migrated to Firebase
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
-import { differenceInDays } from 'date-fns';
-import { db } from '@/integrations/firebase/app';
 
 
 
 // ============================================================================================
 // TYPES & INTERFACES
 // ============================================================================================
+
+import { useQuery } from '@tanstack/react-query';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { differenceInDays } from 'date-fns';
 
 export interface PatientStats {
   sessionsCompleted: number;

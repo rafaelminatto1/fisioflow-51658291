@@ -2,6 +2,7 @@
  * Expiring Vouchers Workflow - Migrated to Firebase
  *
  */
+
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';

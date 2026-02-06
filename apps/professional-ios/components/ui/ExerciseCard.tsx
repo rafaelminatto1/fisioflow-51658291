@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ViewStyle } from 'react-native';
-
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { Icon } from './Icon';
