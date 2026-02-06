@@ -2,9 +2,8 @@
  * Exercise Suggestion Flow (Genkit)
  */
 
-import { z } from 'zod';
-import { gemini15Flash } from '@genkit-ai/vertexai';
-import { ai } from '../config';
+import { z } from 'genkit';
+import { ai, gemini15Flash } from '../config';
 
 const ExerciseSuggestionInputSchema = z.object({
     patientId: z.string(),
