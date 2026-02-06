@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Calendar, Ban } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { DropTargetPreviewCard } from './DropTargetPreviewCard';
+import { formatDateToLocalISO } from '@/utils/dateUtils';
 import {
 
   calculateCardWidthPercent,
@@ -70,7 +71,7 @@ export const DroppableTimeSlot = memo(({
   draggedAppointment = null
 }: DroppableTimeSlotProps) => {
   // ID único para o droppable: "slot-YYYY-MM-DD-HH:mm"
-  const dateStr = day.toISOString().split('T')[0];
+  const dateStr = formatDateToLocalISO(day);
   const id = `slot-${dateStr}-${time}`;
 
   const { setNodeRef, isOver } = useDroppable({
