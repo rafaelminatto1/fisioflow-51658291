@@ -12,13 +12,12 @@ export class DoctorService {
             return (response.data || []) as unknown as Doctor[];
         } catch (error) {
             console.error('Error fetching doctors from API, falling back to Firestore search:', error);
-            const q = query(
+            query(
                 collection(db, 'doctors'),
                 where('is_active', '==', true),
                 orderBy('name', 'asc')
             );
-            // We'll leave the fallback to the UI or simpler query if needed,
-            // but the Cloud SQL should be the primary source.
+            // Fallback: devolver vazio para não quebrar a UI, mas poderíamos ler o snapshot aqui.
             return [];
         }
     }
@@ -33,7 +32,7 @@ export class DoctorService {
 
         try {
             const response = await doctorsApi.search({ searchTerm, limit: maxResults });
-            return (response.data || []) as unknown as Doctor[];
+            return (response.data || []) as Doctor[];
         } catch (error) {
             console.error('Error searching doctors from API:', error);
             return [];
@@ -85,7 +84,7 @@ export class DoctorService {
         const docRef = await addDoc(collection(db, 'doctors'), dataToSave);
         const docSnap = await getDoc(docRef);
 
-        const savedData = docSnap.data() as Record<string, any>;
+        const savedData = docSnap.data() as Partial<Doctor> | undefined;
         return {
             id: docSnap.id,
             name: savedData?.name || '',
