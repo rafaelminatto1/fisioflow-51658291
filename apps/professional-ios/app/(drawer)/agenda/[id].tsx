@@ -27,15 +27,6 @@ import type { Appointment } from '@/types';
 
 type AppointmentStatus = 'agendado' | 'confirmado' | 'em_andamento' | 'concluido' | 'cancelado' | 'faltou';
 
-const getStatusOptions = (colors: any) => [
-  { value: 'agendado' as const, label: 'Agendado', color: colors.primary },
-  { value: 'confirmado' as const, label: 'Confirmado', color: '#22c55e' },
-  { value: 'em_andamento' as const, label: 'Em Andamento', color: '#f59e0b' },
-  { value: 'concluido' as const, label: 'Concluído', color: '#10b981' },
-  { value: 'cancelado' as const, label: 'Cancelado', color: '#ef4444' },
-  { value: 'faltou' as const, label: 'Faltou', color: colors.notification },
-];
-
 export default function AppointmentDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -46,11 +37,7 @@ export default function AppointmentDetailScreen() {
   const [updating, setUpdating] = useState(false);
   const [appointment, setAppointment] = useState<Appointment | null>(null);
 
-  useEffect(() => {
-    loadAppointment();
-  }, [appointmentId]);
-
-  const loadAppointment = async () => {
+  const loadAppointment = useCallback(async () => {
     try {
       const docRef = doc(db, 'appointments', appointmentId);
       const docSnap = await getDoc(docRef);
@@ -63,7 +50,11 @@ export default function AppointmentDetailScreen() {
       console.error('Error loading appointment:', error);
       setLoading(false);
     }
-  };
+  }, [appointmentId]);
+
+  useEffect(() => {
+    loadAppointment();
+  }, [loadAppointment]);
 
   const handleStatusChange = useCallback(async (status: AppointmentStatus) => {
     try {

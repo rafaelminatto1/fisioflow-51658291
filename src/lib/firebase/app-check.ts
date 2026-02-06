@@ -19,6 +19,14 @@ declare global {
  * Use reCAPTCHA Enterprise for web environments
  */
 export const initAppCheck = () => {
+  // Temporarily disabled via env to stop reCAPTCHA 400 errors in production.
+  // Set VITE_ENABLE_APPCHECK=true when reconfiguring App Check.
+  const isEnabled = import.meta.env.VITE_ENABLE_APPCHECK === 'true';
+  if (!isEnabled) {
+    logger.info('Firebase App Check disabled via VITE_ENABLE_APPCHECK', null, 'app-check');
+    return;
+  }
+
   if (typeof window === 'undefined') return;
 
   try {
@@ -46,6 +54,9 @@ export const initAppCheck = () => {
  * Get current App Check token for use in custom requests
  */
 export const getAppCheckToken = async (): Promise<string | undefined> => {
+  const isEnabled = import.meta.env.VITE_ENABLE_APPCHECK === 'true';
+  if (!isEnabled) return undefined;
+
   if (typeof window === 'undefined') return undefined;
 
   try {
