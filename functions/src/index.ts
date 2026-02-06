@@ -41,13 +41,12 @@ setGlobalOptions({
     maxInstances: 1,
     // Set default memory for all functions (reduced to save quota)
     memory: '256MiB',
-    // Set default CPU for all functions (1 vCPU is required for concurrency > 1)
-    cpu: 1,
+    // Set default CPU for all functions (lowered to fit within quota)
+    cpu: 0.1,
     // Set timeout for all functions (default is 60s for Gen 2)
     timeoutSeconds: 60,
-    // Set concurrency (number of simultaneous requests per instance)
-    // 80 is a safe default for non-CPU intensive functions
-    concurrency: 80,
+    // Set concurrency to 1 to allow CPU < 1
+    concurrency: 1,
     // Keep minimum instances warm for critical functions (reduces cold starts)
     // Note: This applies globally but can be overridden per function
     minInstances: 0,
@@ -416,7 +415,7 @@ export const runPerformanceIndexes = onRequest(
 // AI FUNCTIONS
 // AI FUNCTIONS (Genkit Modernized)
 export const generateExercisePlan = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { exerciseGeneratorHandler } = await import('./ai/flow-wrappers');
         return exerciseGeneratorHandler(request);
@@ -424,7 +423,7 @@ export const generateExercisePlan = onCall(
 );
 
 export const aiClinicalAnalysis = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { clinicalAnalysisHandler } = await import('./ai/flow-wrappers');
         return clinicalAnalysisHandler(request);
@@ -432,7 +431,7 @@ export const aiClinicalAnalysis = onCall(
 );
 
 export const aiExerciseSuggestion = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { exerciseSuggestionHandler } = await import('./ai/flow-wrappers');
         return exerciseSuggestionHandler(request);
@@ -440,7 +439,7 @@ export const aiExerciseSuggestion = onCall(
 );
 
 export const aiSoapGeneration = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { soapGenerationHandler } = await import('./ai/flow-wrappers');
         return soapGenerationHandler(request);
@@ -448,7 +447,7 @@ export const aiSoapGeneration = onCall(
 );
 
 export const aiMovementAnalysis = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { movementAnalysisHandler } = await import('./ai/movement-analysis');
         return movementAnalysisHandler(request);
@@ -457,7 +456,7 @@ export const aiMovementAnalysis = onCall(
 
 // New AI Functions (Clinical Assistant)
 export const aiClinicalChat = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { aiClinicalChatHandler } = await import('./ai/clinical-chat');
         return aiClinicalChatHandler(request);
@@ -465,7 +464,7 @@ export const aiClinicalChat = onCall(
 );
 
 export const aiExerciseRecommendationChat = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { aiExerciseRecommendationChatHandler } = await import('./ai/clinical-chat');
         return aiExerciseRecommendationChatHandler(request);
@@ -473,7 +472,7 @@ export const aiExerciseRecommendationChat = onCall(
 );
 
 export const aiSoapNoteChat = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { aiSoapNoteChatHandler } = await import('./ai/clinical-chat');
         return aiSoapNoteChatHandler(request);
@@ -481,7 +480,7 @@ export const aiSoapNoteChat = onCall(
 );
 
 export const aiGetSuggestions = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { aiGetSuggestionsHandler } = await import('./ai/clinical-chat');
         return aiGetSuggestionsHandler(request);
@@ -489,7 +488,7 @@ export const aiGetSuggestions = onCall(
 );
 
 export const getPatientAISummaryHttp = onRequest(
-    { cpu: 2, memory: '1GiB', cors: CORS_ORIGINS },
+    { cpu: 2, memory: '1GiB', maxInstances: 1, cors: CORS_ORIGINS },
     async (req: any, res: any) => {
         const { getPatientAISummaryHttpHandler } = await import('./api/ai-assistant');
         return getPatientAISummaryHttpHandler(req, res);
@@ -497,7 +496,7 @@ export const getPatientAISummaryHttp = onRequest(
 );
 
 export const getClinicalInsightsHttp = onRequest(
-    { cpu: 2, memory: '1GiB', cors: CORS_ORIGINS },
+    { cpu: 2, memory: '1GiB', maxInstances: 1, cors: CORS_ORIGINS },
     async (req: any, res: any) => {
         const { getClinicalInsightsHttpHandler } = await import('./api/clinical-insights');
         return getClinicalInsightsHttpHandler(req, res);
@@ -505,7 +504,7 @@ export const getClinicalInsightsHttp = onRequest(
 );
 
 export const scanMedicalReportHttp = onRequest(
-    { cpu: 2, memory: '1GiB', cors: CORS_ORIGINS },
+    { cpu: 2, memory: '1GiB', maxInstances: 1, cors: CORS_ORIGINS },
     async (req: any, res: any) => {
         const { scanMedicalReportHttpHandler } = await import('./api/ocr-scanner');
         return scanMedicalReportHttpHandler(req, res);
@@ -514,10 +513,16 @@ export const scanMedicalReportHttp = onRequest(
 
 // REMOVIDO: migrateClinicalSchema - migração já executada
 export { dailyPatientDigest } from './crons/scheduled-tasks';
-export { analyzeProgress } from './ai/flow-wrappers';
+export const analyzeProgress = onCall(
+    { cpu: 2, memory: '1GiB', maxInstances: 1, region: 'southamerica-east1' },
+    async (request) => {
+        const { analyzeProgressHandler } = await import('./ai/flow-wrappers');
+        return analyzeProgressHandler(request);
+    }
+);
 
 export const aiFastProcessing = onCall(
-    { cpu: 2, memory: '1GiB' },
+    { cpu: 2, memory: '1GiB', maxInstances: 1 },
     async (request) => {
         const { aiFastProcessingHandler } = await import('./ai/groq-service');
         return aiFastProcessingHandler(request);
