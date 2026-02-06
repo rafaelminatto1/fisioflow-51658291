@@ -39,7 +39,7 @@ export class MedicalReturnService {
         const docRef = await addDoc(collection(db, 'patient_medical_returns'), dataToSave);
         const docSnap = await getDoc(docRef);
 
-        const savedData = docSnap.data() as any;
+        const savedData = docSnap.data() as MedicalReturn;
         return {
             id: docSnap.id,
             patient_id: savedData.patient_id,
@@ -64,7 +64,7 @@ export class MedicalReturnService {
         });
 
         const docSnap = await getDoc(docRef);
-        const updatedData = docSnap.data() as any;
+        const updatedData = docSnap.data() as MedicalReturn;
 
         return {
             id: docSnap.id,

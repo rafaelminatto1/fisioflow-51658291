@@ -151,21 +151,22 @@ export default function MovementLabPage() {
       setActiveTab('analysis');
 
       // Processar análise de articulações
-      if (mapped.joints) {
+      const jointsData = mapped.joints;
+      if (jointsData) {
         const joints: JointAnalysis[] = [];
 
-        if ((mapped.joints as any).leftShoulder) {
+        if (jointsData.leftShoulder) {
           joints.push({
             name: 'Ombro Esquerdo',
-            leftAngle: (mapped.joints as any).leftShoulder.angle,
-            status: (mapped.joints as any).leftShoulder.status,
+            leftAngle: jointsData.leftShoulder.angle,
+            status: jointsData.leftShoulder.status,
           });
         }
-        if ((mapped.joints as any).rightShoulder) {
+        if (jointsData.rightShoulder) {
           joints.push({
             name: 'Ombro Direito',
-            rightAngle: (mapped.joints as any).rightShoulder.angle,
-            status: (mapped.joints as any).rightShoulder.status,
+            rightAngle: jointsData.rightShoulder.angle,
+            status: jointsData.rightShoulder.status,
           });
         }
         // ... adicionar outras articulações

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DoctorService } from '@/lib/services/doctorService';
-import type { Doctor, DoctorFormData } from '@/types/doctor';
+import type { DoctorFormData } from '@/types/doctor';
 import { toast } from 'sonner';
 
 /**

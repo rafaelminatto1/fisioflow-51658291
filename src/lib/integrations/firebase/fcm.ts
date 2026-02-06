@@ -4,9 +4,7 @@
  */
 
 import admin from 'firebase-admin';
-import { httpsCallable, HttpsError } from 'firebase-functions';
-import { db } from '@/integrations/firebase/app';
-import { UnknownError, getErrorMessage } from '@/types';
+import { getErrorMessage } from '@/types';
 
 // ============================================================================
 // Types
