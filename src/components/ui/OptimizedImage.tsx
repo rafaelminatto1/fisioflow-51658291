@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useRef, useEffect, ImgHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -158,53 +157,6 @@ export function OptimizedImage({
       />
     </div>
   );
-}
-
-/**
- * Hook para preload de imagens
- * Útil para imagens críticas acima do fold
- */
- 
-export function useImagePreload(src: string): boolean {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setIsLoaded(true);
-    img.onerror = () => setIsLoaded(true); // Consider loaded even on error
-    img.src = src;
-  }, [src]);
-
-  return isLoaded;
-}
-
-/**
- * Preload de múltiplas imagens
- */
- 
-export function useImagesPreload(srcs: string[]): boolean {
-  const [loaded, setLoaded] = useState(0);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    srcs.forEach((src) => {
-      const img = new Image();
-      img.onload = () => {
-        if (isMounted) setLoaded((prev) => prev + 1);
-      };
-      img.onerror = () => {
-        if (isMounted) setLoaded((prev) => prev + 1);
-      };
-      img.src = src;
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [srcs]);
-
-  return loaded === srcs.length;
 }
 
 /**

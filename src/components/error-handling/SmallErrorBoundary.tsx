@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 import { Component, ReactNode } from 'react';
 
 interface Props {
@@ -16,36 +16,10 @@ interface State {
  * Use para cards, widgets e outras partes isoladas da UI
  */
  
-export function withErrorBoundary<P extends object>(
-  Component: ComponentType<P>,
-  fallback?: ReactNode,
-  onError?: (error: Error) => void
-) {
-  return class WrappedComponent extends Component<P> {
-    state: State = { hasError: false };
-
-    static getDerivedStateFromError(error: Error) {
-      return { hasError: true, error };
-    }
-
-    componentDidCatch(error: Error) {
-      onError?.(error);
-    }
-
-    render() {
-      if (this.state.hasError) {
-        return fallback || <SmallErrorFallback error={this.state.error} />;
-      }
-
-      return super.render();
-    }
-  };
-}
-
 /**
  * Fallback compacto para erros em componentes pequenos
  */
-function SmallErrorFallback({ error }: { error?: Error }) {
+export function SmallErrorFallback({ error }: { error?: Error }) {
   return (
     <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
       <div className="flex items-center gap-2 text-sm text-destructive">

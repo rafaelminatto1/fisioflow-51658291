@@ -28,6 +28,17 @@ export const LeaderboardTable: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  const {
+    leaderboard,
+    totalCount,
+    totalPages,
+    isLoading,
+    filters,
+    setFilters,
+    exportToCSV,
+    refresh,
+  } = useLeaderboard();
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -39,19 +50,7 @@ export const LeaderboardTable: React.FC = () => {
   // Update filters when debounced search changes
   useEffect(() => {
     setFilters({ search: debouncedSearch || undefined });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
-
-  const {
-    leaderboard,
-    totalCount,
-    totalPages,
-    isLoading,
-    filters,
-    setFilters,
-    exportToCSV,
-    refresh,
-  } = useLeaderboard();
+  }, [debouncedSearch, setFilters]);
 
   const { adjustXp, resetStreak } = useGamificationAdmin();
 

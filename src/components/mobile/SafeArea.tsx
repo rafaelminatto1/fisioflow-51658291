@@ -1,5 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
-
 /**
  * Wrapper que adiciona safe area insets para iOS (notch e home indicator)
  * Garante que o conteúdo não fique atrás do notch ou do indicador home
@@ -7,7 +5,6 @@
 
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { Capacitor } from '@capacitor/core';
 
 export interface SafeAreaProps {
   children: ReactNode;
@@ -108,35 +105,3 @@ export function SafeAreaFooter({
     </footer>
   );
 }
-
-/**
- * Hook para obter as dimensões do safe area
- * Útil quando precisa calcular posições absolutas
- */
-export function useSafeAreaInsets() {
-  const [insets, setInsets] = useState({
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  });
-
-  useEffect(() => {
-    // Em nativo, podemos obter os valores reais
-    if (Capacitor.isNativePlatform()) {
-      // TODO: Implementar com plugin capacitor-safe-area
-      // Por enquanto, usar valores padrão
-      setInsets({
-        top: 44, // iPhone notch padrão
-        bottom: 34, // iPhone home indicator padrão
-        left: 0,
-        right: 0,
-      });
-    }
-  }, []);
-
-  return insets;
-}
-
-// Adicionar import para useState e useEffect
-import { useState, useEffect } from 'react';

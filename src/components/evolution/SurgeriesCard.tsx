@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * Card de Cirurgias na página de Evolução
  * Lista cirurgias de forma compacta
@@ -19,7 +18,7 @@ import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
 import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
 
-export function formatTimeSinceSurgery(surgeryDate: string): string {
+function formatTimeSinceSurgery(surgeryDate: string): string {
   const now = new Date();
   const date = new Date(surgeryDate);
   const totalDays = differenceInDays(now, date);

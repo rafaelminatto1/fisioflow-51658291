@@ -9,4 +9,5 @@ export { PainMapHistory } from './PainMapHistory';
 export { PainMapManager } from './PainMapManager';
 export { FloatingActionBar } from './FloatingActionBar';
 export { SOAPAccordion, type SOAPData } from './SOAPAccordion';
-export { PainScaleWidget, type PainScaleData } from './PainScaleWidget';
+export { PainScaleWidget } from './PainScaleWidget';
+export { type PainScaleData } from '@/lib/evolution/painScale';

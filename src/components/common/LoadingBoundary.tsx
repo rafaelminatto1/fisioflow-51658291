@@ -1,5 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { Suspense, ComponentType, ReactNode } from 'react';
+ 
+import React, { Suspense, ReactNode } from 'react';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
 interface LoadingBoundaryProps {
@@ -27,21 +27,6 @@ export function LoadingBoundary({
 /**
  * HOC para envolver componentes lazy-loaded com boundary padrão
  */
-export function withLoadingBoundary<P extends object>(
-  Component: ComponentType<P>,
-  options: { type?: 'card' | 'list' | 'stats' | 'table'; rows?: number } = {}
-) {
-  const { type = 'card', rows = 3 } = options;
-
-  return function WrappedComponent(props: P) {
-    return (
-      <LoadingBoundary type={type} rows={rows}>
-        <Component {...props} />
-      </LoadingBoundary>
-    );
-  };
-}
-
 /**
  * Componente para carregar módulos pesados apenas quando necessário
  */
@@ -73,29 +58,6 @@ export function SuspenseModule({
 /**
  * Wrapper para lazy loading de componentes pesados com fallback customizado
  */
-export function createLazyComponent<
-  P extends object,
->(importFn: () => Promise<{ default: ComponentType<P> }>, options: {
-  fallback?: ReactNode;
-  type?: 'card' | 'list' | 'stats' | 'table';
-  rows?: number;
-} = {}) {
-  const LazyComponent = React.lazy(importFn);
-  const { fallback, type = 'card', rows = 3 } = options;
-
-  return function LazyWrapper(props: P) {
-    return (
-      <Suspense
-        fallback={
-          fallback || <LoadingSkeleton type={type} rows={rows} />
-        }
-      >
-        <LazyComponent {...props} />
-      </Suspense>
-    );
-  };
-}
-
 /**
  * Boundary para componentes com tratamento de erro
  */
@@ -170,28 +132,3 @@ export function AsyncBoundary({
 /**
  * Wrapper para criar componentes lazy com ErrorBoundary
  */
-export function createSafeLazyComponent<P extends object>(
-  importFn: () => Promise<{ default: ComponentType<P> }>,
-  options: {
-    loadingFallback?: ReactNode;
-    errorFallback?: ReactNode;
-    onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-  } = {}
-) {
-  const LazyComponent = React.lazy(importFn);
-  const { loadingFallback, errorFallback, onError } = options;
-
-  return function SafeLazyWrapper(props: P) {
-    return (
-      <ErrorBoundary fallback={errorFallback} onError={onError}>
-        <Suspense
-          fallback={
-            loadingFallback || <LoadingSkeleton type="card" rows={3} />
-          }
-        >
-          <LazyComponent {...props} />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  };
-}

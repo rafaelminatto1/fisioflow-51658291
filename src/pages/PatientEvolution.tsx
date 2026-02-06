@@ -38,7 +38,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { useCommandPalette } from '@/components/ui/CommandPalette';
+import { useCommandPalette } from '@/hooks/ui/useCommandPalette';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Hooks
@@ -66,10 +66,8 @@ import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
 import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
 import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
-import {
-  EvolutionKeyboardShortcuts,
-  useEvolutionShortcuts,
-} from '@/components/evolution/EvolutionKeyboardShortcuts';
+import { EvolutionKeyboardShortcuts } from '@/components/evolution/EvolutionKeyboardShortcuts';
+import { useEvolutionShortcuts } from '@/hooks/evolution/useEvolutionShortcuts';
 import { EvolutionAlerts } from '@/components/evolution/EvolutionAlerts';
 import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
 import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';

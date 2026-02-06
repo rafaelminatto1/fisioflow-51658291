@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, collection, getDocs, orderBy, limit } from '@/integrations/firebase/app';
+import { db, collection, getDocs, orderBy, limit, query as firestoreQuery } from '@/integrations/firebase/app';
 import {
 
   CommandDialog,
@@ -42,11 +42,11 @@ interface SearchResult {
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -60,21 +60,20 @@ export function GlobalSearch() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  useEffect(() => {
+  const searchAll = useCallback(async () => {
     if (!debouncedQuery || debouncedQuery.length < 2) {
       setResults([]);
       return;
     }
 
-    const searchAll = async () => {
-      setIsLoading(true);
-      try {
-        const searchResults: SearchResult[] = [];
-        const queryLower = debouncedQuery.toLowerCase();
+    setIsLoading(true);
+    try {
+      const searchResults: SearchResult[] = [];
+      const queryLower = debouncedQuery.toLowerCase();
 
         // Buscar eventos - Firebase doesn't have ilike, so we fetch all and filter client-side
         // In production, you'd want to use a proper search solution like Algolia or Elasticsearch
-        const eventosQuery = query(
+        const eventosQuery = firestoreQuery(
           collection(db, 'eventos'),
           orderBy('nome'),
           limit(50)
@@ -101,7 +100,7 @@ export function GlobalSearch() {
         const filteredEventResults = searchResults.slice(0, 5);
 
         // Buscar participantes
-        const participantesQuery = query(
+        const participantesQuery = firestoreQuery(
           collection(db, 'participantes'),
           orderBy('nome'),
           limit(50)
@@ -122,7 +121,7 @@ export function GlobalSearch() {
         });
 
         // Buscar prestadores
-        const prestadoresQuery = query(
+        const prestadoresQuery = firestoreQuery(
           collection(db, 'prestadores'),
           orderBy('nome'),
           limit(50)
@@ -145,18 +144,18 @@ export function GlobalSearch() {
         setResults(filteredEventResults.slice(0, 15)); // Limit total results
       } catch (error) {
         logger.error('Erro na busca', error, 'GlobalSearch');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    searchAll();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    } finally {
+      setIsLoading(false);
+    }
   }, [debouncedQuery]);
+
+  useEffect(() => {
+    searchAll();
+  }, [searchAll]);
 
   const handleSelect = (result: SearchResult) => {
     setOpen(false);
-    setQuery('');
+    setSearchQuery('');
     
     if (result.type === 'evento') {
       navigate(`/eventos/${result.id}`);
@@ -184,8 +183,8 @@ export function GlobalSearch() {
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
           placeholder="Buscar eventos, participantes, prestadores..."
-          value={query}
-          onValueChange={setQuery}
+          value={searchQuery}
+          onValueChange={setSearchQuery}
         />
         <CommandList>
           <CommandEmpty>

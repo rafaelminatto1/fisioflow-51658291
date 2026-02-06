@@ -31,9 +31,11 @@ import {
 } from 'lucide-react';
 import { useCreateMeasurement } from '@/hooks/usePatientEvolution';
 import { ClinicalTestCombobox, type ClinicalTest as ClinicalTestComboboxTest } from '@/components/ui/clinical-test-combobox';
-import { CustomFieldsConfig, DEFAULT_MEASUREMENT_FIELDS, type CustomField } from './CustomFieldsConfig';
+import { CustomFieldsConfig } from './CustomFieldsConfig';
+import { DEFAULT_MEASUREMENT_FIELDS, type CustomField } from '@/lib/evolution/customFields';
 import { SaveMeasurementTemplateModal } from './SaveMeasurementTemplateModal';
-import { MeasurementDiagramYBalance, Y_BALANCE_KEYS } from './MeasurementDiagramYBalance';
+import { MeasurementDiagramYBalance } from './MeasurementDiagramYBalance';
+import { Y_BALANCE_KEYS } from '@/lib/evolution/yBalance';
 import { TestLibraryModal, type ClinicalTest } from '@/components/clinical/TestLibraryModal';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion, AnimatePresence } from 'framer-motion';

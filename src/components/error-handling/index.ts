@@ -1,8 +1,8 @@
 export { ErrorBoundary, default as default } from './ErrorBoundary';
-export { useErrorBoundary } from './ErrorBoundaryContext';
+export { useErrorBoundary } from '@/hooks/error/errorBoundaryContext';
 export { QueryErrorBoundary, QueryErrorFallback } from './QueryErrorBoundary';
 export {
-  withErrorBoundary,
   SmallErrorBoundary,
   SmallErrorFallback,
 } from './SmallErrorBoundary';
+export { withErrorBoundary } from '@/lib/react/withSmallErrorBoundary';

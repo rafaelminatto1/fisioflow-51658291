@@ -1,12 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, ReactNode } from 'react';
-
-interface ErrorBoundaryContextValue {
-  reset: () => void;
-  error: Error | null;
-}
-
-const ErrorBoundaryContext = createContext<ErrorBoundaryContextValue | null>(null);
+ 
+import { ReactNode } from 'react';
+import { ErrorBoundaryContext, ErrorBoundaryContextValue } from '@/hooks/error/errorBoundaryContext';
 
 interface ProviderProps {
   value: ErrorBoundaryContextValue;
@@ -26,12 +20,3 @@ export function Provider({ value, children }: ProviderProps) {
  * Permite reset manual de erros de dentro de componentes
  */
  
-export function useErrorBoundary() {
-  const context = useContext(ErrorBoundaryContext);
-
-  if (!context) {
-    throw new Error('useErrorBoundary deve ser usado dentro de um ErrorBoundary');
-  }
-
-  return context;
-}

@@ -38,4 +38,16 @@ export default tseslint.config(
       "unused-imports/no-unused-imports": "warn",
     },
   }
+  ,
+  {
+    files: [
+      "src/contexts/**/*.{ts,tsx}",
+      "src/hooks/**/*.{ts,tsx}",
+      "src/lib/**/*.{ts,tsx}",
+      "src/test-utils.tsx"
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  }
 );

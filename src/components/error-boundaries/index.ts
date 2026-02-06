@@ -29,7 +29,8 @@ export { ErrorBoundary, type ErrorBoundaryProps, type ErrorBoundaryState } from 
 export { default as ErrorBoundary } from './ErrorBoundary';
 
 // Route-specific error boundary
-export { RouteErrorBoundary, withRouteErrorBoundary } from './RouteErrorBoundary';
+export { RouteErrorBoundary } from './RouteErrorBoundary';
+export { withRouteErrorBoundary } from '@/lib/react/routeErrorBoundary';
 export { default as RouteErrorBoundary } from './RouteErrorBoundary';
 
 // HOC for wrapping components

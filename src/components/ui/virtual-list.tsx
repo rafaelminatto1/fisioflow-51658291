@@ -1,5 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
+import { useInView } from '@/hooks/ui/useInView';
 
 interface VirtualListProps<T> {
   items: T[];
@@ -100,38 +100,6 @@ export function VirtualList<T>({
       </div>
     </div>
   );
-}
-
-/**
- * Hook para detectar quando elementos entram na viewport
- * Útil para lazy loading de imagens e componentes pesados
- */
-export function useInView<T extends HTMLElement = HTMLDivElement>(
-  options: IntersectionObserverInit = {}
-) {
-  const [isInView, setIsInView] = useState(false);
-  const ref = useRef<T>(null);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsInView(entry.isIntersecting);
-    }, {
-      threshold: 0.1,
-      rootMargin: '50px',
-      ...options,
-    });
-
-    observer.observe(element);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [options]);
-
-  return [ref, isInView] as const;
 }
 
 /**

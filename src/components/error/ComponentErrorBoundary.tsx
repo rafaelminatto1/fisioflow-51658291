@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * ComponentErrorBoundary - Error Boundary para componentes individuais
  *
@@ -14,13 +14,13 @@
  * </ComponentErrorBoundary>
  */
 
-import { Component, ReactNode, ComponentType } from 'react';
+import { Component, ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-interface ComponentErrorBoundaryProps {
+export interface ComponentErrorBoundaryProps {
   children: ReactNode;
   /** Componente de fallback em caso de erro */
   fallback?: ReactNode | ((error: Error, errorInfo: React.ErrorInfo) => ReactNode);
@@ -152,20 +152,6 @@ export class ComponentErrorBoundary extends Component<
  *   componentName: 'MyComponent'
  * });
  */
-export function withErrorBoundary<P extends object>(
-  Component: ComponentType<P>,
-  errorBoundaryProps?: Omit<ComponentErrorBoundaryProps, 'children'>
-): ComponentType<P> {
-  const WrappedComponent: ComponentType<P> = (props) => (
-    <ComponentErrorBoundary {...errorBoundaryProps}>
-      <Component {...props} />
-    </ComponentErrorBoundary>
-  );
-
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-
-  return WrappedComponent;
-}
 
 /**
  * Fallback padrão para componentes pesados
