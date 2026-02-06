@@ -10,6 +10,7 @@ import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
 import { defineSecret } from 'firebase-functions/params';
+import * as crypto from 'crypto';
 
 export const WHATSAPP_PHONE_NUMBER_ID_SECRET = defineSecret('WHATSAPP_PHONE_NUMBER_ID');
 export const WHATSAPP_ACCESS_TOKEN_SECRET = defineSecret('WHATSAPP_ACCESS_TOKEN');
@@ -563,8 +564,6 @@ function verifyWhatsAppSignature(
     return false;
   }
 
-  // Import crypto for HMAC verification
-  const crypto = require('crypto');
   const expectedSignature = crypto
     .createHmac('sha256', appSecret)
     .update(payload, 'utf8')

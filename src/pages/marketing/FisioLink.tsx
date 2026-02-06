@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -109,7 +110,8 @@ export default function FisioLinkPage() {
   const getFisioLinkUrl = () => `${window.location.origin}/l/${slug || organizationId}`;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <MainLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -450,7 +452,8 @@ export default function FisioLinkPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
 

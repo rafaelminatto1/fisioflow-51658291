@@ -27,18 +27,14 @@ export function usePurchaseVoucher() {
     mutationFn: async (voucherId: string) => {
       const createCheckout = httpsCallable(functions, 'create-voucher-checkout');
 
-      try {
-        const result = await createCheckout({ voucherId });
-        const data = result.data as VoucherCheckoutData;
+      const result = await createCheckout({ voucherId });
+      const data = result.data as VoucherCheckoutData;
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        return data;
-      } catch (error: unknown) {
-        throw error;
+      if (data.error) {
+        throw new Error(data.error);
       }
+
+      return data;
     },
     onSuccess: (data: VoucherCheckoutData) => {
       if (data.url) {
@@ -70,18 +66,14 @@ export function useVerifyVoucherPayment() {
     mutationFn: async (sessionId: string) => {
       const verifyPayment = httpsCallable(functions, 'verify-voucher-payment');
 
-      try {
-        const result = await verifyPayment({ sessionId });
-        const data = result.data as VoucherPaymentVerifyData;
+      const result = await verifyPayment({ sessionId });
+      const data = result.data as VoucherPaymentVerifyData;
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        return data;
-      } catch (error: unknown) {
-        throw error;
+      if (data.error) {
+        throw new Error(data.error);
       }
+
+      return data;
     },
     onSuccess: (data: VoucherPaymentVerifyData) => {
       queryClient.invalidateQueries({ queryKey: ['user-vouchers'] });

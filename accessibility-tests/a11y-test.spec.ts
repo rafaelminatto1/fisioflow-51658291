@@ -361,7 +361,9 @@ test.describe('FisioFlow Accessibility Tests', () => {
               return true;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          // Some stylesheets are blocked by CORS.
+        }
       }
       return false;
     });
@@ -455,7 +457,7 @@ test.describe('FisioFlow Accessibility Tests', () => {
     logResult('Semantic HTML', 'Navigation uses lists', navsWithLists === navLists.length,
       navsWithLists === navLists.length
         ? 'Navigation(s) use proper list structure'
-        : `${navLists.length - navsWithLists} navigation(s) don\'t use list elements`,
+        : `${navLists.length - navsWithLists} navigation(s) don't use list elements`,
       navsWithLists !== navLists.length ? 'moderate' : 'minor'
     );
 

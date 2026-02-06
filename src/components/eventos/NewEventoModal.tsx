@@ -41,6 +41,8 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
       local: '',
       data_inicio: new Date(),
       data_fim: new Date(),
+      hora_inicio: '08:00',
+      hora_fim: '17:00',
       gratuito: false,
       link_whatsapp: '',
       valor_padrao_prestador: 0,
@@ -165,6 +167,7 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
                         <SelectItem value="corrida">Corrida</SelectItem>
                         <SelectItem value="corporativo">Corporativo</SelectItem>
                         <SelectItem value="ativacao">Ativação</SelectItem>
+                        <SelectItem value="workshop">Workshop</SelectItem>
                         <SelectItem value="outro">Outro</SelectItem>
                       </SelectContent>
                     </Select>
@@ -261,6 +264,32 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
                     </Popover>
                     {errors.data_fim && (
                       <p className="text-sm text-destructive">{String(errors.data_fim.message)}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="hora_inicio">Horário de Início</Label>
+                    <Input
+                      id="hora_inicio"
+                      type="time"
+                      {...register('hora_inicio')}
+                    />
+                    {errors.hora_inicio && (
+                      <p className="text-sm text-destructive">{errors.hora_inicio.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="hora_fim">Horário de Fim</Label>
+                    <Input
+                      id="hora_fim"
+                      type="time"
+                      {...register('hora_fim')}
+                    />
+                    {errors.hora_fim && (
+                      <p className="text-sm text-destructive">{errors.hora_fim.message}</p>
                     )}
                   </div>
                 </div>

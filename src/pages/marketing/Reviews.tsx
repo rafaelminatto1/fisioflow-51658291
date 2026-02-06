@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -168,34 +169,39 @@ export default function ReviewsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-4">
-            <Star className="h-8 w-8 animate-pulse text-primary" />
-            <p className="text-muted-foreground">Carregando avaliações...</p>
+      <MainLayout>
+        <div className="p-6 max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center gap-4">
+              <Star className="h-8 w-8 animate-pulse text-primary" />
+              <p className="text-muted-foreground">Carregando avaliações...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-              <AlertCircle className="h-5 w-5" />
-              <p>{error}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <MainLayout>
+        <div className="p-6 max-w-7xl mx-auto">
+          <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+                <AlertCircle className="h-5 w-5" />
+                <p>{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <MainLayout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -499,6 +505,7 @@ export default function ReviewsPage() {
           )}
         </>
       )}
-    </div>
+      </div>
+    </MainLayout>
   );
 }

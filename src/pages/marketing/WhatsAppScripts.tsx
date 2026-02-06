@@ -5,12 +5,13 @@
  */
 
 import React from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { WhatsAppScriptGenerator } from '@/components/marketing/WhatsAppScriptGenerator';
 
 export default function WhatsAppScriptsPage() {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <MainLayout>
       <WhatsAppScriptGenerator />
-    </div>
+    </MainLayout>
   );
 }

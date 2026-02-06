@@ -337,53 +337,49 @@ export function usePaginatedQuery<T = unknown>(
     // Let's implement partial logic.
 
     const startTime = performance.now();
-    try {
-      // Fetch "all" (with a reasonable safety limit)
-      const constraints: QueryConstraint[] = [];
-      if (baseOptions.filter) {
-        // ... (same filter mapping as above)
-        type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
-        let op: WhereOperator = '==';
-        if (baseOptions.filter.operator === 'eq') op = '==';
-        else if (baseOptions.filter.operator === 'neq') op = '!=';
-        else if (baseOptions.filter.operator === 'gt') op = '>';
-        else if (baseOptions.filter.operator === 'gte') op = '>=';
-        else if (baseOptions.filter.operator === 'lt') op = '<';
-        else if (baseOptions.filter.operator === 'lte') op = '<=';
-        else if (baseOptions.filter.operator === 'in') op = 'in';
-        else if (baseOptions.filter.operator === 'contains') op = 'array-contains';
-        constraints.push(where(baseOptions.filter.column, op, baseOptions.filter.value));
-      }
-      if (baseOptions.orderBy) {
-        constraints.push(firestoreOrderBy(baseOptions.orderBy.column, baseOptions.orderBy.ascending !== false ? 'asc' : 'desc'));
-      }
-
-      // Safety limit 1000
-      constraints.push(firestoreLimit(1000));
-
-      const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
-      const snapshot = await getDocs(q);
-      const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
-
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize;
-      const pageDocs = allDocs.slice(from, to);
-
-      const duration = performance.now() - startTime;
-      trackQueryMetric({
-        queryKey: `paginated:${baseOptions.table}:${page}`,
-        duration,
-        cacheHit: false,
-        timestamp: Date.now(),
-      });
-
-      return {
-        data: pageDocs,
-        count: allDocs.length
-      };
-    } catch (error: unknown) {
-      throw error;
+    // Fetch "all" (with a reasonable safety limit)
+    const constraints: QueryConstraint[] = [];
+    if (baseOptions.filter) {
+      // ... (same filter mapping as above)
+      type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
+      let op: WhereOperator = '==';
+      if (baseOptions.filter.operator === 'eq') op = '==';
+      else if (baseOptions.filter.operator === 'neq') op = '!=';
+      else if (baseOptions.filter.operator === 'gt') op = '>';
+      else if (baseOptions.filter.operator === 'gte') op = '>=';
+      else if (baseOptions.filter.operator === 'lt') op = '<';
+      else if (baseOptions.filter.operator === 'lte') op = '<=';
+      else if (baseOptions.filter.operator === 'in') op = 'in';
+      else if (baseOptions.filter.operator === 'contains') op = 'array-contains';
+      constraints.push(where(baseOptions.filter.column, op, baseOptions.filter.value));
     }
+    if (baseOptions.orderBy) {
+      constraints.push(firestoreOrderBy(baseOptions.orderBy.column, baseOptions.orderBy.ascending !== false ? 'asc' : 'desc'));
+    }
+
+    // Safety limit 1000
+    constraints.push(firestoreLimit(1000));
+
+    const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
+    const snapshot = await getDocs(q);
+    const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as T[];
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize;
+    const pageDocs = allDocs.slice(from, to);
+
+    const duration = performance.now() - startTime;
+    trackQueryMetric({
+      queryKey: `paginated:${baseOptions.table}:${page}`,
+      duration,
+      cacheHit: false,
+      timestamp: Date.now(),
+    });
+
+    return {
+      data: pageDocs,
+      count: allDocs.length
+    };
 
   }, [baseOptions, pageSize]);
 

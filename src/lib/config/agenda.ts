@@ -3,34 +3,25 @@ import type { StatusConfig, RolePermissions, UserRole, SessionStatus, CardSize, 
 // Status configuration for visual representation and allowed actions
 import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 
-// Status configuration for visual representation and allowed actions
 // Default status config (for reset functionality)
 export const DEFAULT_STATUS_COLORS: Record<string, { color: string; bgColor: string; borderColor: string }> = {};
 
+// Helper para normalizar status do backend para os valores padrão do frontend
+// Backend usa: 'paciente_faltou', 'em_atendimento', etc. (functions/src/api/appointments.ts)
+export const normalizeStatus = (status: string): SessionStatus => {
+  const s = status.toLowerCase();
+  // Backend → Frontend mappings
+  if (s === 'paciente_faltou' || s === 'faltou') return 'falta';
+  if (s === 'em_atendimento') return 'em_andamento';
+  if (s === 'completed' || s === 'realizado' || s === 'atendido') return 'concluido';
+  if (s === 'confirmed') return 'confirmado';
+  if (s === 'scheduled') return 'agendado';
+  if (s === 'remarcado') return 'reagendado';
+  return s as SessionStatus;
+};
+
 export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
-  // Positive/Completed States - Soft Gray/Neutral (mais profissional)
-  realizado: {
-    label: "Realizado",
-    color: "hsl(220 13% 85%)",
-    bgColor: "hsl(220 13% 85%)",
-    borderColor: "hsl(220 13% 75%)",
-    twBg: "bg-slate-300",
-    twBorder: "border-slate-400",
-    twText: "text-slate-800",
-    icon: CheckCircle,
-    allowedActions: ["view", "payment", "evolution"]
-  },
-  completed: { // Legacy/Duplicate mapping
-    label: "Concluído",
-    color: "hsl(220 13% 85%)",
-    bgColor: "hsl(220 13% 85%)",
-    borderColor: "hsl(220 13% 75%)",
-    twBg: "bg-slate-300",
-    twBorder: "border-slate-400",
-    twText: "text-slate-800",
-    icon: CheckCircle,
-    allowedActions: ["view", "payment", "evolution"]
-  },
+  // Completed - Soft Gray/Neutral
   concluido: {
     label: "Concluído",
     color: "hsl(220 13% 85%)",
@@ -42,19 +33,8 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
-  atendido: {
-    label: "Atendido",
-    color: "hsl(220 13% 85%)",
-    bgColor: "hsl(220 13% 85%)",
-    borderColor: "hsl(220 13% 75%)",
-    twBg: "bg-slate-300",
-    twBorder: "border-slate-400",
-    twText: "text-slate-800",
-    icon: CheckCircle,
-    allowedActions: ["view", "payment", "evolution"]
-  },
 
-  // Confirmed States - Soft Emerald Green
+  // Confirmed - Soft Emerald Green
   confirmado: {
     label: "Confirmado",
     color: "hsl(158 58% 46%)",
@@ -66,31 +46,9 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     icon: CheckCircle,
     allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
   },
-  confirmed: { // Legacy
-    label: "Confirmado",
-    color: "hsl(158 58% 46%)",
-    bgColor: "hsl(158 58% 46%)",
-    borderColor: "hsl(158 58% 40%)",
-    twBg: "bg-emerald-600",
-    twBorder: "border-emerald-700",
-    twText: "text-white",
-    icon: CheckCircle,
-    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
-  },
 
-  // Scheduled States - Soft Professional Blue
+  // Scheduled - Soft Blue
   agendado: {
-    label: "Agendado",
-    color: "hsl(217 85% 55%)",
-    bgColor: "hsl(217 85% 55%)",
-    borderColor: "hsl(217 85% 48%)",
-    twBg: "bg-blue-600",
-    twBorder: "border-blue-700",
-    twText: "text-white",
-    icon: Clock,
-    allowedActions: ["confirm", "cancel", "reschedule", "edit"]
-  },
-  scheduled: { // Legacy
     label: "Agendado",
     color: "hsl(217 85% 55%)",
     bgColor: "hsl(217 85% 55%)",
@@ -115,7 +73,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
 
-  // Pending/Waiting States - Soft Amber/Orange
+  // Waiting - Soft Amber
   aguardando_confirmacao: {
     label: "Aguardando",
     color: "hsl(38 92% 50%)",
@@ -139,7 +97,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
-  // Negative States - Soft Red
+  // Negative - Soft Red
   cancelado: {
     label: "Cancelado",
     color: "hsl(0 72% 51%)",
@@ -162,30 +120,8 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     icon: AlertCircle,
     allowedActions: ["view", "reschedule", "payment"]
   },
-  faltou: {
-    label: "Faltou",
-    color: "hsl(0 72% 51%)",
-    bgColor: "hsl(0 72% 51%)",
-    borderColor: "hsl(0 72% 45%)",
-    twBg: "bg-red-600",
-    twBorder: "border-red-700",
-    twText: "text-white",
-    icon: AlertCircle,
-    allowedActions: ["view", "reschedule", "payment"]
-  },
 
-  // Rescheduled/Delayed - Soft Cyan/Teal/Lime
-  remarcado: {
-    label: "Remarcado",
-    color: "hsl(192 85% 55%)",
-    bgColor: "hsl(192 85% 55%)",
-    borderColor: "hsl(192 85% 48%)",
-    twBg: "bg-cyan-600",
-    twBorder: "border-cyan-700",
-    twText: "text-white",
-    icon: Clock,
-    allowedActions: ["view"]
-  },
+  // Rescheduled - Soft Lime
   reagendado: {
     label: "Reagendado",
     color: "hsl(142 62% 45%)",
@@ -197,6 +133,8 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     icon: Clock,
     allowedActions: ["view"]
   },
+
+  // Delayed - Soft Orange
   atrasado: {
     label: "Atrasado",
     color: "hsl(25 95% 53%)",
@@ -209,7 +147,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
-  // Handling 'em_andamento' - Soft Yellow/Orange
+  // In Progress - Soft Yellow/Orange
   em_andamento: {
     label: "Em Andamento",
     color: "hsl(43 96% 56%)",
@@ -219,7 +157,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     twBorder: "border-amber-500",
     twText: "text-amber-950",
     allowedActions: ["complete", "cancel"]
-  }
+  },
 };
 
 // Initialize DEFAULT_STATUS_COLORS for reset functionality

@@ -267,7 +267,6 @@ export const aiClinicalChatHandler = async (request: any) => {
     ];
 
     // Generate response
-    // @ts-ignore - Type mismatch between conversation history format and Content[]
     const result = await generativeModel.generateContent({ contents });
     const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
 

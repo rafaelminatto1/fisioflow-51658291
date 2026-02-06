@@ -58,7 +58,7 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
 
   return (
     <>
-      <Card className="border-primary/20 bg-primary/5 shadow-sm h-full flex flex-col">
+      <Card className="border-primary/20 bg-primary/5 shadow-sm flex flex-col">
         <CardHeader className="pb-1.5 pt-2.5 px-3 flex flex-row items-center justify-between flex-shrink-0">
           <CardTitle className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
             <Scissors className="h-3 w-3 text-primary" />

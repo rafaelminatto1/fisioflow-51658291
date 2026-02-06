@@ -8,6 +8,7 @@ import { Platform, AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion, deleteField } from 'firebase/firestore';
+import notificationIcon from '@/assets/notification-icon.png';
 import { auth, db } from '@/lib/firebase';
 
 export interface NotificationPermission {
@@ -295,5 +296,5 @@ export async function initializeNotifications(): Promise<void> {
 export function getNotificationIcon(type: 'exercise' | 'appointment' | 'evolution' | 'general'): number {
   // For now, use the same icon for all types
   // TODO: Create specific icons for each notification type
-  return require('@/assets/notification-icon.png');
+  return notificationIcon;
 }
