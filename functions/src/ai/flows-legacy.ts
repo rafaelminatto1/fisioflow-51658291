@@ -60,7 +60,7 @@ export const analyzePatientProgressFlow = ai.defineFlow(
 /**
  * Wrapper Callable para o Frontend chamar
  */
-export const analyzeProgress = onCall(
+export const analyzeProgressLegacy = onCall(
   { cpu: 2, memory: '1GiB' },
   async (request) => {
     if (!request.auth) {

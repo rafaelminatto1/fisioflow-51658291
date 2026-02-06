@@ -61,6 +61,12 @@ import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel,
 import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 import { PatientAIChat } from '@/components/ai/PatientAIChat';
 
+// Evolution Cards
+import { MedicalReturnCard } from '@/components/evolution/MedicalReturnCard';
+import { SurgeriesCard } from '@/components/evolution/SurgeriesCard';
+import { MetasCard } from '@/components/evolution/MetasCard';
+import { useQueryClient } from '@tanstack/react-query';
+
 // Financial & Documents Imports
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -169,6 +175,7 @@ const PersonalDataTab = ({ patient }: { patient: Patient }) => (
 
 const OverviewTab = ({ patient }: { patient: Patient }) => {
     const { data: evolutionData } = usePatientEvolutionReport(patient.id);
+    const queryClient = useQueryClient();
 
     // Fetch upcoming appointments
     const { data: upcomingAppointments } = useQuery({
@@ -205,8 +212,20 @@ const OverviewTab = ({ patient }: { patient: Patient }) => {
                     status: patient.status
                 }}
                 upcomingAppointments={Array.isArray(upcomingAppointments) ? upcomingAppointments : []}
-                onAction={() => {}}
+                onAction={() => { }}
             />
+
+            {/* Evolution Management Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <MedicalReturnCard
+                    patient={patient}
+                    patientId={patient.id}
+                    onPatientUpdated={() => queryClient.invalidateQueries({ queryKey: ['patient', patient.id] })}
+                />
+                <SurgeriesCard patientId={patient.id} />
+            </div>
+
+            <MetasCard patientId={patient.id} />
 
             {/* Evolution charts below */}
             {evolutionData && evolutionData.sessions.length > 0 && (
@@ -784,7 +803,7 @@ export const PatientProfilePage = () => {
                 {/* Patient Header Card - Enhanced */}
                 <div className="bg-gradient-to-r from-card to-card/50 rounded-xl p-6 shadow-sm border space-y-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-                    
+
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between relative z-10">
                         <div className="flex items-center gap-5">
                             <div className="relative">

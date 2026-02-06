@@ -41,7 +41,7 @@ export enum EmailTemplate {
 export const sendAppointmentConfirmation = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   // Verificar autenticação
   if (!request.auth) {
@@ -126,7 +126,7 @@ export const sendAppointmentConfirmation = onCall({
 export const sendAppointmentReminder = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { patientId, appointmentId, hoursBefore } = request.data as {
     patientId: string;
@@ -185,7 +185,7 @@ export const sendAppointmentReminder = onCall({
 export const sendWelcomeEmail = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { userId } = request.data as { userId: string };
 
@@ -221,7 +221,7 @@ export const sendWelcomeEmail = onCall({
 export const sendPaymentConfirmation = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { userId, voucherId, amount } = request.data as {
     userId: string;
@@ -265,7 +265,7 @@ export const sendPaymentConfirmation = onCall({
 export const sendExercisePlanEmail = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { patientId, planId } = request.data as {
     patientId: string;

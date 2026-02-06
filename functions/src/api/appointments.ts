@@ -93,7 +93,7 @@ export const listAppointmentsHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -147,7 +147,7 @@ export const listAppointmentsHttp = onRequest(
  * HTTP version of getAppointment for CORS
  */
 export const getAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
@@ -180,7 +180,7 @@ export const getAppointmentHttp = onRequest(
  * HTTP version of checkTimeConflict for CORS
  */
 export const checkTimeConflictHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
@@ -209,7 +209,7 @@ export const checkTimeConflictHttp = onRequest(
  * HTTP version of createAppointment for CORS
  */
 export const createAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
@@ -285,7 +285,7 @@ export const createAppointmentHttp = onRequest(
  * HTTP version of updateAppointment for CORS
  */
 export const updateAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
@@ -406,7 +406,7 @@ export const updateAppointmentHttp = onRequest(
  * HTTP version of cancelAppointment for CORS
  */
 export const cancelAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 100, cors: CORS_ORIGINS, invoker: 'public' },
+  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
