@@ -28,16 +28,15 @@ import {
   TrendingUp,
   CheckCircle2,
   AlertTriangle,
-  BarChart3,
 } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions, storage } from '@/lib/firebase';
+import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
-import { PoseOverlay } from '@/components/ai/PoseOverlay';
 import { PoseComparison } from '@/components/ai/PoseComparison';
 import { ProgressTimeline } from '@/components/ai/ProgressTimeline';
+import { analyzeMovement } from '@/services/ai/firebaseAIService';
+import { usePatientsPostgres } from '@/hooks/useDataConnect';
 
 interface PoseAnalysis {
   summary: string;
@@ -76,6 +75,7 @@ export default function MovementLabPage() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('upload');
   const [patientId, setPatientId] = useState<string>('');
+  const { data: patients } = usePatientsPostgres('default');
   const { toast } = useToast();
 
   const patientVideoRef = useRef<HTMLVideoElement>(null);
@@ -106,33 +106,47 @@ export default function MovementLabPage() {
 
       toast({ title: 'Upload Completo', description: 'Enviando para análise...' });
 
-      // 2. Chamar Cloud Function com MediaPipe
-      const aiMovementAnalysis = httpsCallable(functions, 'aiMovementAnalysisWithPose');
-      const result = await aiMovementAnalysis({
-        fileUrl,
-        mediaType: file.type.startsWith('video') ? 'video' : 'image',
-        includePoseData: true,
+      // 2. Chamar serviço unificado (aiService -> movementAnalysis)
+      const result: any = await analyzeMovement({
+        patientId: patientId || 'unknown',
+        exerciseId: 'custom-upload',
+        exerciseName: 'Execução enviada',
+        patientVideoUrl: fileUrl,
+        language: 'pt-BR',
       });
 
-      const data = result.data as unknown as PoseAnalysis;
-      setAnalysis(data);
+      // Mapear resposta do backend para o formato esperado pela UI
+      const mapped: PoseAnalysis = {
+        summary: result.data?.summary || 'Análise gerada pela IA.',
+        overallScore: result.data?.formQuality?.overall ?? 75,
+        postureScore: result.data?.formQuality?.posture ?? 75,
+        romScore: result.data?.formQuality?.rangeOfMotion ?? 75,
+        controlScore: result.data?.formQuality?.control ?? 75,
+        tempoScore: result.data?.formQuality?.tempo ?? 75,
+        joints: {},
+        deviations: (result.data?.deviations ?? []).map((d) => `${d.bodyPart}: ${d.issue} (${d.severity})`),
+        recommendations: result.data?.improvements ?? result.data?.strengths ?? ['Ajustar ritmo', 'Usar espelho para alinhamento'],
+      };
+
+      setAnalysis(mapped);
+      setActiveTab('analysis');
 
       // Processar análise de articulações
-      if (data.joints) {
+      if (mapped.joints) {
         const joints: JointAnalysis[] = [];
 
-        if (data.joints.leftShoulder) {
+        if ((mapped.joints as any).leftShoulder) {
           joints.push({
             name: 'Ombro Esquerdo',
-            leftAngle: data.joints.leftShoulder.angle,
-            status: data.joints.leftShoulder.status,
+            leftAngle: (mapped.joints as any).leftShoulder.angle,
+            status: (mapped.joints as any).leftShoulder.status,
           });
         }
-        if (data.joints.rightShoulder) {
+        if ((mapped.joints as any).rightShoulder) {
           joints.push({
             name: 'Ombro Direito',
-            rightAngle: data.joints.rightShoulder.angle,
-            status: data.joints.rightShoulder.status,
+            rightAngle: (mapped.joints as any).rightShoulder.angle,
+            status: (mapped.joints as any).rightShoulder.status,
           });
         }
         // ... adicionar outras articulações
@@ -203,6 +217,31 @@ export default function MovementLabPage() {
             </p>
           </div>
         </div>
+
+        {/* Seleção de paciente (opcional) */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Paciente (opcional)</label>
+                <Input
+                  list="patients-list"
+                  placeholder="ID do paciente"
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                />
+                <datalist id="patients-list">
+                  {patients?.map((p: any) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </datalist>
+              </div>
+              <div className="md:col-span-2 text-sm text-gray-500">
+                Vincular o paciente permite salvar histórico e comparar progressos. Caso não saiba o ID, deixe em branco.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
