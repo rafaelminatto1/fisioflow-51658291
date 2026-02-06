@@ -489,6 +489,37 @@ export { dailyPatientDigest } from './crons/scheduled-tasks';
 // ============================================================================
 
 // ============================================================================
+// OTIMIZAÇÃO FASE 3: Serviços Unificados (Exercícios e Avaliações)
+// ============================================================================
+// Serviços unificados criados para migração futura:
+// - exerciseService: Consolida listExercises, getExercise, searchSimilarExercises, etc.
+// - assessmentService: Consolida listAssessments, getAssessment, createAssessment, etc.
+//
+// Para migrar o frontend, substituir:
+// await callFunction('listExercises', { data })
+// Por:
+// await callFunction('exerciseService', { action: 'list', data })
+//
+// Economia potencial: ~R$ 8-12/mês (16 serviços → 2 serviços)
+// ============================================================================
+
+export const exerciseService = onCall(
+    STANDARD_FUNCTION,
+    async (request) => {
+        const { exerciseServiceHandler } = await import('./api/exercises-unified');
+        return exerciseServiceHandler(request);
+    }
+);
+
+export const assessmentService = onCall(
+    STANDARD_FUNCTION,
+    async (request) => {
+        const { assessmentServiceHandler } = await import('./api/assessments-unified');
+        return assessmentServiceHandler(request);
+    }
+);
+
+// ============================================================================
 // BACKGROUND TRIGGERS
 // ============================================================================
 

@@ -17,7 +17,8 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import { getAdminDb, batchFetchDocuments } from '../init';
-import { sendAppointmentReminderEmail, sendAppointmentConfirmationEmail } from '../communications/resend-templates';
+import { sendAppointmentConfirmationEmail } from '../communications/resend-templates';
+import { dispatchAppointmentNotification } from './notifications';
 
 interface AppointmentWithRelations {
   id: string;
@@ -38,6 +39,40 @@ interface AppointmentWithRelations {
     name?: string;
     settings?: { email_enabled?: boolean; whatsapp_enabled?: boolean };
   };
+}
+
+function resolveAppointmentDateTime(appointment: any): Date | null {
+  const rawDate = appointment.date || appointment.appointment_date;
+  const rawTime = appointment.time || appointment.start_time || appointment.startTime || appointment.appointment_time;
+  if (!rawDate || !rawTime) return null;
+
+  let baseDate: Date | null = null;
+  if (rawDate instanceof Date) {
+    baseDate = rawDate;
+  } else if (typeof rawDate === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      const [year, month, day] = rawDate.split('-').map(Number);
+      baseDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    } else {
+      const parsed = new Date(rawDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        baseDate = parsed;
+      }
+    }
+  } else if (rawDate && typeof rawDate.toDate === 'function') {
+    baseDate = rawDate.toDate();
+  }
+
+  if (!baseDate || Number.isNaN(baseDate.getTime())) return null;
+
+  const [hoursStr, minutesStr] = String(rawTime).split(':');
+  const hours = Number(hoursStr);
+  const minutes = Number(minutesStr);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+
+  const appointmentDateTime = new Date(baseDate);
+  appointmentDateTime.setHours(hours, minutes, 0, 0);
+  return Number.isNaN(appointmentDateTime.getTime()) ? null : appointmentDateTime;
 }
 
 // ============================================================================
@@ -120,6 +155,10 @@ export const appointmentReminders = onSchedule(
 
           const preferences = patient.notification_preferences || {};
           const orgSettings = organization?.settings || {};
+          const emailEnabledByOrg = orgSettings.email_enabled !== false;
+          const whatsappEnabledByOrg = orgSettings.whatsapp_enabled !== false;
+          const emailEnabledByPatient = preferences.email !== false;
+          const whatsappEnabledByPatient = preferences.whatsapp !== false;
 
           try {
             // Check if reminder already sent
@@ -141,42 +180,30 @@ export const appointmentReminders = onSchedule(
               };
             }
 
-            // Send email reminder
-            if (preferences.email !== false && orgSettings.email_enabled && patient.email) {
-              const emailResult = await sendAppointmentReminderEmail(patient.email, {
-                patientName: patient.full_name || patient.name || 'Paciente',
-                date: appointment.date,
-                time: appointment.time || appointment.startTime,
-                therapistName: appointment.therapistName || 'Seu fisioterapeuta',
-                clinicName: organization.name || 'FisioFlow',
-              });
-
-              logger.info('[appointmentReminders] Email reminder sent', {
+            if ((!emailEnabledByOrg && !whatsappEnabledByOrg) || (!emailEnabledByPatient && !whatsappEnabledByPatient)) {
+              return {
                 appointmentId: appointment.id,
-                patientEmail: patient.email,
-                success: emailResult.success,
-                error: emailResult.error,
-              });
-
-              if (emailResult.success) {
-                remindersSent++;
-              }
+                sent: false,
+                reason: 'Notifications disabled by preferences',
+              };
             }
 
-            // Send WhatsApp reminder
-            if (
-              preferences.whatsapp !== false &&
-              orgSettings.whatsapp_enabled &&
-              patient.phone
-            ) {
-              logger.info('[appointmentReminders] Queuing WhatsApp reminder', {
-                appointmentId: appointment.id,
-                patientPhone: patient.phone,
-              });
+            const dispatchResult = await dispatchAppointmentNotification({
+              kind: 'reminder_24h',
+              organizationId: organization.id,
+              appointmentId: appointment.id,
+              patientId: patient.id,
+              date: appointment.date,
+              time: appointment.time || appointment.startTime,
+              patientName: patient.full_name || patient.name || 'Paciente',
+              therapistName: appointment.therapistName || 'Seu fisioterapeuta',
+            });
 
-              // TODO: Send via WhatsApp provider
-              remindersSent++;
-            }
+            const emailSent = emailEnabledByOrg && emailEnabledByPatient && !!dispatchResult.email.sent;
+            const whatsappSent = whatsappEnabledByOrg && whatsappEnabledByPatient && !!dispatchResult.whatsapp.sent;
+            const anySent = emailSent || whatsappSent;
+
+            if (anySent) remindersSent++;
 
             // Log reminder sent
             const reminderRef = db.collection('appointment_reminders').doc();
@@ -187,19 +214,19 @@ export const appointmentReminders = onSchedule(
               reminder_type: 'day_before',
               sent_at: new Date().toISOString(),
               channels: {
-                email: !!(preferences.email !== false && orgSettings.email_enabled && patient.email),
-                whatsapp: !!(
-                  preferences.whatsapp !== false &&
-                  orgSettings.whatsapp_enabled &&
-                  patient.phone
-                ),
+                email: emailSent,
+                whatsapp: whatsappSent,
+              },
+              errors: {
+                email: dispatchResult.email.error || null,
+                whatsapp: dispatchResult.whatsapp.error || null,
               },
             });
 
             return {
               appointmentId: appointment.id,
               patientId: patient.id,
-              sent: true,
+              sent: anySent,
             };
           } catch (error) {
             logger.error('[appointmentReminders] Error processing appointment', {
@@ -231,6 +258,93 @@ export const appointmentReminders = onSchedule(
       logger.error('[appointmentReminders] Fatal error', { error });
       throw error;
     }
+  }
+);
+
+/**
+ * Send 2-hour reminders.
+ * Runs every 30 minutes and targets appointments between 90 and 150 minutes from now.
+ */
+export const appointmentReminders2h = onSchedule(
+  {
+    schedule: 'every 30 minutes',
+    region: 'southamerica-east1',
+    timeZone: 'America/Sao_Paulo',
+  },
+  async () => {
+    const db = getAdminDb();
+    const now = new Date();
+    let snapshot;
+
+    try {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 2);
+
+      snapshot = await db
+        .collection('appointments')
+        .where('status', '==', 'agendado')
+        .where('date', '>=', start.toISOString())
+        .where('date', '<', end.toISOString())
+        .get();
+    } catch {
+      snapshot = await db.collection('appointments').where('status', '==', 'agendado').get();
+    }
+
+    if (snapshot.empty) {
+      return;
+    }
+
+    const candidates = snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() } as any))
+      .filter((appointment) => {
+        const appointmentDateTime = resolveAppointmentDateTime(appointment);
+        if (!appointmentDateTime) return false;
+        const diffMinutes = (appointmentDateTime.getTime() - now.getTime()) / 60000;
+        return diffMinutes >= 90 && diffMinutes <= 150;
+      });
+
+    if (candidates.length === 0) {
+      return;
+    }
+
+    await Promise.all(candidates.map(async (appointment) => {
+      const reminderSnapshot = await db
+        .collection('appointment_reminders')
+        .where('appointment_id', '==', appointment.id)
+        .where('reminder_type', '==', 'two_hours')
+        .limit(1)
+        .get();
+      if (!reminderSnapshot.empty) {
+        return;
+      }
+
+      const dispatch = await dispatchAppointmentNotification({
+        kind: 'reminder_2h',
+        organizationId: String(appointment.organization_id || 'system'),
+        appointmentId: String(appointment.id),
+        patientId: String(appointment.patient_id),
+        date: String(appointment.date || appointment.appointment_date || ''),
+        time: String(appointment.time || appointment.start_time || appointment.startTime || appointment.appointment_time || ''),
+      });
+
+      await db.collection('appointment_reminders').doc().create({
+        appointment_id: appointment.id,
+        patient_id: appointment.patient_id,
+        organization_id: appointment.organization_id,
+        reminder_type: 'two_hours',
+        sent_at: new Date().toISOString(),
+        channels: {
+          email: dispatch.email.sent,
+          whatsapp: dispatch.whatsapp.sent,
+        },
+        errors: {
+          email: dispatch.email.error || null,
+          whatsapp: dispatch.whatsapp.error || null,
+        },
+      });
+    }));
   }
 );
 
