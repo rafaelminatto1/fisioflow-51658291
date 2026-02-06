@@ -26,7 +26,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Trophy, Star, Flame, Target, Calendar, Plus, Minus,
-  RefreshCw, History, Award, Zap, User
+  RefreshCw, History, Award, User
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, doc, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc } from '@/integrations/firebase/app';

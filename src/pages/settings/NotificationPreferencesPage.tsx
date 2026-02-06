@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Mail, MessageSquare, CreditCard, TrendingUp, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Bell, Mail, MessageSquare, TrendingUp, Moon } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -59,6 +59,7 @@ export default function NotificationPreferencesPage() {
 
   useEffect(() => {
     loadPreferences();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadPreferences = async () => {

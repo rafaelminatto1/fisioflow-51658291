@@ -6,7 +6,7 @@ import { api } from '@/integrations/firebase/functions';
 import { SessionEvolutionService } from '@/lib/services/sessionEvolutionService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { addDays, subDays, startOfWeek, isWeekend, format } from 'date-fns';
+import { addDays, subDays, isWeekend } from 'date-fns';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export default function SeedData() {

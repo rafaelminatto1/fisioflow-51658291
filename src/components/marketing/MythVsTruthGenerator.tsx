@@ -15,14 +15,12 @@ import { Badge } from '@/components/ui/badge';
 import {
 
   Sparkles,
-  Download,
   Lightbulb,
   XCircle,
   CheckCircle2,
   Info,
   Plus,
   Trash2,
-  Eye,
   Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -80,7 +78,7 @@ export function MythVsTruthGenerator() {
     explanation: '',
     slides: [],
   });
-  const [customBranding, setCustomBranding] = useState({
+  const [customBranding, _setCustomBranding] = useState({
     showLogo: true,
     clinicName: '',
     showHashtags: true,

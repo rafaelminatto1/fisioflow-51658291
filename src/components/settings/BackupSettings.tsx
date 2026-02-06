@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Database, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
+import { db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function BackupSettings() {

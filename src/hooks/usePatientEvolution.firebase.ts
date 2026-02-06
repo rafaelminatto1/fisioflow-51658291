@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';

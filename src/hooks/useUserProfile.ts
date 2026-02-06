@@ -2,9 +2,9 @@
  * useUserProfile - Migrated to Firebase Auth + Firestore
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, setDoc, updateDoc, getFirebaseAuth, db } from '@/integrations/firebase/app';
-import { User as FirebaseUser, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const auth = getFirebaseAuth();
@@ -31,7 +31,7 @@ export const useUserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const ensureProfile = async (userId: string, email: string | null, fullName?: string | null) => {
+  const ensureProfile = useCallback(async (userId: string, email: string | null, fullName?: string | null) => {
     try {
       const profileRef = doc(db, 'profiles', userId);
       const profileSnap = await getDoc(profileRef);
@@ -53,12 +53,12 @@ export const useUserProfile = () => {
     } catch (err) {
       logger.error('Erro ao garantir perfil', err, 'useUserProfile');
     }
-  };
+  }, []);
 
   /**
    * Buscar perfil do usuário no Firestore
    */
-  const fetchProfile = async (firebaseUser: FirebaseUser): Promise<UserProfile | null> => {
+  const fetchProfile = useCallback(async (firebaseUser: FirebaseUser): Promise<UserProfile | null> => {
     try {
       // Buscar perfil
       const profileRef = doc(db, 'profiles', firebaseUser.uid);
@@ -110,7 +110,7 @@ export const useUserProfile = () => {
       setError(err instanceof Error ? err.message : 'Erro ao buscar perfil');
       return null;
     }
-  };
+  }, [ensureProfile]);
 
   /**
    * Atualizar perfil do usuário no Firestore
@@ -180,7 +180,7 @@ export const useUserProfile = () => {
     };
 
     initAuth();
-  }, []);
+  }, [ensureProfile, fetchProfile]);
 
   /**
    * Obter nome de exibição

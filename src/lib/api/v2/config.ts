@@ -7,8 +7,8 @@
  * 3. Fallback hardcoded (último deploy conhecido)
  */
 
-const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'fisioflow-migration';
-const REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
+const _PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'fisioflow-migration';
+const _REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
 const HASH = import.meta.env.VITE_CLOUD_FUNCTIONS_HASH || 'tfecm5cqoq'; 
 
 // URL Base única para Cloud Run (Firebase Functions V2)

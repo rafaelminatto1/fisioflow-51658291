@@ -10,7 +10,6 @@ import {
   Customer,
   Subscription,
   Invoice,
-  WebhookEvent,
 } from '@/types/integrations';
 
 // ============================================================================
@@ -297,7 +296,7 @@ export async function createInvoice(
     dueDays?: number;
   }
 ): Promise<Invoice> {
-  const invoiceItem = await stripe.invoiceItems.create({
+  const _invoiceItem = await stripe.invoiceItems.create({
     customer: params.customerId,
     amount: params.amount,
     currency: params.currency,

@@ -18,8 +18,6 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   User,
-  UserCredential,
-  Auth,
   updateProfile,
   updateEmail,
   updatePassword,

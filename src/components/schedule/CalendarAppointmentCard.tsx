@@ -196,7 +196,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const scaledTypeFontSize = Math.round(sizeConfig.typeFontSize * fontScale);
 
     const duration = appointment.duration || 60;
-    const isSmall = duration <= 30; // 30 min or less
+    const _isSmall = duration <= 30; // 30 min or less
     const isTiny = duration < 30; // Less than 30 min (e.g. 15, 20)
 
     const handleMouseEnter = () => setIsHovered(true);

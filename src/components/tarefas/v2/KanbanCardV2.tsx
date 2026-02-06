@@ -1,6 +1,5 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { format, isPast, isToday, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
 
   Calendar,
@@ -84,6 +83,7 @@ const KanbanCardContent = memo(function KanbanCardContent({
     }
     return null;
   }, [tarefa.assignees, tarefa.responsavel]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const dueDate = tarefa.data_vencimento ? new Date(tarefa.data_vencimento) : null;
   const isOverdue = dueDate && isPast(dueDate) && tarefa.status !== 'CONCLUIDO';
   const isDueToday = dueDate && isToday(dueDate);

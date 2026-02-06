@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Play, Pause, MoreVertical, Edit2, Copy, Trash2 } from 'lucide-react';
+import { MoreVertical, Edit2, Copy, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -161,10 +161,10 @@ export function RecipeLibrary({
   onCategoryChange,
   onSelectRecipe,
 }: {
-  recipes: any[];
+  recipes: unknown[];
   selectedCategory: string;
-  onCategoryChange: (cat: any) => void;
-  onSelectRecipe: (recipe: any) => void;
+  onCategoryChange: (cat: unknown) => void;
+  onSelectRecipe: (recipe: unknown) => void;
 }) {
   const categories: Array<{ value: string; label: string }> = [
     { value: 'all', label: 'Todos' },

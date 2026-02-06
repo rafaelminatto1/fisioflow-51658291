@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, deleteDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDocs, query as firestoreQuery, orderBy, addDoc, updateDoc, writeBatch, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Pencil, Trash2, Search, Filter, CheckSquare, Square, Trash, Power, Target } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, CheckSquare, Square, Trash, Power, Target } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

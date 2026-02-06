@@ -426,7 +426,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [showMergeModal, setShowMergeModal] = useState(false);
 
-  const { exercises, loading, deleteExercise, mergeExercises, isDeleting, isMerging } = useExercises();
+  const { exercises, loading, deleteExercise, mergeExercises, isDeleting, _isMerging } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

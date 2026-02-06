@@ -20,7 +20,6 @@ import {
     HeartPulse,
     Info,
     Eye,
-    EyeOff,
     X,
     ChevronDown,
     ChevronRight,
@@ -31,7 +30,6 @@ import {
     Activity,
     Brain,
     Wind,
-    Armchair,
     Keyboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -97,7 +95,7 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
     const [focusedIndex, setFocusedIndex] = useState(-1);
 
     const searchInputRef = useRef<HTMLInputElement>(null);
-    const listRef = useRef<HTMLDivElement>(null);
+    const _listRef = useRef<HTMLDivElement>(null);
 
     // Load recent tests from localStorage
     useEffect(() => {
@@ -158,6 +156,7 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, focusedIndex, selectedTest]);
 
     const { data: tests = [], isLoading } = useQuery({

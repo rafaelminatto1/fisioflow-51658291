@@ -4,18 +4,16 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import {
 
-  Trophy, TrendingUp, Plus, Trash2, Save, RefreshCw,
+  Trophy, TrendingUp, Save, RefreshCw,
   Settings, Info, Sparkles
 } from 'lucide-react';
 import { useGamificationAdmin, calculateLevelCurve } from '@/hooks/useGamificationAdmin';
-import { ProgressionType, LevelConfig } from '@/types/gamification';
+import { ProgressionType } from '@/types/gamification';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
 /**
@@ -59,7 +57,7 @@ export const LevelSystemConfig: React.FC = () => {
     setHasChanges(true);
   };
 
-  const getProgressionTypeLabel = (type: ProgressionType) => {
+  const _getProgressionTypeLabel = (type: ProgressionType) => {
     switch (type) {
       case 'linear': return 'Linear';
       case 'exponential': return 'Exponencial';

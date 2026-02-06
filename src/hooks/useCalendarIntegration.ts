@@ -3,11 +3,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { GoogleAuthProvider, signInWithPopup, linkWithPopup, unlink } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();

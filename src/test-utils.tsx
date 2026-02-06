@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 
 /**
  * Wrapper para testes que precisam de QueryClient
@@ -37,7 +38,7 @@ export function TestWrapper({ children }: TestWrapperProps) {
 /**
  * Wrapper para renderHook com QueryClientProvider
  */
-export function renderHookWithQueryClient<T>(callback: () => T) {
+export function renderHookWithQueryClient<T>(_callback: () => T) {
   const queryClient = createTestQueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>

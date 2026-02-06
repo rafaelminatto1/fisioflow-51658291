@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Onboarding Flow - First-time user experience
  *
@@ -7,7 +8,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface OnboardingStep {
@@ -73,7 +74,7 @@ export function OnboardingFlow({
 }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isDismissed, setIsDismissed] = useState(false);
-  const [isHighlighting, setIsHighlighting] = useState(false);
+  const [_isHighlighting, setIsHighlighting] = useState(false);
 
   // Check if user already completed onboarding
   useEffect(() => {
@@ -100,6 +101,17 @@ export function OnboardingFlow({
     }
   }, [currentStep, steps]);
 
+  const handleComplete = useCallback(() => {
+    localStorage.setItem('fisioflow_onboarding_completed', 'true');
+    setIsDismissed(true);
+    onComplete?.();
+
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate([20, 50, 20]);
+    }
+  }, [onComplete]);
+
   const handleNext = useCallback(() => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
@@ -111,7 +123,7 @@ export function OnboardingFlow({
     } else {
       handleComplete();
     }
-  }, [currentStep, steps.length]);
+  }, [currentStep, steps.length, handleComplete]);
 
   const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
@@ -123,17 +135,6 @@ export function OnboardingFlow({
       }
     }
   }, [currentStep]);
-
-  const handleComplete = useCallback(() => {
-    localStorage.setItem('fisioflow_onboarding_completed', 'true');
-    setIsDismissed(true);
-    onComplete?.();
-
-    // Haptic feedback
-    if ('vibrate' in navigator) {
-      navigator.vibrate([20, 50, 20]);
-    }
-  }, [onComplete]);
 
   const handleSkip = useCallback(() => {
     localStorage.setItem('fisioflow_onboarding_completed', 'true');

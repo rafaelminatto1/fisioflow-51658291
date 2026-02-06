@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -27,7 +26,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, User, Phone, Mail, MapPin, Activity, FileText, HeartPulse, Shield, Briefcase } from 'lucide-react';
+import { CalendarIcon, User, Phone, Mail, MapPin, Activity, HeartPulse, Shield, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cleanCPF, emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';

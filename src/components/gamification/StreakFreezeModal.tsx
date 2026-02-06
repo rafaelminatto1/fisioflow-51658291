@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Snowflake, ShieldAlert, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 interface StreakFreezeModalProps {
     isOpen: boolean;

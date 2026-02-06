@@ -23,6 +23,6 @@ export const identifyUser = (userId: string, email?: string, name?: string) => {
   }
 };
 
-export const captureEvent = (eventName: string, properties?: Record<string, any>) => {
+export const captureEvent = (eventName: string, properties?: Record<string, unknown>) => {
   posthog.capture(eventName, properties);
 };

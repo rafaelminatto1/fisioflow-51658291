@@ -1,4 +1,4 @@
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { db, collection, getDocs, addDoc, query, where, orderBy } from '@/integrations/firebase/app';
 import type { TestEvolutionData, TestStatistics, AssessmentTestConfig } from '@/types/evolution';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 

@@ -9,7 +9,7 @@
  * Título baseado em nível
  */
 
-import { Achievement, UnlockedAchievement } from '@/types/gamification';
+import { UnlockedAchievement } from '@/types/gamification';
 
 export interface LevelTitle {
   level: number;
@@ -343,7 +343,7 @@ export function getNextLevelTitle(currentLevel: number): LevelTitle | null {
  */
 export function getProgressToNextTitle(
   currentLevel: number,
-  currentXp: number
+  _currentXp: number
 ): { percent: number; remaining: number; nextTitle: LevelTitle | null } {
   const nextTitle = getNextLevelTitle(currentLevel);
 
@@ -352,7 +352,7 @@ export function getProgressToNextTitle(
   }
 
   // Simples: diferença de níveis
-  const levelDiff = nextTitle.level - currentLevel;
+  const _levelDiff = nextTitle.level - currentLevel;
   const percent = Math.min(100, ((currentLevel - (nextTitle.level - 10)) / 10) * 100);
 
   return {

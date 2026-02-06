@@ -4,7 +4,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db, collection, getDocs, query as firestoreQuery, where, doc, getDoc } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface ScoreFactor {
@@ -34,7 +34,7 @@ export function useLeadScoring() {
         where('active', '==', true)
       );
       const regrasSnapshot = await getDocs(regrasQ);
-      const regras = regrasSnapshot.docs.length > 0 ? regrasSnapshot.docs[0].data() : null;
+      const _regras = regrasSnapshot.docs.length > 0 ? regrasSnapshot.docs[0].data() : null;
 
       const calculatedScores = leads.map(lead => {
         let totalScore = 0;

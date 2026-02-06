@@ -1,7 +1,6 @@
 
 // Extend global self type for Firebase App Check debug token
 
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -33,7 +32,7 @@ export const getAppCheckToken = async (): Promise<string | undefined> => {
 
   try {
     const { getToken } = await import('firebase/app-check');
-    const appCheck = await import('firebase/app-check').then(m => m.getAppCheck(getApp()));
+    const _appCheck = await import('firebase/app-check').then(m => m.getAppCheck(getApp()));
     return await getToken();
   } catch (error) {
     logger.debug('Could not get App Check token', error, 'app-check');

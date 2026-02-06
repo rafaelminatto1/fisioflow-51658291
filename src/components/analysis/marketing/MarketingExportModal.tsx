@@ -51,7 +51,8 @@ const MarketingExportModal: React.FC<MarketingExportModalProps> = ({
                 setSelectedMetrics(metrics.slice(0, 3).map(m => m.label));
             }
         }
-    }, [isOpen, patientId]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, patientId]);  
 
     // Update Caption
     useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
-import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
+import { onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
 import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
 import { profileApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -12,14 +12,14 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const [sessionCheckFailed, setSessionCheckFailed] = useState(false);
-  const { toast } = useToast();
+  const [sessionCheckFailed, _setSessionCheckFailed] = useState(false);
+  const { _toast } = useToast();
 
   /**
    * Obtém ou cria a organização padrão para o usuário
    * Busca por uma organização ativa existente ou cria uma nova
    */
-  const getOrCreateDefaultOrganization = async (): Promise<string | null> => {
+  const _getOrCreateDefaultOrganization = async (): Promise<string | null> => {
     try {
       // Buscar a primeira organização ativa disponível
       const orgQuery = query(
@@ -59,7 +59,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   /**
    * Waits for the profile to be created by the backend trigger
    */
-  const waitForProfile = async (firebaseUser: User, attempts = 0): Promise<Profile | null> => {
+  const waitForProfile = async (firebaseUser: User, _attempts = 0): Promise<Profile | null> => {
     try {
       const profileRef = doc(db, 'profiles', firebaseUser.uid);
       const profileSnap = await getDoc(profileRef);
@@ -199,6 +199,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       mounted = false;
       unsubscribe();
     };
+   
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - fetchProfile is stable (useCallback with no deps)
 

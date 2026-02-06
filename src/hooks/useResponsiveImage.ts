@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref } from 'firebase/storage';
 import { getFirebaseApp } from '@/integrations/firebase/app';
 
 interface UseResponsiveImageOptions {
