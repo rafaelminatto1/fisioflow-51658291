@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 const QUICK_TEMPLATES = [
   {
@@ -65,7 +66,7 @@ const QUICK_TEMPLATES = [
 ];
 
 export function BlockedTimesManager() {
-  const { blockedTimes, createBlockedTime, deleteBlockedTime, isLoadingBlocked } = useScheduleSettings();
+  const { blockedTimes, createBlockedTime, deleteBlockedTime, isLoadingBlocked, isCreatingBlocked, isDeletingBlocked } = useScheduleSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [newBlocked, setNewBlocked] = useState({
@@ -80,16 +81,64 @@ export function BlockedTimesManager() {
     recurring_days: [] as number[],
   });
 
-  const handleCreate = () => {
-    createBlockedTime({
-      ...newBlocked,
-      start_time: newBlocked.is_all_day ? undefined : newBlocked.start_time,
-      end_time: newBlocked.is_all_day ? undefined : newBlocked.end_time,
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    setIsOpen(false);
-    resetForm();
+  const toMinutes = (value: string) => {
+    const [hours, minutes] = value.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const handleCreate = async () => {
+    if (!newBlocked.title.trim()) {
+      toast({
+        title: 'Título obrigatório',
+        description: 'Informe um título para o bloqueio.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newBlocked.start_date > newBlocked.end_date) {
+      toast({
+        title: 'Período inválido',
+        description: 'A data de início deve ser anterior ou igual à data de fim.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!newBlocked.is_all_day) {
+      if (!newBlocked.start_time || !newBlocked.end_time) {
+        toast({
+          title: 'Horário obrigatório',
+          description: 'Preencha hora início e hora fim para bloqueio parcial.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (toMinutes(newBlocked.start_time) >= toMinutes(newBlocked.end_time)) {
+        toast({
+          title: 'Faixa de horário inválida',
+          description: 'Hora início deve ser anterior à hora fim.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    try {
+      await createBlockedTime.mutateAsync({
+        ...newBlocked,
+        title: newBlocked.title.trim(),
+        reason: newBlocked.reason?.trim() || '',
+        start_time: newBlocked.is_all_day ? undefined : newBlocked.start_time,
+        end_time: newBlocked.is_all_day ? undefined : newBlocked.end_time,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      setIsOpen(false);
+      resetForm();
+    } catch {
+      // Erro já tratado no hook via toast
+    }
   };
 
   const resetForm = () => {
@@ -274,7 +323,8 @@ export function BlockedTimesManager() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => deleteBlockedTime(blocked.id)}
+                            disabled={isDeletingBlocked}
+                            onClick={() => deleteBlockedTime.mutate(blocked.id)}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Remover
@@ -431,11 +481,20 @@ export function BlockedTimesManager() {
               {/* Botão criar */}
               <Button
                 onClick={handleCreate}
-                disabled={!newBlocked.title || !newBlocked.start_date || !newBlocked.end_date}
+                disabled={isCreatingBlocked || !newBlocked.title || !newBlocked.start_date || !newBlocked.end_date}
                 className="w-full h-11 text-base font-semibold"
               >
-                <Plus className="h-5 w-5 mr-2" />
-                Criar Bloqueio
+                {isCreatingBlocked ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Criar Bloqueio
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>

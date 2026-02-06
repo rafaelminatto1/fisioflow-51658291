@@ -41,6 +41,8 @@ import { GanttDependencyLine } from './GanttDependencyLine';
 import { GanttTimelineHeader } from './GanttTimelineHeader';
 import { calculateCriticalPath } from '@/lib/gantt/criticalPath';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import type {
   GanttTask,
@@ -208,9 +210,47 @@ export function GanttChart({
   }, [zoom]);
 
   const handleExport = useCallback(() => {
-    // TODO: Implementar export PDF
-    logger.info('Exportar Gantt para PDF', { zoom, taskCount: tasks.length }, 'GanttChart');
-  }, [zoom, tasks.length]);
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+
+      // Header
+      doc.setFontSize(18);
+      doc.text('Cronograma do Projeto (Gantt)', margin, 20);
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, margin, 28);
+
+      // Table
+      autoTable(doc, {
+        startY: 35,
+        head: [['Tarefa', 'Início', 'Fim', 'Status']],
+        body: tasks.map((t) => [
+          t.title,
+          format(t.start_date, 'dd/MM/yyyy'),
+          format(t.end_date, 'dd/MM/yyyy'),
+          t.status || 'Pendente'
+        ]),
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246] }, // Primary color
+        styles: { fontSize: 9 },
+      });
+
+      doc.save(`gantt-chart-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast({
+        title: 'Sucesso',
+        description: 'Gráfico de Gantt exportado para PDF',
+      });
+    } catch (error) {
+      logger.error('Erro ao exportar Gantt para PDF', error, 'GanttChart');
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o PDF',
+        variant: 'destructive',
+      });
+    }
+  }, [tasks, toast]);
 
   // Render
   const totalWidth = timeCells.length * getColumnWidth(zoom);

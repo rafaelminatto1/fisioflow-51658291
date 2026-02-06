@@ -27,6 +27,8 @@ import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
 import { NetworkStatus } from "@/components/ui/network-status";
 import { SyncManager } from "@/components/sync/SyncManager";
+import { initPushNotifications } from '@/lib/mobile/push-notifications';
+import { useNavigate } from 'react-router-dom';
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -103,6 +105,17 @@ const StatsigProviderWrapper = ({ children }: { children: React.ReactNode }) => 
   );
 };
 
+// Component to initialize push notifications with navigation support
+const NotificationInitializer = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    initPushNotifications(navigate);
+  }, [navigate]);
+
+  return null;
+};
+
 const App = () => {
   // Gerenciar atualizações do Service Worker
   // DESABILITADO: useServiceWorkerUpdate();
@@ -173,6 +186,7 @@ const App = () => {
                       v7_relativeSplatPath: true,
                     }}
                   >
+                    <NotificationInitializer />
                     <Suspense fallback={<PageLoadingFallback />}>
                       <AppRoutes />
                       <VersionManager />

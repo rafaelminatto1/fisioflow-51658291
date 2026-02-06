@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
+import { RescheduleCapacityDialog } from './RescheduleCapacityDialog';
 import { AdvancedFilters } from './AdvancedFilters';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { CalendarDayView } from './CalendarDayView';
@@ -22,6 +23,7 @@ import { CalendarWeekViewDndKit } from './CalendarWeekViewDndKit';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
+import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -61,6 +63,47 @@ interface CalendarViewProps {
   patientFilter?: string | null;
   onPatientFilterChange?: (patientName: string | null) => void;
 }
+
+const OVERBOOK_MARKER = '[EXCEDENTE]';
+const NON_CAPACITY_STATUSES = new Set([
+  'cancelado',
+  'falta',
+  'faltou',
+  'remarcado',
+  'reagendado',
+  'paciente_faltou'
+]);
+
+const normalizeSlotTime = (time: string | undefined | null): string => {
+  if (!time || typeof time !== 'string') return '00:00';
+  return time.substring(0, 5);
+};
+
+const timeToMinutes = (time: string | undefined | null): number => {
+  const normalized = normalizeSlotTime(time);
+  const [hours, minutes] = normalized.split(':').map(Number);
+  return (hours || 0) * 60 + (minutes || 0);
+};
+
+const parseAppointmentDate = (dateValue: Appointment['date']): Date | null => {
+  if (!dateValue) return null;
+
+  if (dateValue instanceof Date) {
+    return isNaN(dateValue.getTime()) ? null : dateValue;
+  }
+
+  if (typeof dateValue === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      const [year, month, day] = dateValue.split('-').map(Number);
+      return new Date(year, month - 1, day, 12, 0, 0);
+    }
+
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+};
 
 export const CalendarView = memo(({
   appointments,
@@ -128,16 +171,79 @@ export const CalendarView = memo(({
 
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { getMinCapacityForInterval } = useScheduleCapacity();
 
   // Optimistic updates state - maintains a local copy of appointments with pending changes
   const [optimisticAppointments, setOptimisticAppointments] = useState<Appointment[]>([]);
   const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<{ id: string; originalDate: string; originalTime: string } | null>(null);
 
   // Use optimistic appointments when there's a pending update, otherwise use original appointments (filter out null/undefined to avoid "reading 'id'" on drag)
-  const displayAppointments = useMemo(() => {
+  const baseDisplayAppointments = useMemo(() => {
     const base = pendingOptimisticUpdate && optimisticAppointments.length > 0 ? optimisticAppointments : appointments;
     return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
   }, [appointments, optimisticAppointments, pendingOptimisticUpdate]);
+
+  // Marca automaticamente os agendamentos que excedem a capacidade configurada.
+  const overbookedAppointmentIds = useMemo(() => {
+    const groupedByDate = new Map<string, Appointment[]>();
+
+    for (const apt of baseDisplayAppointments) {
+      const aptDate = parseAppointmentDate(apt.date);
+      if (!aptDate) continue;
+      const dateKey = format(aptDate, 'yyyy-MM-dd');
+      if (!groupedByDate.has(dateKey)) groupedByDate.set(dateKey, []);
+      groupedByDate.get(dateKey)!.push(apt);
+    }
+
+    const result = new Set<string>();
+
+    groupedByDate.forEach((dayAppointments) => {
+      const activeAppointments = dayAppointments
+        .filter((apt) => !NON_CAPACITY_STATUSES.has((apt.status || '').toLowerCase()))
+        .sort((a, b) => {
+          const byTime = timeToMinutes(a.time) - timeToMinutes(b.time);
+          if (byTime !== 0) return byTime;
+          return a.id.localeCompare(b.id);
+        });
+
+      const activeIntervals: Array<{ id: string; end: number }> = [];
+
+      for (const apt of activeAppointments) {
+        const aptDate = parseAppointmentDate(apt.date);
+        if (!aptDate) continue;
+
+        const startMinutes = timeToMinutes(apt.time);
+        const durationMinutes = Math.max(1, apt.duration || 60);
+        const endMinutes = startMinutes + durationMinutes;
+        const normalizedTime = normalizeSlotTime(apt.time);
+
+        for (let i = activeIntervals.length - 1; i >= 0; i--) {
+          if (activeIntervals[i].end <= startMinutes) {
+            activeIntervals.splice(i, 1);
+          }
+        }
+
+        const capacityForInterval = getMinCapacityForInterval(aptDate.getDay(), normalizedTime, durationMinutes);
+        const markedByNote = apt.notes?.includes(OVERBOOK_MARKER) || false;
+
+        if (markedByNote || activeIntervals.length + 1 > capacityForInterval) {
+          result.add(apt.id);
+        }
+
+        activeIntervals.push({ id: apt.id, end: endMinutes });
+      }
+    });
+
+    return result;
+  }, [baseDisplayAppointments, getMinCapacityForInterval]);
+
+  const displayAppointments = useMemo(() => {
+    return baseDisplayAppointments.map((apt) => {
+      const isOverbooked = overbookedAppointmentIds.has(apt.id);
+      if (apt.isOverbooked === isOverbooked) return apt;
+      return { ...apt, isOverbooked };
+    });
+  }, [baseDisplayAppointments, overbookedAppointmentIds]);
 
   // Index appointments by date string (YYYY-MM-DD) for O(1) lookup
   const appointmentsByDate = useMemo(() => {
@@ -146,15 +252,9 @@ export const CalendarView = memo(({
     (displayAppointments || []).forEach(apt => {
       if (!apt || !apt.date) return;
       
-      let dateKey: string;
-      
-      if (typeof apt.date === 'string') {
-        dateKey = apt.date; // Assuming YYYY-MM-DD
-      } else if (apt.date instanceof Date) {
-        dateKey = format(apt.date, 'yyyy-MM-dd');
-      } else {
-        return;
-      }
+      const aptDate = parseAppointmentDate(apt.date);
+      if (!aptDate) return;
+      const dateKey = format(aptDate, 'yyyy-MM-dd');
       
       if (!map.has(dateKey)) {
         map.set(dateKey, []);
@@ -243,12 +343,17 @@ export const CalendarView = memo(({
     handleDragLeave: handleDragLeaveNative,
     handleDrop: handleDropNative,
     handleConfirmReschedule: handleConfirmRescheduleNative,
-    handleCancelReschedule: handleCancelRescheduleNative
+    handleCancelReschedule: handleCancelRescheduleNative,
+    showOverCapacityDialog: showOverCapacityDialogNative,
+    pendingOverCapacity: pendingOverCapacityNative,
+    handleConfirmOverCapacity: handleConfirmOverCapacityNative,
+    handleCancelOverCapacity: handleCancelOverCapacityNative
   } = useCalendarDrag({
     onAppointmentReschedule,
     onOptimisticUpdate: handleOptimisticUpdate,
     onRevertUpdate: handleRevertUpdate,
-    getAppointmentsForSlot
+    getAppointmentsForSlot,
+    getMinCapacityForInterval
   });
 
   // Drag and drop logic from hook (@dnd-kit)
@@ -262,10 +367,16 @@ export const CalendarView = memo(({
     handleDragEnd: handleDragEndDndKit,
     handleConfirmReschedule: handleConfirmRescheduleDndKit,
     handleCancelReschedule: handleCancelRescheduleDndKit,
+    showOverCapacityDialog: showOverCapacityDialogDndKit,
+    pendingOverCapacity: pendingOverCapacityDndKit,
+    handleConfirmOverCapacity: handleConfirmOverCapacityDndKit,
+    handleCancelOverCapacity: handleCancelOverCapacityDndKit,
   } = useCalendarDragDndKit({
     onAppointmentReschedule,
     onOptimisticUpdate: handleOptimisticUpdate,
     onRevertUpdate: handleRevertUpdate,
+    getAppointmentsForSlot,
+    getMinCapacityForInterval,
   });
 
   // Use the appropriate hook based on feature flag
@@ -275,6 +386,10 @@ export const CalendarView = memo(({
   const pendingReschedule = USE_DND_KIT ? pendingRescheduleDndKit : pendingRescheduleNative;
   const handleConfirmReschedule = USE_DND_KIT ? handleConfirmRescheduleDndKit : handleConfirmRescheduleNative;
   const handleCancelReschedule = USE_DND_KIT ? handleCancelRescheduleDndKit : handleCancelRescheduleNative;
+  const showOverCapacityDialog = USE_DND_KIT ? showOverCapacityDialogDndKit : showOverCapacityDialogNative;
+  const pendingOverCapacity = USE_DND_KIT ? pendingOverCapacityDndKit : pendingOverCapacityNative;
+  const handleConfirmOverCapacity = USE_DND_KIT ? handleConfirmOverCapacityDndKit : handleConfirmOverCapacityNative;
+  const handleCancelOverCapacity = USE_DND_KIT ? handleCancelOverCapacityDndKit : handleCancelOverCapacityNative;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -338,12 +453,13 @@ export const CalendarView = memo(({
     }
   }, [viewType, currentDate]);
 
-  // Restore focus to calendar grid when RescheduleConfirmDialog closes (cancel or confirm)
+  // Restore focus to calendar grid when a reschedule dialog closes
   const calendarGridRef = useRef<HTMLDivElement>(null);
-  const prevShowConfirmRef = useRef(showConfirmDialog);
+  const isAnyRescheduleDialogOpen = showConfirmDialog || showOverCapacityDialog;
+  const prevShowDialogRef = useRef(isAnyRescheduleDialogOpen);
   useEffect(() => {
-    const didClose = prevShowConfirmRef.current && !showConfirmDialog;
-    prevShowConfirmRef.current = showConfirmDialog;
+    const didClose = prevShowDialogRef.current && !isAnyRescheduleDialogOpen;
+    prevShowDialogRef.current = isAnyRescheduleDialogOpen;
     if (didClose) {
       // Short delay so focus runs after Radix unmounts the dialog and releases focus
       const t = setTimeout(() => {
@@ -351,7 +467,7 @@ export const CalendarView = memo(({
       }, 0);
       return () => clearTimeout(t);
     }
-  }, [showConfirmDialog]);
+  }, [isAnyRescheduleDialogOpen]);
 
   // Screen reader: announce drop target during drag (WCAG feedback)
   const dropTargetAnnouncement = useMemo(() => {
@@ -378,9 +494,9 @@ export const CalendarView = memo(({
   }, [dragState.isDragging, dropTargetAnnouncement]);
 
   const getStatusColor = useCallback((status: string, isOverCapacity: boolean = false) => {
-    // Over-capacity appointments get a special amber/orange pulsing style
+    // Over-capacity appointments get a strong alert color
     if (isOverCapacity) {
-      return 'bg-gradient-to-br from-amber-600 to-orange-600 border-amber-400 shadow-amber-500/40 ring-2 ring-amber-400/50 ring-offset-1';
+      return 'bg-gradient-to-br from-red-600 to-rose-700 border-red-400 shadow-red-500/40 ring-2 ring-red-400/50 ring-offset-1';
     }
 
     switch (status.toLowerCase()) {
@@ -424,7 +540,7 @@ export const CalendarView = memo(({
 
   // Helper to check if appointment is over capacity
   const isOverCapacity = useCallback((apt: Appointment): boolean => {
-    return apt.notes?.includes('[EXCEDENTE]') || false;
+    return Boolean(apt.isOverbooked || apt.notes?.includes(OVERBOOK_MARKER));
   }, []);
 
   // Hook for time slots availability
@@ -895,7 +1011,7 @@ export const CalendarView = memo(({
               <div key="month-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
                 <CalendarMonthView
                   currentDate={currentDate}
-                  appointments={appointments}
+                  appointments={displayAppointments}
                   onDateChange={onDateChange}
                   onTimeSlotClick={onTimeSlotClick}
                   onEditAppointment={onEditAppointment}
@@ -922,6 +1038,18 @@ export const CalendarView = memo(({
         newDate={pendingReschedule?.newDate || null}
         newTime={pendingReschedule?.newTime || null}
         onConfirm={handleConfirmReschedule}
+      />
+
+      <RescheduleCapacityDialog
+        open={showOverCapacityDialog}
+        onOpenChange={(open) => !open && handleCancelOverCapacity()}
+        appointment={pendingOverCapacity?.appointment || null}
+        newDate={pendingOverCapacity?.newDate || null}
+        newTime={pendingOverCapacity?.newTime || null}
+        currentCount={pendingOverCapacity?.currentCount || 0}
+        maxCapacity={pendingOverCapacity?.maxCapacity || 0}
+        onConfirm={handleConfirmOverCapacity}
+        onCancel={handleCancelOverCapacity}
       />
     </>
   );
