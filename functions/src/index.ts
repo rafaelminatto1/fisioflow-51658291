@@ -383,9 +383,38 @@ export const createPerformanceIndexes = onCall(async (request) => {
 });
 
 // AI FUNCTIONS
-// Note: generateExercisePlan, aiExerciseSuggestion, aiSoapGeneration, aiClinicalAnalysis
-// were using incompatible Genkit flows and have been temporarily removed.
-// The core AI functionality is still available via the existing ai/ module functions.
+// AI FUNCTIONS (Genkit Modernized)
+export const generateExercisePlan = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { exerciseGeneratorHandler } = await import('./ai/flow-wrappers');
+        return exerciseGeneratorHandler(request);
+    }
+);
+
+export const aiClinicalAnalysis = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { clinicalAnalysisHandler } = await import('./ai/flow-wrappers');
+        return clinicalAnalysisHandler(request);
+    }
+);
+
+export const aiExerciseSuggestion = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { exerciseSuggestionHandler } = await import('./ai/flow-wrappers');
+        return exerciseSuggestionHandler(request);
+    }
+);
+
+export const aiSoapGeneration = onCall(
+    { cpu: 2, memory: '1GiB' },
+    async (request) => {
+        const { soapGenerationHandler } = await import('./ai/flow-wrappers');
+        return soapGenerationHandler(request);
+    }
+);
 
 export const aiMovementAnalysis = onCall(
     { cpu: 2, memory: '1GiB' },
