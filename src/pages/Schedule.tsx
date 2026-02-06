@@ -17,9 +17,7 @@ import { AlertTriangle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
-import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
@@ -28,7 +26,6 @@ import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
-import { cn } from '@/lib/utils';
 import {
 
   AlertDialog,

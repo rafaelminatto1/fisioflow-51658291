@@ -15,7 +15,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getAuth } from 'firebase/auth';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { UnknownError, getErrorMessage } from '@/types';
+import { getErrorMessage } from '@/types';
 
 const auth = getAuth();
 
@@ -531,7 +531,7 @@ export function usePatientEvolutionData() {
       }
 
       return { data: record, error: null };
-    } catch (error: UnknownError) {
+    } catch (error: unknown) {
       return { data: null, error: getErrorMessage(error) || 'Erro desconhecido' };
     }
   }, [patientId, appointmentId, createSoapRecord]);

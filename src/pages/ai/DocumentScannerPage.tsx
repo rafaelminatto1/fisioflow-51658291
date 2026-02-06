@@ -37,14 +37,12 @@ import {
   Eye,
   Brain,
   Download,
-  Trash2,
   RefreshCw,
-  Image as ImageIcon,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions, storage, db } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import ReactMarkdown from 'react-markdown';
@@ -469,19 +467,6 @@ export default function DocumentScannerPage() {
       toast({ title: 'Erro ao salvar', description: 'Falha ao vincular documento.', variant: 'destructive' });
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleDeleteDocument = async () => {
-    if (!extractedData) return;
-
-    try {
-      await deleteObject(ref(storage, extractedData.storagePath));
-      toast({ title: 'Documento excluído', description: 'Arquivo removido do storage.' });
-      clearFile();
-    } catch (error) {
-      console.error(error);
-      toast({ title: 'Erro', description: 'Falha ao excluir documento.', variant: 'destructive' });
     }
   };
 
