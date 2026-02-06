@@ -8,7 +8,7 @@
 
 /** Mensagem amigável exibida quando o backend retorna 409 (conflito de horário). */
 export const APPOINTMENT_CONFLICT_MESSAGE =
-  'Este horário já está ocupado para você. Escolha outro horário.';
+  'Capacidade máxima de pacientes por horário atingida. Escolha outro horário ou entre na fila de espera.';
 
 /** Título opcional para toasts de conflito. */
 export const APPOINTMENT_CONFLICT_TITLE = 'Conflito de horário';
