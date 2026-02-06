@@ -4,6 +4,7 @@ import { Appointment } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { toast } from 'sonner';
 import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { parseResponseDate } from '@/utils/dateUtils';
 
 interface DragState {
   appointment: Appointment | null;
@@ -26,12 +27,10 @@ interface UseCalendarDragDndKitProps {
  * Normaliza uma data para garantir consistência de timezone.
  */
 const normalizeDate = (date: Date | string): Date => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [year, month, day] = date.split('-').map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0);
+  if (typeof date === 'string') {
+    return parseResponseDate(date);
   }
-  return startOfDay(d);
+  return startOfDay(date);
 };
 
 /**
@@ -116,7 +115,9 @@ export const useCalendarDragDndKit = ({
     }
 
     const [, dateStr, timeStr] = match;
-    const newDate = new Date(dateStr);
+    
+    // Parse dateStr (YYYY-MM-DD) safely using utility to avoid timezone issues
+    const newDate = parseResponseDate(dateStr);
     const newTime = timeStr;
 
     // Normalizar a data antiga do appointment para comparação
