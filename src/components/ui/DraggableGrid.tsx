@@ -24,7 +24,7 @@ export interface GridItem {
 
 interface DraggableGridProps {
     items: GridItem[];
-    onLayoutChange?: (layout: Layout) => void;
+    onLayoutChange?: (layout: Layout[]) => void;
     className?: string;
     rowHeight?: number;
     cols?: { lg: number; md: number; sm: number; xs: number; xxs: number };
@@ -131,7 +131,7 @@ export const DraggableGrid = memo(function DraggableGrid({
         setIsMounted(true);
     }, []);
 
-    const handleLayoutChange = useCallback((currentLayout: Layout) => {
+    const handleLayoutChange = useCallback((currentLayout: Layout[]) => {
         if (onLayoutChange) {
             onLayoutChange(currentLayout);
         }
@@ -213,7 +213,6 @@ export const DraggableGrid = memo(function DraggableGrid({
                             // Note: minW/minH are intentionally omitted here to allow
                             // responsive layouts (passed via 'layouts' prop) to take full control
                             // on smaller breakpoints without being constrained by desktop minimums.
-                            maxW: item.defaultLayout.w,
                         }}
                         style={{ overflow: 'visible' }}
                     >
