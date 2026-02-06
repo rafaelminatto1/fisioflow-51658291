@@ -382,6 +382,65 @@ export function useScheduleCapacity() {
     return matchingConfig?.max_patients || 1;
   };
 
+  /**
+   * Obtém a menor capacidade configurada em um intervalo de tempo.
+   * Útil para garantir que um agendamento longo não exceda a capacidade em nenhum momento.
+   * Se houver "buracos" sem configuração no intervalo, assume capacidade padrão (1).
+   */
+  const getMinCapacityForInterval = (dayOfWeek: number, startTimeStr: string, duration: number): number => {
+    if (!capacities || capacities.length === 0) return 1;
+
+    const startMinutes = timeToMinutes(startTimeStr);
+    const endMinutes = startMinutes + duration;
+
+    // 1. Encontrar todas as configurações que tocam no intervalo
+    const overlappingConfigs = capacities.filter(config => {
+      if (config.day_of_week !== dayOfWeek) return false;
+
+      const configStart = timeToMinutes(config.start_time);
+      const configEnd = timeToMinutes(config.end_time);
+
+      return (
+        (startMinutes >= configStart && startMinutes < configEnd) ||
+        (endMinutes > configStart && endMinutes <= configEnd) ||
+        (startMinutes <= configStart && endMinutes >= configEnd)
+      );
+    });
+
+    if (overlappingConfigs.length === 0) return 1;
+
+    // 2. Verificar se o intervalo está TOTALMENTE coberto pelas configurações
+    // Se houver qualquer minuto não coberto, a capacidade desse minuto é 1 (padrão)
+    
+    // Ordenar por início
+    overlappingConfigs.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+
+    let currentPointer = startMinutes;
+    
+    for (const config of overlappingConfigs) {
+      const configStart = timeToMinutes(config.start_time);
+      const configEnd = timeToMinutes(config.end_time);
+
+      // Se há um buraco entre o ponteiro atual e o início desta config
+      if (configStart > currentPointer) {
+        return 1; // Gap detectado -> capacidade 1
+      }
+
+      // Avançar ponteiro
+      if (configEnd > currentPointer) {
+        currentPointer = configEnd;
+      }
+    }
+
+    // Se após todas as configs, ainda não chegamos ao fim do agendamento
+    if (currentPointer < endMinutes) {
+      return 1; // Gap no final -> capacidade 1
+    }
+
+    // Se coberto totalmente, retorna a menor capacidade encontrada
+    return Math.min(...overlappingConfigs.map(c => c.max_patients));
+  };
+
   const daysOfWeek = [
     { value: 0, label: 'Domingo' },
     { value: 1, label: 'Segunda-feira' },
@@ -434,6 +493,7 @@ export function useScheduleCapacity() {
     updateCapacityGroup: updateCapacityGroup.mutate,
     deleteCapacityGroup: deleteCapacityGroup.mutate,
     getCapacityForTime,
+    getMinCapacityForInterval,
     checkConflicts,
     isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
     isUpdating: updateCapacity.isPending || updateCapacityGroup.isPending,

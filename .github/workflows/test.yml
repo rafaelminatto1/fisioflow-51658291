@@ -141,6 +141,8 @@ jobs:
       fail-fast: false
       matrix:
         test_suite:
+          - name: agenda-regression
+            spec: "agenda-regression"
           - name: e2e
             spec: ""
           - name: accessibility
@@ -184,7 +186,9 @@ jobs:
           sleep 5
       - name: Run ${{ matrix.test_suite.name }} tests
         run: |
-          if [ -n "${{ matrix.test_suite.spec }}" ]; then
+          if [ "${{ matrix.test_suite.spec }}" = "agenda-regression" ]; then
+            pnpm run test:e2e:agenda-regression
+          elif [ -n "${{ matrix.test_suite.spec }}" ]; then
             pnpm run test:e2e --project=chromium ${{ matrix.test_suite.spec }}
           else
             pnpm run test:e2e --project=chromium
