@@ -6,7 +6,7 @@ import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, X, ArrowsHorizontal } from 'lucide-react';
+import { Upload, X, ArrowLeftRight } from 'lucide-react';
 import { PoseOverlay } from './PoseOverlay';
 
 interface PoseComparisonProps {
@@ -56,7 +56,7 @@ export function PoseComparison({ patientId, className }: PoseComparisonProps) {
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ArrowsHorizontal className="w-5 h-5" />
+          <ArrowLeftRight className="w-5 h-5" />
           Comparação de Movimento
         </CardTitle>
       </CardHeader>
