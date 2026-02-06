@@ -324,7 +324,7 @@ export class ClinicalDecisionSupport {
       this.groundingModel = this.genAI.getGenerativeModel({
         model: CLINICAL_AI_CONFIG.model,
         systemInstruction: CLINICAL_SUPPORT_GROUNDING_PROMPT,
-        // @ts-ignore - googleSearch is a valid tool for Gemini
+        // @ts-expect-error - googleSearch is a valid tool for Gemini
         tools: [{ googleSearch: {} }],
       });
     }

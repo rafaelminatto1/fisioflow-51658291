@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +48,8 @@ export default function ClinicalAnalysisPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <MainLayout>
+      <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-8">
         <div className="p-3 bg-purple-100 rounded-lg">
           <Brain className="w-8 h-8 text-purple-600" />
@@ -123,6 +125,7 @@ export default function ClinicalAnalysisPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

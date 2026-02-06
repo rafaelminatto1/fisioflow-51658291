@@ -309,7 +309,7 @@ export async function getMonthlyRetentionData(
             collection(db, 'appointments'),
             where('patient_id', '==', pid),
             where('appointment_date', '<', monthStartStr),
-            // @ts-ignore
+            // @ts-expect-error - limit workaround for firestore query typing
             where('limit', '==', 1)
           );
 

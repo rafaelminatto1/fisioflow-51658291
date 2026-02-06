@@ -1,5 +1,5 @@
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
- '@/types/evolution';
+import type { Pathology } from '@/types/evolution';
 
 export class PathologyService {
   // Optimized: Select only required columns instead of *

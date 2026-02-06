@@ -42,7 +42,7 @@ export const exerciseImageProxy = onRequest(
       const fullPath = request.path || '';
       console.log('Exercise image proxy - fullPath:', fullPath);
 
-      let pathSegment = fullPath.replace('/api/exercise-image/', '');
+      const pathSegment = fullPath.replace('/api/exercise-image/', '');
       console.log('Exercise image proxy - pathSegment:', pathSegment);
 
       if (!pathSegment) {

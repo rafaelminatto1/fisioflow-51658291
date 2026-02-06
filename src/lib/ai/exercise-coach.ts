@@ -912,7 +912,7 @@ export class ExerciseCoach {
       const message = JSON.parse(data);
 
       switch (message.type) {
-        case 'audio':
+        case 'audio': {
           const audioChunk = base64ToAudioChunk(
             message.data,
             this.session.config.audio.outputSampleRate,
@@ -920,6 +920,7 @@ export class ExerciseCoach {
           );
           await this.playAudio(audioChunk.data as ArrayBuffer);
           break;
+        }
 
         case 'form_analysis':
           // Form analysis from video

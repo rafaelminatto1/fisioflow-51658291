@@ -86,7 +86,7 @@ export function EvaluationTemplateSelector({
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ['evaluation-templates-with-fields', category],
         queryFn: async () => {
-            let q = firestoreQuery(
+            const q = firestoreQuery(
                 collection(db, 'evaluation_forms'),
                 where('ativo', '==', true),
                 orderBy('nome')

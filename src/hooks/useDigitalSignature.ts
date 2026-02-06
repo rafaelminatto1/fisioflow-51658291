@@ -37,7 +37,7 @@ export function useDocumentSignatures(documentId?: string) {
   return useQuery({
     queryKey: ['document-signatures', documentId],
     queryFn: async () => {
-      let q = firestoreQuery(
+      const q = firestoreQuery(
         collection(db, 'document_signatures'),
         orderBy('signed_at', 'desc')
       );

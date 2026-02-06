@@ -361,6 +361,7 @@ export function constructWebhookEvent(
   signature: string,
   webhookSecret: string
 ): Stripe.Event {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const stripe = require('stripe');
   const webhookEndpoint = stripe.webhooks;
 
@@ -382,35 +383,41 @@ export async function handleWebhookEvent(
   }
 ): Promise<void> {
   switch (event.type) {
-    case 'checkout.session.completed':
+    case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
       await handlers.onCheckoutCompleted?.(session);
       break;
+    }
 
-    case 'invoice.paid':
+    case 'invoice.paid': {
       const invoice = event.data.object as Stripe.Invoice;
       await handlers.onInvoicePaid?.(invoice);
       break;
+    }
 
-    case 'invoice.payment_failed':
+    case 'invoice.payment_failed': {
       const failedInvoice = event.data.object as Stripe.Invoice;
       await handlers.onInvoiceFailed?.(failedInvoice);
       break;
+    }
 
-    case 'customer.subscription.created':
+    case 'customer.subscription.created': {
       const newSub = event.data.object as Stripe.Subscription;
       await handlers.onSubscriptionCreated?.(newSub);
       break;
+    }
 
-    case 'customer.subscription.updated':
+    case 'customer.subscription.updated': {
       const updatedSub = event.data.object as Stripe.Subscription;
       await handlers.onSubscriptionUpdated?.(updatedSub);
       break;
+    }
 
-    case 'customer.subscription.deleted':
+    case 'customer.subscription.deleted': {
       const deletedSub = event.data.object as Stripe.Subscription;
       await handlers.onSubscriptionDeleted?.(deletedSub);
       break;
+    }
 
     default:
       console.log(`Unhandled event type: ${event.type}`);

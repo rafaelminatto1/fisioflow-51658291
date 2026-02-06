@@ -74,7 +74,7 @@ export interface ExerciseRecommendation {
 /**
  * Partial exercise recommendation (from AI, before validation)
  */
-export interface PartialExerciseRecommendation extends Partial<ExerciseRecommendation> {}
+export type PartialExerciseRecommendation = Partial<ExerciseRecommendation>;
 
 /**
  * Complete exercise program recommendation

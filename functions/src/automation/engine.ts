@@ -7,6 +7,7 @@ import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as logger from 'firebase-functions/logger';
+import * as admin from 'firebase-admin';
 import { Firestore } from 'firebase-admin/firestore';
 
 import type {
@@ -558,7 +559,6 @@ export const onTimeEntryCreated = onDocumentWritten(
 // ============================================================================
 
 function getFirestore(): Firestore {
-  const admin = require('firebase-admin');
   if (!admin.apps.length) {
     admin.initializeApp();
   }

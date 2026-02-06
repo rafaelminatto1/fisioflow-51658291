@@ -6,7 +6,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
 
 // Importação dinâmica para não quebrar no Expo Go sem prebuild
-let HealthConnect: any = null;
+const HealthConnect: any = null;
 try {
   // HealthConnect = require('react-native-health-connect');
 } catch (e) {
