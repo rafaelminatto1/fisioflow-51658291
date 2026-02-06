@@ -4,9 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import ReactMarkdown from 'react-markdown';
+import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
 
 interface Props {
   patientId: string;
@@ -32,18 +31,31 @@ export function PatientAIChat({ patientId, patientName }: Props) {
     setLoading(true);
 
     try {
-      const chatFunction = httpsCallable(functions, 'aiClinicalChat');
-      const result = await chatFunction({ 
-        patientId, 
+      const aiResponse = await chatWithClinicalAssistant({
         message: userMsg,
-        history: messages // Enviar histórico para manter contexto
+        context: {
+          patientId,
+          condition: patientName,
+          sessionCount: 0,
+        },
+        conversationHistory: messages.map(msg => ({
+          role: msg.role === 'model' ? 'assistant' : 'user',
+          content: msg.content,
+        })),
       });
 
-      const aiResponse = (result.data as unknown).response;
       setMessages(prev => [...prev, { role: 'model', content: aiResponse }]);
-    } catch (error) {
-      console.error(error);
-      setMessages(prev => [...prev, { role: 'model', content: '❌ Erro ao conectar com Gemini. Tente novamente.' }]);
+    } catch (error: unknown) {
+      const firebaseError = error as { code?: string; message?: string };
+      console.error('[PatientAIChat] aiClinicalChat failed', {
+        code: firebaseError.code,
+        message: firebaseError.message,
+        patientId,
+      });
+      setMessages(prev => [
+        ...prev,
+        { role: 'model', content: '❌ Erro ao conectar com assistente clínico. Tente novamente.' },
+      ]);
     } finally {
       setLoading(false);
     }

@@ -113,7 +113,7 @@ export const sendWhatsAppAppointmentConfirmation = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Não autenticado');
@@ -203,7 +203,7 @@ export const sendWhatsAppAppointmentReminder = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { patientId, appointmentId } = request.data as {
     patientId: string;
@@ -272,7 +272,7 @@ export const sendWhatsAppWelcome = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { userId } = request.data as { userId: string };
 
@@ -317,7 +317,7 @@ export const sendWhatsAppCustomMessage = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Não autenticado');
@@ -377,7 +377,7 @@ export const sendWhatsAppExerciseAssigned = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   const { patientId, planName, exercisesCount } = request.data as {
     patientId: string;
@@ -588,7 +588,7 @@ function verifyWhatsAppSignature(
 export const whatsappWebhookHttp = onRequest({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
   secrets: ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_APP_SECRET'],
 }, async (request: any, response: any) => {
   // Verificar token de verificação do WhatsApp
@@ -791,7 +791,7 @@ export const testWhatsAppMessage = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth && request.data.secret !== 'FISIOFLOW_TEST_SECRET') {
     throw new HttpsError('unauthenticated', 'Não autenticado');
@@ -857,7 +857,7 @@ export const testWhatsAppTemplate = onCall({
   cors: CORS_ORIGINS,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Não autenticado');

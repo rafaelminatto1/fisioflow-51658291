@@ -23,7 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useCreateGoal, useUpdateGoal } from '@/hooks/usePatientEvolution';
+import { useCreateGoal, useUpdateGoal, useDeleteGoal } from '@/hooks/usePatientEvolution';
 import type { PatientGoal } from '@/types/evolution';
 import { format } from 'date-fns';
 
@@ -54,6 +54,7 @@ const PRIORITIES = [
 export function MetaFormModal({ open, onOpenChange, patientId, goal }: MetaFormModalProps) {
     const createGoal = useCreateGoal();
     const updateGoal = useUpdateGoal();
+    const deleteGoal = useDeleteGoal();
 
     const isEditing = !!goal;
 
@@ -130,7 +131,18 @@ export function MetaFormModal({ open, onOpenChange, patientId, goal }: MetaFormM
         }
     };
 
-    const isPending = createGoal.isPending || updateGoal.isPending;
+    const handleDelete = async () => {
+        if (goal && confirm('Tem certeza que deseja excluir esta meta?')) {
+            try {
+                await deleteGoal.mutateAsync(goal.id);
+                onOpenChange(false);
+            } catch (error) {
+                console.error('Erro ao excluir meta:', error);
+            }
+        }
+    };
+
+    const isPending = createGoal.isPending || updateGoal.isPending || deleteGoal.isPending;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -250,6 +262,16 @@ export function MetaFormModal({ open, onOpenChange, patientId, goal }: MetaFormM
                     )}
 
                     <DialogFooter className="gap-2">
+                        {isEditing && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={handleDelete}
+                                disabled={isPending}
+                            >
+                                Excluir
+                            </Button>
+                        )}
                         <Button
                             type="button"
                             variant="outline"

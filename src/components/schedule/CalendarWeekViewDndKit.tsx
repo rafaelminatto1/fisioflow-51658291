@@ -1,17 +1,17 @@
-import React, { memo, useMemo, useState, useCallback, useEffect } from 'react';
+import React, { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { parseResponseDate } from '@/utils/dateUtils';
+import { formatDateToLocalISO, parseResponseDate } from '@/utils/dateUtils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DraggableAppointment } from './DraggableAppointment';
 import { CalendarDragOverlay } from './DragOverlay';
 import { useCardSize } from '@/hooks/useCardSize';
-import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
+import { calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 import { getOverlapStackPosition } from '@/lib/calendar';
 import {
 
@@ -63,6 +63,9 @@ interface CalendarWeekViewDndKitProps {
 const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
+const MIN_WEEK_SLOT_HEIGHT = 26;
+const GRID_HEIGHT_ADJUSTMENT = 3;
+const WEEK_GRID_HEIGHT_BOOST = 0;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
 const _OVERLAP_LAYOUT_MARGIN_PX = 1;
@@ -109,7 +112,7 @@ export const CalendarWeekViewDndKit = memo(({
 }: CalendarWeekViewDndKitProps) => {
   // Get card size configuration from user preferences
   const { cardSize, heightScale } = useCardSize();
-  const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
+  const preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
@@ -144,6 +147,57 @@ export const CalendarWeekViewDndKit = memo(({
   }, [currentDate]);
 
   const timeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+  const weekContainerRef = useRef<HTMLDivElement | null>(null);
+  const weekScrollRef = useRef<HTMLDivElement | null>(null);
+  const weekHeaderRef = useRef<HTMLDivElement | null>(null);
+  const [fitSlotHeight, setFitSlotHeight] = useState<number | null>(null);
+
+  // Force fit all weekly slots (07:00-21:00) in visible height while respecting user compactness preference.
+  const slotHeight = useMemo(() => {
+    const fitted = fitSlotHeight ?? preferredSlotHeight;
+    return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferredSlotHeight, fitted));
+  }, [fitSlotHeight, preferredSlotHeight]);
+
+  useEffect(() => {
+    const updateSlotHeight = () => {
+      const containerHeight = weekScrollRef.current?.clientHeight ?? weekContainerRef.current?.clientHeight ?? 0;
+      const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
+
+      if (containerHeight <= 0 || timeSlots.length === 0) return;
+
+      const availableGridHeight = containerHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
+      if (availableGridHeight <= 0) return;
+
+      setFitSlotHeight(Math.floor(availableGridHeight / timeSlots.length));
+    };
+
+    updateSlotHeight();
+    const rafId = typeof window !== 'undefined' ? window.requestAnimationFrame(updateSlotHeight) : 0;
+    const timeoutId = window.setTimeout(updateSlotHeight, 80);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', updateSlotHeight);
+    }
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(updateSlotHeight);
+      if (weekContainerRef.current) observer.observe(weekContainerRef.current);
+      if (weekScrollRef.current) observer.observe(weekScrollRef.current);
+      if (weekHeaderRef.current) observer.observe(weekHeaderRef.current);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.cancelAnimationFrame(rafId);
+      }
+      window.clearTimeout(timeoutId);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', updateSlotHeight);
+      }
+      observer?.disconnect();
+    };
+  }, [timeSlots.length]);
 
   // Current time indicator
   const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null);
@@ -241,8 +295,9 @@ export const CalendarWeekViewDndKit = memo(({
     const startRowIndex = timeSlots.findIndex(t => t === time);
     if (startRowIndex === -1) return null;
 
-    const duration = apt.duration || 60;
-    const heightInPixels = calculateAppointmentCardHeight(cardSize, duration, heightScale);
+    const duration = Math.max(SLOT_DURATION_MINUTES, apt.duration || 60);
+    const slotCount = Math.max(1, Math.ceil(duration / SLOT_DURATION_MINUTES));
+    const heightInPixels = Math.max(MIN_WEEK_SLOT_HEIGHT - 1, (slotHeight * slotCount) - 2);
 
     const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
     let { index, count } = getOverlapStackPosition(dayAppointments, apt);
@@ -280,7 +335,7 @@ export const CalendarWeekViewDndKit = memo(({
       top: '0px',
       zIndex: 10 + index
     };
-  }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale, dropTarget, dragState]);
+  }, [weekDays, timeSlots, appointmentsByDayIndex, slotHeight, dropTarget, dragState]);
 
   // @dnd-kit event handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -373,14 +428,14 @@ export const CalendarWeekViewDndKit = memo(({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden">
-          <div className="overflow-auto w-full h-full custom-scrollbar">
+        <div ref={weekContainerRef} className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden">
+          <div ref={weekScrollRef} className="overflow-auto w-full h-full custom-scrollbar">
             <div className="w-full">
               {/* Header Row */}
-              <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm min-w-[600px]">
+              <div ref={weekHeaderRef} className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm min-w-[600px]">
                 {/* Time icon - Sticky Left */}
-                <div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center sticky left-0 z-50 bg-white dark:bg-slate-950">
-                  <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-gray-500">
+                <div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center sticky left-0 z-50 bg-white dark:bg-slate-950">
+                  <div className="w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-gray-500">
                     <span className="text-[10px] font-bold">GMT-3</span>
                   </div>
                 </div>
@@ -390,20 +445,20 @@ export const CalendarWeekViewDndKit = memo(({
                   const isTodayDate = isSameDay(day, new Date());
                   return (
                     <div key={i} className={cn(
-                      "h-14 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
+                      "h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
                       isTodayDate ? "bg-blue-50/50 dark:bg-blue-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/40"
                     )}>
                       {isTodayDate && (
                         <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
                       )}
                       <span className={cn(
-                        "text-[10px] font-medium uppercase tracking-wider mb-0.5",
+                        "text-[9px] font-medium uppercase tracking-wider mb-0.5",
                         isTodayDate ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-gray-500"
                       )}>
                         {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
                       </span>
                       <div className={cn(
-                        "text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                        "text-base font-bold w-7 h-7 rounded-full flex items-center justify-center transition-all",
                         isTodayDate
                           ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                           : "text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700"
@@ -443,8 +498,8 @@ export const CalendarWeekViewDndKit = memo(({
                       <div
                         key={`time-${time}`}
                         className={cn(
-                          "border-r border-slate-100 dark:border-slate-800 text-[11px] font-medium flex justify-end pr-2 pt-2 sticky left-0 z-30 bg-white dark:bg-slate-950",
-                          isHour ? "text-slate-600 dark:text-gray-500 -mt-2.5 translate-y-0" : "text-gray-500 dark:text-slate-600 hidden"
+                          "border-r border-slate-100 dark:border-slate-800 text-[10px] font-medium flex justify-end pr-2 pt-0.5 sticky left-0 z-30 bg-white dark:bg-slate-950",
+                          isHour ? "text-slate-600 dark:text-gray-500" : "text-gray-500 dark:text-slate-600 hidden"
                         )}
                         style={{ gridRow: index + 1, gridColumn: 1 }}
                       >
@@ -531,6 +586,7 @@ export const CalendarWeekViewDndKit = memo(({
                           isSelected={selectedIds?.has(apt.id)}
                           onToggleSelection={onToggleSelection}
                           dragHandleOnly={false}
+                          density="compact"
                         />
                       </DraggableAppointment>
                     );

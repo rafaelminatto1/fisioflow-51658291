@@ -247,7 +247,7 @@ export const syncToGoogleCalendarHandler = async (request: any) => {
 export const syncToGoogleCalendar = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, syncToGoogleCalendarHandler);
 
 /**
@@ -336,7 +336,7 @@ export const importFromGoogleCalendarHandler = async (request: any) => {
 export const importFromGoogleCalendar = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, importFromGoogleCalendarHandler);
 
 /**
@@ -429,7 +429,7 @@ export const exportToICalCallableHandler = async (request: any) => {
 export const exportToICal = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, exportToICalCallableHandler);
 
 /**
@@ -485,7 +485,7 @@ export const connectGoogleCalendarHandler = async (request: any) => {
 export const connectGoogleCalendar = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, connectGoogleCalendarHandler);
 
 /**
@@ -514,7 +514,7 @@ export const disconnectGoogleCalendarHandler = async (request: any) => {
 export const disconnectGoogleCalendar = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, disconnectGoogleCalendarHandler);
 
 /**
@@ -552,7 +552,7 @@ export const getGoogleAuthUrlHandler = async (request: any) => {
 export const getGoogleAuthUrl = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, getGoogleAuthUrlHandler);
 
 /**
@@ -601,7 +601,7 @@ export const syncIntegrationHandler = async (request: any) => {
 export const syncIntegration = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, syncIntegrationHandler);
 
 // ============================================================================================

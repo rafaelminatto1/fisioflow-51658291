@@ -93,7 +93,7 @@ export const listPatientsHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -223,7 +223,7 @@ export const getPatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -284,7 +284,7 @@ export const getPatientHttp = onRequest(
 export const getPatientStatsHttp = onRequest(
   {
     region: 'southamerica-east1',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -402,7 +402,7 @@ export const createPatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -565,7 +565,7 @@ export const updatePatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -658,7 +658,7 @@ export const deletePatientHttp = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },

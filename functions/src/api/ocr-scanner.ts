@@ -8,7 +8,7 @@ const visionClient = new ImageAnnotatorClient();
 const httpOpts = {
   region: 'southamerica-east1' as const, memory: '1GiB' as const,
   cpu: 1 as const,
-  maxInstances: 5, cors: CORS_ORIGINS, invoker: 'public' as const
+  maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' as const
 };
 
 /**

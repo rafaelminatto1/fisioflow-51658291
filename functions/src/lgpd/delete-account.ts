@@ -80,7 +80,7 @@ const COLLECTION_RETENTION_POLICY: Record<string, RetentionPolicy> = {
 export const requestAccountDeletion = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
   cors: true,
 }, async (request) => {
   if (!request.auth) {
@@ -159,7 +159,7 @@ export const requestAccountDeletion = onCall({
 export const cancelDeletionRequest = onCall({
   region: 'southamerica-east1',
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
   cors: true,
 }, async (request) => {
   if (!request.auth) {

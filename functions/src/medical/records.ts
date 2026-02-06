@@ -22,7 +22,7 @@ export const createEvolution = onCall({
   cors: true,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -142,7 +142,7 @@ export const updateEvolution = onCall({
   cors: true,
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -244,7 +244,7 @@ export const addEvolutionAttachment = onCall({
   cors: true,
   region: 'southamerica-east1',
   
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -305,7 +305,7 @@ export const getPatientEvolutionHistory = onCall({
   cors: true,
   region: 'southamerica-east1',
   
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -359,7 +359,7 @@ export const generateEvolutionReport = onCall({
   cors: true,
   region: 'southamerica-east1',
   memory: '1GiB',
-  maxInstances: 5,
+  maxInstances: 1,
   timeoutSeconds: 300,
 }, async (request) => {
   if (!request.auth) {
@@ -454,7 +454,7 @@ export const compareEvolutions = onCall({
   cors: true,
   region: 'southamerica-east1',
   
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
