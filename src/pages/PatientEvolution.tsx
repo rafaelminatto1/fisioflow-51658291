@@ -808,7 +808,7 @@ const PatientEvolution = () => {
           />
 
           {/* Abas de Navegação */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
               {/* Layout: 3 cards na linha 1 | Metas ocupando o restante na linha 2 | Resumo ocupando 30% na lateral */}

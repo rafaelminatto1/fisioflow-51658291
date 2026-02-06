@@ -62,6 +62,7 @@ export const LeaderboardTable: React.FC = () => {
     return (
       <TableHead
         className="cursor-pointer hover:bg-accent/50 transition-colors"
+        aria-sort={isSorted ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
         onClick={() => {
           if (isSorted) {
             setFilters({ sortBy: column as string, order: direction === 'asc' ? 'desc' : 'asc' });
@@ -283,6 +284,7 @@ export const LeaderboardTable: React.FC = () => {
                       size="icon"
                       onClick={() => handlePageChange(filters.page - 1)}
                       disabled={filters.page === 1}
+                      aria-label="Página anterior"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -306,6 +308,8 @@ export const LeaderboardTable: React.FC = () => {
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => handlePageChange(pageNum)}
+                            aria-label={`Página ${pageNum}`}
+                            aria-current={filters.page === pageNum ? 'page' : undefined}
                           >
                             {pageNum}
                           </Button>
@@ -317,6 +321,7 @@ export const LeaderboardTable: React.FC = () => {
                       size="icon"
                       onClick={() => handlePageChange(filters.page + 1)}
                       disabled={filters.page === totalPages}
+                      aria-label="Próxima página"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

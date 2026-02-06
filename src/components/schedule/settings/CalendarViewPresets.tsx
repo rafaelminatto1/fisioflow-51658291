@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -61,8 +61,40 @@ export function CalendarViewPresets() {
   const { cardSize, setCardSize, heightScale, setHeightScale } = useCardSize();
   const [highContrast, setHighContrast] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [largeText, setLargeText] = useState(false);
+  const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [appliedPreset, setAppliedPreset] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('accessibility-settings');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        highContrast?: boolean;
+        reducedMotion?: boolean;
+        fontSize?: 'small' | 'medium' | 'large';
+      };
+      setHighContrast(!!parsed.highContrast);
+      setReducedMotion(!!parsed.reducedMotion);
+      if (parsed.fontSize === 'small' || parsed.fontSize === 'medium' || parsed.fontSize === 'large') {
+        setFontSize(parsed.fontSize);
+      }
+    } catch {
+      // ignore parsing errors and use defaults
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('accessibility-settings', JSON.stringify({
+      highContrast,
+      reducedMotion,
+      fontSize,
+    }));
+
+    document.documentElement.classList.toggle('high-contrast', highContrast);
+    document.documentElement.classList.toggle('reduced-motion', reducedMotion);
+    document.documentElement.classList.remove('text-small', 'text-medium', 'text-large');
+    document.documentElement.classList.add(`text-${fontSize}`);
+  }, [highContrast, reducedMotion, fontSize]);
 
   const currentPreset = PRESETS.find(
     p => p.config.cardSize === cardSize && p.config.heightScale === heightScale
@@ -191,7 +223,6 @@ export function CalendarViewPresets() {
               checked={highContrast}
               onCheckedChange={(checked) => {
                 setHighContrast(checked);
-                document.documentElement.classList.toggle('high-contrast', checked);
                 toast({
                   title: checked ? 'Alto contraste ativado' : 'Alto contraste desativado',
                 });
@@ -219,7 +250,6 @@ export function CalendarViewPresets() {
               checked={reducedMotion}
               onCheckedChange={(checked) => {
                 setReducedMotion(checked);
-                document.documentElement.classList.toggle('reduce-motion', checked);
                 toast({
                   title: checked ? 'Movimento reduzido ativado' : 'Movimento reduzido desativado',
                 });
@@ -244,10 +274,9 @@ export function CalendarViewPresets() {
             </div>
             <Switch
               id="large-text"
-              checked={largeText}
+              checked={fontSize === 'large'}
               onCheckedChange={(checked) => {
-                setLargeText(checked);
-                document.documentElement.classList.toggle('large-text', checked);
+                setFontSize(checked ? 'large' : 'medium');
                 toast({
                   title: checked ? 'Texto grande ativado' : 'Texto grande desativado',
                 });
