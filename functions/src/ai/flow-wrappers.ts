@@ -14,6 +14,7 @@ import {
     soapGenerationFlow,
     type SoapGenerationInput,
     analyzePatientProgressFlow,
+    generateExercisePlan,
 } from './flows';
 
 import { onCall } from 'firebase-functions/v2/https';
@@ -123,6 +124,22 @@ export async function soapGenerationHandler(request: CallableRequest) {
             success: false,
             error: error.message || 'Failed to generate SOAP note',
             timestamp: new Date().toISOString(),
+        };
+    }
+}
+
+export async function exerciseGeneratorHandler(request: CallableRequest) {
+    try {
+        const result = await generateExercisePlan(request.data);
+        return {
+            success: true,
+            data: result,
+        };
+    } catch (error: any) {
+        console.error('[exerciseGeneratorHandler] Error:', error);
+        return {
+            success: false,
+            error: error.message || 'Failed to generate exercise plan',
         };
     }
 }
