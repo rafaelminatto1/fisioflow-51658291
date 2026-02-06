@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Trash2, CheckSquare, Settings as SettingsIcon, Sparkles, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ import { CalendarWeekViewDndKit } from './CalendarWeekViewDndKit';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -140,54 +139,38 @@ export const CalendarView = memo(({
     return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
   }, [appointments, optimisticAppointments, pendingOptimisticUpdate]);
 
+  // Index appointments by date string (YYYY-MM-DD) for O(1) lookup
+  const appointmentsByDate = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+    
+    (displayAppointments || []).forEach(apt => {
+      if (!apt || !apt.date) return;
+      
+      let dateKey: string;
+      
+      if (typeof apt.date === 'string') {
+        dateKey = apt.date; // Assuming YYYY-MM-DD
+      } else if (apt.date instanceof Date) {
+        dateKey = format(apt.date, 'yyyy-MM-dd');
+      } else {
+        return;
+      }
+      
+      if (!map.has(dateKey)) {
+        map.set(dateKey, []);
+      }
+      map.get(dateKey)!.push(apt);
+    });
+    
+    return map;
+  }, [displayAppointments]);
+
   // Helper function to get appointments for a specific date
   // Needs to be defined BEFORE useCalendarDrag hook
   const getAppointmentsForDate = useCallback((date: Date) => {
-    let filteredNoDate = 0;
-    let filteredInvalidDate = 0;
-
-    const result = (displayAppointments || []).filter(apt => {
-      if (!apt || !apt.date) {
-        filteredNoDate++;
-        return false;
-      }
-
-      const aptDate = typeof apt.date === 'string'
-        ? (() => {
-          const dateStr = apt.date as string;
-          const parts = dateStr.split('-');
-          if (parts.length !== 3) return new Date('Invalid');
-          const [y, m, d] = parts.map(Number);
-          return new Date(y, m - 1, d, 12, 0, 0);
-        })()
-        : apt.date;
-
-      // Ensure we have a valid date object before comparison
-      if (!(aptDate instanceof Date) || isNaN(aptDate.getTime())) {
-        filteredInvalidDate++;
-        logger.warn(`Agendamento com data inválida filtrado no CalendarView`, {
-          aptId: apt?.id,
-          aptDate: apt?.date,
-          patientName: apt?.patientName
-        }, 'CalendarView');
-        return false;
-      }
-
-      return isSameDay(aptDate, date);
-    });
-
-    // Log apenas se houver filtros (evitar spam)
-    if (filteredNoDate > 0 || filteredInvalidDate > 0) {
-      logger.warn(`Agendamentos filtrados no CalendarView`, {
-        date: format(date, 'yyyy-MM-dd'),
-        filteredNoDate,
-        filteredInvalidDate,
-        returnedCount: result.length
-      }, 'CalendarView');
-    }
-
-    return result;
-  }, [displayAppointments]);
+    const dateKey = format(date, 'yyyy-MM-dd');
+    return appointmentsByDate.get(dateKey) || [];
+  }, [appointmentsByDate]);
 
   // Helper function to get appointments for a specific slot (date + time)
   // Used by useCalendarDrag to detect existing appointments in the drop target

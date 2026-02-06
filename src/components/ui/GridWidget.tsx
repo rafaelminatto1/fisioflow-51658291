@@ -129,23 +129,23 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                                 )}
                                 {icon && <div className="text-muted-foreground shrink-0">{icon}</div>}
                                 {title && (
-                                    <CardTitle className="text-sm font-medium truncate">
+                                    <CardTitle className="text-base font-bold truncate tracking-tight text-foreground">
                                         {title}
                                     </CardTitle>
                                 )}
                             </div>
-                            <div className="flex items-center gap-1 shrink-0">
+                            <div className="flex items-center gap-2 shrink-0">
                                 {extraHeaderContent}
                                 {headerActions}
                                 {onRemove && (
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
+                                        className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive transition-colors"
                                         onClick={onRemove}
                                         aria-label="Remover widget"
                                     >
-                                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                        <X className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                 )}
                             </div>
