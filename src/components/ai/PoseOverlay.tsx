@@ -76,7 +76,6 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [jointAngles, setJointAngles] = useState<Record<string, number>>({});
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
-  const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const { toast } = useToast();
 
   // Inicializar MediaPipe Pose Landmarker
