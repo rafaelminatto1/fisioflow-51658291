@@ -30,10 +30,11 @@ import {
   CheckSquare
 } from 'lucide-react';
 import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
-import { ClinicalTestCombobox, type ClinicalTest } from '@/components/ui/clinical-test-combobox';
+import { ClinicalTestCombobox, type ClinicalTest as ClinicalTestComboboxTest } from '@/components/ui/clinical-test-combobox';
 import { CustomFieldsConfig, DEFAULT_MEASUREMENT_FIELDS, type CustomField } from './CustomFieldsConfig';
 import { SaveMeasurementTemplateModal } from './SaveMeasurementTemplateModal';
 import { MeasurementDiagramYBalance, Y_BALANCE_KEYS, type YBalanceValues } from './MeasurementDiagramYBalance';
+import { TestLibraryModal, type ClinicalTest } from '@/components/clinical/TestLibraryModal';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -61,7 +62,7 @@ interface MeasurementInput {
   notes: string;
   selectedTestId?: string;
   /** Teste completo da biblioteca (para exibir imagem/execução) */
-  selectedTest?: ClinicalTest;
+  selectedTest?: ClinicalTest | ClinicalTestComboboxTest;
   // Dynamic fields
   custom_data: Record<string, string>;
 }
@@ -137,6 +138,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
   const [customFields, setCustomFields] = useState<CustomField[]>(DEFAULT_MEASUREMENT_FIELDS);
   const [showFieldsConfig, setShowFieldsConfig] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [testLibraryOpen, setTestLibraryOpen] = useState(false);
 
   const createMeasurement = useCreateMeasurement();
 
@@ -207,7 +209,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
     setMeasurements(updated);
   };
 
-  const handleSelectTest = (index: number, testId: string, test?: ClinicalTest) => {
+  const handleSelectTest = (index: number, testId: string, test?: ClinicalTest | ClinicalTestComboboxTest) => {
     const updated = [...measurements];
 
     if (testId === "") {
@@ -362,6 +364,41 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
     queryClient.invalidateQueries({ queryKey: ['clinical-tests-combobox'] });
   };
 
+  const handleAddTestFromLibrary = (test: ClinicalTest) => {
+    // Adiciona um novo measurement com os dados do teste selecionado
+    const newMeasurement: MeasurementInput = {
+      measurement_type: test.category || 'Teste Funcional',
+      measurement_name: test.name,
+      value: '',
+      unit: test.fields_definition?.find(f => f.id === 'value')?.unit || '',
+      notes: '',
+      selectedTestId: test.id,
+      selectedTest: test,
+      custom_data: {}
+    };
+
+    // Se o teste tem fields_definition, configura os campos automaticamente
+    if (test.fields_definition && test.fields_definition.length > 0) {
+      const newCustomFields = customFields.map(f => {
+        const templateField = test.fields_definition?.find(tf => tf.id === f.id || tf.label.toLowerCase() === f.label.toLowerCase());
+        if (templateField) {
+          return {
+            ...f,
+            enabled: true,
+            required: templateField.required ?? f.required,
+            unit: templateField.unit ?? f.unit
+          };
+        }
+        if (['measurement_name', 'value'].includes(f.id)) return { ...f, enabled: true };
+        return { ...f, enabled: false };
+      });
+      setCustomFields(newCustomFields);
+      newMeasurement.measurement_type = 'Personalizado';
+    }
+
+    setMeasurements([...measurements, newMeasurement]);
+  };
+
   // Get enabled fields for rendering
   const enabledFields = customFields.filter(f => f.enabled);
   const hasCustomType = measurements.some(m => m.measurement_type === 'Personalizado');
@@ -381,7 +418,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={() => navigate('/clinical-tests')}
+              onClick={() => setTestLibraryOpen(true)}
               size="sm"
               variant="outline"
               className="hidden sm:flex border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 font-semibold"
@@ -425,7 +462,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
 
       <CardContent className="p-6 space-y-6">
         {/* Mobile link for tests */}
-        <Button onClick={() => navigate('/clinical-tests')} size="sm" variant="outline" className="w-full sm:hidden border-teal-100 text-teal-700 font-bold">
+        <Button onClick={() => setTestLibraryOpen(true)} size="sm" variant="outline" className="w-full sm:hidden border-teal-100 text-teal-700 font-bold">
           <BookOpen className="h-4 w-4 mr-2" />
           Biblioteca de Testes
         </Button>
@@ -968,6 +1005,13 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
         onOpenChange={setSaveTemplateOpen}
         fields={customFields}
         onSaved={handleTemplateSaved}
+      />
+
+      <TestLibraryModal
+        open={testLibraryOpen}
+        onOpenChange={setTestLibraryOpen}
+        onAddTest={handleAddTestFromLibrary}
+        patientId={patientId}
       />
     </Card>
   );

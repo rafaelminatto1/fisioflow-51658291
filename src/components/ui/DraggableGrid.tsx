@@ -40,10 +40,10 @@ const GRID_CONFIG = {
     // - md/lg (996px+): 12 columns for desktops
     cols: { lg: 12, md: 12, sm: 6, xs: 2, xxs: 1 } as const,
     breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const,
-    margin: [16, 16] as const, // [horizontal, vertical] margin between items
-    rowHeight: 50, // default height of each grid row in pixels
+    margin: [12, 10] as const, // [horizontal, vertical] margin between items (tighter vertical spacing)
+    rowHeight: 46, // default height of each grid row in pixels (more compact)
     compactType: 'vertical' as const, // vertical compacting - pushes items down to fill gaps
-    containerPadding: [0, 0] as const, // No extra padding at container edges
+    containerPadding: [0, 0] as const, // Padding is handled by the parent wrapper
     // Enhanced UX: Animation and transition settings
     transitionDuration: 150, // ms - faster animation for more responsive feel
     dragThreshold: 0, // pixels - 0 for instant drag response
@@ -58,9 +58,9 @@ const useContainerWidth = () => {
     // Use window.innerWidth as initial estimate for mobile-friendly default
     const [width, setWidth] = useState(() => {
         if (typeof window !== 'undefined') {
-            return Math.min(window.innerWidth, 1200);
+            return window.innerWidth;
         }
-        return 1200;
+        return 1280;
     });
 
     useEffect(() => {
@@ -123,6 +123,7 @@ export const DraggableGrid = memo(function DraggableGrid({
     const [isMounted, setIsMounted] = useState(false);
     const { containerRef, width } = useContainerWidth();
     const dragCounterRef = useRef(0);
+    const effectiveWidth = containerRef.current?.getBoundingClientRect().width ?? width;
 
     // Wait for mount to ensure container dimensions are measured
     useEffect(() => {
@@ -169,14 +170,15 @@ export const DraggableGrid = memo(function DraggableGrid({
         <div
             ref={containerRef}
             className={cn("w-full max-w-full", className)}
-            style={{ position: 'relative', overflow: 'hidden' }}
+            style={{ position: 'relative', overflow: 'visible' }}
         >
             <Responsive
                 className={cn("layout", isEditable && "editable")}
                 breakpoints={GRID_CONFIG.breakpoints}
                 cols={cols}
                 rowHeight={rowHeight}
-                width={width}
+                width={Math.max(1, effectiveWidth)}
+                measureBeforeMount={true}
                 draggableHandle=".drag-handle"
                 isDraggable={isEditable}
                 isResizable={isEditable}
@@ -210,7 +212,7 @@ export const DraggableGrid = memo(function DraggableGrid({
                             // Note: minW/minH are intentionally omitted here to allow
                             // responsive layouts (passed via 'layouts' prop) to take full control
                             // on smaller breakpoints without being constrained by desktop minimums.
-                            maxW: item.defaultLayout.w ? item.defaultLayout.w + 4 : undefined,
+                            maxW: item.defaultLayout.w,
                         }}
                         style={{ overflow: 'visible' }}
                     >

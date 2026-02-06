@@ -106,7 +106,7 @@ export default function AtRiskPatientsPage() {
           collection(db, 'appointments'),
           where('patient_id', '==', patientId),
           orderBy('appointment_date', 'desc'),
-          // @ts-ignore - limit exists
+          // @ts-expect-error - limit exists
           where('limit', '==', 1)
         );
 

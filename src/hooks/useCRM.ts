@@ -367,13 +367,17 @@ export function useNPSPesquisas() {
             try {
               const leadDoc = await getDoc(doc(db, 'leads', item.lead_id));
               if (leadDoc.exists()) leadName = leadDoc.data().nome;
-            } catch (e) { }
+            } catch (e) {
+              // Ignore missing lead data
+            }
           }
           if (item.patient_id) {
             try {
               const patientDoc = await getDoc(doc(db, 'patients', item.patient_id));
               if (patientDoc.exists()) patientName = patientDoc.data().full_name || patientDoc.data().name;
-            } catch (e) { }
+            } catch (e) {
+              // Ignore missing patient data
+            }
           }
 
           return {
@@ -550,4 +554,3 @@ export function useImportLeads() {
     onError: () => toast.error('Erro ao importar leads.'),
   });
 }
-

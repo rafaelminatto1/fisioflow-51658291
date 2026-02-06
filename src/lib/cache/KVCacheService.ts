@@ -263,7 +263,8 @@ export async function warmUpCache(
       } catch (error) {
         logger.error(`Cache warm-up failed for ${key}`, error, 'KVCacheService');
         return { status: 'rejected' as const, key };
-      })
+      }
+    })
   );
 
   const successful = results.filter(r => r.status === 'fulfilled').length;

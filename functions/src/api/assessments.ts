@@ -45,7 +45,7 @@ export const listAssessmentTemplatesHandler = async (request: any) => {
   }
 };
 
-export const listAssessmentTemplates = onCall<{}, Promise<ListAssessmentTemplatesResponse>>(
+export const listAssessmentTemplates = onCall<Record<string, never>, Promise<ListAssessmentTemplatesResponse>>(
   { cors: CORS_ORIGINS },
   listAssessmentTemplatesHandler
 );
@@ -100,7 +100,7 @@ export const getAssessmentTemplateHandler = async (request: any) => {
 
     // Buscar perguntas para todas as seções de uma vez (mais eficiente que loops independentes)
     const sectionIds = sectionsResult.rows.map((s: { id: string }) => s.id);
-    let sectionsWithQuestions = sectionsResult.rows.map((s: any) => ({ ...s, questions: [] }));
+    const sectionsWithQuestions = sectionsResult.rows.map((s: any) => ({ ...s, questions: [] }));
 
     if (sectionIds.length > 0) {
       const questionsResult = await pool.query(

@@ -105,57 +105,53 @@ export const useUsePackageSession = () => {
       const packageRef = doc(db, 'session_packages', packageId);
 
       // Use transaction to ensure atomicity
-      try {
-        await runTransaction(db, async (transaction) => {
-          const packageSnap = await getDoc(packageRef);
+      await runTransaction(db, async (transaction) => {
+        const packageSnap = await getDoc(packageRef);
 
-          if (!packageSnap.exists()) {
-            throw new Error('Pacote não encontrado');
-          }
+        if (!packageSnap.exists()) {
+          throw new Error('Pacote não encontrado');
+        }
 
-          const pkg = packageSnap.data() as SessionPackage;
+        const pkg = packageSnap.data() as SessionPackage;
 
-          if (pkg.status !== 'ativo') {
-            throw new Error('Pacote não está ativo');
-          }
+        if (pkg.status !== 'ativo') {
+          throw new Error('Pacote não está ativo');
+        }
 
-          if (pkg.remaining_sessions <= 0) {
-            throw new Error('Não há sessões disponíveis neste pacote');
-          }
+        if (pkg.remaining_sessions <= 0) {
+          throw new Error('Não há sessões disponíveis neste pacote');
+        }
 
-          // Check if package is expired
-          if (pkg.valid_until && new Date(pkg.valid_until) < new Date()) {
-            throw new Error('Pacote expirado');
-          }
+        // Check if package is expired
+        if (pkg.valid_until && new Date(pkg.valid_until) < new Date()) {
+          throw new Error('Pacote expirado');
+        }
 
-          const newUsedSessions = pkg.used_sessions + 1;
-          const newRemainingSessions = pkg.remaining_sessions - 1;
+        const newUsedSessions = pkg.used_sessions + 1;
+        const newRemainingSessions = pkg.remaining_sessions - 1;
 
-          // Update status if consumed
-          let newStatus = pkg.status;
-          if (newRemainingSessions === 0) {
-            newStatus = 'consumido';
-          }
+        // Update status if consumed
+        let newStatus = pkg.status;
+        if (newRemainingSessions === 0) {
+          newStatus = 'consumido';
+        }
 
-          transaction.update(packageRef, {
-            used_sessions: newUsedSessions,
-            remaining_sessions: newRemainingSessions,
-            status: newStatus,
-            updated_at: new Date().toISOString(),
-          });
-
-          return { id: packageId, ...pkg, used_sessions: newUsedSessions, remaining_sessions: newRemainingSessions, status: newStatus };
+        transaction.update(packageRef, {
+          used_sessions: newUsedSessions,
+          remaining_sessions: newRemainingSessions,
+          status: newStatus,
+          updated_at: new Date().toISOString(),
         });
 
-        // Fetch updated package
-        const updatedSnap = await getDoc(packageRef);
-        return {
-          id: updatedSnap.id,
-          ...updatedSnap.data(),
-        } as SessionPackage;
-      } catch (error) {
-        throw error;
-      }
+        return { id: packageId, ...pkg, used_sessions: newUsedSessions, remaining_sessions: newRemainingSessions, status: newStatus };
+      });
+
+      // Fetch updated package
+      const updatedSnap = await getDoc(packageRef);
+      return {
+        id: updatedSnap.id,
+        ...updatedSnap.data(),
+      } as SessionPackage;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });

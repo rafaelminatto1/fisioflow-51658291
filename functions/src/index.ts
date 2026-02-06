@@ -724,7 +724,15 @@ export { expiringVouchers, birthdays, cleanup, dataIntegrity } from './crons/add
 // ============================================================================
 
 // Notification Workflows
-export { sendNotification, sendNotificationBatch, processNotificationQueue, emailWebhook } from './workflows/notifications';
+export {
+  sendNotification,
+  sendNotificationBatch,
+  notifyAppointmentScheduled,
+  notifyAppointmentReschedule,
+  notifyAppointmentCancellation,
+  processNotificationQueue,
+  emailWebhook
+} from './workflows/notifications';
 
 // Appointment Workflows
 export { appointmentReminders, onAppointmentCreatedWorkflow, onAppointmentUpdatedWorkflow } from './workflows/appointments';

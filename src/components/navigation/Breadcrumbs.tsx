@@ -121,7 +121,7 @@ function generateBreadcrumbsFromPath(pathname: string, location: Location): Brea
     }
 
     // Get label from mapping or format the segment
-    let label = routeLabels[segment] || formatBreadcrumbLabel(segment);
+    const label = routeLabels[segment] || formatBreadcrumbLabel(segment);
 
     // Special handling for dynamic routes
     if (segment === 'pacientes' && pathSegments[index + 1]) {
