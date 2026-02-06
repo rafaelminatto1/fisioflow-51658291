@@ -3,7 +3,7 @@
  * Gerencia arquivos, pastas e permissões no Google Drive
  */
 
-import { google } from 'googleapis';
+import { google, drive_v3 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
 // ============================================================================
@@ -47,7 +47,7 @@ export interface UploadResult {
 // ============================================================================
 
 export class DriveService {
-  private drive: any;
+  private drive: drive_v3.Drive;
   private oauth2Client: OAuth2Client;
 
   constructor(accessToken: string) {
@@ -110,7 +110,7 @@ export class DriveService {
     name: string,
     parentId?: string
   ): Promise<DriveFolder> {
-    const fileMetadata: any = {
+    const fileMetadata: drive_v3.Schema$File = {
       name,
       mimeType: 'application/vnd.google-apps.folder',
     };
@@ -176,8 +176,8 @@ export class DriveService {
     fileBuffer: Buffer,
     folderId?: string
   ): Promise<UploadResult> {
-    const fileMetadata: any = {
-      name,
+    const fileMetadata: drive_v3.Schema$File = {
+      name: fileName,
       mimeType,
     };
 
@@ -214,7 +214,7 @@ export class DriveService {
    * Copia arquivo
    */
   async copyFile(fileId: string, name: string, parentId?: string): Promise<DriveFile> {
-    const fileMetadata: any = { name };
+    const fileMetadata: drive_v3.Schema$File = { name };
 
     if (parentId) {
       fileMetadata.parents = [parentId];
@@ -227,6 +227,26 @@ export class DriveService {
     });
 
     return response.data;
+  }
+
+  /**
+   * Move arquivo para uma pasta
+   */
+  async moveFile(fileId: string, folderId: string): Promise<void> {
+    // Buscar pais atuais
+    const file = await this.drive.files.get({
+      fileId,
+      fields: 'parents',
+    });
+    const previousParents = (file.data.parents || []).join(',');
+
+    // Mover arquivo
+    await this.drive.files.update({
+      fileId,
+      addParents: folderId,
+      removeParents: previousParents,
+      fields: 'id, parents',
+    });
   }
 
   /**

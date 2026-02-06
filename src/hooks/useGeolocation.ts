@@ -1,6 +1,7 @@
 import { Geolocation, Position, PositionOptions } from '@capacitor/geolocation';
 import { useCallback, useMemo, useState } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { db, collection, addDoc, serverTimestamp, getFirebaseAuth } from '@/integrations/firebase/app';
 
 export interface LocationData {
   latitude: number;
@@ -156,8 +157,21 @@ export function useCheckIn() {
       checkedAt: new Date(location.timestamp).toISOString(),
     };
 
-    // TODO: Enviar para Firebase
-    // await addDoc(collection(db, 'appointment_checkins'), checkInData);
+    try {
+      const auth = getFirebaseAuth();
+      const user = auth.currentUser;
+      
+      if (user) {
+        await addDoc(collection(db, 'appointment_checkins'), {
+          ...checkInData,
+          userId: user.uid,
+          serverTimestamp: serverTimestamp(),
+        });
+        logger.info('Check-in realizado com sucesso', { appointmentId }, 'useGeolocation');
+      }
+    } catch (err) {
+      logger.error('Erro ao salvar check-in no Firebase', err, 'useGeolocation');
+    }
 
     return checkInData;
   }, [getCurrentPosition]);

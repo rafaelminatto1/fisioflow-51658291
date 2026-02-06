@@ -6,6 +6,7 @@
 import admin from 'firebase-admin';
 import { httpsCallable, HttpsError } from 'firebase-functions';
 import { db } from '@/integrations/firebase/app';
+import { UnknownError, getErrorMessage } from '@/types';
 
 // ============================================================================
 // Types
@@ -206,8 +207,8 @@ export class FCMService {
         success: true,
         messageId,
       };
-    } catch (error: any) {
-      const errorMessage = error?.message || String(error);
+    } catch (error: UnknownError) {
+      const errorMessage = getErrorMessage(error);
 
       // Verificar se token é inválido
       if (
@@ -297,14 +298,14 @@ export class FCMService {
         results,
         invalidTokens,
       };
-    } catch (error: any) {
+    } catch (error: UnknownError) {
       console.error('Erro ao enviar multicast:', error);
       return {
         successCount: 0,
         failureCount: tokens.length,
         results: tokens.map(() => ({
           success: false,
-          error: error?.message || 'Erro ao enviar notificações',
+          error: getErrorMessage(error) || 'Erro ao enviar notificações',
         })),
         invalidTokens: [],
       };
@@ -338,10 +339,10 @@ export class FCMService {
         success: true,
         messageId,
       };
-    } catch (error: any) {
+    } catch (error: UnknownError) {
       return {
         success: false,
-        error: error?.message || 'Erro ao enviar para tópico',
+        error: getErrorMessage(error) || 'Erro ao enviar para tópico',
       };
     }
   }
@@ -360,11 +361,11 @@ export class FCMService {
         failureCount: response.failureCount,
         errors: [],
       };
-    } catch (error: any) {
+    } catch (error: UnknownError) {
       return {
         successCount: 0,
         failureCount: tokens.length,
-        errors: [error?.message || 'Erro ao inscrever ao tópico'],
+        errors: [getErrorMessage(error) || 'Erro ao inscrever ao tópico'],
       };
     }
   }
@@ -383,11 +384,11 @@ export class FCMService {
         failureCount: response.failureCount,
         errors: [],
       };
-    } catch (error: any) {
+    } catch (error: UnknownError) {
       return {
         successCount: 0,
         failureCount: tokens.length,
-        errors: [error?.message || 'Erro ao remover inscrição do tópico'],
+        errors: [getErrorMessage(error) || 'Erro ao remover inscrição do tópico'],
       };
     }
   }

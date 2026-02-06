@@ -104,6 +104,9 @@ export function useScheduleSettings() {
 
   const upsertBusinessHours = useMutation({
     mutationFn: async (hours: Partial<BusinessHour>[]) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada.');
+      }
       const validHours = hours.filter(h => h.day_of_week !== undefined);
 
       const promises = validHours.map(async (h) => {
@@ -149,6 +152,9 @@ export function useScheduleSettings() {
 
   const upsertCancellationRules = useMutation({
     mutationFn: async (rules: Partial<CancellationRule>) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada.');
+      }
       const docRef = doc(db, 'schedule_cancellation_rules', organizationId!);
       await setDoc(docRef, { ...rules, organization_id: organizationId }, { merge: true });
     },
@@ -176,6 +182,9 @@ export function useScheduleSettings() {
 
   const upsertNotificationSettings = useMutation({
     mutationFn: async (settings: Partial<NotificationSettings>) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada.');
+      }
       const docRef = doc(db, 'schedule_notification_settings', organizationId!);
       await setDoc(docRef, { ...settings, organization_id: organizationId }, { merge: true });
     },
@@ -206,6 +215,9 @@ export function useScheduleSettings() {
 
   const createBlockedTime = useMutation({
     mutationFn: async (blocked: Omit<BlockedTime, 'id' | 'created_by'>) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada.');
+      }
       await addDoc(collection(db, 'schedule_blocked_times'), {
         ...blocked,
         organization_id: organizationId,
@@ -224,6 +236,9 @@ export function useScheduleSettings() {
 
   const deleteBlockedTime = useMutation({
     mutationFn: async (id: string) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada.');
+      }
       await deleteDoc(doc(db, 'schedule_blocked_times', id));
     },
     onSuccess: () => {
@@ -251,15 +266,17 @@ export function useScheduleSettings() {
     isLoadingBlocked,
 
     // Mutations
-    upsertBusinessHours: upsertBusinessHours.mutate,
-    upsertCancellationRules: upsertCancellationRules.mutate,
-    upsertNotificationSettings: upsertNotificationSettings.mutate,
-    createBlockedTime: createBlockedTime.mutate,
-    deleteBlockedTime: deleteBlockedTime.mutate,
+    upsertBusinessHours,
+    upsertCancellationRules,
+    upsertNotificationSettings,
+    createBlockedTime,
+    deleteBlockedTime,
 
     // Pending states
     isSavingHours: upsertBusinessHours.isPending,
     isSavingRules: upsertCancellationRules.isPending,
     isSavingNotifications: upsertNotificationSettings.isPending,
+    isCreatingBlocked: createBlockedTime.isPending,
+    isDeletingBlocked: deleteBlockedTime.isPending,
   };
 }

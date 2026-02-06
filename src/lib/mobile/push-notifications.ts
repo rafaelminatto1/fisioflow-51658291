@@ -21,7 +21,7 @@ export interface PushNotificationData {
  * Inicializa o sistema de push notifications
  * Deve ser chamado ao iniciar o app (apenas em nativo)
  */
-export async function initPushNotifications(): Promise<void> {
+export async function initPushNotifications(navigate?: (path: string) => void): Promise<void> {
   // Verificar se está em plataforma nativa
   if (!Capacitor.isNativePlatform()) {
     logger.info('Push notifications não disponíveis na web', undefined, 'push-notifications');
@@ -68,7 +68,7 @@ export async function initPushNotifications(): Promise<void> {
     // Listener: Notificação clicada (app aberto pela notificação)
     await PushNotifications.addListener('pushNotificationActionPerformed', (notification: ActionPerformed) => {
       logger.info('Notificação clicada', { notification }, 'push-notifications');
-      handleNotificationAction(notification);
+      handleNotificationAction(notification, navigate);
     });
   } catch (error) {
     logger.error('Erro ao inicializar push notifications', error, 'push-notifications');
@@ -137,22 +137,32 @@ async function showLocalNotification(notification: {
 /**
  * Manipula clique na notificação
  */
-function handleNotificationAction(notification: ActionPerformed): void {
+function handleNotificationAction(notification: ActionPerformed, navigate?: (path: string) => void): void {
   const type = notification.notification.data?.type;
+  const id = notification.notification.data?.id;
 
-  // TODO: Implementar navegação baseada no tipo
+  if (!navigate) {
+    logger.warn('Navegação não disponível para ação de notificação', undefined, 'push-notifications');
+    return;
+  }
+
   switch (type) {
     case 'appointment':
-      logger.info('Navegar para detalhes da consulta', undefined, 'push-notifications');
+      logger.info('Navegar para detalhes da consulta', { id }, 'push-notifications');
+      if (id) navigate(`/agenda?appointmentId=${id}`);
+      else navigate('/');
       break;
     case 'message':
-      logger.info('Navegar para chat', undefined, 'push-notifications');
+      logger.info('Navegar para chat', { id }, 'push-notifications');
+      navigate('/communications');
       break;
     case 'alert':
       logger.info('Navegar para alerta', undefined, 'push-notifications');
+      navigate('/notifications');
       break;
     default:
       logger.info('Navegar para dashboard', undefined, 'push-notifications');
+      navigate('/');
   }
 }
 

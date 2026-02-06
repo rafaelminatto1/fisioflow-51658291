@@ -63,10 +63,14 @@ export function NotificationSettingsManager() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    upsertNotificationSettings(settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      await upsertNotificationSettings.mutateAsync(settings);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // Erro já tratado no hook via toast
+    }
   };
 
   if (isLoadingNotifications) {
@@ -113,7 +117,8 @@ export function NotificationSettingsManager() {
           <Info className="h-4 w-4 text-blue-600" />
           <AlertTitle className="text-blue-900 dark:text-blue-100">Personalização</AlertTitle>
           <AlertDescription className="text-blue-700 dark:text-blue-300">
-            Mensagens personalizadas aumentam o comparecimento em até 40%.
+            Mensagens personalizadas melhoram o comparecimento.
+            As opções desta aba são persistidas para fluxos automáticos de comunicação.
           </AlertDescription>
         </Alert>
 

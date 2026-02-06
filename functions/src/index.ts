@@ -333,6 +333,21 @@ export const createPerformanceIndexes = onCall(async (request) => {
     return createPerformanceIndexesHandler(request);
 });
 
+// OTIMIZAÇÃO: Nova função HTTP para criar índices otimizados
+export const createOptimizedIndexes = onRequest(
+    {
+        secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
+        memory: '256MiB',
+        timeoutSeconds: 300,
+        region: 'southamerica-east1',
+        cors: CORS_ORIGINS,
+    },
+    async (req, res) => {
+        const { createOptimizedIndexesHandler } = await import('./migrations/create-indexes-optimized');
+        return createOptimizedIndexesHandler(req, res);
+    }
+);
+
 export const runPatientMedicalReturnCols = onRequest(
     {
         secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
@@ -488,6 +503,34 @@ export const scanMedicalReportHttp = onRequest(
     async (req: any, res: any) => {
         const { scanMedicalReportHttpHandler } = await import('./api/ocr-scanner');
         return scanMedicalReportHttpHandler(req, res);
+    }
+);
+
+// ============================================================================
+// OTIMIZAÇÃO FASE 2: AI SERVICE UNIFICADO
+// ============================================================================
+// Nova função unificada que consolida múltiplas funções AI em um único serviço
+// Uso: chamar aiService com { action: 'nomeDaAcao', ...params }
+// Ações disponíveis: generateExercisePlan, clinicalAnalysis, exerciseSuggestion,
+//                    soapGeneration, analyzeProgress, movementAnalysis, clinicalChat,
+//                    exerciseRecommendationChat, soapNoteChat, getSuggestions, fastProcessing
+//
+// Economia: ~R$ 15-20/mês ao migrar das funções individuais para esta versão unificada
+// As funções individuais acima são mantidas para compatibilidade durante a migração
+// ============================================================================
+export const aiService = onCall(
+    AI_FUNCTION,
+    async (request) => {
+        const { aiServiceHandler } = await import('./ai/unified-ai-service');
+        return aiServiceHandler(request);
+    }
+);
+
+export const aiServiceHttp = onRequest(
+    { ...AI_FUNCTION, ...withCors(AI_FUNCTION, CORS_ORIGINS) },
+    async (req: any, res: any) => {
+        const { aiServiceHttpHandler } = await import('./ai/unified-ai-service');
+        return aiServiceHttpHandler(req, res);
     }
 );
 

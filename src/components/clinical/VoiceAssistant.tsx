@@ -309,8 +309,11 @@ export function VoiceAssistant({
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
-    // TODO: Implement actual audio muting
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    if (assistantRef.current) {
+      assistantRef.current.setMuted(newMutedState);
+    }
   };
 
   const formatDuration = (seconds: number) => {

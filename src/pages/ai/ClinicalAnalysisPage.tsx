@@ -34,7 +34,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { functions, db } from '@/lib/firebase';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import { ChatInterface } from '@/components/ai/ChatInterface';
@@ -87,51 +88,59 @@ export default function ClinicalAnalysisPage() {
     const patient = patients?.find((p: Patient) => p.id === selectedPatient);
     if (patient) {
       setSelectedPatientData(patient);
-      // TODO: Buscar histórico real do backend
-      // Por enquanto, mock data
-      setAnalysisHistory([
-        {
-          id: '1',
-          date: new Date(2026, 1, 25),
-          summary: 'Paciente apresentando melhora na flexão de joelho esquerdo',
-          score: 65,
-          improvement: 44,
-        },
-        {
-          id: '2',
-          date: new Date(2026, 1, 15),
-          summary: 'Início de protocolo de fortalecimento de quadríceps',
-          score: 58,
-          improvement: 22,
-        },
-        {
-          id: '3',
-          date: new Date(2026, 1, 5),
-          summary: 'Avaliação inicial: Limitação significativa de movimento',
-          score: 45,
-          improvement: 0,
-        },
-      ]);
+      
+      const fetchHistory = async () => {
+        setLoading(true);
+        try {
+          const soapRef = collection(db, 'soap_records');
+          const q = query(
+            soapRef,
+            where('patient_id', '==', selectedPatient),
+            orderBy('record_date', 'desc'),
+            limit(10)
+          );
+          
+          const snapshot = await getDocs(q);
+          const history: AnalysisHistory[] = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              date: data.record_date ? new Date(data.record_date) : new Date(),
+              summary: data.assessment || data.subjective || 'Sem descrição',
+              score: data.progress_score || undefined,
+              improvement: data.improvement_percentage || undefined
+            };
+          });
+          
+          setAnalysisHistory(history);
 
-      // Alertas simulados
-      setAlerts([
-        {
-          id: '1',
-          type: 'milestone',
-          title: 'Progresso Significativo',
-          description: 'Paciente alcançou 85% da flexão normal do joelho',
-          severity: 'low',
-        },
-        {
-          id: '2',
-          type: 'info',
-          title: 'Próxima Reavaliação',
-          description: 'Sugerida para 15/02/2026',
-          severity: 'medium',
-        },
-      ]);
+          // Alertas reais poderiam vir de uma análise de IA
+          if (history.length > 0 && history[0].summary.toLowerCase().includes('dor')) {
+            setAlerts([
+              {
+                id: '1',
+                type: 'risk',
+                title: 'Alerta de Dor',
+                description: 'Paciente reportou dor na última sessão.',
+                severity: 'medium',
+              }
+            ]);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar histórico:', error);
+          toast({
+            title: 'Erro ao carregar histórico',
+            description: 'Não foi possível buscar as sessões anteriores.',
+            variant: 'destructive'
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchHistory();
     }
-  }, [selectedPatient, patients]);
+  }, [selectedPatient, patients, toast]);
 
   const selectedPatientObj = patients?.find((p: Patient) => p.id === selectedPatient);
 

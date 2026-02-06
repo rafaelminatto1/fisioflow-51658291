@@ -395,7 +395,7 @@ export default function Auth() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full" aria-label="Opções de autenticação">
             <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/50">
               <TabsTrigger
                 value="login"

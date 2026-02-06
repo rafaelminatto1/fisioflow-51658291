@@ -15,10 +15,9 @@ import {
 } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Calendar, Check, Loader2 } from 'lucide-react';
+import { Clock, Calendar, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScheduleSettings, type BusinessHour } from '@/hooks/useScheduleSettings';
 
@@ -28,8 +27,6 @@ interface ScheduleConfig {
         saturday: { start: string; end: string };
         sunday: { start: string; end: string };
     };
-    slotDuration: number; // minutes
-    maxCapacity: number;
     workingDays: {
         monday: boolean;
         tuesday: boolean;
@@ -47,8 +44,6 @@ const defaultConfig: ScheduleConfig = {
         saturday: { start: '07:00', end: '13:00' },
         sunday: { start: '00:00', end: '00:00' }, // Closed
     },
-    slotDuration: 30,
-    maxCapacity: 4,
     workingDays: {
         monday: true,
         tuesday: true,
@@ -124,18 +119,6 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
         setSaved(false);
     };
 
-    const handleSlotDurationChange = (value: number[]) => {
-        setConfig(prev => ({ ...prev, slotDuration: value[0] }));
-        setHasChanges(true);
-        setSaved(false);
-    };
-
-    const handleMaxCapacityChange = (value: number[]) => {
-        setConfig(prev => ({ ...prev, maxCapacity: value[0] }));
-        setHasChanges(true);
-        setSaved(false);
-    };
-
     const handleWorkingDayToggle = (day: keyof ScheduleConfig['workingDays']) => {
         setConfig(prev => ({
             ...prev,
@@ -180,19 +163,15 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                 <SheetHeader>
                     <SheetTitle>Configurações da Agenda</SheetTitle>
                     <SheetDescription>
-                        Ajuste horários, capacidade e dias de trabalho
+                        Ajuste horários e dias de trabalho
                     </SheetDescription>
                 </SheetHeader>
 
                 <Tabs defaultValue="hours" className="mt-6">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="hours" className="gap-1.5">
                             <Clock className="w-4 h-4" />
                             Horários
-                        </TabsTrigger>
-                        <TabsTrigger value="capacity" className="gap-1.5">
-                            <Users className="w-4 h-4" />
-                            Capacidade
                         </TabsTrigger>
                         <TabsTrigger value="days" className="gap-1.5">
                             <Calendar className="w-4 h-4" />
@@ -283,82 +262,6 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
                                 </div>
                             </div>
 
-                            {/* Slot Duration */}
-                            <div className="space-y-3">
-                                <Label className="text-sm font-medium">
-                                    Duração do Slot (minutos)
-                                </Label>
-                                <div className="px-1">
-                                    <Slider
-                                        value={[config.slotDuration]}
-                                        onValueChange={handleSlotDurationChange}
-                                        min={15}
-                                        max={120}
-                                        step={15}
-                                        className="py-4"
-                                    />
-                                    <div className="flex justify-between text-xs text-slate-500">
-                                        <span>15 min</span>
-                                        <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                            {config.slotDuration} min
-                                        </span>
-                                        <span>120 min</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    {/* Capacity Tab */}
-                    <TabsContent value="capacity" className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="space-y-3">
-                                <Label className="text-sm font-medium">
-                                    Capacidade Máxima por Horário
-                                </Label>
-                                <div className="px-1">
-                                    <Slider
-                                        value={[config.maxCapacity]}
-                                        onValueChange={handleMaxCapacityChange}
-                                        min={1}
-                                        max={10}
-                                        step={1}
-                                        className="py-4"
-                                    />
-                                    <div className="flex justify-between text-xs text-slate-500">
-                                        <span>1 paciente</span>
-                                        <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                            {config.maxCapacity} pacientes
-                                        </span>
-                                        <span>10 pacientes</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 space-y-2">
-                                <p className="text-sm font-medium">Preview do Indicador</p>
-                                <div className="flex items-center gap-3">
-                                    {[1, 2, 3, 4].map((count) => (
-                                        <div
-                                            key={count}
-                                            className={cn(
-                                                "flex items-center gap-1 text-[10px] px-2 py-1 rounded-full font-medium",
-                                                count >= config.maxCapacity
-                                                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-700"
-                                                    : count >= config.maxCapacity * 0.75
-                                                        ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700"
-                                                        : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-gray-500 border border-slate-200 dark:border-slate-600"
-                                            )}
-                                        >
-                                            <Users className="w-3 h-3" />
-                                            <span>{count}/{config.maxCapacity}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="text-xs text-slate-500 dark:text-gray-500">
-                                    Este indicador aparece no calendário mostrando ocupação em tempo real
-                                </p>
-                            </div>
                         </div>
                     </TabsContent>
 

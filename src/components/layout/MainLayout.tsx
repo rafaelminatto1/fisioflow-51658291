@@ -200,6 +200,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Main Content - Com padding para mobile header e bottom navigation - Otimizado para iPhone/iPad */}
         <main
           id="main-content"
+          role="main"
           tabIndex={-1}
           aria-label="Conteúdo principal"
           className={cn(

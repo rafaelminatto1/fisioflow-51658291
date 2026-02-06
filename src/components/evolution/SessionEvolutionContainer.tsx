@@ -590,7 +590,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       <div className="sticky top-0 z-40 bg-background border-b">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={handleClose}>
+            <Button variant="ghost" size="icon" onClick={handleClose} aria-label="Voltar">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -724,7 +724,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         <div className="lg:col-span-3 space-y-4">
           <ScrollArea className="h-[calc(100vh-120px)]">
             <div className="space-y-4 pr-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <Tabs value={activeTab} onValueChange={setActiveTab} aria-label="Painéis de evolução">
                 <TabsList className="w-full">
                   <TabsTrigger value="evolution" className="flex-1">Evolução</TabsTrigger>
                   <TabsTrigger value="exercises" className="flex-1">Exercícios</TabsTrigger>

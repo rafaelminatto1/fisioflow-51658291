@@ -11,47 +11,84 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame, ArrowLeft, Info, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useScheduleSettings } from '@/hooks/useScheduleSettings';
 import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
+import { Badge } from '@/components/ui/badge';
 
 export default function ScheduleSettings() {
   const [activeTab, setActiveTab] = useState('capacity');
-  const [hasChanges, setHasChanges] = useState(false);
 
   // Pré-carrega dados uma vez na página para que as abas não mostrem "Carregando..." individualmente
-  const scheduleSettings = useScheduleSettings();
-  const scheduleCapacity = useScheduleCapacity();
-  const _isInitialLoading =
-    scheduleSettings.isLoadingHours ||
-    scheduleSettings.isLoadingRules ||
-    scheduleSettings.isLoadingNotifications ||
-    scheduleSettings.isLoadingBlocked ||
-    scheduleCapacity.isLoading;
-
-  // Track changes indicator
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasChanges) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasChanges]);
+  useScheduleSettings();
+  useScheduleCapacity();
 
   const tabInfo = {
-    capacity: { title: 'Capacidade', description: 'Configure vagas por dia da semana', icon: Users, color: 'from-green-500 to-emerald-500' },
-    hours: { title: 'Horários de Funcionamento', description: 'Defina horários de atendimento', icon: Clock, color: 'from-blue-500 to-indigo-500' },
-    cancellation: { title: 'Regras de Cancelamento', description: 'Políticas e prazos para cancelamentos', icon: AlertTriangle, color: 'from-amber-500 to-orange-500' },
-    notifications: { title: 'Notificações', description: 'Alertas e lembretes automáticos', icon: Bell, color: 'from-violet-500 to-purple-500' },
-    blocked: { title: 'Horários Bloqueados', description: 'Gerencie períodos indisponíveis', icon: CalendarOff, color: 'from-red-500 to-rose-500' },
-    status: { title: 'Cores de Status', description: 'Personalize as cores dos agendamentos', icon: Palette, color: 'from-pink-500 to-fuchsia-500' },
-    cardsize: { title: 'Aparência', description: 'Tamanho dos cards e layout', icon: Frame, color: 'from-cyan-500 to-sky-500' },
-    presets: { title: 'Presets', description: 'Configurações otimizadas', icon: Sparkles, color: 'from-purple-500 to-pink-500' },
+    capacity: {
+      title: 'Capacidade',
+      description: 'Configure vagas por dia da semana',
+      icon: Users,
+      color: 'from-green-500 to-emerald-500',
+      impactLabel: 'Global',
+      impactClass: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800'
+    },
+    hours: {
+      title: 'Horários de Funcionamento',
+      description: 'Defina horários de atendimento',
+      icon: Clock,
+      color: 'from-blue-500 to-indigo-500',
+      impactLabel: 'Global',
+      impactClass: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800'
+    },
+    cancellation: {
+      title: 'Regras de Cancelamento',
+      description: 'Políticas e prazos para cancelamentos',
+      icon: AlertTriangle,
+      color: 'from-amber-500 to-orange-500',
+      impactLabel: 'Automação',
+      impactClass: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+    },
+    notifications: {
+      title: 'Notificações',
+      description: 'Alertas e lembretes automáticos',
+      icon: Bell,
+      color: 'from-violet-500 to-purple-500',
+      impactLabel: 'Automação',
+      impactClass: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+    },
+    blocked: {
+      title: 'Horários Bloqueados',
+      description: 'Gerencie períodos indisponíveis',
+      icon: CalendarOff,
+      color: 'from-red-500 to-rose-500',
+      impactLabel: 'Global',
+      impactClass: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800'
+    },
+    status: {
+      title: 'Cores de Status',
+      description: 'Personalize as cores dos agendamentos',
+      icon: Palette,
+      color: 'from-pink-500 to-fuchsia-500',
+      impactLabel: 'Local',
+      impactClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800'
+    },
+    cardsize: {
+      title: 'Aparência',
+      description: 'Tamanho dos cards e layout',
+      icon: Frame,
+      color: 'from-cyan-500 to-sky-500',
+      impactLabel: 'Local',
+      impactClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800'
+    },
+    presets: {
+      title: 'Presets',
+      description: 'Configurações otimizadas',
+      icon: Sparkles,
+      color: 'from-purple-500 to-pink-500',
+      impactLabel: 'Local',
+      impactClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800'
+    },
   };
 
   const currentTab = tabInfo[activeTab as keyof typeof tabInfo];
@@ -76,12 +113,6 @@ export default function ScheduleSettings() {
               Personalize horários, capacidade, cores e aparência da sua agenda
             </p>
           </div>
-          {hasChanges && (
-            <Badge variant="outline" className="hidden sm:flex items-center gap-1.5 border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30">
-              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              Alterações não salvas
-            </Badge>
-          )}
         </div>
 
         {/* Info Banner */}
@@ -89,10 +120,11 @@ export default function ScheduleSettings() {
           <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              Configurações aplicadas em tempo real
+              Impacto das configurações
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-              As alterações feitas aqui afetam imediatamente a visualização da agenda para todos os usuários.
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
+              Global: capacidade, horários e bloqueios. Local: cores, aparência e presets (por usuário/dispositivo).
+              Automação: cancelamento e notificações (persistidas para fluxos automáticos).
             </p>
           </div>
         </div>
@@ -100,10 +132,7 @@ export default function ScheduleSettings() {
         <Tabs
           defaultValue="capacity"
           value={activeTab}
-          onValueChange={(value) => {
-            setActiveTab(value);
-            setHasChanges(false);
-          }}
+          onValueChange={setActiveTab}
           className="space-y-6"
         >
           {/* Enhanced Tabs List with better visual feedback */}
@@ -183,6 +212,9 @@ export default function ScheduleSettings() {
                 <p className="text-sm font-semibold">{currentTab.title}</p>
                 <p className="text-xs text-muted-foreground">{currentTab.description}</p>
               </div>
+              <Badge variant="outline" className={cn("text-[10px] uppercase tracking-wide", currentTab.impactClass)}>
+                {currentTab.impactLabel}
+              </Badge>
             </div>
           </div>
 

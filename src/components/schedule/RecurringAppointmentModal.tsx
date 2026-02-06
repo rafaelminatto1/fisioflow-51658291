@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { RecurringAppointmentFormData, RecurrenceType, RecurrenceEndType, DayOfWeek } from '@/types/recurring-appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
+import { useActivePatients } from '@/hooks/usePatients';
 
 interface RecurringAppointmentModalProps {
   /** Indica se o modal está aberto */
@@ -114,6 +116,8 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
     notes: initialData?.notes || '',
     auto_confirm: initialData?.auto_confirm || false,
   }));
+
+  const { data: patients = [], isLoading: isLoadingPatients } = useActivePatients();
 
   // =================================================================
   // PREVIEW
@@ -248,19 +252,12 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
           {/* Paciente */}
           <div className="space-y-2">
             <Label htmlFor="patient">Paciente *</Label>
-            <Select
+            <PatientCombobox
+              patients={patients || []}
               value={formData.patient_id}
               onValueChange={(value) => setFormData((prev) => ({ ...prev, patient_id: value }))}
-            >
-              <SelectTrigger id="patient">
-                <SelectValue placeholder="Selecione o paciente" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* TODO: Buscar pacientes do banco */}
-                <SelectItem value="1">Paciente Exemplo 1</SelectItem>
-                <SelectItem value="2">Paciente Exemplo 2</SelectItem>
-              </SelectContent>
-            </Select>
+              disabled={isLoadingPatients}
+            />
           </div>
 
           {/* Configuração de Recorrência */}

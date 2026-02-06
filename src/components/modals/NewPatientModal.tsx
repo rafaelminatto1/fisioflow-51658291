@@ -256,9 +256,12 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     id="name"
                     {...register('name')}
                     placeholder="Nome completo do paciente"
+                    aria-required="true"
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? "name-error" : undefined}
                   />
                   {errors.name && (
-                    <p className="text-sm text-destructive">{String(errors.name.message)}</p>
+                    <p id="name-error" className="text-sm text-destructive">{String(errors.name.message)}</p>
                   )}
                 </div>
 
@@ -269,9 +272,11 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     type="email"
                     {...register('email')}
                     placeholder="email@exemplo.com"
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "email-error" : undefined}
                   />
                   {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                    <p id="email-error" className="text-sm text-destructive">{errors.email.message}</p>
                   )}
                 </div>
 
@@ -288,9 +293,11 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     }}
                     placeholder="(11) 99999-9999"
                     maxLength={15}
+                    aria-invalid={!!errors.phone}
+                    aria-describedby={errors.phone ? "phone-error" : undefined}
                   />
                   {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone.message}</p>
+                    <p id="phone-error" className="text-sm text-destructive">{errors.phone.message}</p>
                   )}
                 </div>
 
@@ -307,18 +314,24 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     }}
                     placeholder="000.000.000-00"
                     maxLength={14}
+                    aria-invalid={!!errors.cpf}
+                    aria-describedby={errors.cpf ? "cpf-error" : undefined}
                   />
                   {errors.cpf && (
-                    <p className="text-sm text-destructive">{errors.cpf.message}</p>
+                    <p id="cpf-error" className="text-sm text-destructive">{errors.cpf.message}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Data de Nascimento *</Label>
+                  <Label id="birth-date-label">Data de Nascimento *</Label>
                   <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
+                        aria-labelledby="birth-date-label"
+                        aria-required="true"
+                        aria-invalid={!!errors.birth_date}
+                        aria-describedby={errors.birth_date ? "birth-date-error" : undefined}
                         className={cn(
                           "w-full justify-start text-left font-normal",
                           !watchedBirthDate && "text-muted-foreground"
@@ -349,7 +362,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     </PopoverContent>
                   </Popover>
                   {errors.birth_date && (
-                    <p className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
+                    <p id="birth-date-error" className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
                   )}
                 </div>
 
@@ -359,7 +372,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     value={watch('gender')}
                     onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="gender" aria-required="true" aria-invalid={!!errors.gender} aria-describedby={errors.gender ? "gender-error" : undefined}>
                       <SelectValue placeholder="Selecione o gênero" />
                     </SelectTrigger>
                     <SelectContent>
@@ -369,7 +382,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     </SelectContent>
                   </Select>
                   {errors.gender && (
-                    <p className="text-sm text-destructive">{errors.gender.message}</p>
+                    <p id="gender-error" className="text-sm text-destructive">{errors.gender.message}</p>
                   )}
                 </div>
               </div>
@@ -419,9 +432,12 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                   id="main_condition"
                   {...register('main_condition')}
                   placeholder="Ex: Dor lombar, Lesão no joelho"
+                  aria-required="true"
+                  aria-invalid={!!errors.main_condition}
+                  aria-describedby={errors.main_condition ? "main-condition-error" : undefined}
                 />
                 {errors.main_condition && (
-                  <p className="text-sm text-destructive">{errors.main_condition.message}</p>
+                  <p id="main-condition-error" className="text-sm text-destructive">{errors.main_condition.message}</p>
                 )}
               </div>
 

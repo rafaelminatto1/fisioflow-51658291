@@ -99,7 +99,7 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2" role="list" aria-label="Histórico de sessões">
               {records.map((record, index) => {
                 const isExpanded = expandedIds.has(record.id);
                 const recordDate = new Date(record.record_date);
@@ -111,6 +111,7 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
                     key={record.id}
                     open={isExpanded}
                     onOpenChange={() => toggleExpanded(record.id)}
+                    role="listitem"
                   >
                     <div
                       className={cn(

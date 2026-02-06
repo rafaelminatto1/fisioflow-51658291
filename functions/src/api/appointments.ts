@@ -8,6 +8,7 @@ import { rtdb } from '../lib/rtdb';
 import { setCorsHeaders } from '../lib/cors';
 import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
+import { dispatchAppointmentNotification } from '../workflows/notifications';
 
 const firebaseAuth = admin.auth();
 
@@ -66,6 +67,17 @@ function normalizeAppointmentStatus(value: string | undefined): DbAppointmentSta
  * ATENÇÃO: Sempre usar getOrganizationIdCached diretamente para máxima performance
  */
 const getOrganizationId = getOrganizationIdCached;
+
+function normalizeDateOnly(value: unknown): string {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  return String(value || '').slice(0, 10);
+}
+
+function normalizeTimeOnly(value: unknown): string {
+  return String(value || '').slice(0, 5);
+}
 
 /**
  * HTTP version of listAppointments for CORS/compatibility
@@ -233,6 +245,7 @@ export const createAppointmentHttp = onRequest(
         const db = admin.firestore();
         await db.collection('appointments').doc(appointment.id).set({
           ...appointment,
+          notification_origin: 'api_appointments_v2',
           created_at: new Date(),
           updated_at: new Date()
         });
@@ -249,6 +262,19 @@ export const createAppointmentHttp = onRequest(
           rtdb.refreshAppointments(organizationId)
         ]);
       } catch (err) { logger.error('Erro Realtime:', err); }
+
+      try {
+        await dispatchAppointmentNotification({
+          kind: 'scheduled',
+          organizationId,
+          patientId: String(appointment.patient_id),
+          appointmentId: String(appointment.id),
+          date: normalizeDateOnly(appointment.date),
+          time: normalizeTimeOnly(appointment.start_time),
+        });
+      } catch (notifyError) {
+        logger.error('[createAppointmentHttp] Notification dispatch failed (non-blocking):', notifyError);
+      }
       res.status(201).json({ data: appointment });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -366,6 +392,36 @@ export const updateAppointmentHttp = onRequest(
           rtdb.refreshAppointments(organizationId)
         ]);
       } catch (err) { logger.error('Erro Realtime:', err); }
+
+      const previousStatus = normalizeAppointmentStatus(String(currentAppt.status || 'agendado'));
+      const nextStatus = normalizeAppointmentStatus(String(updatedAppt.status || currentAppt.status || 'agendado'));
+      const statusChangedToCancelled = previousStatus !== 'cancelado' && nextStatus === 'cancelado';
+      const dateChanged = normalizeDateOnly(updatedAppt.date) !== normalizeDateOnly(currentAppt.date);
+      const startTimeChanged = normalizeTimeOnly(updatedAppt.start_time) !== normalizeTimeOnly(currentAppt.start_time);
+
+      try {
+        if (statusChangedToCancelled) {
+          await dispatchAppointmentNotification({
+            kind: 'cancelled',
+            organizationId,
+            patientId: String(updatedAppt.patient_id || currentAppt.patient_id),
+            appointmentId: String(updatedAppt.id || appointmentId),
+            date: normalizeDateOnly(updatedAppt.date || currentAppt.date),
+            time: normalizeTimeOnly(updatedAppt.start_time || currentAppt.start_time),
+          });
+        } else if (dateChanged || startTimeChanged) {
+          await dispatchAppointmentNotification({
+            kind: 'rescheduled',
+            organizationId,
+            patientId: String(updatedAppt.patient_id || currentAppt.patient_id),
+            appointmentId: String(updatedAppt.id || appointmentId),
+            date: normalizeDateOnly(updatedAppt.date || currentAppt.date),
+            time: normalizeTimeOnly(updatedAppt.start_time || currentAppt.start_time),
+          });
+        }
+      } catch (notifyError) {
+        logger.error('[updateAppointmentHttp] Notification dispatch failed (non-blocking):', notifyError);
+      }
       res.json({ data: updatedAppt });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { setCorsHeaders(res, req); res.status(401).json({ error: error.message }); return; }
@@ -421,6 +477,19 @@ export const cancelAppointmentHttp = onRequest(
           rtdb.refreshAppointments(organizationId)
         ]);
       } catch (err) { logger.error('Erro Realtime:', err); }
+
+      try {
+        await dispatchAppointmentNotification({
+          kind: 'cancelled',
+          organizationId,
+          patientId: String(current.rows[0].patient_id),
+          appointmentId: String(appointmentId),
+          date: normalizeDateOnly(current.rows[0].date),
+          time: normalizeTimeOnly(current.rows[0].start_time),
+        });
+      } catch (notifyError) {
+        logger.error('[cancelAppointmentHttp] Notification dispatch failed (non-blocking):', notifyError);
+      }
       res.json({ success: true });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -795,6 +864,7 @@ export const createAppointmentHandler = async (request: any) => {
       const db = admin.firestore();
       await db.collection('appointments').doc(appointment.id).set({
         ...appointment,
+        notification_origin: 'api_appointments_v2',
         created_at: new Date(),
         updated_at: new Date()
       });
@@ -812,6 +882,19 @@ export const createAppointmentHandler = async (request: any) => {
       ]);
     } catch (err) {
       logger.error('Erro Realtime:', err);
+    }
+
+    try {
+      await dispatchAppointmentNotification({
+        kind: 'scheduled',
+        organizationId: auth.organizationId,
+        patientId: String(appointment.patient_id),
+        appointmentId: String(appointment.id),
+        date: normalizeDateOnly(appointment.date),
+        time: normalizeTimeOnly(appointment.start_time),
+      });
+    } catch (notifyError) {
+      logger.error('[createAppointment] Notification dispatch failed (non-blocking):', notifyError);
     }
 
     return { data: appointment as Appointment };
@@ -961,6 +1044,36 @@ export const updateAppointmentHandler = async (request: any) => {
       logger.error('Erro Realtime:', err);
     }
 
+    const previousStatus = normalizeAppointmentStatus(String(currentAppt.status || 'agendado'));
+    const nextStatus = normalizeAppointmentStatus(String(updatedAppt.status || currentAppt.status || 'agendado'));
+    const statusChangedToCancelled = previousStatus !== 'cancelado' && nextStatus === 'cancelado';
+    const dateChanged = normalizeDateOnly(updatedAppt.date) !== normalizeDateOnly(currentAppt.date);
+    const startTimeChanged = normalizeTimeOnly(updatedAppt.start_time) !== normalizeTimeOnly(currentAppt.start_time);
+
+    try {
+      if (statusChangedToCancelled) {
+        await dispatchAppointmentNotification({
+          kind: 'cancelled',
+          organizationId: auth.organizationId,
+          patientId: String(updatedAppt.patient_id || currentAppt.patient_id),
+          appointmentId: String(updatedAppt.id || appointmentId),
+          date: normalizeDateOnly(updatedAppt.date || currentAppt.date),
+          time: normalizeTimeOnly(updatedAppt.start_time || currentAppt.start_time),
+        });
+      } else if (dateChanged || startTimeChanged) {
+        await dispatchAppointmentNotification({
+          kind: 'rescheduled',
+          organizationId: auth.organizationId,
+          patientId: String(updatedAppt.patient_id || currentAppt.patient_id),
+          appointmentId: String(updatedAppt.id || appointmentId),
+          date: normalizeDateOnly(updatedAppt.date || currentAppt.date),
+          time: normalizeTimeOnly(updatedAppt.start_time || currentAppt.start_time),
+        });
+      }
+    } catch (notifyError) {
+      logger.error('[updateAppointment] Notification dispatch failed (non-blocking):', notifyError);
+    }
+
     return { data: updatedAppt as Appointment };
   } catch (error: unknown) {
     logger.error('Error in updateAppointment:', error);
@@ -1016,7 +1129,8 @@ export const cancelAppointmentHandler = async (request: any) => {
     const result = await pool.query(
       `UPDATE appointments
        SET status = 'cancelado', notes = notes || $1, updated_at = NOW()
-       WHERE id = $2 AND organization_id = $3`,
+       WHERE id = $2 AND organization_id = $3
+       RETURNING *`,
       [reason ? `\n[Cancelamento: ${reason}]` : '', appointmentId, auth.organizationId]
     );
 
@@ -1041,6 +1155,19 @@ export const cancelAppointmentHandler = async (request: any) => {
       ]);
     } catch (err) {
       logger.error('Erro Realtime:', err);
+    }
+
+    try {
+      await dispatchAppointmentNotification({
+        kind: 'cancelled',
+        organizationId: auth.organizationId,
+        patientId: String(current.rows[0].patient_id),
+        appointmentId: String(appointmentId),
+        date: normalizeDateOnly(current.rows[0].date),
+        time: normalizeTimeOnly(current.rows[0].start_time),
+      });
+    } catch (notifyError) {
+      logger.error('[cancelAppointment] Notification dispatch failed (non-blocking):', notifyError);
     }
 
     return { success: true };

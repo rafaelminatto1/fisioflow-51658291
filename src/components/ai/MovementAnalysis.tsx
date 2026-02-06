@@ -40,6 +40,9 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { storage, functions } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { httpsCallable } from 'firebase/functions';
 
 // ============================================================================
 // TYPES
@@ -272,33 +275,57 @@ export function MovementAnalysis({
     });
 
     try {
-      const formData = new FormData();
-      formData.append('video', videoFile);
-      formData.append('patientId', patientId);
-      formData.append('exerciseId', exerciseId);
-      formData.append('exerciseName', exerciseName);
-      formData.append('language', language);
-      if (demoVideoUrl) {
-        formData.append('demoVideoUrl', demoVideoUrl);
-      }
-      if (expectedReps) {
-        formData.append('expectedReps', expectedReps.toString());
-      }
-      if (focusAreas.length > 0) {
-        formData.append('focusAreas', JSON.stringify(focusAreas));
-      }
+      // 1. Upload video to Firebase Storage
+      const storagePath = `movement_analysis/${patientId}/${Date.now()}_${videoFile.name}`;
+      const storageRef = ref(storage, storagePath);
+      
+      await uploadBytes(storageRef, videoFile);
+      const patientVideoUrl = await getDownloadURL(storageRef);
 
       setAnalysisProgress({
         stage: 'analyzing',
-        progress: 30,
+        progress: 40,
         message: language === 'pt-BR' ? 'Analisando movimento com IA...' : 'Analyzing movement with AI...',
       });
 
-      // Firebase aiMovementAnalysis requer patientVideoUrl (vídeo em Firebase Storage)
-      // TODO: Implementar upload do vídeo para Storage e obter URL antes de chamar
-      throw new Error(language === 'pt-BR'
-        ? 'Análise de movimento: integração com Firebase Storage em desenvolvimento.'
-        : 'Movement analysis: Firebase Storage integration in development.');
+      // 2. Call Cloud Function for analysis
+      const aiMovementAnalysis = httpsCallable(functions, 'aiMovementAnalysis');
+      const result = await aiMovementAnalysis({
+        patientVideoUrl,
+        patientId,
+        exerciseId,
+        exerciseName,
+        language,
+        demoVideoUrl,
+        expectedReps,
+        focusAreas,
+      });
+
+      setAnalysisProgress({
+        stage: 'processing',
+        progress: 90,
+        message: language === 'pt-BR' ? 'Processando resultados...' : 'Processing results...',
+      });
+
+      const data = result.data as MovementAnalysisResult;
+      setAnalysisResult(data);
+      
+      if (onAnalysisComplete) {
+        onAnalysisComplete(data);
+      }
+
+      setAnalysisProgress({
+        stage: 'complete',
+        progress: 100,
+        message: language === 'pt-BR' ? 'Análise concluída!' : 'Analysis complete!',
+      });
+
+      toast({
+        title: language === 'pt-BR' ? 'Análise Concluída' : 'Analysis Complete',
+        description: language === 'pt-BR' 
+          ? 'O movimento foi analisado com sucesso.' 
+          : 'Movement analyzed successfully.',
+      });
     } catch (err) {
       logger.error('[MovementAnalysis] Error', err, 'MovementAnalysis');
       const errorMessage = err instanceof Error ? err.message : language === 'pt-BR'

@@ -3,7 +3,7 @@
  * Gerencia documentos Google Docs, templates e geração de relatórios
  */
 
-import { google } from 'googleapis';
+import { google, docs_v1 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { DriveService } from './drive';
 
@@ -43,7 +43,7 @@ export interface GeneratedReport {
 // ============================================================================
 
 export class DocsService {
-  private docs: any;
+  private docs: docs_v1.Docs;
   private driveService: DriveService;
   private oauth2Client: OAuth2Client;
 
@@ -112,15 +112,15 @@ export class DocsService {
     const placeholders = new Set<string>();
     const body = response.data.body;
 
-    function extractFromContent(content: any) {
+    function extractFromContent(content: docs_v1.Schema$StructuralElement[]) {
       if (!content) return;
 
       for (const element of content) {
-        if ('paragraph' in element) {
+        if (element.paragraph) {
           const paragraph = element.paragraph;
           if (paragraph.elements) {
             for (const elem of paragraph.elements) {
-              if ('textRun' in elem && elem.textRun?.content) {
+              if (elem.textRun?.content) {
                 const matches = elem.textRun.content.match(/\{\{([^}]+)\}\}/g);
                 if (matches) {
                   matches.forEach((match: string) => {
@@ -130,7 +130,7 @@ export class DocsService {
               }
             }
           }
-        } else if ('table' in element) {
+        } else if (element.table) {
           const table = element.table;
           if (table.rows) {
             for (const row of table.rows) {
@@ -354,20 +354,20 @@ export class DocsService {
     const body = response.data.body;
     let content = '';
 
-    function extractText(element: any) {
+    function extractText(element: docs_v1.Schema$StructuralElement[]) {
       if (!element) return;
 
       for (const item of element) {
-        if ('paragraph' in item) {
+        if (item.paragraph) {
           const paragraph = item.paragraph;
           if (paragraph.elements) {
             for (const elem of paragraph.elements) {
-              if ('textRun' in elem && elem.textRun?.content) {
+              if (elem.textRun?.content) {
                 content += elem.textRun.content;
               }
             }
           }
-        } else if ('table' in item) {
+        } else if (item.table) {
           const table = item.table;
           if (table.rows) {
             for (const row of table.rows) {
@@ -418,7 +418,7 @@ export class DocsService {
     text: string,
     heading?: 'NORMAL_TEXT' | 'HEADING_1' | 'HEADING_2' | 'HEADING_3' | 'TITLE' | 'SUBTITLE'
   ): Promise<void> {
-    const requests: any[] = [
+    const requests: docs_v1.Schema$Request[] = [
       {
         insertText: {
           text: text + '\n',
@@ -506,13 +506,14 @@ export class DocsService {
     });
 
     const documentId = response.data.documentId;
+    if (!documentId) throw new Error('Falha ao criar documento');
 
     // Adicionar conteúdo
     await this.addParagraph(documentId, content);
 
     // Mover para pasta se especificado
     if (folderId) {
-      // TODO: Implementar movimentação de arquivo
+      await this.driveService.moveFile(documentId, folderId);
     }
 
     return documentId;

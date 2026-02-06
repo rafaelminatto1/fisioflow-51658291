@@ -418,9 +418,25 @@ export class AppointmentService {
      */
     static async updateStatus(id: string, status: string): Promise<void> {
         try {
+            const normalizedStatus = String(status || '').toLowerCase();
+            if (normalizedStatus === 'cancelado' || normalizedStatus === 'cancelled') {
+                await appointmentsApi.cancel(id);
+                return;
+            }
             await appointmentsApi.update(id, { status });
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.updateStatus');
+        }
+    }
+
+    /**
+     * Cancel appointment with optional reason.
+     */
+    static async cancelAppointment(id: string, reason?: string): Promise<void> {
+        try {
+            await appointmentsApi.cancel(id, reason);
+        } catch (error) {
+            throw AppError.from(error, 'AppointmentService.cancelAppointment');
         }
     }
     /**

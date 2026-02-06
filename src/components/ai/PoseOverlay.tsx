@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Camera, Video, RefreshCw, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PoseLandmarker, FilesetResolver, Landmark } from '@mediapipe/tasks-vision';
 
 interface PoseKeypoint {
   x: number;
@@ -72,8 +73,45 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pose, setPose] = useState<PoseDetection | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isModelLoading, setIsModelLoading] = useState(true);
   const [jointAngles, setJointAngles] = useState<Record<string, number>>({});
+  const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
+  const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const { toast } = useToast();
+
+  // Inicializar MediaPipe Pose Landmarker
+  useEffect(() => {
+    const initializePoseLandmarker = async () => {
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        );
+        const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+            delegate: "GPU"
+          },
+          runningMode: videoRef ? "VIDEO" : "IMAGE",
+          numPoses: 1
+        });
+        poseLandmarkerRef.current = poseLandmarker;
+        setIsModelLoading(false);
+      } catch (error) {
+        console.error("Failed to initialize Pose Landmarker:", error);
+        toast({
+          title: "Erro ao carregar IA",
+          description: "Não foi possível inicializar o modelo de pose.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    initializePoseLandmarker();
+
+    return () => {
+      poseLandmarkerRef.current?.close();
+    };
+  }, [videoRef, toast]);
 
   // Calcular ângulo entre três pontos
   const calculateAngle = (a: PoseKeypoint, b: PoseKeypoint, c: PoseKeypoint): number => {
@@ -85,50 +123,70 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
 
   // Detectar pose usando MediaPipe
   const detectPose = async () => {
+    if (!poseLandmarkerRef.current) return;
     setIsAnalyzing(true);
 
     try {
-      // TODO: Integrar com MediaPipe Pose Landmarker
-      // Por enquanto, simulação para demonstração
+      let result;
+      if (videoRef?.current) {
+        const startTimeMs = performance.now();
+        result = poseLandmarkerRef.current.detectForVideo(videoRef.current, startTimeMs);
+      } else if (imageUrl) {
+        // Para imagem, precisamos carregar o elemento HTMLImageElement
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imageUrl;
+        await new Promise((resolve) => (img.onload = resolve));
+        result = poseLandmarkerRef.current.detect(img);
+      }
 
-      // Simular keypoints (em produção viria do MediaPipe)
-      const mockKeypoints: PoseKeypoint[] = KEYPOINT_NAMES.map(() => ({
-        x: Math.random() * 0.5 + 0.25,
-        y: Math.random() * 0.5 + 0.25,
-        z: Math.random() * 0.2 - 0.1,
-        visibility: Math.random() * 0.3 + 0.7,
-      }));
+      if (result && result.landmarks && result.landmarks.length > 0) {
+        const landmarks = result.landmarks[0];
+        const keypoints: PoseKeypoint[] = landmarks.map((l: Landmark) => ({
+          x: l.x,
+          y: l.y,
+          z: l.z,
+          visibility: (l as any).visibility || 1.0,
+        }));
 
-      const detection: PoseDetection = {
-        keypoints: mockKeypoints,
-        score: 0.85,
-      };
+        const detection: PoseDetection = {
+          keypoints,
+          score: 1.0, 
+        };
 
-      setPose(detection);
+        setPose(detection);
 
-      // Calcular ângulos das articulações
-      const angles: Record<string, number> = {};
+        // Calcular ângulos das articulações
+        const angles: Record<string, number> = {};
 
-      for (const [joint, points] of Object.entries(JOINT_ANALYSIS)) {
-        const a = mockKeypoints[points.left];
-        const b = mockKeypoints[points.right - 1]; // Ajustar índice
-        const c = mockKeypoints[points.right];
-
-        if (a && b && c && a.visibility > 0.5 && b.visibility > 0.5 && c.visibility > 0.5) {
-          angles[`${joint}_angle`] = calculateAngle(a, b, c);
+        for (const [joint, points] of Object.entries(JOINT_ANALYSIS)) {
+          const a = keypoints[points.left];
+          const b = keypoints[points.right - 1]; 
+          if (a && b && keypoints[points.right]) {
+            const c = keypoints[points.right];
+            if (a.visibility > 0.5 && b.visibility > 0.5 && c.visibility > 0.5) {
+              angles[`${joint}_angle`] = calculateAngle(a, b, c);
+            }
+          }
         }
+
+        setJointAngles(angles);
+
+        if (onPoseDetected) {
+          onPoseDetected(detection);
+        }
+
+        toast({
+          title: 'Análise concluída',
+          description: '33 pontos de referência detectados',
+        });
+      } else {
+        toast({
+          title: 'IA não detectou pose',
+          description: 'Certifique-se de que a pessoa está visível na imagem.',
+          variant: 'warning'
+        });
       }
-
-      setJointAngles(angles);
-
-      if (onPoseDetected) {
-        onPoseDetected(detection);
-      }
-
-      toast({
-        title: 'Análise concluída',
-        description: '33 pontos de referência detectados',
-      });
     } catch (error) {
       console.error('Erro ao detectar pose:', error);
       toast({

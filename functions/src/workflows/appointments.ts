@@ -255,6 +255,13 @@ export const onAppointmentCreatedWorkflow = onDocumentCreated(
     const appointment = { id: snapshot.id, ...snapshot.data() } as any;
     const db = getAdminDb();
 
+    if (appointment.notification_origin === 'api_appointments_v2') {
+      logger.info('[onAppointmentCreatedWorkflow] Notification skipped (handled by API flow)', {
+        appointmentId: appointment.id,
+      });
+      return;
+    }
+
     logger.info('[onAppointmentCreatedWorkflow] Processing new appointment', {
       appointmentId: appointment.id,
     });

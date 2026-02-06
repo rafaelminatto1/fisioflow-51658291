@@ -53,7 +53,7 @@ import {
 } from '@/types/appointment';
 import { appointmentFormSchema } from '@/lib/validations/agenda';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
-import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -351,38 +351,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return slotInfo.map(s => s.time);
   }, [slotInfo, isDayClosed]);
 
-  const handleSave = async (data: AppointmentFormData) => {
-    // Validar campos obrigatórios que podem ter passado pelo hook-form se a schema for muito permissiva
-    if (!data.appointment_time || data.appointment_time === '') {
-      toast.error('Horário do agendamento é obrigatório');
-      return;
-    }
-
-    if (!data.patient_id || data.patient_id === '') {
-      toast.error('ID do paciente é obrigatório');
-      return;
-    }
-
-    if (!data.appointment_date || data.appointment_date === '') {
-      toast.error('Data do agendamento é obrigatória');
-      return;
-    }
-
-    // Fisioterapeuta é opcional; quando não informado, o backend pode usar o usuário logado.
-
-    const maxCapacity = watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1;
-    const currentCount = (conflictCheck?.totalConflictCount || 0);
-
-    if (currentCount >= maxCapacity) {
-      setPendingFormData({
-        ...data,
-        // appointment_date: format(new Date(), 'yyyy-MM-dd') // Don't reset date to today
-      });
-      setCapacityDialogOpen(true);
-      return;
-    }
-
-    const appointmentData = data;
+  const persistAppointment = async (appointmentData: AppointmentFormData) => {
     const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
     const endTimeString = format(endTime, 'HH:mm');
 
@@ -404,70 +373,98 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       payment_status: dbPaymentStatus,
       notes: appointmentData.notes || '',
       session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as 'individual' | 'group',
-      session_package_id: appointmentData.session_package_id || null, // Ensure this is passed
-      payment_method: appointmentData.payment_status === 'paid_package' ? 'package' : appointmentData.payment_method, // Set method to package if applicable
+      session_package_id: appointmentData.session_package_id || null,
+      payment_method: appointmentData.payment_status === 'paid_package' ? 'package' : appointmentData.payment_method,
     };
 
-    try {
-      let appointmentId = appointment?.id;
+    let appointmentId = appointment?.id;
 
-      if (appointmentId) {
-        await updateAppointmentAsync({
-          appointmentId: appointmentId,
-          updates: formattedData
-        });
-      } else {
-        const newAppointment = await createAppointmentAsync(formattedData as unknown as AppointmentFormData);
-        appointmentId = (newAppointment as { id?: string })?.id;
-      }
+    if (appointmentId) {
+      await updateAppointmentAsync({
+        appointmentId: appointmentId,
+        updates: formattedData
+      });
+    } else {
+      const newAppointment = await createAppointmentAsync(formattedData as unknown as AppointmentFormData);
+      appointmentId = (newAppointment as { id?: string })?.id;
+    }
 
-      // Handle Package Consumption
-      // Logic: If status is confirmed/attended AND it's a package payment AND package ID is present
-      // We check if it wasn't already consumed (this check is basic here, assuming UI prevents double charge or hook handles it)
-      if (
-        appointmentData.session_package_id &&
-        (appointmentData.payment_status === 'paid_package') &&
-        (appointmentData.status === 'confirmado' || appointmentData.status === 'atendido' || appointmentData.status === 'concluido')
-      ) {
-        try {
-          // Verify if we should consume:
-          // For edits: Only if status changed to verified status? 
-          // For now, simpler: Try to consume. The hook logs usage. 
-          // Ideally we check if usage exists for this appointmentId to avoid double consumption.
-          // But useUsePackageSession doesn't enforce unique constraint on appointment_id in the hook itself, 
-          // though the DB table might.
-          // Let's assume we consume.
-
-          // Check if we are transitioning to confirmed/attended?
-          // If we are editing and it was ALREADY confirmed, we might re-consume?
-          // Safe guard: Only consume if we are saving. 
-          // Better: The user explicitly selected "Pacote".
-
-          // TODO: Implement better check for existing usage in future.
-          if (appointmentId) {
-            await consumeSession({
-              patientPackageId: appointmentData.session_package_id,
-              appointmentId: appointmentId
-            });
-          }
-        } catch (err) {
-          logger.error("Error consuming session", err, 'AppointmentModalRefactored');
-          toast.error("Erro ao debitar sessão do pacote. Verifique o saldo.");
+    // Handle Package Consumption
+    if (
+      appointmentData.session_package_id &&
+      (appointmentData.payment_status === 'paid_package') &&
+      (appointmentData.status === 'confirmado' || appointmentData.status === 'atendido' || appointmentData.status === 'concluido')
+    ) {
+      try {
+        if (appointmentId) {
+          await consumeSession({
+            patientPackageId: appointmentData.session_package_id,
+            appointmentId: appointmentId
+          });
         }
+      } catch (err) {
+        logger.error("Error consuming session", err, 'AppointmentModalRefactored');
+        toast.error("Erro ao debitar sessão do pacote. Verifique o saldo.");
       }
+    }
 
-      if (appointmentData.status === 'avaliacao' && appointmentId && !scheduleOnlyRef.current) {
-        const navPath = `/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointmentId}`;
-        navigate(navPath);
-      }
-      scheduleOnlyRef.current = false;
+    if (appointmentData.status === 'avaliacao' && appointmentId && !scheduleOnlyRef.current) {
+      const navPath = `/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointmentId}`;
+      navigate(navPath);
+    }
+    scheduleOnlyRef.current = false;
+    onClose();
+  };
 
-      onClose();
+  const handleSave = async (data: AppointmentFormData) => {
+    // Validar campos obrigatórios que podem ter passado pelo hook-form se a schema for muito permissiva
+    if (!data.appointment_time || data.appointment_time === '') {
+      toast.error('Horário do agendamento é obrigatório');
+      return;
+    }
 
+    if (!data.patient_id || data.patient_id === '') {
+      toast.error('ID do paciente é obrigatório');
+      return;
+    }
+
+    if (!data.appointment_date || data.appointment_date === '') {
+      toast.error('Data do agendamento é obrigatória');
+      return;
+    }
+
+    // Fisioterapeuta é opcional; quando não informado, o backend pode usar o usuário logado.
+
+    const selectedDate = parseISO(data.appointment_date);
+    const selectedTime = data.appointment_time;
+    const selectedDuration = data.duration || 60;
+
+    const freshConflictCheck = checkAppointmentConflict({
+      date: selectedDate,
+      time: selectedTime,
+      duration: selectedDuration,
+      excludeId: appointment?.id,
+      therapistId: effectiveTherapistId,
+      appointments: appointmentsRef.current
+    });
+
+    const maxCapacity = getMinCapacityForInterval(selectedDate.getDay(), selectedTime, selectedDuration);
+    const currentCount = freshConflictCheck.totalConflictCount || 0;
+
+    if (currentCount >= maxCapacity) {
+      setPendingFormData({ ...data });
+      setConflictCheck(freshConflictCheck);
+      setCapacityDialogOpen(true);
+      return;
+    }
+
+    try {
+      await persistAppointment(data);
     } catch (error: unknown) {
       if (isAppointmentConflictError(error)) {
         // Instead of just a toast, show the CapacityExceededDialog
         setPendingFormData(data);
+        setConflictCheck(freshConflictCheck);
         setCapacityDialogOpen(true);
         ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave', { showNotification: false });
       } else {
@@ -546,33 +543,25 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     setActiveTab('info');
   };
 
-  const handleScheduleAnyway = () => {
-    if (pendingFormData) {
-      const endTime = new Date(new Date(`${pendingFormData.appointment_date}T${pendingFormData.appointment_time}`).getTime() + pendingFormData.duration * 60000);
-      const endTimeString = format(endTime, 'HH:mm');
+  const handleScheduleAnyway = async () => {
+    if (!pendingFormData) return;
 
-      const formattedData = {
-        patient_id: pendingFormData.patient_id,
-        therapist_id: pendingFormData.therapist_id || null,
-        date: pendingFormData.appointment_date,
-        start_time: pendingFormData.appointment_time,
-        end_time: endTimeString,
-        status: pendingFormData.status,
-        payment_status: pendingFormData.payment_status || 'pending',
-        notes: pendingFormData.notes || '',
-        session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as 'individual' | 'group',
-      };
-
-      createAppointmentAsync(formattedData as unknown as AppointmentFormData, {
-        onSuccess: () => {
-          // Toast já exibido pelo hook
-          setCapacityDialogOpen(false);
-          setPendingFormData(null);
-          onClose();
-        }
+    try {
+      await persistAppointment(pendingFormData);
+      toast.warning('Agendamento confirmado acima da capacidade configurada.', {
+        description: 'Este atendimento será exibido com destaque na agenda.'
       });
+      setCapacityDialogOpen(false);
+      setPendingFormData(null);
+    } catch (error: unknown) {
+      if (isAppointmentConflictError(error)) {
+        toast.error('Não foi possível confirmar acima da capacidade neste horário.');
+        ErrorHandler.handle(error, 'AppointmentModalRefactored:handleScheduleAnyway', { showNotification: false });
+      } else {
+        ErrorHandler.handle(error, 'AppointmentModalRefactored:handleScheduleAnyway');
+      }
     }
- };
+  };
 
   // Use CustomModal instead of Dialog/Sheet to avoid React Error #185
   return (

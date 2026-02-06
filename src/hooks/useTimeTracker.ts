@@ -51,6 +51,7 @@ interface UseTimeTrackerReturn {
   pauseTimer: () => Promise<void>;
   resumeTimer: () => void;
   stopTimer: () => Promise<TimeEntry | null>;
+  updateActiveTimer: (updates: Partial<ActiveTimer>) => Promise<void>;
   discardTimer: () => void;
 
   // Ações de Entradas
@@ -300,6 +301,12 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
     await saveActiveTimer(null);
   }, [saveActiveTimer]);
 
+  const updateActiveTimer = useCallback(async (updates: Partial<ActiveTimer>) => {
+    if (!activeTimer) return;
+    const updatedTimer = { ...activeTimer, ...updates };
+    await saveActiveTimer(updatedTimer);
+  }, [activeTimer, saveActiveTimer]);
+
   // ============================================================================
   // Ações de Entradas
   // ============================================================================
@@ -399,6 +406,9 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
       getTimeStats(organizationId, userId, monthStart, new Date()),
     ]);
 
+    const daysElapsed = today.getDate();
+    const averageDaily = monthStats.total_seconds / daysElapsed;
+
     return {
       today: {
         total_seconds: todayStats.total_seconds,
@@ -415,7 +425,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
         billable_seconds: monthStats.billable_seconds,
         entries: monthStats.entries_count,
       },
-      average_daily: 0, // TODO: Calcular média real
+      average_daily: Math.round(averageDaily),
     };
   }, [organizationId, userId]);
 
@@ -441,6 +451,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
     pauseTimer,
     resumeTimer,
     stopTimer,
+    updateActiveTimer,
     discardTimer,
 
     // Ações de Entradas
@@ -459,7 +470,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
  * Hook simplificado para widget de timer rápido
  */
 export function useQuickTimer(options: { organizationId: string; userId: string }) {
-  const { activeTimer, isRunning, currentDuration, startTimer, stopTimer, discardTimer } =
+  const { activeTimer, isRunning, currentDuration, startTimer, stopTimer, updateActiveTimer, discardTimer } =
     useTimeTracker(options);
 
   const formatTime = (seconds: number): string => {
@@ -479,6 +490,7 @@ export function useQuickTimer(options: { organizationId: string; userId: string 
     formattedTime: formatTime(currentDuration),
     startTimer: (description: string) => startTimer(description),
     stopTimer,
+    updateActiveTimer,
     discardTimer,
   };
 }

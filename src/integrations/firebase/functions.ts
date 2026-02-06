@@ -610,7 +610,7 @@ export const exercisesApi = {
     return res.data;
   },
   searchSimilar: (params: { exerciseId?: string; query?: string; limit?: number }): Promise<ExerciseApi.Exercise[]> =>
-    callFunctionHttp('searchSimilarExercisesV2', params).then((r: any) => r.data),
+    callFunctionHttp<{ exerciseId?: string; query?: string; limit?: number }, { data: ExerciseApi.Exercise[] }>('searchSimilarExercisesV2', params).then((r) => r.data),
   getCategories: async (): Promise<ExerciseApi.Category[]> => {
     const res = await callFunctionHttp<Record<string, never>, { data: ExerciseApi.Category[] }>('getExerciseCategoriesV2', {});
     return res.data;

@@ -3,11 +3,11 @@
  * Integração real com Zoom Meetings API
  */
 import {
-
   ZoomMeeting,
   ZoomUser,
   ZoomRecording,
 } from '@/types/integrations';
+import CryptoJS from 'crypto-js';
 
 // ============================================================================
 // Zoom Client
@@ -46,8 +46,7 @@ export class ZoomClient {
   }
 
   private hmacSHA256(message: string, secret: string): string {
-    // Simplificado - usar biblioteca crypto real em produção
-    return btoa(message + secret); // Placeholder
+    return CryptoJS.HmacSHA256(message, secret).toString(CryptoJS.enc.Base64);
   }
 
   /**
@@ -346,10 +345,9 @@ export class ZoomClient {
   /**
    * Verifica assinatura do webhook
    */
-  verifyWebhook(signature: string, _payload: string): boolean {
-    // TODO: Implementar verificação real HMAC-SHA256
-    // zoom webhook secret + payload -> compare com signature
-    return signature.length > 0;
+  verifyWebhook(signature: string, payload: string, webhookSecret: string): boolean {
+    const hash = CryptoJS.HmacSHA256(payload, webhookSecret).toString(CryptoJS.enc.Hex);
+    return signature === hash;
   }
 }
 

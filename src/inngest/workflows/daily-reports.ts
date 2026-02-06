@@ -10,6 +10,7 @@ import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { ResendService } from '../../lib/email/resend.js';
 
 interface Organization {
   id: string;
@@ -119,11 +120,24 @@ export const dailyReportsWorkflow = inngest.createFunction(
 
               const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
+              // Get new patients for yesterday
+              const newPatientsSnapshot = await db.collection('patients')
+                .where('organization_id', '==', org.id)
+                .where('created_at', '>=', yesterday.toISOString())
+                .where('created_at', '<', today.toISOString())
+                .get();
+
+              const completedSessions = sessions.filter((s: any) => s.status === 'concluido' || s.status === 'atendido').length;
+              const cancelledSessions = sessions.filter((s: any) => s.status === 'cancelado').length;
+
               // Generate report data
               const reportData = {
                 organization: org.name,
-                date: yesterday.toISOString().split('T')[0],
+                date: yesterday.toLocaleDateString('pt-BR'),
                 totalSessions: sessions.length,
+                completedSessions,
+                cancelledSessions,
+                newPatients: newPatientsSnapshot.size,
                 sessionsByTherapist: sessions.reduce((acc: Record<string, number>, session: SessionRecord) => {
                   const therapistId = session.therapist_id || 'unassigned';
                   acc[therapistId] = (acc[therapistId] || 0) + 1;
@@ -134,16 +148,31 @@ export const dailyReportsWorkflow = inngest.createFunction(
               // Send reports to therapists
               let emailsSent = 0;
               for (const therapist of therapists) {
+                if (!therapist.email) continue;
+                
                 try {
-                  // TODO: Send via Resend
+                  await ResendService.sendDailyReport(
+                    therapist.email,
+                    {
+                      therapistName: therapist.name || therapist.full_name || 'Fisioterapeuta',
+                      organizationName: org.name || 'FisioFlow',
+                      date: reportData.date,
+                      totalSessions: reportData.totalSessions,
+                      completedSessions: reportData.completedSessions,
+                      cancelledSessions: reportData.cancelledSessions,
+                      newPatients: reportData.newPatients,
+                    },
+                    org.name
+                  );
+                  
                   logger.info(
-                    `Sending daily report to therapist for org`,
-                    { organizationId: org.id, organizationName: org.name, therapistId: therapist.id },
+                    `Daily report sent to ${therapist.email}`,
+                    { organizationId: org.id, therapistId: therapist.id },
                     'daily-reports'
                   );
                   emailsSent++;
                 } catch (error) {
-                  logger.error(`Failed to send report to therapist`, error, 'daily-reports');
+                  logger.error(`Failed to send report to therapist ${therapist.email}`, error, 'daily-reports');
                 }
               }
 

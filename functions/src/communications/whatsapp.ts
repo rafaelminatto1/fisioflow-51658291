@@ -510,11 +510,30 @@ async function sendWhatsAppTextMessage(params: {
   return result;
 }
 
+export async function sendWhatsAppTemplateMessageInternal(params: {
+  to: string;
+  template: string;
+  language: string;
+  components?: Array<{
+    type: string;
+    parameters: Array<{ type: string; text: string }>;
+  }>;
+}) {
+  return sendWhatsAppTemplateMessage(params);
+}
+
+export async function sendWhatsAppTextMessageInternal(params: {
+  to: string;
+  message: string;
+}) {
+  return sendWhatsAppTextMessage(params);
+}
+
 /**
  * Formata número de telefone para o formato do WhatsApp
  * Converte various formats para: 55DDDDDDDDD
  */
-function formatPhoneForWhatsApp(phone: string): string {
+export function formatPhoneForWhatsApp(phone: string): string {
   // Remover todos os caracteres não numéricos
   let cleaned = phone.replace(/\D/g, '');
 

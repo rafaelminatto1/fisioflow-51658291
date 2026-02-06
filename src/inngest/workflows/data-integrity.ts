@@ -8,6 +8,7 @@ import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb, documentExists } from '../../lib/firebase/admin.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { ResendService } from '../../lib/email/resend.js';
 
 export const dataIntegrityWorkflow = inngest.createFunction(
   {
@@ -154,7 +155,25 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     await step.run('log-integrity-results', async () => {
       if (issues.length > 0) {
         logger.warn('[Data Integrity] Issues found', { issues }, 'data-integrity');
-        // TODO: Send alert to admins
+        
+        try {
+          await ResendService.sendEmail({
+            to: 'admin@fisioflow.com.br',
+            subject: '⚠️ Alerta de Integridade de Dados - FisioFlow',
+            html: `
+              <h1>Problemas de Integridade Detectados</h1>
+              <p>O check automático de integridade de dados encontrou os seguintes problemas:</p>
+              <ul>
+                ${issues.map(issue => `<li>${issue}</li>`).join('')}
+              </ul>
+              <p>Data do check: ${new Date().toLocaleString('pt-BR')}</p>
+              <p>Por favor, verifique o console do Firebase para mais detalhes.</p>
+            `,
+            tags: { type: 'alert', category: 'data-integrity' }
+          });
+        } catch (emailError) {
+          logger.error('Erro ao enviar alerta de integridade para admins', emailError, 'data-integrity');
+        }
       } else {
         logger.info('[Data Integrity] Check passed: No issues found', {}, 'data-integrity');
       }

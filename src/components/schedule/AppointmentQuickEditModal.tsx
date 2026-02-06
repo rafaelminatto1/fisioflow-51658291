@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { format, differenceInYears, parseISO } from 'date-fns';
+import { format, differenceInYears, differenceInMinutes, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { parseResponseDate } from '@/utils/dateUtils';
@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+import { useScheduleSettings } from '@/hooks/useScheduleSettings';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
 import { getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { PatientService } from '@/services/patientService';
@@ -104,6 +105,13 @@ const STARTABLE_STATUSES: Set<AppointmentStatus> = new Set([
 // Opções de duração padronizadas
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
 
+const DEFAULT_CANCELLATION_RULES = {
+  min_hours_before: 24,
+  max_cancellations_month: 3,
+  charge_late_cancellation: false,
+  late_cancellation_fee: 0,
+};
+
 interface PatientDetails {
   phone?: string;
   birthDate?: string;
@@ -127,6 +135,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { cancelAppointment, isCanceling } = useAppointmentActions();
+  const { cancellationRules } = useScheduleSettings();
 
   // States
   const [isEditing, setIsEditing] = useState(false);
@@ -173,6 +182,35 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     },
     staleTime: 30000,
     enabled: open && !!appointment?.date,
+  });
+
+  const { data: patientMonthCancellations = 0, isLoading: isLoadingPatientMonthCancellations } = useQuery<number>({
+    queryKey: ['patient-cancellations-month', appointment?.patientId, formData.appointment_date, open],
+    queryFn: async () => {
+      if (!appointment?.patientId || !formData.appointment_date) return 0;
+
+      const targetDate = parseResponseDate(formData.appointment_date);
+      const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+      const monthEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+      const monthStartStr = format(monthStart, 'yyyy-MM-dd');
+      const monthEndStr = format(monthEnd, 'yyyy-MM-dd');
+
+      const q = firestoreQuery(
+        collection(db, 'appointments'),
+        where('patient_id', '==', appointment.patientId)
+      );
+      const snapshot = await getDocs(q);
+
+      return snapshot.docs.filter((doc) => {
+        const data = normalizeFirestoreData(doc.data()) as { appointment_date?: string; date?: string; status?: string };
+        const status = String(data.status || '').toLowerCase();
+        if (status !== 'cancelado' && status !== 'cancelled') return false;
+        const appointmentDate = String(data.appointment_date || data.date || '').slice(0, 10);
+        return appointmentDate >= monthStartStr && appointmentDate <= monthEndStr;
+      }).length;
+    },
+    staleTime: 30000,
+    enabled: open && !!appointment?.patientId && !!formData.appointment_date,
   });
 
   // Mutation para atualizar agendamento com atualização otimista completa
@@ -352,6 +390,63 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
   const statusConfig = STATUS_CONFIG[formData.status];
 
+  const effectiveCancellationRules = useMemo(() => ({
+    ...DEFAULT_CANCELLATION_RULES,
+    ...(cancellationRules || {}),
+  }), [cancellationRules]);
+
+  const appointmentDateTime = useMemo(() => {
+    if (!formData.appointment_date || !formData.appointment_time) return null;
+    const [hours, minutes] = formData.appointment_time.split(':').map(Number);
+    const parsedDate = parseResponseDate(formData.appointment_date);
+    const dateTime = new Date(parsedDate);
+    dateTime.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+    return Number.isNaN(dateTime.getTime()) ? null : dateTime;
+  }, [formData.appointment_date, formData.appointment_time]);
+
+  const minutesUntilAppointment = useMemo(() => {
+    if (!appointmentDateTime) return null;
+    return differenceInMinutes(appointmentDateTime, new Date());
+  }, [appointmentDateTime]);
+
+  const hoursUntilAppointment = useMemo(() => {
+    if (minutesUntilAppointment === null) return null;
+    return minutesUntilAppointment / 60;
+  }, [minutesUntilAppointment]);
+
+  const requiresMinHours = effectiveCancellationRules.min_hours_before ?? DEFAULT_CANCELLATION_RULES.min_hours_before;
+  const monthlyLimit = effectiveCancellationRules.max_cancellations_month ?? DEFAULT_CANCELLATION_RULES.max_cancellations_month;
+  const isLateCancellation = hoursUntilAppointment !== null && hoursUntilAppointment < requiresMinHours;
+  const exceedsMonthlyLimit = monthlyLimit > 0 && patientMonthCancellations >= monthlyLimit;
+  const lateFeeApplies = isLateCancellation &&
+    !!effectiveCancellationRules.charge_late_cancellation &&
+    (effectiveCancellationRules.late_cancellation_fee || 0) > 0;
+  const requiresPolicyOverride = isLateCancellation || exceedsMonthlyLimit;
+
+  const cancellationReason = useMemo(() => {
+    const reasons: string[] = [];
+    if (isLateCancellation && hoursUntilAppointment !== null) {
+      reasons.push(`fora da antecedência (${Math.max(0, hoursUntilAppointment).toFixed(1)}h < ${requiresMinHours}h)`);
+    }
+    if (exceedsMonthlyLimit && monthlyLimit > 0) {
+      reasons.push(`limite mensal atingido (${patientMonthCancellations}/${monthlyLimit})`);
+    }
+    if (lateFeeApplies) {
+      reasons.push(`taxa sugerida: R$ ${(effectiveCancellationRules.late_cancellation_fee || 0).toFixed(2)}`);
+    }
+    if (reasons.length === 0) return undefined;
+    return `[Regra de cancelamento] ${reasons.join(' | ')}`;
+  }, [
+    effectiveCancellationRules.late_cancellation_fee,
+    exceedsMonthlyLimit,
+    hoursUntilAppointment,
+    isLateCancellation,
+    lateFeeApplies,
+    monthlyLimit,
+    patientMonthCancellations,
+    requiresMinHours,
+  ]);
+
   // Handlers
   const handleSave = useCallback(() => {
     if (!appointment) return;
@@ -377,9 +472,11 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   const handleCancel = useCallback(() => {
     if (!appointment) return;
 
-    cancelAppointment(appointment.id, {
+    cancelAppointment({
+      appointmentId: appointment.id,
+      reason: cancellationReason,
+    }, {
       onSuccess: () => {
-        toast.success('Agendamento cancelado');
         setShowCancelConfirm(false);
         onOpenChange(false);
         _onDeleted?.();
@@ -388,7 +485,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         toast.error('Erro ao cancelar: ' + error.message);
       },
     });
-  }, [appointment, cancelAppointment, onOpenChange, _onDeleted]);
+  }, [appointment, cancelAppointment, cancellationReason, onOpenChange, _onDeleted]);
 
   const handleWhatsAppConfirm = useCallback(() => {
     if (!appointment) return;
@@ -799,10 +896,47 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
               Tem certeza que deseja cancelar o agendamento de{' '}
               <strong>{appointment.patientName}</strong> para{' '}
               <strong>{dateFormatted}</strong> às <strong>{formData.appointment_time}</strong>?
-              <br />
-              <br />
-              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
+            <div
+              className={cn(
+                "rounded-lg border p-3 text-sm",
+                requiresPolicyOverride
+                  ? "border-destructive/40 bg-destructive/10"
+                  : "border-border bg-muted/40"
+              )}
+            >
+              <p className="font-medium mb-2">Regras aplicadas neste cancelamento</p>
+              <div className="grid gap-1.5 text-muted-foreground">
+                <p>
+                  Antecedência mínima: <strong className="text-foreground">{requiresMinHours}h</strong>
+                </p>
+                <p>
+                  Tempo restante:{' '}
+                  <strong className={cn(requiresPolicyOverride && isLateCancellation && "text-destructive")}>
+                    {hoursUntilAppointment === null ? 'N/A' : `${Math.max(0, hoursUntilAppointment).toFixed(1)}h`}
+                  </strong>
+                </p>
+                <p>
+                  Cancelamentos no mês:{' '}
+                  <strong className={cn(requiresPolicyOverride && exceedsMonthlyLimit && "text-destructive")}>
+                    {monthlyLimit > 0 ? `${patientMonthCancellations}/${monthlyLimit}` : `${patientMonthCancellations} (ilimitado)`}
+                  </strong>
+                </p>
+                {lateFeeApplies && (
+                  <p className="text-destructive">
+                    Taxa de cancelamento tardio sugerida: <strong>R$ {(effectiveCancellationRules.late_cancellation_fee || 0).toFixed(2)}</strong>
+                  </p>
+                )}
+                {isLoadingPatientMonthCancellations && (
+                  <p className="text-xs">Verificando histórico mensal...</p>
+                )}
+              </div>
+              {requiresPolicyOverride && (
+                <p className="mt-2 text-xs font-medium text-destructive">
+                  Cancelamento fora da política. Confirme somente se deseja manter o cancelamento manual.
+                </p>
+              )}
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
@@ -817,7 +951,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   Cancelando...
                 </>
               ) : (
-                'Sim, Cancelar'
+                requiresPolicyOverride ? 'Cancelar Mesmo Assim' : 'Sim, Cancelar'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

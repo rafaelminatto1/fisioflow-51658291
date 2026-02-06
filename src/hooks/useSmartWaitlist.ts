@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { doc, updateDoc } from '@/integrations/firebase/app';
+import { doc, updateDoc, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { useState, useCallback } from 'react';
 import { addDays, format } from 'date-fns';
 import { useWaitlist, WaitlistEntry } from './useWaitlist';
@@ -48,9 +48,36 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
   const recommendationsQuery = useQuery({
     queryKey: ['smart-waitlist', 'recommendations', selectedDateRange, waitlist],
     queryFn: async (): Promise<WaitlistRecommendation[]> => {
-      // TODO: Fetch blocked dates and times from database
+      // Buscar feriados e bloqueios
       const blockedDates: Date[] = [];
       const blockedTimes: Record<string, string[]> = {};
+
+      try {
+        // 1. Buscar feriados
+        const feriadosSnap = await getDocs(collection(db, 'feriados'));
+        feriadosSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.date) blockedDates.push(new Date(data.date));
+        });
+
+        // 2. Buscar agendamentos bloqueados ou já ocupados
+        const appointmentsQuery = firestoreQuery(
+          collection(db, 'appointments'),
+          where('date', '>=', format(selectedDateRange.start, 'yyyy-MM-dd')),
+          where('date', '<=', format(selectedDateRange.end, 'yyyy-MM-dd'))
+        );
+        const appointmentsSnap = await getDocs(appointmentsQuery);
+        
+        appointmentsSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.date && data.start_time) {
+            if (!blockedTimes[data.date]) blockedTimes[data.date] = [];
+            blockedTimes[data.date].push(data.start_time);
+          }
+        });
+      } catch (error) {
+        logger.error('Erro ao buscar bloqueios para waitlist', error, 'useSmartWaitlist');
+      }
 
       const availableSlots = generateAvailableSlots(
         selectedDateRange.start,
