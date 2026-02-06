@@ -2,9 +2,8 @@
  * SOAP Note Generation Flow (Genkit)
  */
 
-import { z } from 'zod';
-import { gemini15Flash } from '@genkit-ai/vertexai';
-import { ai } from '../config';
+import { z } from 'genkit';
+import { ai, gemini15Flash } from '../config';
 
 const SoapGenerationInputSchema = z.object({
     patientContext: z.object({
@@ -115,7 +114,7 @@ export const soapEnhancementFlow = ai.defineFlow(
             improvements: z.array(z.string()),
         }),
     },
-    async (input: { existingSOAP: { subjective: string; objective: string; assessment: string; plan: string }; enhancementType: 'clarity' | 'detail' | 'professional' | 'evidence' }) => {
+    async (input) => {
         const enhancementPrompts: Record<string, string> = {
             clarity: 'Melhore a clareza e organização',
             detail: 'Adicione mais detalhes clínicos relevantes',

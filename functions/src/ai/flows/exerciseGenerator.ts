@@ -4,10 +4,8 @@
  * Original flow for generating comprehensive exercise plans
  */
 
-import { z } from 'zod';
-import { gemini15Flash } from '@genkit-ai/vertexai';
-import { ai } from '../config';
-import { ExercisePlanInputSchema, ExercisePlanOutputSchema } from '../schemas';
+import { ai, gemini15Flash } from '../config';
+import { GeneratePlanInputSchema, ExercisePlanSchema } from '../schemas';
 
 /**
  * Generate Exercise Plan Flow
@@ -16,8 +14,8 @@ import { ExercisePlanInputSchema, ExercisePlanOutputSchema } from '../schemas';
 export const generateExercisePlan = ai.defineFlow(
     {
         name: 'generateExercisePlan',
-        inputSchema: ExercisePlanInputSchema,
-        outputSchema: ExercisePlanOutputSchema,
+        inputSchema: GeneratePlanInputSchema,
+        outputSchema: ExercisePlanSchema,
     },
     async (input) => {
         const prompt = `Como fisioterapeuta especialista, crie um plano de exercícios personalizado:
@@ -36,7 +34,7 @@ Gere um plano estruturado com exercícios específicos, progressões e orientaç
             },
             output: {
                 format: 'json',
-                schema: ExercisePlanOutputSchema,
+                schema: ExercisePlanSchema,
             },
         });
 

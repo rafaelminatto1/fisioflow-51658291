@@ -30,3 +30,7 @@ export {
     type SoapGenerationInput,
     type SoapNoteOutput,
 } from './soapGeneration';
+
+export {
+    analyzePatientProgressFlow,
+} from './patientAnalysis';
