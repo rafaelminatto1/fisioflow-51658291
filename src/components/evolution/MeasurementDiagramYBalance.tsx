@@ -1,17 +1,9 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-
-export const Y_BALANCE_KEYS = ['anterior', 'posteromedial', 'posterolateral'] as const;
-export type YBalanceKey = (typeof Y_BALANCE_KEYS)[number];
-
-export interface YBalanceValues {
-  anterior: string;
-  posteromedial: string;
-  posterolateral: string;
-}
+import { type YBalanceKey, type YBalanceValues } from '@/lib/evolution/yBalance';
 
 interface MeasurementDiagramYBalanceProps {
   values: YBalanceValues;

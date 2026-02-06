@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useCallback, useEffect, useRef } from 'react';
 import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
 import { appointmentsApi } from '@/integrations/firebase/functions';

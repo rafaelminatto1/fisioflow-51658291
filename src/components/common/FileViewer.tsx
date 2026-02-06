@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
@@ -18,22 +18,22 @@ interface FileViewerProps {
 export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-    const getPublicUrl = async (path: string): Promise<string> => {
+    const getPublicUrl = useCallback(async (path: string): Promise<string> => {
         const storage = getFirebaseStorage();
         const storageRef = ref(storage, `${bucketName}/${path}`);
         return await getDownloadURL(storageRef);
-    };
+    }, [bucketName]);
 
     // Cache for URLs to avoid repeated fetches
-    const urlCache = new Map<string, string>();
+    const urlCache = useRef(new Map<string, string>());
 
-    const getCachedUrl = async (path: string): Promise<string> => {
-        if (!urlCache.has(path)) {
+    const getCachedUrl = useCallback(async (path: string): Promise<string> => {
+        if (!urlCache.current.has(path)) {
             const url = await getPublicUrl(path);
-            urlCache.set(path, url);
+            urlCache.current.set(path, url);
         }
-        return urlCache.get(path)!;
-    };
+        return urlCache.current.get(path)!;
+    }, [getPublicUrl]);
 
     const selectedFile = selectedIndex !== null ? files[selectedIndex] : null;
     const [urls, setUrls] = useState<Map<string, string>>(new Map());
@@ -49,8 +49,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
             setUrls(newUrls);
         };
         fetchUrls();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [files]);
+    }, [files, getCachedUrl]);
 
     const handleNext = (e: React.MouseEvent) => {
         e.stopPropagation();
