@@ -51,13 +51,13 @@ const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 
 /** Margem à esquerda do primeiro card (em px). */
-const OVERLAP_LAYOUT_MARGIN_PX = 2;
+const _OVERLAP_LAYOUT_MARGIN_PX = 2;
 
 /** Espaçamento entre cards sobrepostos (em px). */
-const OVERLAP_LAYOUT_GAP_PX = 2;
+const _OVERLAP_LAYOUT_GAP_PX = 2;
 
 /** Espaço reservado à direita para área clicável (em px). */
-const CLICKABLE_AREA_WIDTH_PX = 16;
+const _CLICKABLE_AREA_WIDTH_PX = 16;
 
 /**
  * Calcula a largura e posição de cards sobrepostos na agenda.
@@ -278,6 +278,7 @@ export const CalendarWeekView = memo(({
             top: '0px',
             zIndex: 10 + index
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale, dropTarget, dragState, targetAppointments]);
 
     const isDraggable = !!onAppointmentReschedule;

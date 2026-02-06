@@ -7,7 +7,7 @@
 
 // Types matching the DB schema manually for now (until types.ts is regenerated)
 
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, writeBatch, documentId } from '@/integrations/firebase/app';
+import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, query, where, orderBy, writeBatch } from '@/integrations/firebase/app';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';

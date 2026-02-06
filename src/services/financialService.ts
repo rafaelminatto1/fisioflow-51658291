@@ -1,6 +1,5 @@
 import { financialApi } from '@/integrations/firebase/functions';
 import { AppError } from '@/lib/errors/AppError';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface Transaction {
     id: string;

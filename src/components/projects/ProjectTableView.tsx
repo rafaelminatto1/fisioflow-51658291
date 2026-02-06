@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useTarefas, Tarefa, TarefaStatus, TarefaPrioridade, STATUS_LABELS, PRIORIDADE_LABELS, PRIORIDADE_COLORS, useUpdateTarefa, useDeleteTarefa } from '@/hooks/useTarefas';
+import { useTarefas, Tarefa, TarefaStatus, STATUS_LABELS, PRIORIDADE_LABELS, PRIORIDADE_COLORS, useUpdateTarefa, useDeleteTarefa } from '@/hooks/useTarefas';
 import {
 
     Table,

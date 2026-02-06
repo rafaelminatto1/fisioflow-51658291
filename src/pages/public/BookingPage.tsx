@@ -38,7 +38,7 @@ interface BookingResponse {
 
 export const BookingPage = () => {
     const { slug } = useParams();
-    const navigate = useNavigate();
+    const _navigate = useNavigate();
     const { toast } = useToast();
     const [profile, setProfile] = useState<PublicProfile | null>(null);
     const [loading, setLoading] = useState(true);

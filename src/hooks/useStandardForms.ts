@@ -8,7 +8,7 @@
 // Definição das fichas padrão
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, query as firestoreQuery, where, limit, db } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, query as firestoreQuery, where, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 
 export const STANDARD_FORMS = {

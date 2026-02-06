@@ -1,5 +1,5 @@
 import { OptimizedImage } from './OptimizedImage';
-import { getOptimizedImageUrlWithPreset, IMAGE_PRESETS, type ImagePreset } from '@/lib/media/image';
+import { getOptimizedImageUrlWithPreset, type ImagePreset } from '@/lib/media/image';
 
 interface OptimizedSupabaseImageProps {
     bucket: string;

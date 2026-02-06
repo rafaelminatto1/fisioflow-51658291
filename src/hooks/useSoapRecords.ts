@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, QueryConstraint, serverTimestamp, Timestamp } from '@/integrations/firebase/app';
+import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import {
 
@@ -782,7 +782,7 @@ export const useAutoSaveSoapRecord = () => {
           acc[key] = val;
         }
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, unknown>);
 
       const recordData = {
         ...sanitizedData,

@@ -686,7 +686,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                         return 0; // Maintain chronological order within same period
                       });
 
-                      const day = watchedDate.getDay();
+                      const _day = watchedDate.getDay();
                       const bestSlot = sortedSlots.find(slot => {
                         if (!slot.isAvailable) return false;
                         // const capacity = getCapacityForTime(day, slot.time);

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addMonths, addWeeks } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings as SettingsIcon,
-  Filter,
   CheckSquare,
   Plus,
   Stethoscope,
@@ -99,7 +98,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
     return format(currentDate, 'MMM yyyy', { locale: ptBR });
   }, [currentDate]);
 
-  const handleNavigate = (direction: 'prev' | 'next') => {
+  const _handleNavigate = (direction: 'prev' | 'next') => {
     const daysToAdd = direction === 'next' ? 1 : -1;
     const newDate = new Date(currentDate);
 
@@ -120,7 +119,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
     return newDate;
   };
 
-  const handleToday = () => {
+  const _handleToday = () => {
     // Note: Parent component should handle this
     window.dispatchEvent(new CustomEvent('schedule-today-click'));
   };
@@ -273,7 +272,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
   );
 
   // For tablet - medium density
-  const TabletToolbar = () => (
+  const _TabletToolbar = () => (
     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-40">
       {/* Left: Date Nav + View Switcher */}
       <div className="flex items-center gap-3">

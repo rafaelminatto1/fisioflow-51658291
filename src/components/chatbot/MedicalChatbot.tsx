@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useRef, useEffect } from 'react';
 import {
 
@@ -328,7 +329,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSatisfactionRating, setShowSatisfactionRating] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [showFrequentQuestions, setShowFrequentQuestions] = useState(false);
+  const [showFrequentQuestions, _setShowFrequentQuestions] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -649,7 +650,7 @@ export const ChatbotFloatingButton: React.FC<{
 };
 
 // Hook para controlar o estado do chatbot
-/* eslint-disable-next-line react-refresh/only-export-components */
+ 
 export const useChatbotState = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);

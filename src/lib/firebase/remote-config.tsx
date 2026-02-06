@@ -10,7 +10,6 @@ import {
 
   getRemoteConfig,
   fetchAndActivate,
-  getValue,
   getBoolean,
   getNumber,
   getString,
@@ -595,13 +594,13 @@ export async function getMultipleFeatures(
  */
 export async function getUserFeatures(
   userId: string,
-  userRole: string
+  _userRole: string
 ): Promise<Partial<Record<FeatureFlagName, boolean>>> {
   const manager = getRemoteConfigManager();
   const allFeatures = manager.getAllFeatures();
   const userFlags: Partial<Record<FeatureFlagName, boolean>> = {};
 
-  for (const [key, value] of Object.entries(allFeatures)) {
+  for (const [key, _value] of Object.entries(allFeatures)) {
     userFlags[key as FeatureFlagName] = manager.isFeatureEnabledForUser(
       key as FeatureFlagName,
       userId

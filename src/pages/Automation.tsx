@@ -8,11 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import {
 
   Plus,
-  Play,
-  Pause,
-  Trash2,
-  Edit,
-  Copy,
   History,
   Sparkles,
   CheckCircle2,
@@ -27,13 +22,8 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AutomationCard, RecipeLibrary } from '@/components/automation/AutomationCard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,10 +68,10 @@ const mockAutomations: Automation[] = [
       },
     ],
     execution_count: 156,
-    last_executed_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    last_executed_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
     last_status: 'success',
-    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-    updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
+    updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
   },
   {
     id: '2',
@@ -104,10 +94,10 @@ const mockAutomations: Automation[] = [
       },
     ],
     execution_count: 423,
-    last_executed_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    last_executed_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
     last_status: 'success',
-    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-    updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
+    updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
   },
 ];
 
@@ -126,7 +116,7 @@ const mockRecipes: AutomationRecipe[] = [
     ],
     variables: [],
     created_by: 'system',
-    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
   },
   {
     id: 'r2',
@@ -142,7 +132,7 @@ const mockRecipes: AutomationRecipe[] = [
     ],
     variables: [],
     created_by: 'system',
-    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
   },
 ];
 
@@ -202,8 +192,8 @@ export default function AutomationPage() {
         id: `a-${i}`,
       })),
       execution_count: 0,
-      created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-      updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+      created_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
+      updated_at: { seconds: Date.now() / 1000, nanoseconds: 0 } as unknown,
     };
     setAutomations((prev) => [...prev, newAutomation]);
   };

@@ -26,7 +26,6 @@ import {
     Copy,
     FileText,
     CheckCircle2,
-    ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -115,7 +114,7 @@ const SOAPAccordionField = React.memo(({
             setLocalValue(value || '');
             lastSentValue.current = value || '';
         }
-    }, [value]);
+    }, [value, localValue]);
 
     useEffect(() => {
         return () => {
@@ -226,7 +225,7 @@ export const SOAPAccordion: React.FC<SOAPAccordionProps> = ({
                         className="space-y-2"
                     >
                         {SOAP_SECTIONS.map((section) => {
-                            const Icon = section.icon;
+                            const _Icon = section.icon;
                             const wordCount = getWordCount(data[section.key]);
                             const isComplete = wordCount >= 10;
                             const isExpanded = expandedSections.includes(section.key);

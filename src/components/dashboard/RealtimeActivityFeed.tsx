@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from '@/integrations/firebase/app';
+import { db, collection, query, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 

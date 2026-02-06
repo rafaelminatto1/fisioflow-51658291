@@ -27,14 +27,13 @@ service cloud.firestore {
 
     // Verificar se o usuário é admin
     function isAdmin() {
-      return hasRole('admin') || isBootstrapAdmin();
+      return request.auth.token.admin == true || request.auth.token.role == 'admin';
     }
 
-    // Acesso emergencial para o email do proprietário (UID confirmado via auth:export)
+    // Acesso emergencial (Bootstrap) - Removido em favor de Custom Claims
+    // Para acesso inicial, use o script scripts/set-admin-claim.js
     function isBootstrapAdmin() {
-      return isAuthenticated() &&
-        (request.auth.token.email == 'rafael.minatto@yahoo.com.br' ||
-         request.auth.uid == 'sj9b11xOjPT8Q34pPHBMUIPzvQQ2');
+      return isAdmin();
     }
     // UID do bootstrap admin - uso direto quando get(profiles) puder falhar
     function isBootstrapAdminUid() {

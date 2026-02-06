@@ -12,7 +12,7 @@ import { format, startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear, st
 import { ptBR } from 'date-fns/locale';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
+const _convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
 
 export type PerformancePeriod = 'month' | '3months' | '6months' | 'year' | 'custom';
 export type PerformanceMetric = 'revenue' | 'sessions' | 'retention' | 'satisfaction';

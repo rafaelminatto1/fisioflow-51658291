@@ -15,7 +15,7 @@ export default function Integrations() {
       const getUrl = httpsCallable(functions, 'getGoogleAuthUrlIntegration');
       const result = await getUrl();
       // Redirecionar para URL de Auth do Google
-      window.location.href = (result.data as any).url;
+      window.location.href = (result.data as unknown).url;
     } catch (error) {
       console.error(error);
       toast({ title: "Erro", description: "Falha ao iniciar conexão.", variant: "destructive" });

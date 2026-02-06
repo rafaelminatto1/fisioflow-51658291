@@ -19,7 +19,6 @@ import {
   Twitter,
   FileText,
   Image as ImageIcon,
-  Video,
   Hash,
   AtSign,
   Smile,
@@ -182,7 +181,7 @@ export default function ContentGeneratorPage() {
         title: 'Copiado!',
         description: 'Conteúdo copiado para a área de transferência',
       });
-    } catch (err) {
+    } catch (_err) {
       toast({
         variant: 'destructive',
         title: 'Erro ao copiar',

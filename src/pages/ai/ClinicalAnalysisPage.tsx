@@ -4,7 +4,7 @@ import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brain, Sparkles, FileText, Activity } from 'lucide-react';
+import { Brain, Sparkles, Activity } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +28,7 @@ export default function ClinicalAnalysisPage() {
       const result = await analyzeProgress({ patientId: selectedPatient });
       
       // O Genkit retorna o texto dentro de data.text ou estrutura similar dependendo do fluxo
-      const aiResponse = (result.data as any).text || (result.data as any).analysis || JSON.stringify(result.data);
+      const aiResponse = (result.data as unknown).text || (result.data as unknown).analysis || JSON.stringify(result.data);
       setAnalysis(aiResponse);
 
       toast({
@@ -75,7 +75,7 @@ export default function ClinicalAnalysisPage() {
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients?.map((p: any) => (
+                  {patients?.map((p: unknown) => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>

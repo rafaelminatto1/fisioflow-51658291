@@ -59,7 +59,8 @@ export function useErrorHandler(): UseErrorHandlerReturn {
 
   const clearError = useCallback(() => {
     setError(null);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reset]);
 
   const handleError = useCallback((error: unknown, options: ApiErrorOptions = {}) => {
     const {
@@ -151,7 +152,7 @@ export function useErrorHandler(): UseErrorHandlerReturn {
 /**
  * Determina se um erro deve ser logado baseado no tipo
  */
-function shouldLogError(error: unknown): boolean {
+function _shouldLogError(error: unknown): boolean {
   // Não logar erros de cancelamento
   if (error instanceof Error && error.name === 'AbortError') {
     return false;
@@ -213,6 +214,7 @@ export function useAsyncOperation<T>() {
 
       return null;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

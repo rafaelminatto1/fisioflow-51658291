@@ -41,7 +41,6 @@ import {
 import {
   Users,
   TrendingUp,
-  TrendingDown,
   Activity,
   Award,
   AlertCircle,
@@ -59,8 +58,6 @@ import {
   useTopConditions,
   useTreatmentEffectiveness,
   useRetentionAnalysis,
-  useBenchmarks,
-  usePopulationHealthChartData,
   usePopulationInsights,
   useRefreshPopulationAnalysis,
   getPeriodLabel,

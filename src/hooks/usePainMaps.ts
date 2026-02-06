@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from 'react';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, delete as deleteDocs, writeBatch, documentId, db } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, deleteDoc, query as firestoreQuery, where, orderBy, writeBatch, documentId, db } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';

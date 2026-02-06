@@ -4,11 +4,9 @@ import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
 import {
 
     Clock,
-    Search,
     Sun,
     Sunset,
     Moon,
@@ -41,7 +39,7 @@ const DAY_LABELS: Record<string, string> = {
     sunday: 'Dom',
 };
 
-const TIME_SLOT_CONFIG: Record<string, { label: string; icon: typeof Sun }> = {
+const _TIME_SLOT_CONFIG: Record<string, { label: string; icon: typeof Sun }> = {
     morning: { label: 'Manhã', icon: Sun },
     afternoon: { label: 'Tarde', icon: Sunset },
     evening: { label: 'Noite', icon: Moon },

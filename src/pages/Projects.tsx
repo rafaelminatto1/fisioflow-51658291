@@ -45,7 +45,7 @@ const STATUS_LABELS = {
 export default function ProjectsPage() {
     const { data: projects, isLoading } = useProjects();
     const deleteProject = useDeleteProject();
-    const navigate = useNavigate();
+    const _navigate = useNavigate();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);

@@ -10,7 +10,6 @@ import { AppError } from '@/lib/errors/AppError';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
-import type { UnknownError } from '@/types/common';
 
 interface AppointmentApiItem {
     id: string;
@@ -49,7 +48,7 @@ export class AppointmentService {
     /**
      * Fetch all appointments for an organization
      */
-    static async fetchAppointments(organizationId: string): Promise<AppointmentBase[]> {
+    static async fetchAppointments(_organizationId: string): Promise<AppointmentBase[]> {
         try {
             const response = await appointmentsApi.list({ limit: 1000 });
             const data = response.data || [];
@@ -225,7 +224,7 @@ export class AppointmentService {
     static async updateAppointment(
         id: string,
         updates: Partial<AppointmentFormData>,
-        organizationId: string
+        _organizationId: string
     ): Promise<AppointmentBase> {
         try {
             // #region agent log
@@ -366,7 +365,7 @@ export class AppointmentService {
                     updatedAppointment.patientName = r.patient_name || r.patients?.full_name || 'Desconhecido';
                     updatedAppointment.phone = r.patient_phone || r.patients?.phone || '';
                 }
-            } catch (e) {
+            } catch (_e) {
                 // Ignore silent refresh error
             }
 
@@ -418,7 +417,7 @@ export class AppointmentService {
     /**
      * Delete an appointment
      */
-    static async deleteAppointment(id: string, organizationId: string): Promise<void> {
+    static async deleteAppointment(id: string, _organizationId: string): Promise<void> {
         try {
             await appointmentsApi.cancel(id, 'Deletado pelo usuário');
         } catch (error) {

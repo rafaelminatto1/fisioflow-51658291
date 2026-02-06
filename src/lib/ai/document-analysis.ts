@@ -18,7 +18,7 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, db, doc, setDoc, collection, serverTimestamp, updateDoc, arrayUnion } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -292,7 +292,7 @@ export async function reanalyzeDocument(
   documentId: string,
   patientId: string,
   additionalInstructions: string,
-  language: 'pt-BR' | 'en' = 'pt-BR'
+  _language: 'pt-BR' | 'en' = 'pt-BR'
 ): Promise<DocumentAnalysisResult> {
   // Buscar documento e re-analisar com instruções adicionais
   // Implementação depende de como documentos estão armazenados
@@ -576,7 +576,7 @@ Respond in valid JSON:
  */
 async function combineBatchResults(
   results: DocumentAnalysisResult[],
-  language: 'pt-BR' | 'en'
+  _language: 'pt-BR' | 'en'
 ): Promise<{
   allDiagnoses: ExtractedDiagnosis[];
   allMedications: ExtractedMedication[];
@@ -847,7 +847,7 @@ async function saveDocumentAnalysis(
  */
 export async function getPatientDocumentAnalyses(
   patientId: string,
-  limit = 20
+  _limit = 20
 ): Promise<DocumentAnalysisResult[]> {
 
   // Implementar busca no Firestore

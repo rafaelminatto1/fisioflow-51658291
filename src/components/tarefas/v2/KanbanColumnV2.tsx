@@ -1,5 +1,5 @@
 import { Droppable } from '@hello-pangea/dnd';
-import { Plus, MoreHorizontal, Settings, Trash2, Archive, AlertCircle } from 'lucide-react';
+import { Plus, MoreHorizontal, Settings, Archive, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';

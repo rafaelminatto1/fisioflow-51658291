@@ -1,6 +1,6 @@
 import MainLayout from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Target, Award, Gift, Zap, BarChart3, TrendingUp, Settings, RotateCcw } from 'lucide-react';
+import { Trophy, Target, Award, Gift, Zap, BarChart3, TrendingUp, Settings } from 'lucide-react';
 import QuestsManager from '@/components/admin/gamification/QuestsManager';
 import AchievementsManager from '@/components/admin/gamification/AchievementsManager';
 import RewardsManager from '@/components/admin/gamification/RewardsManager';
@@ -10,7 +10,7 @@ import LeaderboardTable from '@/components/admin/gamification/LeaderboardTable';
 import LevelSystemConfig from '@/components/admin/gamification/LevelSystemConfig';
 import EngagementReports from '@/components/admin/gamification/EngagementReports';
 import GamificationSettings from '@/components/admin/gamification/GamificationSettings';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 export default function AdminGamificationPage() {

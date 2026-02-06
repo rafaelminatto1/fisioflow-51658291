@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
 
   BarChart, Bar,
@@ -15,14 +14,14 @@ import {
   TooltipProps,
 } from 'recharts';
 import {
-  TrendingUp, Users, Target, Flame, Award, Star,
-  AlertTriangle, Calendar, CheckCircle2, Download
+  TrendingUp, Target, Award, Star,
+  AlertTriangle, CheckCircle2, Download
 } from 'lucide-react';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
 import { useEngagementData } from '@/hooks/useLeaderboard';
 import { exportAtRiskPatientsToCSV } from '@/utils/gamificationExport';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { format, subDays, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface ChartEntry {
@@ -97,12 +96,12 @@ export const EngagementReports: React.FC = () => {
     return distribution;
   }, [stats]);
 
-  const maxLevelCount = useMemo(() => {
+  const _maxLevelCount = useMemo(() => {
     return Math.max(...levelDistribution.map(d => d.count), 1);
   }, [levelDistribution]);
 
   // Weekly activity heatmap
-  const heatmapData = useMemo(() => {
+  const _heatmapData = useMemo(() => {
     const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const hours = Array.from({ length: 12 }, (_, i) => `${i * 2}:00`);
 
