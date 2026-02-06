@@ -26,7 +26,6 @@ import {
 // Import optimization presets
 import {
     AI_FUNCTION,
-    AI_FUNCTION_CRITICAL,
     withCors
 } from './lib/function-config';
 
@@ -407,81 +406,26 @@ export const rebuildPatientRagIndexHttp = onRequest(
     }
 );
 
-// AI FUNCTIONS (Genkit Modernized)
-// OTIMIZADO - Usando presets de configuração
-export const generateExercisePlan = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { exerciseGeneratorHandler } = await import('./ai/flow-wrappers');
-        return exerciseGeneratorHandler(request);
-    }
-);
+// ============================================================================
+// OTIMIZAÇÃO FASE 3: AI SERVICE UNIFICADO
+// ============================================================================
+// As seguintes funções AI individuais foram REMOVIDAS e consolidadas no aiService:
+// - generateExercisePlan → use aiService com action: 'generateExercisePlan'
+// - aiClinicalAnalysis → use aiService com action: 'clinicalAnalysis'
+// - aiExerciseSuggestion → use aiService com action: 'exerciseSuggestion'
+// - aiSoapGeneration → use aiService com action: 'soapGeneration'
+// - aiMovementAnalysis → use aiService com action: 'movementAnalysis'
+// - aiClinicalChat → use aiService com action: 'clinicalChat'
+// - aiExerciseRecommendationChat → use aiService com action: 'exerciseRecommendationChat'
+// - aiSoapNoteChat → use aiService com action: 'soapNoteChat'
+// - aiGetSuggestions → use aiService com action: 'getSuggestions'
+// - analyzeProgress → use aiService com action: 'analyzeProgress'
+// - aiFastProcessing → use aiService com action: 'fastProcessing'
+//
+// Economia: R$ 15-20/mês (13 serviços Cloud Run → 1 serviço unificado)
+// ============================================================================
 
-export const aiClinicalAnalysis = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { clinicalAnalysisHandler } = await import('./ai/flow-wrappers');
-        return clinicalAnalysisHandler(request);
-    }
-);
-
-export const aiExerciseSuggestion = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { exerciseSuggestionHandler } = await import('./ai/flow-wrappers');
-        return exerciseSuggestionHandler(request);
-    }
-);
-
-export const aiSoapGeneration = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { soapGenerationHandler } = await import('./ai/flow-wrappers');
-        return soapGenerationHandler(request);
-    }
-);
-
-export const aiMovementAnalysis = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { movementAnalysisHandler } = await import('./ai/movement-analysis');
-        return movementAnalysisHandler(request);
-    }
-);
-
-// New AI Functions (Clinical Assistant)
-export const aiClinicalChat = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { aiClinicalChatHandler } = await import('./ai/clinical-chat');
-        return aiClinicalChatHandler(request);
-    }
-);
-
-export const aiExerciseRecommendationChat = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { aiExerciseRecommendationChatHandler } = await import('./ai/clinical-chat');
-        return aiExerciseRecommendationChatHandler(request);
-    }
-);
-
-export const aiSoapNoteChat = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { aiSoapNoteChatHandler } = await import('./ai/clinical-chat');
-        return aiSoapNoteChatHandler(request);
-    }
-);
-
-export const aiGetSuggestions = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { aiGetSuggestionsHandler } = await import('./ai/clinical-chat');
-        return aiGetSuggestionsHandler(request);
-    }
-);
-
+// HTTP AI endpoints (mantidos - funcionalidades diferentes)
 export const getPatientAISummaryHttp = onRequest(
     { ...AI_FUNCTION, ...withCors(AI_FUNCTION, CORS_ORIGINS) },
     async (req: any, res: any) => {
@@ -536,28 +480,16 @@ export const aiServiceHttp = onRequest(
 
 // REMOVIDO: migrateClinicalSchema - migração já executada
 export { dailyPatientDigest } from './crons/scheduled-tasks';
-export const analyzeProgress = onCall(
-    AI_FUNCTION_CRITICAL,
-    async (request) => {
-        const { analyzeProgressHandler } = await import('./ai/flow-wrappers');
-        return analyzeProgressHandler(request);
-    }
-);
-
-export const aiFastProcessing = onCall(
-    AI_FUNCTION,
-    async (request) => {
-        const { aiFastProcessingHandler } = await import('./ai/groq-service');
-        return aiFastProcessingHandler(request);
-    }
-);
 
 // ============================================================================
-// EXPORT/IMPORT FUNCTIONS
-// OTIMIZAÇÃO: Removidos blocos comentados de webhooks e integrações desativadas
+// OTIMIZAÇÃO FASE 3: Funções AI individuais removidas
+// ============================================================================
+// analyzeProgress e aiFastProcessing foram consolidadas no aiService
+// Use: aiService com action: 'analyzeProgress' ou 'fastProcessing'
+// ============================================================================
+
 // ============================================================================
 // BACKGROUND TRIGGERS
-// OTIMIZAÇÃO: Removidos blocos comentados de monitoring e realtime
 // ============================================================================
 
 // Firestore triggers with proper error handling
@@ -681,7 +613,7 @@ export {
 } from './workflows/notifications';
 
 // Appointment Workflows
-export { appointmentReminders, onAppointmentCreatedWorkflow, onAppointmentUpdatedWorkflow } from './workflows/appointments';
+export { appointmentReminders, appointmentReminders2h, onAppointmentCreatedWorkflow, onAppointmentUpdatedWorkflow } from './workflows/appointments';
 
 // Patient Reactivation Workflow
 export { patientReactivation } from './workflows/reactivation';
