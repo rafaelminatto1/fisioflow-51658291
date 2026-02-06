@@ -120,6 +120,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                         exercises.map((exercise, index) => (
                             <Card
                                 key={exercise.id}
+                                role="listitem"
                                 className={cn(
                                     "group relative overflow-hidden transition-all duration-200 hover:shadow-md border-l-4",
                                     exercise.completed
@@ -178,6 +179,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                                                                 : "bg-muted hover:bg-muted-foreground/10 text-muted-foreground"
                                                         )}
                                                         onClick={() => toggleCompleted(exercise.id)}
+                                                        aria-label={exercise.completed ? 'Marcar como não concluído' : 'Marcar como concluído'}
                                                     >
                                                         {exercise.completed ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
                                                     </Button>
@@ -187,6 +189,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                                                         size="icon"
                                                         className="h-10 w-10 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
                                                         onClick={() => handleRemoveExercise(exercise.id)}
+                                                        aria-label={`Remover exercício ${exercise.name}`}
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
