@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,7 +33,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIndex, setCopiedId] = useState<number | null>(null);
 
-  const generateAIInsights = async () => {
+  const generateAIInsights = useCallback(async () => {
     if (!patientId) return;
     
     setIsLoading(true);
@@ -84,12 +84,11 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [patientId, generate, toast]);
 
   useEffect(() => {
     generateAIInsights();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId]);
+  }, [generateAIInsights]);
 
   const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
