@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-
   Dialog,
   DialogContent,
   DialogDescription,
@@ -18,6 +17,8 @@ import { useAddToWaitlist } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import { toast } from 'sonner';
 import { PatientCombobox } from '@/components/ui/patient-combobox';
+import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface WaitlistQuickAddProps {
   open: boolean;
@@ -50,7 +51,13 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00', def
   const [patientId, setPatientId] = useState(defaultPatientId);
   const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [notes, setNotes] = useState('');
+  
+  // Quick Patient Creation State
+  const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
+  const [suggestedPatientName, setSuggestedPatientName] = useState('');
+  const [lastCreatedPatient, setLastCreatedPatient] = useState<{ id: string; name: string } | null>(null);
 
+  const queryClient = useQueryClient();
   const { mutate: addToWaitlist, isPending: isAdding } = useAddToWaitlist();
   const { data: patients = [] } = usePatients();
 
@@ -84,92 +91,120 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00', def
     setPatientId('');
     setPriority('normal');
     setNotes('');
+    setLastCreatedPatient(null);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Adicionar à Lista de Espera
-          </DialogTitle>
-          <DialogDescription>
-            Registrar interesse de paciente neste horário
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Adicionar à Lista de Espera
+            </DialogTitle>
+            <DialogDescription>
+              Registrar interesse de paciente neste horário
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Slot info */}
-          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <div className="text-sm">
-              <span className="font-medium">
-                {format(safeDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-              </span>
-              <span className="text-muted-foreground"> às </span>
-              <span className="font-medium">{time}</span>
+          <div className="space-y-4 py-4">
+            {/* Slot info */}
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div className="text-sm">
+                <span className="font-medium">
+                  {format(safeDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+                </span>
+                <span className="text-muted-foreground"> às </span>
+                <span className="font-medium">{time}</span>
+              </div>
+            </div>
+
+            {/* Patient Select */}
+            <div className="space-y-2">
+              <Label>Paciente</Label>
+              <PatientCombobox
+                patients={patients}
+                value={patientId}
+                onValueChange={setPatientId}
+                disabled={isAdding}
+                onCreateNew={(searchTerm) => {
+                  setSuggestedPatientName(searchTerm);
+                  setQuickPatientModalOpen(true);
+                }}
+                fallbackDisplayName={
+                  lastCreatedPatient?.id === patientId ? lastCreatedPatient.name : undefined
+                }
+              />
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-2">
+              <Label>Prioridade</Label>
+              <RadioGroup value={priority} onValueChange={(v) => setPriority(v as typeof priority)} className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="normal" id="normal" />
+                  <Label htmlFor="normal" className="text-sm font-normal cursor-pointer">Normal</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="high" id="high" />
+                  <Label htmlFor="high" className="text-sm font-normal cursor-pointer text-orange-600">Alta</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="urgent" id="urgent" />
+                  <Label htmlFor="urgent" className="text-sm font-normal cursor-pointer text-red-600">Urgente</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label>Observações (opcional)</Label>
+              <Textarea
+                placeholder="Alguma observação sobre o interesse..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            <div className="flex items-start gap-2 p-3 bg-blue-500/10 rounded-lg text-sm">
+              <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-muted-foreground">
+                Quando este horário ficar disponível, você receberá uma notificação para entrar em contato com o paciente.
+              </p>
             </div>
           </div>
 
-          {/* Patient Select */}
-          <div className="space-y-2">
-            <Label>Paciente</Label>
-            <PatientCombobox
-              patients={patients}
-              value={patientId}
-              onValueChange={setPatientId}
-              disabled={isAdding}
-            />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit} disabled={isAdding || !patientId}>
+              {isAdding ? 'Adicionando...' : 'Adicionar'}
+            </Button>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Priority */}
-          <div className="space-y-2">
-            <Label>Prioridade</Label>
-            <RadioGroup value={priority} onValueChange={(v) => setPriority(v as typeof priority)} className="flex gap-4">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="normal" id="normal" />
-                <Label htmlFor="normal" className="text-sm font-normal cursor-pointer">Normal</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="high" id="high" />
-                <Label htmlFor="high" className="text-sm font-normal cursor-pointer text-orange-600">Alta</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="urgent" id="urgent" />
-                <Label htmlFor="urgent" className="text-sm font-normal cursor-pointer text-red-600">Urgente</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label>Observações (opcional)</Label>
-            <Textarea
-              placeholder="Alguma observação sobre o interesse..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-            />
-          </div>
-
-          <div className="flex items-start gap-2 p-3 bg-blue-500/10 rounded-lg text-sm">
-            <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-            <p className="text-muted-foreground">
-              Quando este horário ficar disponível, você receberá uma notificação para entrar em contato com o paciente.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={isAdding || !patientId}>
-            {isAdding ? 'Adicionando...' : 'Adicionar'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <QuickPatientModal
+        open={quickPatientModalOpen}
+        onOpenChange={(open) => {
+          setQuickPatientModalOpen(open);
+          if (!open) {
+            setSuggestedPatientName('');
+          }
+        }}
+        onPatientCreated={(newPatientId, newPatientName) => {
+          setPatientId(newPatientId);
+          setLastCreatedPatient({ id: newPatientId, name: newPatientName });
+          setQuickPatientModalOpen(false);
+          setSuggestedPatientName('');
+          queryClient.invalidateQueries({ queryKey: ['patients'] });
+        }}
+        suggestedName={suggestedPatientName}
+      />
+    </>
   );
 }
