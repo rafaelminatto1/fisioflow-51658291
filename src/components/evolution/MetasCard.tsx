@@ -69,14 +69,14 @@ export function MetasCard({ patientId }: MetasCardProps) {
         return (
             <Card className="border-primary/20 bg-primary/5 shadow-sm h-full">
                 <CardHeader className="pb-1.5 pt-2.5 px-3 flex-shrink-0">
-                    <CardTitle className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
-                        <Target className="h-3 w-3 text-primary animate-pulse" />
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                        <Target className="h-4 w-4 text-primary animate-pulse" />
                         Metas
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2.5 flex-1">
                     <div className="flex items-center justify-center h-full">
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
                 </CardContent>
             </Card>
@@ -86,12 +86,12 @@ export function MetasCard({ patientId }: MetasCardProps) {
     return (
         <>
             <Card className="border-primary/20 bg-primary/5 shadow-sm flex flex-col">
-                <CardHeader className="pb-1.5 pt-2.5 px-3 flex flex-row items-center justify-between flex-shrink-0">
-                    <CardTitle className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
-                        <Target className="h-3 w-3 text-primary" />
+                <CardHeader className="pb-2 pt-3 px-4 flex flex-row items-center justify-between flex-shrink-0">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+                        <Target className="h-5 w-5 text-primary" />
                         Metas
                         {goals.length > 0 && (
-                            <span className="ml-1 h-4 px-1 rounded-full bg-primary/10 text-primary text-[9px] flex items-center justify-center">
+                            <span className="ml-1 h-5 px-2 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
                                 {activeGoals.length}/{goals.length}
                             </span>
                         )}
@@ -100,18 +100,18 @@ export function MetasCard({ patientId }: MetasCardProps) {
                         variant="ghost"
                         size="sm"
                         onClick={handleAdd}
-                        className="h-6 w-6 p-0 hover:bg-primary/10"
+                        className="h-8 w-8 p-0 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                         title="Adicionar meta"
                     >
-                        <Plus className="h-2.5 w-2.5" />
+                        <Plus className="h-5 w-5" />
                     </Button>
                 </CardHeader>
 
-                <CardContent className="px-3 pb-2.5 space-y-1.5 flex-1 min-h-0 overflow-auto">
+                <CardContent className="px-4 pb-3 space-y-3 flex-1 min-h-0 overflow-auto">
                     {goals.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <Trophy className="h-6 w-6 text-muted-foreground/30 mb-1" />
-                            <p className="text-[10px] text-muted-foreground">
+                        <div className="flex flex-col items-center justify-center h-full text-center py-6">
+                            <Trophy className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                            <p className="text-sm text-muted-foreground">
                                 Nenhuma meta definida
                             </p>
                         </div>
@@ -125,42 +125,42 @@ export function MetasCard({ patientId }: MetasCardProps) {
                                 return (
                                     <div
                                         key={goal.id}
-                                        className="group relative px-2 py-1.5 rounded-lg bg-card/40 hover:bg-card/60 transition-all"
+                                        className="group relative px-3 py-2.5 rounded-lg bg-card/60 border border-transparent hover:border-primary/10 hover:bg-card/80 transition-all shadow-sm"
                                     >
-                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                        <div className="flex items-center justify-between gap-3 mb-2">
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="text-[10px] font-medium truncate">{goal.goal_title}</h4>
+                                                <h4 className="text-base font-medium text-foreground leading-tight truncate">{goal.goal_title}</h4>
                                             </div>
-                                            <div className="flex items-center gap-1 text-[9px]">
+                                            <div className="flex items-center gap-2 text-sm">
                                                 {goal.target_date && (
-                                                    <span className={`flex items-center gap-0.5 ${countdown.isUrgent ? 'text-orange-500' : 'text-muted-foreground'}`}>
-                                                        <Clock className="h-2 w-2" />
+                                                    <span className={`flex items-center gap-1.5 font-medium ${countdown.isUrgent ? 'text-orange-600' : 'text-muted-foreground'}`}>
+                                                        <Clock className="h-3.5 w-3.5" />
                                                         {countdown.text}
                                                     </span>
                                                 )}
-                                                <span className="text-primary font-medium">{progress}%</span>
+                                                <span className="text-primary font-bold">{progress}%</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Progress value={progress} className="h-1 flex-1" />
-                                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center gap-3">
+                                            <Progress value={progress} className="h-2 flex-1 shadow-inner" />
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-4 w-4 p-0"
+                                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-green-600"
                                                     onClick={() => handleComplete(goal.id)}
                                                     title="Concluir"
                                                 >
-                                                    <CheckCircle2 className="h-2.5 w-2.5 text-green-500" />
+                                                    <CheckCircle2 className="h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-4 w-4 p-0"
+                                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
                                                     onClick={() => handleEdit(goal)}
                                                     title="Editar"
                                                 >
-                                                    <Edit className="h-2.5 w-2.5 text-muted-foreground" />
+                                                    <Edit className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </div>
@@ -169,21 +169,21 @@ export function MetasCard({ patientId }: MetasCardProps) {
                             })}
 
                             {activeGoals.length > 3 && (
-                                <p className="text-[9px] text-muted-foreground text-center py-1">
-                                    +{activeGoals.length - 3} outras metas
+                                <p className="text-xs text-muted-foreground text-center py-1 font-medium">
+                                    +{activeGoals.length - 3} outras metas ativas
                                 </p>
                             )}
 
                             {/* Metas concluídas - indicador compacto */}
                             {completedGoals.length > 0 && (
-                                <div className="pt-1 border-t border-border/50 flex items-center justify-between">
-                                    <span className="text-[9px] text-green-600 flex items-center gap-1">
-                                        <Trophy className="h-2.5 w-2.5" />
+                                <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                                    <span className="text-sm text-green-700 dark:text-green-400 font-semibold flex items-center gap-2">
+                                        <Trophy className="h-4 w-4" />
                                         {completedGoals.length} concluída(s)
                                     </span>
                                     {completedGoals.length > 0 && completedGoals[0]?.completed_at && (
-                                        <span className="text-[9px] text-muted-foreground">
-                                            {format(parseISO(completedGoals[0].completed_at!), "dd/MM/yy", { locale: ptBR })}
+                                        <span className="text-xs text-muted-foreground font-medium">
+                                            Última em {format(parseISO(completedGoals[0].completed_at!), "dd/MM/yy", { locale: ptBR })}
                                         </span>
                                     )}
                                 </div>
