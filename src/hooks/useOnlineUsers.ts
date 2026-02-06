@@ -34,7 +34,7 @@ class FirebasePresence {
 
   async track(user: PresenceUser) {
     // Implement presence tracking using Firestore
-    const { getFirebaseDb } = await import('@/integrations/firebase/app');
+    const { _getFirebaseDb } = await import('@/integrations/firebase/app');
     const { doc, setDoc } = await import('firebase/firestore');
 
     this.presenceRef = doc(db, 'presence', this.channelName, 'users', user.userId);
@@ -65,7 +65,7 @@ export function useOnlineUsers(channelName: string = 'online-users') {
     isConnected: false,
   });
 
-  const [currentUser, setCurrentUser] = useState<PresenceUser | null>(null);
+  const [_currentUser, setCurrentUser] = useState<PresenceUser | null>(null);
 
   useEffect(() => {
     let mounted = true;

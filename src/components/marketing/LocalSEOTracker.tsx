@@ -7,7 +7,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,7 +19,6 @@ import {
   Eye,
   BarChart3,
   Clock,
-  AlertCircle,
   CheckCircle2,
   Target,
   ExternalLink,
@@ -48,7 +46,7 @@ interface GoogleBusinessMetrics {
   photosCount: number;
 }
 
-const KEYWORD_CATEGORIES = [
+const _KEYWORD_CATEGORIES = [
   { name: 'Primárias', color: 'bg-purple-100 text-purple-700 border-purple-200' },
   { name: 'Secundárias', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   { name: 'Long-tail', color: 'bg-green-100 text-green-700 border-green-200' },
@@ -65,7 +63,7 @@ export function LocalSEOTracker() {
     averageRating: 0,
     photosCount: 0,
   });
-  const [businessName, setBusinessName] = useState('');
+  const [_businessName, _setBusinessName] = useState('');
   const [trackingKeyword, setTrackingKeyword] = useState('');
   const [location, setLocation] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -201,7 +199,7 @@ export function LocalSEOTracker() {
                 key={range.value}
                 variant={timeRange === range.value ? 'default' : 'outline'}
                 className="cursor-pointer"
-                onClick={() => setTimeRange(range.value as any)}
+                onClick={() => setTimeRange(range.value as unknown)}
               >
                 {range.label}
               </Badge>

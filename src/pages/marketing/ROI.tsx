@@ -27,13 +27,12 @@ import {
   Target,
   BarChart3,
   PiggyBank,
-  ArrowRight,
   Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateMarketingROI } from '@/services/marketing/marketingService';
 import { useAuth } from '@/contexts/AuthContext';
-import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { subMonths } from 'date-fns';
 
 interface ROIMetrics {
   totalLeads: number;
@@ -140,7 +139,7 @@ export default function ROICalculatorPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Período de Análise</Label>
-              <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
+              <Select value={period} onValueChange={(value: unknown) => setPeriod(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

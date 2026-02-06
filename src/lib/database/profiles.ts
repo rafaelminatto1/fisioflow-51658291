@@ -4,7 +4,7 @@
  */
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db, doc, getDoc, setDoc, query, where, getDocs, collection, addDoc } from '@/integrations/firebase/app';
+import { db, doc, getDoc, setDoc } from '@/integrations/firebase/app';
 
 export const ensureProfile = async (userId: string, email?: string, fullName?: string): Promise<string | null> => {
   try {
@@ -52,7 +52,7 @@ export const ensureProfile = async (userId: string, email?: string, fullName?: s
   }
 };
 
-export const fetchProfile = async (userId: string): Promise<any | null> => {
+export const fetchProfile = async (userId: string): Promise<unknown | null> => {
   try {
     const profileRef = doc(db, 'profiles', userId);
     const profileSnap = await getDoc(profileRef);

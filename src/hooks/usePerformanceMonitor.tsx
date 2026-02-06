@@ -158,7 +158,7 @@ export function useMemoryMonitor(enabled = process.env.NODE_ENV === 'development
       if (!memory) return;
 
       const usedMB = (memory.usedJSHeapSize / 1048576).toFixed(2);
-      const totalMB = (memory.totalJSHeapSize / 1048576).toFixed(2);
+      const _totalMB = (memory.totalJSHeapSize / 1048576).toFixed(2);
       const limitMB = (memory.jsHeapSizeLimit / 1048576).toFixed(2);
       const percentage = ((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(2);
 

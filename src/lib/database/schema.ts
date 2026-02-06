@@ -1,4 +1,3 @@
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 /**
  * Database Schema Documentation
  *

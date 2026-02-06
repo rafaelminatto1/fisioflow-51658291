@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc, increment, db } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, addDoc, updateDoc, doc, increment, db } from '@/integrations/firebase/app';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ interface TokenData {
 
 const PreCadastro = () => {
   const { token } = useParams<{ token: string }>();
-  const _navigate = useNavigate(); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const _navigate = useNavigate();  
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);

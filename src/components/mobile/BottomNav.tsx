@@ -15,7 +15,6 @@ import {
   Users,
   FileText,
   Settings,
-  Activity,
   Dumbbell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -308,7 +307,7 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetProps) {
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [_isAnimating, _setIsAnimating] = useState(false);
 
   // Fechar ao pressionar Escape
   React.useEffect(() => {

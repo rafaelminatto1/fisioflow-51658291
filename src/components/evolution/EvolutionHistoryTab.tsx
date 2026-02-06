@@ -44,7 +44,7 @@ export const EvolutionHistoryTab = React.memo(function EvolutionHistoryTab({
     surgeries,
     previousEvolutions,
     onCopyEvolution,
-    showComparison,
+    _showComparison,
     onToggleComparison
 }: EvolutionHistoryTabProps) {
     return (

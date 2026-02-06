@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PatientActivitySummary {

@@ -9,7 +9,7 @@
 import ExcelJS from 'exceljs';
 
 export interface WorkSheet {
-  [key: string]: any;
+  [key: string]: unknown;
   '!cols'?: ColInfo[];
   '!ref'?: string;
 }
@@ -27,7 +27,7 @@ export interface WorkBook {
 
 export interface Utils {
   book_new(): WorkBook;
-  aoa_to_sheet(data: any[][]): WorkSheet;
+  aoa_to_sheet(data: unknown[][]): WorkSheet;
   sheet_to_json<T>(sheet: WorkSheet): T[];
   book_append_sheet(wb: WorkBook, ws: WorkSheet, name: string): void;
 }
@@ -40,7 +40,7 @@ class ExcelJSUtils implements Utils {
     };
   }
 
-  aoa_to_sheet(data: any[][]): WorkSheet {
+  aoa_to_sheet(data: unknown[][]): WorkSheet {
     const sheet: WorkSheet = {};
     const range = { s: { c: 0, r: 0 }, e: { c: 0, r: 0 } };
 
@@ -75,7 +75,7 @@ class ExcelJSUtils implements Utils {
 
     // Convert rows to objects
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const row: any = {};
+      const row: unknown = {};
       let hasData = false;
       for (let c = range.s.c; c <= range.e.c; c++) {
         const cellRef = this.encodeCell(c, r);
@@ -239,7 +239,7 @@ function convertWorksheetToXlsxFormat(worksheet: ExcelJS.Worksheet): WorkSheet {
       const cellRef = encodeCell(c, r);
 
       const value = cell.value;
-      let cellData: any;
+      let cellData: unknown;
 
       if (typeof value === 'number') {
         cellData = { v: value, t: 'n' };

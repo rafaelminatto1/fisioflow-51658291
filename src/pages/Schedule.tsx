@@ -13,7 +13,7 @@ import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { AlertTriangle, Plus, CheckSquare, Sparkles } from 'lucide-react';
+import { AlertTriangle, CheckSquare, Sparkles } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -38,12 +38,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { format, parseISO, addDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
-import { db, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { prefetchRoute, RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
+import { RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
@@ -193,7 +191,7 @@ const Schedule = () => {
   // COMPUTED VALUES
   // ===================================================================
 
-  const formattedMonth = useMemo(() => {
+  const _formattedMonth = useMemo(() => {
     const month = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
     return month.charAt(0).toUpperCase() + month.slice(1);
   }, [currentDate]);

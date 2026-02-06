@@ -12,9 +12,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Plus, Search, Calendar, Building2, Eye, Settings } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { FileText, Plus, Search, Eye, Settings } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';

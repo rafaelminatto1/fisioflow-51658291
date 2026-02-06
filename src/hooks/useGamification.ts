@@ -2,7 +2,6 @@
  * useGamification - Migrated to Firebase
  */
 
-import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, setDoc } from '@/integrations/firebase/app';
 import { triggerGamificationFeedback } from '@/lib/gamification/feedback-utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,13 +15,8 @@ import {
   GamificationProfile,
   Achievement,
   UnlockedAchievement,
-  XpTransactionReason,
   AwardXpParams,
   AwardXpResult,
-  CompleteQuestParams,
-  QuestItem,
-  parseAchievementRequirements,
-  type AchievementRequirement,
   type ShopItem,
   type UserInventoryItem,
   type BuyItemParams,

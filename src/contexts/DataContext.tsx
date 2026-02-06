@@ -79,7 +79,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { ...session, id: crypto.randomUUID() };
   };
 
-  const updateTreatmentSession = async (id: string, session: Partial<TreatmentSession>): Promise<void> => {
+  const updateTreatmentSession = async (_id: string, _session: Partial<TreatmentSession>): Promise<void> => {
     // Mock implementation
   };
 
@@ -87,7 +87,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { ...record, id: crypto.randomUUID() };
   };
 
-  const updateSOAPRecord = async (id: string, record: Partial<SOAPRecord>): Promise<void> => {
+  const updateSOAPRecord = async (_id: string, _record: Partial<SOAPRecord>): Promise<void> => {
     // Mock implementation
   };
 

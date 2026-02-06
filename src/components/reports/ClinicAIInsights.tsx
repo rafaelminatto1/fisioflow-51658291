@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, TrendingUp, TrendingDown, Target, Zap, Info } from 'lucide-react';
+import { Sparkles, Loader2, Zap, Info } from 'lucide-react';
 import { useAI } from '@/integrations/firebase/ai';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -38,7 +38,7 @@ export const ClinicAIInsights: React.FC<ClinicAIInsightsProps> = ({ data }) => {
 
       const result = await generate(prompt, {
         userId: 'admin-manager',
-        feature: 'clinical_analysis' as any,
+        feature: 'clinical_analysis' as unknown,
       });
 
       setInsights(result.content);

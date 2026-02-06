@@ -326,7 +326,7 @@ interface PopulationStatsResult {
 }
 
 function calculatePopulationStats(data: PopulationStatsInput): PopulationStatsResult {
-  const { patients, mlData, appointments } = data;
+  const { patients, mlData, _appointments } = data;
 
   // Population overview
   const totalPatients = patients.length;
@@ -481,7 +481,7 @@ export async function analyzeClinicPopulation(
     startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Default 90 days
     endDate = new Date(),
     includeBenchmarks = true,
-    minSampleSize = 10,
+    _minSampleSize = 10,
   } = options;
 
   // Aggregate data

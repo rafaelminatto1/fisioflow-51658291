@@ -301,7 +301,7 @@ export class SOAPAssistant {
     patientContext: PatientSOAPContext
   ): Promise<SOAPGenerationResponse> {
     try {
-      const startTime = Date.now();
+      const _startTime = Date.now();
 
       // Build prompt
       const prompt = this.buildSOAPPrompt(consultationText, patientContext);
@@ -514,7 +514,7 @@ Retorne APENAS JSON válido.`;
     consultationText: string,
     context: PatientSOAPContext
   ): string {
-    const { patient, previousSOAP, sessionNumber, sessionType, language } = context;
+    const { patient, previousSOAP, sessionNumber, sessionType, _language } = context;
 
     const sessionTypeLabel = {
       initial: 'Consulta Inicial',

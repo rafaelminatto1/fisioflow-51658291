@@ -7,7 +7,7 @@
 // Helper to convert doc
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query as firestoreQuery, where, getDocs, addDoc, deleteDoc, doc, orderBy, getDoc, db, getFirebaseStorage } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, addDoc, deleteDoc, doc, orderBy, db, getFirebaseStorage } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';

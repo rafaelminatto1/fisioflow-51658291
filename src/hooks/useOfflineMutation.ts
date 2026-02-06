@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { set, get } from 'idb-keyval';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface OfflineMutation<TData = unknown, TError = unknown, TVariables = void, TContext = unknown> {
+export interface OfflineMutation<_TData = unknown, _TError = unknown, TVariables = void, _TContext = unknown> {
     id: string;
     mutationKey: unknown[];
     variables: TVariables;
@@ -16,8 +16,8 @@ export function useOfflineMutation<TData = unknown, TError = unknown, TVariables
     options: UseMutationOptions<TData, TError, TVariables, TContext>
 ) {
     const { toast } = useToast();
-    const queryClient = useQueryClient();
-    const isOnline = navigator.onLine; // Simplificado, idealmente usar um hook useNetwork
+    const _queryClient = useQueryClient();
+    const _isOnline = navigator.onLine; // Simplificado, idealmente usar um hook useNetwork
 
     return useMutation<TData, TError, TVariables, TContext>({
         ...options,

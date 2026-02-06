@@ -13,7 +13,7 @@ import { usePatientsPostgres } from '@/hooks/useDataConnect';
 
 export default function DocumentScannerPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [extractedData, setExtractedData] = useState<any>(null);
+  const [extractedData, setExtractedData] = useState<unknown>(null);
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,7 +36,7 @@ export default function DocumentScannerPage() {
       const scanMedicalReport = httpsCallable(functions, 'scanMedicalReportHttp');
       const result = await scanMedicalReport({ fileUrl });
 
-      setExtractedData({ ...result.data as any, fileUrl });
+      setExtractedData({ ...result.data as unknown, fileUrl });
       toast({ title: "Sucesso", description: "Dados extraídos do documento." });
     } catch (error) {
       console.error(error);
@@ -120,7 +120,7 @@ export default function DocumentScannerPage() {
                       <SelectValue placeholder="Selecione o paciente..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {patients?.map((p: any) => (
+                      {patients?.map((p: unknown) => (
                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
                     </SelectContent>

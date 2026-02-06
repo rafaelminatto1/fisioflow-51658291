@@ -22,7 +22,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import {
 
@@ -33,8 +32,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   AlertCircle,
-  Play,
-  Pause,
   RotateCcw,
   Sparkles,
   Target,
@@ -323,6 +320,7 @@ export function MovementAnalysis({
       // Clear progress after a delay
       setTimeout(() => setAnalysisProgress(null), 3000);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile, patientId, exerciseId, exerciseName, demoVideoUrl, expectedReps, focusAreas, language, onAnalysisComplete]);
 
   /**
@@ -342,7 +340,7 @@ export function MovementAnalysis({
   /**
    * Toggle video playback
    */
-  const togglePlayback = useCallback(() => {
+  const _togglePlayback = useCallback(() => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();

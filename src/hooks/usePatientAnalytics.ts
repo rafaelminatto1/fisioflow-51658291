@@ -438,7 +438,7 @@ export function useUpdatePatientRiskScore() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (patientId: string) => {
+    mutationFn: async (_patientId: string) => {
       // Firebase doesn't support RPC functions directly
       // This would need to be implemented as a Cloud Function
       throw new Error('RPC function not implemented - needs Cloud Function');

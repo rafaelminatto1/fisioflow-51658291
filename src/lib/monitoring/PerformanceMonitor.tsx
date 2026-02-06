@@ -48,7 +48,7 @@ class PerformanceMonitor {
       });
       navObserver.observe({ entryTypes: ['navigation'] });
       this.observers.push(navObserver);
-    } catch (e) {
+    } catch (_e) {
       // Navigation timing might not be available
     }
 
@@ -63,7 +63,7 @@ class PerformanceMonitor {
       });
       paintObserver.observe({ entryTypes: ['paint'] });
       this.observers.push(paintObserver);
-    } catch (e) {
+    } catch (_e) {
       // Paint timing might not be available
     }
 
@@ -78,7 +78,7 @@ class PerformanceMonitor {
       });
       longTaskObserver.observe({ entryTypes: ['longtask'] });
       this.observers.push(longTaskObserver);
-    } catch (e) {
+    } catch (_e) {
       // Long task observer might not be available
     }
 
@@ -126,7 +126,7 @@ class PerformanceMonitor {
           logger.debug(`⏱️ Performance: ${name}`, { duration: `${measure.duration.toFixed(2)}ms` }, 'PerformanceMonitor');
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // Might fail if marks don't exist
     }
   }
@@ -194,7 +194,7 @@ class PerformanceMonitor {
     const metrics: Array<{ name: string; avg: string; max: string; count: number; emoji: string }> = [];
 
     // Reportar métricas coletadas
-    for (const [name, durations] of this.metrics.entries()) {
+    for (const [name, _durations] of this.metrics.entries()) {
       const stats = this.getStats(name);
       if (stats) {
         const { avg, max, count } = stats;

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
 import * as Icons from 'lucide-react';
-import { Loader2, ShoppingCart, Zap, Shield, Palette, Award, Lock } from 'lucide-react';
+import { Loader2, ShoppingCart, Zap, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -56,7 +56,7 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
       });
       setIsConfirmOpen(false);
       setSelectedItem(null);
-    } catch (error) {
+    } catch (_error) {
       // Error handled in hook toast
     }
   };
