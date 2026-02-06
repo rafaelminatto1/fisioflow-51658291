@@ -4,6 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
+import { parseResponseDate } from '@/utils/dateUtils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
@@ -309,7 +310,7 @@ export const CalendarWeekViewDndKit = memo(({
     const match = overId.match(/slot-(\d{4}-\d{2}-\d{2})-(\d{2}:\d{2})/);
     if (match) {
       const [, dateStr, timeStr] = match;
-      handleDragOverHook(new Date(dateStr), timeStr);
+      handleDragOverHook(parseResponseDate(dateStr), timeStr);
     }
   }, [currentOverId, handleDragOverHook]);
 
@@ -341,7 +342,7 @@ export const CalendarWeekViewDndKit = memo(({
         const { blocked } = blockedStatusCache.get(key) || { blocked: false };
 
         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
-        const isDraggingOver = currentOverId === `slot-${day.toISOString().split('T')[0]}-${time}`;
+        const isDraggingOver = currentOverId === `slot-${formatDateToLocalISO(day)}-${time}`;
 
         // Get appointments for this slot for preview
         const slotAppointments = isDropTarget || isDraggingOver
