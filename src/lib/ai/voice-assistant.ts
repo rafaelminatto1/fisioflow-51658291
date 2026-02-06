@@ -27,7 +27,6 @@ import {
   LiveAPIEvent,
   generateSessionId,
   DEFAULT_VOICE_ASSISTANT_CONFIG,
-  createLiveAPIEvent,
   audioChunkToBase64,
   base64ToAudioChunk,
   formatSessionDuration,
@@ -241,7 +240,7 @@ export class VoiceAssistant {
       this.callbacks.onSessionEnd();
 
       // Generate session summary
-      const summary = this.generateSessionSummary();
+      const _summary = this.generateSessionSummary();
 
       // Keep session for summary retrieval
       return;

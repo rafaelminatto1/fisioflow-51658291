@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, BookmarkPlus, LayoutDashboard, FileText, Activity, Map, Plus, Save } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { db, doc, getDoc, getDocs, collection, query as firestoreQuery, where, addDoc, updateDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
+import { db, doc, getDoc, getDocs, collection, query as firestoreQuery, where, addDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppointmentService } from '@/services/appointmentService';
 
@@ -39,7 +39,7 @@ export default function NewEvaluationPage() {
 
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isSaving, setIsSaving] = useState(false);
-    const [isTemplateLoading, setIsTemplateLoading] = useState(!!templateId);
+    const [_isTemplateLoading, setIsTemplateLoading] = useState(!!templateId);
 
     // Template-based Anamnesis State
     const [selectedTemplate, setSelectedTemplate] = useState<EvaluationTemplate | null>(null);

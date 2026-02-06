@@ -8,7 +8,6 @@ import {
   parseISO,
   startOfDay,
   isSameDay,
-  differenceInMinutes,
   addMinutes,
   isValid
 } from 'date-fns';

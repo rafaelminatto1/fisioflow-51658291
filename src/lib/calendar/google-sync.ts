@@ -16,7 +16,6 @@ import { google, calendar_v3 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { Appointment } from '@/types/appointment';
 import { calculateEndTime } from './utils';
-import { STATUS_COLORS } from './constants';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface GoogleOAuthToken {

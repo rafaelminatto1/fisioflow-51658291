@@ -272,6 +272,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentId, propPatientId, testsCompleted, toast, db]);
 
   useEffect(() => {

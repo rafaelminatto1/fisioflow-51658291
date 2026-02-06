@@ -11,8 +11,7 @@ import {
   TrendingUp,
   Star, Crown, Medal, Award, CheckCircle2,
   Flame,
-  Search,
-  Sparkles
+  Search
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,8 +40,8 @@ interface LeaderboardEntry {
   title: string;
 }
 
-const RANK_ICONS = [Crown, Medal, Award];
-const RANK_COLORS = ['text-yellow-500', 'text-gray-500', 'text-amber-600'];
+const _RANK_ICONS = [Crown, Medal, Award];
+const _RANK_COLORS = ['text-yellow-500', 'text-gray-500', 'text-amber-600'];
 
 const container = {
   hidden: { opacity: 0 },
@@ -60,7 +59,7 @@ const item = {
 };
 
 export default function PatientGamificationPage() {
-  const { user, profile: userProfile } = useAuth();
+  const { user, profile: _userProfile } = useAuth();
   const {
     profile,
     dailyQuests,
@@ -100,7 +99,7 @@ export default function PatientGamificationPage() {
       );
 
       const snapshot = await getDocs(q);
-      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as any[];
+      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as unknown[];
 
       if (entries.length === 0) return [];
 

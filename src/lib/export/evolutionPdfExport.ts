@@ -78,7 +78,7 @@ export const generateEvolutionPDF = (
   yPos += 20;
 
   // --- Summary Cards ---
-  const drawCard = (x: number, y: number, w: number, h: number, title: string, value: string, icon: string) => {
+  const drawCard = (x: number, y: number, w: number, h: number, title: string, value: string, _icon: string) => {
     doc.setFillColor(252, 252, 252);
     doc.setDrawColor(230, 230, 230);
     doc.roundedRect(x, y, w, h, 3, 3, 'FD');

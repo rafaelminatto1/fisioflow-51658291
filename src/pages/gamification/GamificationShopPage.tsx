@@ -9,7 +9,7 @@ import { ShoppingBag, Coins, Sparkles, Shield, Clock, Ticket } from 'lucide-reac
 import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ShopItem {
@@ -87,7 +87,7 @@ const container = {
   }
 };
 
-const item = {
+const _item = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 }
 };
@@ -149,7 +149,7 @@ export default function GamificationShopPage() {
 
       // Refresh the gamification data
       // The actual implementation would update the database
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Erro na compra',
         description: 'Não foi possível completar a compra. Tente novamente.',

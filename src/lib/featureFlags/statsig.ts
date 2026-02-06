@@ -109,7 +109,7 @@ export function isFeatureEnabled(
 
 export function getFeatureFlagMetadata(
   flagName: FeatureFlagName,
-  user?: StatsigUser
+  _user?: StatsigUser
 ): { enabled: boolean; metadata?: Record<string, unknown> } {
   return {
     enabled: getDefaultFlagValue(flagName),
@@ -156,14 +156,14 @@ export function getConfigValue<T = unknown>(
 // ============================================================================
 
 export function getExperiment<T = string>(
-  experimentName: string,
+  _experimentName: string,
   _user?: StatsigUser
 ): { value: T; name: string } | null {
   return null;
 }
 
 export function logExperimentExposure(
-  experimentName: string,
+  _experimentName: string,
   _user?: StatsigUser
 ): void {
   // No-op
@@ -174,30 +174,30 @@ export function logExperimentExposure(
 // ============================================================================
 
 export function logEvent(
-  eventName: string,
-  value?: number,
-  metadata?: Record<string, string | number | boolean | null>
+  _eventName: string,
+  _value?: number,
+  _metadata?: Record<string, string | number | boolean | null>
 ): void {
   // Silent no-op
 }
 
 export const Analytics = {
-  appointmentCreated: (appointmentId: string, therapistId: string) => { },
-  appointmentCompleted: (appointmentId: string, therapistId: string, duration: number) => { },
-  patientCreated: (patientId: string, therapistId: string) => { },
-  aiAnalysisGenerated: (type: string, tokensUsed: number) => { },
-  aiChatMessage: (messageLength: number) => { },
-  featureUsed: (featureName: string) => { },
-  exercisePrescribed: (exerciseId: string, patientId: string) => { },
-  reportGenerated: (reportType: string, therapistId: string) => { },
-  pageViewed: (pageName: string) => { },
+  appointmentCreated: (_appointmentId: string, _therapistId: string) => { },
+  appointmentCompleted: (_appointmentId: string, _therapistId: string, _duration: number) => { },
+  patientCreated: (_patientId: string, _therapistId: string) => { },
+  aiAnalysisGenerated: (_type: string, _tokensUsed: number) => { },
+  aiChatMessage: (_messageLength: number) => { },
+  featureUsed: (_featureName: string) => { },
+  exercisePrescribed: (_exerciseId: string, _patientId: string) => { },
+  reportGenerated: (_reportType: string, _therapistId: string) => { },
+  pageViewed: (_pageName: string) => { },
 };
 
 // ============================================================================
 // USER MANAGEMENT
 // ============================================================================
 
-export function updateUser(user: StatsigUser): void { }
+export function updateUser(_user: StatsigUser): void { }
 
 export function logUserOut(): void {
   isInitialized = false;

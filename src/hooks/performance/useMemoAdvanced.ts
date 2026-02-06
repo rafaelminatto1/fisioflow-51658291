@@ -122,11 +122,10 @@ export function useMultiMemo<T>(
   factories: (() => T)[],
   depsArrays: unknown[][]
 ): T[] {
-  return useMemo(
-    () => factories.map(factory => factory()),
-     
-    depsArrays.flat()
-  );
+  const flatDeps = useMemo(() => depsArrays.flat(), [depsArrays]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => factories.map(factory => factory()), [factories, flatDeps]);
 }
 
 /**
@@ -220,7 +219,7 @@ export function usePromiseMemo<T>(
     return () => {
       cancelled = true;
     };
-  }, deps);
+  }, [promiseFactory, deps]);
 
   return state;
 }

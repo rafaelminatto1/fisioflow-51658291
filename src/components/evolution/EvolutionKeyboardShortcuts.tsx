@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * EvolutionKeyboardShortcuts - Atalhos de teclado específicos para página de Evolução
  *
@@ -177,7 +178,7 @@ export const EvolutionKeyboardShortcuts = memo(({ open, onOpenChange }: Evolutio
 EvolutionKeyboardShortcuts.displayName = 'EvolutionKeyboardShortcuts';
 
 // Hook para gerenciar atalhos globais
-/* eslint-disable-next-line react-refresh/only-export-components */
+ 
 export const useEvolutionShortcuts = (
   onSave?: () => void,
   onComplete?: () => void,

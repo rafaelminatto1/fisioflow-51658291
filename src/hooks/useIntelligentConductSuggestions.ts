@@ -8,7 +8,7 @@
 // Helper to convert doc
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useSoapRecords } from './useSoapRecords';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 

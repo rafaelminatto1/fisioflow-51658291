@@ -871,7 +871,7 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
 function VideoCard({
   video,
   onPlay,
-  onPlayPlaylist,
+  _onPlayPlaylist,
   onDelete,
   onEdit,
   onDownload,
@@ -1039,7 +1039,7 @@ function VideoCard({
 function VideoListItem({
   video,
   onPlay,
-  onPlayPlaylist,
+  _onPlayPlaylist,
   onDelete,
   onEdit,
   onDownload,

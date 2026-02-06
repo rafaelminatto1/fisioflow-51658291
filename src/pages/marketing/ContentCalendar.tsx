@@ -8,7 +8,6 @@ import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -22,15 +21,11 @@ import {
 import {
   Calendar,
   Plus,
-  Edit,
   Trash2,
   Sparkles,
   Image,
   Video,
   FileText,
-  Clock,
-  CheckCircle2,
-  XCircle,
   Filter,
   ChevronLeft,
   ChevronRight,
@@ -41,7 +36,6 @@ import {
   collection,
   getDocs,
   query,
-  where,
   updateDoc,
   deleteDoc,
   doc,
@@ -74,7 +68,7 @@ const CONTENT_TYPES: { value: ContentType; label: string; icon: React.ComponentT
   { value: 'live', label: 'Live', icon: Video, color: 'bg-orange-100 text-orange-700 border-orange-200' },
 ];
 
-const STATUS_COLORS: Record<ContentStatus, string> = {
+const _STATUS_COLORS: Record<ContentStatus, string> = {
   idea: 'bg-gray-100 text-gray-700 border-gray-200',
   scheduled: 'bg-blue-100 text-blue-700 border-blue-200',
   posted: 'bg-green-100 text-green-700 border-green-200',
@@ -109,7 +103,7 @@ export default function ContentCalendarPage() {
   });
   const [filterType, setFilterType] = useState<ContentType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<ContentStatus | 'all'>('all');
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingIdeas, setGeneratingIdeas] = useState(false);
 
@@ -188,7 +182,7 @@ export default function ContentCalendarPage() {
         hashtags: '',
       });
       await loadContentItems();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao salvar conteúdo');
     } finally {
       setSaving(false);
@@ -202,7 +196,7 @@ export default function ContentCalendarPage() {
       await deleteDoc(doc(db, 'content_calendar', id));
       toast.success('Conteúdo excluído!');
       await loadContentItems();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao excluir conteúdo');
     }
   };
@@ -271,7 +265,7 @@ export default function ContentCalendarPage() {
               <Filter className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Filtros:</span>
             </div>
-            <Select value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+            <Select value={filterType} onValueChange={(value: unknown) => setFilterType(value)}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
@@ -282,7 +276,7 @@ export default function ContentCalendarPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+            <Select value={filterStatus} onValueChange={(value: unknown) => setFilterStatus(value)}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -482,7 +476,7 @@ export default function ContentCalendarPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
+                  <Select value={formData.type} onValueChange={(value: unknown) => setFormData({ ...formData, type: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -496,7 +490,7 @@ export default function ContentCalendarPage() {
 
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                  <Select value={formData.status} onValueChange={(value: unknown) => setFormData({ ...formData, status: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

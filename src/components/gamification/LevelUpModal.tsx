@@ -8,9 +8,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Trophy, Star, Sparkles, ChevronRight } from 'lucide-react';
+import { Trophy, Star, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -33,7 +33,7 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
 
       const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-      const interval: any = setInterval(function() {
+      const interval: unknown = setInterval(function() {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {

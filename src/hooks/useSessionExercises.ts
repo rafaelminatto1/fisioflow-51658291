@@ -40,7 +40,7 @@ export const useSessionExercises = (patientId: string) => {
         observations: string
     ): SessionExercise[] => {
         return exercises.map(ex => {
-            const suggestedSets = ex.sets;
+            const _suggestedSets = ex.sets;
             let suggestedReps = ex.repetitions;
             let suggestionMsg = '';
 

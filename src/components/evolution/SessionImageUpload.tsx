@@ -117,6 +117,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
 
     const files = Array.from(e.dataTransfer.files);
     handleFiles(files);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readonly, canUploadMore]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {

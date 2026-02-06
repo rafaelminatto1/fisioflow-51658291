@@ -137,8 +137,8 @@ export function TemplateManager() {
   const [viewTemplate, setViewTemplate] = useState<ExerciseTemplate | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [showImportModal, setShowImportModal] = useState(false);
+   
+  const [_showImportModal, setShowImportModal] = useState(false);
 
   // Fetch all templates and filter client-side to handle diverse categories
   const { templates, loading, deleteTemplate, createTemplateAsync } = useExerciseTemplates();
@@ -175,8 +175,8 @@ export function TemplateManager() {
     }, {} as Record<string, ExerciseTemplate[]>);
   }, [filteredTemplates]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const importDefaultTemplates = async () => {
+   
+  const _importDefaultTemplates = async () => {
     try {
       setImporting(true);
       const { defaultTemplates } = await import('@/lib/data/defaultTemplates');

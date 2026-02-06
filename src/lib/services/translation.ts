@@ -220,7 +220,7 @@ export const translationService = getTranslationService();
 export async function translate(
   text: string,
   targetLanguage: string,
-  sourceLanguage?: string
+  _sourceLanguage?: string
 ): Promise<string> {
   return translationService.translateFromPortuguese(text, targetLanguage);
 }

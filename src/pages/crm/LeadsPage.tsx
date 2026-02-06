@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Plus, Phone, Mail, Search, Kanban, BarChart3, Download } from 'lucide-react';
 import { useLeads, useLeadMetrics, useUpdateLead, Lead } from '@/hooks/useLeads';
 import { LeadDialog } from '@/components/crm/LeadDialog';
@@ -99,7 +99,7 @@ export function LeadsContent() {
     setIsDialogOpen(true);
   };
 
-  const getEstagioInfo = (estagio: string) => ESTAGIOS.find(e => e.value === estagio) || ESTAGIOS[0];
+  const _getEstagioInfo = (estagio: string) => ESTAGIOS.find(e => e.value === estagio) || ESTAGIOS[0];
 
   return (
 

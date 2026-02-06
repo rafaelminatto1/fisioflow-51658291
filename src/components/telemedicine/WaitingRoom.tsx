@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
 
   Clock,
@@ -12,7 +10,6 @@ import {
   User,
   CheckCircle2,
   AlertCircle,
-  Phone,
   X,
   Mic,
   Camera,
@@ -43,8 +40,8 @@ interface DeviceCheck {
  * WaitingRoom component - Pre-call preparation and waiting area
  */
 export function WaitingRoom({
-  appointmentId,
-  patientName = 'Paciente',
+  _appointmentId,
+  _patientName = 'Paciente',
   scheduledTime,
   therapistName,
   onJoin,
@@ -57,9 +54,11 @@ export function WaitingRoom({
     speakers: false,
   });
   const [isCheckingDevices, setIsCheckingDevices] = useState(false);
-  const [canJoin, setCanJoin] = useState(false);
+  const [_canJoin, setCanJoin] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const appointmentTime = new Date(scheduledTime);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const now = new Date();
   const minutesUntil = differenceInMinutes(appointmentTime, now);
 

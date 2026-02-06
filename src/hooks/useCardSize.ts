@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { CardSize } from '@/types/agenda';
 import { DEFAULT_CARD_SIZE } from '@/lib/config/agenda';
 import { toast } from '@/hooks/use-toast';

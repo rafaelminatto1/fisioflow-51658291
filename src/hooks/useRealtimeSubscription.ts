@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { collection, query as firestoreQuery, where, onSnapshot, Query, limit, db } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, onSnapshot, Query, db } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';

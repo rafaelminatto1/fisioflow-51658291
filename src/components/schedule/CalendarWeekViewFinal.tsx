@@ -1,10 +1,9 @@
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, User, Stethoscope, Users, AlertCircle, Info } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { AppointmentQuickView } from './AppointmentQuickView';
@@ -42,7 +41,7 @@ interface CalendarWeekViewProps {
 }
 
 const START_HOUR = 7;
-const END_HOUR = 21;
+const _END_HOUR = 21;
 const SLOT_HEIGHT = 64; // px per slot
 const DEFAULT_MAX_CAPACITY = 4;
 
@@ -85,8 +84,8 @@ export const CalendarWeekViewFinal = memo(({
     handleDrop,
     checkTimeBlocked,
     isDayClosedForDate,
-    getStatusColor,
-    isOverCapacity,
+    _getStatusColor,
+    _isOverCapacity,
     openPopoverId,
     setOpenPopoverId,
     maxCapacity = DEFAULT_MAX_CAPACITY,
@@ -148,13 +147,13 @@ export const CalendarWeekViewFinal = memo(({
     };
 
     // Calculate grid position
-    const getGridRow = (time: string) => {
+    const _getGridRow = (time: string) => {
         const [h, m] = time.split(':').map(Number);
         const minutesFromStart = (h - START_HOUR) * 60 + m;
         return Math.floor(minutesFromStart / 30) + 1;
     };
 
-    const getGridSpan = (duration: number) => {
+    const _getGridSpan = (duration: number) => {
         return Math.ceil(duration / 30);
     };
 

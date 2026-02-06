@@ -8,7 +8,7 @@
 
 // ===== TYPES =====
 
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp } from '@/integrations/firebase/app';
+import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -446,7 +446,7 @@ export interface ConsultationHistory {
   }>;
 }
 
-export async function getConsultationHistory(patientId: string, startDate?: string, endDate?: string): Promise<ConsultationHistory[]> {
+export async function getConsultationHistory(patientId: string, _startDate?: string, _endDate?: string): Promise<ConsultationHistory[]> {
   try {
     // This would be more efficient with a proper backend function
     // For now, fetch all relevant records and group them by date

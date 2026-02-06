@@ -37,7 +37,6 @@ import { Separator } from '@/components/ui/separator';
 import {
   AlertTriangle,
   TrendingUp,
-  Calendar,
   Target,
   Activity,
   RefreshCw,

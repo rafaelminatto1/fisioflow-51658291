@@ -1,10 +1,9 @@
 import React, { memo, useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Clock, User, Stethoscope } from 'lucide-react';
+import { Calendar, Clock, User, Stethoscope } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AppointmentQuickView } from './AppointmentQuickView';
 
@@ -33,7 +32,7 @@ interface CalendarWeekViewProps {
 }
 
 const START_HOUR = 7;
-const END_HOUR = 21;
+const _END_HOUR = 21;
 const SLOT_HEIGHT = 64; // px per slot
 
 export const CalendarWeekViewRefactored = memo(({
@@ -76,13 +75,13 @@ export const CalendarWeekViewRefactored = memo(({
     }, [appointments, weekDays]);
 
     // Calculate grid position
-    const getGridRow = (time: string) => {
+    const _getGridRow = (time: string) => {
         const [h, m] = time.split(':').map(Number);
         const minutesFromStart = (h - START_HOUR) * 60 + m;
         return Math.floor(minutesFromStart / 30) + 1; // +1 because header is separate
     };
 
-    const getGridSpan = (duration: number) => {
+    const _getGridSpan = (duration: number) => {
         return Math.ceil(duration / 30);
     };
 

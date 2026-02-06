@@ -37,7 +37,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { wikiService } from '@/lib/services/wikiService';
 
-import type { WikiPage, WikiCategory } from '@/types/wiki';
+import type { WikiPage } from '@/types/wiki';
 
 export default function WikiPage() {
   const { slug } = useParams<{ slug?: string }>();

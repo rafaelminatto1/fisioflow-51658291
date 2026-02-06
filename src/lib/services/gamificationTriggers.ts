@@ -5,7 +5,7 @@
  * These values can be overridden by database settings
  */
 
-import { db, collection, doc, getDoc, getDocs, query, where, limit, addDoc, updateDoc, setDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, doc, getDoc, getDocs, query, where, addDoc, setDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -77,7 +77,7 @@ interface GamificationSettings {
 }
 
 // Helper to convert Firestore doc to data
-const docToData = <T>(doc: QueryDocumentSnapshot<T>): T => {
+const _docToData = <T>(doc: QueryDocumentSnapshot<T>): T => {
   return normalizeFirestoreData(doc.data());
 };
 

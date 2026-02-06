@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import {
 
   Link2,
@@ -20,15 +19,11 @@ import {
   MessageSquare,
   MapPin,
   Phone,
-  Globe,
   Eye,
   Save,
   Copy,
   ExternalLink,
   Sparkles,
-  Palette,
-  BarChart3,
-  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -95,7 +90,7 @@ export default function FisioLinkPage() {
       });
       setSlug(newSlug);
       toast.success('FisioLink configurado com sucesso');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao salvar configuração');
     } finally {
       setSaving(false);
@@ -275,7 +270,7 @@ export default function FisioLinkPage() {
                   {THEME_OPTIONS.map((theme) => (
                     <button
                       key={theme.value}
-                      onClick={() => setConfig({ ...config, theme: theme.value as any })}
+                      onClick={() => setConfig({ ...config, theme: theme.value as unknown })}
                       className={cn(
                         'p-3 border-2 rounded-lg transition-all',
                         config.theme === theme.value

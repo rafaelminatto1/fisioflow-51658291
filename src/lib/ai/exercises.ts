@@ -222,7 +222,7 @@ function buildExercisePrompt(context: PatientProfileContext): string {
     : 'No pain data available';
 
   // Format recent SOAP notes
-  const recentSOAP = soapHistory.slice(-3).map((soap, idx) => `
+  const recentSOAP = soapHistory.slice(-3).map((soap, _idx) => `
 Sessão ${soap.sessionNumber}:
 - Queixa principal: ${soap.subjective || 'N/A'}
 - Avaliação: ${soap.assessment || 'N/A'}
@@ -311,7 +311,7 @@ export class ExerciseAIAssistant {
    */
   async suggestExercises(context: PatientProfileContext): Promise<ExerciseSuggestionResponse> {
     try {
-      const startTime = Date.now();
+      const _startTime = Date.now();
 
       // Build prompt
       const prompt = buildExercisePrompt(context);
@@ -327,7 +327,7 @@ export class ExerciseAIAssistant {
       });
 
       const responseText = result.response.text();
-      const endTime = Date.now();
+      const _endTime = Date.now();
 
       // Clean response (remove markdown code blocks if present)
       const cleanedJson = this.cleanJsonResponse(responseText);

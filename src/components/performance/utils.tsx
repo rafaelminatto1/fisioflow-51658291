@@ -220,7 +220,7 @@ export function withPerformanceMonitoring<P extends object>(
   componentName?: string
 ): React.ComponentType<P> {
   const WrappedComponent = (props: P) => {
-    const renders = useRenderCount(componentName || Component.name);
+    const _renders = useRenderCount(componentName || Component.name);
     const perf = useRenderPerf(componentName || Component.name);
 
     perf.start();

@@ -14,7 +14,6 @@
  */
 
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { Webhook, WebhookDelivery, WebhookEvent } from '@/types/integrations';
 
 export function generateWebhookSignature(
   payload: string,
@@ -85,13 +84,13 @@ export interface WebhookContext {
 }
 
 export type WebhookHandler = (
-  payload: any,
+  payload: unknown,
   context: WebhookContext
 ) => Promise<void | WebhookResponse>;
 
 export interface WebhookResponse {
   status: number;
-  body?: any;
+  body?: unknown;
 }
 
 /**
@@ -103,7 +102,7 @@ export async function handleWebhook(
   headers: Record<string, string>,
   handler: WebhookHandler,
   context: WebhookContext
-): Promise<{ status: number; body: any }> {
+): Promise<{ status: number; body: unknown }> {
   // Verificar assinatura
   if (context.webhookSecret) {
     if (!signature) {
@@ -124,7 +123,7 @@ export async function handleWebhook(
   }
 
   // Parse payload
-  let parsedPayload: any;
+  let parsedPayload: unknown;
   try {
     parsedPayload = typeof payload === 'string' ? JSON.parse(payload) : JSON.parse(payload.toString());
   } catch {
@@ -173,7 +172,7 @@ const DEFAULT_RETRY_CONFIG: WebhookRetryConfig = {
  */
 export async function sendWebhookWithRetry(
   url: string,
-  payload: any,
+  payload: unknown,
   signature: string,
   config: Partial<WebhookRetryConfig> = {}
 ): Promise<boolean> {
@@ -203,7 +202,7 @@ export async function sendWebhookWithRetry(
       if (response.status >= 400 && response.status < 500) {
         return false;
       }
-    } catch (error) {
+    } catch (_error) {
       // Erro de rede - tentar novamente
     }
 
@@ -248,7 +247,7 @@ export interface WebhookLog {
  * Salva log de tentativa de entrega
  */
 export async function logWebhookDelivery(
-  db: any, // Firestore instance
+  db: unknown, // Firestore instance
   log: Omit<WebhookLog, 'id' | 'created_at'>
 ): Promise<string> {
   const logRef = db.collection('webhook_logs').doc();
@@ -267,7 +266,7 @@ export async function logWebhookDelivery(
  * Atualiza log de delivery
  */
 export async function updateWebhookLog(
-  db: any,
+  db: unknown,
   logId: string,
   updates: Partial<WebhookLog>
 ): Promise<void> {
@@ -282,12 +281,12 @@ export async function updateWebhookLog(
  * Handler para Stripe webhooks
  */
 export async function handleStripeWebhook(
-  payload: any,
+  payload: unknown,
   context: WebhookContext,
   handlers: {
-    onCheckoutCompleted?: (session: any) => Promise<void>;
-    onInvoicePaid?: (invoice: any) => Promise<void>;
-    onSubscriptionCreated?: (subscription: any) => Promise<void>;
+    onCheckoutCompleted?: (session: unknown) => Promise<void>;
+    onInvoicePaid?: (invoice: unknown) => Promise<void>;
+    onSubscriptionCreated?: (subscription: unknown) => Promise<void>;
   }
 ): Promise<WebhookResponse> {
   const eventType = payload.type;
@@ -316,11 +315,11 @@ export async function handleStripeWebhook(
  * Handler para Google Calendar webhooks
  */
 export async function handleGoogleCalendarWebhook(
-  payload: any,
+  payload: unknown,
   context: WebhookContext,
   handlers: {
-    onEventCreated?: (eventId: string, eventData: any) => Promise<void>;
-    onEventUpdated?: (eventId: string, eventData: any) => Promise<void>;
+    onEventCreated?: (eventId: string, eventData: unknown) => Promise<void>;
+    onEventUpdated?: (eventId: string, eventData: unknown) => Promise<void>;
     onEventDeleted?: (eventId: string) => Promise<void>;
   }
 ): Promise<WebhookResponse> {
@@ -345,11 +344,11 @@ export async function handleGoogleCalendarWebhook(
  * Handler para Zoom webhooks
  */
 export async function handleZoomWebhook(
-  payload: any,
+  payload: unknown,
   context: WebhookContext,
   handlers: {
-    onMeetingStarted?: (meetingId: string, data: any) => Promise<void>;
-    onMeetingEnded?: (meetingId: string, data: any) => Promise<void>;
+    onMeetingStarted?: (meetingId: string, data: unknown) => Promise<void>;
+    onMeetingEnded?: (meetingId: string, data: unknown) => Promise<void>;
     onRecordingCompleted?: (meetingId: string, downloadUrl: string) => Promise<void>;
   }
 ): Promise<WebhookResponse> {
@@ -388,13 +387,13 @@ export function createWebhookMiddleware(
 ) {
   return async (
     req: {
-      body: any;
+      body: unknown;
       headers: Record<string, string>;
       method: string;
     },
     res: {
-      status: (code: number) => any;
-      json: (data: any) => void;
+      status: (code: number) => unknown;
+      json: (data: unknown) => void;
     },
     next: () => void
   ) => {
@@ -422,7 +421,7 @@ export function createWebhookMiddleware(
     }
 
     // Adicionar contexto ao request
-    (req as any).webhook = {
+    (req as unknown).webhook = {
       verified: true,
       integrationId,
     };
