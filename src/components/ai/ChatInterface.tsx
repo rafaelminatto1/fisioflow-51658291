@@ -15,13 +15,11 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Send, Sparkles, User, Bot, Volume2, VolumeX, Zap } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getGeminiClient, chat as geminiChat, GeminiModel } from '@/lib/integrations/google/client';
-import { UnknownError } from '@/types';
+import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
 
 // Web Speech API Types
 interface SpeechRecognitionEvent extends Event {
@@ -84,6 +82,11 @@ export function ChatInterface({
   const geminiClient = getGeminiClient();
   const isGeminiConfigured = geminiClient.isConfigured();
 
+  // Sincronizar toggle externo (RAG x Gemini)
+  useEffect(() => {
+    setDirectGemini(!useRAG);
+  }, [useRAG]);
+
   // Auto-scroll para última mensagem
   useEffect(() => {
     if (scrollRef.current) {
@@ -145,7 +148,20 @@ export function ChatInterface({
       // Contexto do paciente para o prompt
       const patientContext = `Paciente: ${patientName} (ID: ${patientId})\nVocê é um assistente clínico especializado em fisioterapia.`;
 
-      if (directGemini && isGeminiConfigured) {
+      if (!directGemini) {
+        // Preferir serviço unificado (RAG + MedLM) via Cloud Functions
+        responseText = await chatWithClinicalAssistant({
+          message: `${patientContext}\n\nPergunta: ${query}`,
+          context: {
+            patientId,
+            patientName,
+          },
+          conversationHistory: messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        });
+      } else if (directGemini && isGeminiConfigured) {
         // Usar Gemini API diretamente
         const history = messages.map((m) => ({
           role: m.role === 'assistant' ? 'assistant' : 'user',
@@ -158,18 +174,7 @@ export function ChatInterface({
           { model }
         );
       } else {
-        // Usar Cloud Functions com RAG
-        const analyzeWithRAG = httpsCallable(functions, 'aiChatWithRAG');
-        const result = await analyzeWithRAG({
-          patientId,
-          message: `${patientContext}\n\nPergunta: ${query}`,
-          conversationHistory: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        });
-
-        responseText = (result.data as { response?: string }).response || 'Sem resposta da IA.';
+        throw new Error('Nenhum provedor de IA configurado');
       }
 
       const assistantMessage: Message = {
@@ -180,7 +185,7 @@ export function ChatInterface({
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error: UnknownError) {
+    } catch (error: unknown) {
       console.error('Erro ao enviar mensagem:', error);
 
       // Fallback para Gemini direto se Cloud Functions falhar
