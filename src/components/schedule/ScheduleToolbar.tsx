@@ -219,6 +219,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             size="icon"
             className="h-9 w-9 rounded-lg"
             title="Configurações da Agenda"
+            aria-label="Configurações da Agenda"
           >
             <SettingsIcon className="w-4 h-4" />
           </Button>
@@ -240,6 +241,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             title: "IA Analisando...",
             description: "Verificando disponibilidade e padrões de agendamento."
           })}
+          aria-label="Otimizar agenda com IA"
         >
           <Sparkles className="mr-2 h-4 w-4" />
           <span className="hidden 2xl:inline">Otimizar</span>
@@ -255,6 +257,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           )}
           onClick={onToggleSelection}
           title="Modo de Seleção (atalho: A)"
+          aria-label="Alternar modo de seleção"
         >
           <CheckSquare className="w-4 h-4" />
         </Button>
@@ -263,6 +266,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         <Button
           onClick={onCreateAppointment}
           className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 shadow-md rounded-lg px-4"
+          aria-label="Criar novo agendamento"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden lg:inline">Novo Agendamento</span>
@@ -368,6 +372,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           size="sm"
           onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'prev' } }))}
           className="h-8 w-8 p-0"
+          aria-label="Data anterior"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
@@ -379,6 +384,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           size="sm"
           onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'next' } }))}
           className="h-8 w-8 p-0"
+          aria-label="Próxima data"
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
@@ -387,13 +393,14 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           size="sm"
           onClick={() => window.dispatchEvent(new CustomEvent('schedule-today-click'))}
           className="h-7 px-2 text-xs"
+          aria-label="Ir para hoje"
         >
           Hoje
         </Button>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg">
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg" role="group" aria-label="Tipo de visualização">
           {(['day', 'week'] as const).map((view) => (
             <button
               key={view}
@@ -404,6 +411,8 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   : "text-gray-600 dark:text-gray-400"
               )}
+              aria-pressed={viewType === view}
+              aria-label={`Visualização por ${VIEW_LABELS[view]}`}
             >
               {view === 'day' ? 'D' : 'S'}
             </button>
@@ -415,6 +424,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           size="icon"
           className={cn("h-8 w-8", isSelectionMode && "bg-primary text-primary-foreground")}
           onClick={onToggleSelection}
+          aria-label="Alternar modo de seleção"
         >
           <CheckSquare className="w-3.5 h-3.5" />
         </Button>
@@ -422,6 +432,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         <Button
           onClick={onCreateAppointment}
           className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0"
+          aria-label="Criar novo agendamento"
         >
           <Plus className="w-4 h-4" />
         </Button>

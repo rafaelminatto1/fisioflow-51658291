@@ -8,6 +8,7 @@ import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { ResendService } from '../../lib/email/resend.js';
 
 type DateRange = { start: string; end: string };
 type Organization = { id: string; name?: string };
@@ -99,9 +100,64 @@ export const weeklySummaryWorkflow = inngest.createFunction(
 
     // Send emails to therapists
     await step.run('send-summary-emails', async () => {
-      logger.info('[Weekly Summary] Reports generated', { count: results.length }, 'weekly-summary-workflow');
-      // TODO: Implement email sending via Resend
-      return true;
+      logger.info('[Weekly Summary] Sending emails', { count: results.length }, 'weekly-summary-workflow');
+      
+      let emailsSent = 0;
+      
+      for (const result of results) {
+        if (result.error) continue;
+
+        try {
+          // Get therapists for this organization
+          const therapistsSnapshot = await db.collection('profiles')
+            .where('organization_id', '==', result.organizationId)
+            .where('active', '==', true)
+            .where('receive_weekly_reports', '==', true)
+            .get();
+
+          const therapists = therapistsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+
+          for (const therapist of therapists) {
+            if (!therapist.email) continue;
+
+            const startDate = new Date(result.dateRange!.start).toLocaleDateString('pt-BR');
+            const endDate = new Date(result.dateRange!.end).toLocaleDateString('pt-BR');
+
+            await ResendService.sendEmail({
+              to: therapist.email,
+              subject: `📊 Resumo Semanal - ${result.organizationName}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                  <h1 style="color: #4facfe; text-align: center;">Resumo Semanal</h1>
+                  <p style="text-align: center; color: #666;">Período: ${startDate} a ${endDate}</p>
+                  
+                  <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px 0;"><strong>Total de sessões:</strong></td>
+                        <td style="text-align: right; padding: 10px 0; font-size: 18px; color: #4facfe;">${result.totalSessions}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0;"><strong>Novos pacientes:</strong></td>
+                        <td style="text-align: right; padding: 10px 0; font-size: 18px; color: #8b5cf6;">${result.newPatients}</td>
+                      </tr>
+                    </table>
+                  </div>
+                  
+                  <p style="color: #666; font-size: 14px; text-align: center;">Continue acompanhando a evolução da sua clínica!</p>
+                  <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">Equipe FisioFlow</p>
+                </div>
+              `,
+              tags: { type: 'weekly-summary', organization: result.organizationName || 'FisioFlow' }
+            });
+            emailsSent++;
+          }
+        } catch (error) {
+          logger.error(`Error sending weekly summary for org ${result.organizationId}`, error, 'weekly-summary-workflow');
+        }
+      }
+      
+      return { emailsSent };
     });
 
     return {

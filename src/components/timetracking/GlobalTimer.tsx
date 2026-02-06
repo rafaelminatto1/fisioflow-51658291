@@ -62,6 +62,7 @@ export function GlobalTimer({
     formattedTime,
     startTimer,
     stopTimer,
+    updateActiveTimer,
     discardTimer,
   } = useQuickTimer({
     organizationId: user?.organizationId || '',
@@ -111,8 +112,13 @@ export function GlobalTimer({
       toast.error('Descrição é obrigatória');
       return;
     }
-    // TODO: Atualizar timer ativo
+    updateActiveTimer({
+      description: description.trim(),
+      is_billable: isBillable,
+      hourly_rate: hourlyRate,
+    });
     setIsEditing(false);
+    toast.success('Timer atualizado');
   };
 
   // Se não há timer ativo e está minimizado, não mostrar

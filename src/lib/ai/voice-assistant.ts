@@ -788,6 +788,23 @@ export class VoiceAssistant {
   }
 
   /**
+   * Mute or unmute the microphone
+   */
+  setMuted(muted: boolean): void {
+    if (!this.session) return;
+
+    if (this.session.processorNode) {
+      if (muted) {
+        this.session.sourceNode?.disconnect(this.session.processorNode);
+      } else {
+        this.session.sourceNode?.connect(this.session.processorNode);
+      }
+    }
+
+    this.session.state.isActive = !muted;
+  }
+
+  /**
    * Clear session data
    */
   clearSession(): void {

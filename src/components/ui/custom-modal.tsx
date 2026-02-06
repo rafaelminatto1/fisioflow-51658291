@@ -12,6 +12,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFocusTrap, useFocusRestoration } from '@/lib/a11y';
 
 interface CustomModalProps {
   open: boolean;
@@ -39,7 +40,8 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   isMobile = false
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useFocusTrap(open);
+  useFocusRestoration(open);
 
   // Use refs to store the latest callback to avoid stale closures
   const onOpenChangeRef = useRef(onOpenChange);
@@ -71,43 +73,6 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
-    };
-  }, [open]);
-
-  // Focus trap for accessibility
-  useEffect(() => {
-    if (!open || !contentRef.current) return;
-
-    const focusableElements = contentRef.current.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-    if (!firstElement) return;
-
-    firstElement.focus();
-
-    const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement?.focus();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement?.focus();
-        }
-      }
-    };
-
-    contentRef.current.addEventListener('keydown', handleTab);
-    return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      contentRef.current?.removeEventListener('keydown', handleTab);
     };
   }, [open]);
 

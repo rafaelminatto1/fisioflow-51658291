@@ -15,6 +15,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getAuth } from 'firebase/auth';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { UnknownError, getErrorMessage } from '@/types';
 
 const auth = getAuth();
 
@@ -252,7 +253,7 @@ export const useCreateMeasurement = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) };
+      return { id: docSnap.id, ...(docSnap.data() as EvolutionMeasurement) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as EvolutionMeasurement).patient_id] });
@@ -285,7 +286,7 @@ export const useUpdateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
+      return { id: docSnap.id, ...(docSnap.data() as PatientGoal) } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -311,7 +312,7 @@ export const useCompleteGoal = () => {
       await updateDoc(docRef, updateData);
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
+      return { id: docSnap.id, ...(docSnap.data() as PatientGoal) } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -339,7 +340,7 @@ export const useCreateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) };
+      return { id: docSnap.id, ...(docSnap.data() as PatientGoal) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -530,8 +531,8 @@ export function usePatientEvolutionData() {
       }
 
       return { data: record, error: null };
-    } catch (error: any) {
-      return { data: null, error: error?.message || 'Erro desconhecido' };
+    } catch (error: UnknownError) {
+      return { data: null, error: getErrorMessage(error) || 'Erro desconhecido' };
     }
   }, [patientId, appointmentId, createSoapRecord]);
 
@@ -577,7 +578,7 @@ export function usePatientEvolutionData() {
       measurements,
       previousEvolutions,
       evolutionStats
-    } as any as PatientEvolutionData,
+    } as PatientEvolutionData,
     loading: dataLoading,
     error: appointmentError || patientError,
     isSaving: createSoapRecord.isPending,

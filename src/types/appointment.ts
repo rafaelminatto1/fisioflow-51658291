@@ -20,6 +20,7 @@ export interface AppointmentBase {
   session_package_id?: string;
   is_recurring?: boolean;
   recurring_until?: Date;
+  isOverbooked?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

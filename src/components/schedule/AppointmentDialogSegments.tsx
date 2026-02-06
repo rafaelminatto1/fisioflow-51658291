@@ -64,9 +64,11 @@ export const PatientSelectionSection = ({
                 onCreateNew={onCreateNew}
                 fallbackDisplayName={fallbackPatientName}
                 disabled={disabled || isLoading}
+                aria-invalid={!!errors.patient_id}
+                aria-describedby={errors.patient_id ? "patient-id-error" : undefined}
             />
             {errors.patient_id && (
-                <p className="text-xs text-destructive">{(errors.patient_id as { message?: string })?.message}</p>
+                <p id="patient-id-error" className="text-xs text-destructive">{(errors.patient_id as { message?: string })?.message}</p>
             )}
         </div>
     );
@@ -111,7 +113,7 @@ export const DateTimeSection = ({
         <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className="space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium">Data *</Label>
+                    <Label id="date-label" className="text-xs sm:text-sm font-medium">Data *</Label>
                     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                         <PopoverTrigger asChild>
                             <Button
@@ -123,6 +125,10 @@ export const DateTimeSection = ({
                                     errors.appointment_date && "border-destructive text-destructive"
                                 )}
                                 disabled={disabled}
+                                aria-labelledby="date-label"
+                                aria-required="true"
+                                aria-invalid={!!errors.appointment_date}
+                                aria-describedby={errors.appointment_date ? "date-error" : undefined}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {watchedDate ? format(watchedDate, 'dd/MM', { locale: ptBR }) : "Data"}
@@ -143,13 +149,13 @@ export const DateTimeSection = ({
                         </PopoverContent>
                     </Popover>
                     {errors.appointment_date && (
-                        <p className="text-xs text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
+                        <p id="date-error" className="text-xs text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
                     )}
                 </div>
 
                 <div className="space-y-2 relative">
                     <div className="flex items-center justify-between">
-                        <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
+                        <Label id="time-label" className="text-xs sm:text-sm font-medium">Horário *</Label>
                         {onAutoSchedule && !disabled && (
                             <Button
                                 type="button"
@@ -158,6 +164,7 @@ export const DateTimeSection = ({
                                 className="h-6 w-6 -mt-1 -mr-1 text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={onAutoSchedule}
                                 title="Sugerir melhor horário"
+                                aria-label="Sugerir melhor horário"
                             >
                                 <Wand2 className="h-3.5 w-3.5" />
                             </Button>
@@ -168,10 +175,16 @@ export const DateTimeSection = ({
                         onValueChange={(value) => setValue('appointment_time', value)}
                         disabled={disabled}
                     >
-                        <SelectTrigger className={cn(
-                            "h-10 text-xs sm:text-sm",
-                            errors.appointment_time && "border-destructive text-destructive"
-                        )}>
+                        <SelectTrigger 
+                            className={cn(
+                                "h-10 text-xs sm:text-sm",
+                                errors.appointment_time && "border-destructive text-destructive"
+                            )}
+                            aria-labelledby="time-label"
+                            aria-required="true"
+                            aria-invalid={!!errors.appointment_time}
+                            aria-describedby={errors.appointment_time ? "time-error" : undefined}
+                        >
                             <SelectValue placeholder="Hora" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -181,7 +194,7 @@ export const DateTimeSection = ({
                         </SelectContent>
                     </Select>
                     {errors.appointment_time && (
-                        <p className="text-xs text-destructive font-medium">{(errors.appointment_time as { message?: string })?.message}</p>
+                        <p id="time-error" className="text-xs text-destructive font-medium">{(errors.appointment_time as { message?: string })?.message}</p>
                     )}
                 </div>
 
@@ -251,16 +264,22 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
     return (
         <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-                <Label className="text-xs sm:text-sm font-medium">Tipo *</Label>
+                <Label id="type-label" className="text-xs sm:text-sm font-medium">Tipo *</Label>
                 <Select
                     value={watch('type')}
                     onValueChange={(value) => setValue('type', value as AppointmentType)}
                     disabled={disabled}
                 >
-                    <SelectTrigger className={cn(
-                        "h-10 text-xs sm:text-sm",
-                        errors.type && "border-destructive text-destructive"
-                    )}>
+                    <SelectTrigger 
+                        className={cn(
+                            "h-10 text-xs sm:text-sm",
+                            errors.type && "border-destructive text-destructive"
+                        )}
+                        aria-labelledby="type-label"
+                        aria-required="true"
+                        aria-invalid={!!errors.type}
+                        aria-describedby={errors.type ? "type-error" : undefined}
+                    >
                         <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -270,18 +289,22 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     </SelectContent>
                 </Select>
                 {errors.type && (
-                    <p className="text-xs text-destructive font-medium">{(errors.type as { message?: string })?.message}</p>
+                    <p id="type-error" className="text-xs text-destructive font-medium">{(errors.type as { message?: string })?.message}</p>
                 )}
             </div>
 
             <div className="space-y-2">
-                <Label className="text-xs sm:text-sm font-medium">Status *</Label>
+                <Label id="status-label" className="text-xs sm:text-sm font-medium">Status *</Label>
                 <Select
                     value={watch('status')}
                     onValueChange={(value) => setValue('status', value as AppointmentStatus)}
                     disabled={disabled}
                 >
-                    <SelectTrigger className="h-10 text-xs sm:text-sm">
+                    <SelectTrigger 
+                        className="h-10 text-xs sm:text-sm"
+                        aria-labelledby="status-label"
+                        aria-required="true"
+                    >
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

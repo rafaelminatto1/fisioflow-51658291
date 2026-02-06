@@ -39,31 +39,58 @@ export const CapacityExceededDialog: React.FC<CapacityExceededDialogProps> = ({
     return date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   };
 
+  const exceededBy = Math.max(0, currentCount - maxCapacity);
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md border-red-300/70 bg-red-50/50">
         <AlertDialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-full bg-amber-500/10">
-              <AlertTriangle className="h-6 w-6 text-amber-600" />
+            <div className="p-2 rounded-full bg-red-500/15">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
-            <AlertDialogTitle className="text-lg">Capacidade Máxima Atingida</AlertDialogTitle>
+            <AlertDialogTitle className="text-lg text-red-800">Capacidade Máxima Atingida</AlertDialogTitle>
           </div>
           <AlertDialogDescription asChild>
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Capacidade máxima de pacientes por horário atingida, escolha outro horário ou entre na fila de espera.
+              <p className="text-sm text-red-700">
+                Este horário já ultrapassa a capacidade configurada para os profissionais disponíveis.
               </p>
-              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+              <div className="bg-white/80 rounded-lg p-3 space-y-2 border border-red-200/70">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Horário:</span>
                   <span className="font-medium">{selectedTime} - {formatDate(selectedDate)}</span>
                 </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Capacidade:</span>
+                  <span className="font-medium">{maxCapacity} paciente{maxCapacity > 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Após este agendamento:</span>
+                  <span className="font-semibold text-red-700">{currentCount} pacientes</span>
+                </div>
+                {exceededBy > 0 && (
+                  <div className="text-xs text-red-700 font-medium">
+                    Excedente de {exceededBy} paciente{exceededBy > 1 ? 's' : ''}.
+                  </div>
+                )}
               </div>
               <p className="text-sm font-medium">O que deseja fazer?</p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        <Button
+          variant="destructive"
+          className="justify-start h-12 px-4 bg-red-600 hover:bg-red-700"
+          onClick={onScheduleAnyway}
+        >
+          <CalendarPlus className="h-4 w-4 mr-3" />
+          <div className="text-left">
+            <p className="font-medium text-sm">Agendar Mesmo Assim</p>
+            <p className="text-xs text-red-100">Confirma atendimento acima da capacidade</p>
+          </div>
+        </Button>
         
         <div className="grid gap-2 py-2">
           <Button

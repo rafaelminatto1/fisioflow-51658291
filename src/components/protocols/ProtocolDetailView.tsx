@@ -28,6 +28,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ClipboardCheck } from 'lucide-react';
 import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { ApplyProtocolModal } from './ApplyProtocolModal';
 
 interface ProtocolDetailViewProps {
     protocol: ExerciseProtocol;
@@ -57,6 +58,7 @@ interface LinkedClinicalTest {
 export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDetailViewProps) {
     const details = PROTOCOL_DETAILS[protocol.condition_name];
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
+    const [applyModalOpen, setApplyModalOpen] = useState(false);
     const { currentOrganization } = useOrganizations();
 
     const { data: linkedTests = [], isLoading: _isLoadingTests } = useQuery({
@@ -160,7 +162,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3">
-                <Button onClick={() => { /* TODO: Implement apply to patient */ }} className="gap-2">
+                <Button onClick={() => setApplyModalOpen(true)} className="gap-2">
                     <Play className="h-4 w-4" />
                     Aplicar a Paciente
                 </Button>
@@ -530,6 +532,12 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                     </Card>
                 </div>
             )}
+
+            <ApplyProtocolModal
+                protocol={protocol}
+                open={applyModalOpen}
+                onOpenChange={setApplyModalOpen}
+            />
         </div>
     );
 }

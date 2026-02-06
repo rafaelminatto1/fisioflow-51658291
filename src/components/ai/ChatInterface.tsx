@@ -21,6 +21,30 @@ import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getGeminiClient, chat as geminiChat, GeminiModel } from '@/lib/integrations/google/client';
+import { UnknownError } from '@/types';
+
+// Web Speech API Types
+interface SpeechRecognitionEvent extends Event {
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface ISpeechRecognition extends EventTarget {
+  continuous: boolean;
+  lang: string;
+  interimResults: boolean;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: { error: string }) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
 
 interface Message {
   id: string;
@@ -54,7 +78,7 @@ export function ChatInterface({
   const [isRecording, setIsRecording] = useState(false);
   const [directGemini, setDirectGemini] = useState(!useRAG); // Toggle para usar Gemini direto
   const scrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
   // Verificar se Gemini client está configurado
   const geminiClient = getGeminiClient();
@@ -71,24 +95,26 @@ export function ChatInterface({
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.lang = 'pt-BR';
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current = new SpeechRecognition() as ISpeechRecognition;
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.lang = 'pt-BR';
+        recognitionRef.current.interimResults = false;
 
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-      };
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          const transcript = event.results[0][0].transcript;
+          setInput(transcript);
+        };
 
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsRecording(false);
-      };
+        recognitionRef.current.onerror = (event: { error: string }) => {
+          console.error('Speech recognition error:', event.error);
+          setIsRecording(false);
+        };
 
-      recognitionRef.current.onend = () => {
-        setIsRecording(false);
-      };
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+        };
+      }
     }
 
     return () => {
@@ -143,7 +169,7 @@ export function ChatInterface({
           })),
         });
 
-        responseText = (result.data as any).response || 'Sem resposta da IA.';
+        responseText = (result.data as { response?: string }).response || 'Sem resposta da IA.';
       }
 
       const assistantMessage: Message = {
@@ -154,7 +180,7 @@ export function ChatInterface({
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: UnknownError) {
       console.error('Erro ao enviar mensagem:', error);
 
       // Fallback para Gemini direto se Cloud Functions falhar

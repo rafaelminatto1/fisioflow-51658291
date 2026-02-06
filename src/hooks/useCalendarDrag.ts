@@ -23,6 +23,8 @@ interface UseCalendarDragProps {
     onRevertUpdate?: (appointmentId: string) => void;
     // Função para obter appointments em um determinado slot (para preview dinâmica)
     getAppointmentsForSlot?: (date: Date, time: string) => Appointment[];
+    // Função para obter capacidade máxima de um intervalo específico
+    getMinCapacityForInterval?: (dayOfWeek: number, startTimeStr: string, duration: number) => number;
 }
 
 /**
@@ -49,6 +51,30 @@ const createLocalDate = (year: number, month: number, day: number): Date => {
     return new Date(year, month, day, 12, 0, 0); // Meio-dia para evitar edge cases
 };
 
+const NON_CAPACITY_STATUSES = new Set([
+    'cancelado',
+    'falta',
+    'faltou',
+    'remarcado',
+    'reagendado',
+    'paciente_faltou'
+]);
+
+const isCapacityCountedStatus = (status: string | undefined): boolean => {
+    return !NON_CAPACITY_STATUSES.has((status || '').toLowerCase());
+};
+
+interface PendingReschedule {
+    appointment: Appointment;
+    newDate: Date;
+    newTime: string;
+}
+
+interface PendingOverCapacity extends PendingReschedule {
+    currentCount: number;
+    maxCapacity: number;
+}
+
 interface DropState {
     dropTarget: DropTarget | null;
     targetAppointments: Appointment[];
@@ -56,11 +82,19 @@ interface DropState {
 
 const initialDropState: DropState = { dropTarget: null, targetAppointments: [] };
 
-export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate, getAppointmentsForSlot }: UseCalendarDragProps) => {
+export const useCalendarDrag = ({
+    onAppointmentReschedule,
+    onOptimisticUpdate,
+    onRevertUpdate,
+    getAppointmentsForSlot,
+    getMinCapacityForInterval
+}: UseCalendarDragProps) => {
     const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false, savingAppointmentId: null });
     const [dropState, setDropState] = useState<DropState>(initialDropState);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-    const [pendingReschedule, setPendingReschedule] = useState<{ appointment: Appointment; newDate: Date; newTime: string } | null>(null);
+    const [showOverCapacityDialog, setShowOverCapacityDialog] = useState(false);
+    const [pendingReschedule, setPendingReschedule] = useState<PendingReschedule | null>(null);
+    const [pendingOverCapacity, setPendingOverCapacity] = useState<PendingOverCapacity | null>(null);
 
     const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const lastDropTargetKeyRef = useRef<string | null>(null);
@@ -216,33 +250,58 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             return;
         }
 
-        // Abrir diálogo de confirmação com a data correta
-        setPendingReschedule({
+        const nextPending: PendingReschedule = {
             appointment: appointmentToMove,
-            newDate: newDate,
+            newDate,
             newTime: time
-        });
+        };
+
+        if (getAppointmentsForSlot && getMinCapacityForInterval) {
+            const slotAppointments = getAppointmentsForSlot(newDate, time).filter((apt) => apt.id !== appointmentToMove.id);
+            const activeAppointmentsCount = slotAppointments.filter((apt) => isCapacityCountedStatus(apt.status)).length;
+            const duration = Math.max(1, appointmentToMove.duration || 60);
+            const maxCapacity = getMinCapacityForInterval(newDate.getDay(), time, duration);
+            const currentCount = activeAppointmentsCount + 1;
+
+            if (currentCount > maxCapacity) {
+                setPendingReschedule(nextPending);
+                setPendingOverCapacity({
+                    ...nextPending,
+                    currentCount,
+                    maxCapacity
+                });
+
+                setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
+                setDropState(initialDropState);
+                setShowOverCapacityDialog(true);
+                return;
+            }
+        }
+
+        // Abrir diálogo de confirmação com a data correta
+        setPendingReschedule(nextPending);
 
         // Limpar o estado de drag visualmente antes de abrir o modal para evitar conflitos de sobreposição (z-index)
         setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
         setDropState(initialDropState);
 
         setShowConfirmDialog(true);
-    }, [dragState.appointment, handleDragEnd]);
+    }, [dragState.appointment, getAppointmentsForSlot, getMinCapacityForInterval, handleDragEnd]);
 
-    const handleConfirmReschedule = useCallback(async () => {
-        if (!pendingReschedule || !onAppointmentReschedule) return;
+    const executeReschedule = useCallback(async (payload: PendingReschedule) => {
+        if (!onAppointmentReschedule) return;
 
-        const { appointment, newDate, newTime } = pendingReschedule;
+        const { appointment, newDate, newTime } = payload;
         if (!appointment?.id) {
             setShowConfirmDialog(false);
+            setShowOverCapacityDialog(false);
             setPendingReschedule(null);
+            setPendingOverCapacity(null);
             return;
         }
 
-        // OPTIMISTIC UPDATE: Atualiza a UI imediatamente
-        // 1. Fecha o diálogo instantaneamente para melhor UX
         setShowConfirmDialog(false);
+        setShowOverCapacityDialog(false);
 
         // 2. Marca o appointment como "saving" para mostrar feedback visual
         setDragState({ appointment: null, isDragging: false, savingAppointmentId: appointment.id });
@@ -259,6 +318,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
             // 5. Limpa o estado de saving após sucesso
             setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
             setPendingReschedule(null);
+            setPendingOverCapacity(null);
         } catch (error) {
             logger.error('Erro ao reagendar', { error }, 'useCalendarDrag');
 
@@ -273,21 +333,44 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
 
             setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
 
-            // 7. Reabre o diálogo para mostrar o erro
-            setShowConfirmDialog(true);
+            // 7. Reabre o diálogo apropriado para nova decisão do usuário
+            if (pendingOverCapacity) {
+                setShowOverCapacityDialog(true);
+            } else {
+                setShowConfirmDialog(true);
+            }
         }
-    }, [pendingReschedule, onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate]);
+    }, [onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate, pendingOverCapacity]);
+
+    const handleConfirmReschedule = useCallback(async () => {
+        if (!pendingReschedule) return;
+        await executeReschedule(pendingReschedule);
+    }, [executeReschedule, pendingReschedule]);
+
+    const handleConfirmOverCapacity = useCallback(async () => {
+        if (!pendingReschedule) return;
+        await executeReschedule(pendingReschedule);
+    }, [executeReschedule, pendingReschedule]);
 
     const handleCancelReschedule = useCallback(() => {
         setShowConfirmDialog(false);
         setPendingReschedule(null);
+        setPendingOverCapacity(null);
+    }, []);
+
+    const handleCancelOverCapacity = useCallback(() => {
+        setShowOverCapacityDialog(false);
+        setPendingReschedule(null);
+        setPendingOverCapacity(null);
     }, []);
 
     return {
         dragState,
         dropTarget: dropState.dropTarget,
         showConfirmDialog,
+        showOverCapacityDialog,
         pendingReschedule,
+        pendingOverCapacity,
         targetAppointments: dropState.targetAppointments,
         handleDragStart,
         handleDragEnd,
@@ -295,6 +378,8 @@ export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, o
         handleDragLeave,
         handleDrop,
         handleConfirmReschedule,
-        handleCancelReschedule
+        handleCancelReschedule,
+        handleConfirmOverCapacity,
+        handleCancelOverCapacity
     };
 };

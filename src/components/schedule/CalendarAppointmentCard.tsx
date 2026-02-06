@@ -8,8 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useCardSize } from '@/hooks/useCardSize';
+import { useStatusConfig } from '@/hooks/useStatusConfig';
 import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { getOptimalTextColor } from '@/utils/colorContrast';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -157,6 +159,18 @@ const getStatusStyles = (status: string) => {
     return styles[normalizeStatus(status) as keyof typeof styles] || styles.default;
 };
 
+const OVERBOOK_MARKER = '[EXCEDENTE]';
+
+const overbookStyles = {
+    border: 'border-red-600',
+    bg: 'bg-red-100/95 dark:bg-red-900/40',
+    hoverBg: 'hover:bg-red-200/95 dark:hover:bg-red-900/55',
+    text: 'text-red-950 dark:text-red-100',
+    subtext: 'text-red-900/90 dark:text-red-200/90',
+    accent: 'bg-red-700',
+    indicator: 'text-red-800 dark:text-red-200'
+};
+
 const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointmentCardProps>(({
     appointment,
     style,
@@ -185,10 +199,30 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const [isHovered, setIsHovered] = useState(false);
 
     const { cardSize, fontPercentage } = useCardSize();
+    const {
+        getStatusConfig: getCustomStatusConfig,
+        hasCustomColors,
+        isCustomStatus
+    } = useStatusConfig();
     const isCompact = density === 'compact';
 
-    // Status visual config
-    const statusStyles = getStatusStyles(appointment.status);
+    const isOverbooked = Boolean(appointment.isOverbooked || appointment.notes?.includes(OVERBOOK_MARKER));
+    const statusStyles = isOverbooked ? overbookStyles : getStatusStyles(appointment.status);
+    const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
+    const customStatusConfig = getCustomStatusConfig(normalizedStatus);
+    const useCustomStatusStyle =
+        !isOverbooked && (hasCustomColors(normalizedStatus) || isCustomStatus(normalizedStatus));
+    const customTextColor = useCustomStatusStyle
+        ? getOptimalTextColor(customStatusConfig.bgColor || customStatusConfig.color)
+        : null;
+    const customCardStyle = useCustomStatusStyle
+        ? { backgroundColor: customStatusConfig.bgColor, borderColor: customStatusConfig.borderColor }
+        : undefined;
+    const customTextStyle = customTextColor ? { color: customTextColor } : undefined;
+    const customSubtextStyle = customTextColor ? { color: customTextColor, opacity: 0.85 } : undefined;
+    const customAccentStyle = useCustomStatusStyle
+        ? { backgroundColor: customStatusConfig.color || customStatusConfig.borderColor }
+        : undefined;
 
     // Get card size configuration
     const sizeConfig = CARD_SIZE_CONFIGS[cardSize];
@@ -326,8 +360,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             )}
             style={{
                 ...style,
-                backgroundColor: undefined,
-                // Não sobrescrever border com estilo inline - deixar as classes Tailwind definirem a cor baseada no status
+                ...(customCardStyle || {}),
                 pointerEvents: isDragging && hideGhostWhenSiblings && !dragHandleOnly ? 'none' : undefined,
             }}
             role="button"
@@ -350,10 +383,16 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 {/* 1. Tiny View (< 30m): Minimal indicator */}
                 {isTiny ? (
                     <div className="flex items-center gap-1 w-full justify-center">
-                        <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusStyles.accent)} />
+                        <div
+                            className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusStyles.accent)}
+                            style={customAccentStyle}
+                        />
                         {/* Only show time if > 15m allows? Actually for 15m, usually just color is enough on grid */}
                         {duration >= 20 && (
-                            <span className={cn("text-[9px] font-bold", statusStyles.text)}>
+                            <span
+                                className={cn("text-[9px] font-bold", statusStyles.text)}
+                                style={customTextStyle}
+                            >
                                 {normalizeTime(appointment.time)}
                             </span>
                         )}
@@ -361,13 +400,16 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 ) : useCompactLayout ? (
                     <div className="flex flex-col min-w-0 w-full gap-0.5">
                         <div className="flex items-center gap-1 min-w-0">
-                            <div className={cn("w-px h-2 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
+                            <div
+                                className={cn("w-px h-2 rounded-full shrink-0 opacity-80", statusStyles.accent)}
+                                style={customAccentStyle}
+                            />
                             <span
                                 className={cn(
                                     "font-mono font-semibold shrink-0 leading-none tracking-tight",
                                     statusStyles.text,
                                 )}
-                                style={{ fontSize: `${scaledTimeFontSize}px` }}
+                                style={{ fontSize: `${scaledTimeFontSize}px`, ...(customTextStyle || {}) }}
                             >
                                 {normalizeTime(appointment.time)}
                             </span>
@@ -388,7 +430,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                 "min-w-0 leading-tight tracking-tight font-semibold line-clamp-2 whitespace-normal break-words",
                                 statusStyles.text,
                             )}
-                            style={{ fontSize: `${scaledNameFontSize}px` }}
+                            style={{ fontSize: `${scaledNameFontSize}px`, ...(customTextStyle || {}) }}
                             title={appointment.patientName}
                         >
                             {appointment.patientName}
@@ -401,14 +443,17 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                         <div className="flex items-center justify-between gap-2 mb-1 w-full">
                             <div className="flex items-center gap-2 min-w-0">
                                 {/* Accent Bar logic instead of dot for cleaner look */}
-                                <div className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
+                                <div
+                                    className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)}
+                                    style={customAccentStyle}
+                                />
 
                                 <span
                                     className={cn(
                                         "font-mono font-semibold truncate leading-none tracking-tight",
                                         statusStyles.text,
                                     )}
-                                    style={{ fontSize: `${scaledTimeFontSize}px` }}
+                                    style={{ fontSize: `${scaledTimeFontSize}px`, ...(customTextStyle || {}) }}
                                 >
                                     {normalizeTime(appointment.time)}
                                 </span>
@@ -440,7 +485,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                                 "block font-bold leading-tight line-clamp-2 tracking-tight",
                                                 statusStyles.text,
                                             )}
-                                            style={{ fontSize: `${scaledNameFontSize}px` }}
+                                            style={{ fontSize: `${scaledNameFontSize}px`, ...(customTextStyle || {}) }}
                                         >
                                             {appointment.patientName}
                                         </span>
@@ -456,7 +501,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                             "block truncate opacity-70 mt-1 font-medium",
                                             statusStyles.subtext
                                         )}
-                                        style={{ fontSize: `${scaledTypeFontSize}px` }}
+                                        style={{ fontSize: `${scaledTypeFontSize}px`, ...(customSubtextStyle || {}) }}
                                     >
                                         {appointment.type}
                                     </span>
@@ -483,7 +528,10 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                     onEditAppointment?.(appointment);
                                 }}
                             >
-                                <MoreVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                                <MoreVertical
+                                    className={cn("w-3 h-3", statusStyles.subtext)}
+                                    style={customSubtextStyle}
+                                />
                             </div>
                         </motion.div>
                         <motion.div
@@ -511,10 +559,16 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                     onDragEnd={onDragEnd}
                                     data-drag-handle
                                 >
-                                    <GripVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                                    <GripVertical
+                                        className={cn("w-3 h-3", statusStyles.subtext)}
+                                        style={customSubtextStyle}
+                                    />
                                 </div>
                             ) : (
-                                <GripVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                                <GripVertical
+                                    className={cn("w-3 h-3", statusStyles.subtext)}
+                                    style={customSubtextStyle}
+                                />
                             )}
                         </motion.div>
                     </AnimatePresence>

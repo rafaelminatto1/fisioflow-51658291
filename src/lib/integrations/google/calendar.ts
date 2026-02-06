@@ -4,12 +4,21 @@
  */
 
 import { google } from 'googleapis';
+
 import { OAuth2Client } from 'google-auth-library';
+
+import { db, doc, updateDoc } from '@/integrations/firebase/app';
+
+import CryptoJS from 'crypto-js';
+
 import {
 
   CalendarEvent,
+
   IntegrationConfig,
+
   SyncResult,
+
 } from '@/types/integrations';
 
 // ============================================================================
@@ -267,9 +276,20 @@ export async function syncToGoogleCalendar(
         results.updated++;
       } else {
         // Criar novo evento
-        const _eventId = await createCalendarEvent(accessToken, eventData);
+        const eventId = await createCalendarEvent(accessToken, eventData);
         results.created++;
-        // TODO: Salvar eventId no appointment
+        
+        // Salvar eventId no appointment
+        try {
+          const appointmentRef = doc(db, 'appointments', appointment.id);
+          await updateDoc(appointmentRef, {
+            google_calendar_event_id: eventId,
+            updated_at: new Date().toISOString()
+          });
+        } catch (dbError) {
+          console.error(`Erro ao salvar eventId no agendamento ${appointment.id}:`, dbError);
+          // Não falhamos o sync total por erro ao salvar o ID, mas logamos
+        }
       }
     } catch (error) {
       results.errors.push({
@@ -322,11 +342,11 @@ export async function handleCalendarWebhook(
     throw new Error('Assinatura não fornecida');
   }
 
-  // TODO: Validar HMAC
-  // const expectedSignature = crypto
-  //   .createHmac('sha256', channelToken)
-  //   .update(JSON.stringify(body))
-  //   .digest('hex');
+  // Validar HMAC
+  const expectedSignature = CryptoJS.HmacSHA256(JSON.stringify(body), channelToken).toString(CryptoJS.enc.Hex);
+  if (signature !== expectedSignature) {
+    throw new Error('Assinatura inválida');
+  }
 
   for (const item of body.items || []) {
     await onEvent(item.id, item.kind);
