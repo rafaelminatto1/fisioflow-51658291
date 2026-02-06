@@ -132,7 +132,7 @@ export const translate = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -194,7 +194,7 @@ export const detectLanguage = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -256,7 +256,7 @@ export const getSupportedLanguages = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -334,7 +334,7 @@ export const translateExercise = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },

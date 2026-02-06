@@ -134,7 +134,7 @@ export const transcribeAudio = onRequest(
     region: 'southamerica-east1',
     memory: '512MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -213,7 +213,7 @@ export const transcribeLongAudio = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     cpu: 0.125, // Minimum CPU for lower resource usage
-    maxInstances: 5,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
