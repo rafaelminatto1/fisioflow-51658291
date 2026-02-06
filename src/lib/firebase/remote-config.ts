@@ -257,12 +257,7 @@ class RemoteConfigManager {
 
       // Set default values (Firebase best practice)
       // This ensures the app works even if Remote Config fetch fails
-      import('firebase/remote-config').then(({ defaults }) => {
-        defaults.setDefaults(this.remoteConfig!, REMOTE_CONFIG_DEFAULTS);
-      }).catch(() => {
-        // setDefaults might not be available in all SDK versions
-        logger.debug('Remote Config defaults.setDefaults not available', undefined, 'remote-config');
-      });
+      this.remoteConfig.defaultConfig = REMOTE_CONFIG_DEFAULTS;
 
       // Fetch and activate remote config
       await fetchAndActivate(this.remoteConfig);

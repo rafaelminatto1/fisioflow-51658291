@@ -137,7 +137,9 @@ export function usePatientPackages(patientId?: string) {
                 created_at: pData.created_at
               } as SessionPackage;
             }
-          } catch (e) { }
+          } catch (e) {
+            // Ignore package lookup errors
+          }
         }
 
         // Fetch patient details
@@ -147,7 +149,9 @@ export function usePatientPackages(patientId?: string) {
             if (patSnap.exists()) {
               patientName = patSnap.data().name || patSnap.data().full_name;
             }
-          } catch (e) { }
+          } catch (e) {
+            // Ignore patient lookup errors
+          }
         }
 
         const remaining = Number(pp.sessions_purchased) - Number(pp.sessions_used);
@@ -432,5 +436,4 @@ export function useDeactivatePackage() {
     },
   });
 }
-
 

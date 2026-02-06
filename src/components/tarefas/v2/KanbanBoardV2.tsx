@@ -46,7 +46,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LazyKanbanColumnWrapper, LazyTaskDetailModal, LazyTaskQuickCreateModal } from './LazyComponents';
+import { LazyKanbanColumnV2, LazyKanbanColumnWrapper, LazyTaskDetailModal, LazyTaskQuickCreateModal } from './LazyComponents';
 import {
   Tarefa,
   TarefaStatus,
@@ -109,7 +109,7 @@ export function KanbanBoardV2({
   const groupedTarefas = useMemo(() => {
     if (!tarefas) return {};
 
-    let filtered = tarefas.filter(t => {
+    const filtered = tarefas.filter(t => {
       // Text search
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -566,7 +566,7 @@ export function KanbanBoardV2({
               onDuplicateTask={handleDuplicateTask}
               onArchiveTask={handleArchiveTask}
             >
-              <KanbanColumnV2 />
+              <LazyKanbanColumnV2 />
             </LazyKanbanColumnWrapper>
           ))}
         </div>

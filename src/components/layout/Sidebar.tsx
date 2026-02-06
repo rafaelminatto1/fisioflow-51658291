@@ -54,6 +54,7 @@ import {
   Plug,
   FlaskConical,
   UserCircle,
+  UserCheck,
   MoreHorizontal,
   Star,
   Calculator,
@@ -105,6 +106,7 @@ const operacionaisSubmenu = [
 
 const cadastrosSubmenu = [
   { icon: FileText, label: 'Serviços', href: '/cadastros/servicos' },
+  { icon: UserCheck, label: 'Contratados', href: '/cadastros/contratados' },
   { icon: Building2, label: 'Fornecedores', href: '/cadastros/fornecedores' },
   { icon: CalendarOff, label: 'Feriados', href: '/cadastros/feriados' },
   { icon: FileCheck, label: 'Atestados', href: '/cadastros/atestados' },

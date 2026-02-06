@@ -462,7 +462,7 @@ export function CohortComparison({
     queryKey: ['admin-cohort-patients', timeRange],
     queryFn: async (): Promise<PatientWithCohortData[]> => {
       // Build query for Firebase
-      let patientsQuery = firestoreQuery(
+      const patientsQuery = firestoreQuery(
         collection(db, 'patients'),
         fsLimit(500)
       );

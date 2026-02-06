@@ -770,18 +770,29 @@ export const useAutoSaveSoapRecord = () => {
       const profileId = await ensureProfile(firebaseUser.uid, firebaseUser.email, fullName);
       if (!profileId) throw new SoapOperationError('Não foi possível carregar o perfil do usuário', 'PROFILE_ERROR');
 
+      // Destructure recordId to avoid including it in the document body
+      const { recordId, ...restData } = data;
+
+      // Sanitize data: remove undefined values and ensure types are correct for Firestore
+      const sanitizedData = Object.entries(restData).reduce((acc, [key, val]) => {
+        if (val !== undefined) {
+          acc[key] = val;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
       const recordData = {
-        ...data,
+        ...sanitizedData,
         created_by: profileId,
-        status: data.status || 'draft',
+        status: sanitizedData.status || 'draft',
         last_auto_save_at: new Date().toISOString(),
-        record_date: data.record_date || new Date().toISOString().split('T')[0],
+        record_date: sanitizedData.record_date || new Date().toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
       };
 
       // Se tem recordId, atualiza
-      if (data.recordId) {
-        const docRef = doc(db, 'soap_records', data.recordId);
+      if (recordId) {
+        const docRef = doc(db, 'soap_records', recordId);
         await updateDoc(docRef, recordData);
 
         const snapshot = await getDoc(docRef);
@@ -789,10 +800,10 @@ export const useAutoSaveSoapRecord = () => {
       }
 
       // Se tem appointment_id, verifica se existe draft
-      if (data.appointment_id) {
+      if (sanitizedData.appointment_id) {
         const q = firestoreQuery(
           collection(db, 'soap_records'),
-          where('appointment_id', '==', data.appointment_id),
+          where('appointment_id', '==', sanitizedData.appointment_id),
           where('status', '==', 'draft'),
           limit(1)
         );

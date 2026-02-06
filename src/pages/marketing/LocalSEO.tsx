@@ -5,12 +5,13 @@
  */
 
 import React from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { LocalSEOTracker } from '@/components/marketing/LocalSEOTracker';
 
 export default function LocalSEOPage() {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <MainLayout>
       <LocalSEOTracker />
-    </div>
+    </MainLayout>
   );
 }

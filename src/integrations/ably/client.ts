@@ -13,7 +13,7 @@ const DISABLE_ABLY =
   (typeof window !== 'undefined' && !!(window as { __E2E__?: boolean }).__E2E__);
 
 // Track if Ably is available (desabilitado em E2E para evitar 410 Gone)
-let isAblyAvailable = !DISABLE_ABLY && !!ABLY_KEY && ABLY_KEY !== 'your_ably_api_key_here';
+const isAblyAvailable = !DISABLE_ABLY && !!ABLY_KEY && ABLY_KEY !== 'your_ably_api_key_here';
 let ablyClient: Ably.Realtime | null = null;
 
 /**

@@ -46,6 +46,9 @@ export default {
 			'iphone-max': '430px'
 		},
 		extend: {
+			maxWidth: {
+				'7xl': 'min(1280px, 95vw)',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
