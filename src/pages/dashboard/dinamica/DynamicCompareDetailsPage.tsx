@@ -1,3 +1,7 @@
+
+
+// Mock Data Loader (Replace with real fetch)
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-
 import { parseDynamicCompare } from '@/lib/validation/dynamicCompare';
 import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';
 import DeltaCards from '@/components/metrics/DeltaCards';
@@ -14,7 +17,6 @@ import MetricsTrendChart, { TrendSeriesPoint } from '@/components/metrics/Metric
 import GoalPanel from '@/components/goals/GoalPanel';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Mock Data Loader (Replace with real fetch)
 const fetchCompareData = async (_id: string): Promise<Record<string, unknown>> => {
     // Simulating API latency
     await new Promise(r => setTimeout(r, 800));

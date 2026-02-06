@@ -1,13 +1,13 @@
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Users, Calendar, DollarSign, Activity, LayoutDashboard } from "lucide-react";
-import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
-import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";
-import { FinancialAnalytics } from "@/components/analytics/FinancialAnalytics";
-import { PredictiveAnalytics } from "@/components/analytics/PredictiveAnalytics";
-import { InternalDashboard } from "@/components/analytics/InternalDashboard";
-import { useAnalyticsSummary } from "@/hooks/useAnalyticsSummary";
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart3, Users, Calendar, DollarSign, Activity, LayoutDashboard } from 'lucide-react';
+import { AppointmentAnalytics } from '@/components/analytics/AppointmentAnalytics';
+import { PatientAnalytics } from '@/components/analytics/PatientAnalytics';
+import { FinancialAnalytics } from '@/components/analytics/FinancialAnalytics';
+import { PredictiveAnalytics } from '@/components/analytics/PredictiveAnalytics';
+import { InternalDashboard } from '@/components/analytics/InternalDashboard';
+import { useAnalyticsSummary } from '@/hooks/useAnalyticsSummary';
 
 export default function AdvancedAnalytics() {
   const { summary, isLoading } = useAnalyticsSummary();

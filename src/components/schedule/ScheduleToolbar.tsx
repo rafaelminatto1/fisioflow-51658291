@@ -9,7 +9,7 @@ import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addM
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import {
+
   ChevronLeft,
   ChevronRight,
   Settings as SettingsIcon,

@@ -1,5 +1,4 @@
-import { UnifiedLandmark } from '@/utils/geometry';
-import { calculateAngle } from '@/utils/geometry';
+import { UnifiedLandmark, calculateAngle } from '@/utils/geometry';
 
 export interface PostureMetric {
     name: string;

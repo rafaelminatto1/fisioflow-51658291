@@ -1,7 +1,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { format, isPast, isToday, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
+
   Calendar,
   MoreHorizontal,
   Pencil,

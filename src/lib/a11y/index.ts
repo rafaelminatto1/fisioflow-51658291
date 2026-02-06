@@ -7,11 +7,13 @@
  * @module lib/a11y
  */
 
-import { useEffect, useRef, useState } from 'react';
 
 /**
  * Generate a unique ID for ARIA relationships
  */
+
+import { useEffect, useRef, useState } from 'react';
+
 let idCounter = 0;
 export function generateId(prefix: string = 'id'): string {
   return `${prefix}-${++idCounter}`;

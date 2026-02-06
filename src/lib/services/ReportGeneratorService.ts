@@ -1,7 +1,9 @@
+
+// Extend jsPDF type to include lastAutoTable
+
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Extend jsPDF type to include lastAutoTable
 declare module 'jspdf' {
   interface jsPDF {
     lastAutoTable?: {

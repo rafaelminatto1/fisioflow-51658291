@@ -7,6 +7,11 @@
  * @version 2.0.0 - Enhanced with proper exports
  */
 
+
+// ============================================================================
+// SECRETS DEFINITIONS
+// ============================================================================
+
 import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
@@ -15,10 +20,6 @@ import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { Pool } from 'pg';
 import { defineSecret } from 'firebase-functions/params';
 import { logger } from './lib/logger';
-
-// ============================================================================
-// SECRETS DEFINITIONS
-// ============================================================================
 
 export const DB_PASS_SECRET = defineSecret('DB_PASS');
 export const DB_USER_SECRET = defineSecret('DB_USER');

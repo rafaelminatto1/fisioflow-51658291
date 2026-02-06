@@ -5,7 +5,6 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-
 import type { DependencyType } from '@/types/gantt';
 
 interface GanttDependencyLineProps {

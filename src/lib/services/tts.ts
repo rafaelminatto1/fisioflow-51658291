@@ -6,11 +6,12 @@
  * @module lib/services/tts
  */
 
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type SynthesisType = 'accessibility' | 'exercise' | 'countdown' | 'encouragement';
 

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, Suspense } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import {
+
   Filter,
   LayoutGrid,
   Plus,

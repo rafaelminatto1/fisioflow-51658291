@@ -14,6 +14,12 @@ const FIREBASE_STORAGE_PATTERN = /https:\/\/firebasestorage\.googleapis\.com\/v0
 export function toProxyUrl(storageUrl: string | null | undefined): string {
   if (!storageUrl) return '';
 
+  // Reject local file paths (these are artifacts from AI generation, not valid URLs)
+  if (storageUrl.startsWith('/brain/') || storageUrl.startsWith('/home/') || storageUrl.startsWith('/tmp/')) {
+    console.warn('[storageProxy] Invalid local path detected, returning empty:', storageUrl);
+    return '';
+  }
+
   // Check if it's already a proxy URL
   if (storageUrl.startsWith(PROXY_BASE)) {
     return storageUrl;

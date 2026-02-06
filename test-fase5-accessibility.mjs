@@ -1,6 +1,3 @@
-import { chromium } from 'playwright';
-import fs from 'fs/promises';
-import path from 'path';
 
 /**
  * FASE 5: Testes de Acessibilidade (10 min)
@@ -9,6 +6,10 @@ import path from 'path';
  * 2. ARIA Labels
  * 3. Contraste
  */
+
+import { chromium } from 'playwright';
+import fs from 'fs/promises';
+import path from 'path';
 
 const report = {
   timestamp: new Date().toISOString(),

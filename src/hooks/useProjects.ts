@@ -2,11 +2,10 @@
  * useProjects - Migrated to Firebase
  *
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc } from '@/integrations/firebase/app';
-import { toast } from 'sonner';
-import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, addDoc, updateDoc, deleteDoc, db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { toast } from 'sonner';
 
 export interface Project {
     id: string;

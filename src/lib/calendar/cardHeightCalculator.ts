@@ -4,8 +4,6 @@
  * @module calendar/cardHeightCalculator
  */
 
-import { CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
-import type { CardSize } from '@/types/agenda';
 
 /**
  * Calculate the minimum height required for a card based on its content
@@ -18,6 +16,10 @@ import type { CardSize } from '@/types/agenda';
  * @param heightScale - Optional height scale multiplier (0-10) for additional adjustment
  * @returns Height in pixels
  */
+
+import { CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
+import type { CardSize } from '@/types/agenda';
+
 export function calculateContentBasedCardHeight(
   cardSize: CardSize,
   showAvatar: boolean,

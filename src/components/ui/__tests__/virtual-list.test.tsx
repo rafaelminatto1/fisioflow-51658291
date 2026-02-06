@@ -2,11 +2,13 @@
  * Tests for VirtualizedList component
  */
 
+
+// Mock IntersectionObserver
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, renderHook, act } from '@testing-library/react';
 import { VirtualizedList, useVirtualizedList } from '@/components/ui/virtualized-list';
 
-// Mock IntersectionObserver
 global.IntersectionObserver = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),

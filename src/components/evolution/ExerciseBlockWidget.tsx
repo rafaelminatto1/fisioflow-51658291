@@ -1,5 +1,10 @@
+
+// ============================================================================================
+// TYPES & INTERFACES
+// ============================================================================================
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
-import { useExercises } from '@/hooks/useExercises';
+import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ExerciseFilters } from '@/services/exercises';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
-import { type Exercise } from '@/hooks/useExercises';
 import { Card } from '@/components/ui/card';
-
-// ============================================================================================
-// TYPES & INTERFACES
-// ============================================================================================
 
 interface ExerciseBlockWidgetProps {
     exercises: SessionExercise[];

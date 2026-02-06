@@ -1,6 +1,8 @@
-import { z } from 'zod';
 
 // Schema robusto para validação de senha
+
+import { z } from 'zod';
+
 export const passwordSchema = z
   .string()
   .min(8, 'Senha deve ter no mínimo 8 caracteres')

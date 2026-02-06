@@ -1,6 +1,8 @@
-import { z } from 'zod';
 
 // Sanitização
+
+import { z } from 'zod';
+
 const sanitizeString = (str: string) => str.trim().replace(/[<>]/g, '');
 
 // Validação de Instagram aprimorada

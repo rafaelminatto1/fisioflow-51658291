@@ -1,7 +1,9 @@
 // Gerador de OpenAPI spec a partir dos schemas Zod
-import { z } from 'zod';
 
 // OpenAPI JSON Schema types (simplified)
+
+import { z } from 'zod';
+
 export type JSONSchema =
   | { type: 'string' | 'number' | 'integer' | 'boolean'; format?: string; enum?: unknown[] }
   | { type: 'array'; items: JSONSchema }

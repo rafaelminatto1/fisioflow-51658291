@@ -3,11 +3,13 @@
  * Helper functions for improving app accessibility
  */
 
-import { AccessibilityInfo, Platform } from 'react-native';
 
 /**
  * Check if screen reader is enabled
  */
+
+import { AccessibilityInfo, Platform } from 'react-native';
+
 export async function isScreenReaderEnabled(): Promise<boolean> {
   return await AccessibilityInfo.isScreenReaderEnabled();
 }

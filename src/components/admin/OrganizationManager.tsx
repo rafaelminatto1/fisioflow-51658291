@@ -8,7 +8,6 @@ import { useOrganizationMembers } from '@/hooks/useOrganizationMembers';
 import { Building2, Users, Settings, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { InviteUserModal } from './InviteUserModal';
-
 import { Badge } from '@/components/ui/badge';
 
 export const OrganizationManager = () => {

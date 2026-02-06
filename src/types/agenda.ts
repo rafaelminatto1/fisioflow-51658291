@@ -1,6 +1,8 @@
-import type { AppointmentStatus } from './appointment';
 
 // Agenda System Types
+
+import type { AppointmentStatus } from './appointment';
+
 export type SessionStatus = AppointmentStatus;
 export type PaymentStatus = 'pending' | 'paid' | 'partial';
 export type SessionType = 'individual' | 'group';

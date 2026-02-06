@@ -2,13 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { auth, onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
 import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
-import { profileApi } from '@/integrations/firebase/functions'; // Use Firebase Functions API
-import { Profile, UserRole, RegisterFormData } from '@/types/auth';
+import { profileApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
-import { AuthContextType } from './AuthContext';
-
-import { AuthContext, AuthError } from './AuthContext';
+import { AuthContextType, AuthContext, AuthError } from './AuthContext';
 
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

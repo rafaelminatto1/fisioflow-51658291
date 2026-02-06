@@ -1,10 +1,12 @@
-import { onCall } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
-import { logger } from '../lib/logger';
 
 /**
  * Migration: Create clinical tables (goals, pathologies)
  */
+
+import { onCall } from 'firebase-functions/v2/https';
+import { getPool, CORS_ORIGINS } from '../init';
+import { logger } from '../lib/logger';
+
 export const migrateClinicalSchema = onCall({ cors: CORS_ORIGINS }, async (request) => {
   const pool = getPool();
   const client = await pool.connect();

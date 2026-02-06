@@ -3,11 +3,11 @@
  */
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subDays, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import {
+
   LeaderboardEntry,
   LeaderboardFilters,
   EngagementData,

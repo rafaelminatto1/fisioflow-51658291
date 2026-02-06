@@ -1,7 +1,3 @@
-import { lazy } from 'react';
-import { Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { RouteErrorBoundary } from "@/components/error-boundaries/RouteErrorBoundary";
 
 // =============================================================================
 // LAZY LOADED PAGES WITH OPTIMIZED CHUNKS
@@ -10,6 +6,12 @@ import { RouteErrorBoundary } from "@/components/error-boundaries/RouteErrorBoun
 // Only prefetch when user is likely to navigate (use React usePrefetchPattern instead)
 
 // Auth pages - Eager load for faster authentication
+
+import { lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { RouteErrorBoundary } from '@/components/error-boundaries/RouteErrorBoundary';
+
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
 const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));

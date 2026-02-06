@@ -3,13 +3,10 @@
  */
 
 import { useMemo } from 'react';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-
 import type { BusinessHour, BlockedTime } from './useScheduleSettings';
 import { useAuth } from './useAuth';
-
 import { generateTimeSlots, TimeSlotInfo } from '@/utils/scheduleHelpers';
 
 export type { TimeSlotInfo };

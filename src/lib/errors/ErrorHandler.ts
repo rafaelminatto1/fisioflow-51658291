@@ -1,11 +1,13 @@
 
-import { AppError, SupabaseError } from './AppError';
-import { logger } from './logger';
-import { toast } from 'sonner';
 
 /**
  * Error notification options
  */
+
+import { AppError, SupabaseError } from './AppError';
+import { logger } from './logger';
+import { toast } from 'sonner';
+
 export interface ErrorNotificationOptions {
     /** Whether to show toast notification (default: true) */
     showNotification?: boolean;

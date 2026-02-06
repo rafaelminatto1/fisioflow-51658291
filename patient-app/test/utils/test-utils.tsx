@@ -3,13 +3,15 @@
  * Helper functions for testing
  */
 
-import { render, RenderAPI } from '@testing-library/react-native';
-import { ReactElement } from 'react';
-import { log } from '../lib/logger';
 
 /**
  * Enhanced render with common providers
  */
+
+import { render, RenderAPI } from '@testing-library/react-native';
+import { ReactElement } from 'react';
+import { log } from '../lib/logger';
+
 export function renderWithProviders(
   ui: ReactElement,
   options?: {

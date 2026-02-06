@@ -2,12 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowLeft, BookmarkPlus, LayoutDashboard, FileText, Activity, Map, Plus, Save } from 'lucide-react';
-
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
-import {
+
     EvaluationTemplateSelector,
     DynamicFieldRenderer,
     AddCustomFieldDialog,

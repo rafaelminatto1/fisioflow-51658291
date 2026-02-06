@@ -3,10 +3,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, runTransaction } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, runTransaction, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
-
 
 const auth = getFirebaseAuth();
 

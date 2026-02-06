@@ -5,7 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import Animated, {
+
   useAnimatedStyle,
   useSharedValue,
   withSpring,

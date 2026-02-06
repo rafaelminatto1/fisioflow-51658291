@@ -6,11 +6,13 @@
  * @module lib/accessibility
  */
 
-import React from 'react';
 
 /**
  * Announces messages to screen readers via ARIA live regions
  */
+
+import React from 'react';
+
 export function announceToScreenReader(message: string, priority: 'polite' | 'assertive' = 'polite') {
   // Remove existing announcer if present
   const existing = document.getElementById(`a11y-announcer-${priority}`);
