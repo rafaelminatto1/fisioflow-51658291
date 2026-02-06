@@ -80,7 +80,7 @@ export const subscribeWebhook = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   subscribeWebhookHandler
 );
@@ -132,7 +132,7 @@ export const unsubscribeWebhook = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   unsubscribeWebhookHandler
 );
@@ -184,7 +184,7 @@ export const listWebhooks = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   listWebhooksHandler
 );
@@ -263,7 +263,7 @@ export const testWebhook = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
     timeoutSeconds: 60,
   },
   testWebhookHandler
@@ -313,7 +313,7 @@ export const getWebhookEventTypes = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getWebhookEventTypesHandler
 );

@@ -346,7 +346,7 @@ interface PatientAnalyticsDashboardProps {
 
 export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAnalyticsDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
-  const { data, isLoading, isError, refetch } = usePatientAnalyticsDashboard(patientId);
+  const { data, isLoading, isFetching, isError, isEmpty, refetch } = usePatientAnalyticsDashboard(patientId);
   const updateRiskScore = useUpdatePatientRiskScore();
 
   // Memoized chart data for performance - must be before early returns
@@ -407,7 +407,7 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
     );
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
@@ -415,6 +415,23 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
           <p className="text-muted-foreground">Erro ao carregar dados de analytics</p>
           <Button variant="outline" onClick={() => refetch()} className="mt-4">
             Tentar novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="font-medium">Ainda não há dados de analytics para este paciente</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Os indicadores aparecerão após registrar sessões, objetivos, avaliações ou insights.
+          </p>
+          <Button variant="outline" onClick={() => refetch()} className="mt-4">
+            Atualizar dados
           </Button>
         </CardContent>
       </Card>
@@ -431,9 +448,9 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
           <h2 className="text-2xl font-bold">Analytics de Paciente</h2>
           <p className="text-muted-foreground">{patientName}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2" disabled={isFetching}>
+          <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
+          {isFetching ? 'Atualizando...' : 'Atualizar'}
         </Button>
       </div>
 

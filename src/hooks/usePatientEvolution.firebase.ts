@@ -29,6 +29,20 @@ export interface PatientSurgery {
   updated_at: string;
 }
 
+export interface PatientMedicalReturn {
+  id: string;
+  patient_id: string;
+  doctor_name: string;
+  doctor_phone?: string;
+  return_date: string;
+  return_period?: 'manha' | 'tarde' | 'noite';
+  notes?: string;
+  report_done?: boolean;
+  report_sent?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PatientGoal {
   id: string;
   patient_id: string;
@@ -98,6 +112,55 @@ export const usePatientSurgeries = (patientId: string) => {
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientSurgery[];
     },
     enabled: !!patientId
+  });
+};
+
+// Hook para retornos médicos
+export const usePatientMedicalReturns = (patientId: string) => {
+  return useQuery({
+    queryKey: ['patient-medical-returns', patientId],
+    queryFn: async () => {
+      const mapSnapshot = (snapshot: Awaited<ReturnType<typeof getDocs>>) =>
+        snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientMedicalReturn[];
+
+      const sortByReturnDateDesc = (returns: PatientMedicalReturn[]) =>
+        returns.sort(
+          (a, b) => new Date(b.return_date).getTime() - new Date(a.return_date).getTime()
+        );
+
+      try {
+        const q = firestoreQuery(
+          collection(db, 'patient_medical_returns'),
+          where('patient_id', '==', patientId),
+          orderBy('return_date', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        return mapSnapshot(snapshot);
+      } catch (error) {
+        const maybeCode = (error as { code?: string })?.code;
+
+        // Fallback para evitar travamento quando o índice composto ainda não existe.
+        if (maybeCode === 'failed-precondition') {
+          logger.warn(
+            'Missing Firestore index for patient_medical_returns. Falling back to client-side sort.',
+            { patientId },
+            'usePatientEvolution.firebase'
+          );
+
+          const fallbackQuery = firestoreQuery(
+            collection(db, 'patient_medical_returns'),
+            where('patient_id', '==', patientId)
+          );
+          const snapshot = await getDocs(fallbackQuery);
+          return sortByReturnDateDesc(mapSnapshot(snapshot));
+        }
+
+        throw error;
+      }
+    },
+    enabled: !!patientId,
+    retry: false,
   });
 };
 
@@ -198,7 +261,7 @@ export const useCreateMeasurement = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      return { id: docSnap.id, ...(docSnap.data() as any) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as { patient_id?: string }).patient_id] });
@@ -231,7 +294,7 @@ export const useUpdateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() } as PatientGoal;
+      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -257,7 +320,7 @@ export const useCompleteGoal = () => {
       await updateDoc(docRef, updateData);
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() } as PatientGoal;
+      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -285,7 +348,7 @@ export const useCreateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      return { id: docSnap.id, ...(docSnap.data() as any) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -321,7 +384,7 @@ export const useUpdateGoalStatus = () => {
       await updateDoc(docRef, updates);
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      return { id: docSnap.id, ...(docSnap.data() as any) };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -358,7 +421,6 @@ export interface SoapRecord {
   objective?: string;
   assessment?: string;
   plan?: string;
-  [key: string]: unknown;
 }
 
 export interface PatientEvolutionData {
@@ -366,6 +428,7 @@ export interface PatientEvolutionData {
   patient: Patient | null;
   patientId: string | null;
   surgeries: PatientSurgery[];
+  medicalReturns: PatientMedicalReturn[];
   goals: PatientGoal[];
   pathologies: PatientPathology[];
   measurements: EvolutionMeasurement[];
@@ -396,6 +459,7 @@ export function usePatientEvolutionData() {
   } = useAppointmentData(appointmentId);
 
   const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
+  const { data: medicalReturns = [] } = usePatientMedicalReturns(patientId || '');
   const { data: goals = [] } = usePatientGoals(patientId || '');
   const { data: pathologies = [] } = usePatientPathologies(patientId || '');
   const { data: measurements = [] } = useEvolutionMeasurements(patientId || '');
@@ -493,7 +557,7 @@ export function usePatientEvolutionData() {
     }
 
     const saveResult = await handleSave(soapData);
-    if (saveResult.error) return saveResult;
+    if (!saveResult || saveResult.error) return saveResult || { error: 'Erro ao salvar' };
 
     if (appointmentId) {
       completeAppointment(appointmentId, {
@@ -523,12 +587,13 @@ export function usePatientEvolutionData() {
       patient,
       patientId,
       surgeries,
+      medicalReturns,
       goals,
       pathologies,
       measurements,
       previousEvolutions,
       evolutionStats
-    } as PatientEvolutionData,
+    } as any as PatientEvolutionData,
     loading: dataLoading,
     error: appointmentError || patientError,
     isSaving: createSoapRecord.isPending,

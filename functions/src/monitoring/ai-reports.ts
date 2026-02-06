@@ -64,7 +64,7 @@ export const generateAIReport = onCall(
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
-    maxInstances: 5,
+    maxInstances: 1,
     timeoutSeconds: 180,
   },
   async (request) => {
@@ -165,7 +165,7 @@ export const listReports = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   async (request) => {
     const { data } = request;
@@ -221,7 +221,7 @@ export const getReport = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   async (request) => {
     const { data } = request;
@@ -274,7 +274,7 @@ export const downloadReport = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   async (req, res) => {
     // CORS

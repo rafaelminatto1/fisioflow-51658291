@@ -29,7 +29,7 @@ const CORS_ORIGINS = [
 export const stripeWebhookHttp = onRequest({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
   cors: CORS_ORIGINS,
   secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
 }, async (request, response) => {

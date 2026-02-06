@@ -153,7 +153,7 @@ export const exportPatients = onCall(
   {
     region: 'southamerica-east1',
     memory: '512MiB',
-    maxInstances: 5,
+    maxInstances: 1,
     timeoutSeconds: 300,
   },
   exportPatientsHandler
@@ -349,7 +349,7 @@ export const importPatients = onCall(
   {
     region: 'southamerica-east1',
     memory: '512MiB',
-    maxInstances: 5,
+    maxInstances: 1,
     timeoutSeconds: 300,
   },
   importPatientsHandler
@@ -491,7 +491,7 @@ export const downloadExport = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   downloadExportHandler
 );

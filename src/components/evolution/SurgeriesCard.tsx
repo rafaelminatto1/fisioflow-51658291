@@ -19,6 +19,7 @@ import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
 import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
 function formatTimeSinceSurgery(surgeryDate: string): string {
+  if (!surgeryDate) return '—';
   return formatDetailedDuration(surgeryDate);
 }
 
@@ -83,10 +84,10 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
           ) : (
             <ScrollArea className="h-full pr-1">
               <ul className="space-y-1">
-                {surgeries.map((s: any) => {
-                  const surgeryDate = s.surgery_date as string;
-                  const surgeryType = s.surgery_type as string | undefined;
-                  const affectedSide = s.affected_side as string | undefined;
+                {surgeries.map((s: Surgery) => {
+                  const surgeryDate = s.surgery_date;
+                  const surgeryType = s.surgery_type;
+                  const affectedSide = s.affected_side;
                   const timeSince = surgeryDate ? formatTimeSinceSurgery(surgeryDate) : '—';
 
                   return (
@@ -96,7 +97,7 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-medium truncate">
-                          {s.surgery_name as string}
+                          {s.surgery_name}
                         </p>
                         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
                           {surgeryDate && (
@@ -122,7 +123,7 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
                         variant="ghost"
                         size="sm"
                         className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0"
-                        onClick={() => handleEdit(s as Surgery)}
+                        onClick={() => handleEdit(s)}
                         aria-label="Editar cirurgia"
                       >
                         <Edit2 className="h-2.5 w-2.5" />

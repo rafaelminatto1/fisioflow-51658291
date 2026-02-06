@@ -32,6 +32,8 @@ interface CalendarAppointmentCardProps {
     onToggleSelection?: (id: string) => void;
     /** When true, drag starts only from the grip handle (reduces accidental drag when clicking to open) */
     dragHandleOnly?: boolean;
+    /** Compact visual density for tight weekly grid layouts */
+    density?: 'normal' | 'compact';
 }
 
 const normalizeTime = (time: string | null | undefined): string => {
@@ -174,7 +176,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     selectionMode = false,
     isSelected = false,
     onToggleSelection,
-    dragHandleOnly = false
+    dragHandleOnly = false,
+    density = 'normal'
 }, ref) => {
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
@@ -182,6 +185,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const [isHovered, setIsHovered] = useState(false);
 
     const { cardSize, fontPercentage } = useCardSize();
+    const isCompact = density === 'compact';
 
     // Status visual config
     const statusStyles = getStatusStyles(appointment.status);
@@ -191,13 +195,18 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
 
     // Calculate scaled font sizes based on user preference
     const fontScale = fontPercentage / 100; // Convert percentage to multiplier (0.5 to 1.5)
-    const scaledTimeFontSize = Math.round(sizeConfig.timeFontSize * fontScale);
-    const scaledNameFontSize = Math.max(14, Math.round(sizeConfig.nameFontSize * fontScale));
+    const scaledTimeFontSize = isCompact
+        ? Math.max(9, Math.round(sizeConfig.timeFontSize * fontScale * 0.95))
+        : Math.round(sizeConfig.timeFontSize * fontScale);
+    const scaledNameFontSize = isCompact
+        ? Math.max(12, Math.round(sizeConfig.nameFontSize * fontScale * 0.9))
+        : Math.max(14, Math.round(sizeConfig.nameFontSize * fontScale));
     const scaledTypeFontSize = Math.round(sizeConfig.typeFontSize * fontScale);
 
     const duration = appointment.duration || 60;
     const _isSmall = duration <= 30; // 30 min or less
     const isTiny = duration < 30; // Less than 30 min (e.g. 15, 20)
+    const useCompactLayout = isCompact && !isTiny;
 
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
@@ -332,7 +341,11 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                     "flex flex-col h-full relative",
                     isTiny && "p-0.5 justify-center items-center"
                 )}
-                style={isTiny ? undefined : { padding: `max(8px, ${sizeConfig.padding})`, paddingRight: '1.5rem' }}
+                style={isTiny
+                    ? undefined
+                    : useCompactLayout
+                        ? { padding: '0.2rem 0.5rem 0.2rem 0.3rem' }
+                        : { padding: `max(8px, ${sizeConfig.padding})`, paddingRight: '0.875rem' }}
             >
                 {/* 1. Tiny View (< 30m): Minimal indicator */}
                 {isTiny ? (
@@ -344,6 +357,42 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                 {normalizeTime(appointment.time)}
                             </span>
                         )}
+                    </div>
+                ) : useCompactLayout ? (
+                    <div className="flex flex-col min-w-0 w-full gap-0.5">
+                        <div className="flex items-center gap-1 min-w-0">
+                            <div className={cn("w-0.5 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
+                            <span
+                                className={cn(
+                                    "font-mono font-semibold shrink-0 leading-none tracking-tight",
+                                    statusStyles.text,
+                                )}
+                                style={{ fontSize: `${scaledTimeFontSize}px` }}
+                            >
+                                {normalizeTime(appointment.time)}
+                            </span>
+
+                            {isSaving ? (
+                                <Loader2 className="ml-auto w-3 h-3 text-amber-500 animate-spin shrink-0" />
+                            ) : selectionMode ? (
+                                isSelected ? (
+                                    <CheckCircle2 className="ml-auto w-3 h-3 text-primary fill-background shrink-0" />
+                                ) : (
+                                    <Circle className="ml-auto w-3 h-3 opacity-40 shrink-0" />
+                                )
+                            ) : null}
+                        </div>
+
+                        <span
+                            className={cn(
+                                "min-w-0 leading-tight tracking-tight font-semibold line-clamp-2 whitespace-normal break-words",
+                                statusStyles.text,
+                            )}
+                            style={{ fontSize: `${scaledNameFontSize}px` }}
+                            title={appointment.patientName}
+                        >
+                            {appointment.patientName}
+                        </span>
                     </div>
                 ) : (
                     /* 2. Normal View (>= 30m) */
@@ -505,7 +554,8 @@ function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: Calen
         prev.selectionMode !== next.selectionMode ||
         prev.isSelected !== next.isSelected ||
         prev.isPopoverOpen !== next.isPopoverOpen ||
-        prev.dragHandleOnly !== next.dragHandleOnly
+        prev.dragHandleOnly !== next.dragHandleOnly ||
+        prev.density !== next.density
     ) {
         return false;
     }

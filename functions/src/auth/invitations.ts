@@ -57,7 +57,7 @@ export const createUserInvitationHandler = async (request: any) => {
 };
 
 export const createUserInvitation = onCall(
-  { cors: true, memory: '512MiB', maxInstances: 10 },
+  { cors: true, memory: '512MiB', maxInstances: 1 },
   createUserInvitationHandler
 );
 
@@ -101,7 +101,7 @@ export const getInvitationByTokenHandler = async (request: any) => {
 };
 
 export const getInvitationByToken = onCall(
-  { cors: true, memory: '512MiB', maxInstances: 10 },
+  { cors: true, memory: '512MiB', maxInstances: 1 },
   getInvitationByTokenHandler
 );
 
@@ -163,6 +163,6 @@ export const consumeInvitationHandler = async (request: any) => {
 };
 
 export const consumeInvitation = onCall(
-  { cors: true, memory: '512MiB', maxInstances: 10 },
+  { cors: true, memory: '512MiB', maxInstances: 1 },
   consumeInvitationHandler
 );

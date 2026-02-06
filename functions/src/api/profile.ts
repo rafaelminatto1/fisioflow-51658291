@@ -159,7 +159,7 @@ export const getProfileHttpHandler = async (req: any, res: any) => {
 export const getProfile = onRequest(
   {
     region: 'southamerica-east1',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },
@@ -320,7 +320,7 @@ export const updateProfileHttpHandler = async (req: any, res: any) => {
 export const updateProfile = onRequest(
   {
     region: 'southamerica-east1',
-    maxInstances: 10,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },

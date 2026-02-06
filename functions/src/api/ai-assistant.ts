@@ -5,7 +5,7 @@ import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { VertexAI } from '@google-cloud/vertexai';
 import { logger } from '../lib/logger';
 
-const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' as const };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' as const };
 
 /**
  * Assistente de IA que analisa todo o histórico do paciente via Gemini (Versão Estável Vertex AI)

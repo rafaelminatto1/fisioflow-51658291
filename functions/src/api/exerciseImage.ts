@@ -11,7 +11,7 @@ export const exerciseImageProxy = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 50,
+    maxInstances: 1,
     cors: CORS_ORIGINS,
     invoker: 'public',
   },

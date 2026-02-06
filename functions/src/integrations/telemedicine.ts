@@ -18,7 +18,7 @@ import * as logger from 'firebase-functions/logger';
 export const createTelemedicineRoom = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -117,7 +117,7 @@ export const createTelemedicineRoom = onCall({
 export const joinTelemedicineRoom = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -215,7 +215,7 @@ export const joinTelemedicineRoom = onCall({
 export const endTelemedicineRoom = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -291,7 +291,7 @@ export const endTelemedicineRoom = onCall({
 export const getTelemedicineHistory = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');

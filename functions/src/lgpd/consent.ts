@@ -49,7 +49,7 @@ export interface PrivacyPreferences {
 export const recordConsent = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -128,7 +128,7 @@ export const recordConsent = onCall({
 export const revokeConsent = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -174,7 +174,7 @@ export const revokeConsent = onCall({
 export const getUserConsents = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');
@@ -202,7 +202,7 @@ export const getUserConsents = onCall({
 export const acceptAllTerms = onCall({
   cors: true,
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');

@@ -7,7 +7,7 @@ import { setCorsHeaders } from '../lib/cors';
 
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
-const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 10, cors: CORS_ORIGINS, invoker: 'public' as const };
+const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' as const };
 
 export const getPatientRecordsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }

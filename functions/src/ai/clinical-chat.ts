@@ -10,7 +10,7 @@
  * - Input sanitization
  */
 
-import { onCall } from 'firebase-functions/v2/https';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { VertexAI } from '@google-cloud/vertexai';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
@@ -18,6 +18,7 @@ import { withIdempotency } from '../lib/idempotency';
 
 const logger = getLogger('ai-clinical-chat');
 const db = admin.firestore();
+const CLINICAL_CHAT_MODEL = process.env.CLINICAL_CHAT_MODEL || 'gemini-2.5-flash';
 
 // Usage tracking for cost management
 const MAX_DAILY_REQUESTS = 100;
@@ -111,21 +112,30 @@ async function checkUsageLimit(userId: string): Promise<{ allowed: boolean; rema
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const snapshot = await db
-    .collection('clinical_chat_logs')
-    .where('userId', '==', userId)
-    .where('timestamp', '>=', today)
-    .count()
-    .get();
+  try {
+    const snapshot = await db
+      .collection('clinical_chat_logs')
+      .where('userId', '==', userId)
+      .where('timestamp', '>=', today)
+      .count()
+      .get();
 
-  const count = snapshot.data().count;
-  const remaining = Math.max(0, MAX_DAILY_REQUESTS - count);
+    const count = snapshot.data().count;
+    const remaining = Math.max(0, MAX_DAILY_REQUESTS - count);
 
-  if (count >= MAX_DAILY_REQUESTS) {
-    return { allowed: false };
+    if (count >= MAX_DAILY_REQUESTS) {
+      return { allowed: false };
+    }
+
+    return { allowed: true, remaining };
+  } catch (error) {
+    // Fail-open to keep clinical assistant available even when a Firestore index is missing.
+    logger.warn('Usage limit check failed; allowing request without quota enforcement', {
+      userId,
+      error: (error as Error).message,
+    });
+    return { allowed: true, remaining: MAX_DAILY_REQUESTS };
   }
-
-  return { allowed: true, remaining };
 }
 
 /**
@@ -184,7 +194,7 @@ export const aiClinicalChatHandler = async (request: any) => {
       sessionCount?: number;
       recentEvolutions?: Array<{ date: string; notes: string }>;
     };
-    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+    conversationHistory?: Array<{ role: 'user' | 'assistant' | 'model'; content: string }>;
   };
 
   // Sanitize input
@@ -250,14 +260,14 @@ export const aiClinicalChatHandler = async (request: any) => {
     });
 
     const generativeModel = vertexAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: CLINICAL_CHAT_MODEL,
       systemInstruction: contextPrompt,
     });
 
     // Sanitize conversation history
-    const sanitizedHistory = (conversationHistory || []).map(msg => ({
-      role: msg.role,
-      parts: [{ text: detectAndRedactPHI(msg.content).sanitized }],
+    const sanitizedHistory = (conversationHistory || []).slice(-12).map(msg => ({
+      role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
+      parts: [{ text: detectAndRedactPHI(msg.content || '').sanitized }],
     }));
 
     // Build chat history
@@ -321,7 +331,7 @@ export const aiClinicalChat = onCall(
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
-    maxInstances: 10,
+    maxInstances: 1,
     timeoutSeconds: 120,
   },
   aiClinicalChatHandler
@@ -390,7 +400,7 @@ export const aiExerciseRecommendationChat = onCall(
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
-    maxInstances: 10,
+    maxInstances: 1,
     timeoutSeconds: 120,
   },
   aiExerciseRecommendationChatHandler
@@ -431,7 +441,7 @@ export const aiSoapNoteChatHandler = async (request: any) => {
     });
 
     const model = vertexAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: CLINICAL_CHAT_MODEL,
       systemInstruction: `Você é um especialista em documentação fisioterapêutica. Gere notas SOAP profissionais e concisas.`,
     });
 
@@ -457,7 +467,7 @@ export const aiSoapNoteChat = onCall(
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
-    maxInstances: 10,
+    maxInstances: 1,
     timeoutSeconds: 120,
   },
   aiSoapNoteChatHandler
@@ -542,7 +552,7 @@ export const aiGetSuggestions = onCall(
     region: 'southamerica-east1',
     memory: '1GiB',
     cpu: 1,
-    maxInstances: 10,
+    maxInstances: 1,
     timeoutSeconds: 90,
   },
   aiGetSuggestionsHandler
@@ -557,7 +567,7 @@ async function generateExerciseRecommendation(patientData: any, question: string
   });
 
   const model = vertexAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
+    model: CLINICAL_CHAT_MODEL,
   });
 
   const prompt = `Como fisioterapeuta especialista, recomende exercícios para:
@@ -628,7 +638,7 @@ async function generateSuggestions(
   });
 
   const model = vertexAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
+    model: CLINICAL_CHAT_MODEL,
   });
 
   // Build context from patient history
@@ -676,5 +686,3 @@ async function generateSuggestions(
     };
   }
 }
-
-import { HttpsError } from 'firebase-functions/v2/https';

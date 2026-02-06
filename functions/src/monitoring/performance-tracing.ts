@@ -295,7 +295,7 @@ export const getPerformanceStats = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getPerformanceStatsHandler
 );
@@ -350,7 +350,7 @@ export const getSlowRequests = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getSlowRequestsHandler
 );
@@ -435,7 +435,7 @@ export const getTraceTimeline = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getTraceTimelineHandler
 );
@@ -520,7 +520,7 @@ export const getPerformanceTrends = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getPerformanceTrendsHandler
 );
@@ -679,7 +679,7 @@ export const performanceStream = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   performanceStreamHandler
 );
