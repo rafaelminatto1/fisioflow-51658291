@@ -39,7 +39,6 @@ import {
   Download,
   Trash2,
   RefreshCw,
-  Table,
   Image as ImageIcon,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
@@ -49,7 +48,7 @@ import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from '
 import { useToast } from '@/hooks/use-toast';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import ReactMarkdown from 'react-markdown';
-import { UnknownError, getErrorMessage } from '@/types';
+import { analyzeWithGeminiVision } from '@/services/ai/geminiVisionService';
 
 // Tipos para dados extraídos
 interface ExtractedData {
@@ -208,6 +207,52 @@ export default function DocumentScannerPage() {
     }
   };
 
+  // Fallback local com Gemini Vision client-side (sem Cloud Functions)
+  const scanLocally = async (file: File) => {
+    const toBase64 = (f: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1] || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+
+    const base64 = await toBase64(file);
+    const visionResult = await analyzeWithGeminiVision(base64);
+    const text = visionResult.text || 'Nenhum texto detectado.';
+
+    // Heurística simples de classificação
+    const lower = text.toLowerCase();
+    let type: DocumentClassification['type'] = 'clinical_report';
+    if (lower.includes('rx') || lower.includes('raio') || lower.includes('x-ray')) type = 'xray';
+    if (lower.includes('ressonância') || lower.includes('mri')) type = 'mri';
+    if (lower.includes('tomografia') || lower.includes('ct')) type = 'ct_scan';
+    if (lower.includes('ultra') || lower.includes('doppler')) type = 'ultrasound';
+
+    const fallbackSummary: DocumentSummary = {
+      keyFindings: text.split('\n').slice(0, 3).filter(Boolean),
+      impression: text.split('\n').slice(3, 8).join('\n') || 'Impressão automática gerada pela IA local.',
+      recommendations: ['Validar com radiologista', 'Comparar com exame anterior', 'Salvar no prontuário'],
+    };
+
+    const localExtracted: ExtractedData = {
+      fileUrl: `local://${file.name}`,
+      storagePath: '',
+      text,
+      fullText: text,
+      confidence: 0.42,
+    };
+
+    setExtractedData(localExtracted);
+    setClassification({ type, confidence: 0.42 });
+    setSummary(fallbackSummary);
+    setComparison(null);
+    setTranslation(null);
+    setTags([
+      { id: 'local-1', name: type.toUpperCase(), category: 'modality', confidence: 0.42 },
+    ]);
+  };
+
   const handleScan = async () => {
     if (!file) return;
     setLoading(true);
@@ -220,53 +265,61 @@ export default function DocumentScannerPage() {
 
       toast({ title: 'Upload Completo', description: 'Enviando para análise...' });
 
-      // 2. Análise completa com Gemini Vision e Document AI
-      const analyzeDocument = httpsCallable(functions, 'aiDocumentAnalysis');
-      const result = await analyzeDocument({
-        fileUrl,
-        fileName: file.name,
-        mediaType: file.type,
-        options: {
-          includeClassification: true,
-          includeSummary: true,
-          includeExtraction: true,
-          includeTables: true,
-          includeTranslation: autoTranslate,
-          targetLanguage: translateLanguage,
-          compareWithPrevious: selectedPatient ? true : false,
-          patientId: selectedPatient || null,
-        },
-      });
+      try {
+        // 2. Análise completa via Cloud Functions (se disponível)
+        const analyzeDocument = httpsCallable(functions, 'aiDocumentAnalysis');
+        const result = await analyzeDocument({
+          fileUrl,
+          fileName: file.name,
+          mediaType: file.type,
+          options: {
+            includeClassification: true,
+            includeSummary: true,
+            includeExtraction: true,
+            includeTables: true,
+            includeTranslation: autoTranslate,
+            targetLanguage: translateLanguage,
+            compareWithPrevious: selectedPatient ? true : false,
+            patientId: selectedPatient || null,
+          },
+        });
 
-      const data = result.data as unknown as {
-        extractedData: ExtractedData;
-        classification?: DocumentClassification;
-        summary?: DocumentSummary;
-        comparison?: DocumentComparison;
-        translation?: TranslatedDocument;
-        tags?: DocumentTag[];
-      };
+        const data = result.data as unknown as {
+          extractedData: ExtractedData;
+          classification?: DocumentClassification;
+          summary?: DocumentSummary;
+          comparison?: DocumentComparison;
+          translation?: TranslatedDocument;
+          tags?: DocumentTag[];
+        };
 
-      // Atualizar estado com todos os resultados
-      setExtractedData({
-        ...data.extractedData,
-        storagePath: storageRef.fullPath,
-      });
-      setClassification(data.classification || null);
-      setSummary(data.summary || null);
-      setComparison(data.comparison || null);
-      setTranslation(data.translation || null);
-      setTags(data.tags || []);
+        setExtractedData({
+          ...data.extractedData,
+          storagePath: storageRef.fullPath,
+        });
+        setClassification(data.classification || null);
+        setSummary(data.summary || null);
+        setComparison(data.comparison || null);
+        setTranslation(data.translation || null);
+        setTags(data.tags || []);
 
-      // Buscar exames anteriores se houver paciente selecionado
-      if (selectedPatient) {
-        await fetchPreviousExams(selectedPatient);
+        if (selectedPatient) {
+          await fetchPreviousExams(selectedPatient);
+        }
+
+        toast({
+          title: 'Análise Completa Concluída',
+          description: 'Documento processado com sucesso.',
+        });
+      } catch (cloudError) {
+        console.error('Cloud analysis failed, usando fallback local', cloudError);
+        toast({
+          title: 'Modo local ativado',
+          description: 'Processando com Gemini Vision no frontend.',
+          variant: 'default',
+        });
+        await scanLocally(file);
       }
-
-      toast({
-        title: 'Análise Completa Concluída',
-        description: 'Documento processado com sucesso.',
-      });
     } catch (error) {
       console.error(error);
       toast({
@@ -293,7 +346,10 @@ export default function DocumentScannerPage() {
       toast({ title: 'Documento Classificado', description: 'Tipo identificado com sucesso.' });
     } catch (error) {
       console.error(error);
-      toast({ title: 'Erro', description: 'Falha na classificação.', variant: 'destructive' });
+      // Fallback heurístico
+      const fallbackType = extractedData.text.toLowerCase().includes('rx') ? 'xray' : 'clinical_report';
+      setClassification({ type: fallbackType as DocumentClassification['type'], confidence: 0.35 });
+      toast({ title: 'Classificação local', description: 'Usando heurística offline.', variant: 'default' });
     }
   };
 
@@ -311,7 +367,13 @@ export default function DocumentScannerPage() {
       toast({ title: 'Resumo Gerado', description: 'IA analisou o documento.' });
     } catch (error) {
       console.error(error);
-      toast({ title: 'Erro', description: 'Falha na sumarização.', variant: 'destructive' });
+      const fallback: DocumentSummary = {
+        keyFindings: extractedData.text.split('\n').slice(0, 3),
+        impression: extractedData.text.split('\n').slice(3, 8).join('\n') || 'Resumo gerado localmente.',
+        recommendations: ['Validar com especialista', 'Arquivar no prontuário'],
+      };
+      setSummary(fallback);
+      toast({ title: 'Resumo local', description: 'Gerado offline com heurística.', variant: 'default' });
     }
   };
 
@@ -329,7 +391,14 @@ export default function DocumentScannerPage() {
       toast({ title: 'Tradução Concluída', description: 'Documento traduzido.' });
     } catch (error) {
       console.error(error);
-      toast({ title: 'Erro', description: 'Falha na tradução.', variant: 'destructive' });
+      const fallback: TranslatedDocument = {
+        originalText: extractedData.text,
+        translatedText: extractedData.text,
+        sourceLanguage: 'auto',
+        targetLanguage: translateLanguage,
+      };
+      setTranslation(fallback);
+      toast({ title: 'Tradução local', description: 'Exibindo texto original (tradução indisponível).' });
     }
   };
 
@@ -354,7 +423,11 @@ export default function DocumentScannerPage() {
       toast({ title: 'Comparação Concluída', description: 'Exames comparados.' });
     } catch (error) {
       console.error(error);
-      toast({ title: 'Erro', description: 'Falha na comparação.', variant: 'destructive' });
+      setComparison({
+        hasChanges: false,
+        changes: ['Comparação offline não disponível.'],
+      });
+      toast({ title: 'Comparação offline', description: 'Não foi possível chamar a função, exibindo fallback.' });
     }
   };
 
@@ -430,7 +503,7 @@ export default function DocumentScannerPage() {
       toast({ title: 'PDF Gerado', description: 'Documento disponível para download.' });
     } catch (error) {
       console.error(error);
-      toast({ title: 'Erro', description: 'Falha ao gerar PDF.', variant: 'destructive' });
+      toast({ title: 'PDF não disponível', description: 'Função não encontrada. Copie o texto manualmente.', variant: 'destructive' });
     }
   };
 
