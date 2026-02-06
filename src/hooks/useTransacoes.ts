@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Transacao {
   id: string;
@@ -22,7 +23,7 @@ export interface Transacao {
 
 // Helper: Convert Firestore doc to Transacao
 const convertDocToTransacao = (doc: { id: string; data: () => Record<string, unknown> }): Transacao => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

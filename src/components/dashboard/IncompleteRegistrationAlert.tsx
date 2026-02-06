@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Patient {
   id: string;
@@ -31,7 +32,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const patients: Patient[] = [];
       snapshot.forEach((doc) => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         patients.push({
           id: doc.id,
           name: data.full_name || data.name || 'Paciente',

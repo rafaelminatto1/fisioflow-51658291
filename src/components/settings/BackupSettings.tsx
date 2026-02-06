@@ -5,6 +5,7 @@ import { Database, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { db, collection, getDocs, query, getFirestore } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function BackupSettings() {
     const [isExporting, setIsExporting] = useState(false);
@@ -33,7 +34,7 @@ export function BackupSettings() {
             await Promise.all(collections.map(async (colName) => {
                 const colRef = collectionRef(db, colName);
                 const snapshot = await getDocsFromCollection(colRef);
-                backupData[colName] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                backupData[colName] = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
             }));
 
             // Create Blob

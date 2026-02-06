@@ -7,6 +7,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb, documentExists } from '../../lib/firebase/admin.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export const dataIntegrityWorkflow = inngest.createFunction(
   {
@@ -28,7 +29,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
       const snapshot = await db.collection(collectionPath).limit(limit).get();
 
       const orphanedIds: string[] = [];
-      const refIds = snapshot.docs.map(doc => doc.data()[refField]).filter(Boolean);
+      const refIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())[refField]).filter(Boolean);
 
       // Batch check existence
       for (const refId of refIds) {
@@ -46,7 +47,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
       const snapshot = await db.collection('appointments').limit(100).get();
 
       let orphanedCount = 0;
-      const patientIds = snapshot.docs.map(doc => doc.data().patient_id).filter(Boolean);
+      const patientIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).patient_id).filter(Boolean);
       const uniquePatientIds = [...new Set(patientIds)];
 
       // Batch check patients
@@ -54,7 +55,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
         const exists = await documentExists('patients', patientId);
         if (!exists) {
           // Count how many appointments reference this patient
-          const count = snapshot.docs.filter(doc => doc.data().patient_id === patientId).length;
+          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).patient_id === patientId).length;
           orphanedCount += count;
         }
       }
@@ -77,14 +78,14 @@ export const dataIntegrityWorkflow = inngest.createFunction(
         return 0;
       }
 
-      const appointmentIds = snapshot.docs.map(doc => doc.data().appointment_id).filter(Boolean);
+      const appointmentIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).appointment_id).filter(Boolean);
       const uniqueAppointmentIds = [...new Set(appointmentIds)];
 
       let orphanedCount = 0;
       for (const appointmentId of uniqueAppointmentIds) {
         const exists = await documentExists('appointments', appointmentId);
         if (!exists) {
-          const count = snapshot.docs.filter(doc => doc.data().appointment_id === appointmentId).length;
+          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).appointment_id === appointmentId).length;
           orphanedCount += count;
         }
       }
@@ -107,14 +108,14 @@ export const dataIntegrityWorkflow = inngest.createFunction(
         return 0;
       }
 
-      const appointmentIds = snapshot.docs.map(doc => doc.data().appointment_id).filter(Boolean);
+      const appointmentIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).appointment_id).filter(Boolean);
       const uniqueAppointmentIds = [...new Set(appointmentIds)];
 
       let orphanedCount = 0;
       for (const appointmentId of uniqueAppointmentIds) {
         const exists = await documentExists('appointments', appointmentId);
         if (!exists) {
-          const count = snapshot.docs.filter(doc => doc.data().appointment_id === appointmentId).length;
+          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).appointment_id === appointmentId).length;
           orphanedCount += count;
         }
       }
@@ -130,14 +131,14 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     await step.run('check-orphaned-patients', async () => {
       const snapshot = await db.collection('patients').limit(100).get();
 
-      const orgIds = snapshot.docs.map(doc => doc.data().organization_id).filter(Boolean);
+      const orgIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).organization_id).filter(Boolean);
       const uniqueOrgIds = [...new Set(orgIds)];
 
       let orphanedCount = 0;
       for (const orgId of uniqueOrgIds) {
         const exists = await documentExists('organizations', orgId);
         if (!exists) {
-          const count = snapshot.docs.filter(doc => doc.data().organization_id === orgId).length;
+          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).organization_id === orgId).length;
           orphanedCount += count;
         }
       }

@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Medal, Crown, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -29,7 +30,7 @@ export function Leaderboard({ currentPatientId }: LeaderboardProps) {
 
       const entries: LeaderboardEntry[] = [];
       querySnapshot.forEach((doc: QueryDocumentSnapshot) => {
-        const data = doc.data();
+        const data = normalizeFirestoreData(doc.data());
         entries.push({
           patient_id: doc.id,
           total_points: data.total_points || 0,

@@ -10,6 +10,7 @@
 
 import { db, query as firestoreQuery, where, orderBy, limit, startAfter, Query, collection, CollectionReference } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
@@ -290,6 +291,6 @@ export function createPaginatedQuery<T>(
 export function snapshotToArray<T>(snapshot: { docs: Array<{ id: string; data: () => T }> }): Array<T & { id: string }> {
   return snapshot.docs.map(doc => ({
     id: doc.id,
-    ...doc.data(),
+    ...normalizeFirestoreData(doc.data()),
   })) as Array<T & { id: string }>;
 }

@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, FileText, Search, Sparkles } from 'lucide-react';
 import { TemplateModal } from './TemplateModal';
 import { TemplateDetailsModal } from './TemplateDetailsModal';
 import type { ExerciseTemplate } from '@/hooks/useExerciseTemplates';
+import {
 
   AlertDialog,
   AlertDialogAction,

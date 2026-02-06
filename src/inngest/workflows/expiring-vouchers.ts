@@ -7,6 +7,7 @@ import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 type VoucherWithRelations = {
   id: string;
@@ -56,8 +57,8 @@ export const expiringVouchersWorkflow = inngest.createFunction(
       }
 
       // OPTIMIZATION: Batch fetch all patients and organizations
-      const patientIds = snapshot.docs.map(doc => doc.data().patient_id).filter(Boolean);
-      const orgIds = snapshot.docs.map(doc => doc.data().organization_id).filter(Boolean);
+      const patientIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).patient_id).filter(Boolean);
+      const orgIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).organization_id).filter(Boolean);
 
       const [patientMap, orgMap] = await Promise.all([
         batchFetchDocuments('patients', patientIds),
@@ -66,7 +67,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
 
       const vouchersWithRelations: VoucherWithRelations[] = [];
       for (const doc of snapshot.docs) {
-        const voucher = { id: doc.id, ...doc.data() } as { id: string; expiration_date: string; patient_id: string; organization_id: string };
+        const voucher = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as { id: string; expiration_date: string; patient_id: string; organization_id: string };
 
         vouchersWithRelations.push({
           id: voucher.id,

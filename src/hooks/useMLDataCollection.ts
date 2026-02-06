@@ -12,9 +12,10 @@ import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, order
 import { toast } from 'sonner';
 import crypto from 'crypto';
 import type { MLTrainingData } from '@/types/patientAnalytics';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) =>
-  ({ id: doc.id, ...doc.data() });
+  ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
 
 interface AppointmentFirestore {
   status?: string;
@@ -265,7 +266,7 @@ export function useMLTrainingDataStats() {
     queryFn: async () => {
       const q = firestoreQuery(collection(db, 'ml_training_data'));
       const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MLTrainingData[];
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as MLTrainingData[];
 
       const totalRecords = data.length || 0;
 

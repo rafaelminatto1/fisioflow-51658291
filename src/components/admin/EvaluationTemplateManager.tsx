@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
 
     Table,
     TableBody,
@@ -24,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { db, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, orderBy as fsOrderBy } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Template {
     id: string;
@@ -54,7 +56,7 @@ export const EvaluationTemplateManager = () => {
                 fsOrderBy('category', 'asc')
             );
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
         }
     });
 

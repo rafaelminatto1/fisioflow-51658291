@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDoc, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface ApplyTemplateParams {
   templateId: string;
@@ -45,7 +46,7 @@ export const useApplyExerciseTemplate = () => {
         orderBy('order_index')
       );
       const itemsSnap = await getDocs(itemsQuery);
-      const templateItems = itemsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const templateItems = itemsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // 3. Calcular semanas pós-operatórias se aplicável
       let currentWeek = 0;

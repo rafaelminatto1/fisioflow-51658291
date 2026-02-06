@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Feriado {
   id: string;
@@ -23,7 +24,7 @@ export type FeriadoFormData = Omit<Feriado, 'id' | 'created_at' | 'updated_at'>;
 
 // Helper to convert Firestore doc to Feriado
 const convertDocToFeriado = (doc: { id: string; data: () => Record<string, unknown> }): Feriado => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PrecadastroToken {
   id: string;
@@ -61,7 +62,7 @@ export function usePrecadastroTokens() {
       );
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PrecadastroToken[];
+      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PrecadastroToken[];
     },
     enabled: !!user
   });
@@ -86,7 +87,7 @@ export function usePrecadastros() {
       );
 
       const snapshot = await getDocs(q);
-      const precadastros = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const precadastros = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Fetch token names for each precadastro
       const tokenIds = precadastros.map((p: Precadastro) => p.token_id).filter((id): id is string => id !== null);

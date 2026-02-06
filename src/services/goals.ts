@@ -12,6 +12,7 @@ import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 import { httpsCallable } from 'firebase/functions';
 import { Auth } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type GoalProfileStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
@@ -73,7 +74,7 @@ export const GoalService = {
         );
 
         const snapshot = await getDocs(q);
-        const profiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GoalProfile));
+        const profiles = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as GoalProfile));
 
         // Filter by status if needed (client-side for status since we can't have multiple range filters)
         let filteredProfiles = profiles;
@@ -99,7 +100,7 @@ export const GoalService = {
                     where('profile_id', 'in', chunk)
                 );
                 const targetsSnapshot = await getDocs(targetsQuery);
-                allTargets.push(...targetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GoalTarget)));
+                allTargets.push(...targetsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as GoalTarget)));
             }
 
             // Attach targets to profiles
@@ -130,7 +131,7 @@ export const GoalService = {
             where('profile_id', '==', id)
         );
         const targetsSnapshot = await getDocs(targetsQuery);
-        const targets = targetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GoalTarget));
+        const targets = targetsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as GoalTarget));
 
         return {
             ...profile,

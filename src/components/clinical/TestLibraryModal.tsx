@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
+import {
 
     Dialog,
     DialogContent,
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ClinicalTest {
     id: string;
@@ -168,7 +170,7 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data()
+                ...normalizeFirestoreData(doc.data())
             })) as ClinicalTest[];
         },
         enabled: open,

@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, doc, getDoc, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PatientEvolutionData {
   sessions: {
@@ -43,7 +44,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         orderBy('record_date', 'asc')
       );
       const soapSnap = await getDocs(soapQ);
-      const soapRecords = soapSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const soapRecords = soapSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Buscar medições de evolução
       const measurementsQ = firestoreQuery(
@@ -52,7 +53,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         orderBy('measured_at', 'asc')
       );
       const measurementsSnap = await getDocs(measurementsQ);
-      const measurements = measurementsSnap.docs.map(doc => doc.data());
+      const measurements = measurementsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       // Buscar sessões prescritas (pacotes)
       const packagesQ = firestoreQuery(
@@ -128,7 +129,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
           )
         );
         painMaps = painMapsResults.flatMap(snapshot =>
-          snapshot.docs.map(doc => ({ session_id: doc.data().session_id, global_pain_level: doc.data().global_pain_level }))
+          snapshot.docs.map(doc => ({ session_id: normalizeFirestoreData(doc.data()).session_id, global_pain_level: normalizeFirestoreData(doc.data()).global_pain_level }))
         );
       }
 
@@ -144,7 +145,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         const profilesQ = firestoreQuery(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
         const profilesSnap = await getDocs(profilesQ);
         profilesSnap.forEach(doc => {
-          therapistMap.set(doc.data().user_id, doc.data().full_name);
+          therapistMap.set(normalizeFirestoreData(doc.data()).user_id, normalizeFirestoreData(doc.data()).full_name);
         });
       }
 

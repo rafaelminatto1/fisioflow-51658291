@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, getDocFromServer, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export type QuestCategory = 'daily' | 'weekly' | 'special';
 export type QuestStatus = 'pending' | 'in_progress' | 'completed' | 'expired';
@@ -76,7 +77,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
         );
 
         const snapshot = await getDocs(q);
-        const quests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientQuest[];
+        const quests = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientQuest[];
 
         // Fetch quest definitions for each quest
         const questsWithDefinitions = await Promise.all(
@@ -118,7 +119,7 @@ export const useQuests = (patientId?: string): UseQuestsResult => {
         );
 
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as QuestDefinition[];
+        return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as QuestDefinition[];
       } catch (err) {
         logger.error('Failed to fetch available quests', err, 'useQuests');
         return [];

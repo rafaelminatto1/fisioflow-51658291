@@ -11,6 +11,7 @@
  * @deprecated Import from @/lib/firebase/storage instead
  * This file is kept for backward compatibility
  */
+import {
 
   uploadFile,
   uploadFiles,

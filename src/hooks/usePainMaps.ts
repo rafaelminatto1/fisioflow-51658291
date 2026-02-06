@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { PainPoint } from '@/components/pain-map';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface PainMap {
   id: string;
@@ -46,7 +47,7 @@ interface CreatePainMapInput {
 
 // Helper: Convert Firestore doc to PainMap
 const convertDocToPainMap = (doc: { id: string; data: () => Record<string, unknown> }): PainMap => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -55,7 +56,7 @@ const convertDocToPainMap = (doc: { id: string; data: () => Record<string, unkno
 
 // Helper: Convert Firestore doc to PainMapPoint
 const convertDocToPainMapPoint = (doc: { id: string; data: () => Record<string, unknown> }): PainMapPoint => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,
@@ -506,7 +507,7 @@ export function usePainEvolution(patientId: string | undefined) {
       const snapshot = await getDocs(q);
       const maps = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       })) as PainMapResponse[];
 
       // Calcular média de intensidade por mapa
@@ -557,7 +558,7 @@ export function usePainStatistics(patientId: string | undefined) {
       const snapshot = await getDocs(q);
       const maps = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       })) as PainMapResponse[];
 
       if (maps.length === 0) return null;

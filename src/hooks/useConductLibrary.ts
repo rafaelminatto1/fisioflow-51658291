@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ConductTemplate {
   id: string;
@@ -30,7 +31,7 @@ export interface CreateConductData {
 
 // Helper to convert Firestore doc to ConductTemplate
 const convertDocToConductTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ConductTemplate => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

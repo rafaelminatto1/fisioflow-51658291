@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useGamification, Achievement } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
+import {
 
   TrendingUp,
   Star, Crown, Medal, Award, CheckCircle2,
@@ -29,6 +30,7 @@ import WeeklyChallenges from '@/components/gamification/WeeklyChallenges';
 import { LevelUpModal } from '@/components/gamification/LevelUpModal';
 import AchievementModal from '@/components/gamification/AchievementModal';
 import StreakFreezeModal from '@/components/gamification/StreakFreezeModal';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -98,7 +100,7 @@ export default function PatientGamificationPage() {
       );
 
       const snapshot = await getDocs(q);
-      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as any[];
 
       if (entries.length === 0) return [];
 

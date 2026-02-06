@@ -8,6 +8,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { PreCadastroStats } from '@/components/precadastro/PreCadastroStats';
 import { PreCadastroList } from '@/components/precadastro/PreCadastroList';
 import { LinkManagement } from '@/components/precadastro/LinkManagement';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface NewTokenData {
   nome?: string;
@@ -29,7 +30,7 @@ const PreCadastroAdmin = () => {
     queryFn: async () => {
       const q = firestoreQuery(collection(db, 'precadastro_tokens'), orderBy('created_at', 'desc'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
     }
   });
 
@@ -39,7 +40,7 @@ const PreCadastroAdmin = () => {
     queryFn: async () => {
       const q = firestoreQuery(collection(db, 'precadastros'), orderBy('created_at', 'desc'));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
     }
   });
 
