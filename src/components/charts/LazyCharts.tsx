@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * Lazy Charts Wrapper
  *
@@ -95,15 +95,6 @@ export function LazyChart({ children, height = 300 }: { children: React.ReactNod
   );
 }
 
-/**
- * Preload dos componentes de chart (útil para prefetch antes de navegar)
- */
- 
-export function preloadCharts() {
-  // Pré-carregar todos os componentes do Recharts
-  void import('recharts');
-}
-
 // Re-exportar tudo do recharts para compatibilidade
 
 export {
@@ -125,6 +116,5 @@ export {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
 
 

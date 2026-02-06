@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * React Hooks for Statsig Feature Flags
  *
