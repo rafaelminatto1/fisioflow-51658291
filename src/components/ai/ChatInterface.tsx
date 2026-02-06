@@ -17,7 +17,6 @@ import { Switch } from '@/components/ui/switch';
 import { Send, Sparkles, User, Bot, Volume2, VolumeX, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import { getGeminiClient, chat as geminiChat, GeminiModel } from '@/lib/integrations/google/client';
 import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
 
@@ -67,7 +66,6 @@ export function ChatInterface({
   useRAG = true,
   model = GeminiModel.GEMINI_2_5_FLASH
 }: ChatInterfaceProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -97,8 +95,13 @@ export function ChatInterface({
   // Inicializar reconhecimento de voz
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition() as ISpeechRecognition;
+      type SpeechRecognitionConstructor = new () => ISpeechRecognition;
+      const speechWindow = window as typeof window & {
+        webkitSpeechRecognition?: SpeechRecognitionConstructor;
+        SpeechRecognition?: SpeechRecognitionConstructor;
+      };
+      const SpeechRecognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+      recognitionRef.current = SpeechRecognition ? new SpeechRecognition() : null;
       if (recognitionRef.current) {
         recognitionRef.current.continuous = false;
         recognitionRef.current.lang = 'pt-BR';
@@ -213,7 +216,7 @@ export function ChatInterface({
           };
 
           setMessages((prev) => [...prev, assistantMessage]);
-        } catch (geminiError) {
+        } catch {
           toast({
             title: 'Erro',
             description: 'Falha ao comunicar com a IA.',
@@ -262,12 +265,6 @@ export function ChatInterface({
       utterance.pitch = 1;
 
       window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const stopSpeaking = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
     }
   };
 

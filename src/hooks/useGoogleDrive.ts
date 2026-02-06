@@ -2,10 +2,10 @@
  * useGoogleDrive - Hook para integração com Google Drive
  */
 
-import { useState, useCallback } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { DriveService, DriveFolder, DriveFile } from '@/lib/integrations/google/drive';
+import { DriveService } from '@/lib/integrations/google/drive';
 
 interface UseGoogleDriveOptions {
   accessToken?: string;
@@ -39,7 +39,7 @@ export function useGoogleDrive(options: UseGoogleDriveOptions = {}) {
       const service = new DriveService(accessToken);
       return service.createPatientFolderStructure(tenantId, patientId, patientName);
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success('Pastas criadas no Google Drive');
       queryClient.invalidateQueries({ queryKey: ['drive-files'] });
     },

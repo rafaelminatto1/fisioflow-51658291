@@ -261,7 +261,8 @@ export const useCreateMeasurement = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) };
+      const docData = docSnap.data() as EvolutionMeasurement;
+      return { id: docSnap.id, ...docData };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as { patient_id?: string }).patient_id] });
@@ -294,7 +295,8 @@ export const useUpdateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
+      const goalData = docSnap.data() as PatientGoal;
+      return { id: docSnap.id, ...goalData };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -320,7 +322,8 @@ export const useCompleteGoal = () => {
       await updateDoc(docRef, updateData);
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) } as PatientGoal;
+      const goalData = docSnap.data() as PatientGoal;
+      return { id: docSnap.id, ...goalData };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -348,7 +351,8 @@ export const useCreateGoal = () => {
       });
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) };
+      const goalData = docSnap.data() as PatientGoal;
+      return { id: docSnap.id, ...goalData };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -384,7 +388,8 @@ export const useUpdateGoalStatus = () => {
       await updateDoc(docRef, updates);
 
       const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as any) };
+      const goalData = docSnap.data() as PatientGoal;
+      return { id: docSnap.id, ...goalData };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -581,19 +586,21 @@ export function usePatientEvolutionData() {
     return saveResult;
   }, [appointmentId, patientId, handleSave, completeAppointment, awardXp, navigate]);
 
+  const data: PatientEvolutionData = {
+    appointment,
+    patient,
+    patientId,
+    surgeries,
+    medicalReturns,
+    goals,
+    pathologies,
+    measurements,
+    previousEvolutions,
+    evolutionStats
+  };
+
   return {
-    data: {
-      appointment,
-      patient,
-      patientId,
-      surgeries,
-      medicalReturns,
-      goals,
-      pathologies,
-      measurements,
-      previousEvolutions,
-      evolutionStats
-    } as any as PatientEvolutionData,
+    data,
     loading: dataLoading,
     error: appointmentError || patientError,
     isSaving: createSoapRecord.isPending,

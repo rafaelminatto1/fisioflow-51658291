@@ -2,14 +2,11 @@
  * useGoogleDocs - Hook para integração com Google Docs
  */
 
-import { useState, useCallback } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   DocsService,
-  TextReplacement,
-  GeneratedReport,
-  DocsTemplate,
   CLINICAL_REPORT_PLACEHOLDERS,
   CERTIFICATE_PLACEHOLDERS,
   DECLARATION_PLACEHOLDERS,
