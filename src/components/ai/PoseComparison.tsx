@@ -14,11 +14,9 @@ interface PoseComparisonProps {
   className?: string;
 }
 
-export function PoseComparison({ patientId, className }: PoseComparisonProps) {
+export function PoseComparison({ className }: PoseComparisonProps) {
   const [referenceVideo, setReferenceVideo] = useState<string | null>(null);
   const [patientVideo, setPatientVideo] = useState<string | null>(null);
-  const [referenceFile, setReferenceFile] = useState<File | null>(null);
-  const [patientFile, setPatientFile] = useState<File | null>(null);
   const referenceVideoRef = useRef<HTMLVideoElement>(null);
   const patientVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -30,11 +28,9 @@ export function PoseComparison({ patientId, className }: PoseComparisonProps) {
     if (!file) return;
 
     if (type === 'reference') {
-      setReferenceFile(file);
       const url = URL.createObjectURL(file);
       setReferenceVideo(url);
     } else {
-      setPatientFile(file);
       const url = URL.createObjectURL(file);
       setPatientVideo(url);
     }

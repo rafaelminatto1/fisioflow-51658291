@@ -6,7 +6,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Camera, Video, RefreshCw, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PoseLandmarker, FilesetResolver, Landmark } from '@mediapipe/tasks-vision';
@@ -50,14 +49,6 @@ const KEYPOINT_CONNECTIONS = [
   [26, 28], // joelho -> tornozelo
 ];
 
-const KEYPOINT_NAMES = [
-  'nose', 'left_eye_inner', 'left_eye', 'left_eye_outer', 'right_eye_inner', 'right_eye', 'right_eye_outer',
-  'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow',
-  'left_wrist', 'right_wrist', 'left_pinky', 'right_pinky', 'left_index', 'right_index',
-  'left_thumb', 'right_thumb', 'left_hip', 'right_hip', 'left_knee', 'right_knee',
-  'left_ankle', 'right_ankle', 'left_heel', 'right_heel', 'left_foot_index', 'right_foot_index',
-];
-
 const JOINT_ANALYSIS = {
   left_shoulder: { left: 11, right: 13 },
   right_shoulder: { left: 12, right: 14 },
@@ -73,7 +64,6 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pose, setPose] = useState<PoseDetection | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(true);
   const [jointAngles, setJointAngles] = useState<Record<string, number>>({});
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const { toast } = useToast();
@@ -94,7 +84,6 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
           numPoses: 1
         });
         poseLandmarkerRef.current = poseLandmarker;
-        setIsModelLoading(false);
       } catch (error) {
         console.error("Failed to initialize Pose Landmarker:", error);
         toast({
@@ -112,7 +101,7 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
     };
   }, [videoRef, toast]);
 
-  // Calcular ângulo entre três pontos
+    // Calcular ângulo entre três pontos
   const calculateAngle = (a: PoseKeypoint, b: PoseKeypoint, c: PoseKeypoint): number => {
     const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
     let angle = Math.abs(radians * 180 / Math.PI);
@@ -141,12 +130,15 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
 
       if (result && result.landmarks && result.landmarks.length > 0) {
         const landmarks = result.landmarks[0];
-        const keypoints: PoseKeypoint[] = landmarks.map((l: Landmark) => ({
+        const keypoints: PoseKeypoint[] = landmarks.map((l: Landmark) => {
+          const lm = l as Landmark & { visibility?: number };
+          return {
           x: l.x,
           y: l.y,
           z: l.z,
-          visibility: (l as any).visibility || 1.0,
-        }));
+          visibility: lm.visibility ?? 1.0,
+        };
+        });
 
         const detection: PoseDetection = {
           keypoints,
@@ -199,7 +191,7 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
   };
 
   // Desenhar pose no canvas
-  const drawPose = () => {
+  const drawPose = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !pose) return;
 
@@ -249,13 +241,13 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
         ctx.fillText(index.toString(), x + 6, y - 6);
       }
     });
-  };
+  }, [pose]);
 
   useEffect(() => {
     if (pose) {
       drawPose();
     }
-  }, [pose]);
+  }, [pose, drawPose]);
 
   const handleDownloadImage = () => {
     const canvas = canvasRef.current;
