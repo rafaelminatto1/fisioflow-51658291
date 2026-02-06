@@ -458,6 +458,25 @@ service cloud.firestore {
       allow read, write: if isValidSize() && (isBootstrapAdmin() || canManageSchedule() || canAccessScheduleDoc());
     }
 
+    // ============================================================================================
+    // WAITLIST (Lista de Espera) - Firestore migration
+    // ============================================================================================
+    match /waitlist/{waitlistId} {
+      // Visualizar e manipular itens da lista de espera somente por quem gerencia agenda
+      allow read: if canManageSchedule();
+      allow create: if isValidSize() && canManageSchedule();
+      allow update: if canManageSchedule();
+      // Deleção completa apenas por admin; normalmente usamos update para marcar como removed
+      allow delete: if isAdmin();
+    }
+
+    // Ofertas de vaga associadas à lista de espera
+    match /waitlist_offers/{offerId} {
+      allow read: if canManageSchedule();
+      allow create, update: if isValidSize() && canManageSchedule();
+      allow delete: if isAdmin();
+    }
+
     // Presence (usuários online) - cada usuário só escreve/lê o próprio doc
     match /presence/{channelName}/users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId && isValidSize();
