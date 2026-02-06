@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, RefreshCw, Lightbulb } from 'lucide-react';
@@ -16,7 +16,7 @@ export const AIInsightsWidget: React.FC<AIInsightsWidgetProps> = ({ metrics }) =
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const generateInsights = async () => {
+  const generateInsights = useCallback(async () => {
     if (!metrics) return;
     
     setLoading(true);
@@ -50,14 +50,13 @@ export const AIInsightsWidget: React.FC<AIInsightsWidgetProps> = ({ metrics }) =
     } finally {
       setLoading(false);
     }
-  };
+  }, [generate, metrics]);
 
   useEffect(() => {
     if (metrics && !insight && !loading) {
       generateInsights();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metrics]);
+  }, [metrics, insight, loading, generateInsights]);
 
   return (
     <Card className="border-primary/20 bg-primary/5 shadow-sm overflow-hidden relative group">

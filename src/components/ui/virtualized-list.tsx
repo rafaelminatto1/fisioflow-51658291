@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * VirtualizedList - Componente de lista virtualizada
  * Renderiza apenas os itens visíveis na tela, drasticamente melhorando performance
@@ -251,40 +250,4 @@ export function VirtualizedList<T>({
 /**
  * Hook para usar lista virtualizada com scroll infinito
  */
-export function useVirtualizedList<T>(
-  items: T[],
-  _options: {
-    itemHeight: number | ((item: T, index: number) => number);
-    containerHeight: number;
-    overscan?: number;
-  }
-) {
-  const [visibleItems, setVisibleItems] = useState<{
-    items: T[];
-    startIndex: number;
-    endIndex: number;
-  }>({
-    items: items.slice(0, 20),
-    startIndex: 0,
-    endIndex: 20,
-  });
-
-  const loadMore = useCallback((startIndex: number, endIndex: number) => {
-    const newItems = items.slice(startIndex, endIndex);
-    setVisibleItems({
-      items: newItems,
-      startIndex,
-      endIndex,
-    });
-  }, [items]);
-
-  return {
-    visibleItems: visibleItems.items,
-    startIndex: visibleItems.startIndex,
-    endIndex: visibleItems.endIndex,
-    loadMore,
-    totalItems: items.length,
-  };
-}
-
 export default VirtualizedList;

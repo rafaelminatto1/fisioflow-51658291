@@ -1,12 +1,10 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * SkipLink - Componente de acessibilidade para navegação por teclado
  *
  * Permite que usuários de leitor de tela pulem diretamente para o conteúdo principal,
  * ignorando a navegação repetitiva. Requisito WCAG 2.1 AAA 2.4.1
  */
-
-import { useMemo } from 'react';
 
 interface SkipLinkProps {
   /** ID do elemento principal para onde o link deve pular */
@@ -39,26 +37,4 @@ export function SkipLink({
       {label}
     </a>
   );
-}
-
-/**
- * Adiciona atributos de acessibilidade ao elemento principal
- */
-export function MainContentProps() {
-  return {
-    id: 'main-content',
-    tabIndex: -1,
-    'aria-label': 'Conteúdo principal',
-  };
-}
-
-/**
- * Hook para adicionar props de acessibilidade ao conteúdo principal
- */
-export function useMainContentProps() {
-  return useMemo(() => ({
-    id: 'main-content',
-    tabIndex: -1,
-    'aria-label': 'Conteúdo principal',
-  }), []);
 }

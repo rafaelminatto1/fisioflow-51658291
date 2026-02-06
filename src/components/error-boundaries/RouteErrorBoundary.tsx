@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * Route Error Boundary Component
  *
@@ -78,21 +78,4 @@ export function RouteErrorBoundary({
  * }, { routeName: 'MyPage' });
  * ```
  */
-export function withRouteErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  options?: Pick<RouteErrorBoundaryProps, 'routeName' | 'fallback'>
-): React.ComponentType<P> {
-  const WrappedComponent = (props: P) => (
-    <RouteErrorBoundary {...options}>
-      <Component {...props} />
-    </RouteErrorBoundary>
-  );
-
-  WrappedComponent.displayName = `withRouteErrorBoundary(${
-    Component.displayName || Component.name || 'Component'
-  })`;
-
-  return WrappedComponent;
-}
-
 export default RouteErrorBoundary;

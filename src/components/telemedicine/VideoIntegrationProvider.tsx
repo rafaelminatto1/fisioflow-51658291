@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,17 +11,8 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
-export type VideoProvider = 'builtin' | 'whereby' | 'twilio' | 'agora' | 'daily';
-
-interface VideoIntegrationConfig {
-  provider: VideoProvider;
-  apiKey?: string;
-  roomUrl?: string;
-  enableRecording?: boolean;
-  enableChat?: boolean;
-  enableScreenShare?: boolean;
-}
+import { useVideoIntegration } from '@/hooks/telemedicine/useVideoIntegration';
+import type { VideoIntegrationConfig, VideoProvider } from '@/lib/telemedicine/types';
 
 interface VideoCallProps {
   roomId: string;
@@ -31,43 +21,6 @@ interface VideoCallProps {
   onJoin?: () => void;
   onLeave?: () => void;
   onError?: (error: Error) => void;
-}
-
-export function useVideoIntegration(config?: VideoIntegrationConfig) {
-  const [provider, setProvider] = useState<VideoProvider>(config?.provider || 'builtin');
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Verificar se a API do provedor está disponível
-    if (provider === 'whereby') {
-      const wherebyEmbed = (window as Window & { WherebyEmbed?: { new: (element: HTMLElement, config: Record<string, unknown>) => { on: (event: string, callback: () => void) => void } } }).WherebyEmbed;
-      if (!wherebyEmbed && !config?.roomUrl) {
-        setError('Whereby não está configurado');
-        return;
-      }
-      setIsReady(true);
-    } else if (provider === 'twilio') {
-      const Twilio = (window as Window & { Twilio?: unknown }).Twilio;
-      if (!Twilio && !config?.apiKey) {
-        setError('Twilio não está configurado');
-        return;
-      }
-      setIsReady(true);
-    } else {
-      setIsReady(true);
-    }
-  }, [provider, config]);
-
-  return {
-    provider,
-    setProvider,
-    isReady,
-    error,
-    canRecord: provider !== 'builtin',
-    supportsChat: provider !== 'builtin',
-    supportsScreenShare: provider !== 'builtin',
-  };
 }
 
 // Componente de videochamada embutido
