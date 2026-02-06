@@ -27,7 +27,7 @@ export async function handlePatientSync(event: FirestoreEvent<Change<DocumentSna
     }
 
     const pool = getPool();
-    
+
     try {
         // Mapeamento de campos Firestore -> SQL
         const name = newData.name || newData.full_name;
@@ -35,7 +35,7 @@ export async function handlePatientSync(event: FirestoreEvent<Change<DocumentSna
         const cpf = newData.cpf ? newData.cpf.replace(/\D/g, '') : null;
         const phone = newData.phone || null;
         const organizationId = newData.organizationId || newData.organization_id;
-        
+
         if (!organizationId) {
             logger.warn(`[Sync] Patient ${patientId} has no organizationId. Skipping SQL sync.`);
             return;
@@ -53,11 +53,14 @@ export async function handlePatientSync(event: FirestoreEvent<Change<DocumentSna
             INSERT INTO patients (
                 id, organization_id, name, email, cpf, phone, 
                 birth_date, gender, main_condition, status, 
-                is_active, updated_at, created_at
+                is_active, updated_at, created_at,
+                referring_doctor_name, referring_doctor_phone, medical_return_date,
+                medical_report_done, medical_report_sent
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, 
                 $7, $8, $9, $10, 
-                $11, NOW(), $12
+                $11, NOW(), $12,
+                $13, $14, $15, $16, $17
             )
             ON CONFLICT (id) DO UPDATE SET
                 name = EXCLUDED.name,
@@ -69,6 +72,11 @@ export async function handlePatientSync(event: FirestoreEvent<Change<DocumentSna
                 main_condition = EXCLUDED.main_condition,
                 status = EXCLUDED.status,
                 is_active = EXCLUDED.is_active,
+                referring_doctor_name = EXCLUDED.referring_doctor_name,
+                referring_doctor_phone = EXCLUDED.referring_doctor_phone,
+                medical_return_date = EXCLUDED.medical_return_date,
+                medical_report_done = EXCLUDED.medical_report_done,
+                medical_report_sent = EXCLUDED.medical_report_sent,
                 updated_at = NOW()
             WHERE patients.updated_at < NOW() - INTERVAL '2 seconds'
         `;
@@ -85,7 +93,12 @@ export async function handlePatientSync(event: FirestoreEvent<Change<DocumentSna
             newData.main_condition || 'A definir',
             newData.status || 'Inicial',
             newData.is_active !== false, // Default true
-            newData.created_at ? new Date(newData.created_at) : new Date()
+            newData.created_at ? new Date(newData.created_at) : new Date(),
+            newData.referring_doctor_name || null,
+            newData.referring_doctor_phone || null,
+            newData.medical_return_date || null,
+            newData.medical_report_done === true,
+            newData.medical_report_sent === true
         ];
 
         await pool.query(query, values);

@@ -125,6 +125,11 @@ CREATE TABLE IF NOT EXISTS patients (
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   created_by TEXT REFERENCES profiles(user_id),
   is_active BOOLEAN DEFAULT true,
+  referring_doctor_name TEXT,
+  referring_doctor_phone TEXT,
+  medical_return_date DATE,
+  medical_report_done BOOLEAN DEFAULT false,
+  medical_report_sent BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

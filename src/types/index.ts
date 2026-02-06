@@ -134,43 +134,43 @@ export interface Patient {
   city?: string;
   state?: string;
   zip_code?: string;
-  
+
   // Contact & Emergency
   emergencyContact?: string;
   emergency_contact?: string; // Database compatibility
   emergencyContactRelationship?: string;
   emergency_phone?: string;
-  
+
   // Clinical
   medicalHistory?: string;
   mainCondition: string;
   status: 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído' | string;
   progress: number;
   observations?: string;
-  
+
   // Insurance
   insurancePlan?: string;
   health_insurance?: string; // Database compatibility
   insuranceNumber?: string;
   insurance_number?: string; // Database compatibility
   insuranceValidity?: string;
-  
+
   // Demographics
   maritalStatus?: string;
   profession?: string;
   educationLevel?: string;
-  
+
   // Medical Details
   bloodType?: string;
   allergies?: string;
   medications?: string;
   weight?: number;
   height?: number;
-  
+
   photo_url?: string;
-  
+
   incomplete_registration?: boolean;
-  
+
   // Retorno médico / médico assistente (vinculado ao paciente)
   referring_doctor_name?: string;
   referringDoctorName?: string; // Alias
@@ -178,11 +178,12 @@ export interface Patient {
   referringDoctorPhone?: string; // Alias
   medical_return_date?: string; // ISO date - data prevista do retorno ao médico
   medicalReturnDate?: string;
+  medical_return_period?: 'manha' | 'tarde' | 'noite';
   medical_report_done?: boolean; // relatório médico já foi feito
   medicalReportDone?: boolean;
   medical_report_sent?: boolean; // relatório já foi enviado ao médico
   medicalReportSent?: boolean;
-  
+
   createdAt: string;
   created_at?: string; // Database compatibility
   updatedAt: string;

@@ -14,6 +14,7 @@ import {
   startOfDay
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDetailedDuration } from '@/utils/dateUtils';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -219,7 +220,7 @@ const PatientEvolution = () => {
   // Tempo de tratamento do paciente
   const treatmentDuration = useMemo(() =>
     patient?.created_at
-      ? formatDistanceToNow(new Date(patient.created_at), { locale: ptBR, addSuffix: true })
+      ? formatDetailedDuration(patient.created_at)
       : 'N/A',
     [patient?.created_at]
   );
@@ -811,21 +812,23 @@ const PatientEvolution = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
-              {/* Layout: 3 cards na linha 1 | Metas na linha 2 | Resumo ocupando 2 linhas à direita */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 lg:grid-rows-[auto_auto] gap-3">
-                {/* Linha 1, Coluna 1: Retorno Médico (25%) */}
+              {/* Layout: 3 cards na linha 1 | Metas ocupando o restante na linha 2 | Resumo ocupando 30% na lateral */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                {/* Linha 1: Retorno Médico (~33%), Cirurgias (~33%), Resumo (~33%) */}
                 <MedicalReturnCard
                   patient={patient}
                   patientId={patientId || undefined}
                   onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
                 />
-                {/* Linha 1, Coluna 2: Cirurgias (25%) */}
+
                 <SurgeriesCard patientId={patientId || undefined} />
-                {/* Linha 1-2, Coluna 3-4: Resumo (50% lateralmente, 2 linhas verticalmente) */}
-                <div className="lg:col-span-2 lg:row-span-2">
+
+                {/* Resumo da Evolução: spans 2 rows on the right, approx 33% width */}
+                <div className="lg:row-span-2">
                   <EvolutionSummaryCard stats={evolutionStats} />
                 </div>
-                {/* Linha 2, Coluna 1-2: Metas (50%) */}
+
+                {/* Linha 2: Metas (~66%) */}
                 <div className="lg:col-span-2">
                   <MetasCard patientId={patientId || undefined} />
                 </div>
