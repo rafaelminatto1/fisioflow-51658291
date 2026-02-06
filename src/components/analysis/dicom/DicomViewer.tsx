@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * DicomViewer - Visualizador DICOM otimizado com lazy loading
  * Carrega o Cornerstone.js apenas quando o componente é montado
@@ -14,8 +14,6 @@ import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ComponentErrorBoundary, ComputerVisionFallback } from '@/components/error/ComponentErrorBoundary';
 
-export { usePreloadDicomViewer } from './hooks/usePreloadDicomViewer';
- 
 
 interface DicomViewerProps {
   file?: File; // Local mode

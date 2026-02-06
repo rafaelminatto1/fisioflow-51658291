@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /**
  * Context API para estado compartilhado do calendário
  * @module contexts/CalendarContext

@@ -706,6 +706,14 @@ export const syncPatientToSql = functions.firestore.onDocumentWritten(
     }
 );
 
+export const syncAppointmentToSql = functions.firestore.onDocumentWritten(
+    'appointments/{appointmentId}',
+    async (event) => {
+        const { handleAppointmentSync } = await import('./triggers/sync-appointments');
+        return handleAppointmentSync(event as any);
+    }
+);
+
 /**
  * Firestore trigger unificado: publica eventos de agendamento no Ably (INSERT e UPDATE)
  */
