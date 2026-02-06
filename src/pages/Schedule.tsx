@@ -19,6 +19,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
@@ -27,6 +28,7 @@ import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
+import { cn } from '@/lib/utils';
 import {
 
   AlertDialog,
@@ -189,6 +191,7 @@ const Schedule = () => {
     },
   });
 
+  const hasConnectionBanner = !isOnline || isChecking || isReconnecting || isFromCache || !!isUsingStaleData;
 
   // ===================================================================
   // COMPUTED VALUES
@@ -544,33 +547,21 @@ const Schedule = () => {
           Pular para o calendário
         </a>
 
-        {/* Offline Cache Indicator */}
-        <OfflineIndicator
-          isFromCache={isFromCache}
-          isOnline={isOnline}
-          isChecking={isChecking}
-          isReconnecting={isReconnecting}
-          cacheTimestamp={cacheTimestamp}
-          itemCount={appointments.length}
-          onRefresh={handleRefresh}
-          className=""
-          // @ts-expect-error - Propriedades dinâmicas retornadas pelo hook atualizado
-          isStale={isUsingStaleData}
-          // @ts-expect-error - Dynamic property from hook
-          dataSource={dataSource}
-        />
-
-
-
-        {/* Toolbar actions are now integrated into CalendarView header */}
-
-        {/* Main Workspace */}
         <div className="flex flex-col flex-1 relative min-h-0">
 
           {/* Horizontal Waitlist */}
           <WaitlistHorizontal
             onSchedulePatient={handleScheduleFromWaitlist}
             className="flex-shrink-0 z-20"
+            isOnline={isOnline}
+            isChecking={isChecking}
+            isReconnecting={isReconnecting}
+            isFromCache={isFromCache}
+            isStale={isUsingStaleData}
+            dataSource={dataSource}
+            cacheTimestamp={cacheTimestamp}
+            onRefresh={handleRefresh}
+            hasConnectionBanner={hasConnectionBanner}
           />
 
           {/* Calendar Area */}

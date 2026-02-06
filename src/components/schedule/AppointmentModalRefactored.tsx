@@ -98,7 +98,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const isMobile = useIsMobile();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
-  const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } | null>(null);
+  const [conflictCheck, setConflictCheck] = useState<{ 
+    hasConflict: boolean; 
+    conflictingAppointment?: AppointmentBase; 
+    conflictCount?: number;
+    totalConflictCount?: number;
+  } | null>(null);
   const queryClient = useQueryClient();
   const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
   const [suggestedPatientName, setSuggestedPatientName] = useState('');
@@ -120,7 +125,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
   const { data: activePatients, isLoading: patientsLoading } = useActivePatients() as { data: Patient[] | undefined; isLoading: boolean };
   const { data: appointments = [] } = useAppointments();
-  const { getCapacityForTime } = useScheduleCapacity();
+  const { getMinCapacityForInterval } = useScheduleCapacity();
   const { mutateAsync: consumeSession } = useUsePackageSession();
 
   // Verifica se o paciente já teve sessões/evoluções anteriores
@@ -365,8 +370,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
     // Fisioterapeuta é opcional; quando não informado, o backend pode usar o usuário logado.
 
-    const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
-    const currentCount = (conflictCheck?.conflictCount || 0);
+    const maxCapacity = watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1;
+    const currentCount = (conflictCheck?.totalConflictCount || 0);
 
     if (currentCount >= maxCapacity) {
       setPendingFormData({
@@ -461,7 +466,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
     } catch (error: unknown) {
       if (isAppointmentConflictError(error)) {
-        toast.error(APPOINTMENT_CONFLICT_MESSAGE);
+        // Instead of just a toast, show the CapacityExceededDialog
+        setPendingFormData(data);
+        setCapacityDialogOpen(true);
         ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave', { showNotification: false });
       } else {
         ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave');
@@ -629,8 +636,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     timeSlots={timeSlots}
                     isCalendarOpen={isCalendarOpen}
                     setIsCalendarOpen={setIsCalendarOpen}
-                    getCapacityForTime={getCapacityForTime}
-                    conflictCount={conflictCheck?.conflictCount || 0}
+                    getMinCapacityForInterval={getMinCapacityForInterval}
+                    conflictCount={conflictCheck?.totalConflictCount || 0}
                     watchedDateStr={watchedDateStr}
                     watchedTime={watchedTime}
                     watchedDuration={watchedDuration}
@@ -895,8 +902,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         <CapacityExceededDialog
           open={capacityDialogOpen}
           onOpenChange={setCapacityDialogOpen}
-          currentCount={(conflictCheck?.conflictCount || 0) + 1}
-          maxCapacity={watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1}
+          currentCount={(conflictCheck?.totalConflictCount || 0) + 1}
+          maxCapacity={watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1}
           selectedTime={watchedTime || ''}
           selectedDate={watchedDate || new Date()}
           onAddToWaitlist={handleAddToWaitlistFromCapacity}
