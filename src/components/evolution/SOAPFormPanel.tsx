@@ -53,10 +53,10 @@ const SOAPField = React.memo(({
     // Sincroniza apenas quando o valor externo mudar de forma não programática
     // (não via digitação do usuário que é tratada pelo debounce)
     if (value !== localValue && value !== lastSentValue.current && !debounceTimer.current) {
-      setLocalValue(value);
-      lastSentValue.current = value;
+      setLocalValue(value || '');
+      lastSentValue.current = value || '';
     }
-  }, [value, localValue]);
+  }, [value]);
 
   useEffect(() => {
     return () => {
@@ -72,7 +72,7 @@ const SOAPField = React.memo(({
     debounceTimer.current = setTimeout(() => {
       lastSentValue.current = val;
       onChange(val);
-    }, 300);
+    }, 1000); // Aumentado para 1000ms para melhor performance ao digitar
   }, [onChange]);
 
   return (

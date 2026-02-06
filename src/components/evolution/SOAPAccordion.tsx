@@ -110,9 +110,9 @@ const SOAPAccordionField = React.memo(({
     const debounceTimer = React.useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        if (value !== localValue && value !== lastSentValue.current) {
-            setLocalValue(value);
-            lastSentValue.current = value;
+        if (value !== localValue && value !== lastSentValue.current && !debounceTimer.current) {
+            setLocalValue(value || '');
+            lastSentValue.current = value || '';
         }
     }, [value]);
 
@@ -133,7 +133,7 @@ const SOAPAccordionField = React.memo(({
                 lastSentValue.current = newValue;
                 onChange(newValue);
             }
-        }, 300);
+        }, 1000); // Aumentado para 1000ms para melhor performance ao digitar
     }, [onChange]);
 
     return (

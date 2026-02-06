@@ -61,7 +61,7 @@ export function useCommunications(filters?: { channel?: string; status?: string 
   return useQuery({
     queryKey: ['communications', filters],
     queryFn: async () => {
-      let baseQuery = firestoreQuery(
+      const baseQuery = firestoreQuery(
         collection(db, 'communication_logs'),
         orderBy('created_at', 'desc'),
         limit(100)

@@ -1393,6 +1393,8 @@ All colors MUST be HSL.
   .react-grid-layout > .react-grid-item {
     /* Ensure items don't overflow their calculated width */
     box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
     /* Base z-index for all items */
     position: relative;
     z-index: 1;

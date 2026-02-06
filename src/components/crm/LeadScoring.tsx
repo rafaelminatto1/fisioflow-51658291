@@ -45,7 +45,7 @@ export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps)
   const { data: scores = [], isLoading } = useQuery({
     queryKey: ['lead-scores', _leadId],
     queryFn: async () => {
-      let q = queryFromFirestore(collectionRef(db, 'lead_scores'), orderByFn('total_score', 'desc'));
+      const q = queryFromFirestore(collectionRef(db, 'lead_scores'), orderByFn('total_score', 'desc'));
 
       const snapshot = await getDocsFromCollection(q);
 

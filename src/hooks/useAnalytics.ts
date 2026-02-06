@@ -98,7 +98,7 @@ export function useDailyMetrics(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: ["daily-metrics", startDate, endDate],
     queryFn: async () => {
-      let q = firestoreQuery(collection(db, "daily_metrics"));
+      const q = firestoreQuery(collection(db, "daily_metrics"));
 
       // Note: Firestore requires composite indexes for multiple range queries
       // For now, we'll fetch all and filter on the client side

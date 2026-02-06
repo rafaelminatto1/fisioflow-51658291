@@ -60,6 +60,7 @@ const FornecedoresPage = lazy(() => import(/* webpackChunkName: "cadastros-suppl
 const FeriadosPage = lazy(() => import(/* webpackChunkName: "cadastros-holidays" */ "./pages/cadastros/FeriadosPage"));
 const AtestadosPage = lazy(() => import(/* webpackChunkName: "cadastros-certificates" */ "./pages/cadastros/AtestadosPage"));
 const ContratosPage = lazy(() => import(/* webpackChunkName: "cadastros-contracts" */ "./pages/cadastros/ContratosPage"));
+const ContratadosPage = lazy(() => import(/* webpackChunkName: "cadastros-contracted" */ "./pages/cadastros/ContratadosPage"));
 const EvolutionTemplatesPage = lazy(() => import(/* webpackChunkName: "cadastros-templates" */ "./pages/cadastros/EvolutionTemplatesPage"));
 const EvaluationFormsPage = lazy(() => import(/* webpackChunkName: "cadastros-forms" */ "./pages/cadastros/EvaluationFormsPage"));
 const EvaluationFormBuilderPage = lazy(() => import(/* webpackChunkName: "cadastros-form-builder" */ "./pages/cadastros/EvaluationFormBuilderPage"));
@@ -270,6 +271,7 @@ export function AppRoutes() {
             <Route path="/cadastros/feriados" element={<ProtectedRoute><FeriadosPage /></ProtectedRoute>} />
             <Route path="/cadastros/atestados" element={<ProtectedRoute><AtestadosPage /></ProtectedRoute>} />
             <Route path="/cadastros/contratos" element={<ProtectedRoute><ContratosPage /></ProtectedRoute>} />
+            <Route path="/cadastros/contratados" element={<ProtectedRoute><ContratadosPage /></ProtectedRoute>} />
 
             {/* Cadastros Clínicos - Fase 3 */}
             <Route path="/cadastros/templates-evolucao" element={<ProtectedRoute><EvolutionTemplatesPage /></ProtectedRoute>} />

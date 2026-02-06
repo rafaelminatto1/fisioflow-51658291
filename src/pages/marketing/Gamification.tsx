@@ -5,12 +5,13 @@
  */
 
 import React from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { AdherenceGamification } from '@/components/marketing/AdherenceGamification';
 
 export default function AdherenceGamificationPage() {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <MainLayout>
       <AdherenceGamification />
-    </div>
+    </MainLayout>
   );
 }

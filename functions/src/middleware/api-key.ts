@@ -11,6 +11,7 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import { getPool } from '../init';
 import { logger } from 'firebase-functions';
+import * as crypto from 'crypto';
 
 // ============================================================================================
 // TYPES
@@ -135,7 +136,6 @@ async function initApiKeysTable(): Promise<void> {
  */
 function hashApiKey(key: string): string {
   // Use SHA-256 hashing
-  const crypto = require('crypto');
   return crypto.createHash('sha256').update(key).digest('hex');
 }
 
@@ -146,7 +146,6 @@ function hashApiKey(key: string): string {
  * @returns Generated API key
  */
 export function generateApiKey(prefix: string = 'fio'): string {
-  const crypto = require('crypto');
   const randomBytes = crypto.randomBytes(32).toString('hex');
   return `${prefix}_${randomBytes}`;
 }

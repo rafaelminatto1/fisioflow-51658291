@@ -19,6 +19,8 @@ export interface Evento {
   local?: string;
   data_inicio: string;
   data_fim: string;
+  hora_inicio?: string | null;
+  hora_fim?: string | null;
   gratuito: boolean;
   link_whatsapp?: string;
   valor_padrao_prestador?: number;
@@ -101,10 +103,12 @@ export function useCreateEvento() {
         local: evento.local || null,
         data_inicio: evento.data_inicio.toISOString().split('T')[0],
         data_fim: evento.data_fim.toISOString().split('T')[0],
+        hora_inicio: evento.hora_inicio || null,
+        hora_fim: evento.hora_fim || null,
         gratuito: evento.gratuito,
         link_whatsapp: evento.link_whatsapp || null,
         valor_padrao_prestador: evento.valor_padrao_prestador || null,
-        status: 'ativo',
+        status: 'AGENDADO',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };

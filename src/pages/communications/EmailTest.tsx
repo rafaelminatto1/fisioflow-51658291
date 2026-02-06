@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,8 @@ export default function EmailTest() {
   };
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
+    <MainLayout>
+      <div className="p-6 max-w-lg mx-auto">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -91,6 +93,7 @@ export default function EmailTest() {
           </Button>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

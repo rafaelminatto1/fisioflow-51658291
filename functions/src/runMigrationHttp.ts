@@ -62,7 +62,7 @@ export const runMigrationHttp = onRequest({
 
       await client.query(`
         UPDATE organizations
-        SET slug = LOWER(REGEXP_REPLACE(name, '[^a-zA-Z0-9\u00C0-\u00FF\s]', '', 'g'))
+        SET slug = LOWER(REGEXP_REPLACE(name, '[^a-zA-Z0-9\u00C0-\u00FF\\s]', '', 'g'))
         WHERE slug IS NULL
       `);
 

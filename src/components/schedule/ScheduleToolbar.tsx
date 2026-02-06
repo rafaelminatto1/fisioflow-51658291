@@ -78,13 +78,14 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
     switch (viewType) {
       case 'day':
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
-      case 'week':
+      case 'week': {
         const weekStart = startOfWeek(currentDate, { locale: ptBR });
         const weekEnd = endOfWeek(currentDate, { locale: ptBR });
         if (weekStart.getMonth() === weekEnd.getMonth()) {
           return format(weekStart, "MMMM 'de' yyyy", { locale: ptBR });
         }
         return `${format(weekStart, 'MMM', { locale: ptBR })} - ${format(weekEnd, "MMM 'de' yyyy", { locale: ptBR })}`;
+      }
       case 'month':
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
       default:
