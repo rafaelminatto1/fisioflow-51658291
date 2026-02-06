@@ -8,7 +8,7 @@ import * as admin from 'firebase-admin';
  */
 export const onDicomUpload = onObjectFinalized(
   {
-    region: 'us-central1',
+    region: 'southamerica-east1',
   },
   async (event: StorageEvent) => {
     const object = event.data;
