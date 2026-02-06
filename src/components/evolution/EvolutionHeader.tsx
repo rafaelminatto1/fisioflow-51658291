@@ -208,27 +208,27 @@ export const EvolutionHeader = memo(({
                         </Avatar>
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <h1 className="text-lg font-semibold truncate">
+                                <h1 className="text-xl font-bold truncate tracking-tight text-foreground">
                                     {PatientHelpers.getName(patient)}
                                 </h1>
-                                <Badge variant="outline" className="text-xs px-2 py-0.5 shrink-0">
+                                <Badge variant="outline" className="text-sm px-2.5 py-0.5 shrink-0 bg-primary/5 border-primary/20 text-primary font-bold">
                                     Sessão #{sessionNumber}
                                 </Badge>
                                 {evolutionStats.totalEvolutions > 0 && (
-                                    <span className="text-xs text-muted-foreground shrink-0">
-                                        {evolutionStats.totalEvolutions} evol. anteriores
+                                    <span className="text-sm font-medium text-muted-foreground shrink-0">
+                                        ({evolutionStats.totalEvolutions} evol. anteriores)
                                     </span>
                                 )}
                             </div>
-                            <div className="flex items-center gap-3 mt-0.5 text-sm text-muted-foreground flex-wrap">
+                            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground/90 flex-wrap">
                                 {appointment?.appointment_date && (
-                                    <span className="flex items-center gap-1">
-                                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="flex items-center gap-1.5 font-medium">
+                                        <Calendar className="h-4 w-4 shrink-0 text-primary/70" />
                                         {format(parseResponseDate(appointment.appointment_date), 'dd/MM HH:mm', { locale: ptBR })}
                                     </span>
                                 )}
-                                <span className="flex items-center gap-1">
-                                    <FileText className="h-3.5 w-3.5 shrink-0" />
+                                <span className="flex items-center gap-1.5 font-medium">
+                                    <FileText className="h-4 w-4 shrink-0 text-primary/70" />
                                     {treatmentDuration}
                                 </span>
                             </div>
@@ -237,14 +237,14 @@ export const EvolutionHeader = memo(({
                 </div>
 
                 {/* Ações primárias */}
-                <div className="flex items-center gap-2 shrink-0 flex-shrink-0">
+                <div className="flex items-center gap-3 shrink-0 flex-shrink-0">
                     {showFirstEvolution && <FirstEvolutionBadge />}
                     <Button
                         onClick={onSave}
                         size="sm"
                         variant="outline"
                         disabled={isSaving}
-                        className="h-10 px-4 min-w-[100px] shadow-sm hover:bg-primary/5 touch-target"
+                        className="h-11 px-5 min-w-[120px] shadow-sm hover:bg-primary/5 border-primary/20 text-sm font-bold touch-target"
                         aria-label={isSaving ? 'Salvando...' : 'Salvar'}
                         title={lastSavedAt && autoSaveEnabled ? `Último salvamento: ${format(lastSavedAt, 'HH:mm')}` : undefined}
                     >
@@ -259,7 +259,7 @@ export const EvolutionHeader = memo(({
                         onClick={onComplete}
                         size="sm"
                         disabled={isSaving || isCompleting}
-                        className="h-10 px-4 min-w-[110px] bg-green-600 hover:bg-green-700 text-white shadow-md touch-target font-medium"
+                        className="h-11 px-5 min-w-[130px] bg-green-600 hover:bg-green-700 text-white shadow-md touch-target font-bold text-sm"
                         aria-label={isCompleting ? 'Concluindo...' : 'Concluir sessão'}
                     >
                         {isCompleting ? (
@@ -273,16 +273,16 @@ export const EvolutionHeader = memo(({
             </div>
 
             {/* Linha 2: Fisioterapeuta | Cronômetro | Abas | Menu */}
-            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border/50 flex-wrap">
+            <div className="flex items-center gap-4 mt-5 pt-5 border-t border-border/60 flex-wrap">
                 {therapists.length > 0 && onTherapistChange && (
-                    <div className="flex items-center gap-2 shrink-0">
-                        <UserCog className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="flex items-center gap-2.5 shrink-0">
+                        <UserCog className="h-4 w-4 text-primary shrink-0" />
                         <Select
                             value={selectedTherapistId || THERAPIST_SELECT_NONE}
                             onValueChange={(v) => onTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
                             aria-label={THERAPIST_PLACEHOLDER}
                         >
-                            <SelectTrigger className="h-9 w-[180px] text-sm bg-background/80 border-border/60">
+                            <SelectTrigger className="h-10 w-[200px] text-sm font-medium bg-background/80 border-border/60">
                                 <SelectValue placeholder={THERAPIST_PLACEHOLDER} />
                             </SelectTrigger>
                             <SelectContent>
@@ -302,7 +302,7 @@ export const EvolutionHeader = memo(({
                             </SelectContent>
                         </Select>
                         {selectedTherapist?.crefito && (
-                            <Badge variant="secondary" className="text-xs font-mono shrink-0">
+                            <Badge variant="secondary" className="text-sm font-mono font-bold shrink-0 bg-muted border-border">
                                 CREFITO {selectedTherapist.crefito}
                             </Badge>
                         )}
@@ -311,10 +311,10 @@ export const EvolutionHeader = memo(({
                 {tabsConfig.length > 0 && onTabChange && (
                     <>
                         {therapists.length > 0 && onTherapistChange && (
-                            <div className="h-6 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
+                            <div className="h-8 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
                         )}
                         <nav
-                            className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/30 p-1 gap-0.5"
+                            className="inline-flex h-10 items-center justify-center rounded-lg bg-muted/40 p-1 gap-1"
                             role="tablist"
                             aria-label="Abas de evolução"
                         >
@@ -333,19 +333,19 @@ export const EvolutionHeader = memo(({
                                         aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ''}`}
                                         onClick={() => onTabChange(tab.value)}
                                         className={cn(
-                                            "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium transition-all",
+                                            "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-bold transition-all",
                                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                                             "disabled:pointer-events-none disabled:opacity-50",
                                             isActive
-                                                ? "bg-background text-foreground shadow-sm"
+                                                ? "bg-background text-primary shadow-sm ring-1 ring-border/50"
                                                 : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
                                         )}
                                     >
-                                        <tab.icon className="h-3.5 w-3.5 shrink-0" />
+                                        <tab.icon className="h-4 w-4 shrink-0" />
                                         <span className="hidden sm:inline">{tab.label}</span>
                                         <span className="sm:hidden">{tab.shortLabel}</span>
                                         {(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
-                                            <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-0.5 h-4.5 min-w-4.5 px-1 text-[9px]">
+                                            <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-1 h-5 min-w-5 px-1 text-[10px] font-black">
                                                 {badgeCount}
                                             </Badge>
                                         )}

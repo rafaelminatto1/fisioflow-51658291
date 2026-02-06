@@ -1,11 +1,7 @@
 /**
  * API Functions: Patients
  * Cloud Functions para gestão de pacientes
- */
-
-
-/**
- * Lista pacientes com filtros opcionais
+ * OTIMIZADO - Cache de queries e configurações de performance
  */
 
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
@@ -18,6 +14,11 @@ import { setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
 import * as admin from 'firebase-admin';
 import { clearPatientRagIndex, triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
+import { STANDARD_FUNCTION, withCors } from '../lib/function-config';
+import { getOrganizationIdCached } from '../lib/cache-helpers';
+
+// Configuração otimizada para funções de pacientes (com CORS)
+const PATIENT_HTTP_OPTS = withCors(STANDARD_FUNCTION, CORS_ORIGINS);
 
 interface ListPatientsRequest {
   status?: string;
@@ -104,42 +105,18 @@ export async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
 
 /**
  * Helper to get organization ID from user ID
+ * OTIMIZADO: Usa cache para reduzir queries repetidas
  */
 export async function getOrganizationId(userId: string): Promise<string> {
-  try {
-    const pool = getPool();
-    const result = await pool.query('SELECT organization_id FROM profiles WHERE user_id = $1', [userId]);
-    if (result.rows.length > 0) {
-      return result.rows[0].organization_id;
-    }
-  } catch (error) {
-    logger.info('PostgreSQL query failed, trying Firestore:', error);
-  }
-
-  try {
-    const profileDoc = await admin.firestore().collection('profiles').doc(userId).get();
-    if (profileDoc.exists) {
-      const profile = profileDoc.data();
-      return profile?.organizationId || profile?.activeOrganizationId || profile?.organizationIds?.[0] || 'default';
-    }
-  } catch (error) {
-    logger.info('Firestore query failed:', error);
-  }
-
-  throw new HttpsError('not-found', 'Perfil não encontrado');
+  return getOrganizationIdCached(userId);
 }
 
 /**
  * HTTP version of listPatients for CORS/compatibility
+ * OTIMIZADO - Usa cache de organização e configurações de performance
  */
 export const listPatientsHttp = onRequest(
-  {
-    region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 1,
-    cors: CORS_ORIGINS,
-    invoker: 'public',
-  },
+  PATIENT_HTTP_OPTS,
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') {
@@ -154,7 +131,8 @@ export const listPatientsHttp = onRequest(
 
     try {
       const { uid } = await verifyAuthHeader(req);
-      const organizationId = await getOrganizationId(uid);
+      // OTIMIZADO: Usa cache para evitar queries repetidas
+      const organizationId = await getOrganizationIdCached(uid);
 
       const { status, search, limit = 50, offset = 0 } = req.body || {};
       const pool = getPool();

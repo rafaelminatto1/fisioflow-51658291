@@ -45,7 +45,7 @@ export const EvolutionStats = memo(({ stats, compact = false, vertical = false }
     // Layout vertical para o card de resumo lateral, mantendo o visual padrão
     if (vertical) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {STAT_CONFIG.map((config, idx) => {
                     const colors = COLOR_CLASSES[config.color];
                     const rawValue = config.getVal(stats);
@@ -55,17 +55,17 @@ export const EvolutionStats = memo(({ stats, compact = false, vertical = false }
                     return (
                         <div
                             key={idx}
-                            className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card/30 backdrop-blur-sm p-2 hover:bg-card/50 transition-all`}
+                            className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card/40 backdrop-blur-sm p-3 hover:bg-card/60 transition-all shadow-sm`}
                         >
-                            <div className="flex items-center gap-1 mb-0.5">
-                                <div className={`p-0.5 rounded-md bg-gradient-to-br ${colors.bg}`}>
-                                    <config.icon className={`h-3 w-3 ${colors.text}`} />
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <div className={`p-1.5 rounded-md bg-gradient-to-br ${colors.bg}`}>
+                                    <config.icon className={`h-4 w-4 ${colors.text}`} />
                                 </div>
-                                <span className="text-[10px] font-medium text-muted-foreground">{config.label}</span>
+                                <span className="text-sm font-semibold text-muted-foreground/90 uppercase tracking-tight">{config.label}</span>
                             </div>
-                            <p className={`text-sm font-bold leading-4 ${colors.text}`}>{rawValue}</p>
+                            <p className={`text-xl font-black leading-tight ${colors.text}`}>{rawValue}</p>
                             {isPercent && (
-                                <div className="mt-1 h-1 w-full bg-muted rounded-full overflow-hidden">
+                                <div className="mt-2 h-2 w-full bg-muted/50 rounded-full overflow-hidden border border-border/5">
                                     <div
                                         className={`h-full ${colors.progress} rounded-full transition-all duration-500`}
                                         style={{ width: `${Math.min(100, Math.max(0, numValue))}%` }}
@@ -82,31 +82,23 @@ export const EvolutionStats = memo(({ stats, compact = false, vertical = false }
     // Layout compacto (grid pequeno)
     return (
         <div className={compact
-            ? 'grid grid-cols-2 gap-2'
-            : 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4'
+            ? 'grid grid-cols-2 gap-3'
+            : 'grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4'
         }>
             {STAT_CONFIG.map((config, idx) => {
                 const colors = COLOR_CLASSES[config.color];
                 return (
                     <div
                         key={idx}
-                        className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-2 sm:p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
+                        className="group relative overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm p-4 sm:p-5 hover:bg-card/90 hover:shadow-lg transition-all cursor-default"
                     >
                         <div className={`absolute inset-0 bg-gradient-to-br ${colors.bg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
-                        <div className="relative flex items-center justify-between gap-2">
+                        <div className="relative flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                                <p className={
-                                    compact
-                                        ? 'text-[11px] uppercase tracking-wider text-muted-foreground font-medium'
-                                        : 'text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium truncate'
-                                }>{config.label}</p>
-                                <p className={
-                                    compact
-                                        ? `text-base font-bold ${colors.text} mt-0.5`
-                                        : `text-sm sm:text-lg font-bold ${colors.text} mt-0.5 truncate`
-                                }>{config.getVal(stats)}</p>
+                                <p className='text-sm uppercase tracking-widest text-muted-foreground font-bold truncate opacity-80'>{config.label}</p>
+                                <p className={`text-xl sm:text-2xl font-black ${colors.text} mt-1.5 truncate tracking-tight`}>{config.getVal(stats)}</p>
                             </div>
-                            <config.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${colors.icon} transition-colors flex-shrink-0`} />
+                            <config.icon className={`h-6 w-6 sm:h-7 sm:w-7 ${colors.icon} transition-transform group-hover:scale-110 flex-shrink-0`} />
                         </div>
                     </div>
                 );

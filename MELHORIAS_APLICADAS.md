@@ -1,96 +1,26 @@
-# Melhorias Aplicadas aos Componentes do Mapa de Dor
+Pronto! Aumentei o tamanho da fonte e dos ícones nos cards da página de Evolução do Paciente (Retorno Médico, Cirurgias, Metas e Resumo).
 
-## Resumo das Alterações
+**Resumo das alterações:**
 
-### Componentes Novos Criados
+1.  **MedicalReturnCard.tsx**:
+    *   Títulos: `text-xs` → `text-sm`
+    *   Conteúdo/Nomes: `text-[10px]` → `text-sm`
+    *   Metadados/Badges: `text-[9px]/[8px]` → `text-xs`
+    *   Ícones: Aumentados proporcionalmente (ex: `h-3` → `h-4`).
 
-1. **PainGauge.tsx**
-   - Gauge semicircular animado para exibir score total de dor
-   - Suporta tamanhos: sm, md, lg
-   - Cores dinâmicas baseadas na intensidade
-   - Animação suave de rotação
+2.  **SurgeriesCard.tsx**:
+    *   Títulos: `text-xs` → `text-sm`
+    *   Nomes das Cirurgias: `text-[10px]` → `text-sm`
+    *   Metadados: `text-[9px]` → `text-xs`
+    *   Ícones aumentados.
 
-2. **EvaScaleBar.tsx**
-   - Barra de escala EVA (0-10) visualmente aprimorada
-   - Cores distintas para cada nível de intensidade
-   - Labels descritivos (Sem Dor, Leve, Moderada, etc.)
-   - Responsivo com altura adaptativa (h-9 em mobile, h-10 em desktop)
+3.  **MetasCard.tsx**:
+    *   Títulos: `text-xs` → `text-sm`
+    *   Nomes das Metas: `text-[10px]` → `text-sm`
+    *   Metadados/Progresso: `text-[9px]` → `text-xs`
+    *   Ícones aumentados.
 
-3. **PainEvolutionChart.tsx**
-   - Gráfico de evolução da dor com múltiplos tipos (linha, área, barras)
-   - Indicadores de tendência (melhorando, piorando, estável)
-   - Percentual de melhora/piora
-   - Integração com dados do hook `usePainEvolution`
+4.  **EvolutionSummaryCard.tsx & EvolutionStats.tsx**:
+    *   Atualizei também o card de resumo e suas estatísticas internas para manter a consistência visual com os outros cards, aumentando fontes e ícones tanto no layout vertical quanto no compacto.
 
-4. **PainPointsBottomSheet.tsx**
-   - Bottom sheet arrastável para lista de pontos
-   - Cards informativos com badges de intensidade
-   - Ícones por tipo de dor
-   - Suporte para edição e remoção inline
-
-5. **PainPointDetailPanel.tsx**
-   - Painel lateral para edição detalhada
-   - Slider de intensidade
-   - Seleção de qualidades da dor (queimação, pontada, etc.)
-   - Gráfico de evolução do ponto específico
-
-6. **PainPointModal.tsx**
-   - Modal para edição completa de pontos
-   - Integração com EvaScaleBar
-   - Reset automático ao fechar
-   - Validação e salvamento
-
-### Componentes Modificados
-
-1. **PainMapEditor.tsx**
-   - Integração de todos os novos componentes
-   - Substituição do slider antigo por EvaScaleBar
-   - Integração do PainGauge nas estatísticas
-   - Suporte para bottom sheet e modal
-
-2. **BodyMap.tsx**
-   - Animações pulse-ring para pontos selecionados
-   - Feedback visual melhorado (hover, click)
-   - Tamanho maior para pontos selecionados
-
-3. **PainMapManager.tsx**
-   - Integração com novos componentes visuais
-   - Layout híbrido melhorado
-   - Suporte para evolução e estatísticas
-
-4. **tailwind.config.ts**
-   - Adicionadas cores EVA customizadas (eva-0 a eva-10)
-   - Animações: pulse-ring, gauge-rotate
-   - Keyframes para efeitos visuais
-
-### Melhorias Técnicas
-
-- ✅ Sem erros de lint
-- ✅ Tipagem TypeScript completa
-- ✅ Responsividade para mobile e desktop
-- ✅ Animações suaves e performáticas
-- ✅ Acessibilidade (aria-labels, keyboard navigation)
-- ✅ Estado gerenciado corretamente (reset ao fechar modal)
-
-### Compatibilidade com Supabase
-
-- ✅ Verificado schema da tabela `pain_maps`
-- ✅ Estrutura atual: `pain_points` como JSONB
-- ⚠️ **Nota**: Hooks ainda referenciam `pain_map_points` (estrutura futura)
-- ✅ Componentes funcionam com ambas as estruturas
-
-### Status do Commit
-
-- ✅ Commit realizado: `deaffe5`
-- ✅ Push para GitHub concluído
-- ✅ 10 arquivos alterados
-- ✅ 1362 inserções, 81 deleções
-
-## Próximos Passos Recomendados
-
-1. **Testar integração completa** em ambiente de desenvolvimento
-2. **Verificar performance** com múltiplos pontos de dor
-3. **Validar responsividade** em dispositivos reais
-4. **Considerar migração** para estrutura `pain_map_points` se necessário
-5. **Adicionar testes unitários** para novos componentes
-
+Verifiquei a pasta `.agent` conforme solicitado, mas ela não continha guias de estilo específicos (apenas arquivos ignorados), então segui as boas práticas de UI para garantir legibilidade e consistência visual no projeto.
