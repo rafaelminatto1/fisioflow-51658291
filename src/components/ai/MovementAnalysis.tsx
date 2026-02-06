@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { storage, functions } from '@/lib/firebase';
+import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { analyzeMovement } from '@/services/ai/firebaseAIService';
 
@@ -341,7 +341,6 @@ export function MovementAnalysis({
       // Clear progress after a delay
       setTimeout(() => setAnalysisProgress(null), 3000);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoFile, patientId, exerciseId, exerciseName, demoVideoUrl, expectedReps, focusAreas, language, onAnalysisComplete]);
 
   /**

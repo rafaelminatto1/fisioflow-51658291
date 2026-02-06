@@ -24,6 +24,7 @@
     }
   ],
   "hosting": {
+    "site": "fisioflow-migration",
     "public": "dist",
     "ignore": [
       "firebase.json",

@@ -25,8 +25,6 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Appointment } from '@/types';
 
-type Rating = 1 | 2 | 3 | 4 | 5;
-
 export default function EvaluateSessionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -41,15 +39,10 @@ export default function EvaluateSessionScreen() {
   const [patientResponse, setPatientResponse] = useState('');
   const [painLevel, setPainLevel] = useState<number>(0);
   const [functionalImprovement, setFunctionalImprovement] = useState<number>(0);
-  const [exercisesPerformed, setExercisesPerformed] = useState<boolean[]>([]);
   const [notes, setNotes] = useState('');
   const [homeExercisePrescribed, setHomeExercisePrescribed] = useState(false);
 
-  useEffect(() => {
-    loadAppointment();
-  }, [appointmentId]);
-
-  const loadAppointment = async () => {
+  const loadAppointment = useCallback(async () => {
     try {
       const docRef = doc(db, 'appointments', appointmentId);
       const docSnap = await getDoc(docRef);
@@ -62,7 +55,11 @@ export default function EvaluateSessionScreen() {
       console.error('Error loading appointment:', error);
       setLoading(false);
     }
-  };
+  }, [appointmentId]);
+
+  useEffect(() => {
+    loadAppointment();
+  }, [loadAppointment]);
 
   const handleSaveEvaluation = useCallback(async () => {
     try {
@@ -75,7 +72,6 @@ export default function EvaluateSessionScreen() {
           patient_response: patientResponse,
           pain_level: painLevel,
           functional_improvement: functionalImprovement,
-          exercises_performed: exercisesPerformed,
           notes,
           home_exercise_prescribed: homeExercisePrescribed,
         },
