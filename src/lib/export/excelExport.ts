@@ -1,8 +1,10 @@
+
+// Types
+
 import XLSX from './exceljsWrapper';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-// Types
 export interface ExcelColumn {
   header: string;
   key: string;

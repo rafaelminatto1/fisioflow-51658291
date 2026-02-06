@@ -1,9 +1,11 @@
+
+// Variáveis de Ambiente (Configurar no Google Cloud / .env)
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
 import { google } from 'googleapis';
 import { defineString } from 'firebase-functions/params';
 
-// Variáveis de Ambiente (Configurar no Google Cloud / .env)
 const GOOGLE_CLIENT_ID = defineString('GOOGLE_CLIENT_ID');
 const GOOGLE_CLIENT_SECRET = defineString('GOOGLE_CLIENT_SECRET');
 const GOOGLE_MAPS_KEY = defineString('GOOGLE_MAPS_API_KEY');

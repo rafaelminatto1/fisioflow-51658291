@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { Save, X, Eye, EyeOff } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { toast } from 'sonner';
-
 import type { WikiPage } from '@/types/wiki';
 
 interface WikiEditorProps {

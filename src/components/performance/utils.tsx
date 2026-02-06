@@ -7,8 +7,6 @@
  * @module components/performance/utils
  */
 
-import { useCallback, useRef, useEffect } from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Custom hook that returns a memoized callback with debounce
@@ -25,6 +23,10 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
  * }, 300);
  * ```
  */
+
+import { useCallback, useRef, useEffect } from 'react';
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number

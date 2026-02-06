@@ -2,14 +2,15 @@
  * useIntelligentConductSuggestions - Migrated to Firebase
  *
  */
-import { useQuery } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit,  } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
 
-import { useSoapRecords } from './useSoapRecords';
 
 
 // Helper to convert doc
+
+import { useQuery } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { useSoapRecords } from './useSoapRecords';
+
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export interface ConductSuggestion {

@@ -7,15 +7,17 @@
  * @module medical/records
  */
 
+
+/**
+ * Cloud Function: Criar evolução completa (SOAP avançado)
+ */
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import { getStorage } from 'firebase-admin/storage';
 import * as logger from 'firebase-functions/logger';
 import { v4 as uuidv4 } from 'uuid';
 
-/**
- * Cloud Function: Criar evolução completa (SOAP avançado)
- */
 export const createEvolution = onCall({
   cors: true,
   region: 'southamerica-east1',

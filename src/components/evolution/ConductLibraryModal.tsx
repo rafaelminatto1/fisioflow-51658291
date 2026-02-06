@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, BookOpen, Copy, Edit, Trash2 } from 'lucide-react';
 import { useConductLibrary, useDeleteConduct, type ConductTemplate } from '@/hooks/useConductLibrary';
-import {
+
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,

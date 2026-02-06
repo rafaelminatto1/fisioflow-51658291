@@ -1,5 +1,3 @@
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { useRef, useCallback } from 'react';
 
 /**
  * Hook personalizado para queries com cancelamento automático
@@ -12,6 +10,10 @@ import { useRef, useCallback } from 'react';
  *   { enabled: !!searchTerm }
  * );
  */
+
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useRef, useCallback } from 'react';
+
 export function useCancellableQuery<T>(
   queryKey: string[],
   queryFn: () => Promise<T>,

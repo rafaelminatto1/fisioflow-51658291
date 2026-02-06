@@ -3,9 +3,11 @@
  * Run with: node scripts/create-test-data-supabase.mjs
  */
 
-import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration from .env
+
+import { createClient } from '@supabase/supabase-js';
+
 const SUPABASE_URL = 'https://ycvbtjfrchcyvmkvuocu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA';
 

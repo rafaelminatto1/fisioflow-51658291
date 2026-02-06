@@ -2,11 +2,13 @@
  * Tests for usePatientAnalytics hooks
  */
 
+
+// Unmock the module we are testing
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Unmock the module we are testing
 vi.unmock('@/hooks/usePatientAnalytics');
 
 import * as hooks from '../usePatientAnalytics';

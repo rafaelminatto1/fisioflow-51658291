@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Hook para throttle de valores
  * Limita a frequência de atualização de um valor
  */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+
 export function useThrottle<T>(value: T, limit: number = 100): T {
   const [throttledValue, setThrottledValue] = useState<T>(value);
   const lastRan = useRef(Date.now());

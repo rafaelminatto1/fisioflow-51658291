@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
-import { useCardSize } from '@/hooks/useCardSize';
 
 /**
  * Base slot height in pixels (at scale 5 / multiplier 1.0)
  */
+
+import { useMemo } from 'react';
+import { useCardSize } from '@/hooks/useCardSize';
+
 const BASE_SLOT_HEIGHT = 80;
 
 /**

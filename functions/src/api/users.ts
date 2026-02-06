@@ -1,8 +1,10 @@
+
+// Types
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getAdminDb, getAdminAuth } from '../init';
 import { logger } from 'firebase-functions';
 
-// Types
 interface UserData {
     uid: string;
     email: string;

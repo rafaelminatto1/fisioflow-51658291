@@ -3,13 +3,14 @@
  * @module stores/useDragStore
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { DragState, DropTarget, DraggedAppointment } from '@/lib/calendar/types';
 
 // =====================================================================
 // STORE STATE
 // =====================================================================
+
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { DragState, DropTarget, DraggedAppointment } from '@/lib/calendar/types';
 
 interface DragStore extends DragState {
   /** Alvo de drop atual */

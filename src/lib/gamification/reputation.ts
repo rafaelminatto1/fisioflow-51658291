@@ -4,11 +4,13 @@
  * Define títulos baseados em nível e achievements para pacientes
  */
 
-import { Achievement, UnlockedAchievement } from '@/types/gamification';
 
 /**
  * Título baseado em nível
  */
+
+import { Achievement, UnlockedAchievement } from '@/types/gamification';
+
 export interface LevelTitle {
   level: number;
   title: string;

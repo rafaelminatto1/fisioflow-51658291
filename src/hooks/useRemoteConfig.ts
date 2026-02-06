@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import { getRemoteConfig, getValue, fetchAndActivate } from 'firebase/remote-config';
-import { app } from '@/integrations/firebase/app';
 
 /**
  * Hook para gerenciar configurações dinâmicas e Feature Flags
  */
+
+import { useState, useEffect } from 'react';
+import { getRemoteConfig, getValue, fetchAndActivate } from 'firebase/remote-config';
+import { app } from '@/integrations/firebase/app';
+
 export const useRemoteConfig = (key: string, defaultValue: any) => {
   const [value, setValue] = useState(defaultValue);
 

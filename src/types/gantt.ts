@@ -3,11 +3,13 @@
  * Sistema de visualização timeline/Gantt
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
 
 /**
  * Tarefa com dados para Gantt
  */
+
+import { Timestamp } from '@/integrations/firebase/app';
+
 export interface GanttTask {
   id: string;
   title: string;

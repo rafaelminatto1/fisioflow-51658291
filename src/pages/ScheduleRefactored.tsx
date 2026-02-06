@@ -1,3 +1,7 @@
+
+
+// Lazy load CalendarView for better initial load performance
+
 import { memo, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
@@ -26,8 +30,6 @@ import { ptBR } from 'date-fns/locale';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 
-
-// Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
   import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView }))
 );

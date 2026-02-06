@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
-import {
+
     Dialog,
     DialogContent,
     DialogHeader,

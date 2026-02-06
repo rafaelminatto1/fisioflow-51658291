@@ -10,12 +10,14 @@
  * - Pain scale (EVA 0-10)
  */
 
+
+// ===== ENUMS =====
+
 import { pgTable, uuid, text, timestamp, jsonb, pgEnum, integer, boolean, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { patients } from './patients';
 import { appointments } from './appointments';
 
-// ===== ENUMS =====
 export const sessionStatusEnum = pgEnum('session_status', [
     'draft',      // Auto-saved, not finalized
     'finalized',  // Completed and signed

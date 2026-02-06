@@ -11,13 +11,14 @@
  * @version 1.0.0 - Firebase Functions v2
  */
 
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { logger } from 'firebase-functions';
-import { getAdminDb } from '../init';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { logger } from 'firebase-functions';
+import { getAdminDb } from '../init';
 
 interface InactivePatient {
   id: string;

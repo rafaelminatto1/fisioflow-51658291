@@ -1,7 +1,9 @@
+
+// Set viewport configurations for different screen sizes
+
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
-// Set viewport configurations for different screen sizes
 test.describe('FASE 4: Testes de Responsividade', () => {
   test.beforeEach(async ({ page, browser }) => {
     // Set test timeout to 120 seconds

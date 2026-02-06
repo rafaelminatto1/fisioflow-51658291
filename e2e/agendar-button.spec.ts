@@ -3,6 +3,7 @@
  * Garante que ao clicar em "Agendar" o agendamento é salvo e o modal fecha,
  * sem navegar para a tela de avaliação.
  */
+
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 

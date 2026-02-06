@@ -3,7 +3,6 @@
  * Algoritmo para identificar tarefas críticas que determinam a duração mínima do projeto
  */
 
-import type {
   GanttTask,
   GanttDependency,
   CriticalPath,

@@ -1,6 +1,5 @@
-
-import { Transaction } from "@/services/financialService";
-import { format } from "date-fns";
+import { Transaction } from '@/services/financialService';
+import { format } from 'date-fns';
 
 export const downloadCSV = (content: string, filename: string) => {
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });

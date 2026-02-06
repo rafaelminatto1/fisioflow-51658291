@@ -3,12 +3,14 @@
  * Consistent animations and transitions
  */
 
-import { Animated, Easing } from 'react-native';
-import { useAnimationDuration } from '@/hooks/useAccessibility';
 
 /**
  * Animation configurations
  */
+
+import { Animated, Easing } from 'react-native';
+import { useAnimationDuration } from '@/hooks/useAccessibility';
+
 export const Animations = {
   // Durations (in ms)
   durations: {

@@ -1,6 +1,3 @@
-import React, { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 /**
  * CustomModal - A robust modal component that avoids React Error #185
@@ -11,6 +8,10 @@ import { cn } from '@/lib/utils';
  * - Proper event cleanup with refs
  * - Supports mobile (bottom sheet) and desktop (centered) layouts
  */
+
+import React, { useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CustomModalProps {
   open: boolean;

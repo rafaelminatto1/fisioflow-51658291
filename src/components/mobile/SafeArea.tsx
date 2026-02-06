@@ -1,11 +1,12 @@
-import { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
-import { Capacitor } from '@capacitor/core';
 
 /**
  * Wrapper que adiciona safe area insets para iOS (notch e home indicator)
  * Garante que o conteúdo não fique atrás do notch ou do indicador home
  */
+
+import { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
+import { Capacitor } from '@capacitor/core';
 
 export interface SafeAreaProps {
   children: ReactNode;

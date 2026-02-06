@@ -1,4 +1,3 @@
-import { chromium } from 'playwright';
 
 /**
  * FASE 3: Testes Funcionais (15 min)
@@ -8,6 +7,8 @@ import { chromium } from 'playwright';
  * 2. Criar Novo Paciente - Create new patient (without using patient list)
  * 3. Criar Pagamento/Transação - Create payment on financial page
  */
+
+import { chromium } from 'playwright';
 
 (async () => {
   console.log('🚀 Starting FASE 3: Functional Tests');

@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { Arrow, Circle, Layer, Rect, Stage, Text } from 'react-konva';
 
-import { Annotation } from '@/hooks/useAssetAnnotations';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
+
+import { useState } from 'react';
+import { Arrow, Circle, Layer, Rect, Stage, Text } from 'react-konva';
+import { Annotation } from '@/hooks/useAssetAnnotations';
+
 const uuidv4 = (): string => crypto.randomUUID();
 
 interface AnnotationLayerProps {

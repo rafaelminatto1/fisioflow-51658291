@@ -3,12 +3,14 @@
  * Manages offline operations and automatic synchronization
  */
 
-import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {doc, updateDoc, getDoc, setDoc, serverTimestamp} from 'firebase/firestore';
-import {db} from '@/lib/firebase';
 
 // Storage keys
+
+import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, updateDoc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
 const OFFLINE_QUEUE_KEY = '@fisioflow_offline_queue';
 const LAST_SYNC_KEY = '@fisioflow_last_sync';
 const CACHE_VERSION_KEY = '@fisioflow_cache_version';

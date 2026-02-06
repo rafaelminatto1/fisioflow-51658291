@@ -1,13 +1,13 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Key, Download, FileCheck } from "lucide-react";
-import { MFASetupPanel } from "./MFASetupPanel";
-import { DataExportPanel } from "./DataExportPanel";
-import { LGPDConsentModal } from "./LGPDConsentModal";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLGPDConsents } from "@/hooks/useLGPDConsents";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Shield, Key, Download, FileCheck } from 'lucide-react';
+import { MFASetupPanel } from './MFASetupPanel';
+import { DataExportPanel } from './DataExportPanel';
+import { LGPDConsentModal } from './LGPDConsentModal';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLGPDConsents } from '@/hooks/useLGPDConsents';
+import { Badge } from '@/components/ui/badge';
 
 export function SecurityDashboard() {
   const [consentModalOpen, setConsentModalOpen] = useState(false);

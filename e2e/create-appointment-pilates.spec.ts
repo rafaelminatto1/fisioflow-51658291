@@ -5,6 +5,7 @@
  * Rodar com app na porta 8084 e (opcional) já logado:
  *   BASE_URL=http://127.0.0.1:8084 npx playwright test e2e/create-appointment-pilates.spec.ts --project=chromium
  */
+
 import { test, expect } from '@playwright/test';
 
 test.describe('Criar agendamento Pilates (session_type group)', () => {

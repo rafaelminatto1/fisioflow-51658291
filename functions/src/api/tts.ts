@@ -8,15 +8,15 @@
  * @method onRequest
  */
 
-import { onRequest } from 'firebase-functions/v2/https';
-import { HttpsError } from 'firebase-functions/v2/https';
-import { getTextToSpeechClient } from '../lib/text-to-speech';
-import { logger } from '../lib/logger';
-import { CORS_ORIGINS } from '../init';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { onRequest, HttpsError } from 'firebase-functions/v2/https';
+import { getTextToSpeechClient } from '../lib/text-to-speech';
+import { logger } from '../lib/logger';
+import { CORS_ORIGINS } from '../init';
 
 interface TTSRequest {
   text: string;

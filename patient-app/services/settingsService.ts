@@ -3,13 +3,15 @@
  * Handles app settings and preferences
  */
 
-import { AppStorage } from '@/lib/storage';
-import { asyncResult, Result } from '@/lib/async';
-import { log } from '@/lib/logger';
 
 /**
  * App settings interface
  */
+
+import { AppStorage } from '@/lib/storage';
+import { asyncResult, Result } from '@/lib/async';
+import { log } from '@/lib/logger';
+
 export interface AppSettings {
   notifications: boolean;
   exerciseReminders: boolean;

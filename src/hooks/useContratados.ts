@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, getDocs, orderBy, query as firestoreQuery, updateDoc, doc, deleteDoc, getDoc } from '@/integrations/firebase/app';
+import { collection, addDoc, getDocs, orderBy, query as firestoreQuery, updateDoc, doc, deleteDoc, getDoc, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { ContratadoCreate, ContratadoUpdate } from '@/lib/validations/contratado';
-import { db } from '@/integrations/firebase/app';
 
 export interface Contratado {
   id: string;

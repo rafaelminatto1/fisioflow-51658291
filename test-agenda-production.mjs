@@ -1,4 +1,3 @@
-
 import { AppointmentService } from './src/services/appointmentService.ts';
 import { db } from './src/integrations/firebase/app.ts';
 import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';

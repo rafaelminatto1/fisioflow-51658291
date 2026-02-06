@@ -5,7 +5,6 @@
  * evitando re-renders e recalculos desnecessários
  */
 
-import { useMemo, useRef, useCallback, useEffect, useState } from 'react';
 
 /**
  * Hook que mantém o valor anterior de um estado ou prop
@@ -17,6 +16,9 @@ import { useMemo, useRef, useCallback, useEffect, useState } from 'react';
  *   // count mudou
  * }
  */
+
+import { useMemo, useRef, useCallback, useEffect, useState } from 'react';
+
 export function usePrevious<T>(value: T): T | undefined {
   const ref = useRef<T>();
 

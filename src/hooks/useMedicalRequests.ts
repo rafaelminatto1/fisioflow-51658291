@@ -2,16 +2,17 @@
  * useMedicalRequests - Migrated to Firebase
  */
 
+
+
+// Helper to convert doc
+
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query as firestoreQuery, where, getDocs, addDoc, deleteDoc, doc, orderBy, getDoc,  } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, addDoc, deleteDoc, doc, orderBy, getDoc, db, getFirebaseStorage } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, getFirebaseStorage } from '@/integrations/firebase/app';
-
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Helper to convert doc
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...doc.data() });
 
 export interface MedicalRequestFile {
