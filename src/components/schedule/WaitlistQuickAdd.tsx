@@ -13,18 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Clock, Calendar, AlertCircle, User } from 'lucide-react';
+import { Clock, Calendar, AlertCircle } from 'lucide-react';
 import { useAddToWaitlist } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import { toast } from 'sonner';
-import { PatientHelpers } from '@/types';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
 
 interface WaitlistQuickAddProps {
   open: boolean;
@@ -122,24 +115,12 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00', def
           {/* Patient Select */}
           <div className="space-y-2">
             <Label>Paciente</Label>
-            <Select value={patientId} onValueChange={setPatientId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o paciente" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => {
-                  const patientName = PatientHelpers.getName(patient);
-                  return (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      <div className="flex items-center gap-2">
-                        <User className="h-3 w-3" />
-                        {patientName}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <PatientCombobox
+              patients={patients}
+              value={patientId}
+              onValueChange={setPatientId}
+              disabled={isAdding}
+            />
           </div>
 
           {/* Priority */}
