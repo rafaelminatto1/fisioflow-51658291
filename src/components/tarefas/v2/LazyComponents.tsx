@@ -4,10 +4,10 @@
 import { lazy, Suspense } from 'react';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
-export const LazyKanbanColumnV2 = lazy(() => import('./KanbanColumnV2'));
+export const LazyKanbanColumnV2 = lazy(() => import('./KanbanColumnV2').then(m => ({ default: m.KanbanColumnV2 })));
 // KanbanCardV2 removido do lazy load pois é necessário imediatamente em KanbanColumnV2
-export const LazyTaskDetailModal = lazy(() => import('./TaskDetailModal'));
-export const LazyTaskQuickCreateModal = lazy(() => import('./TaskQuickCreateModal'));
+export const LazyTaskDetailModal = lazy(() => import('./TaskDetailModal').then(m => ({ default: m.TaskDetailModal })));
+export const LazyTaskQuickCreateModal = lazy(() => import('./TaskQuickCreateModal').then(m => ({ default: m.TaskQuickCreateModal })));
 
 // Componente de fallback para lazy loading
 export function LazyComponentWrapper({ children }: { children: React.ReactNode }) {
