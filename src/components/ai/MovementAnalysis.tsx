@@ -42,7 +42,7 @@ import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { storage, functions } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { httpsCallable } from 'firebase/functions';
+import { analyzeMovement } from '@/services/ai/firebaseAIService';
 
 // ============================================================================
 // TYPES
@@ -288,18 +288,12 @@ export function MovementAnalysis({
         message: language === 'pt-BR' ? 'Analisando movimento com IA...' : 'Analyzing movement with AI...',
       });
 
-      // 2. Call Cloud Function for analysis
-      const aiMovementAnalysis = httpsCallable(functions, 'aiMovementAnalysis');
-      const result = await aiMovementAnalysis({
-        patientVideoUrl,
+      // 2. Call Cloud Function for analysis (via unified AI service)
+      const data = await analyzeMovement({
+        videoData: patientVideoUrl,
         patientId,
-        exerciseId,
-        exerciseName,
-        language,
-        demoVideoUrl,
-        expectedReps,
-        focusAreas,
-      });
+        context: JSON.stringify({ exerciseId, exerciseName, demoVideoUrl, expectedReps, focusAreas }),
+      }) as MovementAnalysisResult;
 
       setAnalysisProgress({
         stage: 'processing',
