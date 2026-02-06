@@ -40,7 +40,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LazyKanbanColumnV2, LazyKanbanColumnWrapper, LazyTaskDetailModal, LazyTaskQuickCreateModal } from './LazyComponents';
+import { LazyKanbanColumnV2, LazyTaskDetailModal, LazyTaskQuickCreateModal } from './LazyComponents';
 import {
   Tarefa,
   TarefaStatus,
@@ -321,12 +321,14 @@ export function KanbanBoardV2({
             onClick: () => handleAddTask('A_FAZER')
           }}
         />
-        <TaskQuickCreateModal
-          open={quickCreateOpen}
-          onOpenChange={setQuickCreateOpen}
-          defaultStatus={defaultStatus}
-          defaultProjectId={projectId}
-        />
+        <Suspense fallback={<LoadingSkeleton type="card" className="w-full h-64" />}>
+          <LazyTaskQuickCreateModal
+            open={quickCreateOpen}
+            onOpenChange={setQuickCreateOpen}
+            defaultStatus={defaultStatus}
+            defaultProjectId={projectId}
+          />
+        </Suspense>
       </>
     );
   }
@@ -550,20 +552,19 @@ export function KanbanBoardV2({
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-6 overflow-x-auto pb-4">
           {statuses.map(status => (
-            <LazyKanbanColumnWrapper
-              key={status}
-              status={status}
-              tarefas={groupedTarefas[status] || []}
-              wipLimit={wipLimits[status]}
-              onAddTask={handleAddTask}
-              onEditTask={handleEditTask}
-              onViewTask={handleViewTask}
-              onDeleteTask={handleDeleteTask}
-              onDuplicateTask={handleDuplicateTask}
-              onArchiveTask={handleArchiveTask}
-            >
-              <LazyKanbanColumnV2 />
-            </LazyKanbanColumnWrapper>
+            <Suspense key={status} fallback={<LoadingSkeleton type="card" className="w-[320px] h-[500px]" />}>
+              <LazyKanbanColumnV2
+                status={status}
+                tarefas={groupedTarefas[status] || []}
+                wipLimit={wipLimits[status]}
+                onAddTask={handleAddTask}
+                onEditTask={handleEditTask}
+                onViewTask={handleViewTask}
+                onDeleteTask={handleDeleteTask}
+                onDuplicateTask={handleDuplicateTask}
+                onArchiveTask={handleArchiveTask}
+              />
+            </Suspense>
           ))}
         </div>
       </DragDropContext>

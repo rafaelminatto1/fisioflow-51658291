@@ -53,40 +53,42 @@ export const RescheduleCapacityDialog: React.FC<RescheduleCapacityDialogProps> =
               Capacidade Máxima Atingida
             </AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="space-y-3 text-red-700">
-            <p>
-              O novo horário de <strong>{appointment.patientName}</strong> já está no limite de capacidade.
-            </p>
-            <div className="rounded-lg border border-red-200/70 bg-white/85 p-3 space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Data
-                </span>
-                <span className="font-medium">
-                  {format(newDate, "dd 'de' MMMM", { locale: ptBR })}
-                </span>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3 text-red-700">
+              <p>
+                O novo horário de <strong>{appointment.patientName}</strong> já está no limite de capacidade.
+              </p>
+              <div className="rounded-lg border border-red-200/70 bg-white/85 p-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Data
+                  </span>
+                  <span className="font-medium">
+                    {format(newDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    Horário
+                  </span>
+                  <span className="font-medium">{newTime}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Users className="h-3.5 w-3.5" />
+                    Ocupação após mover
+                  </span>
+                  <span className="font-semibold text-red-700">
+                    {currentCount}/{maxCapacity}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  Horário
-                </span>
-                <span className="font-medium">{newTime}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" />
-                  Ocupação após mover
-                </span>
-                <span className="font-semibold text-red-700">
-                  {currentCount}/{maxCapacity}
-                </span>
-              </div>
+              <p className="font-medium">
+                Deseja manter o reagendamento mesmo assim?
+              </p>
             </div>
-            <p className="font-medium">
-              Deseja manter o reagendamento mesmo assim?
-            </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
 

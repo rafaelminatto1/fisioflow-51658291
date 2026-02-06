@@ -331,6 +331,7 @@ export default function ClinicalAnalysisPage() {
                 <ChatInterface
                   patientId={selectedPatient}
                   patientName={selectedPatientObj?.name || ''}
+                  useRAG={useRAG}
                 />
               </TabsContent>
 
