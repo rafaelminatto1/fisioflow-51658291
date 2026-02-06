@@ -7,7 +7,6 @@
 
 import { onCall } from 'firebase-functions/v2/https';
 import { STANDARD_FUNCTION } from '../lib/function-config';
-import { getPool, CORS_ORIGINS } from '../init';
 
 // ============================================================================
 // EXERCISE HANDLERS IMPORT
