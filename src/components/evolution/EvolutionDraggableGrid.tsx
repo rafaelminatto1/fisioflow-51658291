@@ -304,7 +304,6 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     previousEvolutions = [],
     onCopyLastEvolution
 }) => {
-    const forceDefaultLayout = true; // Layout padrão travado para todos
     const normalizeLayout = React.useCallback((layout: Layout[], cols = 12) => {
         if (!Array.isArray(layout)) return [];
         return layout.map((item) => {
@@ -456,7 +455,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         if (user?.id && profile?.preferences?.evolution_layout) {
             try {
                 const profileRef = doc(db, 'profiles', user.id);
-                const { _evolution_layout, ...restPreferences } = profile.preferences;
+                const restPreferences = { ...profile.preferences };
+                delete restPreferences.evolution_layout;
                 await updateDoc(profileRef, {
                     preferences: restPreferences,
                     updated_at: new Date().toISOString(),
@@ -494,12 +494,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     }, [onExercisesChange]);
 
     const toggleEditMode = () => {
-        if (forceDefaultLayout) {
-            return;
-        }
         if (!isEditable) {
-            // When entering edit mode, initialize currentLayout with the current state of gridItems
-            const initialLayout = gridItems.map(item => ({
+            // Start from saved layout when available to avoid snapping back to defaults
+            const fallbackLayout = gridItems.map(item => ({
                 i: item.id,
                 w: item.defaultLayout.w,
                 h: item.defaultLayout.h,
@@ -508,6 +505,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 minW: item.defaultLayout.minW,
                 minH: item.defaultLayout.minH,
             }));
+            const initialLayout = storedLayouts?.lg?.length
+                ? normalizeLayout(storedLayouts.lg)
+                : normalizeLayout(fallbackLayout);
             setCurrentLayout(initialLayout);
             setIsEditable(true);
         } else {
@@ -854,11 +854,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         }));
 
         // Use stored layout when available (localStorage or Firestore), otherwise default
-        const desktopLayout = forceDefaultLayout
-            ? lgLayout
-            : (storedLayouts?.lg && storedLayouts.lg.length > 0)
-                ? normalizeLayout(storedLayouts.lg)
-                : lgLayout;
+        const desktopLayout = (storedLayouts?.lg && storedLayouts.lg.length > 0)
+            ? normalizeLayout(storedLayouts.lg)
+            : lgLayout;
 
         // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 1 for xxs as per DraggableGrid config)
         // and stack them vertically
@@ -896,7 +894,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             xs: xsLayout,
             xxs: xxsLayout
         };
-    }, [gridItems, normalizeLayout, storedLayouts, forceDefaultLayout]);
+    }, [gridItems, normalizeLayout, storedLayouts]);
 
     return (
         <TooltipProvider>
@@ -932,12 +930,10 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                             </>
                         ) : (
                             <>
-                                {!forceDefaultLayout && (
-                                    <Button variant="outline" size="sm" onClick={toggleEditMode} className="h-8.5 px-3 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
-                                        <LayoutDashboard className="h-3.5 w-3.5 text-primary" />
-                                        <span className="font-semibold">Personalizar</span>
-                                    </Button>
-                                )}
+                                <Button variant="outline" size="sm" onClick={toggleEditMode} className="h-8.5 px-3 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                    <LayoutDashboard className="h-3.5 w-3.5 text-primary" />
+                                    <span className="font-semibold">Personalizar</span>
+                                </Button>
                             </>
                         )}
                     </div>

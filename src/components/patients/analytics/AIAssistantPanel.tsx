@@ -61,7 +61,7 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data: analyticsData } = usePatientAnalyticsDashboard(patientId);
-  const chat = useAIPatientAssistant(patientId, patientName);
+  const chat = useAIPatientAssistant(patientId, patientName, analyticsData);
   const insights = useAIInsights({
     patientId,
     patientName,
@@ -345,7 +345,7 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-2/3" />
                   </div>
-                ) : aiSummary.isError ? (
+                ) : insights.error ? (
                   <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
                     <AlertTriangle className="h-10 w-10 mb-2 text-amber-500 opacity-50" />
                     <p className="text-xs text-muted-foreground">
@@ -358,12 +358,12 @@ export function AIAssistantPanel({ patientId, patientName }: AIAssistantPanelPro
                       variant="outline" 
                       size="sm" 
                       className="mt-4"
-                      onClick={() => aiSummary.mutate(patientId)}
+                      onClick={() => insights.generate()}
                     >
                       Tentar Novamente
                     </Button>
                   </div>
-                ) : aiSummary.data?.summary ? (
+                ) : insights.completion ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     <ReactMarkdown
                       components={{

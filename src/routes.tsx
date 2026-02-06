@@ -11,6 +11,7 @@ import { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { RouteErrorBoundary } from '@/components/error-boundaries/RouteErrorBoundary';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
@@ -67,6 +68,7 @@ const EvolutionTemplatesPage = lazy(() => import(/* webpackChunkName: "cadastros
 const EvaluationFormsPage = lazy(() => import(/* webpackChunkName: "cadastros-forms" */ "./pages/cadastros/EvaluationFormsPage"));
 const EvaluationFormBuilderPage = lazy(() => import(/* webpackChunkName: "cadastros-form-builder" */ "./pages/cadastros/EvaluationFormBuilderPage"));
 const PatientObjectivesPage = lazy(() => import(/* webpackChunkName: "cadastros-objectives" */ "./pages/cadastros/PatientObjectivesPage"));
+const DoctorManagement = lazy(() => import(/* webpackChunkName: "cadastros-doctors" */ "./pages/DoctorManagement").then(module => ({ default: module.DoctorManagement })));
 
 // Financial pages
 const ContasFinanceirasPage = lazy(() => import(/* webpackChunkName: "financial-accounts" */ "./pages/financeiro/ContasFinanceirasPage"));
@@ -280,6 +282,7 @@ export function AppRoutes() {
             <Route path="/cadastros/fichas-avaliacao" element={<ProtectedRoute><EvaluationFormsPage /></ProtectedRoute>} />
             <Route path="/cadastros/fichas-avaliacao/:id/campos" element={<ProtectedRoute><EvaluationFormBuilderPage /></ProtectedRoute>} />
             <Route path="/cadastros/objetivos" element={<ProtectedRoute><PatientObjectivesPage /></ProtectedRoute>} />
+            <Route path="/cadastros/medicos" element={<ProtectedRoute><DoctorManagement /></ProtectedRoute>} />
 
             {/* Financeiro Avançado - Fase 4 */}
             <Route path="/financeiro/contas" element={<ProtectedRoute><ContasFinanceirasPage /></ProtectedRoute>} />
@@ -318,10 +321,10 @@ export function AppRoutes() {
             <Route path="/gamification/quests" element={<ProtectedRoute><GamificationQuestsPage /></ProtectedRoute>} />
             <Route path="/gamification/shop" element={<ProtectedRoute><GamificationShopPage /></ProtectedRoute>} />
             <Route path="/gamification/leaderboard" element={<ProtectedRoute><GamificationLeaderboardPage /></ProtectedRoute>} />
-            <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot /></ProtectedRoute>} />
-            <Route path="/computer-vision/:patientId?" element={<ProtectedRoute><ComputerVisionExercise userId="" /></ProtectedRoute>} />
-            <Route path="/intelligent-reports/:patientId" element={<ProtectedRoute><IntelligentReports patientId="" patientName="" /></ProtectedRoute>} />
-            <Route path="/augmented-reality/:patientId?" element={<ProtectedRoute><AugmentedRealityExercise /></ProtectedRoute>} />
+            <Route path="/chatbot" element={<ProtectedRoute><MainLayout><MedicalChatbot userId="system" /></MainLayout></ProtectedRoute>} />
+            <Route path="/computer-vision/:patientId?" element={<ProtectedRoute><MainLayout><ComputerVisionExercise /></MainLayout></ProtectedRoute>} />
+            <Route path="/intelligent-reports/:patientId" element={<ProtectedRoute><MainLayout><IntelligentReports patientId="" patientName="" /></MainLayout></ProtectedRoute>} />
+            <Route path="/augmented-reality/:patientId?" element={<ProtectedRoute><MainLayout><AugmentedRealityExercise /></MainLayout></ProtectedRoute>} />
             <Route path="/admin/gamification" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminGamificationPage /></ProtectedRoute>} />
 
             {/* Image Analysis Module (NeuroPose) */}

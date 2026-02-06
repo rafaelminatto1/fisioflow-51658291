@@ -109,13 +109,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {customHeader ? (
           customHeader
         ) : !hideDefaultHeader && (
-          <header className="hidden md:flex h-16 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-6 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
-                  <Stethoscope className="w-5 h-5 text-white" />
+          <header className="hidden md:flex h-11 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-3.5 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
+                  <Stethoscope className="w-3 h-3 text-white" />
                 </div>
-                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 tracking-tight">
+                <h2 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 tracking-tight">
                   FisioFlow
                 </h2>
               </div>
@@ -123,26 +123,26 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               {/* Breadcrumbs can go here or be below */}
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2.5">
               <GlobalSearch />
 
-              <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2" />
+              <div className="h-3.5 w-px bg-gray-200 dark:bg-gray-700 mx-0.5" />
 
               {/* Indicador de usuários online */}
               <OnlineUsersIndicator />
 
-              <NotificationBell />
+              <NotificationBell className="h-7.5 w-7.5" />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-3 h-10 px-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                    className="flex items-center gap-2 h-7.5 px-2 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                     data-testid="user-menu"
                   >
                     {loading ? (
                       <>
-                        <Skeleton className="w-9 h-9 rounded-full" />
+                        <Skeleton className="w-6 h-6 rounded-full" />
                         <div className="flex flex-col items-start gap-1">
                           <Skeleton className="hidden lg:block h-3 w-20" />
                           <Skeleton className="hidden lg:block h-2 w-12" />
@@ -151,13 +151,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     ) : (
                       <>
                         <div className="relative">
-                          <Avatar className="w-9 h-9 ring-2 ring-white dark:ring-gray-800 shadow-sm">
+                          <Avatar className="w-6 h-6 ring-2 ring-white dark:ring-gray-800 shadow-sm">
                             <AvatarImage src={profile?.avatar_url || ''} />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white font-medium">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
+                          <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 border border-white dark:border-gray-900 rounded-full"></span>
                         </div>
                         <div className="hidden lg:flex flex-col items-start text-sm">
                           <span className="font-semibold text-gray-700 dark:text-gray-200 leading-none">{displayName}</span>
@@ -165,7 +165,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                         </div>
                       </>
                     )}
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-800/50 shadow-xl rounded-2xl animate-scale-in">

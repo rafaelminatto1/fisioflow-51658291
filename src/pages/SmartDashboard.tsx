@@ -30,7 +30,7 @@ type ViewMode = 'today' | 'week' | 'month' | 'custom';
 
 export default function SmartDashboard() {
   const [isEditable, setIsEditable] = useState(false);
-  const [savedLayout, setSavedLayout] = useState<Layout>([]);
+  const [savedLayout, setSavedLayout] = useState<Layout[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('today');
 
   // Load layout from localStorage on mount
@@ -38,14 +38,17 @@ export default function SmartDashboard() {
     const saved = localStorage.getItem('dashboard_layout_v1');
     if (saved) {
       try {
-        setSavedLayout(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setSavedLayout(parsed);
+        }
       } catch (e) {
         logger.warn('Failed to parse saved layout', e, 'SmartDashboard');
       }
     }
   }, []);
 
-  const handleSaveLayout = (layout: Layout) => {
+  const handleSaveLayout = (layout: Layout[]) => {
     localStorage.setItem('dashboard_layout_v1', JSON.stringify(layout));
     setSavedLayout(layout);
     setIsEditable(false);
@@ -566,7 +569,7 @@ export default function SmartDashboard() {
               setSavedLayout(layout);
             }
           }}
-          savedLayout={savedLayout}
+          layouts={savedLayout.length > 0 ? { lg: savedLayout, md: savedLayout } : undefined}
           isEditable={isEditable}
           rowHeight={80}
         />

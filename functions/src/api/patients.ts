@@ -17,6 +17,7 @@ import { Patient } from '../types/models';
 import { setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
 import * as admin from 'firebase-admin';
+import { clearPatientRagIndex, triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
 
 interface ListPatientsRequest {
   status?: string;
@@ -38,10 +39,52 @@ interface ListPatientsResponse {
 
 const firebaseAuth = admin.auth();
 
+async function triggerPatientRagReindexSafe(
+  patientId: string | undefined,
+  organizationId: string | undefined,
+  reason: string
+): Promise<void> {
+  if (!patientId) return;
+
+  try {
+    await triggerPatientRagReindex({
+      patientId,
+      organizationId,
+      reason,
+    });
+  } catch (error) {
+    logger.warn('Failed to run incremental patient RAG reindex from patients API', {
+      patientId,
+      organizationId,
+      reason,
+      error: (error as Error).message,
+    });
+  }
+}
+
+async function clearPatientRagIndexSafe(
+  patientId: string | undefined,
+  organizationId: string | undefined,
+  reason: string
+): Promise<void> {
+  if (!patientId) return;
+
+  try {
+    await clearPatientRagIndex(patientId, organizationId);
+  } catch (error) {
+    logger.warn('Failed to clear patient RAG index from patients API', {
+      patientId,
+      organizationId,
+      reason,
+      error: (error as Error).message,
+    });
+  }
+}
+
 /**
  * Helper to verify Firebase ID token from Authorization header
  */
-async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
+export async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -62,7 +105,7 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
 /**
  * Helper to get organization ID from user ID
  */
-async function getOrganizationId(userId: string): Promise<string> {
+export async function getOrganizationId(userId: string): Promise<string> {
   try {
     const pool = getPool();
     const result = await pool.query('SELECT organization_id FROM profiles WHERE user_id = $1', [userId]);
@@ -518,6 +561,7 @@ export const createPatientHttp = onRequest(
       }
 
       const patient = result.rows[0];
+      await triggerPatientRagReindexSafe(patient.id, organizationId, 'patient_created_http');
 
       // [SYNC] Write to Firestore for legacy frontend compatibility
       try {
@@ -624,6 +668,7 @@ export const updatePatientHttp = onRequest(
         values
       );
       const patient = result.rows[0];
+      await triggerPatientRagReindexSafe(patientId, organizationId, 'patient_updated_http');
 
       // [SYNC] Write to Firestore for legacy frontend compatibility
       try {
@@ -678,6 +723,7 @@ export const deletePatientHttp = onRequest(
         [patientId, organizationId]
       );
       if (result.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
+      await clearPatientRagIndexSafe(patientId, organizationId, 'patient_soft_deleted_http');
 
       // [SYNC] Sync soft-delete to Firestore
       try {
@@ -1020,6 +1066,7 @@ export const createPatientHandler = async (request: any) => {
     }
 
     const patient = result.rows[0];
+    await triggerPatientRagReindexSafe(patient.id, auth.organizationId, 'patient_created');
 
     // [SYNC] Write to Firestore for legacy frontend compatibility
     try {
@@ -1175,6 +1222,7 @@ export const updatePatientHandler = async (request: any) => {
 
     const result = await pool.query(query, values);
     const patient = result.rows[0];
+    await triggerPatientRagReindexSafe(id, auth.organizationId, 'patient_updated');
 
     // [SYNC] Write to Firestore for legacy frontend compatibility
     try {
@@ -1258,6 +1306,7 @@ export const deletePatientHandler = async (request: any) => {
     if (result.rows.length === 0) {
       throw new HttpsError('not-found', 'Paciente não encontrado');
     }
+    await clearPatientRagIndexSafe(patientId, auth.organizationId, 'patient_soft_deleted');
 
     // [SYNC] Sync soft-delete to Firestore
     try {

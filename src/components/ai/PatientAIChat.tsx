@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
+import { usePatientAnalyticsDashboard } from '@/hooks/usePatientAnalytics';
+import { buildPatientChatContext } from '@/lib/ai/patient-chat-context';
 
 interface Props {
   patientId: string;
@@ -21,6 +23,17 @@ export function PatientAIChat({ patientId, patientName }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const { data: analyticsData, isLoading: analyticsLoading } = usePatientAnalyticsDashboard(patientId);
+
+  const context = useMemo(
+    () =>
+      buildPatientChatContext({
+        patientId,
+        patientName,
+        analyticsData,
+      }),
+    [patientId, patientName, analyticsData]
+  );
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -33,11 +46,7 @@ export function PatientAIChat({ patientId, patientName }: Props) {
     try {
       const aiResponse = await chatWithClinicalAssistant({
         message: userMsg,
-        context: {
-          patientId,
-          condition: patientName,
-          sessionCount: 0,
-        },
+        context,
         conversationHistory: messages.map(msg => ({
           role: msg.role === 'model' ? 'assistant' : 'user',
           content: msg.content,
@@ -71,6 +80,9 @@ export function PatientAIChat({ patientId, patientName }: Props) {
         <p className="text-xs text-gray-500">
           Pergunte sobre o histórico de {patientName}. Ex: "Resuma a evolução da dor".
         </p>
+        {analyticsLoading && (
+          <p className="text-[11px] text-purple-600">Preparando contexto clinico do paciente...</p>
+        )}
       </CardHeader>
       
       <CardContent className="flex-1 p-0 overflow-hidden">

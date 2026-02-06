@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { format, isSameDay, parseISO } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, Ban, Calendar, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,16 +17,6 @@ import {
   shouldShowText,
   MAX_CARDS_WITHOUT_BADGE
 } from '@/lib/calendar/dragPreview';
-
-const parseAppointmentDate = (date: string | Date | null | undefined): Date | null => {
-    if (!date) return null;
-    return typeof date === 'string' ? parseISO(date) : date;
-};
-
-const normalizeTime = (time: string | null | undefined): string => {
-    if (!time || !time.trim()) return '00:00';
-    return time.substring(0, 5);
-};
 
 interface CalendarDayViewProps {
     currentDate: Date;
@@ -354,28 +344,9 @@ const CalendarDayView = memo(({
                             const isTimeSlotBlocked = isTimeBlocked(aptTime);
                             const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === aptTime;
 
-                            // Layout lateral: appointments que se sobrepõem no tempo dividem a largura (ex.: 08:30 e 09:00)
-                            let { index: stackIndex, count: stackCount } = getOverlapStackPosition(dayAppointments, apt);
+                            // Keep card sizing stable while dragging; preview handles target feedback.
+                            const { index: stackIndex, count: stackCount } = getOverlapStackPosition(dayAppointments, apt);
                             const hasOverlap = stackCount > 1;
-
-                            // Durante o drag sobre este slot de destino, redimensionar os cards como se o arrastado já estivesse lá
-                            if (isDropTarget && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
-                                const futureDayAppointments = [...dayAppointments, dragState.appointment];
-                                const future = getOverlapStackPosition(futureDayAppointments, apt);
-                                stackCount = future.count;
-                                stackIndex = future.index;
-                            }
-
-                            // Slot de origem: redimensionar os demais cards como se o arrastado já tivesse saído
-                            const draggedDate = parseAppointmentDate(dragState.appointment?.date);
-                            const draggedTime = dragState.appointment?.time ? normalizeTime(dragState.appointment.time) : null;
-                            const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(currentDate, draggedDate);
-                            if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id) {
-                                const originDayAppointments = dayAppointments.filter(a => a.id !== dragState.appointment!.id);
-                                const origin = getOverlapStackPosition(originDayAppointments, apt);
-                                stackCount = origin.count;
-                                stackIndex = origin.index;
-                            }
 
                             const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100;
                             const leftOffset = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;

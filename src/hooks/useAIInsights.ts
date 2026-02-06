@@ -14,6 +14,7 @@ import {
 } from '@/services/ai/firebaseAIService';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { buildPatientChatContext } from '@/lib/ai/patient-chat-context';
 
 // ============================================================================
 // TYPES
@@ -276,7 +277,11 @@ interface ChatMessage {
 /**
  * Hook for AI chat assistant for patient analysis (Firebase Cloud Functions)
  */
-export function useAIPatientAssistant(patientId: string, patientName: string) {
+export function useAIPatientAssistant(
+  patientId: string,
+  patientName: string,
+  analyticsData?: PatientAnalyticsData | null
+) {
   const welcomeMessage: ChatMessage = {
     id: 'welcome',
     role: 'assistant',
@@ -305,7 +310,11 @@ export function useAIPatientAssistant(patientId: string, patientName: string) {
       ];
       const response = await chatWithClinicalAssistant({
         message: msg.content,
-        context: { patientId, condition: patientName, sessionCount: 0 },
+        context: buildPatientChatContext({
+          patientId,
+          patientName,
+          analyticsData,
+        }),
         conversationHistory,
       });
       const assistantMsg: ChatMessage = { id: `assistant-${Date.now()}`, role: 'assistant', content: response };
@@ -317,7 +326,7 @@ export function useAIPatientAssistant(patientId: string, patientName: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [patientId, patientName, messages]);
+  }, [patientId, patientName, messages, analyticsData]);
 
   return {
     messages,

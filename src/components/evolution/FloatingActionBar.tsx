@@ -1,16 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
 
     Save,
     CheckCircle2,
-    Clock,
     Keyboard,
     Cloud,
     Loader2,
-    Play,
-    Pause,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +22,6 @@ interface FloatingActionBarProps {
     isCompleting?: boolean;
     autoSaveEnabled?: boolean;
     lastSavedAt?: Date | null;
-    sessionStartTime?: Date;
     disabled?: boolean;
     className?: string;
 }
@@ -38,14 +34,9 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     isCompleting = false,
     autoSaveEnabled = true,
     lastSavedAt,
-    sessionStartTime,
     disabled = false,
     className,
 }) => {
-    const [elapsedTime, setElapsedTime] = useState<string>('00:00');
-    const [isPaused, setIsPaused] = useState(false);
-    const [pausedDuration, setPausedDuration] = useState(0);
-    const [pauseStartTime, setPauseStartTime] = useState<Date | null>(null);
     const [showFab, setShowFab] = useState(true);
 
     // Desktop: ocultar FAB quando header visível (scroll no topo). Mobile: sempre visível.
@@ -68,51 +59,6 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
         };
     }, []);
 
-    // Format elapsed time
-    const formatTime = useCallback((ms: number): string => {
-        const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-
-        if (hours > 0) {
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }, []);
-
-    // Update timer
-    useEffect(() => {
-        if (!sessionStartTime) return;
-
-        const updateTimer = () => {
-            if (isPaused) return;
-
-            const now = new Date();
-            const elapsed = now.getTime() - sessionStartTime.getTime() - pausedDuration;
-            setElapsedTime(formatTime(elapsed));
-        };
-
-        updateTimer();
-        const interval = setInterval(updateTimer, 1000);
-
-        return () => clearInterval(interval);
-    }, [sessionStartTime, isPaused, pausedDuration, formatTime]);
-
-    // Handle pause/resume
-    const handlePauseToggle = () => {
-        if (isPaused && pauseStartTime) {
-            // Resuming - add paused duration
-            const now = new Date();
-            setPausedDuration(prev => prev + (now.getTime() - pauseStartTime.getTime()));
-            setPauseStartTime(null);
-        } else {
-            // Pausing
-            setPauseStartTime(new Date());
-        }
-        setIsPaused(!isPaused);
-    };
-
     if (!showFab) return null;
 
     return (
@@ -128,45 +74,22 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 )}
             >
                 <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-                    {/* Left Section - Timer */}
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handlePauseToggle}
-                            className="h-9 px-2 gap-1.5"
-                        >
-                            {isPaused ? (
-                                <Play className="h-4 w-4 text-green-500" />
-                            ) : (
-                                <Pause className="h-4 w-4 text-amber-500" />
-                            )}
-                            <div className="flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className={cn(
-                                    'font-mono text-sm font-medium tabular-nums',
-                                    isPaused && 'text-amber-500'
-                                )}>
-                                    {elapsedTime}
+                    {/* Left Section - Auto-save indicator */}
+                    {autoSaveEnabled ? (
+                        <div className="hidden sm:flex items-center gap-1.5">
+                            <Cloud className={cn(
+                                'h-3.5 w-3.5',
+                                lastSavedAt ? 'text-green-500' : 'text-muted-foreground'
+                            )} />
+                            {lastSavedAt && (
+                                <span className="text-[10px] text-muted-foreground">
+                                    {lastSavedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
-                            </div>
-                        </Button>
-
-                        {/* Auto-save indicator */}
-                        {autoSaveEnabled && (
-                            <div className="hidden sm:flex items-center gap-1.5">
-                                <Cloud className={cn(
-                                    'h-3.5 w-3.5',
-                                    lastSavedAt ? 'text-green-500' : 'text-muted-foreground'
-                                )} />
-                                {lastSavedAt && (
-                                    <span className="text-[10px] text-muted-foreground">
-                                        {lastSavedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="w-0" />
+                    )}
 
                     {/* Center Section - Keyboard hint */}
                     {onShowKeyboardHelp && (

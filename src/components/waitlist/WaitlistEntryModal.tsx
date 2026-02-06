@@ -15,15 +15,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAddToWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { Loader2 } from 'lucide-react';
-import { PatientHelpers } from '@/types';
 
 interface WaitlistEntryModalProps {
   open: boolean;
@@ -117,20 +110,13 @@ export function WaitlistEntryModal({ open, onOpenChange, entry }: WaitlistEntryM
 
         <div className="space-y-6">
           <div>
-            <Label htmlFor="patient">Paciente *</Label>
-            <Select value={patientId} onValueChange={setPatientId} disabled={isEditing}>
-              <SelectTrigger id="patient">
-                <SelectValue placeholder="Selecione o paciente" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => {
-                  const patientName = PatientHelpers.getName(patient);
-                  return (
-                  <SelectItem key={patient.id} value={patient.id}>{patientName}</SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <Label>Paciente *</Label>
+            <PatientCombobox
+              patients={patients}
+              value={patientId}
+              onValueChange={setPatientId}
+              disabled={isEditing}
+            />
           </div>
 
           <div>

@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,7 @@ const DynamicCompareDetailsPage = () => {
                     const validData = parseDynamicCompare(raw);
                     setData(validData);
                     setStatus('success');
-                } catch {
+                } catch (e) {
                     logger.error('Error loading dynamic compare data', e, 'DynamicCompareDetailsPage');
                     setError((e as Error).message);
                     setStatus('error');
@@ -79,20 +80,28 @@ const DynamicCompareDetailsPage = () => {
     }, [id]);
 
     if (status === 'loading') {
-        return <div className="flex items-center justify-center p-20"><Loader2 className="animate-spin w-8 h-8 text-blue-600" /></div>;
+        return (
+            <MainLayout>
+                <div className="flex items-center justify-center p-20">
+                    <Loader2 className="animate-spin w-8 h-8 text-blue-600" />
+                </div>
+            </MainLayout>
+        );
     }
 
     if (status === 'error') {
         return (
-            <div className="p-6">
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Erro de Validação</AlertTitle>
-                    <AlertDescription className="whitespace-pre-wrap font-mono text-xs mt-2">
-                        {error}
-                    </AlertDescription>
-                </Alert>
-            </div>
+            <MainLayout>
+                <div className="p-6">
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Erro de Validação</AlertTitle>
+                        <AlertDescription className="whitespace-pre-wrap font-mono text-xs mt-2">
+                            {error}
+                        </AlertDescription>
+                    </Alert>
+                </div>
+            </MainLayout>
         );
     }
 
@@ -109,70 +118,72 @@ const DynamicCompareDetailsPage = () => {
     const availableKeys = data.metric_deltas.map(d => ({ key: d.key, label: d.label, unit: d.unit || '' }));
 
     return (
-        <div className="container mx-auto p-6 space-y-6 max-w-7xl">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="text-3xl font-bold">Detalhes da Comparação</h1>
-                    <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                        {data.test_type} • {new Date(data.created_at).toLocaleDateString()}
-                        <Badge variant="outline" className={data.quality.analysis_confidence_overall_0_100 > 80 ? 'border-green-500 text-green-700' : 'border-amber-500'}>
-                            Confiança: {data.quality.analysis_confidence_overall_0_100}%
-                        </Badge>
-                    </p>
+        <MainLayout>
+            <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl font-bold">Detalhes da Comparação</h1>
+                        <p className="text-muted-foreground flex items-center gap-2 mt-1">
+                            {data.test_type} • {new Date(data.created_at).toLocaleDateString()}
+                            <Badge variant="outline" className={data.quality.analysis_confidence_overall_0_100 > 80 ? 'border-green-500 text-green-700' : 'border-amber-500'}>
+                                Confiança: {data.quality.analysis_confidence_overall_0_100}%
+                            </Badge>
+                        </p>
+                    </div>
+                    <Button variant="outline">Voltar</Button>
                 </div>
-                <Button variant="outline">Voltar</Button>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Card A vs B Info */}
-                <Card>
-                    <CardHeader><CardTitle className="text-sm">Sessão A (Base)</CardTitle></CardHeader>
-                    <CardContent>
-                        <p className="font-medium">{data.trial_A.label}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(data.trial_A.captured_at).toLocaleString()}</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle className="text-sm">Sessão B (Atual)</CardTitle></CardHeader>
-                    <CardContent>
-                        <p className="font-medium">{data.trial_B.label}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(data.trial_B.captured_at).toLocaleString()}</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div>
-                <h3 className="text-lg font-semibold mb-3">Deltas Principais</h3>
-                <DeltaCards data={data} mode="ALL" showConfidence />
-            </div>
-
-            <div className="mb-6">
-                <GoalPanel
-                    compareData={data}
-                    promSnapshot={{ "prom.acl_rsi_0_100": 68, "prom.ikdc_0_100": 78 }}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <MetricsTrendChart series={trendSeries} availableKeys={availableKeys} height={350} />
-                </div>
-                <div>
-                    <Card className="h-full">
-                        <CardHeader><CardTitle>Resumo Clínico</CardTitle></CardHeader>
-                        <CardContent className="prose prose-sm dark:prose-invert">
-                            <h4 className="text-green-700 font-medium m-0">Melhorias</h4>
-                            <ul className="mt-1 mb-4">
-                                {data.summary.improvements?.map((im, i) => <li key={i}>{im}</li>)}
-                            </ul>
-                            {data.summary.metrics_table_markdown && (
-                                <ReactMarkdown>{data.summary.metrics_table_markdown}</ReactMarkdown>
-                            )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Card A vs B Info */}
+                    <Card>
+                        <CardHeader><CardTitle className="text-sm">Sessão A (Base)</CardTitle></CardHeader>
+                        <CardContent>
+                            <p className="font-medium">{data.trial_A.label}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(data.trial_A.captured_at).toLocaleString()}</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-sm">Sessão B (Atual)</CardTitle></CardHeader>
+                        <CardContent>
+                            <p className="font-medium">{data.trial_B.label}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(data.trial_B.captured_at).toLocaleString()}</p>
                         </CardContent>
                     </Card>
                 </div>
+
+                <div>
+                    <h3 className="text-lg font-semibold mb-3">Deltas Principais</h3>
+                    <DeltaCards data={data} mode="ALL" showConfidence />
+                </div>
+
+                <div className="mb-6">
+                    <GoalPanel
+                        compareData={data}
+                        promSnapshot={{ "prom.acl_rsi_0_100": 68, "prom.ikdc_0_100": 78 }}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                        <MetricsTrendChart series={trendSeries} availableKeys={availableKeys} height={350} />
+                    </div>
+                    <div>
+                        <Card className="h-full">
+                            <CardHeader><CardTitle>Resumo Clínico</CardTitle></CardHeader>
+                            <CardContent className="prose prose-sm dark:prose-invert">
+                                <h4 className="text-green-700 font-medium m-0">Melhorias</h4>
+                                <ul className="mt-1 mb-4">
+                                    {data.summary.improvements?.map((im, i) => <li key={i}>{im}</li>)}
+                                </ul>
+                                {data.summary.metrics_table_markdown && (
+                                    <ReactMarkdown>{data.summary.metrics_table_markdown}</ReactMarkdown>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             </div>
-        </div>
+        </MainLayout>
     );
 };
 

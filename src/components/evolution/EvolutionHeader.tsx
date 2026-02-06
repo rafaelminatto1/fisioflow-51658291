@@ -33,7 +33,6 @@ import {
   getTherapistById,
 } from '@/hooks/useTherapists';
 import { PatientHelpers } from '@/types';
-import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { parseResponseDate } from '@/utils/dateUtils';
 import type { Patient, Appointment } from '@/types';
 import { cn } from '@/lib/utils';
@@ -61,7 +60,6 @@ interface EvolutionHeaderProps {
         totalMeasurements: number;
         completionRate: number;
     };
-    sessionStartTime: Date;
     onSave: () => void;
     onComplete: () => void;
     isSaving: boolean;
@@ -143,7 +141,6 @@ export const EvolutionHeader = memo(({
     appointment,
     treatmentDuration,
     evolutionStats,
-    sessionStartTime,
     onSave,
     onComplete,
     isSaving,
@@ -311,13 +308,11 @@ export const EvolutionHeader = memo(({
                         )}
                     </div>
                 )}
-                <div className="h-6 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
-                <SessionTimer startTime={sessionStartTime} className="shrink-0" />
-
-                {/* Abas de navegação - à direita do timer */}
                 {tabsConfig.length > 0 && onTabChange && (
                     <>
-                        <div className="h-6 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
+                        {therapists.length > 0 && onTherapistChange && (
+                            <div className="h-6 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
+                        )}
                         <nav
                             className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/30 p-1 gap-0.5"
                             role="tablist"

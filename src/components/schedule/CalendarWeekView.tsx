@@ -244,27 +244,8 @@ export const CalendarWeekView = memo(({
 
         // Overlap by time range (same day): lateral layout so 08:30 and 09:00 show side by side
         const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
-        let { index, count } = getOverlapStackPosition(dayAppointments, apt);
-
-        // Durante o drag sobre este slot de destino, redimensionar os cards como se o arrastado já estivesse lá
-        const isInDropTargetSlot = dropTarget && isSameDay(dropTarget.date, aptDate) && dropTarget.time === time;
-        if (isInDropTargetSlot && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
-            const futureDayAppointments = [...dayAppointments, dragState.appointment];
-            const future = getOverlapStackPosition(futureDayAppointments, apt);
-            count = future.count;
-            index = future.index;
-        }
-
-        // Slot de origem: redimensionar os demais cards como se o arrastado já tivesse saído
-        const draggedDate = dragState.appointment ? parseAppointmentDate(dragState.appointment.date) : null;
-        const draggedTime = dragState.appointment ? normalizeTime(dragState.appointment.time) : null;
-        const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(aptDate, draggedDate);
-        if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id) {
-            const originDayAppointments = dayAppointments.filter((a) => a.id !== dragState.appointment!.id);
-            const origin = getOverlapStackPosition(originDayAppointments, apt);
-            count = origin.count;
-            index = origin.index;
-        }
+        // Keep card sizing stable while dragging; preview handles target feedback.
+        const { index, count } = getOverlapStackPosition(dayAppointments, apt);
 
         // Calcular largura e posição baseado na quantidade de cards sobrepostos
         const { width, left } = calculateOverlapStyle(count, index);
@@ -278,8 +259,7 @@ export const CalendarWeekView = memo(({
             top: '0px',
             zIndex: 10 + index
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale, dropTarget, dragState, targetAppointments]);
+    }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale]);
 
     const isDraggable = !!onAppointmentReschedule;
     const isDraggingThis = useCallback((aptId: string) =>
@@ -487,4 +467,3 @@ export const CalendarWeekView = memo(({
 });
 
 CalendarWeekView.displayName = 'CalendarWeekView';
-

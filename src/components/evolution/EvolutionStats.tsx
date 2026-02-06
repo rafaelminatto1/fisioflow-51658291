@@ -42,10 +42,10 @@ const COLOR_CLASSES: Record<string, {
 };
 
 export const EvolutionStats = memo(({ stats, compact = false, vertical = false }: EvolutionStatsProps) => {
-    // Layout vertical para o card grande de Resumo - 2 linhas com 3 itens cada
+    // Layout vertical para o card de resumo lateral, mantendo o visual padrão
     if (vertical) {
         return (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {STAT_CONFIG.map((config, idx) => {
                     const colors = COLOR_CLASSES[config.color];
                     const rawValue = config.getVal(stats);
@@ -55,19 +55,17 @@ export const EvolutionStats = memo(({ stats, compact = false, vertical = false }
                     return (
                         <div
                             key={idx}
-                            className={`group relative overflow-hidden rounded-2xl border ${colors.border} bg-card/30 backdrop-blur-sm p-3 hover:bg-card/50 transition-all`}
+                            className={`group relative overflow-hidden rounded-xl border ${colors.border} bg-card/30 backdrop-blur-sm p-2 hover:bg-card/50 transition-all`}
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div className={`p-1.5 rounded-xl bg-gradient-to-br ${colors.bg}`}>
-                                        <config.icon className={`h-4 w-4 ${colors.text}`} />
-                                    </div>
-                                    <span className="text-sm font-medium text-muted-foreground">{config.label}</span>
+                            <div className="flex items-center gap-1 mb-0.5">
+                                <div className={`p-0.5 rounded-md bg-gradient-to-br ${colors.bg}`}>
+                                    <config.icon className={`h-3 w-3 ${colors.text}`} />
                                 </div>
-                                <span className={`text-xl font-bold ${colors.text}`}>{rawValue}</span>
+                                <span className="text-[10px] font-medium text-muted-foreground">{config.label}</span>
                             </div>
+                            <p className={`text-sm font-bold leading-4 ${colors.text}`}>{rawValue}</p>
                             {isPercent && (
-                                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                <div className="mt-1 h-1 w-full bg-muted rounded-full overflow-hidden">
                                     <div
                                         className={`h-full ${colors.progress} rounded-full transition-all duration-500`}
                                         style={{ width: `${Math.min(100, Math.max(0, numValue))}%` }}

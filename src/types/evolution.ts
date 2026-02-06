@@ -377,3 +377,6 @@ export interface EvolutionAlertData {
 
 // Re-export existing types with aliases for common usage
 export type { Surgery as SurgeryData, PatientGoal as GoalData, Pathology as PathologyData };
+
+// Re-export Doctor types for use in evolution components
+export type { Doctor, DoctorFormData, DoctorAutocompleteOption } from './doctor';

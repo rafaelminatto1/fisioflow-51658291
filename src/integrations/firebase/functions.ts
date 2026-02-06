@@ -489,6 +489,39 @@ export namespace ProfileApi {
   }
 }
 
+/**
+ * Tipos para API de Médicos
+ */
+export namespace DoctorApi {
+  export interface ListParams {
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface SearchParams {
+    searchTerm: string;
+    limit?: number;
+  }
+
+  export interface Doctor {
+    id: string;
+    name: string;
+    specialty?: string;
+    crm?: string;
+    crm_state?: string;
+    phone?: string;
+    email?: string;
+    clinic_name?: string;
+    clinic_address?: string;
+    clinic_phone?: string;
+    notes?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  }
+}
+
 // ============================================================================
 // APIs
 // ============================================================================
@@ -577,7 +610,7 @@ export const exercisesApi = {
     return res.data;
   },
   searchSimilar: (params: { exerciseId?: string; query?: string; limit?: number }): Promise<ExerciseApi.Exercise[]> =>
-    callFunctionHttp('searchSimilarExercisesV2', params).then((r: { data: ExerciseApi.Exercise[] }) => r.data),
+    callFunctionHttp('searchSimilarExercisesV2', params).then((r: any) => r.data),
   getCategories: async (): Promise<ExerciseApi.Category[]> => {
     const res = await callFunctionHttp<Record<string, never>, { data: ExerciseApi.Category[] }>('getExerciseCategoriesV2', {});
     return res.data;
@@ -748,6 +781,23 @@ export const profileApi = {
     callFunctionHttp('updateProfile', updates),
 };
 
+/**
+ * API de Médicos no Firebase Functions
+ */
+export const doctorsApi = {
+  /**
+   * Lista médicos (Cloud SQL)
+   */
+  list: (params: DoctorApi.ListParams = {}): Promise<FunctionResponse<DoctorApi.Doctor[]>> =>
+    callFunctionHttpWithResponse('listDoctors', params),
+
+  /**
+   * Busca médicos para autocomplete (Cloud SQL - High Performance)
+   */
+  search: (params: DoctorApi.SearchParams): Promise<{ data: DoctorApi.Doctor[] }> =>
+    callFunctionHttp('searchDoctorsV2', params),
+};
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -757,6 +807,7 @@ export const profileApi = {
  */
 export const api = {
   patients: patientsApi,
+  doctors: doctorsApi,
   exercises: exercisesApi,
   financial: financialApi,
   clinical: clinicalApi,
