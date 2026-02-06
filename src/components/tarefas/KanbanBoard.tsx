@@ -3,6 +3,7 @@ import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { Filter, LayoutGrid, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
 
   Select,
   SelectContent,
@@ -69,10 +70,12 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       return matchesSearch && matchesPrioridade && matchesProject;
     });
 
+    const getOrderIndex = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+
     return STATUSES.reduce((acc, status) => {
       acc[status] = filtered
         .filter(t => t.status === status)
-        .sort((a, b) => a.order_index - b.order_index);
+        .sort((a, b) => getOrderIndex(a.order_index) - getOrderIndex(b.order_index));
       return acc;
     }, {} as Record<TarefaStatus, Tarefa[]>);
   }, [tarefas, searchTerm, filterPrioridade, projectId]);

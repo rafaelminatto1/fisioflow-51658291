@@ -5,6 +5,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { db, collection, getDocs, query as firestoreQuery, where, doc, getDoc } from '@/integrations/firebase/app';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface ScoreFactor {
   type: string;
@@ -18,14 +19,14 @@ export function useLeadScoring() {
       // Buscar leads
       const leadsQ = firestoreQuery(collection(db, 'leads'));
       const leadsSnapshot = await getDocs(leadsQ);
-      const leads = leadsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const leads = leadsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       if (leads.length === 0) return [];
 
       // Buscar interações (comunicações, agendamentos, etc.)
       const interacoesQ = firestoreQuery(collection(db, 'lead_interacoes'));
       const interacoesSnapshot = await getDocs(interacoesQ);
-      const interacoes = interacoesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const interacoes = interacoesSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       // Regras de pontuação
       const regrasQ = firestoreQuery(

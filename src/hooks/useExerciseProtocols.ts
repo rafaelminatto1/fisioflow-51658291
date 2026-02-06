@@ -7,6 +7,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query a
 import { toast } from 'sonner';
 import { protocolsCacheService } from '@/lib/offline/ProtocolsCacheService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ProtocolMilestone {
   week: number;
@@ -50,7 +51,7 @@ interface ProtocolsQueryResult {
 
 // Helper to convert Firestore doc to ExerciseProtocol
 const convertDocToExerciseProtocol = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseProtocol => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

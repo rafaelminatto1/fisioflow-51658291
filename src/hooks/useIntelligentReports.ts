@@ -8,12 +8,13 @@ import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, ge
 import { toast } from '@/hooks/use-toast';
 import { httpsCallable, getFunctions } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const functions = getFunctions(getFirebaseApp());
 const db = getFirebaseApp().firestore() || null;
 
 // Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...doc.data() } as T);
+const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
 
 export function useIntelligentReports(patientId?: string) {
   const { user } = useAuth();

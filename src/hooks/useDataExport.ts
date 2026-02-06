@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { doc, getDoc, getDocs, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function useDataExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -29,9 +30,9 @@ export function useDataExport() {
         getDocs(firestoreQuery(collection(db, 'prescribed_exercises'), where('patient_id', '==', patientId)))
       ]);
 
-      const appointments = appointmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const records = recordsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const exercises = exercisesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const appointments = appointmentsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const records = recordsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const exercises = exercisesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       const fullData = {
         exportedAt: new Date().toISOString(),

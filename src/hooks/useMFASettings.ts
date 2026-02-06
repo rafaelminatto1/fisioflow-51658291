@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
@@ -73,7 +74,7 @@ export function useMFASettings() {
       const doc = snapshot.docs[0];
       return {
         id: doc.id,
-        ...doc.data(),
+        ...normalizeFirestoreData(doc.data()),
       } as MFASettings;
     },
   });

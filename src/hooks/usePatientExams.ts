@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { getStorage, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const storage = getStorage();
 
@@ -52,7 +53,7 @@ export const usePatientExams = (patientId?: string | null) => {
       );
 
       const snapshot = await getDocs(q);
-      const examsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PatientExam[];
+      const examsData = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientExam[];
 
       // Fetch files for each exam
       const examsWithFiles = await Promise.all(
@@ -62,7 +63,7 @@ export const usePatientExams = (patientId?: string | null) => {
             where('exam_id', '==', exam.id)
           );
           const filesSnap = await getDocs(filesQuery);
-          const files = filesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ExamFile[];
+          const files = filesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ExamFile[];
           return { ...exam, files };
         })
       );

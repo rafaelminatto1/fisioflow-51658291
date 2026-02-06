@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, setDoc, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { addDays, format } from 'date-fns';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const auth = getFirebaseAuth();
 
@@ -53,7 +54,7 @@ export interface Prescription {
 
 // Helper: Convert Firestore doc to Prescription
 const convertDocToPrescription = (doc: { id: string; data: () => Record<string, unknown> }): Prescription => {
-  const data = doc.data();
+  const data = normalizeFirestoreData(doc.data());
   return {
     id: doc.id,
     ...data,

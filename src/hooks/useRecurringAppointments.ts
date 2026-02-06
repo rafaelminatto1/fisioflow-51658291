@@ -7,6 +7,7 @@ import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestore
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import {
 
   RecurringAppointmentSeries,
   RecurringAppointmentOccurrence,
@@ -18,6 +19,7 @@ import { addDays, addWeeks, addMonths, addYears, startOfDay, isSameDay } from 'd
 import { db } from '@/integrations/firebase/app';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { AppointmentService } from '@/services/appointmentService';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 
 
@@ -81,7 +83,7 @@ async function fetchRecurringSeries(params?: {
   const q = firestoreQuery(...constraints);
   const snapshot = await getDocs(q);
 
-  const series = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const series = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
   // Fetch patient data for each series
   const patientIds = series.map((s: FirestoreSeriesData) => s.patient_id).filter((id): id is string => id !== null);
@@ -169,7 +171,7 @@ async function fetchSeriesOccurrences(
   );
 
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+  return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) || [];
 }
 
 // =====================================================================

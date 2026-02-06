@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown, Search, Plus, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
 
     Command,
     CommandEmpty,
@@ -25,6 +26,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ClinicalTest {
     id: string;
@@ -81,7 +83,7 @@ export function ClinicalTestCombobox({
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data()
+                ...normalizeFirestoreData(doc.data())
             } as ClinicalTest));
         }
     });

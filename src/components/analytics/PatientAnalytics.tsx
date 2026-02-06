@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 
@@ -46,7 +47,7 @@ export function PatientAnalytics() {
       );
       const snapshot = await getDocs(patientsQuery);
 
-      const patients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const patients = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       const ageRanges = {
         "0-17": 0,

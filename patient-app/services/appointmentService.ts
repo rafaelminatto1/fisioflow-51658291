@@ -3,6 +3,7 @@
  * Handles appointment-related operations
  */
 
+import {
   collection,
   doc,
   query,
