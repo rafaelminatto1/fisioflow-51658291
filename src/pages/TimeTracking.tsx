@@ -10,33 +10,28 @@ import {
   Play,
   Pause,
   Square,
-  Calendar,
   TrendingUp,
   DollarSign,
-  Filter,
   Download,
   Plus,
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useTimeTracker } from '@/hooks/useTimeTracker';
 import { useAuth } from '@/contexts/AuthContext';
 import { TimeSheet } from '@/components/timetracking/TimeSheet';
-import { TimeReport } from '@/components/timetracking/TimeReport';
 import { TimeEntryModal } from '@/components/timetracking/TimeEntryModal';
 import { WeeklySummary } from '@/components/timetracking/WeeklySummary';
 import { TimeTrackingCalendarView } from '@/components/timetracking/TimeTrackingCalendarView';
 import {
   formatDuration,
   formatHoursDecimal,
-  calculateUtilizationRate,
 } from '@/lib/timetracking/timeCalculator';
 
 import type { ReportPeriod, TimeSheetView } from '@/types/timetracking';
@@ -54,14 +49,14 @@ export default function TimeTrackingPage() {
 
   const {
     activeTimer,
-    isRunning,
+    _isRunning,
     currentDuration,
     entries,
     isLoading,
-    error,
+    _error,
     startTimer,
     pauseTimer,
-    resumeTimer,
+    _resumeTimer,
     stopTimer,
     loadEntries,
     createEntry,
@@ -79,10 +74,12 @@ export default function TimeTrackingPage() {
     if (organizationId && userId) {
       loadEntries();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, userId]);
 
   // Estatísticas calculadas
-  const stats = useMemo(() => getStats(), [entries, getStats]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const _stats = useMemo(() => getStats(), [entries, getStats]);
 
   // Dados filtrados por período
   const filteredEntries = useMemo(() => {

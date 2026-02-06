@@ -3,8 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, doc, getDoc, db } from '@/integrations/firebase/app';
-import { toast } from 'sonner';
+import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PatientEvolutionData {
@@ -85,7 +84,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         evolutionMap.get(key)?.push(m);
       });
 
-      const measurementEvolution = Array.from(evolutionMap.entries()).map(([key, history]) => {
+      const measurementEvolution = Array.from(evolutionMap.entries()).map(([_key, history]) => {
         const first = history[0];
         const last = history[history.length - 1];
 

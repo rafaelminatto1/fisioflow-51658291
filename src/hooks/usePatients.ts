@@ -17,7 +17,6 @@ import { patientsApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { PatientService } from '@/services/patientService';
@@ -25,8 +24,7 @@ import {
 
   PATIENT_QUERY_CONFIG,
   PATIENT_SELECT,
-  devValidate,
-  type PatientDBStandard
+  devValidate
 } from '@/lib/constants/patient-queries';
 import {
   isOnline,
@@ -55,7 +53,7 @@ import {
  */
 export const useActivePatients = () => {
   const { profile } = useAuth();
-  const { toast } = useToast();
+  const { _toast } = useToast();
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
 
@@ -79,7 +77,7 @@ export const useActivePatients = () => {
     });
 
     // Handle channel errors (e.g. 410 Gone)
-    const handleChannelState = (stateChange: any) => {
+    const handleChannelState = (stateChange: unknown) => {
       if (stateChange.current === 'failed' || stateChange.current === 'suspended') {
         logger.error(`Realtime: Ably channel ${stateChange.current}`, stateChange.reason, 'usePatients');
 

@@ -8,7 +8,7 @@
 // Types
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp, db } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -131,7 +131,7 @@ export function useTarefasPendentes() {
             if (leadDoc.exists()) {
               return { ...t, lead: { nome: leadDoc.data().nome } };
             }
-          } catch (e) {
+          } catch (_e) {
             // Ignore error
           }
         }
@@ -369,7 +369,7 @@ export function useNPSPesquisas() {
             try {
               const leadDoc = await getDoc(doc(db, 'leads', item.lead_id));
               if (leadDoc.exists()) leadName = leadDoc.data().nome;
-            } catch (e) {
+            } catch (_e) {
               // Ignore missing lead data
             }
           }
@@ -377,7 +377,7 @@ export function useNPSPesquisas() {
             try {
               const patientDoc = await getDoc(doc(db, 'patients', item.patient_id));
               if (patientDoc.exists()) patientName = patientDoc.data().full_name || patientDoc.data().name;
-            } catch (e) {
+            } catch (_e) {
               // Ignore missing patient data
             }
           }
@@ -538,7 +538,7 @@ export function useImportLeads() {
       // Firestore batch write or individual adds
       // For simplicity, individual adds for now, but batch is better for large imports
       const results = [];
-      const batchSize = 500;
+      const _batchSize = 500;
 
       // Since it's potentially many, we should probably do it sequentially or parallel in chunks
       // For now, simple map

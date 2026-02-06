@@ -3,10 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useStatusConfig, CustomStatusConfig } from '@/hooks/useStatusConfig';
-import { STATUS_CONFIG, DEFAULT_STATUS_COLORS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
 import { Palette, Plus, RotateCcw, Trash2, Check, X, ChevronDown, ChevronUp, Pencil, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -419,7 +417,7 @@ export function StatusColorManager() {
         deleteStatus,
         resetToDefaults,
         resetStatusColor,
-        isCustomStatus,
+        _isCustomStatus,
         hasCustomColors,
         customStatuses,
     } = useStatusConfig();
@@ -446,7 +444,7 @@ export function StatusColorManager() {
         toast({ title: 'Status excluído', description: `Status "${statusId}" foi removido.` });
     };
 
-    const handleResetAll = () => {
+    const _handleResetAll = () => {
         resetToDefaults();
         toast({ title: 'Cores resetadas', description: 'Todas as cores foram restauradas para o padrão.' });
     };

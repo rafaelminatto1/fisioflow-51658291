@@ -100,8 +100,8 @@ export function ExerciseCoach({
   strictMode = false,
   onSessionStart,
   onSessionEnd,
-  onRepComplete,
-  onSetComplete,
+  _onRepComplete,
+  _onSetComplete,
   compact = false,
 }: ExerciseCoachProps) {
   // ========================================================================
@@ -117,7 +117,7 @@ export function ExerciseCoach({
   const [currentRep, setCurrentRep] = useState(0);
   const [targetSets] = useState(currentExercise?.targetSets || 3);
   const [targetReps] = useState(currentExercise?.targetReps || 10);
-  const [formScore, setFormScore] = useState(0);
+  const [formScore, _setFormScore] = useState(0);
   const [isVideoEnabled, setIsVideoEnabled] = useState(enableVideo);
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -141,7 +141,7 @@ export function ExerciseCoach({
       logger.debug('Audio received', { audio }, 'ExerciseCoach');
     }, []),
 
-    onTranscript: useCallback((text, isFinal) => {
+    onTranscript: useCallback((text, _isFinal) => {
       setFeedback(prev => {
         const newFeedback = [...prev];
         newFeedback.push({
@@ -215,6 +215,7 @@ export function ExerciseCoach({
         coachRef.current.stopSession();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update exercise when prop changes

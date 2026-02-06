@@ -59,7 +59,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
     const { currentOrganization } = useOrganizations();
 
-    const { data: linkedTests = [], isLoading: isLoadingTests } = useQuery({
+    const { data: linkedTests = [], isLoading: _isLoadingTests } = useQuery({
         queryKey: ['protocol-linked-tests', protocol.id, protocol.clinical_tests],
         queryFn: async () => {
             const testIds = protocol.clinical_tests || [];

@@ -7,7 +7,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useQuery } from '@tanstack/react-query';
 import { PatientHelpers, Patient } from '@/types';
-import { db, collection, query, where, getDocs, getDoc, doc, orderBy, limit } from '@/integrations/firebase/app';
+import { db, collection, query, where, getDocs, orderBy, limit } from '@/integrations/firebase/app';
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,6 @@ import { PatientEvolutionDashboard } from '@/components/patients/PatientEvolutio
 import { ProgressAnalysisCard } from '@/components/patients/ProgressAnalysisCard';
 import { usePatientEvolutionReport } from '@/hooks/usePatientEvolutionReport';
 import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
-import { useSoapRecords } from '@/hooks/useSoapRecords';
 
 // Analytics & ML Imports
 import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel, AIAssistantPanel } from '@/components/patients/analytics';
@@ -716,7 +715,7 @@ export const PatientProfilePage = () => {
 
     const [editingPatient, setEditingPatient] = useState<boolean>(false);
     const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
-    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+    const [_selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
     // Valid tab values
     const validTabs = ['overview', 'analytics', 'personal', 'clinical', 'financial', 'gamification', 'documents'] as const;

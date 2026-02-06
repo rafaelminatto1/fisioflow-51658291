@@ -8,7 +8,7 @@
 
 // Cache for prefetched components
 
-import { lazy, ComponentType } from 'react';
+import { ComponentType } from 'react';
 
 const prefetchedCache = new Map<string, ComponentType<unknown>>();
 
@@ -39,7 +39,7 @@ export async function prefetchRoute(
   try {
     const module = await componentLoader();
     prefetchedCache.set(key, module.default);
-  } catch (error) {
+  } catch (_error) {
     // Remove from attempts on failure so we can retry
     prefetchAttempts.delete(key);
   }
@@ -157,7 +157,7 @@ export function prefetchRelatedRoutes(currentRoute: string): void {
   // Find matching routes and prefetch them
   for (const [route, relatedRoutes] of Object.entries(routeMap)) {
     if (currentRoute.startsWith(route.replace(/:[^/]+/g, ''))) {
-      relatedRoutes.forEach(relatedRoute => {
+      relatedRoutes.forEach(_relatedRoute => {
         // This would be used with actual route loaders in a real implementation
         // For now, it's a placeholder for the prefetching strategy
       });
@@ -170,7 +170,7 @@ export function prefetchRelatedRoutes(currentRoute: string): void {
  */
 export function usePrefetchRoutes(
   routes: Array<{ key: string; loader: () => Promise<{ default: ComponentType<unknown> }> }>,
-  strategy: 'immediate' | 'idle' | 'delayed' = 'idle'
+  _strategy: 'immediate' | 'idle' | 'delayed' = 'idle'
 ) {
   // This would be used in React components
   // Implementation depends on whether we're using React.lazy or custom loaders

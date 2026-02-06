@@ -75,7 +75,7 @@ export function useRecoveryPrediction(
   options: UsePredictiveAnalyticsOptions = {}
 ) {
   const { enabled = true, onSuccess, onError } = options;
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.prediction(input?.patientId || ''),

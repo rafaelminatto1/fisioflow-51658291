@@ -26,7 +26,7 @@ export function GanttTaskBar({ task, position, isDragging, isCritical, onClick }
     disabled: false,
   });
 
-  const id = useId();
+  const _id = useId();
 
   const style = transform
     ? {

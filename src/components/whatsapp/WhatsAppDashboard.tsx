@@ -417,7 +417,7 @@ export function WhatsAppDashboard() {
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-2">
-                    {(messages as any[])?.map((msg: {
+                    {(messages as unknown[])?.map((msg: {
                       id: string;
                       created_at: string;
                       phone_number: string;

@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export const Profile = () => {
   const { user } = useAuth();
-  const { profile, loading: profileLoading, updateProfile } = useUserProfile();
+  const { profile, loading: _profileLoading, updateProfile } = useUserProfile();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

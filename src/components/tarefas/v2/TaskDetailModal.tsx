@@ -14,21 +14,14 @@ import {
   Plus,
   Trash2,
   Flag,
-  Users,
-  MessageSquare,
   Link2,
-  Clock,
-  Activity,
   BookOpen,
   Upload,
   ExternalLink,
-  Send,
   FileText,
   Image,
   Video,
   File,
-  Check,
-  ChevronsUpDown,
   User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,15 +42,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -84,9 +70,6 @@ import {
   TarefaPrioridade,
   TarefaTipo,
   TeamMember,
-  TarefaAttachment,
-  TarefaReference,
-  TarefaChecklist,
   STATUS_LABELS,
   PRIORIDADE_LABELS,
   TIPO_LABELS,
@@ -166,10 +149,10 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
   const updateTarefa = useUpdateTarefa();
   const { data: projects } = useProjects();
-  const { data: allTarefas } = useTarefas();
+  const { data: _allTarefas } = useTarefas();
 
   const [activeTab, setActiveTab] = useState('details');
-  const [newComment, setNewComment] = useState('');
+  const [_newComment, _setNewComment] = useState('');
   const [newChecklistTitle, setNewChecklistTitle] = useState('');
 
   const form = useForm<TarefaDetailFormData>({
@@ -305,13 +288,15 @@ export function TaskDetailModal({
     });
   };
 
+  const checklists = form.watch('checklists');
+
   // Calculate checklist progress
   const checklistProgress = useMemo(() => {
-    const checklists = form.watch('checklists') || [];
-    const totalItems = checklists.reduce((acc, cl) => acc + cl.items.length, 0);
-    const completedItems = checklists.reduce((acc, cl) => acc + cl.items.filter(i => i.completed).length, 0);
+    const checklistItems = checklists || [];
+    const totalItems = checklistItems.reduce((acc, cl) => acc + cl.items.length, 0);
+    const completedItems = checklistItems.reduce((acc, cl) => acc + cl.items.filter(i => i.completed).length, 0);
     return totalItems > 0 ? { completed: completedItems, total: totalItems, percent: (completedItems / totalItems) * 100 } : null;
-  }, [form.watch('checklists')]);
+  }, [checklists]);
 
   const onSubmit = async (data: TarefaDetailFormData) => {
     if (!tarefa) return;

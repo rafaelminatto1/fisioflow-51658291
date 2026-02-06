@@ -15,15 +15,12 @@ import { Textarea } from '@/components/ui/textarea';
 import {
 
   Star,
-  MessageSquare,
   Clock,
   Send,
   CheckCircle2,
-  AlertCircle,
   Settings,
   Zap,
   TrendingUp,
-  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -32,8 +29,6 @@ import {
   type ReviewAutomationConfig,
 } from '@/services/marketing/marketingService';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface ReviewStats {
   sent: number;
@@ -89,6 +84,7 @@ export function ReviewAutomation({ organizationId }: { organizationId?: string }
   useEffect(() => {
     loadConfig();
     loadStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const loadConfig = async () => {
@@ -124,7 +120,7 @@ export function ReviewAutomation({ organizationId }: { organizationId?: string }
     try {
       await updateReviewAutomationConfig(orgId, config);
       toast.success('Configurações salvas com sucesso!');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Erro ao salvar configurações');
     } finally {
       setSaving(false);
@@ -142,7 +138,7 @@ export function ReviewAutomation({ organizationId }: { organizationId?: string }
     setConfig({ ...config, message_template: template });
   };
 
-  const getGoogleReviewLink = () => {
+  const _getGoogleReviewLink = () => {
     // In production, this would be the actual Google Place ID
     return 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID';
   };

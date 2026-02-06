@@ -27,12 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+
+
 import { useExerciseTemplates, type ExerciseTemplate } from '@/hooks/useExerciseTemplates';
 
 const templateSchema = z.object({

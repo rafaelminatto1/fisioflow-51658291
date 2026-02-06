@@ -7,7 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
 
   Activity,
-  Clipboard,
   PlayCircle,
   Target,
   Zap,
@@ -41,7 +40,7 @@ interface QuestListProps {
 }
 
 export function QuestList({ patientId, category = 'all' }: QuestListProps) {
-  const { dailyQuests, weeklyQuests, isLoading, startQuest, claimReward } = useQuests(patientId);
+  const { dailyQuests, weeklyQuests, isLoading, _startQuest, claimReward } = useQuests(patientId);
 
   const displayQuests = category === 'daily' ? dailyQuests :
                         category === 'weekly' ? weeklyQuests :

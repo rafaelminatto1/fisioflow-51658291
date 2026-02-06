@@ -7,18 +7,18 @@
  * para incluir o token no header.
  */
 
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFunctions } from 'firebase/functions';
 import { getAppCheck } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-export async function callableWithAppCheck<T = any, R = any>(
+export async function callableWithAppCheck<T = unknown, R = unknown>(
   name: string,
   data?: T
 ): Promise<R> {
   const app = getApp();
   const functions = getFunctions(app, 'southamerica-east1');
-  const region = functions.region || 'southamerica-east1';
+  const _region = functions.region || 'southamerica-east1';
 
   // Obter token do App Check
   let appCheckToken: string | undefined;

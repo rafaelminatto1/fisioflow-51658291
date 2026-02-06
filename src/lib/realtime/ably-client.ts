@@ -58,7 +58,7 @@ export interface PresenceData {
  * Cliente Ably singleton
  */
 let ablyClient: Ably.Realtime | null = null;
-const connectionPromise: Promise<Ably.Realtime> | null = null;
+const _connectionPromise: Promise<Ably.Realtime> | null = null;
 
 /**
  * Reseta o cliente Ably Realtime

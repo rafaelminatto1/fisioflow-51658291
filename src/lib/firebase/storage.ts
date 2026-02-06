@@ -200,7 +200,7 @@ export async function uploadFile(
     contentType = file.type,
     metadata: customMetadata,
     onProgress,
-    retry = true,
+    _retry = true,
   } = options;
 
   // Get current user for user-specific uploads

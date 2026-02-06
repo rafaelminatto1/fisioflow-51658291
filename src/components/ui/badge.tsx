@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import * as React from 'react';
 import { type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
@@ -13,6 +14,6 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   )
 }
 
-/* eslint-disable react-refresh/only-export-components */
+ 
 export { Badge, badgeVariants }
-/* eslint-enable react-refresh/only-export-components */
+ 

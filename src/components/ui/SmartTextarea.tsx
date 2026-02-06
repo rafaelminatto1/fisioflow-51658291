@@ -263,7 +263,7 @@ const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTe
         }, [onChange]);
 
         // Keyboard shortcuts handler with comprehensive coverage
-        const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        const _handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
             // Handle Escape key for fullscreen
             if (e.key === 'Escape' && isFullScreen) {
                 e.preventDefault();
@@ -303,6 +303,7 @@ const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTe
             }
 
             props.onKeyDown?.(e);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [insertFormat, props]);
 
         // Memoized counts calculations

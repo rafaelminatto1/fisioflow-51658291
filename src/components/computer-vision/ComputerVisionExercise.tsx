@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Camera, Play, Square, Settings, Zap, Target, Timer, Award, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { useComputerVision, getExerciseInstructions, getFormScoreColor, getFeedbackIcon } from '../../hooks/useComputerVision';
 
@@ -293,16 +293,16 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
     realTimeFeedback,
     settings,
     isCalibrated,
-    cameraPermission,
-    modelLoaded,
+    _cameraPermission,
+    _modelLoaded,
     processingStats,
     videoRef,
     canvasRef,
-    initializeSystem,
-    startExerciseSession,
+    _initializeSystem,
+    _startExerciseSession,
     stopExerciseSession,
-    calibrateSystem,
-    takeScreenshot,
+    _calibrateSystem,
+    _takeScreenshot,
     setSettings,
     exerciseTemplates
   } = useComputerVision();
@@ -310,7 +310,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
   const [selectedExercise, setSelectedExercise] = useState<string>('squat');
   const [showCalibration, setShowCalibration] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [_isInitialized, _setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionFinished, setSessionFinished] = useState(false);
 
