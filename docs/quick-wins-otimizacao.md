@@ -1,9 +1,16 @@
 # Quick Wins - Otimização Imediata de Custos
 **Ações de baixo risco que podem ser implementadas hoje**
 
+**STATUS:** Fase 1 Implementada (06/02/2026)
+
 ---
 
-## AÇÃO 1: Remover Funções Duplicadas (10 min)
+## ✅ AÇÃO 1: Remover Funções Duplicadas (CONCLUÍDO)
+
+### Status: **IMPLEMENTADO**
+- **Data:** 06/02/2026
+- **Commit:** c095cfb0
+- **Funções removidas:** 18 funções callable duplicadas
 
 ### Arquivo: functions/src/index.ts
 
@@ -44,7 +51,11 @@ cp functions/src/index.ts functions/src/index.ts.backup
 
 ---
 
-## AÇÃO 2: Usar Gemini Flash (5 min)
+## ⚠️ AÇÃO 2: Usar Gemini Flash (NÃO APLICÁVEL)
+
+**Status:** MANTIDO GEMINI PRO (por solicitação do usuário)
+
+### Arquivo: functions/src/lib/integrations/google/ai.ts
 
 ### Arquivo: functions/src/lib/integrations/google/ai.ts
 
@@ -111,31 +122,73 @@ ON appointments(patient_id, date);
 
 ---
 
-## RESUMO DAS AÇÕES IMEDIATAS
+## RESUMO DAS AÇÕES IMEDIATAS - STATUS ATUAL
 
-| Ação | Tempo | Economia | Risco |
-|------|-------|---------|-------|
-| Remover 36 funções duplicadas | 10 min | R$ 25-35/mês | Baixo |
-| Usar Gemini Flash | 5 min | R$ 20-25/mês | Baixo |
-| Limpar Storage | 5 min | R$ 5-10/mês | Nulo |
-| Ativar cache | 10 min | R$ 10-15/mês | Baixo |
-| Criar índices SQL | 2 min | R$ 10-15/mês | Nulo |
+| Ação | Status | Economia Estimada |
+|------|--------|-------------------|
+| ✅ Remover 18 funções duplicadas | **CONCLUÍDO** | R$ 25-35/mês |
+| ⚠️ Usar Gemini Flash | **NÃO** (mantido Pro) | R$ 0/mês |
+| ❌ Limpar Storage | Pendente | R$ 5-10/mês |
+| ✅ Ativar cache | **CONCLUÍDO** | R$ 10-15/mês |
+| ❌ Criar índices SQL | Pendente | R$ 10-15/mês |
 
-**Total Quick Wins:** ~R$ 70-90/mês de economia em ~30 minutos de trabalho!
+**Economia Fase 1:** ~R$ 35-50/mês (funções removidas + cache ativado)
+**Gemini Pro mantido** conforme solicitação do usuário
 
 ---
 
-## COMO EXECUTAR
+## FASE 1: IMPLEMENTADO ✅
 
-### Opção 1: Manual (Recomendado para segurança)
-1. Fazer backup: `git checkout -b backup-otimizacao`
-2. Editar os arquivos conforme instruções acima
-3. Testar localmente: `firebase emulators:start`
-4. Deploy: `firebase deploy --only functions`
-5. Monitorar por 24h antes de continuar
+### O que foi feito:
+1. **18 funções callable duplicadas removidas:**
+   - Pacientes: listPatients, createPatient, updatePatient, getPatient, deletePatient, getPatientStats
+   - Agendamentos: createAppointment, updateAppointment, getAppointment, cancelAppointment, checkTimeConflict
+   - Financeiro: listTransactions, createTransaction, updateTransaction, deleteTransaction, findTransactionByAppointmentId, getEventReport
+   - RAG: rebuildPatientRagIndex
 
-### Opção 2: Automatizada (Rápido)
-Criar script para automatizar as mudanças acima.
+2. **Código comentado limpo:**
+   - Webhooks (desabilitados)
+   - Integrações Google Calendar (desabilitadas)
+   - Monitoring (desabilitado)
+   - Export/Import (desabilitado)
+
+3. **Cache ativado:**
+   - getOrganizationId agora usa getOrganizationIdCached
+   - Redução de queries repetidas ao PostgreSQL
+
+### Funções após otimização:
+- **Antes:** 67 funções callable + ~40 background/triggers
+- **Depois:** ~54 funções callable + ~40 background/triggers
+- **Removidas:** 18 funções duplicadas callable
+
+---
+
+## PRÓXIMAS AÇÕES (PENDENTE)
+
+### Ação 3: Limpar Storage (5 min)
+
+```bash
+# Limpar logs antigos (mais de 30 dias)
+gsutil -m -S 30d gs://fisioflow-migration.appspot.com/logs/**
+
+# Limpar arquivos temporários
+gsutil -m gs://fisioflow-migration.appspot.com/temp/**
+```
+
+### Ação 4: Criar Índices SQL (2 min)
+
+```sql
+-- Conectar no Cloud SQL e executar:
+CREATE INDEX IF NOT EXISTS idx_patients_org_name
+ON patients(organization_id, name);
+
+CREATE INDEX IF NOT EXISTS idx_appointments_date
+ON appointments(date, start_time)
+WHERE status != 'cancelado';
+
+CREATE INDEX IF NOT EXISTS idx_appointments_patient
+ON appointments(patient_id, date);
+```
 
 ---
 
@@ -148,7 +201,5 @@ Após aplicar as mudanças, monitorar por 1 semana:
 gcloud billing budgets list --billing-account=012726-42CA36-FA7B7A
 
 # Ver uso de funções
-gcloud functions list
+gcloud functions list --regions=southamerica-east1
 ```
-
-**Se tudo estiver funcionando:** economia de R$ 70-90/mês confirmada!
