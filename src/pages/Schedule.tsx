@@ -13,7 +13,7 @@ import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { AlertTriangle, CheckSquare, Sparkles } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -22,7 +22,7 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
-import { ScheduleToolbar } from '@/components/schedule/ScheduleToolbar';
+// ScheduleToolbar removed - actions merged into CalendarView header
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { AppointmentService } from '@/services/appointmentService';
@@ -512,39 +512,7 @@ const Schedule = () => {
     toggleSelectionMode
   ]);
 
-  // Event handlers for ScheduleToolbar custom events
-  useEffect(() => {
-    const handleNavigate = (e: CustomEvent) => {
-      const { direction } = e.detail;
-      const daysToAdd = direction === 'next' ? 1 : -1;
-      const newDate = new Date(currentDate);
-
-      switch (viewType) {
-        case 'day':
-          newDate.setDate(newDate.getDate() + daysToAdd);
-          break;
-        case 'week':
-          newDate.setDate(newDate.getDate() + (daysToAdd * 7));
-          break;
-        case 'month':
-          newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-          break;
-      }
-      setCurrentDate(newDate);
-    };
-
-    const handleTodayClick = () => {
-      setCurrentDate(new Date());
-    };
-
-    window.addEventListener('schedule-navigate', handleNavigate as EventListener);
-    window.addEventListener('schedule-today-click', handleTodayClick);
-
-    return () => {
-      window.removeEventListener('schedule-navigate', handleNavigate as EventListener);
-      window.removeEventListener('schedule-today-click', handleTodayClick);
-    };
-  }, [currentDate, viewType]);
+  // ScheduleToolbar custom events no longer needed - navigation is handled directly by CalendarView
 
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
@@ -589,44 +557,7 @@ const Schedule = () => {
 
 
 
-        {/* Schedule Toolbar */}
-        <ScheduleToolbar
-          currentDate={currentDate}
-          viewType={viewType as 'day' | 'week' | 'month'}
-          onViewChange={(view) => setViewType(view)}
-          isSelectionMode={isSelectionMode}
-          onToggleSelection={toggleSelectionMode}
-          onCreateAppointment={handleCreateAppointment}
-          filters={filters}
-          onFiltersChange={setFilters}
-          onClearFilters={() => setFilters({ status: [], types: [], therapists: [] })}
-          onCancelAllToday={() => setShowCancelAllTodayDialog(true)}
-        />
-
-        {/* Quick Stats Bar */}
-        <div className="flex items-center gap-4 px-6 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-800">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-            <span className="text-sm font-medium text-cyan-900 dark:text-cyan-100">
-              {appointments.length} agendamentos
-            </span>
-          </div>
-          {filteredAppointments.length !== appointments.length && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
-              <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                {filteredAppointments.length} visíveis (filtros ativos)
-              </span>
-            </div>
-          )}
-          {isSelectionMode && selectedIds.size > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
-              <CheckSquare className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
-                {selectedIds.size} selecionados
-              </span>
-            </div>
-          )}
-        </div>
+        {/* Toolbar actions are now integrated into CalendarView header */}
 
         {/* Main Workspace */}
         <div className="flex flex-col flex-1 relative min-h-0">
@@ -656,6 +587,13 @@ const Schedule = () => {
                   selectedIds={selectedIds}
                   onToggleSelection={toggleSelection}
                   rescheduleSuccessMessage={rescheduleSuccessMessage}
+                  onCreateAppointment={handleCreateAppointment}
+                  onToggleSelectionMode={toggleSelectionMode}
+                  onCancelAllToday={() => setShowCancelAllTodayDialog(true)}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  onClearFilters={() => setFilters({ status: [], types: [], therapists: [] })}
+                  totalAppointmentsCount={appointments.length}
                 />
               </Suspense>
             </div>
