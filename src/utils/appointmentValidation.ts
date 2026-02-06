@@ -1,5 +1,5 @@
 import { AppointmentBase } from '@/types/appointment';
-import { parseISO } from 'date-fns';
+import { parseISO, isSameDay } from 'date-fns';
 
 interface ConflictCheckParams {
   date: Date;
@@ -11,6 +11,24 @@ interface ConflictCheckParams {
   appointments: AppointmentBase[];
 }
 
+// Helper para converter horário em minutos
+const timeToMinutes = (timeStr: string | undefined | null): number => {
+  if (!timeStr || typeof timeStr !== 'string') return 0;
+  const parts = timeStr.trim().split(':');
+  const hours = Number(parts[0]) || 0;
+  const minutes = Number(parts[1]) || 0;
+  return hours * 60 + minutes;
+};
+
+// Helper para verificar sobreposição de intervalos
+const isOverlapping = (start1: number, end1: number, start2: number, end2: number): boolean => {
+  return (
+    (start1 >= start2 && start1 < end2) ||
+    (end1 > start2 && end1 <= end2) ||
+    (start1 <= start2 && end1 >= end2)
+  );
+};
+
 export function checkAppointmentConflict({
   date,
   time,
@@ -18,56 +36,48 @@ export function checkAppointmentConflict({
   excludeId,
   therapistId,
   appointments
-}: ConflictCheckParams): { hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } {
-  // Convert time to minutes for easier comparison (aceita "HH:mm" ou "HH:mm:ss")
-  const timeToMinutes = (timeStr: string | undefined | null): number => {
-    if (!timeStr || typeof timeStr !== 'string') return 0;
-    const parts = timeStr.trim().split(':');
-    const hours = Number(parts[0]) || 0;
-    const minutes = Number(parts[1]) || 0;
-    return hours * 60 + minutes;
-  };
-
+}: ConflictCheckParams): { 
+  hasConflict: boolean; 
+  conflictingAppointment?: AppointmentBase; 
+  conflictCount?: number;
+  totalConflictCount?: number;
+} {
   const newStartTime = timeToMinutes(time);
   const newEndTime = newStartTime + duration;
+  const checkDate = typeof date === 'string' ? parseISO(date) : date;
 
-  // Filtrar por terapeuta quando informado (mesma regra do backend: conflito = mesmo terapeuta no mesmo horário)
-  const baseList = therapistId !== undefined
-    ? appointments.filter(apt => (apt.therapistId ?? '') === (therapistId ?? ''))
-    : appointments;
-
-  // Get appointments for the same date and time
-  const sameDateTimeAppointments = baseList.filter(apt => {
-    // Skip the appointment we're editing
+  // 1. Calculate TOTAL conflicts (Clinic-wide)
+  // Used for checking max capacity per slot
+  const totalConflictingAppointments = appointments.filter(apt => {
+    // Skip self
     if (excludeId && apt.id === excludeId) return false;
 
-    // Check if it's the same date - handle both Date objects and strings
+    // Skip cancelled
+    if (apt.status === 'cancelado') return false;
+
+    // Validate Date
     const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
-    const checkDate = typeof date === 'string' ? parseISO(date) : date;
+    if (!aptDate || !checkDate || !isSameDay(aptDate, checkDate)) return false;
 
-    if (!aptDate || !checkDate || aptDate.toDateString() !== checkDate.toDateString()) return false;
-
-    // Valide que o horário existe antes de tentar converter
-    if (!apt.time || apt.time === '') {
-      return false;
-    }
+    // Validate Time
+    if (!apt.time || apt.time === '') return false;
 
     const existingStartTime = timeToMinutes(apt.time);
-    const existingEndTime = existingStartTime + apt.duration;
+    const existingEndTime = existingStartTime + (apt.duration || 60);
 
-    // Check if appointments overlap
-    return (
-      (newStartTime >= existingStartTime && newStartTime < existingEndTime) ||
-      (newEndTime > existingStartTime && newEndTime <= existingEndTime) ||
-      (newStartTime <= existingStartTime && newEndTime >= existingEndTime)
-    );
+    return isOverlapping(newStartTime, newEndTime, existingStartTime, existingEndTime);
   });
 
-  // Retorna informações sobre conflitos (mas não bloqueia mais)
+  // 2. Filter by therapist if provided (Double-booking check)
+  const therapistConflictingAppointments = therapistId !== undefined
+    ? totalConflictingAppointments.filter(apt => (apt.therapistId ?? '') === (therapistId ?? ''))
+    : totalConflictingAppointments;
+
   return { 
-    hasConflict: sameDateTimeAppointments.length > 0, 
-    conflictingAppointment: sameDateTimeAppointments[0],
-    conflictCount: sameDateTimeAppointments.length
+    hasConflict: therapistConflictingAppointments.length > 0, 
+    conflictingAppointment: therapistConflictingAppointments[0],
+    conflictCount: therapistConflictingAppointments.length,
+    totalConflictCount: totalConflictingAppointments.length
   };
 }
 
