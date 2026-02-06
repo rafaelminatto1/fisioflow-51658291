@@ -60,33 +60,35 @@ export const analyzePatientProgressFlow = ai.defineFlow(
 /**
  * Wrapper Callable para o Frontend chamar
  */
-export const analyzeProgress = onCall(async (request) => {
-  if (!request.auth) {
-    throw new Error('Unauthorized');
-  }
-
-  // Schema de validação do Request (espelho do Input do Flow)
-  const RequestSchema = z.object({
-    patientName: z.string().min(1),
-    diagnosis: z.string().min(1),
-    lastEvolutions: z.array(z.string()).min(1, 'Pelo menos uma evolução é necessária'),
-    goals: z.array(z.string()).min(1, 'Pelo menos uma meta é necessária')
-  });
-
-  try {
-    // Validar input antes de chamar a IA (Economia de custos/erros)
-    const validData = RequestSchema.parse(request.data);
-
-    // Executar o flow
-    const result = await analyzePatientProgressFlow(validData);
-    return result;
-  } catch (e: any) {
-    logger.error('Genkit flow failed', e);
-    
-    if (e instanceof z.ZodError) {
-        throw new Error(`Dados inválidos: ${e.issues.map((err: any) => err.message).join(', ')}`);
+export const analyzeProgress = onCall(
+  { cpu: 2, memory: '1GiB' },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error('Unauthorized');
     }
-    
-    throw new Error('Analysis failed');
-  }
-});
+
+    // Schema de validação do Request (espelho do Input do Flow)
+    const RequestSchema = z.object({
+      patientName: z.string().min(1),
+      diagnosis: z.string().min(1),
+      lastEvolutions: z.array(z.string()).min(1, 'Pelo menos uma evolução é necessária'),
+      goals: z.array(z.string()).min(1, 'Pelo menos uma meta é necessária')
+    });
+
+    try {
+      // Validar input antes de chamar a IA (Economia de custos/erros)
+      const validData = RequestSchema.parse(request.data);
+
+      // Executar o flow
+      const result = await analyzePatientProgressFlow(validData);
+      return result;
+    } catch (e: any) {
+      logger.error('Genkit flow failed', e);
+
+      if (e instanceof z.ZodError) {
+        throw new Error(`Dados inválidos: ${e.issues.map((err: any) => err.message).join(', ')}`);
+      }
+
+      throw new Error('Analysis failed');
+    }
+  });
