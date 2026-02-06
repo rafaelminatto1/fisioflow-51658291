@@ -24,7 +24,7 @@ interface PatientComboboxProps {
   patients: Patient[];
   value?: string;
   onValueChange: (value: string) => void;
-  onCreateNew: (searchTerm: string) => void;
+  onCreateNew?: (searchTerm: string) => void;
   /** Nome a exibir quando value está setado mas o paciente ainda não está na lista (ex.: recém-criado) */
   fallbackDisplayName?: string;
   disabled?: boolean;
@@ -47,6 +47,7 @@ export function PatientCombobox({
   const [open, setOpen] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = React.useState("");
+  const canCreateNew = typeof onCreateNew === 'function';
 
   const selectedPatient = React.useMemo(() =>
     patients.find((patient) => patient.id === value),
@@ -115,6 +116,7 @@ export function PatientCombobox({
   };
 
   const handleCreateNew = () => {
+    if (!canCreateNew || !onCreateNew) return;
     setOpen(false);
     onCreateNew(inputValue);
     setInputValue("");
@@ -172,7 +174,7 @@ export function PatientCombobox({
             onValueChange={setInputValue}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                if (inputValue && filteredPatients.length === 0) {
+                if (canCreateNew && inputValue && filteredPatients.length === 0) {
                   e.preventDefault();
                   handleCreateNew();
                 }
@@ -186,15 +188,17 @@ export function PatientCombobox({
                   <p className="text-sm text-muted-foreground text-center">
                     Nenhum paciente encontrado com "{inputValue}"
                   </p>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleCreateNew}
-                    className="w-full mt-2 gap-2"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Cadastrar "{inputValue}"
-                  </Button>
+                  {canCreateNew && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={handleCreateNew}
+                      className="w-full mt-2 gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Cadastrar "{inputValue}"
+                    </Button>
+                  )}
                 </div>
               </CommandEmpty>
             )}
@@ -237,7 +241,7 @@ export function PatientCombobox({
             )}
 
             {/* Always show create option at bottom if there is input */}
-            {inputValue.length > 0 && filteredPatients.length > 0 && (
+            {canCreateNew && inputValue.length > 0 && filteredPatients.length > 0 && (
               <>
                 <div className="h-px bg-border mx-2 my-1" />
                 <CommandGroup>

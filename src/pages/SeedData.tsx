@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { addDoc, collection, db } from '@/integrations/firebase/app';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/integrations/firebase/functions';
@@ -230,31 +231,33 @@ export default function SeedData() {
     };
 
     return (
-        <div className="container mx-auto p-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Seed Data Generator</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="mb-4">
-                        Este utilitário irá gerar:<br />
-                        - 10 Pacientes<br />
-                        - 1 Avaliação completa para cada<br />
-                        - 10 Evoluções (Seg/Qua/Sex) para cada<br />
-                        - Dados variados de dor e progresso
-                    </p>
+        <MainLayout>
+            <div className="container mx-auto p-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Seed Data Generator</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="mb-4">
+                            Este utilitário irá gerar:<br />
+                            - 10 Pacientes<br />
+                            - 1 Avaliação completa para cada<br />
+                            - 10 Evoluções (Seg/Qua/Sex) para cada<br />
+                            - Dados variados de dor e progresso
+                        </p>
 
-                    <Button onClick={handleSeed} disabled={loading} size="lg">
-                        {loading ? 'Processando...' : 'GERAR DADOS (10 Pacientes)'}
-                    </Button>
+                        <Button onClick={handleSeed} disabled={loading} size="lg">
+                            {loading ? 'Processando...' : 'GERAR DADOS (10 Pacientes)'}
+                        </Button>
 
-                    <div className="mt-8 bg-slate-100 p-4 rounded-md h-96 overflow-y-auto font-mono text-xs">
-                        {logs.map((log, i) => (
-                            <div key={i} className="mb-1">{log}</div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+                        <div className="mt-8 bg-slate-100 p-4 rounded-md h-96 overflow-y-auto font-mono text-xs">
+                            {logs.map((log, i) => (
+                                <div key={i} className="mb-1">{log}</div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </MainLayout>
     );
 }
