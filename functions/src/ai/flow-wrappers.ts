@@ -17,25 +17,21 @@ import {
     generateExercisePlan,
 } from './flows';
 
-import { onCall } from 'firebase-functions/v2/https';
 import { logger } from '../lib/logger';
 
-export const analyzeProgress = onCall(
-    { cpu: 2, memory: "1GiB" },
-    async (request: CallableRequest) => {
-        if (!request.auth) {
-            throw new Error('Unauthorized');
-        }
-
-        try {
-            const result = await analyzePatientProgressFlow(request.data);
-            return result;
-        } catch (e: any) {
-            logger.error('Genkit flow failed', e);
-            throw new Error('Analysis failed');
-        }
+export async function analyzeProgressHandler(request: CallableRequest) {
+    if (!request.auth) {
+        throw new Error('Unauthorized');
     }
-);
+
+    try {
+        const result = await analyzePatientProgressFlow(request.data);
+        return result;
+    } catch (e: any) {
+        logger.error('Genkit flow failed', e);
+        throw new Error('Analysis failed');
+    }
+}
 
 export async function exerciseSuggestionHandler(request: CallableRequest) {
     const input: ExerciseSuggestionInput = {
