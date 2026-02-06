@@ -7,7 +7,6 @@
  * @module validations/schemas
  */
 
-import { z } from 'zod';
 
 // ============================================================================================
 // UTILITÁRIOS DE SANITIZAÇÃO
@@ -16,6 +15,9 @@ import { z } from 'zod';
 /**
  * Sanitiza strings removendo conteúdo perigoso
  */
+
+import { z } from 'zod';
+
 export function sanitizeString(input: string): string {
   return input
     .trim()

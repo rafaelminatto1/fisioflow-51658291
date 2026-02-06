@@ -1,3 +1,6 @@
+
+// Componentes para renderizar campos
+
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -7,15 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Eye, Edit, Download, FileText, Clock, User } from 'lucide-react';
+import { Eye, Edit, Download, FileText, Clock, User, Info } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvaluationFormWithFields } from '@/hooks/useEvaluationForms';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Componentes para renderizar campos
 function FormField({ field, value, onChange, readonly }: {
   field: {
     tipo_campo: string;

@@ -3,10 +3,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { db } from '@/integrations/firebase/app';
-
 
 export interface TherapistOccupancyData {
   id: string;

@@ -3,7 +3,6 @@
  * Collection: wiki_pages
  */
 
-import {
   db,
   collection,
   doc,

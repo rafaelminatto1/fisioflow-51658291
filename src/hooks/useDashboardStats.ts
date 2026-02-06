@@ -3,11 +3,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getCountFromServer, query as firestoreQuery, where, onSnapshot } from '@/integrations/firebase/app';
+import { collection, getCountFromServer, query as firestoreQuery, where, onSnapshot, db } from '@/integrations/firebase/app';
 import { format } from 'date-fns';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db } from '@/integrations/firebase/app';
-
 
 interface DashboardStats {
   totalPatients: number;

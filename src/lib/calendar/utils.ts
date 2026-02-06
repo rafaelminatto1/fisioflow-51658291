@@ -3,7 +3,6 @@
  * @module calendar/utils
  */
 
-import {
   format,
   parseISO,
   startOfDay,

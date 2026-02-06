@@ -3,12 +3,14 @@
  * Collection of helpful custom hooks
  */
 
-import { useRef, useEffect, useState, useCallback } from 'react';
 
 /**
  * useFirstRender Hook
  * Check if component is in first render
  */
+
+import { useRef, useEffect, useState, useCallback } from 'react';
+
 export function useFirstRender(): boolean {
   const firstRender = useRef(true);
 

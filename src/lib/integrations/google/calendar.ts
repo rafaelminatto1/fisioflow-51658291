@@ -6,7 +6,6 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
-import type {
   CalendarEvent,
   IntegrationConfig,
   SyncResult,

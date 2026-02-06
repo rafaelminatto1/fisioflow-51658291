@@ -1,4 +1,5 @@
 // Gráfico de receita em tempo real
+
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { db, collection, query, where, orderBy, onSnapshot, Timestamp } from '@/integrations/firebase/app';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

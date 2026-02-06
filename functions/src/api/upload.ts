@@ -1,4 +1,3 @@
-import { CORS_ORIGINS } from "../init";
 /**
  * Upload API - Firebase Cloud Function
  *
@@ -8,13 +7,14 @@ import { CORS_ORIGINS } from "../init";
  * @version 1.1.0 - Firebase Functions v2 - Refactored for consistency
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { logger } from 'firebase-functions';
-import { getAdminAuth, getAdminStorage } from '../init';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { CORS_ORIGINS, getAdminAuth, getAdminStorage } from '../init';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions';
 
 interface GenerateUploadTokenRequest {
   filename: string;

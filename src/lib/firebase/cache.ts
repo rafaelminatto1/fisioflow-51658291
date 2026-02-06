@@ -13,12 +13,13 @@
  * - No list operations for rate limiting
  */
 
-import { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, writeBatch } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, writeBatch } from '@/integrations/firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface CacheOptions {
   /**

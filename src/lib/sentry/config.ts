@@ -1,4 +1,5 @@
 // Configuração do Sentry para o frontend
+
 import * as Sentry from '@sentry/react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

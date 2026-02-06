@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Hook para debounce de valores
  * Útil para buscas e inputs que disparam queries
  */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+
 export function useDebounce<T>(value: T, delay: number = 300): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 

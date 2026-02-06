@@ -5,13 +5,14 @@
  * Uses the ResendService for templates and rendering
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client.js';
-import { Events, EmailSendPayload, InngestStep } from '../../lib/inngest/types.js';
-import { ResendService } from '../../lib/email/index.js';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, EmailSendPayload, InngestStep } from '../../lib/inngest/types.js';
+import { ResendService } from '../../lib/email/index.js';
 
 interface EmailResult {
   success: boolean;

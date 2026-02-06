@@ -1,6 +1,7 @@
 /**
  * Hook para acessar o RealtimeContext (arquivo separado para evitar aviso HMR Fast Refresh).
  */
+
 import { useContext } from 'react';
 import { RealtimeContext } from '@/contexts/RealtimeContext';
 

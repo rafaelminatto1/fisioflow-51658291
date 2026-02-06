@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, query, where, getDocs, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+import { collection, query, where, getDocs, orderBy as firestoreOrderBy, db } from '@/integrations/firebase/app';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,8 +15,6 @@ import { Video, Plus, Clock, Users, Play, Copy, Loader2, Calendar, PhoneCall } f
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientHelpers } from '@/types';
-import { db } from '@/integrations/firebase/app';
-
 
 interface PatientListItem {
   id: string;

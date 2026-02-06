@@ -3,14 +3,15 @@
  * @module hooks/calendar/useAppointmentGroups
  */
 
-import { useMemo, DependencyList } from 'react';
-import { isSameDay, startOfDay, addDays } from 'date-fns';
-import { Appointment } from '@/types/appointment';
-import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
 
 // =====================================================================
 // TYPES
 // =====================================================================
+
+import { useMemo, DependencyList } from 'react';
+import { isSameDay, startOfDay, addDays } from 'date-fns';
+import { Appointment } from '@/types/appointment';
+import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
 
 interface AppointmentGroup {
   /** Data do grupo */

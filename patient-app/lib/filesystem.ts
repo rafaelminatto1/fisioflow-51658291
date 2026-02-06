@@ -3,6 +3,11 @@
  * Helper functions for file operations
  */
 
+
+/**
+ * Get document directory
+ */
+
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -11,9 +16,6 @@ import { Alert, Linking } from 'react-native';
 import { log } from './logger';
 import { asyncResult, Result } from './async';
 
-/**
- * Get document directory
- */
 export async function getDocumentDirectory(): Promise<Result<string>> {
   return asyncResult(async () => {
     const dir = FileSystem.documentDirectory;

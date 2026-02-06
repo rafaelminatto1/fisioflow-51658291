@@ -3,11 +3,13 @@
  * Mock implementations for Firebase services
  */
 
-import { Result } from '../../lib/async';
 
 /**
  * Mock Auth State
  */
+
+import { Result } from '../../lib/async';
+
 let mockAuthUser: any = null;
 let mockAuthError: Error | null = null;
 

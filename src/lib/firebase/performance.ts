@@ -6,12 +6,13 @@
  * @module lib/firebase/performance
  */
 
-import { getApp } from 'firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { getApp } from 'firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface TraceMetric {
   name: string;

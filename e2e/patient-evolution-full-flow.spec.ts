@@ -9,6 +9,7 @@
  * Com navegador visível:
  *   pnpm exec playwright test e2e/patient-evolution-full-flow.spec.ts --project=chromium --headed
  */
+
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 

@@ -6,12 +6,13 @@
  * @module lib/firebase/crashlytics
  */
 
-import { getApp } from 'firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { getApp } from 'firebase/app';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface CrashContext {
   userId?: string;

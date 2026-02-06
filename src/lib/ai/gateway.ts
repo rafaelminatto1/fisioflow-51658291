@@ -19,15 +19,16 @@
  * @see https://sdk.vercel.ai/docs
  */
 
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText, streamText, generateObject } from 'ai';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
-// ============================================================================
-// TYPES
-// ============================================================================
 
 export type AIProvider = 'openai' | 'google' | 'grok' | 'anthropic';
 

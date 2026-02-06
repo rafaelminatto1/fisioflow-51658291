@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
-import { collection, onSnapshot, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { collection, onSnapshot, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
-
 import { toast } from 'sonner';
 import { FinancialService, Transaction, FinancialStats } from '@/services/financialService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';

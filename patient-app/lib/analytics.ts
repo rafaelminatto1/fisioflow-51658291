@@ -3,12 +3,14 @@
  * Event tracking and analytics helpers
  */
 
-import { log } from './logger';
-import { getDeviceInfo } from './device';
 
 /**
  * Event names for analytics
  */
+
+import { log } from './logger';
+import { getDeviceInfo } from './device';
+
 export const AnalyticsEvents = {
   // Auth events
   SIGN_UP_STARTED: 'sign_up_started',

@@ -1,8 +1,10 @@
 
+
+// Load environment variables correctly
+
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables correctly
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 // Setup globals for client compatibility

@@ -2,11 +2,9 @@
  * useFluxoCaixa - Migrated to Firebase
  *
  */
+
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
-
-
+import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 
 export interface MovimentacaoCaixa {
   id: string;

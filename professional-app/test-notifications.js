@@ -1,4 +1,5 @@
 // Test script for notifications
+
 import { registerForPushNotificationsAsync, sendTestNotification } from './lib/notifications.js';
 
 async function testNotifications() {

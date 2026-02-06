@@ -1,3 +1,8 @@
+
+// =====================================================================
+// TYPES
+// =====================================================================
+
 import React, { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -10,10 +15,6 @@ import { TimeSlotCell } from './TimeSlotCell';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 import { getOverlapStackPosition } from '@/lib/calendar';
-
-// =====================================================================
-// TYPES
-// =====================================================================
 
 interface CalendarWeekViewProps {
     currentDate: Date;

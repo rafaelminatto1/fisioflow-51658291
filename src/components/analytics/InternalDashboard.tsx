@@ -1,12 +1,12 @@
-import React, { memo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import React, { memo } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
-import { Users, UserMinus, UserPlus, DollarSign, Calendar, TrendingUp, Clock, CreditCard } from "lucide-react";
-import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import {
+import { Users, UserMinus, UserPlus, DollarSign, Calendar, TrendingUp, Clock, CreditCard } from 'lucide-react';
+import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
   Table,
   TableBody,
   TableCell,

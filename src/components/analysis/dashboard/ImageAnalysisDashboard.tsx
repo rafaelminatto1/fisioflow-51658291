@@ -1,3 +1,7 @@
+
+
+// Lazy-loaded heavy components for code-splitting
+
 import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
@@ -7,10 +11,8 @@ import { FileUp, Activity, Image as ImageIcon, Video, RotateCcw, Loader2 } from 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { GaitMetrics } from '@/types/analysis/schemas';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-
 import ClinicalPostureAnalysis from '../posture/ClinicalPostureAnalysis';
 
-// Lazy-loaded heavy components for code-splitting
 const DicomViewer = lazy(() => import('../dicom/DicomViewer'));
 const PoseAnalyzer = lazy(() => import('../posture/PoseAnalyzer'));
 const AssetViewer = lazy(() => import('../viewer/AssetViewer'));

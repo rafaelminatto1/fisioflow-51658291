@@ -14,17 +14,19 @@
  * - Integração com @dnd-kit
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { DndContext, DragEndEvent, DragOverlay as DndDragOverlay, useDraggable } from '@dnd-kit/core'
-import { CalendarDragOverlay } from '../DragOverlay'
-import { DraggableAppointment } from '../DraggableAppointment'
-import { DroppableTimeSlot } from '../DroppableTimeSlot'
-import { Appointment } from '@/types/appointment'
 
 // ==================== MOCKS ====================
 
 // Mock do hook useCardSize com diferentes tamanhos
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { DndContext, DragEndEvent, DragOverlay as DndDragOverlay, useDraggable } from '@dnd-kit/core';
+import { CalendarDragOverlay } from '../DragOverlay';
+import { DraggableAppointment } from '../DraggableAppointment';
+import { DroppableTimeSlot } from '../DroppableTimeSlot';
+import { Appointment } from '@/types/appointment';
+
 vi.mock('@/hooks/useCardSize', () => ({
   useCardSize: () => ({
     cardSize: 'medium',
