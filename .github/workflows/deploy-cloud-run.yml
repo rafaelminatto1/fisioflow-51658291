@@ -1,0 +1,58 @@
+name: Deploy Image Processor to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/image-processor/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: fisioflow-migration
+  SERVICE_NAME: image-processor
+  REGION: us-central1
+  REPOSITORY: fisioflow-repo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Autenticação Google Cloud (Requer configuração de Workload Identity Federation ou Service Account Key)
+      # Recomendado: Workload Identity Federation para maior segurança
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}' # Ou workload_identity_provider
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: 'Configure Docker'
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: 'Build and Push Container'
+        run: |
+          IMAGE_TAG=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker build -t $IMAGE_TAG ./workers/image-processor
+          docker push $IMAGE_TAG
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: 'Deploy to Cloud Run'
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          service: '${{ env.SERVICE_NAME }}'
+          region: '${{ env.REGION }}'
+          image: '${{ env.IMAGE_TAG }}'
+          flags: '--allow-unauthenticated' # Remova para produção privada
+
+      - name: 'Show Output'
+        run: echo ${{ steps.deploy.outputs.url }}
