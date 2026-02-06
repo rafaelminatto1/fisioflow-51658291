@@ -2,13 +2,28 @@
  * Firebase AI Service
  *
  * Wrapper para Cloud Functions de IA do Firebase/Google Cloud.
- * Substitui as chamadas às rotas /api/ai/* (Vercel) por Firebase callables.
+ * OTIMIZAÇÃO FASE 3: Usa aiService unificado ao invés de funções individuais.
+ * Reduz de 13 serviços Cloud Run para 1, economizando ~R$ 15-20/mês.
  */
 
 import { httpsCallable } from 'firebase/functions';
 import { functionsInstance, callFunctionHttp } from '@/integrations/firebase/functions';
 
 const functions = functionsInstance;
+
+// ============================================================================
+// UNIFIED AI SERVICE WRAPPER
+// ============================================================================
+
+/**
+ * Wrapper genérico para o aiService unificado.
+ * Todas as chamadas AI passam por esta única função.
+ */
+async function callAIService<TInput = unknown, TOutput = unknown>(action: string, data: TInput): Promise<TOutput> {
+  const fn = httpsCallable<{ action: string; data: TInput }, TOutput>(functions, 'aiService');
+  const { data: result } = await fn({ action, data });
+  return result;
+}
 
 /** Convert blob to base64 */
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -48,8 +63,7 @@ export async function getClinicalInsights(prompt: string, options: {
   patientName?: string;
   language?: string;
 }): Promise<string> {
-  const fn = httpsCallable<ClinicalChatInput, { response: string }>(functions, 'aiClinicalChat');
-  const { data } = await fn({
+  const result = await callAIService<ClinicalChatInput, { response: string }>('clinicalChat', {
     message: prompt,
     context: {
       patientId: options.patientId,
@@ -57,7 +71,7 @@ export async function getClinicalInsights(prompt: string, options: {
       sessionCount: 0,
     },
   });
-  return data.response;
+  return result.response;
 }
 
 export async function getTreatmentRecommendations(prompt: string, options: {
@@ -68,8 +82,7 @@ export async function getTreatmentRecommendations(prompt: string, options: {
   sessionCount?: number;
   language?: string;
 }): Promise<string> {
-  const fn = httpsCallable<ClinicalChatInput, { response: string }>(functions, 'aiClinicalChat');
-  const { data } = await fn({
+  const result = await callAIService<ClinicalChatInput, { response: string }>('clinicalChat', {
     message: prompt,
     context: {
       patientId: options.patientId,
@@ -77,13 +90,12 @@ export async function getTreatmentRecommendations(prompt: string, options: {
       sessionCount: options.sessionCount ?? 0,
     },
   });
-  return data.response;
+  return result.response;
 }
 
 export async function chatWithClinicalAssistant(input: ClinicalChatInput): Promise<string> {
-  const fn = httpsCallable<ClinicalChatInput, { response: string }>(functions, 'aiClinicalChat');
-  const { data } = await fn(input);
-  return data.response;
+  const result = await callAIService<ClinicalChatInput, { response: string }>('clinicalChat', input);
+  return result.response;
 }
 
 // ============================================================================
@@ -124,9 +136,7 @@ export interface ExerciseSuggestionResponse {
 }
 
 export async function getExerciseSuggestions(input: ExerciseSuggestionInput): Promise<ExerciseSuggestionResponse> {
-  const fn = httpsCallable<ExerciseSuggestionInput, ExerciseSuggestionResponse>(functions, 'aiExerciseSuggestion');
-  const { data } = await fn(input);
-  return data;
+  return await callAIService<ExerciseSuggestionInput, ExerciseSuggestionResponse>('exerciseSuggestion', input);
 }
 
 // ============================================================================
@@ -165,9 +175,7 @@ export interface ExercisePlanResponse {
  * Retorna dados altamente estruturados e validados.
  */
 export async function generateExercisePlanWithIA(input: GenerateExercisePlanInput): Promise<ExercisePlanResponse> {
-  const fn = httpsCallable<GenerateExercisePlanInput, ExercisePlanResponse>(functions, 'generateExercisePlan');
-  const { data } = await fn(input);
-  return data;
+  return await callAIService<GenerateExercisePlanInput, ExercisePlanResponse>('generateExercisePlan', input);
 }
 
 // ============================================================================
@@ -190,9 +198,7 @@ export interface ClinicalAnalysisInput {
 }
 
 export async function getClinicalAnalysis(input: ClinicalAnalysisInput) {
-  const fn = httpsCallable(functions, 'aiClinicalAnalysis');
-  const { data } = await fn(input);
-  return data;
+  return await callAIService('clinicalAnalysis', input);
 }
 
 // ============================================================================
@@ -217,9 +223,7 @@ export interface SoapGenerationResponse {
 }
 
 export async function generateSOAPNote(input: SoapGenerationInput): Promise<SoapGenerationResponse> {
-  const fn = httpsCallable<SoapGenerationInput, SoapGenerationResponse>(functions, 'aiSoapNoteChat');
-  const { data } = await fn(input);
-  return data;
+  return await callAIService<SoapGenerationInput, SoapGenerationResponse>('soapNoteChat', input);
 }
 
 // ============================================================================
@@ -227,9 +231,7 @@ export async function generateSOAPNote(input: SoapGenerationInput): Promise<Soap
 // ============================================================================
 
 export async function analyzeMovement(input: { videoData?: string; patientId?: string; context?: string }) {
-  const fn = httpsCallable(functions, 'aiMovementAnalysis');
-  const { data } = await fn(input);
-  return data;
+  return await callAIService('movementAnalysis', input);
 }
 
 // ============================================================================
