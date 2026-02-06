@@ -33,6 +33,7 @@ export const PATIENT_ANALYTICS_KEYS = {
   all: ['patient-analytics'] as const,
   progress: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'progress'] as const,
   lifecycle: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'lifecycle'] as const,
+  lifecycleEvents: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'lifecycle-events'] as const,
   outcomes: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'outcomes'] as const,
   sessions: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'sessions'] as const,
   predictions: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'predictions'] as const,
@@ -79,7 +80,7 @@ export function usePatientProgressSummary(patientId: string) {
 
 export function usePatientLifecycleEvents(patientId: string) {
   return useQuery({
-    queryKey: PATIENT_ANALYTICS_KEYS.lifecycle(patientId),
+    queryKey: PATIENT_ANALYTICS_KEYS.lifecycleEvents(patientId),
     queryFn: async (): Promise<PatientLifecycleEvent[]> => {
       const q = firestoreQuery(
         collection(db, 'patient_lifecycle_events'),
@@ -107,20 +108,17 @@ export interface PatientLifecycleSummaryData {
 }
 
 export function usePatientLifecycleSummary(patientId: string) {
-  const { data: events } = usePatientLifecycleEvents(patientId);
+  const lifecycleEventsQuery = usePatientLifecycleEvents(patientId);
+  const events = Array.isArray(lifecycleEventsQuery.data) ? lifecycleEventsQuery.data : [];
 
-  return useQuery({
-    queryKey: PATIENT_ANALYTICS_KEYS.lifecycle(patientId),
-    queryFn: (): PatientLifecycleSummaryData => {
-      if (!events || events.length === 0) {
-        return {
-          current_stage: 'lead_created',
-          days_in_current_stage: 0,
-          total_days_in_treatment: 0,
-          stage_history: [],
-        };
-      }
-
+  const data: PatientLifecycleSummaryData = events.length === 0
+    ? {
+      current_stage: 'lead_created',
+      days_in_current_stage: 0,
+      total_days_in_treatment: 0,
+      stage_history: [],
+    }
+    : (() => {
       const now = new Date();
       const sortedEvents = [...events].sort((a, b) =>
         new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
@@ -147,10 +145,16 @@ export function usePatientLifecycleSummary(patientId: string) {
         total_days_in_treatment: Math.floor((now.getTime() - firstEventDate.getTime()) / (1000 * 60 * 60 * 24)),
         stage_history: stageHistory,
       };
-    },
-    enabled: !!events,
-    staleTime: 10 * 60 * 1000,
-  });
+    })();
+
+  return {
+    data,
+    isLoading: lifecycleEventsQuery.isLoading,
+    isFetching: lifecycleEventsQuery.isFetching,
+    isError: lifecycleEventsQuery.isError,
+    error: lifecycleEventsQuery.error,
+    refetch: lifecycleEventsQuery.refetch,
+  };
 }
 
 export function useCreateLifecycleEvent() {
@@ -171,6 +175,7 @@ export function useCreateLifecycleEvent() {
       return { id: docRef.id, ...eventData };
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.lifecycleEvents(variables.patient_id) });
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.lifecycle(variables.patient_id) });
       toast.success('Evento de ciclo de vida registrado');
     },
@@ -648,39 +653,34 @@ export function useClinicalBenchmarks(benchmarkCategory?: string) {
 export function usePatientAnalyticsDashboard(patientId: string) {
   const progressSummary = usePatientProgressSummary(patientId);
   const lifecycleSummary = usePatientLifecycleSummary(patientId);
-  const { data: outcomeTrends } = useOutcomeMeasureTrends(patientId);
+  const outcomeTrends = useOutcomeMeasureTrends(patientId);
   const sessionMetrics = usePatientSessionMetrics(patientId, 10);
   const riskScore = usePatientRiskScore(patientId);
   const predictions = usePatientPredictions(patientId);
   const goals = usePatientGoals(patientId);
   const insights = usePatientInsights(patientId, false);
-  const benchmarks = useClinicalBenchmarks();
+  const coreQueries = [progressSummary, lifecycleSummary, sessionMetrics];
+  const optionalQueries = [outcomeTrends, riskScore, predictions, goals, insights];
 
-  const isLoading = [
-    progressSummary,
-    lifecycleSummary,
-    outcomeTrends,
-    sessionMetrics,
-    riskScore,
-    predictions,
-    goals,
-    insights,
-    benchmarks,
-  ].some(query => query.isLoading);
+  // Render dashboard as soon as core data is ready; optional data can arrive progressively.
+  const isLoading = coreQueries.some(query => query?.isLoading);
 
-  const isError = [
-    progressSummary,
-    lifecycleSummary,
-    outcomeTrends,
-    sessionMetrics,
-    riskScore,
-    predictions,
-    goals,
-    insights,
-    benchmarks,
-  ].some(query => query.isError);
+  // Only show hard-error state when all core queries fail.
+  const isError = coreQueries.every(query => query?.isError);
+  const isFetching = [...coreQueries, ...optionalQueries].some(query => query?.isFetching);
+  const hasAnalyticsData = Boolean(
+    (progressSummary.data?.total_sessions ?? 0) > 0 ||
+    (lifecycleSummary.data?.stage_history?.length ?? 0) > 0 ||
+    (outcomeTrends.data?.length ?? 0) > 0 ||
+    (sessionMetrics.data?.length ?? 0) > 0 ||
+    riskScore.data ||
+    (predictions.data?.length ?? 0) > 0 ||
+    (goals.data?.length ?? 0) > 0 ||
+    (insights.data?.length ?? 0) > 0
+  );
+  const isEmpty = !isLoading && !isError && !hasAnalyticsData;
 
-  const data: PatientAnalyticsData | undefined = !isLoading && !isError ? {
+  const data: PatientAnalyticsData = {
     patient_id: patientId,
     progress_summary: progressSummary.data ?? {
       total_sessions: 0,
@@ -693,8 +693,8 @@ export function usePatientAnalyticsDashboard(patientId: string) {
       goals_in_progress: 0,
       overall_progress_percentage: null,
     },
-    pain_trend: outcomeTrends?.find(t => t.measure_name.toLowerCase().includes('pain')) || null,
-    function_trend: outcomeTrends?.find(t => t.measure_name.toLowerCase().includes('func')) || null,
+    pain_trend: outcomeTrends.data?.find(t => t.measure_name.toLowerCase().includes('pain')) || null,
+    function_trend: outcomeTrends.data?.find(t => t.measure_name.toLowerCase().includes('func')) || null,
     risk_score: riskScore.data ?? null,
     predictions: {
       dropout_probability: predictions.data?.find(p => p.prediction_type === 'dropout_risk')?.predicted_value ?? 0,
@@ -716,22 +716,25 @@ export function usePatientAnalyticsDashboard(patientId: string) {
       pain_reduction: s.pain_reduction ?? 0,
       satisfaction: s.patient_satisfaction ?? 0,
     })) ?? [],
-  } : undefined;
+  };
 
   return {
     data,
     isLoading,
+    isFetching,
     isError,
-    refetch: () => {
-      progressSummary.refetch();
-      lifecycleSummary.refetch();
-      outcomeTrends?.();
-      sessionMetrics.refetch();
-      riskScore.refetch();
-      predictions.refetch();
-      goals.refetch();
-      insights.refetch();
-      benchmarks.refetch();
+    isEmpty,
+    refetch: async () => {
+      await Promise.all([
+        progressSummary.refetch(),
+        lifecycleSummary.refetch(),
+        outcomeTrends.refetch(),
+        sessionMetrics.refetch(),
+        riskScore.refetch(),
+        predictions.refetch(),
+        goals.refetch(),
+        insights.refetch(),
+      ]);
     },
   };
 }

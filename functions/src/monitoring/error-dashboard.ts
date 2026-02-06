@@ -203,7 +203,7 @@ export const getErrorStats = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getErrorStatsHandler
 );
@@ -257,7 +257,7 @@ export const getRecentErrors = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getRecentErrorsHandler
 );
@@ -304,7 +304,7 @@ export const resolveError = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   resolveErrorHandler
 );
@@ -352,7 +352,7 @@ export const getErrorDetails = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getErrorDetailsHandler
 );
@@ -502,7 +502,7 @@ export const errorStream = onRequest(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   errorStreamHandler
 );
@@ -568,7 +568,7 @@ export const getErrorTrends = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
-    maxInstances: 10,
+    maxInstances: 1,
   },
   getErrorTrendsHandler
 );

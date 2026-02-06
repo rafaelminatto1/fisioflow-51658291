@@ -72,7 +72,7 @@ export interface UserDataExport {
 export const exportUserData = onCall({
   region: 'southamerica-east1',
   memory: '512MiB',
-  maxInstances: 10,
+  maxInstances: 1,
   timeoutSeconds: 540, // 9 minutos máximo
 }, async (request) => {
   if (!request.auth) {
@@ -277,7 +277,7 @@ export const exportUserData = onCall({
 export const getExportHistory = onCall({
   region: 'southamerica-east1',
   memory: '256MiB',
-  maxInstances: 10,
+  maxInstances: 1,
 }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Usuário não autenticado');

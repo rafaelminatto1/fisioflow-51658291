@@ -243,7 +243,7 @@ export const movementAnalysis = onCall({
   region: 'southamerica-east1',
   memory: '2GiB',
   cpu: 1,
-  maxInstances: 5,
+  maxInstances: 1,
 }, movementAnalysisHandler);
 
 // ============================================================================
