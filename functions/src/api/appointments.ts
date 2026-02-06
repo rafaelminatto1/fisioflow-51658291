@@ -63,10 +63,9 @@ function normalizeAppointmentStatus(value: string | undefined): DbAppointmentSta
 /**
  * Helper to get organization ID from user ID
  * OTIMIZADO: Usa cache para evitar queries repetidas
+ * ATENÇÃO: Sempre usar getOrganizationIdCached diretamente para máxima performance
  */
-async function getOrganizationId(userId: string): Promise<string> {
-  return getOrganizationIdCached(userId);
-}
+const getOrganizationId = getOrganizationIdCached;
 
 /**
  * HTTP version of listAppointments for CORS/compatibility

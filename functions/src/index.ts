@@ -72,30 +72,8 @@ import { onCall, onRequest, Request } from 'firebase-functions/v2/https';
 import { Response } from 'express';
 
 // API de Pacientes
-export const listPatients = onCall(async (request) => {
-    const { listPatientsHandler } = await import('./api/patients');
-    return listPatientsHandler(request);
-});
-export const createPatient = onCall(async (request) => {
-    const { createPatientHandler } = await import('./api/patients');
-    return createPatientHandler(request);
-});
-export const updatePatient = onCall(async (request) => {
-    const { updatePatientHandler } = await import('./api/patients');
-    return updatePatientHandler(request);
-});
-export const getPatient = onCall(async (request) => {
-    const { getPatientHandler } = await import('./api/patients');
-    return getPatientHandler(request);
-});
-export const deletePatient = onCall(async (request) => {
-    const { deletePatientHandler } = await import('./api/patients');
-    return deletePatientHandler(request);
-});
-export const getPatientStats = onCall(async (request) => {
-    const { getPatientStatsHandler } = await import('./api/patients');
-    return getPatientStatsHandler(request);
-});
+// OTIMIZAÇÃO: Removidas versões Callable duplicadas (lines 75-98)
+// O frontend usa as versões HTTP (V2) com CORS
 // HTTP (CORS) - frontend callFunctionHttp uses these names
 export {
     listPatientsHttp as listPatientsV2,
@@ -109,26 +87,8 @@ export {
 export { checkPatientAppointments, getLastPainMapDate } from './api/patient-quests';
 
 // API de Agendamentos
-export const createAppointment = onCall(async (request) => {
-    const { createAppointmentHandler } = await import('./api/appointments');
-    return createAppointmentHandler(request);
-});
-export const updateAppointment = onCall(async (request) => {
-    const { updateAppointmentHandler } = await import('./api/appointments');
-    return updateAppointmentHandler(request);
-});
-export const getAppointment = onCall(async (request) => {
-    const { getAppointmentHandler } = await import('./api/appointments');
-    return getAppointmentHandler(request);
-});
-export const cancelAppointment = onCall(async (request) => {
-    const { cancelAppointmentHandler } = await import('./api/appointments');
-    return cancelAppointmentHandler(request);
-});
-export const checkTimeConflict = onCall(async (request) => {
-    const { checkTimeConflictHandler } = await import('./api/appointments');
-    return checkTimeConflictHandler(request);
-});
+// OTIMIZAÇÃO: Removidas versões Callable duplicadas
+// O frontend usa as versões HTTP (V2) com CORS
 // HTTP (CORS) - frontend callFunctionHttp hits these URLs
 export { listAppointmentsHttp as listAppointments } from './api/appointments';
 export { getAppointmentHttp as getAppointmentV2 } from './api/appointments';
@@ -233,30 +193,8 @@ export const createPayment = onCall(async (request) => {
 });
 
 // API Financeira (Transações)
-export const listTransactions = onCall(async (request) => {
-    const { listTransactionsHandler } = await import('./api/financial');
-    return listTransactionsHandler(request);
-});
-export const createTransaction = onCall(async (request) => {
-    const { createTransactionHandler } = await import('./api/financial');
-    return createTransactionHandler(request);
-});
-export const updateTransaction = onCall(async (request) => {
-    const { updateTransactionHandler } = await import('./api/financial');
-    return updateTransactionHandler(request);
-});
-export const deleteTransaction = onCall(async (request) => {
-    const { deleteTransactionHandler } = await import('./api/financial');
-    return deleteTransactionHandler(request);
-});
-export const findTransactionByAppointmentId = onCall(async (request) => {
-    const { findTransactionByAppointmentIdHandler } = await import('./api/financial');
-    return findTransactionByAppointmentIdHandler(request);
-});
-export const getEventReport = onCall(async (request) => {
-    const { getEventReportHandler } = await import('./api/financial');
-    return getEventReportHandler(request);
-});
+// OTIMIZAÇÃO: Removidas versões Callable duplicadas
+// O frontend usa as versões HTTP (V2) com CORS
 // HTTP (CORS) - V2 endpoints for frontend
 export {
     listTransactionsHttp as listTransactionsV2,
@@ -437,14 +375,8 @@ export const runPatientRagSchema = onRequest(
     }
 );
 
-export const rebuildPatientRagIndex = onCall(
-    { cpu: 1, memory: '1GiB', maxInstances: 1, timeoutSeconds: 540, region: 'southamerica-east1' },
-    async (request) => {
-        const { rebuildPatientRagIndexHandler } = await import('./ai/rag/rag-index-maintenance');
-        return rebuildPatientRagIndexHandler(request);
-    }
-);
-
+// OTIMIZAÇÃO: Removida versão Callable duplicada de rebuildPatientRagIndex
+// Mantida apenas versão HTTP abaixo
 export const rebuildPatientRagIndexHttp = onRequest(
     {
         secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
@@ -578,200 +510,11 @@ export const aiFastProcessing = onCall(
 );
 
 // ============================================================================
-// WEBHOOK MANAGEMENT
-// ============================================================================
-
-// Webhook Management - TEMPORARILY DISABLED TO SAVE RESOURCES
-/*
-export const subscribeWebhook = onCall(async (request) => {
-    const { subscribeWebhookHandler } = await import('./webhooks/index');
-    return subscribeWebhookHandler(request);
-});
-export const unsubscribeWebhook = onCall(async (request) => {
-    const { unsubscribeWebhookHandler } = await import('./webhooks/index');
-    return unsubscribeWebhookHandler(request);
-});
-export const listWebhooks = onCall(async (request) => {
-    const { listWebhooksHandler } = await import('./webhooks/index');
-    return listWebhooksHandler(request);
-});
-// REMOVIDO: testWebhook - função de teste não usada em produção
-export const getWebhookEventTypes = onRequest(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (req: any, res: any) => {
-        const { getWebhookEventTypesHandler } = await import('./webhooks/index');
-        return getWebhookEventTypesHandler(req, res);
-    }
-);
-*/
-
-// ============================================================================
-// INTEGRATIONS (Calendar, etc.)
-// ============================================================================
-
-// Integrations (Calendar, etc.) - TEMPORARILY DISABLED TO SAVE RESOURCES
-/*
-export const syncToGoogleCalendar = onCall(async (request) => {
-    const { syncToGoogleCalendarHandler } = await import('./integrations/calendar');
-    return syncToGoogleCalendarHandler(request);
-});
-export const syncIntegration = onCall(async (request) => {
-    const { syncIntegrationHandler } = await import('./integrations/calendar');
-    return syncIntegrationHandler(request);
-});
-export const importFromGoogleCalendar = onCall(async (request) => {
-    const { importFromGoogleCalendarHandler } = await import('./integrations/calendar');
-    return importFromGoogleCalendarHandler(request);
-});
-export const connectGoogleCalendar = onCall(async (request) => {
-    const { connectGoogleCalendarHandler } = await import('./integrations/calendar');
-    return connectGoogleCalendarHandler(request);
-});
-export const disconnectGoogleCalendar = onCall(async (request) => {
-    const { disconnectGoogleCalendarHandler } = await import('./integrations/calendar');
-    return disconnectGoogleCalendarHandler(request);
-});
-export const getGoogleAuthUrl = onCall(async (request) => {
-    const { getGoogleAuthUrlHandler } = await import('./integrations/calendar');
-    return getGoogleAuthUrlHandler(request);
-});
-export { exportToICal } from './integrations/calendar';
-*/
-
-// ============================================================================
 // EXPORT/IMPORT FUNCTIONS
-// ============================================================================
-
-// Export/Import Functions
-// TEMPORARILY DISABLED: export const exportPatients = onCall(
-// TEMPORARILY DISABLED:     {
-// TEMPORARILY DISABLED:         region: 'southamerica-east1',
-// TEMPORARILY DISABLED:         memory: '512MiB',
-// TEMPORARILY DISABLED:         maxInstances: 1,
-// TEMPORARILY DISABLED:         timeoutSeconds: 300,
-// TEMPORARILY DISABLED:     },
-// TEMPORARILY DISABLED:     async (request) => {
-// TEMPORARILY DISABLED:         const { exportPatientsHandler } = await import('./export-import/index');
-// TEMPORARILY DISABLED:         return exportPatientsHandler(request);
-// TEMPORARILY DISABLED:     }
-// TEMPORARILY DISABLED: );
-// TEMPORARILY DISABLED: export const importPatients = onCall(
-// TEMPORARILY DISABLED:     {
-// TEMPORARILY DISABLED:         region: 'southamerica-east1',
-// TEMPORARILY DISABLED:         memory: '512MiB',
-// TEMPORARILY DISABLED:         maxInstances: 1,
-// TEMPORARILY DISABLED:         timeoutSeconds: 300,
-// TEMPORARILY DISABLED:     },
-// TEMPORARILY DISABLED:     async (request) => {
-// TEMPORARILY DISABLED:         const { importPatientsHandler } = await import('./export-import/index');
-// TEMPORARILY DISABLED:         return importPatientsHandler(request);
-// TEMPORARILY DISABLED:     }
-// TEMPORARILY DISABLED: );
-// TEMPORARILY DISABLED: export const downloadExport = onRequest(
-// TEMPORARILY DISABLED:     {
-// TEMPORARILY DISABLED:         region: 'southamerica-east1',
-// TEMPORARILY DISABLED:         memory: '256MiB',
-// TEMPORARILY DISABLED:         maxInstances: 1,
-// TEMPORARILY DISABLED:     },
-// TEMPORARILY DISABLED:     async (req: any, res: any) => {
-// TEMPORARILY DISABLED:         const { downloadExportHandler } = await import('./export-import/index');
-// TEMPORARILY DISABLED:         return downloadExportHandler(req, res);
-// TEMPORARILY DISABLED:     }
-// TEMPORARILY DISABLED: );
-
-// ============================================================================
-// MONITORING & OBSERVABILITY
-// ============================================================================
-
-// Monitoring & Observability - TEMPORARILY DISABLED TO SAVE RESOURCES
-/*
-// REMOVIDO: setupMonitoring - função de setup não usada em produção
-export const getErrorStats = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { getErrorStatsHandler } = await import('./monitoring/error-dashboard');
-        return getErrorStatsHandler(request);
-    }
-);
-export const getRecentErrors = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { getRecentErrorsHandler } = await import('./monitoring/error-dashboard');
-        return getRecentErrorsHandler(request);
-    }
-);
-export const resolveError = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { resolveErrorHandler } = await import('./monitoring/error-dashboard');
-        return resolveErrorHandler(request);
-    }
-);
-export const getErrorDetails = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { getErrorDetailsHandler } = await import('./monitoring/error-dashboard');
-        return getErrorDetailsHandler(request);
-    }
-);
-// REMOVIDO: errorStream - stream não essencial, usar polling
-// REMOVIDO: getErrorTrends, cleanupOldErrors - monitoramento não essencial
-
-export const getPerformanceStats = onCall(
-    {
-        region: 'southamerica-east1',
-        memory: '256MiB',
-        maxInstances: 1,
-    },
-    async (request) => {
-        const { getPerformanceStatsHandler } = await import('./monitoring/performance-tracing');
-        return getPerformanceStatsHandler(request);
-    }
-);
-
-import * as aiReports from './monitoring/ai-reports';
-export const generateAIReport = aiReports.generateAIReport;
-export const listReports = aiReports.listReports;
-export const getReport = aiReports.getReport;
-export const downloadReport = aiReports.downloadReport;
-export const scheduledDailyReport = aiReports.scheduledDailyReport;
-export const scheduledWeeklyReport = aiReports.scheduledWeeklyReport;
-*/
-
-// ============================================================================
-// REALTIME FUNCTIONS
-// ============================================================================
-
-// Realtime Functions - TEMPORARILY DISABLED TO SAVE RESOURCES
-/*
-export const realtimePublish = onRequest(async (req: any, res: any) => {
-    const { realtimePublishHandler } = await import('./realtime/publisher');
-    await realtimePublishHandler(req, res);
-});
-*/
-
+// OTIMIZAÇÃO: Removidos blocos comentados de webhooks e integrações desativadas
 // ============================================================================
 // BACKGROUND TRIGGERS
+// OTIMIZAÇÃO: Removidos blocos comentados de monitoring e realtime
 // ============================================================================
 
 // Firestore triggers with proper error handling
