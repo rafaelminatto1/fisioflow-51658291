@@ -16,16 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   ScanFace,
   Upload,
-  Video,
-  Play,
-  Pause,
-  Download,
   Activity,
-  TrendingUp,
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
@@ -65,6 +59,31 @@ interface JointAnalysis {
   rightAngle?: number;
   asymmetry?: number;
   status: 'normal' | 'warning' | 'critical';
+}
+
+interface MovementAnalysisResult {
+  data?: {
+    summary?: string;
+    formQuality?: {
+      overall?: number;
+      posture?: number;
+      rangeOfMotion?: number;
+      control?: number;
+      tempo?: number;
+    };
+    deviations?: Array<{
+      bodyPart: string;
+      issue: string;
+      severity: string;
+    }>;
+    strengths?: string[];
+    improvements?: string[];
+  };
+}
+
+interface PatientOption {
+  id: string;
+  name: string;
 }
 
 export default function MovementLabPage() {
@@ -107,7 +126,7 @@ export default function MovementLabPage() {
       toast({ title: 'Upload Completo', description: 'Enviando para análise...' });
 
       // 2. Chamar serviço unificado (aiService -> movementAnalysis)
-      const result: any = await analyzeMovement({
+      const result: MovementAnalysisResult = await analyzeMovement({
         patientId: patientId || 'unknown',
         exerciseId: 'custom-upload',
         exerciseName: 'Execução enviada',
@@ -231,7 +250,7 @@ export default function MovementLabPage() {
                   onChange={(e) => setPatientId(e.target.value)}
                 />
                 <datalist id="patients-list">
-                  {patients?.map((p: any) => (
+                  {(patients as PatientOption[] | undefined)?.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </datalist>
