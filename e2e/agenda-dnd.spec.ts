@@ -58,6 +58,6 @@ test('agenda drag and drop', async ({ page }) => {
     await page.getByRole('button', { name: /Confirmar Reagendamento|Confirmar/ }).click();
 
     // 8. Verify success toast (main fix: dialog no longer throws "Invalid time value" for ISO date strings)
-    await expect(page.locator('text=/Reagendado.*sucesso|reagendado com sucesso/i')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=/Reagendado.*sucesso|reagendado com sucesso/i').first()).toBeVisible({ timeout: 15000 });
     console.log('Success!');
 });
