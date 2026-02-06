@@ -306,6 +306,16 @@ export const apiEvaluate = onRequest(async (req: Request, res: Response) => {
     return apiEvaluateHandler(req, res);
 });
 
+// API de Médicos
+export const listDoctors = onRequest(async (req, res) => {
+    const { listDoctorsHttp } = await import('./api/doctors');
+    return listDoctorsHttp(req, res);
+});
+export const searchDoctorsV2 = onRequest(async (req, res) => {
+    const { searchDoctorsHttp } = await import('./api/doctors');
+    return searchDoctorsHttp(req, res);
+});
+
 // Health Check
 export const healthCheck = onRequest(async (req: Request, res: Response) => {
     const { healthCheckHandler } = await import('./api/health');
@@ -409,6 +419,43 @@ export const runPerformanceIndexes = onRequest(
     async (req, res) => {
         const { runPerformanceIndexes } = await import('./migrations/run-performance-indexes');
         return runPerformanceIndexes(req, res);
+    }
+);
+
+export const runPatientRagSchema = onRequest(
+    {
+        secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
+        memory: '512MiB',
+        timeoutSeconds: 300,
+        region: 'southamerica-east1',
+        cors: CORS_ORIGINS,
+    },
+    async (req, res) => {
+        const { runPatientRagSchemaHandler } = await import('./migrations/run-patient-rag-schema');
+        return runPatientRagSchemaHandler(req, res);
+    }
+);
+
+export const rebuildPatientRagIndex = onCall(
+    { cpu: 1, memory: '1GiB', maxInstances: 1, timeoutSeconds: 540, region: 'southamerica-east1' },
+    async (request) => {
+        const { rebuildPatientRagIndexHandler } = await import('./ai/rag/rag-index-maintenance');
+        return rebuildPatientRagIndexHandler(request);
+    }
+);
+
+export const rebuildPatientRagIndexHttp = onRequest(
+    {
+        secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
+        cpu: 1,
+        memory: '1GiB',
+        timeoutSeconds: 540,
+        region: 'southamerica-east1',
+        cors: CORS_ORIGINS,
+    },
+    async (req, res) => {
+        const { rebuildPatientRagIndexHttpHandler } = await import('./ai/rag/rag-index-maintenance');
+        return rebuildPatientRagIndexHttpHandler(req, res);
     }
 );
 
@@ -776,6 +823,24 @@ export const syncAppointmentToSql = functions.firestore.onDocumentWritten(
     async (event) => {
         const { handleAppointmentSync } = await import('./triggers/sync-appointments');
         return handleAppointmentSync(event as any);
+    }
+);
+
+export const syncDoctorToSql = functions.firestore.onDocumentWritten(
+    'doctors/{doctorId}',
+    async (event) => {
+        const { syncDoctorToSqlHandler } = await import('./api/doctors');
+        const doctorId = event.params.doctorId;
+        const doctorData = event.data?.after.data();
+
+        if (!doctorData) {
+            const { getPool } = await import('./init');
+            const pool = getPool();
+            await pool.query('UPDATE doctors SET is_active = false, updated_at = NOW() WHERE id = $1', [doctorId]);
+            return;
+        }
+
+        return syncDoctorToSqlHandler(doctorId, doctorData);
     }
 );
 

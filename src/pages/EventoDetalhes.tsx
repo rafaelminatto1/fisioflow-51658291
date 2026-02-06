@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { useEvento } from '@/hooks/useEventos';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,40 +40,45 @@ export default function EventoDetalhes() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <LoadingSkeleton type="card" rows={3} />
-      </div>
+      <MainLayout>
+        <div className="container mx-auto p-6 space-y-6">
+          <LoadingSkeleton type="card" rows={3} />
+        </div>
+      </MainLayout>
     );
   }
 
   if (!evento) {
     return (
-      <div className="container mx-auto p-6">
-        <EmptyState
-          icon={Calendar}
-          title="Evento não encontrado"
-          description="O evento que você procura não existe ou foi removido."
-          action={{
-            label: "Voltar para Eventos",
-            onClick: () => navigate('/eventos')
-          }}
-        />
-      </div>
+      <MainLayout>
+        <div className="container mx-auto p-6">
+          <EmptyState
+            icon={Calendar}
+            title="Evento não encontrado"
+            description="O evento que você procura não existe ou foi removido."
+            action={{
+              label: "Voltar para Eventos",
+              onClick: () => navigate('/eventos')
+            }}
+          />
+        </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
-      {evento && (
-        <EditEventoModal
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          evento={evento}
-        />
-      )}
+    <MainLayout>
+      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+        {evento && (
+          <EditEventoModal
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            evento={evento}
+          />
+        )}
 
-      {/* Header responsivo */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Header responsivo */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3 sm:gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/eventos')}>
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -103,10 +109,10 @@ export default function EventoDetalhes() {
             <span className="sm:hidden">Editar</span>
           </Button>
         </div>
-      </div>
+        </div>
 
-      {/* Info Cards responsivos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Info Cards responsivos */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -150,58 +156,59 @@ export default function EventoDetalhes() {
             <p className="text-sm">{evento.gratuito ? 'Gratuito' : 'Pago'}</p>
           </CardContent>
         </Card>
+        </div>
+
+        {/* Descrição */}
+        {evento.descricao && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Descrição</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{evento.descricao}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabs responsivos */}
+        <Tabs defaultValue="prestadores" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto gap-1">
+            <TabsTrigger value="prestadores" className="text-sm">Prestadores</TabsTrigger>
+            <TabsTrigger value="contratados" className="text-sm">Contratados</TabsTrigger>
+            <TabsTrigger value="checklist" className="text-sm">Checklist</TabsTrigger>
+            <TabsTrigger value="participantes" className="text-sm">Participantes</TabsTrigger>
+            <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="prestadores">
+            <PrestadoresTab eventoId={id!} />
+          </TabsContent>
+
+          <TabsContent value="contratados">
+            <ContratadosTab
+              eventoId={id!}
+              evento={{
+                data_inicio: evento.data_inicio,
+                data_fim: evento.data_fim,
+                hora_inicio: evento.hora_inicio,
+                hora_fim: evento.hora_fim,
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="checklist">
+            <ChecklistTab eventoId={id!} />
+          </TabsContent>
+
+          <TabsContent value="participantes">
+            <ParticipantesTab eventoId={id!} />
+          </TabsContent>
+
+          <TabsContent value="financeiro">
+            <FinanceiroTab eventoId={id!} evento={evento} />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Descrição */}
-      {evento.descricao && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Descrição</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{evento.descricao}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs responsivos */}
-      <Tabs defaultValue="prestadores" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto gap-1">
-          <TabsTrigger value="prestadores" className="text-sm">Prestadores</TabsTrigger>
-          <TabsTrigger value="contratados" className="text-sm">Contratados</TabsTrigger>
-          <TabsTrigger value="checklist" className="text-sm">Checklist</TabsTrigger>
-          <TabsTrigger value="participantes" className="text-sm">Participantes</TabsTrigger>
-          <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="prestadores">
-          <PrestadoresTab eventoId={id!} />
-        </TabsContent>
-
-        <TabsContent value="contratados">
-          <ContratadosTab
-            eventoId={id!}
-            evento={{
-              data_inicio: evento.data_inicio,
-              data_fim: evento.data_fim,
-              hora_inicio: evento.hora_inicio,
-              hora_fim: evento.hora_fim,
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="checklist">
-          <ChecklistTab eventoId={id!} />
-        </TabsContent>
-
-        <TabsContent value="participantes">
-          <ParticipantesTab eventoId={id!} />
-        </TabsContent>
-
-        <TabsContent value="financeiro">
-          <FinanceiroTab eventoId={id!} evento={evento} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </MainLayout>
   );
 }

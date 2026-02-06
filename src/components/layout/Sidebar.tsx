@@ -107,6 +107,7 @@ const operacionaisSubmenu = [
 
 const cadastrosSubmenu = [
   { icon: FileText, label: 'Serviços', href: '/cadastros/servicos' },
+  { icon: Stethoscope, label: 'Médicos', href: '/cadastros/medicos' },
   { icon: UserCheck, label: 'Contratados', href: '/cadastros/contratados' },
   { icon: Building2, label: 'Fornecedores', href: '/cadastros/fornecedores' },
   { icon: CalendarOff, label: 'Feriados', href: '/cadastros/feriados' },

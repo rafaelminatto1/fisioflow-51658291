@@ -229,3 +229,22 @@ export interface Transaction {
     created_at: string;
     updated_at: string;
 }
+
+export interface Doctor {
+    id: string;
+    organization_id: string;
+    created_by: string;
+    name: string;
+    specialty?: string;
+    crm?: string;
+    crm_state?: string;
+    phone?: string;
+    email?: string;
+    clinic_name?: string;
+    clinic_address?: string;
+    clinic_phone?: string;
+    notes?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}

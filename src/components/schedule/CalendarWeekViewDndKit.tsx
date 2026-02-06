@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
@@ -63,9 +63,12 @@ interface CalendarWeekViewDndKitProps {
 const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
-const MIN_WEEK_SLOT_HEIGHT = 26;
+const MIN_WEEK_SLOT_HEIGHT = 31;
 const GRID_HEIGHT_ADJUSTMENT = 3;
 const WEEK_GRID_HEIGHT_BOOST = 0;
+const INITIAL_MEASUREMENT_SETTLE_MS = 120;
+const INITIAL_MEASUREMENT_MAX_WAIT_MS = 700;
+const INITIAL_MEASUREMENT_MAX_RETRIES = 8;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
 const _OVERLAP_LAYOUT_MARGIN_PX = 1;
@@ -150,30 +153,71 @@ export const CalendarWeekViewDndKit = memo(({
   const weekContainerRef = useRef<HTMLDivElement | null>(null);
   const weekScrollRef = useRef<HTMLDivElement | null>(null);
   const weekHeaderRef = useRef<HTMLDivElement | null>(null);
-  const [fitSlotHeight, setFitSlotHeight] = useState<number | null>(null);
+  const [fitSlotHeight, setFitSlotHeight] = useState<number>(MIN_WEEK_SLOT_HEIGHT);
+  const [isSlotHeightMeasured, setIsSlotHeightMeasured] = useState(false);
 
   // Force fit all weekly slots (07:00-21:00) in visible height while respecting user compactness preference.
   const slotHeight = useMemo(() => {
-    const fitted = fitSlotHeight ?? preferredSlotHeight;
-    return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferredSlotHeight, fitted));
+    return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferredSlotHeight, fitSlotHeight));
   }, [fitSlotHeight, preferredSlotHeight]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    let hasCompletedInitialMeasurement = false;
+    let retryRafId: number | undefined;
+    let revealTimerId: number | undefined;
+    let measurementFallbackId: number | undefined;
+
+    const scheduleInitialReveal = () => {
+      if (hasCompletedInitialMeasurement || typeof window === 'undefined') return;
+
+      if (revealTimerId !== undefined) {
+        window.clearTimeout(revealTimerId);
+      }
+
+      // Reveal only after measurements stop changing for a short window.
+      revealTimerId = window.setTimeout(() => {
+        if (hasCompletedInitialMeasurement) return;
+        hasCompletedInitialMeasurement = true;
+        if (measurementFallbackId !== undefined) {
+          window.clearTimeout(measurementFallbackId);
+          measurementFallbackId = undefined;
+        }
+        setIsSlotHeightMeasured(true);
+      }, INITIAL_MEASUREMENT_SETTLE_MS);
+    };
+
     const updateSlotHeight = () => {
       const containerHeight = weekScrollRef.current?.clientHeight ?? weekContainerRef.current?.clientHeight ?? 0;
       const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
 
-      if (containerHeight <= 0 || timeSlots.length === 0) return;
+      if (containerHeight <= 0 || timeSlots.length === 0) return false;
 
       const availableGridHeight = containerHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
-      if (availableGridHeight <= 0) return;
+      if (availableGridHeight <= 0) return false;
 
-      setFitSlotHeight(Math.floor(availableGridHeight / timeSlots.length));
+      const nextFittedHeight = Math.floor(availableGridHeight / timeSlots.length);
+      setFitSlotHeight(prevHeight => prevHeight === nextFittedHeight ? prevHeight : nextFittedHeight);
+      scheduleInitialReveal();
+      return true;
     };
 
-    updateSlotHeight();
-    const rafId = typeof window !== 'undefined' ? window.requestAnimationFrame(updateSlotHeight) : 0;
-    const timeoutId = window.setTimeout(updateSlotHeight, 80);
+    let attemptCount = 0;
+    const tryInitialMeasure = () => {
+      const measured = updateSlotHeight();
+      if (measured || typeof window === 'undefined' || attemptCount >= INITIAL_MEASUREMENT_MAX_RETRIES) return;
+      attemptCount += 1;
+      retryRafId = window.requestAnimationFrame(tryInitialMeasure);
+    };
+
+    tryInitialMeasure();
+
+    measurementFallbackId = typeof window !== 'undefined'
+      ? window.setTimeout(() => {
+        if (hasCompletedInitialMeasurement) return;
+        hasCompletedInitialMeasurement = true;
+        setIsSlotHeightMeasured(true);
+      }, INITIAL_MEASUREMENT_MAX_WAIT_MS)
+      : undefined;
 
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', updateSlotHeight);
@@ -188,10 +232,15 @@ export const CalendarWeekViewDndKit = memo(({
     }
 
     return () => {
-      if (typeof window !== 'undefined') {
-        window.cancelAnimationFrame(rafId);
+      if (typeof window !== 'undefined' && retryRafId !== undefined) {
+        window.cancelAnimationFrame(retryRafId);
       }
-      window.clearTimeout(timeoutId);
+      if (typeof window !== 'undefined' && revealTimerId !== undefined) {
+        window.clearTimeout(revealTimerId);
+      }
+      if (typeof window !== 'undefined' && measurementFallbackId !== undefined) {
+        window.clearTimeout(measurementFallbackId);
+      }
       if (typeof window !== 'undefined') {
         window.removeEventListener('resize', updateSlotHeight);
       }
@@ -300,27 +349,8 @@ export const CalendarWeekViewDndKit = memo(({
     const heightInPixels = Math.max(MIN_WEEK_SLOT_HEIGHT - 1, (slotHeight * slotCount) - 2);
 
     const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
-    let { index, count } = getOverlapStackPosition(dayAppointments, apt);
-
-    // During drag over this slot, resize cards as if dragged is already there
-    const isInDropTargetSlot = dropTarget && isSameDay(dropTarget.date, aptDate) && dropTarget.time === time;
-    if (isInDropTargetSlot && dragState.isDragging && dragState.appointment && apt.id !== dragState.appointment.id) {
-      const futureDayAppointments = [...dayAppointments, dragState.appointment];
-      const future = getOverlapStackPosition(futureDayAppointments, apt);
-      count = future.count;
-      index = future.index;
-    }
-
-    // Origin slot: resize cards as if dragged has left
-    const draggedDate = dragState.appointment ? parseAppointmentDate(dragState.appointment.date) : null;
-    const draggedTime = dragState.appointment ? normalizeTime(dragState.appointment.time) : null;
-    const isInOriginSlot = dragState.isDragging && draggedDate && draggedTime && isSameDay(aptDate, draggedDate);
-    if (isInOriginSlot && dragState.appointment && apt.id !== dragState.appointment.id) {
-      const originDayAppointments = dayAppointments.filter((a) => a.id !== dragState.appointment!.id);
-      const origin = getOverlapStackPosition(originDayAppointments, apt);
-      count = origin.count;
-      index = origin.index;
-    }
+    // Keep card sizing stable while dragging; drop preview already communicates target arrangement.
+    const { index, count } = getOverlapStackPosition(dayAppointments, apt);
 
     // Usar percentuais puros para que os cards fiquem colados
     const cardWidthPercent = 100 / count;
@@ -335,7 +365,7 @@ export const CalendarWeekViewDndKit = memo(({
       top: '0px',
       zIndex: 10 + index
     };
-  }, [weekDays, timeSlots, appointmentsByDayIndex, slotHeight, dropTarget, dragState]);
+  }, [weekDays, timeSlots, appointmentsByDayIndex, slotHeight]);
 
   // @dnd-kit event handlers
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -428,7 +458,14 @@ export const CalendarWeekViewDndKit = memo(({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div ref={weekContainerRef} className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden">
+        <div
+          ref={weekContainerRef}
+          className={cn(
+            "flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden",
+            !isSlotHeightMeasured && "invisible"
+          )}
+          aria-busy={!isSlotHeightMeasured}
+        >
           <div ref={weekScrollRef} className="overflow-auto w-full h-full custom-scrollbar">
             <div className="w-full">
               {/* Header Row */}

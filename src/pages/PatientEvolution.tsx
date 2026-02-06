@@ -763,7 +763,6 @@ const PatientEvolution = () => {
             appointment={appointment}
             treatmentDuration={treatmentDuration}
             evolutionStats={evolutionStats}
-            sessionStartTime={sessionStartTime}
             onSave={handleSave}
             onComplete={handleCompleteSession}
             isSaving={autoSaveMutation.isPending}
@@ -1012,7 +1011,6 @@ const PatientEvolution = () => {
             isCompleting={isCompleting}
             autoSaveEnabled={autoSaveEnabled}
             lastSavedAt={lastSavedAt}
-            sessionStartTime={sessionStartTime}
           />
 
           {/* Modal para aplicar template */}

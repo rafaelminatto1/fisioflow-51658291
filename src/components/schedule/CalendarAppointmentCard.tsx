@@ -196,7 +196,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     // Calculate scaled font sizes based on user preference
     const fontScale = fontPercentage / 100; // Convert percentage to multiplier (0.5 to 1.5)
     const scaledTimeFontSize = isCompact
-        ? Math.max(9, Math.round(sizeConfig.timeFontSize * fontScale * 0.95))
+        ? Math.max(7, Math.round(sizeConfig.timeFontSize * fontScale * 0.6))
         : Math.round(sizeConfig.timeFontSize * fontScale);
     const scaledNameFontSize = isCompact
         ? Math.max(12, Math.round(sizeConfig.nameFontSize * fontScale * 0.9))
@@ -361,7 +361,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 ) : useCompactLayout ? (
                     <div className="flex flex-col min-w-0 w-full gap-0.5">
                         <div className="flex items-center gap-1 min-w-0">
-                            <div className={cn("w-0.5 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
+                            <div className={cn("w-px h-2 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
                             <span
                                 className={cn(
                                     "font-mono font-semibold shrink-0 leading-none tracking-tight",

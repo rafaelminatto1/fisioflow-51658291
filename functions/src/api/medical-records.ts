@@ -4,10 +4,34 @@ import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { MedicalRecord, TreatmentSession, PainRecord } from '../types/models';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
+import { triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
 
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
 const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' as const };
+
+async function triggerPatientRagReindexSafe(
+  patientId: string | undefined,
+  organizationId: string | undefined,
+  reason: string
+): Promise<void> {
+  if (!patientId) return;
+
+  try {
+    await triggerPatientRagReindex({
+      patientId,
+      organizationId,
+      reason,
+    });
+  } catch (error) {
+    logger.warn('Failed to run incremental patient RAG reindex', {
+      patientId,
+      organizationId,
+      reason,
+      error: (error as Error).message,
+    });
+  }
+}
 
 export const getPatientRecordsHttp = onRequest(httpOpts, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
@@ -46,6 +70,7 @@ export const createMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
     if (patientCheck.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
     const result = await pool.query(`INSERT INTO medical_records (patient_id, created_by, organization_id, type, title, content, record_date) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [patientId, auth.userId, auth.organizationId, type, title, content || '', recordDate || new Date().toISOString().split('T')[0]]);
+    await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'medical_record_created_http');
     try { const realtime = await import('../realtime/publisher'); await realtime.publishPatientUpdate(patientId, { type: 'medical_record_created', recordId: result.rows[0].id }); } catch (er) { logger.error('Ably:', er); }
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
@@ -64,13 +89,14 @@ export const updateMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     const { recordId, ...updates } = parseBody(req);
     if (!recordId) { res.status(400).json({ error: 'recordId é obrigatório' }); return; }
     const pool = getPool();
-    const existing = await pool.query('SELECT id FROM medical_records WHERE id = $1 AND organization_id = $2', [recordId, auth.organizationId]);
+    const existing = await pool.query('SELECT id, patient_id FROM medical_records WHERE id = $1 AND organization_id = $2', [recordId, auth.organizationId]);
     if (existing.rows.length === 0) { res.status(404).json({ error: 'Prontuário não encontrado' }); return; }
     const setClauses: string[] = []; const values: any[] = []; let pc = 0;
     for (const f of ['title', 'content']) { if (f in updates) { pc++; setClauses.push(`${f} = $${pc}`); values.push(updates[f]); } }
     if (setClauses.length === 0) { res.status(400).json({ error: 'Nenhum campo válido para atualizar' }); return; }
     pc++; setClauses.push(`updated_at = $${pc}`); values.push(new Date()); values.push(recordId, auth.organizationId);
     const result = await pool.query(`UPDATE medical_records SET ${setClauses.join(', ')} WHERE id = $${pc + 1} AND organization_id = $${pc + 2} RETURNING *`, values);
+    await triggerPatientRagReindexSafe(existing.rows[0].patient_id, auth.organizationId, 'medical_record_updated_http');
     res.json({ data: result.rows[0] });
   } catch (e: unknown) {
     setCorsHeaders(res);
@@ -87,8 +113,9 @@ export const deleteMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { recordId } = parseBody(req);
     if (!recordId) { res.status(400).json({ error: 'recordId é obrigatório' }); return; }
-    const result = await getPool().query('DELETE FROM medical_records WHERE id = $1 AND organization_id = $2 RETURNING id', [recordId, auth.organizationId]);
+    const result = await getPool().query('DELETE FROM medical_records WHERE id = $1 AND organization_id = $2 RETURNING id, patient_id', [recordId, auth.organizationId]);
     if (result.rows.length === 0) { res.status(404).json({ error: 'Prontuário não encontrado' }); return; }
+    await triggerPatientRagReindexSafe(result.rows[0].patient_id, auth.organizationId, 'medical_record_deleted_http');
     res.json({ success: true });
   } catch (e: unknown) {
     setCorsHeaders(res);
@@ -129,6 +156,7 @@ export const createTreatmentSessionHttp = onRequest(httpOpts, async (req, res) =
       if (apt.rows.length > 0) { appointmentDate = apt.rows[0].date; therapistId = apt.rows[0].therapist_id; }
     }
     const result = await pool.query(`INSERT INTO treatment_sessions (patient_id, therapist_id, appointment_id, organization_id, pain_level_before, pain_level_after, observations, evolution, next_session_goals, session_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`, [patientId, therapistId, appointmentId || null, auth.organizationId, painLevelBefore || null, painLevelAfter || null, observations || null, evolution || null, nextGoals || null, appointmentDate || new Date().toISOString().split('T')[0]]);
+    await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'treatment_session_created_http');
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
     setCorsHeaders(res);
@@ -169,6 +197,7 @@ export const savePainRecordHttp = onRequest(httpOpts, async (req, res) => {
     const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
     if (patientCheck.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
     const result = await pool.query('INSERT INTO pain_records (patient_id, organization_id, pain_level, record_date, notes, recorded_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [patientId, auth.organizationId, painLevel, recordDate || new Date().toISOString().split('T')[0], notes || null, auth.userId]);
+    await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'pain_record_created_http');
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
     setCorsHeaders(res);
@@ -321,6 +350,7 @@ export const createMedicalRecordHandler = async (request: any) => {
         recordDate || new Date().toISOString().split('T')[0],
       ]
     );
+    await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'medical_record_created');
 
     // Publicar no Ably
     try {
@@ -380,7 +410,7 @@ export const updateMedicalRecordHandler = async (request: any) => {
   try {
     // Verificar se prontuário existe
     const existing = await pool.query(
-      'SELECT id FROM medical_records WHERE id = $1 AND organization_id = $2',
+      'SELECT id, patient_id FROM medical_records WHERE id = $1 AND organization_id = $2',
       [recordId, auth.organizationId]
     );
 
@@ -420,6 +450,7 @@ export const updateMedicalRecordHandler = async (request: any) => {
        RETURNING *`,
       values
     );
+    await triggerPatientRagReindexSafe(existing.rows[0].patient_id, auth.organizationId, 'medical_record_updated');
 
     return { data: result.rows[0] as MedicalRecord };
   } catch (error: unknown) {
@@ -575,6 +606,7 @@ export const createTreatmentSessionHandler = async (request: any) => {
         appointmentDate || new Date().toISOString().split('T')[0],
       ]
     );
+    await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'treatment_session_created');
 
     // Atualizar progresso se houver mudança na dor
     if (painLevelAfter !== undefined && painLevelBefore !== undefined) {
@@ -646,7 +678,7 @@ export const updateTreatmentSessionHandler = async (request: any) => {
   try {
     // Verificar se sessão existe
     const existing = await pool.query(
-      'SELECT id FROM treatment_sessions WHERE id = $1 AND organization_id = $2',
+      'SELECT id, patient_id FROM treatment_sessions WHERE id = $1 AND organization_id = $2',
       [sessionId, auth.organizationId]
     );
 
@@ -693,6 +725,7 @@ export const updateTreatmentSessionHandler = async (request: any) => {
        RETURNING *`,
       values
     );
+    await triggerPatientRagReindexSafe(existing.rows[0].patient_id, auth.organizationId, 'treatment_session_updated');
 
     return { data: result.rows[0] as TreatmentSession };
   } catch (error: unknown) {
@@ -808,6 +841,7 @@ export const savePainRecordHandler = async (request: any) => {
         auth.userId
       ]
     );
+    await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'patient_pain_record_created');
 
     return { data: result.rows[0] as PainRecord };
   } catch (error: unknown) {
