@@ -867,3 +867,6 @@ export {
     startHttpTrace,
     withPerformanceTracing,
 } from './lib/performance';
+
+// Storage Triggers
+export { onDicomUpload } from './storage/dicomTriggers';
