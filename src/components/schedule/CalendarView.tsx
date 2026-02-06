@@ -8,7 +8,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Trash2, CheckSquare, Settings as SettingsIcon, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, CheckSquare, Settings as SettingsIcon, Sparkles, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Appointment } from '@/types/appointment';
@@ -58,6 +58,9 @@ interface CalendarViewProps {
   onFiltersChange?: (filters: { status: string[]; types: string[]; therapists: string[] }) => void;
   onClearFilters?: () => void;
   totalAppointmentsCount?: number;
+  // Patient search filter
+  patientFilter?: string | null;
+  onPatientFilterChange?: (patientName: string | null) => void;
 }
 
 export const CalendarView = memo(({
@@ -82,7 +85,45 @@ export const CalendarView = memo(({
   onFiltersChange,
   onClearFilters,
   totalAppointmentsCount,
+  patientFilter,
+  onPatientFilterChange,
 }: CalendarViewProps) => {
+  // Patient search autocomplete state
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+  const [patientSearchOpen, setPatientSearchOpen] = useState(false);
+  const patientSearchRef = useRef<HTMLDivElement>(null);
+
+  // Extract unique patient names from appointments for autocomplete suggestions
+  const uniquePatients = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const apt of appointments) {
+      if (apt.patientName && apt.patientId) {
+        map.set(apt.patientId, apt.patientName);
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [appointments]);
+
+  // Filter patient suggestions based on search query
+  const patientSuggestions = useMemo(() => {
+    if (!patientSearchQuery.trim()) return uniquePatients;
+    const q = patientSearchQuery.toLowerCase().trim();
+    return uniquePatients.filter(p => p.name.toLowerCase().includes(q));
+  }, [uniquePatients, patientSearchQuery]);
+
+  // Close patient search dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (patientSearchRef.current && !patientSearchRef.current.contains(e.target as Node)) {
+        setPatientSearchOpen(false);
+      }
+    };
+    if (patientSearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [patientSearchOpen]);
+
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
 
@@ -597,8 +638,76 @@ export const CalendarView = memo(({
                 )}
               </div>
 
-              {/* Right: Actions + View Switcher + CTA */}
+              {/* Right: Patient Search + Actions + View Switcher + CTA */}
               <div className="flex items-center gap-2">
+                {/* Patient Search Autocomplete */}
+                {onPatientFilterChange && (
+                  <div className="relative" ref={patientSearchRef}>
+                    {patientFilter ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          onPatientFilterChange(null);
+                          setPatientSearchQuery('');
+                        }}
+                        className="h-8 px-2.5 rounded-lg gap-1.5 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/40 max-w-[180px]"
+                        title="Limpar filtro de paciente"
+                      >
+                        <Search className="w-3 h-3 shrink-0" />
+                        <span className="text-xs truncate">{patientFilter}</span>
+                        <X className="w-3 h-3 shrink-0 ml-0.5" />
+                      </Button>
+                    ) : (
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Buscar paciente..."
+                          value={patientSearchQuery}
+                          onChange={(e) => {
+                            setPatientSearchQuery(e.target.value);
+                            setPatientSearchOpen(true);
+                          }}
+                          onFocus={() => setPatientSearchOpen(true)}
+                          className="h-8 w-[170px] pl-8 pr-3 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition-all"
+                          aria-label="Buscar paciente para filtrar agenda"
+                        />
+                      </div>
+                    )}
+
+                    {/* Autocomplete Dropdown */}
+                    {patientSearchOpen && !patientFilter && (
+                      <div className="absolute top-full left-0 mt-1 w-[260px] max-h-[240px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+                        {patientSuggestions.length === 0 ? (
+                          <div className="px-3 py-4 text-xs text-gray-500 text-center">
+                            Nenhum paciente encontrado
+                          </div>
+                        ) : (
+                          patientSuggestions.map((patient) => (
+                            <button
+                              key={patient.id}
+                              onClick={() => {
+                                onPatientFilterChange(patient.name);
+                                setPatientSearchQuery('');
+                                setPatientSearchOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 border-b border-gray-100 dark:border-gray-700/50 last:border-0"
+                            >
+                              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300">
+                                  {patient.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <span className="truncate text-gray-800 dark:text-gray-200">{patient.name}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Cancel All */}
                 {onCancelAllToday && (
                   <Button
