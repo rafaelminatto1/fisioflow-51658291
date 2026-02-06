@@ -26,6 +26,7 @@ import {
 // Import optimization presets
 import {
     AI_FUNCTION,
+    STANDARD_FUNCTION,
     withCors
 } from './lib/function-config';
 
