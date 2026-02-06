@@ -6,10 +6,15 @@ import { logger } from '../lib/logger';
 import * as admin from 'firebase-admin';
 import { rtdb } from '../lib/rtdb';
 import { setCorsHeaders } from '../lib/cors';
+import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
+import { getOrganizationIdCached } from '../lib/cache-helpers';
 
 const firebaseAuth = admin.auth();
 
-// ============================================================================ 
+// OTIMIZADO: Configurações com mais instâncias
+const APPOINTMENT_HTTP_OPTS = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
+
+// ============================================================================
 // HTTP VERSION (for frontend fetch calls with CORS fix)
 // ============================================================================ 
 
@@ -57,46 +62,18 @@ function normalizeAppointmentStatus(value: string | undefined): DbAppointmentSta
 
 /**
  * Helper to get organization ID from user ID
- * Tries PostgreSQL first, then falls back to Firestore
+ * OTIMIZADO: Usa cache para evitar queries repetidas
  */
 async function getOrganizationId(userId: string): Promise<string> {
-  // First try PostgreSQL
-  try {
-    const pool = getPool();
-    const result = await pool.query('SELECT organization_id FROM profiles WHERE user_id = $1', [userId]);
-    if (result.rows.length > 0) {
-      return result.rows[0].organization_id;
-    }
-  } catch (error) {
-    logger.info('PostgreSQL query failed, trying Firestore:', error);
-  }
-
-  // Fallback to Firestore
-  try {
-    const profileDoc = await admin.firestore().collection('profiles').doc(userId).get();
-    if (profileDoc.exists) {
-      const profile = profileDoc.data();
-      // Use organizationId or activeOrganizationId or first from organizationIds
-      return profile?.organizationId || profile?.activeOrganizationId || profile?.organizationIds?.[0] || 'default';
-    }
-  } catch (error) {
-    logger.info('Firestore query failed:', error);
-  }
-
-  throw new HttpsError('not-found', 'Perfil não encontrado em PostgreSQL nem Firestore');
+  return getOrganizationIdCached(userId);
 }
 
 /**
  * HTTP version of listAppointments for CORS/compatibility
+ * OTIMIZADO - Usa cache de organização
  */
 export const listAppointmentsHttp = onRequest(
-  {
-    region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 1,
-    cors: CORS_ORIGINS,
-    invoker: 'public',
-  },
+  APPOINTMENT_HTTP_OPTS,
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') {
@@ -111,7 +88,8 @@ export const listAppointmentsHttp = onRequest(
 
     try {
       const { uid } = await verifyAuthHeader(req);
-      const organizationId = await getOrganizationId(uid);
+      // OTIMIZADO: Usa cache para evitar queries repetidas
+      const organizationId = await getOrganizationIdCached(uid);
 
       const { dateFrom, dateTo, therapistId, status, patientId, limit = 100, offset = 0 } = req.body || {};
       const pool = getPool();

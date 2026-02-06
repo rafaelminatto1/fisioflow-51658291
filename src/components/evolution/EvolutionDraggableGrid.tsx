@@ -178,12 +178,12 @@ const SOAPSectionWidget = React.memo(({
     return (
         <GridWidget
             title={section.label}
-            icon={<section.icon className={cn("h-4 w-4", section.color)} />}
+            icon={<section.icon className={cn("h-5 w-5", section.color)} />}
             isDraggable={isEditable}
             className={cn("h-full border-t-4", section.borderColor)}
-            headerClassName={section.bgColor}
+            headerClassName={cn(section.bgColor, "py-3 px-4")}
             extraHeaderContent={
-                <div className="flex gap-1" role="group" aria-label={`Ações para ${section.key}`}>
+                <div className="flex gap-1.5" role="group" aria-label={`Ações para ${section.key}`}>
                     {onAISuggest && (
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -191,12 +191,12 @@ const SOAPSectionWidget = React.memo(({
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 hover:bg-muted/50"
+                                    className="h-8 w-8 hover:bg-muted/50"
                                     onClick={() => onAISuggest(section.key)}
                                     disabled={disabled}
                                     aria-label={`Sugerir com IA para ${section.key}`}
                                 >
-                                    <Sparkles className="h-3 w-3 text-purple-500" aria-hidden="true" />
+                                    <Sparkles className="h-4 w-4 text-purple-500" aria-hidden="true" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent side="bottom">
@@ -211,12 +211,12 @@ const SOAPSectionWidget = React.memo(({
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 hover:bg-muted/50"
+                                    className="h-8 w-8 hover:bg-muted/50"
                                     onClick={() => onCopyLast(section.key)}
                                     disabled={disabled}
                                     aria-label={`Copiar última sessão para ${section.key}`}
                                 >
-                                    <Copy className="h-3 w-3" aria-hidden="true" />
+                                    <Copy className="h-4 w-4" aria-hidden="true" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent side="bottom">
@@ -234,19 +234,19 @@ const SOAPSectionWidget = React.memo(({
                     placeholder={section.placeholder}
                     disabled={disabled}
                     variant="ghost"
-                    className="flex-1 p-4 sm:p-5 text-sm leading-relaxed"
+                    className="flex-1 p-5 sm:p-6 text-base sm:text-lg leading-relaxed font-medium"
                     containerClassName="flex-1 min-h-0"
                     showStats={false}
                     showToolbarOnFocus={true}
-                    compact={true}
+                    compact={false}
                     aria-label={`Campo SOAP: ${section.label}`}
                 />
-                <div className="px-5 py-2.5 bg-muted/20 border-t flex justify-between items-center text-[11px] text-muted-foreground shrink-0 select-none">
-                    <div className="flex items-center gap-1.5 font-medium">
-                        <span className="w-1 h-1 rounded-full bg-primary/40" />
+                <div className="px-5 py-3 bg-muted/30 border-t flex justify-between items-center text-sm text-muted-foreground font-semibold shrink-0 select-none">
+                    <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                         {wordCount} palavras
                     </div>
-                    <span className="uppercase tracking-widest opacity-40 font-bold">{section.shortLabel}</span>
+                    <span className="uppercase tracking-widest opacity-60 font-black text-xs">{section.shortLabel}</span>
                 </div>
             </div>
         </GridWidget>
