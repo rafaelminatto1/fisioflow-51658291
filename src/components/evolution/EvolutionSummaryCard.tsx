@@ -21,14 +21,14 @@ interface EvolutionSummaryCardProps {
 
 export function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
   return (
-    <Card className="border-primary/20 bg-primary/5 flex flex-col shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 pt-4 px-4 flex-shrink-0">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <BarChart2 className="h-4 w-4 text-primary" />
+    <Card className="border-primary/20 bg-primary/5 flex min-h-[250px] flex-col shadow-sm overflow-hidden">
+      <CardHeader className="pb-1 pt-2 px-3 flex-shrink-0">
+        <CardTitle className="text-xs flex items-center gap-1.5">
+          <BarChart2 className="h-3 w-3 text-primary" />
           Resumo da Evolução
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 pb-4 flex-1 min-h-0 overflow-auto">
+      <CardContent className="px-3 pb-2 flex-1">
         <EvolutionStats stats={stats} vertical />
       </CardContent>
     </Card>
