@@ -1,4 +1,4 @@
-import { DynamicCompareMetrics } from "@/generated/types/dynamic_compare_metrics";
+import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';
 
 export const formatMetricValue = (value: number | null | undefined, unit?: string): string => {
     if (value === null || value === undefined) return "N/A";

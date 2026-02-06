@@ -1,11 +1,13 @@
+
+/**
+ * Adaptador para converter formato Data Connect (camelCase) para Frontend (snake_case)
+ */
+
 import { useQuery } from '@tanstack/react-query';
 import { executeQuery } from 'firebase/data-connect';
 import { dc, listPatientsByOrgRef, getPatientByIdRef } from '@/lib/dataconnect';
 import { fisioLogger } from '@/lib/errors/logger';
 
-/**
- * Adaptador para converter formato Data Connect (camelCase) para Frontend (snake_case)
- */
 const mapPatientFromPostgres = (p: any): any => ({
   id: p.id,
   name: p.name,

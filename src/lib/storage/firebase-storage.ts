@@ -3,7 +3,6 @@
  * Cliente para upload e download de arquivos no Firebase Storage
  */
 
-import {
   ref,
   uploadBytes,
   uploadBytesResumable,

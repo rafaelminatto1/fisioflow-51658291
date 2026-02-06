@@ -1,4 +1,3 @@
-import {
   ref,
   uploadBytesResumable,
   getDownloadURL,

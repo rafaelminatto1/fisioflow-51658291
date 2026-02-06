@@ -3,12 +3,14 @@
  * Track and monitor app performance metrics
  */
 
-import { Performance } from 'react-native';
-import { log } from './logger';
 
 /**
  * Performance metric interface
  */
+
+import { Performance } from 'react-native';
+import { log } from './logger';
+
 interface PerformanceMetric {
   name: string;
   startTime: number;

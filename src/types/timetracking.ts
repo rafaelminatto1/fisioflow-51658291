@@ -3,11 +3,13 @@
  * Sistema completo de tracking de tempo faturável
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
 
 /**
  * Entrada de tempo individual
  */
+
+import { Timestamp } from '@/integrations/firebase/app';
+
 export interface TimeEntry {
   id: string;
   user_id: string;

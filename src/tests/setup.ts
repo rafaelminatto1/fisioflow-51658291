@@ -6,16 +6,17 @@
  * @module tests/setup
  */
 
+
+// ============================================================================
+// MOCKS - Firebase Client
+// ============================================================================
+
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-// ============================================================================
-// MOCKS - Firebase Client
-// ============================================================================
 
 vi.mock('@/integrations/firebase/app', () => ({
   db: null,

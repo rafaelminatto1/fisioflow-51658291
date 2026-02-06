@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
-import { TourProvider, useTour } from '@reactour/tour';
-import { cn } from '@/lib/utils';
 
 /**
  * Tour steps configuration for new users
  */
+
+import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
+import { TourProvider, useTour } from '@reactour/tour';
+import { cn } from '@/lib/utils';
+
 export const tourSteps = [
   {
     id: 'welcome',

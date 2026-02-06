@@ -1,13 +1,14 @@
-import { useEffect } from 'react';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
-import { useQueryClient } from '@tanstack/react-query';
-import { app } from '@/integrations/firebase/app';
-import { useAuth } from '@/contexts/AuthContext'; // Ajustado path do Auth
-import { Alert } from 'react-native';
 
 /**
  * Versão Native do Hook de Sincronização
  */
+
+import { useEffect } from 'react';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { useQueryClient } from '@tanstack/react-query';
+import { app } from '@/integrations/firebase/app';
+import { useAuth } from '@/contexts/AuthContext';
+
 export const useRealtimeAppointments = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();

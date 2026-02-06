@@ -4,7 +4,7 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
-import {
+
   DB_PASS_SECRET,
   DB_USER_SECRET,
   DB_NAME_SECRET,

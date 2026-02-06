@@ -4,8 +4,6 @@
  * Types for patient gamification including XP, levels, achievements, quests, and challenges.
  */
 
-import { z } from 'zod';
-import type { Dictionary } from './common';
 
 // ============================================================================
 // COMMON TYPES
@@ -14,6 +12,10 @@ import type { Dictionary } from './common';
 /**
  * Reasons for XP transactions - used for tracking and analytics
  */
+
+import { z } from 'zod';
+import type { Dictionary } from './common';
+
 export type XpTransactionReason =
   | 'session_completed'
   | 'daily_quest'

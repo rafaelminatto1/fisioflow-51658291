@@ -2,14 +2,15 @@
  * useCRM - Migrated to Firebase
  *
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp } from '@/integrations/firebase/app';
-import { toast } from 'sonner';
-import { db } from '@/integrations/firebase/app';
 
 
 
 // Types
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp, db } from '@/integrations/firebase/app';
+import { toast } from 'sonner';
+
 export interface CRMTarefa {
   id: string;
   lead_id: string | null;

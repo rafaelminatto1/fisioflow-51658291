@@ -6,12 +6,13 @@
  * @module lib/services/speech
  */
 
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/integrations/firebase/app';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/integrations/firebase/app';
 
 export interface TranscriptionOptions {
   audioData: string;

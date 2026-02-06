@@ -1,9 +1,11 @@
 
+
+// Load environment variables correctly
+
 import dotenv from 'dotenv';
 import path from 'path';
 import { getFeatureFlagsFromEnv } from '../src/lib/featureFlags/envFlags';
 
-// Load environment variables correctly
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 // Mock import.meta.env for the library to work in Node

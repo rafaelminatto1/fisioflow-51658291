@@ -1,5 +1,5 @@
-import { useToast } from "@/hooks/use-toast"
-import {
+import { useToast } from '@/hooks/use-toast';
+
   Toast,
   ToastClose,
   ToastDescription,

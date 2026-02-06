@@ -3,7 +3,6 @@
  * This file exports all Lucide icon components used in the app
  */
 
-import {
   // Navigation & Layout
   Home,
   Calendar,

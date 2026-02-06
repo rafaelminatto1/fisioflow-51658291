@@ -3,7 +3,6 @@
  * Handles evolution (SOAP note) related operations
  */
 
-import {
   collection,
   doc,
   query,

@@ -5,11 +5,13 @@
  * Cache times, stale times, retry policies, etc.
  */
 
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 /**
  * Tempos de cache em milissegundos
  */
+
+import { fisioLogger as logger } from '@/lib/errors/logger';
+
 export const CACHE_TIMES = {
   /** Dados que mudam raramente (5 minutos) */
   SHORT: 5 * 60 * 1000,

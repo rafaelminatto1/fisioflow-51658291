@@ -1,8 +1,10 @@
+
+// Load environment variables
+
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { YouTube } from 'youtube-sr';
 
-// Load environment variables
 dotenv.config({ path: '.env.local' });
 
 // Credentials

@@ -4,13 +4,15 @@
  * Main integration file for Firebase AI Logic service.
  */
 
+
+// AI Model Types (local definitions since shared-api was removed)
+
 import { initializeRemoteConfig, REMOTE_CONFIG_KEYS } from '@/lib/firebase/remote-config';
 import { initAppCheck, getAppCheckToken } from '@/lib/firebase/app-check';
 import { AIUsageMonitor as UsageMonitor } from '@/lib/ai/usage-tracker';
 import { ClinicalPromptBuilder } from '@/lib/ai/prompts/clinical-prompts';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// AI Model Types (local definitions since shared-api was removed)
 export enum AIModelType {
   GEMINI_2_5_FLASH = 'gemini-2.5-flash',
   GEMINI_2_5_PRO = 'gemini-2.5-pro',

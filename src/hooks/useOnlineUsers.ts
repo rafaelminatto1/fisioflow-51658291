@@ -2,12 +2,11 @@
  * useOnlineUsers - Migrated to Firebase Presence
  *
  */
-import { useState, useEffect } from 'react';
-import { doc, getDoc } from '@/integrations/firebase/app';
-import { onAuthStateChanged } from 'firebase/auth';
 
+import { useState, useEffect } from 'react';
+import { doc, getDoc, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { onAuthStateChanged } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
 
 const auth = getFirebaseAuth();
 

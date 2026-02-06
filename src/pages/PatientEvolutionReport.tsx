@@ -1,16 +1,16 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { PatientEvolutionDashboard } from "@/components/patients/PatientEvolutionDashboard";
-import { ProgressAnalysisCard } from "@/components/patients/ProgressAnalysisCard";
-import { usePatientEvolutionReport } from "@/hooks/usePatientEvolutionReport";
-import { usePatients } from "@/hooks/usePatients";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileDown, Printer, Activity } from "lucide-react";
-import { LoadingSkeleton, EmptyState } from "@/components/ui";
-import { generateEvolutionPDF } from "@/lib/export/evolutionPdfExport";
-import { toast } from "sonner";
-import { PatientHelpers } from "@/types";
-import { fisioLogger as logger } from "@/lib/errors/logger";
+import { useParams, useNavigate } from 'react-router-dom';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { PatientEvolutionDashboard } from '@/components/patients/PatientEvolutionDashboard';
+import { ProgressAnalysisCard } from '@/components/patients/ProgressAnalysisCard';
+import { usePatientEvolutionReport } from '@/hooks/usePatientEvolutionReport';
+import { usePatients } from '@/hooks/usePatients';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, FileDown, Printer, Activity } from 'lucide-react';
+import { LoadingSkeleton, EmptyState } from '@/components/ui';
+import { generateEvolutionPDF } from '@/lib/export/evolutionPdfExport';
+import { toast } from 'sonner';
+import { PatientHelpers } from '@/types';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const PatientEvolutionReport = () => {
   const { patientId } = useParams<{ patientId: string }>();

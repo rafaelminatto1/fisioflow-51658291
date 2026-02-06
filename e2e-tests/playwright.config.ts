@@ -1,9 +1,11 @@
-import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright E2E Test Configuration
  * Configuração para testes de ponta a ponta do FisioFlow
  */
+
+import { defineConfig, devices } from '@playwright/test';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,

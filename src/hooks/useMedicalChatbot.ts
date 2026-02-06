@@ -1,7 +1,9 @@
+
+// Interfaces para o Chatbot
+
 import { useState, useCallback } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// Interfaces para o Chatbot
 interface ChatMessage {
   id: string;
   content: string;

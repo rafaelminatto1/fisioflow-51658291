@@ -9,13 +9,15 @@
  * @version 2.0.0 - Fixed Firestore API usage
  */
 
+
+// Firebase Functions v2 CORS - explicitly list allowed origins
+
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import { logger } from 'firebase-functions';
 import { getAdminDb, getAdminMessaging } from '../init';
 import { FieldValue } from 'firebase-admin/firestore';
 
-// Firebase Functions v2 CORS - explicitly list allowed origins
 const CORS_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
   /moocafisio\.com\.br$/,

@@ -3,11 +3,13 @@
  * Script para popular o banco de dados com exercícios de fisioterapia
  */
 
+
+// Configuração
+
 import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Configuração
 const CLOUD_SQL_CONNECTION_STRING = process.env.CLOUD_SQL_CONNECTION_STRING;
 
 if (!CLOUD_SQL_CONNECTION_STRING) {

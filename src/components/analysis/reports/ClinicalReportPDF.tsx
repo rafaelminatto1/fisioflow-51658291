@@ -1,9 +1,10 @@
-import React from 'react';
-import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
-import { AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';
 
 // Register fonts if needed (using default Helvetica for now to ensure compatibility)
 // Font.register({ family: 'Roboto', src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf' });
+
+import React from 'react';
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import { AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';
 
 const styles = StyleSheet.create({
     page: {

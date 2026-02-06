@@ -1,3 +1,6 @@
+
+// Registrar fontes
+
 import React from 'react';
 import { Document, Page, Text, View, Image, Font, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { format } from 'date-fns';
@@ -7,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { valorPorExtenso } from '@/hooks/useRecibos';
 
-// Registrar fontes
 Font.register({
   family: 'Roboto',
   fonts: [

@@ -5,12 +5,13 @@
  * including SOAP notes, attachments, document history, and PDF export.
  */
 
+
+// ===== TYPES =====
+
 import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, serverTimestamp } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-// ===== TYPES =====
 
 export interface MedicalRecord {
   id: string;

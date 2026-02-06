@@ -1,4 +1,3 @@
-import { test, expect, Page } from '@playwright/test';
 
 /**
  * Exercise Video Library E2E Tests
@@ -11,6 +10,9 @@ import { test, expect, Page } from '@playwright/test';
  */
 
 // Helper function to navigate to exercises page
+
+import { test, expect, Page } from '@playwright/test';
+
 async function navigateToExercises(page: Page) {
   await page.goto('/exercises');
   await page.waitForLoadState('networkidle');

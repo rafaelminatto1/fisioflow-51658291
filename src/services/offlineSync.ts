@@ -3,11 +3,9 @@
  */
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
-import { collection, getDocs, query, where, orderBy, limit as limitClause } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, orderBy, limit as limitClause, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
-import { db } from '@/integrations/firebase/app';
-
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 let _loggedOfflineSyncStart = false;

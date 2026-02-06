@@ -4,13 +4,13 @@
 
 import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, setDoc } from '@/integrations/firebase/app';
-import { triggerGamificationFeedback } from "@/lib/gamification/feedback-utils";
+import { triggerGamificationFeedback } from '@/lib/gamification/feedback-utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { generateSmartQuests, GeneratedQuest } from '@/lib/gamification/quest-generator';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import {
+
   DailyQuestItem,
   GamificationProfile,
   Achievement,

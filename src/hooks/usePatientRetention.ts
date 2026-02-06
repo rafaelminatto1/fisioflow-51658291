@@ -1,12 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, orderBy, getDocs, addDoc, updateDoc, doc } from '@/integrations/firebase/app';
 
+
+// Query keys for retention
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, query as firestoreQuery, where, orderBy, getDocs, addDoc, updateDoc, doc, db } from '@/integrations/firebase/app';
 import { subDays, subMonths, format, differenceInDays, startOfMonth, parseISO } from 'date-fns';
 import { CACHE_TIMES, STALE_TIMES } from '@/lib/queryConfig';
 import { PatientHelpers } from '@/types';
-import { db } from '@/integrations/firebase/app';
 
-// Query keys for retention
 const RETENTION_KEYS = {
   all: ['retention'] as const,
   metrics: () => [...RETENTION_KEYS.all, 'metrics'] as const,

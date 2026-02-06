@@ -3,14 +3,16 @@
  * Helper functions for device information and platform-specific code
  */
 
+
+/**
+ * Device information interface
+ */
+
 import { Platform, Dimensions, StatusBar, PixelRatio } from 'react-native';
 import * as Device from 'expo-device';
 import { APP_VERSION, APP_NAME } from './constants';
 import { log } from './logger';
 
-/**
- * Device information interface
- */
 export interface DeviceInfo {
   platform: 'ios' | 'android' | 'web';
   osVersion: string;

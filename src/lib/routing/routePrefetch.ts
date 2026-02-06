@@ -5,9 +5,11 @@
  * to improve perceived performance and user experience.
  */
 
-import { lazy, ComponentType } from 'react';
 
 // Cache for prefetched components
+
+import { lazy, ComponentType } from 'react';
+
 const prefetchedCache = new Map<string, ComponentType<unknown>>();
 
 // Track prefetch attempts to avoid duplicate calls

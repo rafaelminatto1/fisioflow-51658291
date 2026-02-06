@@ -1,9 +1,11 @@
-import type { StatusConfig, RolePermissions, UserRole, SessionStatus, CardSize, CardSizeConfig } from "@/types/agenda";
 
 // Status configuration for visual representation and allowed actions
-import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 
 // Default status config (for reset functionality)
+
+import type { StatusConfig, RolePermissions, UserRole, SessionStatus, CardSize, CardSizeConfig } from '@/types/agenda';
+import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
+
 export const DEFAULT_STATUS_COLORS: Record<string, { color: string; bgColor: string; borderColor: string }> = {};
 
 // Helper para normalizar status do backend para os valores padrão do frontend
