@@ -69,10 +69,14 @@ export function CancellationRulesManager() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    upsertCancellationRules(rules);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      await upsertCancellationRules.mutateAsync(rules);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // Erro já tratado no hook via toast
+    }
   };
 
   const applyPreset = (preset: typeof CANCELLATION_PRESETS[0]) => {
@@ -147,6 +151,7 @@ export function CancellationRulesManager() {
           <AlertTitle className="text-blue-900 dark:text-blue-100">Dica</AlertTitle>
           <AlertDescription className="text-blue-700 dark:text-blue-300">
             Regras de cancelamento ajudam a reduzir faltas e permitem melhor planejamento da agenda.
+            As opções desta aba são salvas para uso em fluxos automatizados e integrações.
           </AlertDescription>
         </Alert>
 

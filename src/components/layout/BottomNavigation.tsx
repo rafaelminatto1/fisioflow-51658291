@@ -22,7 +22,12 @@ export const BottomNavigation = memo(function BottomNavigation() {
   const navigate = useNavigate();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-border/50 px-2 sm:px-4 py-2 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-inset-bottom">
+    <nav 
+      id="mobile-navigation"
+      role="navigation"
+      aria-label="Navegação móvel"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-border/50 px-2 sm:px-4 py-2 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] safe-area-inset-bottom"
+    >
       <div className="flex items-center justify-between max-w-md mx-auto px-2">
         {navItems.slice(0, 2).map((item) => {
           const Icon = item.icon;

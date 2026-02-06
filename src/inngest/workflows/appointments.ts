@@ -24,6 +24,10 @@ type AppointmentWithRelations = {
     name?: string;
     settings?: { email_enabled?: boolean; whatsapp_enabled?: boolean };
   };
+  therapist?: {
+    id: string;
+    full_name: string;
+  };
 };
 
 type AppointmentDocument = {
@@ -51,10 +55,12 @@ async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Pro
   // Buscar dados relacionados em lote
   const patientIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).patient_id).filter(Boolean);
   const orgIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).organization_id).filter(Boolean);
+  const therapistIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).therapist_id).filter(Boolean);
 
-  const [patientMap, orgMap] = await Promise.all([
+  const [patientMap, orgMap, therapistMap] = await Promise.all([
     batchFetchDocuments('patients', patientIds),
     batchFetchDocuments('organizations', orgIds),
+    batchFetchDocuments('profiles', therapistIds),
   ]);
 
   const appointments: AppointmentWithRelations[] = [];
@@ -68,6 +74,7 @@ async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Pro
       time: appointment.time,
       patient: patientMap.get(appointment.patient_id) || { id: appointment.patient_id, full_name: 'Unknown' },
       organization: orgMap.get(appointment.organization_id) || { id: appointment.organization_id, name: 'Unknown' },
+      therapist: appointment.therapist_id ? therapistMap.get(appointment.therapist_id) : undefined,
     });
   }
 
@@ -139,7 +146,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
               data: {
                 to: patient.phone,
                 patientName: patient.full_name,
-                therapistName: 'Fisioterapeuta', // TODO: Fetch therapist name if possible, or generic
+                therapistName: appointment.therapist?.full_name || 'Fisioterapeuta',
                 date: new Date(appointment.date).toLocaleDateString('pt-BR'),
                 time: appointment.time,
                 organizationName: appointment.organization?.name || 'FisioFlow',
