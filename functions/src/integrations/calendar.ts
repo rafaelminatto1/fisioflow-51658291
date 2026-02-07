@@ -15,6 +15,7 @@ import { firestore } from 'firebase-admin';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as logger from 'firebase-functions/logger';
+import { CORS_ORIGINS } from '../init';
 
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
 
@@ -245,7 +246,7 @@ export const syncToGoogleCalendarHandler = async (request: any) => {
 };
 
 export const syncToGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, syncToGoogleCalendarHandler);
@@ -334,7 +335,7 @@ export const importFromGoogleCalendarHandler = async (request: any) => {
 };
 
 export const importFromGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, importFromGoogleCalendarHandler);
@@ -427,7 +428,7 @@ export const exportToICalCallableHandler = async (request: any) => {
 };
 
 export const exportToICal = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, exportToICalCallableHandler);
@@ -483,7 +484,7 @@ export const connectGoogleCalendarHandler = async (request: any) => {
 };
 
 export const connectGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, connectGoogleCalendarHandler);
@@ -512,7 +513,7 @@ export const disconnectGoogleCalendarHandler = async (request: any) => {
 };
 
 export const disconnectGoogleCalendar = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, disconnectGoogleCalendarHandler);
@@ -550,7 +551,7 @@ export const getGoogleAuthUrlHandler = async (request: any) => {
 };
 
 export const getGoogleAuthUrl = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, getGoogleAuthUrlHandler);
@@ -599,7 +600,7 @@ export const syncIntegrationHandler = async (request: any) => {
 };
 
 export const syncIntegration = onCall({
-  cors: true,
+  cors: CORS_ORIGINS,
   memory: '256MiB',
   maxInstances: 1,
 }, syncIntegrationHandler);

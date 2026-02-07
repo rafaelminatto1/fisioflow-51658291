@@ -130,6 +130,36 @@ function excludeMswPlugin() {
   };
 }
 
+// Plugin para substituir pdfkit.browser.js pela versão corrigida
+function fixPdfkitImport() {
+  const fixedPdfkitPath = path.resolve(__dirname, './src/lib/pdfkit.browser.fixed.js');
+  return {
+    name: 'fix-pdfkit-import',
+    resolveId(id: string, importer: string | undefined) {
+      // Intercepta a importação do pdfkit.browser.js
+      // Log para debug
+      if (id && (id.includes('pdfkit.browser.js') || id.includes('crypto-js/md5') || id === '@react-pdf/pdfkit')) {
+        console.log('[fixPdfkitImport] Resolving:', id, 'from:', importer);
+      }
+      if (id === '@react-pdf/pdfkit') {
+        // Captura importações do pacote raiz e direciona para a versão corrigida
+        console.log('[fixPdfkitImport] Redirecting package import to fixed pdfkit');
+        return fixedPdfkitPath;
+      }
+      if (id && (id.includes('@react-pdf/pdfkit/lib/pdfkit.browser.js') ||
+          id.endsWith('pdfkit.browser.js'))) {
+        console.log('[fixPdfkitImport] Redirecting to:', fixedPdfkitPath);
+        return fixedPdfkitPath;
+      }
+    },
+    load(id: string) {
+      if (id.includes('pdfkit.browser.fixed.js')) {
+        console.log('[fixPdfkitImport] Loading fixed file:', id);
+      }
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
@@ -160,6 +190,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mockMobileModules(),
+      fixPdfkitImport(),
       mode === 'development' && componentTagger(),
       htmlPlugin(appVersion, buildTime, isProduction),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
@@ -257,6 +288,9 @@ export default defineConfig(({ mode }) => {
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
         // Fix @kitware/vtk.js / @cornerstonejs: globalthis não exporta default em ESM
         globalthis: path.resolve(__dirname, "./src/lib/globalthis-shim.ts"),
+        // Fix pdfkit.browser.js ESM import issues with pako and crypto-js
+        "@react-pdf/pdfkit": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
+        "@react-pdf/pdfkit/lib/pdfkit.browser.js": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
       },
     },
     build: {
@@ -414,6 +448,13 @@ export default defineConfig(({ mode }) => {
         'brotli/decompress.js',
         'fontkit',
         'crypto-js',
+        // Cadeia do @react-pdf precisa ser pré-otimizada para corrigir CJS default exports (abs-svg-path)
+        '@react-pdf/render',
+        '@react-pdf/renderer',
+        'abs-svg-path',
+        'normalize-svg-path',
+        'parse-svg-path',
+        'svg-arc-to-cubic-bezier',
       ],
       exclude: [
         '@cornerstonejs/dicom-image-loader',
@@ -425,8 +466,39 @@ export default defineConfig(({ mode }) => {
         // Exclude PDFKit from pre-bundling to avoid circular dependency issues
         // Rollup will handle it directly in the build
         '@react-pdf/pdfkit',
-        '@react-pdf/renderer',
+        '@react-pdf/pdfkit/lib/pdfkit.browser.js',
       ],
+      esbuildOptions: {
+        plugins: [
+          {
+            name: 'fix-pdfkit-imports',
+            setup(build) {
+              build.onLoad({ filter: /pdfkit\.browser\.js$/ }, async (args) => {
+                const fs = require('fs');
+                const path = require('path');
+                const filePath = args.path;
+                let contents = fs.readFileSync(filePath, 'utf8');
+
+                // Corrigir imports do pako
+                contents = contents.replace(/import require\$\$1\$2 from 'pako\/lib\/zlib\/zstream\.js';/g,
+                  "import * as require$$1$2 from 'pako/lib/zlib/zstream.js';");
+                contents = contents.replace(/import require\$\$2 from 'pako\/lib\/zlib\/deflate\.js';/g,
+                  "import * as require$$2 from 'pako/lib/zlib/deflate.js';");
+                contents = contents.replace(/import require\$\$3\$1 from 'pako\/lib\/zlib\/inflate\.js';/g,
+                  "import * as require$$3$1 from 'pako/lib/zlib/inflate.js';");
+                contents = contents.replace(/import require\$\$4\$1 from 'pako\/lib\/zlib\/constants\.js';/g,
+                  "import * as require$$4$1 from 'pako/lib/zlib/constants.js';");
+
+                // Remover import problemático do MD5 e substituir uso por CryptoJS.MD5
+                contents = contents.replace(/import MD5 from 'crypto-js\/md5\.js';\s*/g, '');
+                contents = contents.replace(/\bMD5\(/g, 'CryptoJS.MD5(');
+
+                return { contents, loader: 'js' };
+              });
+            },
+          },
+        ],
+      },
     },
     esbuild: {
       drop: isProduction ? ['console', 'debugger'] : [],
@@ -434,4 +506,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-
