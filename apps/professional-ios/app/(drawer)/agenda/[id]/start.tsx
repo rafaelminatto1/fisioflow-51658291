@@ -79,7 +79,6 @@ export default function StartSessionScreen() {
         // Update timer state based on appointment status
         if (apt.status === 'em_andamento' && data.started_at) {
           const startedAt = data.started_at.toDate();
-          const now = new Date();
           setTimerState({
             status: 'running',
             startedAt,
@@ -263,7 +262,7 @@ export default function StartSessionScreen() {
   const handleGoToMovementAnalysis = useCallback(() => {
     HapticFeedback.light();
     router.push('/movement-analysis');
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
@@ -461,7 +460,7 @@ function ActionCard({
             {loading ? (
               <ActivityIndicator size="small" color={color} />
             ) : (
-              <Icon name={icon as any} size={24} color={color} />
+              <Icon name={icon} size={24} color={color} />
             )}
           </View>
           <View style={styles.actionInfo}>
