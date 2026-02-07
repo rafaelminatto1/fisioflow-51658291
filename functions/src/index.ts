@@ -96,6 +96,8 @@ export { createAppointmentHttp as createAppointmentV2 } from './api/appointments
 export { updateAppointmentHttp as updateAppointmentV2 } from './api/appointments';
 export { cancelAppointmentHttp as cancelAppointmentV2 } from './api/appointments';
 export { checkTimeConflictHttp as checkTimeConflictV2 } from './api/appointments';
+// API de Médicos (HTTP com CORS configurado no handler)
+export { listDoctorsHttp as listDoctors, searchDoctorsHttp as searchDoctorsV2 } from './api/doctors';
 
 // API de Exercícios
 export const listExercises = onCall(async (request) => {
@@ -243,16 +245,6 @@ export const updateTreatmentSession = onCall(async (request) => {
 export const apiEvaluate = onRequest(async (req: Request, res: Response) => {
     const { apiEvaluateHandler } = await import('./api/evaluate');
     return apiEvaluateHandler(req, res);
-});
-
-// API de Médicos
-export const listDoctors = onRequest(async (req, res) => {
-    const { listDoctorsHttp } = await import('./api/doctors');
-    return listDoctorsHttp(req, res);
-});
-export const searchDoctorsV2 = onRequest(async (req, res) => {
-    const { searchDoctorsHttp } = await import('./api/doctors');
-    return searchDoctorsHttp(req, res);
 });
 
 // Health Check

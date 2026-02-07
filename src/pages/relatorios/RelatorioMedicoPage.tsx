@@ -1239,7 +1239,7 @@ export default function RelatorioMedicoPage() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [previewRelatorio, setPreviewRelatorio] = useState<RelatorioMedicoData | null>(null);
   const [editingRelatorio, setEditingRelatorio] = useState<RelatorioMedicoData | null>(null);
-  const [activeTab, setActiveTab] = useState<'criar' | 'lista' | 'modelos'>('criar');
+  const [activeTab, setActiveTab] = useState<'criar' | 'lista'>('criar');
   const location = useLocation();
   const statePatientId = (location.state as { patientId?: string } | null)?.patientId;
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
@@ -1422,7 +1422,7 @@ export default function RelatorioMedicoPage() {
         nome: (paciente.full_name ?? paciente.name) as string,
         cpf: (paciente.cpf ?? '') as string,
         data_nascimento: (paciente.birth_date ?? '') as string,
-        telefone: (paciente.telefone ?? paciente.phone ?? '') as string,
+        telefone: ((paciente as any).telefone ?? (paciente as any).phone ?? '') as string,
         email: (paciente.email ?? '') as string,
       },
       profissional_emissor: {
@@ -1659,11 +1659,10 @@ export default function RelatorioMedicoPage() {
           </AlertDescription>
         </Alert>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'criar' | 'lista' | 'modelos')}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'criar' | 'lista')}>
           <TabsList>
             <TabsTrigger value="criar">Criar Relatório</TabsTrigger>
             <TabsTrigger value="lista">Relatórios Salvos</TabsTrigger>
-            <TabsTrigger value="modelos">Modelos Prontos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="criar" className="space-y-4">
@@ -1686,6 +1685,94 @@ export default function RelatorioMedicoPage() {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>Modelos de Relatório</CardTitle>
+                  <CardDescription>Crie e reutilize configurações para acelerar o fluxo</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={startCreateTemplate}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Novo modelo
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isLoadingTemplates ? (
+                  <div className="text-sm text-muted-foreground">Carregando modelos...</div>
+                ) : (
+                  <div className="space-y-3">
+                    {templates.map((template) => {
+                      const isBuiltin = template.organization_id === '__builtin__';
+                      return (
+                        <div key={template.id} className="p-4 border rounded-lg flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-muted rounded-lg">
+                              {templateIcon(template.tipo_relatorio)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold text-sm">{template.nome}</p>
+                                {isBuiltin && <Badge variant="outline">Padrão</Badge>}
+                              </div>
+                              <p className="text-xs text-muted-foreground">{template.descricao}</p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {template.campos.map((campo) => {
+                                  const label = TEMPLATE_FIELD_OPTIONS.find(o => o.id === campo)?.label ?? campo;
+                                  return (
+                                    <Badge key={campo} variant="secondary" className="text-[10px]">
+                                      {label}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => applyTemplate(template)}>
+                              <FileText className="h-4 w-4 mr-1" />
+                              Usar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => isBuiltin ? duplicateTemplate(template) : startEditTemplate(template)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              {isBuiltin ? 'Duplicar p/ editar' : 'Editar'}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => duplicateTemplate(template)}>
+                              <Copy className="h-4 w-4 mr-1" />
+                              Duplicar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive"
+                              disabled={isBuiltin || deleteTemplateMutation.isPending}
+                              onClick={() => {
+                                if (isBuiltin) return;
+                                if (window.confirm('Excluir este modelo?')) {
+                                  deleteTemplateMutation.mutate(template.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Excluir
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {!templates.length && (
+                      <div className="text-sm text-muted-foreground">
+                        Nenhum modelo encontrado. Crie um novo modelo para acelerar seus relatórios.
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1766,98 +1853,7 @@ export default function RelatorioMedicoPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="modelos" className="space-y-4">
-            <Card>
-              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <CardTitle>Modelos de Relatório</CardTitle>
-                  <CardDescription>Crie, edite, duplique ou apague modelos prontos</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={startCreateTemplate}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Novo modelo
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {isLoadingTemplates ? (
-                  <div className="text-sm text-muted-foreground">Carregando modelos...</div>
-                ) : (
-                  <div className="space-y-3">
-                    {templates.map((template) => {
-                      const isBuiltin = template.organization_id === '__builtin__';
-                      return (
-                        <div key={template.id} className="p-4 border rounded-lg flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 bg-muted rounded-lg">
-                              {templateIcon(template.tipo_relatorio)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-semibold text-sm">{template.nome}</p>
-                                {isBuiltin && <Badge variant="outline">Padrão</Badge>}
-                              </div>
-                              <p className="text-xs text-muted-foreground">{template.descricao}</p>
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {template.campos.map((campo) => {
-                                  const label = TEMPLATE_FIELD_OPTIONS.find(o => o.id === campo)?.label ?? campo;
-                                  return (
-                                    <Badge key={campo} variant="secondary" className="text-[10px]">
-                                      {label}
-                                    </Badge>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" onClick={() => applyTemplate(template)}>
-                              <FileText className="h-4 w-4 mr-1" />
-                              Usar
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => isBuiltin ? duplicateTemplate(template) : startEditTemplate(template)}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              {isBuiltin ? 'Duplicar p/ editar' : 'Editar'}
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => duplicateTemplate(template)}>
-                              <Copy className="h-4 w-4 mr-1" />
-                              Duplicar
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive"
-                              disabled={isBuiltin || deleteTemplateMutation.isPending}
-                              onClick={() => {
-                                if (isBuiltin) return;
-                                if (window.confirm('Excluir este modelo?')) {
-                                  deleteTemplateMutation.mutate(template.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Excluir
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {!templates.length && (
-                      <div className="text-sm text-muted-foreground">
-                        Nenhum modelo encontrado. Crie um novo modelo para acelerar seus relatórios.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </Tabs>
 
         {/* Dialog Editor */}
         <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
@@ -1939,6 +1935,91 @@ export default function RelatorioMedicoPage() {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Dialog Template CRUD */}
+        <Dialog
+          open={templateDialogOpen}
+          onOpenChange={(open) => {
+            setTemplateDialogOpen(open);
+            if (!open) {
+              setEditingTemplate(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <PenTool className="h-4 w-4" />
+                {editingTemplate ? 'Editar modelo' : 'Novo modelo'}
+              </DialogTitle>
+              <DialogDescription>
+                Defina os campos obrigatórios e o tipo de relatório para reutilizar rapidamente.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Nome do modelo</Label>
+                <Input
+                  value={templateForm.nome}
+                  onChange={(e) => setTemplateForm((prev) => ({ ...prev, nome: e.target.value }))}
+                  placeholder="Ex: Avaliação ortopédica detalhada"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Textarea
+                  value={templateForm.descricao}
+                  onChange={(e) => setTemplateForm((prev) => ({ ...prev, descricao: e.target.value }))}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de relatório</Label>
+                <Select
+                  value={templateForm.tipo_relatorio}
+                  onValueChange={(v) => setTemplateForm((prev) => ({ ...prev, tipo_relatorio: v as RelatorioMedicoData['tipo_relatorio'] }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inicial">Avaliação inicial</SelectItem>
+                    <SelectItem value="evolucao">Evolução</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="interconsulta">Interconsulta</SelectItem>
+                    <SelectItem value="cirurgico">Pré/Pós-operatório</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Campos incluídos</Label>
+                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                  {TEMPLATE_FIELD_OPTIONS.map((campo) => (
+                    <label key={campo.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={templateForm.campos.includes(campo.id)}
+                        onCheckedChange={() => toggleCampo(campo.id)}
+                      />
+                      {campo.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleTemplateSubmit} disabled={saveTemplateMutation.isPending}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saveTemplateMutation.isPending ? 'Salvando...' : 'Salvar modelo'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
