@@ -42,6 +42,7 @@ const HTTP_FUNCTION_URLS: Record<string, string> = {
   cancelAppointmentV2: API_URLS.appointments.cancel,
   checkTimeConflictV2: API_URLS.appointments.checkConflict,
 };
+const LOCAL_FUNCTIONS_PROXY = import.meta.env.DEV ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions') : undefined;
 
 /**
  * Get Firebase Functions instance

@@ -10,17 +10,22 @@ const GOOGLE_CLIENT_ID = defineString('GOOGLE_CLIENT_ID');
 const GOOGLE_CLIENT_SECRET = defineString('GOOGLE_CLIENT_SECRET');
 const GOOGLE_MAPS_KEY = defineString('GOOGLE_MAPS_API_KEY');
 
-const oauth2Client = new google.auth.OAuth2(
-  GOOGLE_CLIENT_ID.value(),
-  GOOGLE_CLIENT_SECRET.value(),
-  'https://fisioflow-migration.web.app/integrations/callback' // URL de redirecionamento
-);
+/**
+ * Helper to get OAuth2 client lazily
+ */
+function getOAuth2Client() {
+  return new google.auth.OAuth2(
+    GOOGLE_CLIENT_ID.value(),
+    GOOGLE_CLIENT_SECRET.value(),
+    'https://fisioflow-migration.web.app/integrations/callback' // URL de redirecionamento
+  );
+}
 
 /**
  * 1. Autocomplete de Endereço (Google Places)
  * Protege sua API Key rodando no backend
  */
-export const searchPlaces = onCall({ region: 'southamerica-east1' }, async (request) => {
+export const searchPlaces = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   const { query } = request.data;
   if (!query) throw new HttpsError('invalid-argument', 'Query string required');
 
@@ -38,13 +43,14 @@ export const searchPlaces = onCall({ region: 'southamerica-east1' }, async (requ
 /**
  * 2. Gerar Link de Autenticação (Calendar & Meet & Business)
  */
-export const getGoogleAuthUrl = onCall({ region: 'southamerica-east1' }, async (request) => {
+export const getGoogleAuthUrl = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   const scopes = [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/calendar.events',
     'https://www.googleapis.com/auth/business.manage', // Para Reviews
   ];
 
+  const oauth2Client = getOAuth2Client();
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline', // Importante para receber Refresh Token
     scope: scopes,
@@ -57,11 +63,12 @@ export const getGoogleAuthUrl = onCall({ region: 'southamerica-east1' }, async (
 /**
  * 3. Trocar Código por Token (Callback)
  */
-export const googleAuthCallback = onCall({ region: 'southamerica-east1' }, async (request) => {
+export const googleAuthCallback = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   const { code } = request.data;
   if (!code) throw new HttpsError('invalid-argument', 'Code required');
 
   try {
+    const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
     
     // AQUI: Salvar tokens no banco Postgres (tabela user_integrations)
@@ -78,10 +85,11 @@ export const googleAuthCallback = onCall({ region: 'southamerica-east1' }, async
 /**
  * 4. Criar Reunião no Google Meet
  */
-export const createMeetLink = onCall({ region: 'southamerica-east1' }, async (request) => {
+export const createMeetLink = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   // Em produção, leríamos o token do banco do usuário logado
   // oauth2Client.setCredentials({ refresh_token: ... })
 
+  const oauth2Client = getOAuth2Client();
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
   try {
@@ -117,7 +125,7 @@ export const createMeetLink = onCall({ region: 'southamerica-east1' }, async (re
  * 5. Sincronizar Calendário (Paciente - Unidirecional)
  * O paciente não pode editar, apenas ver.
  */
-export const syncPatientCalendar = onCall({ region: 'southamerica-east1' }, async (request) => {
+export const syncPatientCalendar = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   const { appointmentId, patientEmail } = request.data;
   
   // Lógica: Inserir evento no calendário do paciente como "Busy"
@@ -130,7 +138,7 @@ export const syncPatientCalendar = onCall({ region: 'southamerica-east1' }, asyn
 /**
  * 6. Buscar Reviews (Google Business)
  */
-export const getBusinessReviews = onCall({ region: 'southamerica-east1' }, async (request) => {
+export const getBusinessReviews = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   // Requer Google My Business API habilitada
   // Mock para demonstração até configurar API
   return {
@@ -140,3 +148,4 @@ export const getBusinessReviews = onCall({ region: 'southamerica-east1' }, async
     ]
   };
 });
+
