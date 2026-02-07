@@ -31,6 +31,10 @@ export const API_URLS = {
     cancel: CLOUD_RUN_BASE_URL('cancelAppointmentV2'),
     checkConflict: CLOUD_RUN_BASE_URL('checkTimeConflictV2'),
   },
+  doctors: {
+    list: CLOUD_RUN_BASE_URL('listDoctors'),
+    search: CLOUD_RUN_BASE_URL('searchDoctorsV2'),
+  },
   clinical: {
     listGoals: CLOUD_RUN_BASE_URL('listpatientgoalshttp'),
     createGoal: CLOUD_RUN_BASE_URL('createpatientgoalhttp'),
