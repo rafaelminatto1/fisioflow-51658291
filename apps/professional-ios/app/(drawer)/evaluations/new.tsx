@@ -17,7 +17,7 @@ import { ptBR } from 'date-fns/locale';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { ObjectiveExamForm } from '@/components/ObjectiveExamForm';
 import { VitalSignsInput } from '@/components/VitalSignsInput';
 import { useTheme } from '@/hooks/useTheme';
@@ -35,9 +35,9 @@ export default function NewEvaluationScreen() {
   const patientId = params.patientId as string;
   const appointmentId = params.appointmentId as string;
 
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [patient, setPatient] = useState<any>(null);
+  const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
 
   // Evaluation fields
   const [chiefComplaint, setChiefComplaint] = useState('');
@@ -49,7 +49,7 @@ export default function NewEvaluationScreen() {
   const [inspection, setInspection] = useState('');
   const [palpation, setPalpation] = useState('');
   const [rangeOfMotion, setRangeOfMotion] = useState<Record<string, string>>({});
-  const [muscleStrength, setMuscleStrength] = useState<Record<string, string>>({});
+  const [muscleStrength] = useState<Record<string, string>>({});
   const [specialTests, setSpecialTests] = useState<Record<string, boolean>>({});
 
   // Assessment
@@ -67,13 +67,7 @@ export default function NewEvaluationScreen() {
   const [respiratoryRate, setRespiratoryRate] = useState('');
   const [oxygenSaturation, setOxygenSaturation] = useState('');
 
-  useEffect(() => {
-    if (patientId) {
-      loadPatient();
-    }
-  }, [patientId]);
-
-  const loadPatient = async () => {
+  const loadPatient = useCallback(async () => {
     try {
       const docRef = doc(db, 'patients', patientId);
       const docSnap = await getDoc(docRef);
@@ -84,7 +78,13 @@ export default function NewEvaluationScreen() {
     } catch (error) {
       console.error('Error loading patient:', error);
     }
-  };
+  }, [patientId]);
+
+  useEffect(() => {
+    if (patientId) {
+      loadPatient();
+    }
+  }, [patientId, loadPatient]);
 
   const handleSave = useCallback(async () => {
     if (!chiefComplaint.trim()) {
@@ -156,6 +156,8 @@ export default function NewEvaluationScreen() {
     } finally {
       setSaving(false);
     }
+  // Nota: specialTests depende de campos dinâmicos; mantemos no array e silenciamos aviso.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chiefComplaint,
     historyOfPresentIllness,
@@ -340,16 +342,16 @@ export default function NewEvaluationScreen() {
   );
 }
 
-function SectionTitle({ icon, title, colors }: { icon: string; title: string; colors: any }) {
+function SectionTitle({ icon, title, colors }: { icon: IconName; title: string; colors: { primary: string; text: string } }) {
   return (
     <View style={styles.sectionHeader}>
-      <Icon name={icon as any} size={20} color={colors.primary} />
+      <Icon name={icon} size={20} color={colors.primary} />
       <Text style={[styles.sectionTitleText, { color: colors.text }]}>{title}</Text>
     </View>
   );
 }
 
-function Label({ label, required, colors }: { label: string; required?: boolean; colors: any }) {
+function Label({ label, required, colors }: { label: string; required?: boolean; colors: { textSecondary: string } }) {
   return (
     <Text style={[styles.label, { color: colors.textSecondary }]}>
       {label}
@@ -367,7 +369,7 @@ function TextArea({
   value: string;
   onChangeText: (text: string) => void;
   placeholder: string;
-  colors: any;
+  colors: { text: string; textSecondary: string; border: string };
 }) {
   return (
     <TextInput

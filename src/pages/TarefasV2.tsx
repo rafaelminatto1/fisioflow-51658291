@@ -20,8 +20,16 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays, addDays, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays, addDays, subDays, startOfMonth, endOfMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Helper seguro para formatação de data
+const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: any) => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  if (!isValid(d)) return 'Data inválida';
+  return format(d, formatStr, options || { locale: ptBR });
+};
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -477,17 +485,24 @@ export default function TarefasV2() {
     const weekAgo = subDays(today, 7);
 
     const byStatus = effectiveTarefas.reduce((acc, t) => {
-      acc[t.status] = (acc[t.status] || 0) + 1;
+      if (t && t.status) {
+        acc[t.status] = (acc[t.status] || 0) + 1;
+      }
       return acc;
     }, {} as Record<TarefaStatus, number>);
 
     const byPriority = effectiveTarefas.reduce((acc, t) => {
-      acc[t.prioridade] = (acc[t.prioridade] || 0) + 1;
+      if (t && t.prioridade) {
+        acc[t.prioridade] = (acc[t.prioridade] || 0) + 1;
+      }
       return acc;
     }, {} as Record<TarefaPrioridade, number>);
 
     const byType = effectiveTarefas.reduce((acc, t) => {
-      acc[t.tipo || 'TAREFA'] = (acc[t.tipo || 'TAREFA'] || 0) + 1;
+      if (t) {
+        const tipo = t.tipo || 'TAREFA';
+        acc[tipo] = (acc[tipo] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
 
@@ -558,7 +573,7 @@ export default function TarefasV2() {
     };
 
     filteredTarefas.forEach(t => {
-      if (t.status && groups[t.status]) {
+      if (t && t.status && groups[t.status]) {
         groups[t.status].push(t);
       }
     });
@@ -613,20 +628,26 @@ export default function TarefasV2() {
     
     // Pre-filter tasks by date range for better performance
     const tasksByDate = effectiveTarefas?.reduce((acc, t) => {
-      if (t.created_at) acc.created[t.created_at] = (acc.created[t.created_at] || 0) + 1;
-      if (t.completed_at) acc.completed[t.completed_at] = (acc.completed[t.completed_at] || 0) + 1;
+      if (t && t.created_at) {
+        const dateKey = t.created_at.split('T')[0];
+        acc.created[dateKey] = (acc.created[dateKey] || 0) + 1;
+      }
+      if (t && t.completed_at) {
+        const dateKey = t.completed_at.split('T')[0];
+        acc.completed[dateKey] = (acc.completed[dateKey] || 0) + 1;
+      }
       return acc;
-    }, { created: {}, completed: {} }) || { created: {}, completed: {} };
+    }, { created: {} as Record<string, number>, completed: {} as Record<string, number> }) || { created: {}, completed: {} };
     
     for (let i = 6; i >= 0; i--) {
       const date = subDays(today, i);
-      const dateStr = format(date, 'yyyy-MM-dd');
+      const dateStr = safeFormat(date, 'yyyy-MM-dd');
 
       const created = tasksByDate.created[dateStr] || 0;
       const completed = tasksByDate.completed[dateStr] || 0;
 
       weeklyData.push({
-        date: format(date, 'EEE', { locale: ptBR }),
+        date: safeFormat(date, 'EEE'),
         criadas: created,
         concluidas: completed
       });
@@ -935,11 +956,11 @@ export default function TarefasV2() {
                           key={i}
                           className={cn(
                             'flex-1 min-w-12 p-2 text-center border-r text-xs',
-                            format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && 'bg-primary/10'
+                            safeFormat(day, 'yyyy-MM-dd') === safeFormat(new Date(), 'yyyy-MM-dd') && 'bg-primary/10'
                           )}
                         >
-                          <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
-                          <div className="text-muted-foreground">{format(day, 'dd')}</div>
+                          <div className="font-medium">{safeFormat(day, 'EEE')}</div>
+                          <div className="text-muted-foreground">{safeFormat(day, 'dd')}</div>
                         </div>
                       ))}
                     </div>
@@ -949,6 +970,7 @@ export default function TarefasV2() {
                   {timelineData.tasks.map((tarefa) => {
                     const startDate = tarefa.start_date ? new Date(tarefa.start_date) : null;
                     const endDate = tarefa.data_vencimento ? new Date(tarefa.data_vencimento) : null;
+                    const statusConfig = STATUS_COLORS[tarefa.status] || { dot: 'bg-gray-400' };
 
                     return (
                       <div
@@ -958,28 +980,31 @@ export default function TarefasV2() {
                       >
                         <div className="w-64 p-2 border-r shrink-0">
                           <div className="flex items-center gap-2">
-                            <div className={cn('h-2 w-2 rounded-full shrink-0', STATUS_COLORS[tarefa.status].dot)} />
+                            <div className={cn('h-2 w-2 rounded-full shrink-0', statusConfig.dot)} />
                             <span className="text-sm truncate">{tarefa.titulo}</span>
                           </div>
                         </div>
                         <div className="flex flex-1 relative">
                           {timelineData.days.map((day, i) => {
-                            const dayStr = format(day, 'yyyy-MM-dd');
-                            const isInRange = (startDate || endDate) && (
-                              (startDate && endDate && isWithinInterval(day, { start: startDate, end: endDate })) ||
-                              (startDate && !endDate && dayStr === format(startDate, 'yyyy-MM-dd')) ||
-                              (!startDate && endDate && dayStr === format(endDate, 'yyyy-MM-dd'))
+                            const dayStr = safeFormat(day, 'yyyy-MM-dd');
+                            const isStartValid = startDate && isValid(startDate);
+                            const isEndValid = endDate && isValid(endDate);
+                            
+                            const isInRange = (isStartValid || isEndValid) && (
+                              (isStartValid && isEndValid && isWithinInterval(day, { start: startDate, end: endDate })) ||
+                              (isStartValid && !isEndValid && dayStr === safeFormat(startDate, 'yyyy-MM-dd')) ||
+                              (!isStartValid && isEndValid && dayStr === safeFormat(endDate, 'yyyy-MM-dd'))
                             );
 
-                            const isStart = startDate && dayStr === format(startDate, 'yyyy-MM-dd');
-                            const isEnd = endDate && dayStr === format(endDate, 'yyyy-MM-dd');
+                            const isStart = isStartValid && dayStr === safeFormat(startDate, 'yyyy-MM-dd');
+                            const isEnd = isEndValid && dayStr === safeFormat(endDate, 'yyyy-MM-dd');
 
                             return (
                               <div
                                 key={i}
                                 className={cn(
                                   'flex-1 min-w-12 h-10 border-r relative',
-                                  format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && 'bg-primary/5'
+                                  safeFormat(day, 'yyyy-MM-dd') === safeFormat(new Date(), 'yyyy-MM-dd') && 'bg-primary/5'
                                 )}
                               >
                                 {isInRange && (

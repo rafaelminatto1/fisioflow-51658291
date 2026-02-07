@@ -34,9 +34,17 @@ import {
   Link2
 } from 'lucide-react';
 import { Tarefa } from '@/types/tarefas';
-import { format, isPast, isToday } from 'date-fns';
+import { format, isPast, isToday, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PRIORIDADE_LABELS, PRIORIDADE_COLORS, STATUS_LABELS, STATUS_COLORS } from '@/types/tarefas';
+
+// Helper seguro para formatação de data
+const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: any) => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  if (!isValid(d)) return 'Inválido';
+  return format(d, formatStr, options || { locale: ptBR });
+};
 
 interface TaskTableVirtualizedProps {
   tasks: Tarefa[];
@@ -71,12 +79,18 @@ const TaskRow: React.FC<TaskRowProps> = ({ index, style, data }) => {
   if (!task) return null;
   const isSelected = selectedTasks.has(task.id);
   
-  const isOverdue = task.data_vencimento && 
-    isPast(new Date(task.data_vencimento)) && 
+  const dueDate = task.data_vencimento ? new Date(task.data_vencimento) : null;
+  const isDateValid = dueDate && isValid(dueDate);
+
+  const isOverdue = isDateValid && 
+    isPast(dueDate) && 
     task.status !== 'CONCLUIDO';
   
-  const isDueToday = task.data_vencimento && isToday(new Date(task.data_vencimento));
+  const isDueToday = isDateValid && isToday(dueDate);
   
+  const statusConfig = STATUS_COLORS[task.status] || { bg: 'bg-gray-500/10', text: 'text-gray-500' };
+  const priorityConfig = PRIORIDADE_COLORS[task.prioridade] || { bg: 'bg-gray-500/20', text: 'text-gray-500' };
+
   const checklistProgress = (() => {
     if (!task.checklists?.length) return null;
     const total = task.checklists.reduce((acc, cl) => acc + cl.items.length, 0);
@@ -135,21 +149,21 @@ const TaskRow: React.FC<TaskRowProps> = ({ index, style, data }) => {
         </div>
       </TableCell>
       <TableCell>
-        <Badge className={cn('text-xs', STATUS_COLORS[task.status].bg, STATUS_COLORS[task.status].text)}>
-          {STATUS_LABELS[task.status]}
+        <Badge className={cn('text-xs', statusConfig.bg, statusConfig.text)}>
+          {STATUS_LABELS[task.status] || task.status || 'S/ Status'}
         </Badge>
       </TableCell>
       <TableCell>
         <Badge 
           variant="outline"
-          className={cn('text-xs', PRIORIDADE_COLORS[task.prioridade].bg, PRIORIDADE_COLORS[task.prioridade].text)}
+          className={cn('text-xs', priorityConfig.bg || priorityConfig, priorityConfig.text || '')}
         >
           <Flag className="h-3 w-3 mr-0.5" />
-          {PRIORIDADE_LABELS[task.prioridade]}
+          {PRIORIDADE_LABELS[task.prioridade] || task.prioridade || 'S/ Prioridade'}
         </Badge>
       </TableCell>
       <TableCell>
-        {task.data_vencimento ? (
+        {isDateValid ? (
           <div className={cn(
             'flex items-center gap-1 text-xs px-1.5 py-0.5 rounded',
             isOverdue && 'bg-red-500/20 text-red-500',
@@ -157,7 +171,7 @@ const TaskRow: React.FC<TaskRowProps> = ({ index, style, data }) => {
             !isOverdue && !isDueToday && 'text-muted-foreground'
           )}>
             <Calendar className="h-3 w-3" />
-            <span>{format(new Date(task.data_vencimento), 'dd/MM', { locale: ptBR })}</span>
+            <span>{safeFormat(dueDate, 'dd/MM')}</span>
           </div>
         ) : (
           <span className="text-muted-foreground text-xs">Sem data</span>
