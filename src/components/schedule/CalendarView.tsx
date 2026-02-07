@@ -379,17 +379,19 @@ export const CalendarView = memo(({
     getMinCapacityForInterval,
   });
 
-  // Use the appropriate hook based on feature flag
-  const dragState = USE_DND_KIT ? dragStateDndKit : dragStateNative;
-  const dropTarget = USE_DND_KIT ? dropTargetDndKit : dropTargetNative;
-  const showConfirmDialog = USE_DND_KIT ? showConfirmDialogDndKit : showConfirmDialogNative;
-  const pendingReschedule = USE_DND_KIT ? pendingRescheduleDndKit : pendingRescheduleNative;
-  const handleConfirmReschedule = USE_DND_KIT ? handleConfirmRescheduleDndKit : handleConfirmRescheduleNative;
-  const handleCancelReschedule = USE_DND_KIT ? handleCancelRescheduleDndKit : handleCancelRescheduleNative;
-  const showOverCapacityDialog = USE_DND_KIT ? showOverCapacityDialogDndKit : showOverCapacityDialogNative;
-  const pendingOverCapacity = USE_DND_KIT ? pendingOverCapacityDndKit : pendingOverCapacityNative;
-  const handleConfirmOverCapacity = USE_DND_KIT ? handleConfirmOverCapacityDndKit : handleConfirmOverCapacityNative;
-  const handleCancelOverCapacity = USE_DND_KIT ? handleCancelOverCapacityDndKit : handleCancelOverCapacityNative;
+  // Choose drag & drop engine based on view (DndKit only in week view for now)
+  const useDndKitMode = USE_DND_KIT && viewType === 'week';
+
+  const dragState = useDndKitMode ? dragStateDndKit : dragStateNative;
+  const dropTarget = useDndKitMode ? dropTargetDndKit : dropTargetNative;
+  const showConfirmDialog = useDndKitMode ? showConfirmDialogDndKit : showConfirmDialogNative;
+  const pendingReschedule = useDndKitMode ? pendingRescheduleDndKit : pendingRescheduleNative;
+  const handleConfirmReschedule = useDndKitMode ? handleConfirmRescheduleDndKit : handleConfirmRescheduleNative;
+  const handleCancelReschedule = useDndKitMode ? handleCancelRescheduleDndKit : handleCancelRescheduleNative;
+  const showOverCapacityDialog = useDndKitMode ? showOverCapacityDialogDndKit : showOverCapacityDialogNative;
+  const pendingOverCapacity = useDndKitMode ? pendingOverCapacityDndKit : pendingOverCapacityNative;
+  const handleConfirmOverCapacity = useDndKitMode ? handleConfirmOverCapacityDndKit : handleConfirmOverCapacityNative;
+  const handleCancelOverCapacity = useDndKitMode ? handleCancelOverCapacityDndKit : handleCancelOverCapacityNative;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -924,21 +926,21 @@ export const CalendarView = memo(({
                   currentTimePosition={currentTimePosition}
                   getAppointmentsForDate={getAppointmentsForDate}
                   appointments={displayAppointments}
-                  savingAppointmentId={dragState.savingAppointmentId}
+                  savingAppointmentId={dragStateNative.savingAppointmentId}
                   timeSlots={memoizedTimeSlots}
                   isDayClosed={isDayClosed}
                   onTimeSlotClick={onTimeSlotClick}
                   onEditAppointment={onEditAppointment}
                   onDeleteAppointment={onDeleteAppointment}
                   onAppointmentReschedule={onAppointmentReschedule}
-                  dragState={dragState}
-                  dropTarget={dropTarget}
+                  dragState={dragStateNative}
+                  dropTarget={dropTargetNative}
                   targetAppointments={targetAppointments}
-                  handleDragStart={handleDragStart}
-                  handleDragEnd={handleDragEnd}
-                  handleDragOver={handleDragOver}
-                  handleDragLeave={handleDragLeave}
-                  handleDrop={handleDrop}
+                  handleDragStart={handleDragStartNative}
+                  handleDragEnd={handleDragEndNative}
+                  handleDragOver={handleDragOverNative}
+                  handleDragLeave={handleDragLeaveNative}
+                  handleDrop={handleDropNative}
                   isTimeBlocked={isTimeBlocked}
                   getBlockReason={getBlockReason}
                   _getStatusColor={getStatusColor}

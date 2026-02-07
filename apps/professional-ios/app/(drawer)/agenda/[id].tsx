@@ -87,7 +87,7 @@ export default function AppointmentDetailScreen() {
               await deleteDoc(doc(db, 'appointments', appointmentId));
               HapticFeedback.success();
               router.back();
-            } catch (error) {
+            } catch (_error) {
               HapticFeedback.error();
               Alert.alert('Erro', 'Não foi possível excluir.');
             }

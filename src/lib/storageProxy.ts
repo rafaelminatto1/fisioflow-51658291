@@ -5,6 +5,16 @@
 
 const PROXY_BASE = '/api/exercise-image';
 const FIREBASE_STORAGE_PATTERN = /https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?]+)/;
+type ImageFormat = 'auto' | 'avif' | 'webp' | 'jpeg' | 'png';
+
+export interface ImageTransformOptions {
+  width?: number;
+  height?: number;
+  dpr?: number;
+  format?: ImageFormat;
+  quality?: number;
+  fit?: 'cover' | 'contain' | 'inside' | 'outside' | 'fill';
+}
 
 /**
  * Convert a Firebase Storage URL to a proxy URL
@@ -44,6 +54,27 @@ export function toProxyUrl(storageUrl: string | null | undefined): string {
 
   // Not a Firebase Storage URL, return as-is
   return storageUrl;
+}
+
+/**
+ * Append transformation params to an image URL (works with proxy or direct URLs)
+ */
+export function withImageParams(url: string | null | undefined, opts: ImageTransformOptions = {}): string {
+  if (!url) return '';
+
+  const hasQuery = url.includes('?');
+  const [base, existingQuery] = hasQuery ? url.split('?', 2) : [url, ''];
+  const params = new URLSearchParams(existingQuery);
+
+  if (opts.width) params.set('w', String(Math.round(opts.width)));
+  if (opts.height) params.set('h', String(Math.round(opts.height)));
+  if (opts.dpr) params.set('dpr', String(opts.dpr));
+  if (opts.format) params.set('fmt', opts.format);
+  if (opts.quality) params.set('q', String(Math.round(opts.quality)));
+  if (opts.fit) params.set('fit', opts.fit);
+
+  const queryString = params.toString();
+  return queryString ? `${base}?${queryString}` : base;
 }
 
 /**

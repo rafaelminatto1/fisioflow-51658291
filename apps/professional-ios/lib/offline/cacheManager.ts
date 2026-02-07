@@ -12,7 +12,6 @@ import {
   getDocs,
   query,
   where,
-  whereIn,
   orderBy,
   limit,
 } from 'firebase/firestore';
@@ -50,7 +49,7 @@ export interface CacheOptions {
 }
 
 class CacheManager {
-  private memoryCache: Map<string, CacheEntry<any>> = new Map();
+  private memoryCache: Map<string, CacheEntry<unknown>> = new Map();
   private initialized = false;
 
   async initialize() {
@@ -80,7 +79,7 @@ class CacheManager {
         if (cached) {
           this.memoryCache.set(key, cached);
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore errors during preloading
       }
     }
@@ -243,7 +242,7 @@ class CacheManager {
   async cacheCollection(
     collectionName: string,
     constraints?: {
-      where?: [string, any, any][];
+      where?: [string, unknown, unknown][];
       orderBy?: [string, 'asc' | 'desc'];
       limit?: number;
     }
@@ -322,27 +321,27 @@ class CacheManager {
   /**
    * Get cached collection data
    */
-  async getCachedCollection(
+  async getCachedCollection<T = unknown>(
     collectionName: string,
     constraints?: {
-      where?: [string, any, any][];
+      where?: [string, unknown, unknown][];
       orderBy?: [string, 'asc' | 'desc'];
       limit?: number;
     }
-  ): Promise<any[] | null> {
+  ): Promise<T[] | null> {
     const cacheKey = this.buildCollectionKey(collectionName, constraints);
-    return this.get<any[]>(cacheKey);
+    return this.get<T[]>(cacheKey);
   }
 
   /**
    * Get cached document
    */
-  async getCachedDocument(
+  async getCachedDocument<T = unknown>(
     collectionName: string,
     documentId: string
-  ): Promise<any | null> {
+  ): Promise<T | null> {
     const cacheKey = `${collectionName}_${documentId}`;
-    return this.get<any>(cacheKey);
+    return this.get<T>(cacheKey);
   }
 
   /**
@@ -358,7 +357,7 @@ class CacheManager {
   private buildCollectionKey(
     collectionName: string,
     constraints?: {
-      where?: [string, any, any][];
+      where?: [string, unknown, unknown][];
       orderBy?: [string, 'asc' | 'desc'];
       limit?: number;
     }
@@ -417,7 +416,7 @@ class CacheManager {
           stats.entriesByCollection[collection] =
             (stats.entriesByCollection[collection] || 0) + 1;
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore metadata read errors
       }
     }
@@ -455,7 +454,7 @@ class CacheManager {
             const dataKey = CACHE_PREFIX + meta.key;
             keysToDelete.push(dataKey, metaKey);
           }
-        } catch (error) {
+        } catch (_error) {
           // Invalid metadata - remove both
           const dataKey = metaKey.replace(CACHE_METADATA_PREFIX, CACHE_PREFIX);
           keysToDelete.push(dataKey, metaKey);

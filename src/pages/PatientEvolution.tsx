@@ -164,7 +164,7 @@ const PatientEvolution = () => {
   const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
   const { data: goals = [] } = usePatientGoals(patientId || '');
   const { data: pathologies = [] } = usePatientPathologies(patientId || '');
-  const { data: measurements = [] } = useEvolutionMeasurements(patientId || '');
+  const { data: measurements = [] } = useEvolutionMeasurements(patientId || '', { limit: 120 });
   const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
   const { data: draftByAppointment } = useDraftSoapRecordByAppointment(patientId || '', appointmentId);
 

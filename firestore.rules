@@ -558,6 +558,29 @@ service cloud.firestore {
     }
 
     // ============================================================================================
+    // DOCTORS COLLECTION
+    // ============================================================================================
+
+    match /doctors {
+      allow list: if isAuthenticated();
+    }
+
+    match /doctors/{doctorId} {
+      // Leitura: qualquer usuário autenticado pode ver médicos
+      allow read: if isAuthenticated();
+
+      // Criação: profissionais e admin podem criar médicos
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+
+      // Atualização: profissionais e admin podem atualizar médicos
+      allow update: if isProfessional() || isAdmin();
+
+      // Soft delete: profissionais e admin podem desativar médicos
+      // Hard delete: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
     // MARKETING COLLECTIONS (Marketing Module v2.0)
     // ============================================================================================
 

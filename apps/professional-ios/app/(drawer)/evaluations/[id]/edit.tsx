@@ -19,7 +19,7 @@ import { ptBR } from 'date-fns/locale';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { ObjectiveExamForm } from '@/components/ObjectiveExamForm';
 import { VitalSignsInput } from '@/components/VitalSignsInput';
 import { useTheme } from '@/hooks/useTheme';
@@ -33,10 +33,11 @@ export default function EditEvaluationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { colors } = useTheme();
-  const { profile } = useAuth();
+  useAuth(); // profile não utilizado nesta tela
 
   const evaluationId = params.id as string;
-  const [loading, saving, setSaving] = useState(false);
+  const [loading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
 
   // Evaluation fields
@@ -67,11 +68,7 @@ export default function EditEvaluationScreen() {
   const [respiratoryRate, setRespiratoryRate] = useState('');
   const [oxygenSaturation, setOxygenSaturation] = useState('');
 
-  useEffect(() => {
-    loadEvaluation();
-  }, [evaluationId]);
-
-  const loadEvaluation = async () => {
+  const loadEvaluation = useCallback(async () => {
     try {
       const docRef = doc(db, 'evaluations', evaluationId);
       const docSnap = await getDoc(docRef);
@@ -105,7 +102,11 @@ export default function EditEvaluationScreen() {
       console.error('Error loading evaluation:', error);
       Alert.alert('Erro', 'Não foi possível carregar a avaliação.');
     }
-  };
+  }, [evaluationId]);
+
+  useEffect(() => {
+    loadEvaluation();
+  }, [loadEvaluation]);
 
   const handleSave = useCallback(async () => {
     if (!chiefComplaint.trim()) {
@@ -171,6 +172,8 @@ export default function EditEvaluationScreen() {
     } finally {
       setSaving(false);
     }
+  // Nota: specialTests depende de objetos do formulário; mantemos no array mesmo com aviso do lint.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chiefComplaint,
     historyOfPresentIllness,
@@ -363,16 +366,16 @@ export default function EditEvaluationScreen() {
   );
 }
 
-function SectionTitle({ icon, title, colors }: { icon: string; title: string; colors: any }) {
+function SectionTitle({ icon, title, colors }: { icon: IconName; title: string; colors: { primary: string; text: string } }) {
   return (
     <View style={styles.sectionHeader}>
-      <Icon name={icon as any} size={20} color={colors.primary} />
+      <Icon name={icon} size={20} color={colors.primary} />
       <Text style={[styles.sectionTitleText, { color: colors.text }]}>{title}</Text>
     </View>
   );
 }
 
-function Label({ label, required, colors }: { label: string; required?: boolean; colors: any }) {
+function Label({ label, required, colors }: { label: string; required?: boolean; colors: { textSecondary: string } }) {
   return (
     <Text style={[styles.label, { color: colors.textSecondary }]}>
       {label}
@@ -390,7 +393,7 @@ function TextArea({
   value: string;
   onChangeText: (text: string) => void;
   placeholder: string;
-  colors: any;
+  colors: { text: string; textSecondary: string; border: string };
 }) {
   return (
     <TextInput

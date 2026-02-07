@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Plus, Dumbbell } from 'lucide-react';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { cn } from '@/lib/utils';
+import { withImageParams } from '@/lib/storageProxy';
 import {
 
     Command,
@@ -78,7 +79,7 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
                                     <div className="h-10 w-10 flex-shrink-0 rounded bg-muted overflow-hidden">
                                         {exercise.image_url ? (
                                             <img
-                                                src={exercise.image_url}
+                                                src={withImageParams(exercise.image_url, { width: 96, height: 96, dpr: 2, format: 'auto', fit: 'cover' })}
                                                 alt={exercise.name}
                                                 className="h-full w-full object-cover"
                                             />

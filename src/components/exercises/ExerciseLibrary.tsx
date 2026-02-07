@@ -39,6 +39,7 @@ import { MergeExercisesModal } from './MergeExercisesModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { withImageParams } from '@/lib/storageProxy';
 
 
 interface ExerciseLibraryProps {
@@ -95,14 +96,17 @@ const ExerciseCard = React.memo(function ExerciseCard({
 }) {
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
+  const thumbSrc = exercise.image_url
+    ? withImageParams(exercise.image_url, { width: 480, height: 360, format: 'auto', fit: 'cover', dpr: 2 })
+    : undefined;
 
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation h-full flex flex-col">
       {/* Image Section */}
       <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden flex-shrink-0">
-        {exercise.image_url ? (
+        {thumbSrc ? (
           <OptimizedImage
-            src={exercise.image_url}
+            src={thumbSrc}
             alt={exercise.name ?? 'Exercício'}
             className="h-full w-full transition-transform duration-500 group-hover:scale-110"
             aspectRatio="4:3"
@@ -310,9 +314,9 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
       <div className="flex items-center gap-4">
         {/* Thumbnail */}
         <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50">
-          {exercise.image_url ? (
+          {thumbSrc ? (
             <OptimizedImage
-              src={exercise.image_url}
+              src={thumbSrc}
               alt={exercise.name ?? 'Exercício'}
               className="w-full h-full object-cover"
               aspectRatio="1:1"

@@ -49,8 +49,23 @@ import {
   Download,
   Trophy
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Helper seguro para formatação de data
+const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: any) => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  if (!isValid(d)) return 'Data inválida';
+  return format(d, formatStr, options || { locale: ptBR });
+};
+
+const safeFormatDistance = (date: Date | string | number | undefined | null, options?: any) => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  if (!isValid(d)) return 'Data inválida';
+  return formatDistanceToNow(d, options || { locale: ptBR, addSuffix: true });
+};
 import {
   useGamification
 } from '@/hooks/useGamification';
@@ -189,10 +204,14 @@ const SessionDetailsModal: React.FC<{
   }, [session.appointment_id, session.exercises_performed]);
 
   // Filtrar medições e anexos desta sessão
-  const sessionDate = new Date(session.created_at).toISOString().split('T')[0];
-  const sessionMeasurements = measurements.filter(m =>
-    new Date(m.measured_at).toISOString().split('T')[0] === sessionDate
-  );
+  const sessionDateObj = new Date(session.created_at);
+  const sessionDate = isValid(sessionDateObj) ? sessionDateObj.toISOString().split('T')[0] : null;
+  
+  const sessionMeasurements = measurements.filter(m => {
+    if (!sessionDate) return false;
+    const mDateObj = new Date(m.measured_at);
+    return isValid(mDateObj) && mDateObj.toISOString().split('T')[0] === sessionDate;
+  });
   const sessionAttachments = attachments.filter(a =>
     a.soap_record_id === session.id
   );
@@ -208,7 +227,7 @@ const SessionDetailsModal: React.FC<{
   // Função para exportar sessão como texto
   const handleExportSession = useCallback(() => {
     const exportText = `
-SESSÃO ${session.session_number || '?'} - ${format(new Date(session.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+SESSÃO ${session.session_number || '?'} - ${safeFormat(session.created_at, 'dd/MM/yyyy')}
 ${'='.repeat(50)}
 
 ESCALA DE DOR (EVA): ${session.pain_level !== undefined ? `${session.pain_level}/10` : 'N/A'}
@@ -245,7 +264,7 @@ ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sessao-${session.session_number || 'N'}-${format(new Date(session.created_at), 'dd-MM-yyyy')}.txt`;
+    a.download = `sessao-${session.session_number || 'N'}-${safeFormat(session.created_at, 'dd-MM-yyyy')}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -269,7 +288,7 @@ ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
                   </div>
                   <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5" />
-                    {format(new Date(session.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    {safeFormat(session.created_at, "dd 'de' MMMM 'de' yyyy")}
                   </div>
                 </div>
               </DialogTitle>
@@ -289,7 +308,7 @@ ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-muted-foreground">
-                  {formatDistanceToNow(new Date(session.created_at), { locale: ptBR, addSuffix: true })}
+                  {safeFormatDistance(session.created_at)}
                 </span>
               </div>
               <Badge variant={session.status === 'finalized' ? 'default' : 'secondary'} className="text-xs">
@@ -675,12 +694,12 @@ ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
               {session.last_auto_save_at && (
                 <div className="flex justify-between items-center">
                   <span>Último auto-save:</span>
-                  <span>{format(new Date(session.last_auto_save_at), 'HH:mm:ss')}</span>
+                  <span>{safeFormat(session.last_auto_save_at, 'HH:mm:ss')}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
                 <span>Criado em:</span>
-                <span>{format(new Date(session.created_at), 'dd/MM/yyyy \'as\' HH:mm:ss', { locale: ptBR })}</span>
+                <span>{safeFormat(session.created_at, 'dd/MM/yyyy \'as\' HH:mm:ss')}</span>
               </div>
             </div>
           </div>
@@ -717,7 +736,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
   const { data: surgeries = [] } = usePatientSurgeries(patientId);
   const { data: goals = [] } = usePatientGoals(patientId);
   const { data: pathologies = [] } = usePatientPathologies(patientId);
-  const { data: measurements = [] } = useEvolutionMeasurements(patientId);
+  const { data: measurements = [] } = useEvolutionMeasurements(patientId, { limit: 200 });
   const { data: attachments = [] } = useSessionAttachments(undefined, patientId);
 
   // Construir timeline de eventos
@@ -740,7 +759,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
         id: `soap-${record.id}`,
         type: 'session',
         date: new Date(record.created_at),
-        title: `Sessão ${record.session_number || '?'} - ${format(new Date(record.created_at), 'dd/MM/yyyy', { locale: ptBR })}`,
+        title: `Sessão ${record.session_number || '?'} - ${safeFormat(record.created_at, 'dd/MM/yyyy')}`,
         description: soapParts.length > 0
           ? `SOAP: ${soapParts.join(' - ')}${record.pain_level !== undefined ? ` | EVA: ${record.pain_level}/10` : ''}${hasAttachments ? ' | 📎' : ''}${hasExercises ? ' | 💪' : ''}`
           : 'Sem descrição',
@@ -820,7 +839,14 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
     });
 
     // Ordenar por data (mais recente primeiro)
-    return events.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return events.sort((a, b) => {
+      const timeA = a.date.getTime();
+      const timeB = b.date.getTime();
+      if (isNaN(timeA) && isNaN(timeB)) return 0;
+      if (isNaN(timeA)) return 1;
+      if (isNaN(timeB)) return -1;
+      return timeB - timeA;
+    });
   }, [soapRecords, surgeries, goals, pathologies, measurements, attachments]);
 
   // Filtrar eventos
@@ -858,7 +884,16 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
     filteredEvents.forEach((event) => {
       const now = new Date();
-      const eventDate = new Date(event.date);
+      const eventDate = event.date;
+      
+      // Validar data para evitar RangeError: Invalid time value
+      if (!isValid(eventDate)) {
+        const period = 'Data Inválida';
+        if (!groups[period]) groups[period] = [];
+        groups[period].push(event);
+        return;
+      }
+
       const diffDays = Math.floor((now.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24));
 
       let period = '';
@@ -867,7 +902,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
       else if (diffDays < 7) period = 'Esta semana';
       else if (diffDays < 30) period = 'Este mês';
       else if (diffDays < 90) period = 'Últimos 3 meses';
-      else period = format(eventDate, 'MMMM yyyy', { locale: ptBR });
+      else period = safeFormat(eventDate, 'MMMM yyyy');
 
       if (!groups[period]) {
         groups[period] = [];
@@ -1172,10 +1207,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                     </p>
                                     <div className="flex items-center gap-2">
                                       <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                        {formatDistanceToNow(event.date, {
-                                          locale: ptBR,
-                                          addSuffix: true
-                                        })}
+                                        {safeFormatDistance(event.date)}
                                       </span>
                                       {isSession && (
                                         <Badge
@@ -1258,7 +1290,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
                                       {event.type === 'surgery' && (
                                         <div className="text-xs space-y-1">
-                                          <div><span className="text-muted-foreground">Data:</span> {format(new Date(event.data.surgery_date), 'dd/MM/yyyy', { locale: ptBR })}</div>
+                                          <div><span className="text-muted-foreground">Data:</span> {safeFormat(event.data.surgery_date, 'dd/MM/yyyy')}</div>
                                           {event.data.affected_side && (
                                             <div><span className="text-muted-foreground">Lado:</span> {event.data.affected_side}</div>
                                           )}
@@ -1355,7 +1387,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                         </p>
                       </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                        {format(event.date, 'dd/MM/yyyy')}
+                        {safeFormat(event.date, 'dd/MM/yyyy')}
                       </span>
                       {isSession && (
                         <Button

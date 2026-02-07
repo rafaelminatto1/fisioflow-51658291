@@ -19,14 +19,13 @@ import { db } from '@/lib/firebase';
 
 const SYNC_QUEUE_KEY = '@fisioflow_sync_queue';
 const LAST_SYNC_KEY = '@fisioflow_last_sync';
-const CACHE_VERSION_KEY = '@fisioflow_cache_version';
 
 export interface SyncOperation {
   id: string;
   collection: string;
   documentId?: string;
   type: 'create' | 'update' | 'delete';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: number;
   retries: number;
   priority: 'high' | 'normal' | 'low';
@@ -159,7 +158,7 @@ class SyncManager {
   async queueOperation(
     collectionName: string,
     type: SyncOperation['type'],
-    data: any,
+    data: Record<string, unknown>,
     documentId?: string,
     priority: SyncOperation['priority'] = 'normal'
   ): Promise<void> {
@@ -211,7 +210,6 @@ class SyncManager {
     this.notifyListeners();
 
     const opts = { ...this.defaultOptions, ...options };
-    let successCount = 0;
     let failCount = 0;
 
     try {
@@ -230,7 +228,6 @@ class SyncManager {
         try {
           await this.processOperation(operation);
           this.queue = this.queue.filter((op) => op.id !== operation.id);
-          successCount++;
         } catch (error) {
           console.error(`Failed to sync operation ${operation.id}:`, error);
 
@@ -304,14 +301,14 @@ class SyncManager {
     }
   }
 
-  private async logFailedOperation(operation: SyncOperation, error: any) {
+  private async logFailedOperation(operation: SyncOperation, error: unknown) {
     const failedOpsKey = '@fisioflow_failed_operations';
     try {
       const existing = await AsyncStorage.getItem(failedOpsKey);
       const failed = existing ? JSON.parse(existing) : [];
       failed.push({
         ...operation,
-        error: error?.message || String(error),
+        error: error instanceof Error ? error.message : String(error),
         failedAt: Date.now(),
       });
       // Keep only last 100 failed operations
@@ -408,8 +405,8 @@ class SyncManager {
       const existing = await AsyncStorage.getItem(failedOpsKey);
       if (!existing) return;
 
-      const failed = JSON.parse(existing);
-      const filtered = failed.filter((op: any) => op.failedAt > cutoffTime);
+      const failed = JSON.parse(existing) as Array<{ failedAt: number }>;
+      const filtered = failed.filter((op) => op.failedAt > cutoffTime);
       await AsyncStorage.setItem(failedOpsKey, JSON.stringify(filtered));
     } catch (error) {
       console.error('Failed to cleanup old operations:', error);

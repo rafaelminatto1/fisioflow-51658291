@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ExerciseFilters } from '@/services/exercises';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
 import { Card } from '@/components/ui/card';
+import { withImageParams } from '@/lib/storageProxy';
 
 interface ExerciseBlockWidgetProps {
     exercises: SessionExercise[];
@@ -148,9 +149,13 @@ const ExerciseImage = memo(({ src, alt, className }: { src?: string; alt: string
         );
     }
 
+    const optimizedSrc = src
+        ? withImageParams(src, { width: 640, height: 360, dpr: 2, format: 'auto', fit: 'cover' })
+        : undefined;
+
     return (
         <img
-            src={src}
+            src={optimizedSrc}
             alt={alt}
             loading="lazy"
             decoding="async"
@@ -412,7 +417,7 @@ const ExerciseAutocompleteSearch = memo<ExerciseAutocompleteSearchProps>(({
                                     <div className="h-12 w-12 flex-shrink-0 rounded-md bg-muted overflow-hidden">
                                         {exercise.image_url ? (
                                             <img
-                                                src={exercise.image_url}
+                                                src={withImageParams(exercise.image_url, { width: 160, height: 160, dpr: 2, format: 'auto', fit: 'cover' })}
                                                 alt={exercise.name}
                                                 className="h-full w-full object-cover"
                                                 loading="lazy"
