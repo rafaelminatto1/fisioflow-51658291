@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
 import { Card } from '@/components/ui/card';
+import { withImageParams } from '@/lib/storageProxy';
 
 interface HomeCareWidgetProps {
     patientId: string;
@@ -229,7 +230,7 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
                                     <div className="relative aspect-video w-full bg-muted overflow-hidden shrink-0">
                                         {p.exercise?.image_url ? (
                                             <img
-                                                src={p.exercise.image_url}
+                                                src={withImageParams(p.exercise.image_url, { width: 640, height: 360, dpr: 2, format: 'auto', fit: 'cover' })}
                                                 alt={p.exercise.name}
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                             />

@@ -167,7 +167,7 @@ export const getAssessmentTemplate = onCall(async (request) => {
 
 // API de Perfis (onCall with CORS so callFunctionHttp works from browser)
 export const getProfile = onCall(
-    { cors: CORS_ORIGINS },
+    { cors: true },
     async (request) => {
         const { getProfileHandler } = await import('./api/profile');
         return getProfileHandler(request);
@@ -716,17 +716,14 @@ export const updateUserRole = onCall(async (request) => {
 // ============================================================================
 // GOOGLE INTEGRATIONS (Maps, Meet, Calendar)
 // ============================================================================
-// TEMPORARILY DISABLED TO SAVE RESOURCES
-/*
+
 import * as googleIntegrations from './integrations/google';
 export const searchPlaces = googleIntegrations.searchPlaces;
-// export const getGoogleAuthUrl = googleIntegrations.getGoogleAuthUrl; // Already exported in integrations/calendar, using unique name here
 export const getGoogleAuthUrlIntegration = googleIntegrations.getGoogleAuthUrl;
 export const googleAuthCallback = googleIntegrations.googleAuthCallback;
 export const createMeetLink = googleIntegrations.createMeetLink;
 export const syncPatientCalendar = googleIntegrations.syncPatientCalendar;
 export const getBusinessReviews = googleIntegrations.getBusinessReviews;
-*/
 
 // Export helper functions (lib) - avoid re-exporting names already exported from api/
 export {

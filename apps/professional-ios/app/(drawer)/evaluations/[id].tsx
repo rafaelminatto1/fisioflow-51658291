@@ -32,11 +32,7 @@ export default function EvaluationDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
 
-  useEffect(() => {
-    loadEvaluation();
-  }, [evaluationId]);
-
-  const loadEvaluation = async () => {
+  const loadEvaluation = useCallback(async () => {
     try {
       const docRef = doc(db, 'evaluations', evaluationId);
       const docSnap = await getDoc(docRef);
@@ -45,11 +41,15 @@ export default function EvaluationDetailScreen() {
         setEvaluation({ id: docSnap.id, ...docSnap.data() } as Evaluation);
       }
       setLoading(false);
-    } catch (error) {
-      console.error('Error loading evaluation:', error);
+    } catch (_error) {
+      console.error('Error loading evaluation');
       setLoading(false);
     }
-  };
+  }, [evaluationId]);
+
+  useEffect(() => {
+    loadEvaluation();
+  }, [loadEvaluation]);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
@@ -65,7 +65,7 @@ export default function EvaluationDetailScreen() {
               await deleteDoc(doc(db, 'evaluations', evaluationId));
               HapticFeedback.success();
               router.back();
-            } catch (error) {
+            } catch (_error) {
               HapticFeedback.error();
               Alert.alert('Erro', 'Não foi possível excluir a avaliação.');
             }

@@ -13,15 +13,20 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  getDoc,
-  getDocs,
   query,
   where,
   orderBy,
   onSnapshot,
   serverTimestamp,
+  limit as limitQuery,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+
+type WhereClause = [
+  Parameters<typeof where>[0],
+  Parameters<typeof where>[1],
+  Parameters<typeof where>[2],
+];
 
 // Re-export types
 export type { SyncStatus, SyncOperation } from './syncManager';
@@ -167,7 +172,7 @@ export function useOfflineDoc<T>(
 export function useOfflineCollection<T>(
   collectionName: string,
   constraints?: {
-    where?: [string, any, any];
+    where?: WhereClause;
     orderBy?: [string, 'asc' | 'desc'];
     limit?: number;
   },
@@ -224,7 +229,7 @@ export function useOfflineCollection<T>(
           q = query(q, orderBy(...constraints.orderBy));
         }
         if (constraints?.limit) {
-          q = query(q, limit(constraints.limit));
+          q = query(q, limitQuery(constraints.limit));
         }
 
         unsubscribeRef.current = onSnapshot(
@@ -264,7 +269,7 @@ export function useOfflineCollection<T>(
         unsubscribeRef.current = null;
       }
     };
-  }, [collectionName, constraints?.where?.[2], constraints?.orderBy?.[0], constraints?.limit, options?.enabled, options?.ttl]);
+  }, [collectionName, options?.enabled, options?.ttl, constraints]);
 
   return { data, loading, error, isFromCache };
 }
@@ -276,7 +281,7 @@ export function useOfflineMutations(collectionName: string) {
   const [isPending, setIsPending] = useState(false);
 
   const create = useCallback(
-    async (data: any, options?: { queueOffline?: boolean; priority?: 'high' | 'normal' | 'low' }) => {
+    async <T extends Record<string, unknown>>(data: T, options?: { queueOffline?: boolean; priority?: 'high' | 'normal' | 'low' }) => {
       setIsPending(true);
 
       try {
@@ -318,7 +323,7 @@ export function useOfflineMutations(collectionName: string) {
   );
 
   const update = useCallback(
-    async (documentId: string, data: any, options?: { queueOffline?: boolean; priority?: 'high' | 'normal' | 'low' }) => {
+    async <T extends Record<string, unknown>>(documentId: string, data: T, options?: { queueOffline?: boolean; priority?: 'high' | 'normal' | 'low' }) => {
       setIsPending(true);
 
       try {

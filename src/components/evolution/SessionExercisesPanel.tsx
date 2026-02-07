@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { withImageParams } from '@/lib/storageProxy';
 
 export interface SessionExercise {
     id: string; // unique for this session instance (uuid)
@@ -134,7 +135,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                                         <div className="relative w-full lg:w-40 h-28 lg:h-auto bg-muted overflow-hidden shrink-0">
                                             {exercise.image_url ? (
                                                 <img
-                                                    src={exercise.image_url}
+                                                    src={withImageParams(exercise.image_url, { width: 420, height: 280, dpr: 2, format: 'auto', fit: 'cover' })}
                                                     alt={exercise.name}
                                                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                                 />

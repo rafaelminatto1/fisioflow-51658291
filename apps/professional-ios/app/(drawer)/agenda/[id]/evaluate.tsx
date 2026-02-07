@@ -101,7 +101,6 @@ export default function EvaluateSessionScreen() {
     patientResponse,
     painLevel,
     functionalImprovement,
-    exercisesPerformed,
     notes,
     homeExercisePrescribed,
     router,
