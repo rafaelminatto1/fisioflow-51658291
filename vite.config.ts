@@ -181,6 +181,14 @@ export default defineConfig(({ mode }) => {
       watch: {
         usePolling: true, // Melhor detecção de mudanças em alguns ambientes
       },
+      proxy: {
+        '/functions': {
+          target: 'https://southamerica-east1-fisioflow-migration.cloudfunctions.net',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (path) => path.replace(/^\/functions/, ''),
+        },
+      },
     },
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),

@@ -41,6 +41,8 @@ const HTTP_FUNCTION_URLS: Record<string, string> = {
   updateAppointmentV2: API_URLS.appointments.update,
   cancelAppointmentV2: API_URLS.appointments.cancel,
   checkTimeConflictV2: API_URLS.appointments.checkConflict,
+  listDoctors: API_URLS.doctors.list,
+  searchDoctorsV2: API_URLS.doctors.search,
 };
 const LOCAL_FUNCTIONS_PROXY = import.meta.env.DEV ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions') : undefined;
 
@@ -161,9 +163,12 @@ export async function callFunctionHttp<TRequest, TResponse>(
 
   const region = DEFAULT_REGION;
   const projectId = app.options.projectId;
-  const url =
+  const baseUrl =
     HTTP_FUNCTION_URLS[functionName] ??
     `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
+  const shouldProxy = LOCAL_FUNCTIONS_PROXY && !HTTP_FUNCTION_URLS[functionName];
+  const proxyBase = LOCAL_FUNCTIONS_PROXY?.replace(/\/$/, '');
+  const url = shouldProxy ? `${proxyBase}/${functionName}` : baseUrl;
 
   try {
     const response = await fetch(url, {
