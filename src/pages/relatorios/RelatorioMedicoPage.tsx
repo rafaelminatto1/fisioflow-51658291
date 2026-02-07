@@ -2,21 +2,22 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-
   FileText, Stethoscope, Edit, Eye,
   Activity, CheckCircle2, PenTool,
-  Bone, Heart, TrendingUp, Save
+  Bone, Heart, TrendingUp, Save,
+  Plus, Copy, Trash2
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -24,8 +25,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, orderBy as firestoreOrderBy, deleteDoc } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { usePatients } from '@/hooks/usePatients';
 import { patientsApi } from '@/integrations/firebase/functions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Info } from 'lucide-react';
@@ -117,6 +119,32 @@ const styles = StyleSheet.create({
   },
 });
 
+const TEMPLATE_FIELD_OPTIONS = [
+  { id: 'queixa_principal', label: 'Queixa principal' },
+  { id: 'historico_doencas_atuais', label: 'Histórico de doenças atuais' },
+  { id: 'medicamentos_em_uso', label: 'Medicamentos em uso' },
+  { id: 'alergias', label: 'Alergias' },
+  { id: 'cirurgias_previas', label: 'Cirurgias prévias' },
+  { id: 'inspecao_visual', label: 'Inspeção visual' },
+  { id: 'palpacao', label: 'Palpação' },
+  { id: 'goniometria', label: 'Goniometria' },
+  { id: 'forca_muscular', label: 'Força muscular' },
+  { id: 'reflexos', label: 'Reflexos' },
+  { id: 'sensibilidade', label: 'Sensibilidade' },
+  { id: 'teste_funcional', label: 'Teste funcional' },
+  { id: 'diagnostico_fisioterapeutico', label: 'Diagnóstico fisioterapêutico' },
+  { id: 'codigos_cid', label: 'Códigos CID' },
+  { id: 'objetivos', label: 'Objetivos do tratamento' },
+  { id: 'procedimentos', label: 'Procedimentos' },
+  { id: 'equipamentos_utilizados', label: 'Equipamentos utilizados' },
+  { id: 'frequencia', label: 'Frequência' },
+  { id: 'duracao_prevista', label: 'Duração prevista' },
+  { id: 'evolucoes', label: 'Evoluções' },
+  { id: 'resumo_tratamento', label: 'Resumo do tratamento' },
+  { id: 'conduta_sugerida', label: 'Conduta sugerida' },
+  { id: 'recomendacoes', label: 'Recomendações' },
+];
+
 interface DadosPaciente {
   nome: string;
   cpf?: string;
@@ -180,6 +208,81 @@ interface Evolucao {
   descricao: string;
   resposta_paciente?: string;
   ajustes_realizados?: string;
+}
+
+interface RelatorioTemplate {
+  id: string;
+  nome: string;
+  descricao: string;
+  tipo_relatorio: RelatorioMedicoData['tipo_relatorio'];
+  campos: string[];
+  organization_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const BUILTIN_TEMPLATES: RelatorioTemplate[] = [
+  {
+    id: 'builtin-avaliacao-inicial',
+    nome: 'Avaliação Inicial Completa',
+    descricao: 'Relatório completo de avaliação inicial para enviar ao médico',
+    tipo_relatorio: 'inicial',
+    campos: ['queixa_principal', 'historico_doencas_atuais', 'medicamentos_em_uso', 'alergias', 'inspecao_visual', 'palpacao', 'goniometria', 'forca_muscular', 'teste_funcional', 'diagnostico_fisioterapeutico', 'codigos_cid', 'objetivos', 'procedimentos', 'frequencia', 'duracao_prevista'],
+    organization_id: '__builtin__',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-evolucao-mensal',
+    nome: 'Evolução Mensal',
+    descricao: 'Atualização mensal da evolução do paciente para o médico assistente',
+    tipo_relatorio: 'evolucao',
+    campos: ['evolucoes', 'resumo_tratamento', 'conduta_sugerida', 'recomendacoes'],
+    organization_id: '__builtin__',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-alta-medica',
+    nome: 'Relatório de Alta',
+    descricao: 'Documento de alta com resumo do tratamento e recomendações finais',
+    tipo_relatorio: 'alta',
+    campos: ['resumo_tratamento', 'conduta_sugerida', 'recomendacoes'],
+    organization_id: '__builtin__',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-interconsulta',
+    nome: 'Solicitação de Interconsulta',
+    descricao: 'Pedido de avaliação com especialista com queixa e conduta sugerida',
+    tipo_relatorio: 'interconsulta',
+    campos: ['queixa_principal', 'historico_doencas_atuais', 'conduta_sugerida'],
+    organization_id: '__builtin__',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'builtin-pos-operatorio',
+    nome: 'Pós-Operatório',
+    descricao: 'Acompanhamento de reabilitação pós-cirúrgica com foco em evolução',
+    tipo_relatorio: 'cirurgico',
+    campos: ['inspecao_visual', 'palpacao', 'goniometria', 'forca_muscular', 'teste_funcional', 'evolucoes', 'resumo_tratamento', 'conduta_sugerida'],
+    organization_id: '__builtin__',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+  },
+];
+
+interface RelatorioTemplate {
+  id: string;
+  nome: string;
+  descricao: string;
+  tipo_relatorio: RelatorioMedicoData['tipo_relatorio'];
+  campos: string[];
+  organization_id?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface RelatorioMedicoData {
@@ -1139,35 +1242,37 @@ export default function RelatorioMedicoPage() {
   const [activeTab, setActiveTab] = useState<'criar' | 'lista' | 'modelos'>('criar');
   const location = useLocation();
   const statePatientId = (location.state as { patientId?: string } | null)?.patientId;
-
-  // Abrir relatório para o paciente quando vier do dashboard/evolução
-  useEffect(() => {
-    if (statePatientId && pacientes.length > 0) {
-      criarRelatorioPaciente(statePatientId);
-    }
-   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statePatientId, pacientes.length]);
-
-  // Estado para novo relatório
-  const [_novoRelatorio] = useState<RelatorioMedicoData>({
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const buildEmptyTemplate = (): RelatorioTemplate => ({
     id: '',
+    nome: 'Novo modelo',
+    descricao: '',
     tipo_relatorio: 'inicial',
-    paciente: {
-      nome: '',
-    },
-    profissional_emissor: {
-      nome: '',
-      registro: '',
-      especialidade: 'Fisioterapia',
-    },
-    profissional_destino: {},
-    clinica: {
-      nome: '',
-    },
-    data_emissao: new Date().toISOString(),
-    urgencia: 'baixa',
+    campos: ['queixa_principal', 'resumo_tratamento', 'conduta_sugerida'],
+    organization_id: org?.id ?? null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<RelatorioTemplate | null>(null);
+  const [templateForm, setTemplateForm] = useState<RelatorioTemplate>(buildEmptyTemplate);
+
+  useEffect(() => {
+    setTemplateForm(prev => ({ ...prev, organization_id: org?.id ?? null }));
+  }, [org?.id]);
+
+  const { data: customTemplates = [], isLoading: isLoadingTemplates } = useQuery({
+    queryKey: ['relatorio-medico-templates', org?.id],
+    queryFn: async () => {
+      const constraints = [firestoreOrderBy('created_at', 'desc')];
+      if (org?.id) constraints.unshift(where('organization_id', '==', org.id));
+      const q = firestoreQuery(collection(db, 'relatorios_medicos_modelos'), ...constraints);
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioTemplate[];
+    },
+  });
+
+  const templates = [...BUILTIN_TEMPLATES, ...customTemplates];
 
   // Buscar relatórios salvos
   const { data: relatorios = [], isLoading } = useQuery({
@@ -1182,15 +1287,16 @@ export default function RelatorioMedicoPage() {
     },
   });
 
-  // Buscar pacientes
-  const { data: pacientes = [] } = useQuery({
-    queryKey: ['pacientes-select-relatorio'],
-    queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'patients'), firestoreOrderBy('full_name'));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; full_name: string }>;
-    },
-  });
+  const { data: pacientes = [] } = usePatients();
+
+  // Abrir relatório para o paciente quando vier do dashboard/evolução
+  useEffect(() => {
+    if (statePatientId && pacientes.length > 0) {
+      setSelectedPatientId(statePatientId);
+      criarRelatorioPaciente(statePatientId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statePatientId, pacientes.length]);
 
   // Salvar relatório
   const saveRelatorio = useMutation({
@@ -1227,6 +1333,60 @@ export default function RelatorioMedicoPage() {
     onError: () => toast.error('Erro ao salvar relatório'),
   });
 
+  const deleteRelatorio = useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, 'relatorios_medicos', id));
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['relatorios-medicos'] });
+      toast.success('Relatório excluído');
+    },
+    onError: () => toast.error('Erro ao excluir relatório'),
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: async (template: RelatorioTemplate) => {
+      const payload = {
+        nome: template.nome,
+        descricao: template.descricao,
+        tipo_relatorio: template.tipo_relatorio,
+        campos: template.campos,
+        organization_id: template.organization_id ?? org?.id ?? null,
+        created_at: template.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (template.id && !template.id.startsWith('builtin-')) {
+        const ref = doc(db, 'relatorios_medicos_modelos', template.id);
+        await setDoc(ref, payload, { merge: true });
+        return { ...template, ...payload };
+      }
+
+      const ref = await addDoc(collection(db, 'relatorios_medicos_modelos'), payload);
+      return { ...template, ...payload, id: ref.id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['relatorio-medico-templates', org?.id] });
+      setTemplateDialogOpen(false);
+      setEditingTemplate(null);
+      toast.success('Modelo salvo');
+    },
+    onError: () => toast.error('Erro ao salvar modelo'),
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, 'relatorios_medicos_modelos', id));
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['relatorio-medico-templates', org?.id] });
+      toast.success('Modelo removido');
+    },
+    onError: () => toast.error('Erro ao remover modelo'),
+  });
+
   // Carregar dados do profissional
   const carregarDadosProfissional = async () => {
     if (!user) return { profile: null, org: null };
@@ -1237,8 +1397,8 @@ export default function RelatorioMedicoPage() {
   };
 
   // Criar relatório a partir de paciente
-  const criarRelatorioPaciente = async (pacienteId: string) => {
-    const paciente = pacientes.find((p: { id: string }) => p.id === pacienteId) as Record<string, unknown> | undefined;
+  const criarRelatorioPaciente = async (pacienteId: string, options?: { openEditor?: boolean }) => {
+    const paciente = pacientes.find((p) => p.id === pacienteId);
     if (!paciente) return;
 
     const { profile, org } = await carregarDadosProfissional();
@@ -1262,7 +1422,7 @@ export default function RelatorioMedicoPage() {
         nome: (paciente.full_name ?? paciente.name) as string,
         cpf: (paciente.cpf ?? '') as string,
         data_nascimento: (paciente.birth_date ?? '') as string,
-        telefone: (paciente.phone ?? '') as string,
+        telefone: (paciente.telefone ?? paciente.phone ?? '') as string,
         email: (paciente.email ?? '') as string,
       },
       profissional_emissor: {
@@ -1293,7 +1453,18 @@ export default function RelatorioMedicoPage() {
     };
 
     setEditingRelatorio(relatorio);
-    setIsEditorOpen(true);
+    if (options?.openEditor !== false) {
+      setIsEditorOpen(true);
+    }
+
+    return relatorio;
+  };
+
+  const handlePatientSelect = (patientId: string) => {
+    setSelectedPatientId(patientId);
+    if (patientId) {
+      criarRelatorioPaciente(patientId);
+    }
   };
 
   const handleSave = () => {
@@ -1307,56 +1478,163 @@ export default function RelatorioMedicoPage() {
     setEditingRelatorio(null);
   };
 
-  const templates = [
-    {
-      id: 'avaliacao_inicial',
-      nome: 'Avaliação Inicial Completa',
-      descricao: 'Relatório completo de avaliação inicial para enviar ao médico',
-      icone: <Activity className="h-6 w-6 text-blue-500" />,
-      tipo: 'inicial' as const,
-      campos: ['queixa_principal', 'historico_doencas_atuais', 'medicamentos_em_uso', 'alergias', 'inspecao_visual', 'palpacao', 'goniometria', 'forca_muscular', 'teste_funcional', 'diagnostico_fisioterapeutico'],
-    },
-    {
-      id: 'evolucao_mensal',
-      nome: 'Evolução Mensal',
-      descricao: 'Atualização da evolução do paciente para o médico assistente',
-      icone: <TrendingUp className="h-6 w-6 text-green-500" />,
-      tipo: 'evolucao' as const,
-      campos: ['resumo_tratamento', 'evolucoes', 'conduta_sugerida'],
-    },
-    {
-      id: 'alta_medica',
-      nome: 'Relatório de Alta',
-      descricao: 'Documento de alta para encerramento do tratamento',
-      icone: <CheckCircle2 className="h-6 w-6 text-purple-500" />,
-      tipo: 'alta' as const,
-      campos: ['resumo_tratamento', 'conduta_sugerida', 'recomendacoes'],
-    },
-    {
-      id: 'interconsulta',
-      nome: 'Solicitação de Interconsulta',
-      descricao: 'Pedido de avaliação com especialista',
-      icone: <Stethoscope className="h-6 w-6 text-orange-500" />,
-      tipo: 'interconsulta' as const,
-      campos: ['queixa_principal', 'historico_doencas_atuais', 'conduta_sugerida'],
-    },
-    {
-      id: 'pre_operatorio',
-      nome: 'Pré-Operatório',
-      descricao: 'Avaliação pré-cirúrgica para preparar o paciente',
-      icone: <Bone className="h-6 w-6 text-red-500" />,
-      tipo: 'cirurgico' as const,
-      campos: ['inspecao_visual', 'palpacao', 'goniometria', 'forca_muscular', 'teste_funcional'],
-    },
-    {
-      id: 'pos_operatorio',
-      nome: 'Pós-Operatório',
-      descricao: 'Acompanhamento de reabilitação pós-cirúrgica',
-      icone: <Heart className="h-6 w-6 text-pink-500" />,
-      tipo: 'cirurgico' as const,
-      campos: ['evolucoes', 'resumo_tratamento', 'conduta_sugerida'],
-    },
-  ];
+  const templateIcon = (tipo: RelatorioMedicoData['tipo_relatorio']) => {
+    switch (tipo) {
+      case 'inicial': return <Activity className="h-6 w-6 text-blue-500" />;
+      case 'evolucao': return <TrendingUp className="h-6 w-6 text-green-500" />;
+      case 'alta': return <CheckCircle2 className="h-6 w-6 text-purple-500" />;
+      case 'interconsulta': return <Stethoscope className="h-6 w-6 text-orange-500" />;
+      case 'cirurgico': return <Bone className="h-6 w-6 text-red-500" />;
+      default: return <FileText className="h-6 w-6 text-primary" />;
+    }
+  };
+
+  const cloneRelatorio = (r: RelatorioMedicoData): RelatorioMedicoData => ({
+    ...r,
+    paciente: { ...r.paciente },
+    profissional_emissor: { ...r.profissional_emissor },
+    profissional_destino: { ...r.profissional_destino },
+    clinica: { ...r.clinica },
+    historico_clinico: r.historico_clinico ? { ...r.historico_clinico } : undefined,
+    avaliacao: r.avaliacao
+      ? {
+          ...r.avaliacao,
+          codigos_cid: r.avaliacao.codigos_cid ? [...r.avaliacao.codigos_cid] : [],
+        }
+      : undefined,
+    plano_tratamento: r.plano_tratamento
+      ? {
+          ...r.plano_tratamento,
+          procedimentos: r.plano_tratamento.procedimentos ? [...r.plano_tratamento.procedimentos] : [],
+          equipamentos_utilizados: r.plano_tratamento.equipamentos_utilizados ? [...r.plano_tratamento.equipamentos_utilizados] : [],
+        }
+      : undefined,
+    evolucoes: r.evolucoes ? [...r.evolucoes] : undefined,
+  });
+
+  const ensureField = (draft: RelatorioMedicoData, field: string) => {
+    switch (field) {
+      case 'queixa_principal':
+      case 'historico_doencas_atuais':
+      case 'medicamentos_em_uso':
+      case 'alergias':
+      case 'cirurgias_previas': {
+        const historico = draft.historico_clinico ? { ...draft.historico_clinico } : {};
+        (historico as any)[field] = (historico as any)[field] ?? '';
+        draft.historico_clinico = historico;
+        break;
+      }
+      case 'inspecao_visual':
+      case 'palpacao':
+      case 'goniometria':
+      case 'forca_muscular':
+      case 'reflexos':
+      case 'sensibilidade':
+      case 'teste_funcional':
+      case 'diagnostico_fisioterapeutico': {
+        const avaliacao = draft.avaliacao ? { ...draft.avaliacao } : {};
+        (avaliacao as any)[field] = (avaliacao as any)[field] ?? '';
+        draft.avaliacao = avaliacao;
+        break;
+      }
+      case 'codigos_cid': {
+        const avaliacao = draft.avaliacao ? { ...draft.avaliacao } : {};
+        avaliacao.codigos_cid = avaliacao.codigos_cid ?? [];
+        draft.avaliacao = avaliacao;
+        break;
+      }
+      case 'objetivos':
+      case 'frequencia':
+      case 'duracao_prevista': {
+        const plano = draft.plano_tratamento ? { ...draft.plano_tratamento } : {};
+        (plano as any)[field] = (plano as any)[field] ?? '';
+        draft.plano_tratamento = plano;
+        break;
+      }
+      case 'procedimentos':
+      case 'equipamentos_utilizados': {
+        const plano = draft.plano_tratamento ? { ...draft.plano_tratamento } : {};
+        (plano as any)[field] = (plano as any)[field] ?? [];
+        draft.plano_tratamento = plano;
+        break;
+      }
+      case 'evolucoes':
+        draft.evolucoes = draft.evolucoes ?? [];
+        break;
+      case 'resumo_tratamento':
+        draft.resumo_tratamento = draft.resumo_tratamento ?? '';
+        break;
+      case 'conduta_sugerida':
+        draft.conduta_sugerida = draft.conduta_sugerida ?? '';
+        break;
+      case 'recomendacoes':
+        draft.recomendacoes = draft.recomendacoes ?? '';
+        break;
+      default:
+        break;
+    }
+    return draft;
+  };
+
+  const applyTemplate = async (template: RelatorioTemplate) => {
+    if (!selectedPatientId) {
+      toast.error('Selecione um paciente na aba "Criar" antes de usar um modelo');
+      setActiveTab('criar');
+      return;
+    }
+
+    let base = editingRelatorio;
+    if (!base) {
+      base = await criarRelatorioPaciente(selectedPatientId, { openEditor: false });
+    }
+    if (!base) return;
+
+    let updated = cloneRelatorio(base);
+    updated.tipo_relatorio = template.tipo_relatorio;
+    template.campos.forEach((campo) => {
+      updated = ensureField({ ...updated }, campo);
+    });
+    setEditingRelatorio(updated);
+    setIsEditorOpen(true);
+    setActiveTab('criar');
+    toast.success(`Modelo "${template.nome}" aplicado`);
+  };
+
+  const startCreateTemplate = () => {
+    setEditingTemplate(null);
+    setTemplateForm(buildEmptyTemplate());
+    setTemplateDialogOpen(true);
+  };
+
+  const startEditTemplate = (template: RelatorioTemplate) => {
+    setEditingTemplate(template);
+    setTemplateForm({ ...template });
+    setTemplateDialogOpen(true);
+  };
+
+  const duplicateTemplate = (template: RelatorioTemplate) => {
+    const clone: RelatorioTemplate = {
+      ...template,
+      id: '',
+      nome: `${template.nome} (cópia)`,
+      organization_id: org?.id ?? template.organization_id ?? null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    saveTemplateMutation.mutate(clone);
+  };
+
+  const handleTemplateSubmit = () => {
+    saveTemplateMutation.mutate(templateForm);
+  };
+
+  const toggleCampo = (campoId: string) => {
+    setTemplateForm((prev) => {
+      const exists = prev.campos.includes(campoId);
+      const campos = exists ? prev.campos.filter(c => c !== campoId) : [...prev.campos, campoId];
+      return { ...prev, campos };
+    });
+  };
 
   return (
     <MainLayout>
@@ -1400,18 +1678,12 @@ export default function RelatorioMedicoPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Paciente *</Label>
-                    <Select onValueChange={(v) => criarRelatorioPaciente(v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um paciente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {pacientes.map(paciente => (
-                          <SelectItem key={paciente.id} value={paciente.id}>
-                            {paciente.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <PatientCombobox
+                      patients={pacientes}
+                      value={selectedPatientId}
+                      onValueChange={handlePatientSelect}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -1460,6 +1732,20 @@ export default function RelatorioMedicoPage() {
                             <Edit className="h-4 w-4 mr-1" />
                             Editar
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive"
+                            disabled={deleteRelatorio.isPending}
+                            onClick={() => {
+                              if (window.confirm('Excluir este relatório definitivamente?')) {
+                                deleteRelatorio.mutate(relatorio.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Excluir
+                          </Button>
                           <PDFDownloadLink
                             document={<RelatorioMedicoPDF data={relatorio} />}
                             fileName={`relatorio-medico-${relatorio.paciente?.nome?.replace(/\s+/g, '-')}-${format(new Date(relatorio.data_emissao), 'dd-MM-yyyy')}.pdf`}
@@ -1482,38 +1768,92 @@ export default function RelatorioMedicoPage() {
 
           <TabsContent value="modelos" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Modelos de Relatório Disponíveis</CardTitle>
-                <CardDescription>
-                  Selecione um modelo para começar rapidamente
-                </CardDescription>
+              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>Modelos de Relatório</CardTitle>
+                  <CardDescription>Crie, edite, duplique ou apague modelos prontos</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={startCreateTemplate}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Novo modelo
+                  </Button>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {templates.map((template) => (
-                    <Card
-                      key={template.id}
-                      className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
-                      onClick={() => {
-                        toast.info(`Selecione um paciente primeiro para usar o modelo "${template.nome}"`);
-                      }}
-                    >
-                      <CardContent className="pt-4">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 bg-muted rounded-lg">
-                            {template.icone}
+              <CardContent className="space-y-3">
+                {isLoadingTemplates ? (
+                  <div className="text-sm text-muted-foreground">Carregando modelos...</div>
+                ) : (
+                  <div className="space-y-3">
+                    {templates.map((template) => {
+                      const isBuiltin = template.organization_id === '__builtin__';
+                      return (
+                        <div key={template.id} className="p-4 border rounded-lg flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-muted rounded-lg">
+                              {templateIcon(template.tipo_relatorio)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold text-sm">{template.nome}</p>
+                                {isBuiltin && <Badge variant="outline">Padrão</Badge>}
+                              </div>
+                              <p className="text-xs text-muted-foreground">{template.descricao}</p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {template.campos.map((campo) => {
+                                  const label = TEMPLATE_FIELD_OPTIONS.find(o => o.id === campo)?.label ?? campo;
+                                  return (
+                                    <Badge key={campo} variant="secondary" className="text-[10px]">
+                                      {label}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-sm">{template.nome}</h3>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {template.descricao}
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => applyTemplate(template)}>
+                              <FileText className="h-4 w-4 mr-1" />
+                              Usar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => isBuiltin ? duplicateTemplate(template) : startEditTemplate(template)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              {isBuiltin ? 'Duplicar p/ editar' : 'Editar'}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => duplicateTemplate(template)}>
+                              <Copy className="h-4 w-4 mr-1" />
+                              Duplicar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive"
+                              disabled={isBuiltin || deleteTemplateMutation.isPending}
+                              onClick={() => {
+                                if (isBuiltin) return;
+                                if (window.confirm('Excluir este modelo?')) {
+                                  deleteTemplateMutation.mutate(template.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Excluir
+                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                      );
+                    })}
+                    {!templates.length && (
+                      <div className="text-sm text-muted-foreground">
+                        Nenhum modelo encontrado. Crie um novo modelo para acelerar seus relatórios.
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

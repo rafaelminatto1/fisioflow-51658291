@@ -12,7 +12,7 @@
 
 const CONFIG = {
   // Nome do cache (versão)
-  CACHE_VERSION: 'v2.3.0',
+  CACHE_VERSION: 'v2.4.0',
   CACHE_PREFIX: 'fisioflow',
 
   // URLs para cache imediato (core resources)
@@ -90,7 +90,7 @@ function getStrategy(url) {
   if (pathname.startsWith('/api/')) {
     // Exercise image proxy - never cache, always go to network
     if (pathname.startsWith('/api/exercise-image/')) {
-      return CONFIG.strategies.critical; // NetworkOnly
+      return CONFIG.strategies.content; // StaleWhileRevalidate for optimized thumbs
     }
     return CONFIG.strategies.api;
   }

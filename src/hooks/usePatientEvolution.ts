@@ -79,6 +79,18 @@ export interface SoapRecord {
   plan?: string;
 }
 
+export interface UseEvolutionMeasurementsOptions {
+  /**
+   * Limit the number of measurements fetched. Helps speed up pages that only
+   * need the most recent records (e.g., evolution page initial load).
+   */
+  limit?: number;
+  /**
+   * Allow callers to defer the request (React Query `enabled`).
+   */
+  enabled?: boolean;
+}
+
 // Helper para obter usuário atual
 const getCurrentUser = () => {
   return auth.currentUser;
@@ -193,45 +205,70 @@ export const usePatientPathologies = (patientId: string) => {
 
 // Hook para medições obrigatórias baseadas nas patologias
 export const useRequiredMeasurements = (pathologyNames: string[]) => {
-  return useQuery({
-    queryKey: ['required-measurements', pathologyNames],
-    queryFn: async () => {
-      // Firestore não tem "in" para múltiplos valores em strings facilmente
-      // Vamos fazer queries separadas e combinar
-      const allResults: PathologyRequiredMeasurement[] = [];
+  const uniquePathologies = useMemo(
+    () => Array.from(new Set(pathologyNames.filter(Boolean))),
+    [pathologyNames]
+  );
 
-      for (const name of pathologyNames) {
-        const q = firestoreQuery(
-          collection(db, 'pathology_required_measurements'),
-          where('pathology_name', '==', name)
-        );
-        const snapshot = await getDocs(q);
-        snapshot.docs.forEach(doc => {
-          allResults.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as PathologyRequiredMeasurement);
-        });
+  return useQuery({
+    queryKey: ['required-measurements', uniquePathologies],
+    queryFn: async () => {
+      // Executa queries em paralelo para reduzir latência total
+      const snapshots = await Promise.all(
+        uniquePathologies.map((name) => {
+          const q = firestoreQuery(
+            collection(db, 'pathology_required_measurements'),
+            where('pathology_name', '==', name)
+          );
+          return getDocs(q);
+        })
+      );
+
+      const allResults = snapshots.flatMap((snapshot) =>
+        snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as PathologyRequiredMeasurement))
+      );
+
+      // Remove duplicatas (mesma patologia + medição) para evitar renders extras
+      const deduped: PathologyRequiredMeasurement[] = [];
+      const seen = new Set<string>();
+
+      for (const measurement of allResults) {
+        const key = `${measurement.pathology_name}|${measurement.measurement_name}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(measurement);
       }
 
-      return allResults;
+      return deduped;
     },
-    enabled: pathologyNames.length > 0
+    enabled: uniquePathologies.length > 0
   });
 };
 
 // Hook para medições de evolução
-export const useEvolutionMeasurements = (patientId: string) => {
+export const useEvolutionMeasurements = (
+  patientId: string,
+  options: UseEvolutionMeasurementsOptions = {}
+) => {
+  const { limit: resultsLimit, enabled = true } = options;
+
   return useQuery({
-    queryKey: ['evolution-measurements', patientId],
+    queryKey: ['evolution-measurements', patientId, resultsLimit ?? 'all'],
     queryFn: async () => {
-      const q = firestoreQuery(
+      const baseQuery = [
         collection(db, 'evolution_measurements'),
         where('patient_id', '==', patientId),
-        orderBy('measured_at', 'desc')
-      );
+        orderBy('measured_at', 'desc'),
+      ] as const;
+
+      const q = resultsLimit
+        ? firestoreQuery(...baseQuery, limit(resultsLimit))
+        : firestoreQuery(...baseQuery);
 
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as EvolutionMeasurement[];
     },
-    enabled: !!patientId,
+    enabled: !!patientId && enabled,
     staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
   });
 };
