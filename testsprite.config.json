@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.testsprite.com/config.v2.json",
+  "project": {
+    "name": "FisioFlow Web",
+    "id": "fisioflow-web"
+  },
+  "server": {
+    "url": "https://moocafisio.com.br",
+    "startup": {
+      "command": "pnpm run dev",
+      "readyPattern": "Local:",
+      "timeout": 30000
+    }
+  },
+  "testPatterns": [
+    "testsprite_tests/**/*.json",
+    "testsprite_tests/**/*.py"
+  ],
+  "viewport": {
+    "default": { "width": 1920, "height": 1080 },
+    "mobile": { "width": 375, "height": 812 },
+    "tablet": { "width": 768, "height": 1024 }
+  },
+  "features": {
+    "visualRegression": {
+      "enabled": true,
+      "threshold": 0.1,
+      "baselineBranch": "main"
+    },
+    "accessibility": {
+      "enabled": true,
+      "standards": ["WCAG2AA"]
+    },
+    "performance": {
+      "enabled": true,
+      "metrics": ["FCP", "LCP", "TTI", "CLS"]
+    }
+  },
+  "credentials": {
+    "testUser": {
+      "email": "rafael.minatto@yahoo.com.br",
+      "password": "Yukari30@"
+    }
+  }
+}

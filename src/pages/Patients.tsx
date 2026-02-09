@@ -252,7 +252,7 @@ const Patients = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-4 animate-fade-in pb-20 sm:space-y-5 md:pb-0">
+      <div className="space-y-4 animate-fade-in pb-20 sm:space-y-5 md:pb-0" data-testid="patients-page">
         <PatientsPageHeader
           stats={headerStats}
           onNewPatient={() => setIsNewPatientModalOpen(true)}

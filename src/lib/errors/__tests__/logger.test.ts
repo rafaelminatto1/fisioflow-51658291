@@ -4,6 +4,8 @@ import { logger } from '../logger';
 describe('Logger', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Limpar logs do logger singleton
+    logger.clearLogs();
     // Mock console methods
     global.console = {
       ...console,

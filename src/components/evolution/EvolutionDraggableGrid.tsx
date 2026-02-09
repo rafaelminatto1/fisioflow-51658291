@@ -12,6 +12,7 @@ import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { User, Eye, Brain, ClipboardList, Sparkles, Copy, LayoutDashboard, Save, RotateCcw, Activity, TrendingDown, TrendingUp, Minus, ChevronUp, ChevronDown, ImageIcon, Dumbbell, House, History } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { db, doc, updateDoc } from '@/integrations/firebase/app';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 export interface SOAPData {
     subjective: string;
@@ -846,9 +848,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         onCopyLastEvolution
     ]);
 
-    // Generate layouts for different breakpoints
+    // Generate layouts for different breakpoints - optimized for iPad/tablet/notebook
     const layouts = React.useMemo(() => {
-        const lgLayout = gridItems.map(item => ({
+        const xlLayout = gridItems.map(item => ({
             i: item.id,
             ...item.defaultLayout
         }));
@@ -856,41 +858,74 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         // Use stored layout when available (localStorage or Firestore), otherwise default
         const desktopLayout = (storedLayouts?.lg && storedLayouts.lg.length > 0)
             ? normalizeLayout(storedLayouts.lg)
-            : lgLayout;
+            : xlLayout;
 
-        // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 1 for xxs as per DraggableGrid config)
-        // and stack them vertically
-        const mobileLayout = gridItems.map((item, index) => ({
+        // iPad 12.9" / Large notebooks (8 cols)
+        const lgLayout = gridItems.map((item, index) => {
+            const w = Math.min(item.defaultLayout.w, 8);
+            return {
+                i: item.id,
+                x: (index % 2) * 4, // 2 items per row
+                y: Math.floor(index / 2) * item.defaultLayout.h,
+                w,
+                h: item.defaultLayout.h,
+                minW: Math.min(item.defaultLayout.minW || 4, 4),
+                minH: item.defaultLayout.minH || 4,
+            };
+        });
+
+        // iPad 10.5"/11" / Small notebooks (6 cols)
+        const mdLayout = gridItems.map((item, index) => {
+            const w = Math.min(item.defaultLayout.w, 6);
+            return {
+                i: item.id,
+                x: (index % 2) * 3, // 2 items per row
+                y: Math.floor(index / 2) * item.defaultLayout.h,
+                w: w >= 4 ? 3 : w,
+                h: item.defaultLayout.h,
+                minW: Math.min(item.defaultLayout.minW || 3, 3),
+                minH: item.defaultLayout.minH || 4,
+            };
+        });
+
+        // iPad Mini / Small tablets (4 cols)
+        const smLayout = gridItems.map((item, index) => ({
             i: item.id,
-            x: 0,
-            y: index * 10, // Approximate stack height
-            w: 6, // Full width for 'sm' breakpoint (max 6)
-            h: item.defaultLayout.h,
-            minW: 6
+            x: (index % 2) * 2, // 2 items per row
+            y: Math.floor(index / 2) * item.defaultLayout.h,
+            w: 2,
+            h: Math.min(item.defaultLayout.h, 8),
+            minW: 2,
+            minH: 4,
         }));
 
+        // Large phones (2 cols)
         const xsLayout = gridItems.map((item, index) => ({
             i: item.id,
             x: 0,
-            y: index * 10,
-            w: 2, // Full width for 'xs' breakpoint (max 2 cols now)
-            h: item.defaultLayout.h,
-            minW: 2
+            y: index * 8,
+            w: 2,
+            h: Math.min(item.defaultLayout.h, 8),
+            minW: 2,
+            minH: 4,
         }));
 
+        // Small phones (1 col)
         const xxsLayout = gridItems.map((item, index) => ({
             i: item.id,
             x: 0,
-            y: index * 10,
-            w: 1, // Full width for 'xxs' breakpoint (max 1)
-            h: item.defaultLayout.h,
-            minW: 1
+            y: index * 8,
+            w: 1,
+            h: Math.min(item.defaultLayout.h, 6),
+            minW: 1,
+            minH: 3,
         }));
 
         return {
-            lg: desktopLayout,
-            md: desktopLayout,
-            sm: mobileLayout,
+            xl: desktopLayout,
+            lg: lgLayout,
+            md: mdLayout,
+            sm: smLayout,
             xs: xsLayout,
             xxs: xxsLayout
         };

@@ -51,7 +51,11 @@ export const useOrganizations = () => {
   });
 
   // Query para organização atual do usuário
-  const { data: currentOrganization } = useQuery({
+  const { 
+    data: currentOrganization, 
+    isLoading: isCurrentOrgLoading,
+    error: currentOrgError 
+  } = useQuery({
     queryKey: ['current-organization'],
     queryFn: async () => {
       const firebaseUser = auth.currentUser;
@@ -144,7 +148,9 @@ export const useOrganizations = () => {
     organizations,
     currentOrganization,
     isLoading,
+    isCurrentOrgLoading,
     error,
+    currentOrgError,
     createOrganization: createOrganization.mutate,
     updateOrganization: updateOrganization.mutate,
     isCreating: createOrganization.isPending,

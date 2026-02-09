@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   View,
@@ -8,91 +8,44 @@ import {
   TouchableOpacity,
   RefreshControl,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { Card } from '@/components';
-
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  lastVisit: string;
-  condition: string;
-  status: 'active' | 'inactive';
-}
-
-// Mock data
-const mockPatients: Patient[] = [
-  {
-    id: '1',
-    name: 'Maria Silva',
-    email: 'maria@email.com',
-    phone: '(11) 99999-1111',
-    lastVisit: '2026-01-30',
-    condition: 'Lombalgia',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'Joao Santos',
-    email: 'joao@email.com',
-    phone: '(11) 99999-2222',
-    lastVisit: '2026-01-29',
-    condition: 'Cervicalgia',
-    status: 'active',
-  },
-  {
-    id: '3',
-    name: 'Ana Costa',
-    email: 'ana@email.com',
-    phone: '(11) 99999-3333',
-    lastVisit: '2026-01-28',
-    condition: 'Pos-operatorio joelho',
-    status: 'active',
-  },
-  {
-    id: '4',
-    name: 'Pedro Lima',
-    email: 'pedro@email.com',
-    phone: '(11) 99999-4444',
-    lastVisit: '2026-01-25',
-    condition: 'Tendinite ombro',
-    status: 'active',
-  },
-  {
-    id: '5',
-    name: 'Lucia Oliveira',
-    email: 'lucia@email.com',
-    phone: '(11) 99999-5555',
-    lastVisit: '2026-01-20',
-    condition: 'Fascite plantar',
-    status: 'inactive',
-  },
-];
+import { usePatients } from '@/hooks/usePatients';
+import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { useHaptics } from '@/hooks/useHaptics';
+import { Card, SyncStatus } from '@/components';
 
 export default function PatientsScreen() {
   const colors = useColors();
+  const { data: patients, isLoading, refetch } = usePatients({ status: 'active' });
+  const { status: syncStatus, isOnline, setSyncing, setSynced } = useSyncStatus();
+  const { light } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    setSyncing();
+    light();
+    await refetch();
+    setSynced();
+    setRefreshing(false);
   };
 
-  const filteredPatients = mockPatients.filter(
+  const filteredPatients = patients.filter(
     (patient) =>
       patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.condition.toLowerCase().includes(searchQuery.toLowerCase())
+      (patient.condition && patient.condition.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (patient.email && patient.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', {
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: 'short',
     });
@@ -112,29 +65,42 @@ export default function PatientsScreen() {
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity
+              onPress={() => {
+                light();
+                setSearchQuery('');
+              }}
+            >
               <Ionicons name="close-circle" size={20} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: colors.primary }]}
-          onPress={() => {}}
+          onPress={() => {
+            light();
+            router.push('/patient-form');
+          }}
         >
           <Ionicons name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
+      </View>
+
+      {/* Sync Status */}
+      <View style={styles.syncStatusContainer}>
+        <SyncStatus status={syncStatus} isOnline={isOnline} compact />
       </View>
 
       {/* Stats */}
       <View style={styles.statsRow}>
         <View style={[styles.statBadge, { backgroundColor: colors.successLight }]}>
           <Text style={[styles.statBadgeText, { color: colors.success }]}>
-            {mockPatients.filter((p) => p.status === 'active').length} Ativos
+            {patients.length} Total
           </Text>
         </View>
-        <View style={[styles.statBadge, { backgroundColor: colors.border }]}>
-          <Text style={[styles.statBadgeText, { color: colors.textSecondary }]}>
-            {mockPatients.filter((p) => p.status === 'inactive').length} Inativos
+        <View style={[styles.statBadge, { backgroundColor: colors.primaryLight }]}>
+          <Text style={[styles.statBadgeText, { color: colors.primary }]}>
+            {filteredPatients.length} Exibindo
           </Text>
         </View>
       </View>
@@ -145,11 +111,18 @@ export default function PatientsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {filteredPatients.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.loadingState}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+              Carregando pacientes...
+            </Text>
+          </View>
+        ) : filteredPatients.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={64} color={colors.textMuted} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Nenhum paciente encontrado
+              {searchQuery ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
             </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {searchQuery ? 'Tente outra busca' : 'Adicione seu primeiro paciente'}
@@ -159,7 +132,10 @@ export default function PatientsScreen() {
           filteredPatients.map((patient) => (
             <TouchableOpacity
               key={patient.id}
-              onPress={() => router.push(`/patient/${patient.id}`)}
+              onPress={() => {
+                light();
+                router.push(`/patient/${patient.id}`);
+              }}
             >
               <Card style={styles.patientCard}>
                 <View style={styles.patientHeader}>
@@ -173,49 +149,27 @@ export default function PatientsScreen() {
                       {patient.name}
                     </Text>
                     <Text style={[styles.patientCondition, { color: colors.textSecondary }]}>
-                      {patient.condition}
+                      {patient.condition ?? 'Sem condição registrada'}
                     </Text>
                   </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor:
-                          patient.status === 'active'
-                            ? colors.successLight
-                            : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.statusText,
-                        {
-                          color:
-                            patient.status === 'active'
-                              ? colors.success
-                              : colors.textSecondary,
-                        },
-                      ]}
-                    >
-                      {patient.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </Text>
-                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
                 </View>
 
                 <View style={[styles.patientFooter, { borderTopColor: colors.border }]}>
                   <View style={styles.footerItem}>
                     <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
                     <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-                      Ultima visita: {formatDate(patient.lastVisit)}
+                      Desde: {formatDate(patient.createdAt)}
                     </Text>
                   </View>
-                  <View style={styles.footerItem}>
-                    <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
-                    <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-                      {patient.phone}
-                    </Text>
-                  </View>
+                  {patient.phone && (
+                    <View style={styles.footerItem}>
+                      <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
+                      <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                        {patient.phone}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </Card>
             </TouchableOpacity>
@@ -263,6 +217,12 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 8,
   },
+  syncStatusContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
   statBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -275,6 +235,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingTop: 8,
+  },
+  loadingState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 14,
+    marginTop: 16,
   },
   patientCard: {
     marginBottom: 12,
@@ -305,15 +273,6 @@ const styles = StyleSheet.create({
   },
   patientCondition: {
     fontSize: 14,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
   },
   patientFooter: {
     flexDirection: 'row',

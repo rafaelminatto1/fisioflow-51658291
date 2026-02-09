@@ -137,15 +137,7 @@ WHATSAPP_VERIFY_TOKEN=your-verify-token
 RESEND_API_KEY=re_xxxxxxxxxxxxx
 ```
 
-### 3.4 Supabase (Legado - em migração)
 
-Apenas para compatibilidade temporária:
-```bash
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
----
 
 ## 4. Deploy no Firebase
 

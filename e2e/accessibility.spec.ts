@@ -8,7 +8,7 @@ test.describe('Testes de Acessibilidade WCAG 2.1 AA', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?|\/eventos|\/dashboard|\/schedule)/);
   });
 
   test('página de eventos deve passar em testes de acessibilidade', async ({ page }) => {

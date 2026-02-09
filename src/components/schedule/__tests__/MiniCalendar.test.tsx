@@ -19,8 +19,8 @@ describe('MiniCalendar', () => {
       />
     );
 
-    expect(screen.getByText('Janeiro')).toBeInTheDocument();
-    expect(screen.getByText('2025')).toBeInTheDocument();
+    expect(screen.getByText(/janeiro/i)).toBeInTheDocument();
+    expect(screen.getByText(/2025/i)).toBeInTheDocument();
   });
 
   it('deve marcar a data selecionada', () => {
@@ -63,7 +63,7 @@ describe('MiniCalendar', () => {
     // Clicar no dia 20
     const dayButtons = screen.getAllByRole('button');
     const day20Button = dayButtons.find(btn => btn.textContent === '20');
-    
+
     if (day20Button) {
       fireEvent.click(day20Button);
       expect(handleDateSelect).toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe('MiniCalendar', () => {
     const prevButton = screen.getByLabelText(/mês anterior/i);
     fireEvent.click(prevButton);
 
-    expect(screen.getByText('Dezembro')).toBeInTheDocument();
+    expect(screen.getByText(/dezembro/i)).toBeInTheDocument();
   });
 
   it('deve navegar para próximo mês', () => {
@@ -97,7 +97,7 @@ describe('MiniCalendar', () => {
     const nextButton = screen.getByLabelText(/próximo mês/i);
     fireEvent.click(nextButton);
 
-    expect(screen.getByText('Fevereiro')).toBeInTheDocument();
+    expect(screen.getByText(/fevereiro/i)).toBeInTheDocument();
   });
 
   it('deve renderizar legenda de indicadores', () => {

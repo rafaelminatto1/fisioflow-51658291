@@ -2,7 +2,7 @@
  * Patient Evolution Page - Migrated to Firebase
  */
 
-import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useCallback, startTransition } from 'react';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, limit } from '@/integrations/firebase/app';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -36,9 +36,11 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/hooks/ui/useCommandPalette';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 // Hooks
 import {
@@ -159,17 +161,38 @@ const PatientEvolution = () => {
   }, [dataLoading]);
 
   // Hooks que dependem de patientId - chamados APÓS useAppointmentData
+  // OTIMIZAÇÃO: Hooks secundários são carregados apenas quando necessário (enabled: !!patientId)
+  // e com staleTime maior para reduzir requisições
   const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
   const { awardXp } = useGamification(patientId || '');
   const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
   const { data: goals = [] } = usePatientGoals(patientId || '');
   const { data: pathologies = [] } = usePatientPathologies(patientId || '');
-  const { data: measurements = [] } = useEvolutionMeasurements(patientId || '', { limit: 120 });
+  // OTIMIZAÇÃO: Reduzido limite de medições na carga inicial de 120 para 50
+  const { data: measurements = [] } = useEvolutionMeasurements(patientId || '', { limit: 50 });
   const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
   const { data: draftByAppointment } = useDraftSoapRecordByAppointment(patientId || '', appointmentId);
 
   // Hook de auto-save
   const autoSaveMutation = useAutoSaveSoapRecord();
+
+  // OTIMIZAÇÃO: Prefetch de dados em background quando patientId está disponível
+  useEffect(() => {
+    if (patientId) {
+      // Prefetch em background usando startTransition para não bloquear a UI
+      startTransition(() => {
+        // Dados para outras abas são carregados de forma lazy
+        queryClient.prefetchQuery({
+          queryKey: ['patient-surgeries', patientId],
+          staleTime: 1000 * 60 * 15,
+        });
+        queryClient.prefetchQuery({
+          queryKey: ['patient-goals', patientId],
+          staleTime: 1000 * 60 * 15,
+        });
+      });
+    }
+  }, [patientId, queryClient]);
 
   // ========== CALLBACKS ==========
   const setSoapDataStable = useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
@@ -210,9 +233,11 @@ const PatientEvolution = () => {
     [pathologies]
   );
 
-  // Medições obrigatórias baseadas nas patologias ativas
+  // OTIMIZAÇÃO: Medições obrigatórias só carregam quando aba de avaliação está ativa
+  // ou quando há patologias ativas e ainda não foram carregadas
+  const shouldLoadRequiredMeasurements = activeTab === 'avaliacao' || activeTab === 'evolucao';
   const { data: requiredMeasurements = [] } = useRequiredMeasurements(
-    activePathologies.map(p => p.pathology_name)
+    shouldLoadRequiredMeasurements ? activePathologies.map(p => p.pathology_name) : []
   );
 
   // Tempo de tratamento do paciente
@@ -808,9 +833,12 @@ const PatientEvolution = () => {
           {/* Abas de Navegação */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
             {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
-            <TabsContent value="evolucao" className="mt-4 space-y-4">
-              {/* Layout: 3 cards na linha 1 | Metas ocupando o restante na linha 2 | Resumo ocupando 30% na lateral */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <TabsContent value="evolucao" className="mt-4 space-y-4 overflow-x-hidden">
+              {/* Responsive container for tablet/notebook */}
+              <div className="overflow-x-auto -mx-2 px-2">
+                <div className="min-w-[320px] max-w-full mx-auto">
+                  {/* Layout: 3 cards na linha 1 | Metas ocupando o restante na linha 2 | Resumo ocupando 30% na lateral */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Linha 1: Retorno Médico (~33%), Cirurgias (~33%), Resumo (~33%) */}
                 <MedicalReturnCard
                   patient={patient}
@@ -829,9 +857,13 @@ const PatientEvolution = () => {
                 <div className="lg:col-span-2">
                   <MetasCard patientId={patientId || undefined} />
                 </div>
+                  </div>
+                </div>
               </div>
+
               <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyEvolutionDraggableGrid
+                <ScrollArea className="h-auto max-h-[60vh] px-1">
+                  <LazyEvolutionDraggableGrid
                   soapData={soapData}
                   onSoapChange={setSoapDataStable}
                   painScaleData={painScale}
@@ -878,6 +910,7 @@ const PatientEvolution = () => {
                     handleCopyPreviousEvolution(evolution);
                   }}
                 />
+                </ScrollArea>
               </Suspense>
             </TabsContent>
 

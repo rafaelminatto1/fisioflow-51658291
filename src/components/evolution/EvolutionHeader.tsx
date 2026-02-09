@@ -413,6 +413,27 @@ export const EvolutionHeader = memo(({
             </div>
         </div>
     );
+}, (prevProps, nextProps) => {
+    // OTIMIZAÇÃO: Comparação personalizada para evitar re-renders desnecessários
+    // Retorna true se as props relevantes não mudaram (não precisa re-renderizar)
+    return (
+        prevProps.patient === nextProps.patient &&
+        prevProps.appointment === nextProps.appointment &&
+        prevProps.treatmentDuration === nextProps.treatmentDuration &&
+        prevProps.isSaving === nextProps.isSaving &&
+        prevProps.isCompleting === nextProps.isCompleting &&
+        prevProps.autoSaveEnabled === nextProps.autoSaveEnabled &&
+        prevProps.lastSavedAt === nextProps.lastSavedAt &&
+        prevProps.showInsights === nextProps.showInsights &&
+        prevProps.activeTab === nextProps.activeTab &&
+        prevProps.previousEvolutionsCount === nextProps.previousEvolutionsCount &&
+        prevProps.pendingRequiredMeasurements === nextProps.pendingRequiredMeasurements &&
+        prevProps.upcomingGoalsCount === nextProps.upcomingGoalsCount &&
+        // Comparação rasa de evolutionStats (objeto muda pouco durante sessão)
+        prevProps.evolutionStats.totalEvolutions === nextProps.evolutionStats.totalEvolutions &&
+        prevProps.evolutionStats.completedGoals === nextProps.evolutionStats.completedGoals &&
+        prevProps.evolutionStats.totalGoals === nextProps.evolutionStats.totalGoals
+    );
 });
 
 EvolutionHeader.displayName = 'EvolutionHeader';

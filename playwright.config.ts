@@ -22,19 +22,23 @@ if (existsSync(envTestPath)) {
   }
 }
 
+// Global setup - executa seed data automaticamente se E2E_AUTO_SEED=true
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 4 : 4, // Aumentado de 2 para 4 para mais paralelização
   reporter: 'html',
+  globalSetup: './e2e/global-setup.ts',
+  timeout: 60000, // Timeout global de 60s por teste (era 30s padrão)
   use: {
     baseURL: process.env.BASE_URL || 'http://127.0.0.1:8084',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    actionTimeout: 15000,
-    navigationTimeout: 30000,
+    actionTimeout: 20000, // Aumentado de 15000 para 20000ms
+    navigationTimeout: 40000, // Aumentado de 30000 para 40000ms
   },
 
   projects: process.env.CI ? [

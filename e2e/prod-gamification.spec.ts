@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test('Verificar Admin Gamification em Produção', async ({ page }) => {
   // Aumentar timeout para produção
@@ -9,9 +10,9 @@ test('Verificar Admin Gamification em Produção', async ({ page }) => {
 
   // Login
   console.log('Preenchendo credenciais...');
-  await page.fill('input[type="email"]', 'rafael.minatto@yahoo.com.br');
-  await page.fill('input[type="password"]', 'Yukari30@');
-  
+  await page.fill('input[type="email"]', testUsers.fisio.email);
+  await page.fill('input[type="password"]', testUsers.fisio.password);
+
   // Clicar em Entrar/Login (tentando seletores comuns)
   await page.click('button[type="submit"]');
 

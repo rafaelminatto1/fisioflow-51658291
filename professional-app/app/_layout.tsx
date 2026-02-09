@@ -1,10 +1,10 @@
-
 // Prevent the splash screen from auto-hiding
 
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,7 +12,21 @@ import { registerForPushNotificationsAsync } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+function RootLayoutContent() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const { isLoading, initialize } = useAuthStore();
@@ -76,6 +90,14 @@ export default function RootLayout() {
         />
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RootLayoutContent />
+    </QueryClientProvider>
   );
 }
 

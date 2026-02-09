@@ -36,9 +36,9 @@ const Index = () => {
 
   return (
     <MainLayout showBreadcrumbs={false}>
-      <div className="space-y-3 sm:space-y-4 md:space-y-6 animate-fade-in pb-20 md:pb-0">
+      <div className="space-y-3 sm:space-y-4 md:space-y-6 animate-fade-in pb-20 md:pb-0" data-testid="dashboard-page">
         {/* Header com saudação - Melhorado para mobile/tablet */}
-        <div className="flex items-center justify-between py-2 sm:py-3 px-1">
+        <div className="flex items-center justify-between py-2 sm:py-3 px-1" data-testid="dashboard-header">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div className="relative flex-shrink-0">
               <Avatar className="h-11 w-11 sm:h-10 sm:w-10 ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm">
@@ -51,7 +51,7 @@ const Index = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">Bem-vindo de volta,</p>
-              <h1 className="text-base sm:text-sm md:text-base font-bold text-foreground leading-tight truncate">
+              <h1 className="text-base sm:text-sm md:text-base font-bold text-foreground leading-tight truncate" data-testid="dashboard-welcome-text">
                 {profileLoading ? 'Carregando...' : displayName}
               </h1>
             </div>

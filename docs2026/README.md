@@ -59,7 +59,7 @@ Visão única de fluxos, requisitos funcionais e modelo de dados:
 | [13. Roadmap](./13-roadmap.md) | Futuro do projeto e melhorias | ✅ |
 | [**Documentação Sistema Completa**](./DOCUMENTACAO_SISTEMA_COMPLETA.md) | Fluxos, requisitos funcionais e entidades (consolidado) | ✅ |
 | [**Entidades e Relacionamentos**](./ENTIDADES_E_RELACIONAMENTOS.md) | Diagrama ER, tabelas, FKs e tipos | ✅ |
-| [**Plano Firebase + GCP**](./PLANO_FIREBASE_GCP.md) | Infraestrutura 100% Firebase + GCP (sem Vercel) | ✅ |
+| [**Plano Firebase + GCP**](./PLANO_FIREBASE_GCP.md) | Infraestrutura 100% Firebase + GCP | ✅ |
 
 ### 📘 Guias Práticos
 
@@ -104,7 +104,7 @@ Visão única de fluxos, requisitos funcionais e modelo de dados:
 Frontend:  React 18 + TypeScript + Vite
 UI:        shadcn/ui + Tailwind CSS
 Backend:   Firebase (Firestore + Auth + Realtime + Storage + Cloud Functions)
-Deploy:    Firebase Hosting + Cloud Build (100% Firebase + GCP)
+Deploy:    Firebase Hosting + Cloud Build
 Monitor:   Cloud Monitoring + Sentry
 Mobile:    Capacitor (iOS/Android)
 ```

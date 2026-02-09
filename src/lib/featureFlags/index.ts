@@ -103,14 +103,4 @@ export {
   showFeature as showFeatureFromEnv,
 } from './envFlags';
 
-// Edge Config (Vercel - LEGACY, will be removed after migration)
-// @deprecated Use Firebase Remote Config instead
-export {
-  getFeatureFlags as getEdgeConfigFlags,
-  isFeatureEnabled as isEdgeConfigEnabled,
-  getMultipleFeatures as getMultipleEdgeConfigFeatures,
-  getUserFeatures as getUserEdgeConfigFeatures,
-  withFeatureFlag as withEdgeConfigFeatureFlag,
-  isMaintenanceMode as isEdgeConfigMaintenanceMode,
-  getABTestVariant as getEdgeConfigABTestVariant,
-} from './edgeConfig';
+

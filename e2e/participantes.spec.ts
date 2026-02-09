@@ -7,7 +7,7 @@ test.describe('Gestão de Participantes', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page.goto('/eventos');
     
     // Clica no primeiro evento

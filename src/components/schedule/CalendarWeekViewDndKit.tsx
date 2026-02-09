@@ -36,6 +36,7 @@ interface CalendarWeekViewDndKitProps {
   currentDate: Date;
   appointments: Appointment[];
   savingAppointmentId: string | null;
+  timeSlots?: string[];
   onTimeSlotClick: (date: Date, time: string) => void;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
@@ -60,8 +61,6 @@ interface CalendarWeekViewDndKitProps {
 // CONSTANTS
 // =====================================================================
 
-const START_HOUR = 7;
-const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 const MIN_WEEK_SLOT_HEIGHT = 31;
 const GRID_HEIGHT_ADJUSTMENT = 3;
@@ -96,6 +95,7 @@ export const CalendarWeekViewDndKit = memo(({
   currentDate,
   appointments,
   savingAppointmentId,
+  timeSlots: timeSlotsProp,
   onTimeSlotClick,
   onEditAppointment,
   onDeleteAppointment,
@@ -149,7 +149,24 @@ export const CalendarWeekViewDndKit = memo(({
     return Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
   }, [currentDate]);
 
-  const timeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+  const timeSlots = useMemo(() => {
+    if (timeSlotsProp && timeSlotsProp.length > 0) {
+      return timeSlotsProp;
+    }
+    return generateTimeSlots(currentDate);
+  }, [timeSlotsProp, currentDate]);
+
+  const derivedStartHour = useMemo(() => {
+    if (!timeSlots.length) return 7;
+    const [h] = timeSlots[0].split(':').map(Number);
+    return Number.isFinite(h) ? h : 7;
+  }, [timeSlots]);
+
+  const derivedEndHour = useMemo(() => {
+    if (!timeSlots.length) return 21;
+    const [h] = timeSlots[timeSlots.length - 1].split(':').map(Number);
+    return Number.isFinite(h) ? h + 1 : 21;
+  }, [timeSlots]);
   const weekContainerRef = useRef<HTMLDivElement | null>(null);
   const weekScrollRef = useRef<HTMLDivElement | null>(null);
   const weekHeaderRef = useRef<HTMLDivElement | null>(null);
@@ -257,12 +274,12 @@ export const CalendarWeekViewDndKit = memo(({
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      if (currentHour < START_HOUR || currentHour > END_HOUR) {
+      if (currentHour < derivedStartHour || currentHour > derivedEndHour) {
         setCurrentTimePosition(null);
         return;
       }
 
-      const totalMinutesFromStart = (currentHour - START_HOUR) * 60 + currentMinute;
+      const totalMinutesFromStart = (currentHour - derivedStartHour) * 60 + currentMinute;
       const position = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
       setCurrentTimePosition(position);
     };
@@ -270,7 +287,7 @@ export const CalendarWeekViewDndKit = memo(({
     updatePosition();
     const interval = setInterval(updatePosition, 60000);
     return () => clearInterval(interval);
-  }, [slotHeight]);
+  }, [slotHeight, derivedStartHour, derivedEndHour]);
 
   // Filter appointments for this week
   const weekAppointments = useMemo(() => {

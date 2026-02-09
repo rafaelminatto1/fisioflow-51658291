@@ -109,7 +109,7 @@ test.describe('Autenticação Completa - Login e Perfil', () => {
 
     const currentUrl = page.url();
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Check if we are still authenticated (url might be root /)
     const isAuthPage = page.url().includes('/auth');

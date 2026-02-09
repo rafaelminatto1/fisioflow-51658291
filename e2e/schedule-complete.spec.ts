@@ -12,7 +12,7 @@ test.describe('Agendamento Completo', () => {
         // 2. Aguardar redirecionamento e navegar para Agenda
         await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard|$)/);
         await page.goto('/schedule');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
     });
 
     test('deve carregar a agenda e exibir elementos principais', async ({ page }) => {

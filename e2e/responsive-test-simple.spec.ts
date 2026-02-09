@@ -47,7 +47,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
     test('Dashboard layout on mobile', async ({ page }) => {
       // Navigate to dashboard
       await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Take screenshot of mobile dashboard
       await page.screenshot({
@@ -71,7 +71,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
 
       for (const pagePath of pages) {
         await page.goto(pagePath);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(1000);
 
         // Take screenshot
@@ -132,7 +132,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
     test('Dashboard layout on tablet', async ({ page }) => {
       // Navigate to dashboard
       await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Take screenshot
       await page.screenshot({
@@ -148,7 +148,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
 
       for (const pagePath of pages) {
         await page.goto(pagePath);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(1000);
 
         const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
@@ -185,7 +185,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
     test('Full HD layout verification', async ({ page }) => {
       // Navigate to dashboard
       await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Take screenshot
       await page.screenshot({
@@ -227,7 +227,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
       for (const viewport of viewports) {
         await page.setViewportSize(viewport);
         await page.goto('/dashboard');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(2000);
 
         // Take screenshot

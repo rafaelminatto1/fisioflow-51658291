@@ -15,23 +15,6 @@
 ```
 fisioflow-51658291/
 ├── src/                          # Código fonte (React + TypeScript)
-│   ├── components/               # Componentes React
-│   │   ├── ui/                  # shadcn/ui components
-│   │   ├── dashboard/           # Dashboard widgets
-│   │   ├── patients/            # Pacientes
-│   │   ├── appointments/        # Agenda
-│   │   ├── exercises/           # Exercícios
-│   │   ├── financial/           # Financeiro
-│   │   └── ...
-│   ├── hooks/                   # React hooks customizados
-│   ├── lib/                     # Utilitários e configs
-│   ├── pages/                   # Páginas (rotas)
-│   ├── routes/                  # Configuração de rotas
-│   ├── stores/                  # Zustand stores
-│   └── types/                   # TypeScript types
-├── supabase/                     # Backend Supabase
-│   ├── functions/               # Edge Functions
-│   └── migrations/              # Migrations SQL (200+)
 ├── public/                       # Assets estáticos
 ├── docs2026/                     # Documentação técnica
 ├── docs/mobile/                  # Documentação iOS (nova)
@@ -59,9 +42,9 @@ fisioflow-51658291/
 ### Backend
 | Tecnologia | Versão | Uso |
 |------------|--------|-----|
-| Supabase | 2.74.0 | BaaS (PostgreSQL + Auth + Real-time) |
-| Drizzle ORM | 0.45.1 | ORM TypeScript |
-| Edge Functions | - | Serverless backend |
+| Firebase   | latest | BaaS (Firestore + Auth + Functions) |
+| Drizzle ORM | 0.45.1 | ORM TypeScript (se usar Cloud SQL) |
+| Cloud Functions | - | Serverless backend |
 
 ### Mobile (Planejado)
 | Tecnologia | Versão | Uso |
@@ -77,7 +60,7 @@ fisioflow-51658291/
 ### Schema Principais
 
 #### 1. Autenticação e Perfis
-- `auth.users` (Supabase Auth)
+- `users` (Firebase Auth)
 - `profiles` - Perfis de usuários
 - `user_roles` - Papéis (Admin, Fisioterapeuta, Estagiário, Paciente, Partner)
 - `organizations` - Multi-tenancy
@@ -86,13 +69,13 @@ fisioflow-51658291/
 - `patients` - Dados cadastrais
 - `patient_contacts` - Contatos de emergência
 - `patient_medical_history` - Histórico médico
-- `patient_documents` - Documentos
+- `patient_documents` - Documentos (Firestore ou Storage)
 
 #### 3. Agenda
 - `appointments` - Consultas agendadas
 - `appointment_types` - Tipos de consulta
 - `recurring_appointments` - Consultas recorrentes
-- `google_calendar_tokens` - Sync Google Calendar
+- `google_calendar_tokens` - Sync Google Calendar (Firestore)
 
 #### 4. Prontuário
 - `soap_records` - Notas SOAP
@@ -121,17 +104,17 @@ fisioflow-51658291/
 - `appointment_checkins` - Check-in via GPS
 
 ### Migrations
-- **Total**: 200+ migrations
+- **Total**: 200+ (do banco anterior)
 - **Última**: `add_project_management` (20260401000000)
 
 ---
 
 ## 🔐 Autenticação e Segurança
 
-### Supabase Auth
-- JWT-based authentication
-- Refresh token rotation
-- Row Level Security (RLS) em todas as tabelas
+### Firebase Authentication
+- Autenticação baseada em JWT (Firebase ID Tokens)
+- Refresh token rotation automático
+- Segurança de dados com Firebase Security Rules
 - MFA suportado (configurado)
 
 ### Roles (RBAC)
@@ -144,10 +127,10 @@ fisioflow-51658291/
 | Partner | Externo | Acesso compartilhado |
 
 ### Segurança
-- ✅ RLS implementado em 100% das tabelas
-- ✅ Audit trails em operações críticas
-- ✅ Criptografia de dados sensíveis
-- ✅ Rate limiting configurado
+- ✅ Firebase Security Rules implementado em Firestore e Storage
+- ✅ Audit trails em operações críticas (via Cloud Functions/Logging)
+- ✅ Criptografia de dados sensíveis (em trânsito e em repouso)
+- ✅ Rate limiting configurado (via Cloud Functions/API Gateway)
 - ✅ MFA opcional
 
 ---
@@ -240,7 +223,7 @@ fisioflow-51658291/
 ### Implementadas
 | Serviço | Uso | Status |
 |---------|-----|--------|
-| Supabase | Database, Auth, Real-time | ✅ Ativo |
+| Firebase | Database, Auth, Functions, Storage | ✅ Ativo |
 | Google Calendar | Sync agenda | ✅ Ativo |
 | WhatsApp Cloud | Notificações | ✅ Ativo |
 | Resend | Email notifications | ✅ Ativo |
@@ -297,9 +280,14 @@ fisioflow-51658291/
 ### Environment Variables
 
 ```bash
-# Supabase
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJxxx...
+# Firebase
+VITE_FIREBASE_API_KEY=xxx
+VITE_FIREBASE_AUTH_DOMAIN=xxx
+VITE_FIREBASE_PROJECT_ID=xxx
+VITE_FIREBASE_STORAGE_BUCKET=xxx
+VITE_FIREBASE_MESSAGING_SENDER_ID=xxx
+VITE_FIREBASE_APP_ID=xxx
+VITE_FIREBASE_MEASUREMENT_ID=xxx
 
 # Google
 VITE_GOOGLE_CLIENT_ID=xxx
@@ -347,7 +335,6 @@ VITE_GEMINI_API_KEY=xxx
 {
   "expo": "~52.0.0",
   "react-native": "0.76.0",
-  "@supabase/supabase-js": "^2.74.0",
   "@tanstack/react-query": "^5.90.17",
   "zustand": "^4.5.5",
   "nativewind": "^4.0.1",

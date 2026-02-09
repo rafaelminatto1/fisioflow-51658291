@@ -47,7 +47,6 @@ npm install
 cp .env.example .env
 
 # Configure as variáveis necessárias
-# Editor: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 ```
 
 ### 4. Execute o Projeto
@@ -445,15 +444,10 @@ Quais alternativas foram consideradas?
 
 - [React Documentation](https://react.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Supabase Docs](https://supabase.com/docs)
 - [Radix UI Primitives](https://www.radix-ui.com/primitives)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
 ## ❓ Perguntas Frequentes
-
-### Como configuro o Supabase localmente?
-
-Veja [docs/supabase-setup.md](docs/supabase-setup.md)
 
 ### Posso usar npm em vez de pnpm?
 

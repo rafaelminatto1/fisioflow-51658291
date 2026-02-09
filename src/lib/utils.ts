@@ -6,11 +6,76 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const formatCurrency = (value: number) => {
+export const formatCurrency = (value: number, decimals: number = 2): string => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   }).format(value);
+};
+
+export const formatDate = (
+  date: Date | string,
+  pattern: string = 'dd/MM/yyyy'
+): string => {
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return 'Invalid Date';
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+
+    return pattern
+      .replace('dd', day)
+      .replace('MM', month)
+      .replace('yyyy', String(year));
+  } catch {
+    return 'Invalid Date';
+  }
+};
+
+export const formatPhone = (phone: string): string => {
+  if (!phone || phone === 'invalid') return phone;
+
+  const cleaned = phone.replace(/\D/g, '');
+
+  if (cleaned.length < 10) return phone;
+
+  if (cleaned.length === 10) {
+    // Telefone fixo: (11) 2345-6789
+    const ddd = cleaned.slice(0, 2);
+    const first = cleaned.slice(2, 6);
+    const second = cleaned.slice(6);
+    return `(${ddd}) ${first}-${second}`;
+  }
+
+  if (cleaned.length === 11) {
+    // Celular: (11) 98765-4321
+    const ddd = cleaned.slice(0, 2);
+    const first = cleaned.slice(2, 7);
+    const second = cleaned.slice(7);
+    return `(${ddd}) ${first}-${second}`;
+  }
+
+  if (cleaned.length === 12) {
+    // Com código do país + telefone fixo
+    const ddd = cleaned.slice(2, 4);
+    const first = cleaned.slice(4, 8);
+    const second = cleaned.slice(8);
+    return `(${ddd}) ${first}-${second}`;
+  }
+
+  if (cleaned.length === 13) {
+    // Com código do país + celular de 9 dígitos
+    const ddd = cleaned.slice(2, 4);
+    const first = cleaned.slice(4, 9);
+    const second = cleaned.slice(9);
+    return `(${ddd}) ${first}-${second}`;
+  }
+
+  return phone;
 };
 
 export const calculateAge = (birthDate?: string | null): number => {
@@ -140,4 +205,118 @@ export function maskToken(token?: string | null): string {
  */
 export function maskUID(uid?: string | null): string {
   return maskToken(uid);
+}
+
+// ============================================================================
+// PERFORMANCE UTILITIES - Debounce, Throttle, Memoization
+// ============================================================================
+
+/**
+ * Creates a debounced function that delays invoking `func` until after `wait` milliseconds
+ * have elapsed since the last time the debounced function was invoked.
+ *
+ * @param func - The function to debounce
+ * @param wait - The number of milliseconds to delay
+ * @returns A debounced version of the function
+ */
+export function debounce<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  return function debounced(...args: Parameters<T>) {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      func(...args);
+      timeoutId = null;
+    }, wait);
+  };
+}
+
+/**
+ * Creates a throttled function that only invokes `func` at most once per every `wait` milliseconds.
+ *
+ * @param func - The function to throttle
+ * @param wait - The number of milliseconds to throttle invocations to
+ * @returns A throttled version of the function
+ */
+export function throttle<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let lastTime = 0;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  return function throttled(...args: Parameters<T>) {
+    const now = Date.now();
+    const remaining = wait - (now - lastTime);
+
+    if (remaining <= 0) {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      lastTime = now;
+      func(...args);
+    } else if (timeoutId === null) {
+      timeoutId = setTimeout(() => {
+        lastTime = Date.now();
+        timeoutId = null;
+        func(...args);
+      }, remaining);
+    }
+  };
+}
+
+/**
+ * Simple cache with TTL support for memoizing expensive computations
+ */
+export class SimpleCache<K, V> {
+  private cache = new Map<K, { value: V; expiresAt: number }>();
+  private readonly defaultTTL: number;
+
+  constructor(defaultTTL: number = 5000) {
+    this.defaultTTL = defaultTTL;
+  }
+
+  set(key: K, value: V, ttl?: number): void {
+    this.cache.set(key, {
+      value,
+      expiresAt: Date.now() + (ttl ?? this.defaultTTL),
+    });
+  }
+
+  get(key: K): V | undefined {
+    const entry = this.cache.get(key);
+    if (!entry) return undefined;
+
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key);
+      return undefined;
+    }
+
+    return entry.value;
+  }
+
+  has(key: K): boolean {
+    return this.get(key) !== undefined;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  // Clean up expired entries
+  purge(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiresAt) {
+        this.cache.delete(key);
+      }
+    }
+  }
 }

@@ -22,7 +22,7 @@ test.describe('Permissões por Role', () => {
     
     for (const route of adminRoutes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
       
       // Não deve redirecionar para /auth ou página de erro
@@ -59,7 +59,7 @@ test.describe('Permissões por Role', () => {
     
     for (const route of fisioRoutes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
       
       const currentUrl = page.url();
@@ -85,7 +85,7 @@ test.describe('Permissões por Role', () => {
     
     for (const route of estagiarioRoutes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
       
       const currentUrl = page.url();
@@ -99,7 +99,7 @@ test.describe('Permissões por Role', () => {
     
     for (const route of restrictedRoutes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(1000);
       
       const currentUrl = page.url();
@@ -127,7 +127,7 @@ test.describe('Permissões por Role', () => {
     
     // Navegar para perfil ou configurações
     await page.goto('/profile');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
     
     // Verificar se a página carregou (indica que profile foi carregado)
@@ -171,7 +171,7 @@ test.describe('Permissões por Role', () => {
     
     for (const route of protectedRoutes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       
       // Deve redirecionar para /auth
       const currentUrl = page.url();

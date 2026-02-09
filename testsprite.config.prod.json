@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.testsprite.com/config.v2.json",
+  "project": {
+    "name": "FisioFlow Web - Produção",
+    "id": "fisioflow-web-prod"
+  },
+  "server": {
+    "url": "https://moocafisio.com.br"
+  },
+  "testPatterns": [
+    "testsprite_tests/**/*.json",
+    "testsprite_tests/**/*.py"
+  ],
+  "viewport": {
+    "default": { "width": 1920, "height": 1080 },
+    "mobile": { "width": 375, "height": 812 }
+  },
+  "credentials": {
+    "testUser": {
+      "email": "rafael.minatto@yahoo.com.br",
+      "password": "Yukari30@"
+    }
+  }
+}

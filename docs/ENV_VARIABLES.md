@@ -6,12 +6,7 @@ Este documento lista todas as variáveis de ambiente necessárias para o funcion
 
 ## 🔐 Variáveis Obrigatórias
 
-### Supabase (Já Configuradas)
-- `SUPABASE_URL` - URL do projeto Supabase
-- `SUPABASE_ANON_KEY` - Chave pública do Supabase
-- `SUPABASE_SERVICE_ROLE_KEY` - Chave de service role (para Edge Functions)
 
----
 
 ## 📊 Monitoramento e Observabilidade
 
@@ -93,7 +88,7 @@ Este documento lista todas as variáveis de ambiente necessárias para o funcion
 ### Database Backup
 - `DATABASE_URL` - Connection string do PostgreSQL
   - Formato: `postgresql://user:password@host:port/database`
-  - Pode ser obtido no Supabase Dashboard > Settings > Database > Connection string
+  - Pode ser obtido no console do provedor de banco de dados (ex: Google Cloud SQL)
 - `CRON_SECRET` - Secret para autenticar chamadas de cron
   - Gere um secret aleatório seguro (ex: `openssl rand -hex 32`)
 
@@ -122,30 +117,11 @@ Este documento lista todas as variáveis de ambiente necessárias para o funcion
 - `CLERK_SECRET_KEY` - Secret key do Clerk
 - `CLERK_WEBHOOK_SECRET` - Secret do webhook
 
-**Nota:** O sistema atualmente usa Supabase Auth. Clerk está preparado para uso futuro.
+**Nota:** O sistema atualmente usa Firebase Auth. Clerk está preparado para uso futuro.
 
 ---
 
-## 📝 Como Configurar no Supabase
 
-### Via Dashboard:
-1. Acesse https://supabase.com/dashboard/project/ycvbtjfrchcyvmkvuocu
-2. Vá em **Settings** > **Edge Functions** > **Secrets**
-3. Adicione cada variável clicando em **Add new secret**
-4. Configure:
-   - **Name:** Nome da variável (ex: `SENTRY_DSN`)
-   - **Value:** Valor da variável
-   - **Scope:** Deixe em branco para todas as funções
-
-### Via CLI:
-```bash
-# Exemplo
-supabase secrets set SENTRY_DSN=your-dsn-here
-supabase secrets set UPSTASH_REDIS_REST_URL=your-url-here
-supabase secrets set UPSTASH_REDIS_REST_TOKEN=your-token-here
-```
-
----
 
 ## 🌐 Variáveis de Frontend (Vercel)
 
@@ -184,7 +160,6 @@ supabase secrets set UPSTASH_REDIS_REST_TOKEN=your-token-here
 
 ## 📚 Referências
 
-- [Supabase Environment Variables](https://supabase.com/docs/guides/functions/secrets)
 - [Vercel Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables)
 - [Sentry Setup](https://docs.sentry.io/platforms/javascript/)
 - [Upstash Redis](https://docs.upstash.com/redis)

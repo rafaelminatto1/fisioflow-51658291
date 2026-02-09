@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 import * as fs from 'fs';
 
 test.describe('Fisioterapeuta Login - setValue Error Check', () => {
@@ -125,13 +126,13 @@ test.describe('Fisioterapeuta Login - setValue Error Check', () => {
     console.log('\n========================================');
     console.log('STEP 3: Logging in...');
     console.log('========================================\n');
-    console.log('Email: rafael.minatto@yahoo.com.br');
+    console.log(`Email: ${testUsers.fisio.email}`);
     console.log('Password: ***');
 
-    await emailLocator.fill('rafael.minatto@yahoo.com.br');
+    await emailLocator.fill(testUsers.fisio.email);
     console.log('Filled email field');
 
-    await passwordLocator.fill('Yukari30@');
+    await passwordLocator.fill(testUsers.fisio.password);
     console.log('Filled password field');
 
     // Screenshot before login
@@ -311,7 +312,7 @@ test.describe('Fisioterapeuta Login - setValue Error Check', () => {
       timestamp: new Date().toISOString(),
       test: 'Fisioterapeuta Login - setValue Error Check',
       credentials: {
-        email: 'rafael.minatto@yahoo.com.br',
+        email: testUsers.fisio.email,
         role: 'professional'
       },
       finalUrl: url,
