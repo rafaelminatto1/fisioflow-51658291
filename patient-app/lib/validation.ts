@@ -203,7 +203,7 @@ export const validators = {
     return null;
   },
   cpf: (value: string) => {
-    if (!value?.trim()) return 'CPF é obrigatório';
+    if (!value?.trim()) return null; // CPF is optional
     if (!isValidCPF(value)) return ValidationErrors.cpfInvalid;
     return null;
   },
