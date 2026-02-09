@@ -103,11 +103,11 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle>{exercise ? 'Editar Exercício' : 'Novo Exercício'}</DialogTitle>
+      <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[90vh] md:max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-2">
+          <DialogTitle className="text-lg sm:text-xl">{exercise ? 'Editar Exercício' : 'Novo Exercício'}</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-2">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2">
           <Form {...form}>
             <form id="exercise-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -138,7 +138,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="category"
@@ -191,7 +191,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                 )}
               />
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="sets"
@@ -364,11 +364,11 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
             </form>
           </Form>
         </div>
-        <div className="flex justify-end gap-2 p-6 pt-4 border-t mt-auto bg-background">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 p-4 sm:p-6 pt-4 border-t mt-auto bg-background">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button type="submit" form="exercise-form" disabled={isLoading}>
+          <Button type="submit" form="exercise-form" disabled={isLoading} className="w-full sm:w-auto">
             {isLoading ? 'Salvando...' : exercise ? 'Atualizar' : 'Criar'}
           </Button>
         </div>
