@@ -780,7 +780,7 @@ const PatientEvolution = () => {
 
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
-      <MainLayout maxWidth="7xl" customBreadcrumbLabels={customBreadcrumbLabels}>
+      <MainLayout maxWidth="full" compactPadding customBreadcrumbLabels={customBreadcrumbLabels}>
         <div className="space-y-5 animate-fade-in pb-8">
           {/* Cabeçalho: paciente + sessão + ações */}
           <EvolutionHeader
