@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dumbbell, ArrowRight, AlertTriangle, Check, Video, VideoOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Exercise } from '@/types';
+import { withImageParams } from '@/lib/storageProxy';
 
 interface MergeExercisesModalProps {
     open: boolean;
@@ -103,9 +104,11 @@ export function MergeExercisesModal({
                                             <div className="h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                                                 {exercise.image_url ? (
                                                     <img
-                                                        src={exercise.image_url}
+                                                        src={withImageParams(exercise.image_url, { width: 140, height: 140, format: 'auto', fit: 'cover', quality: 65 })}
                                                         alt={exercise?.name ?? 'Exercício'}
                                                         className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                        decoding="async"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">

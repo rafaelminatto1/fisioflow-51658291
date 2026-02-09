@@ -79,9 +79,11 @@ export const ExerciseAutocomplete: React.FC<ExerciseAutocompleteProps> = ({
                                     <div className="h-10 w-10 flex-shrink-0 rounded bg-muted overflow-hidden">
                                         {exercise.image_url ? (
                                             <img
-                                                src={withImageParams(exercise.image_url, { width: 96, height: 96, dpr: 2, format: 'auto', fit: 'cover' })}
+                                                src={withImageParams(exercise.image_url, { width: 96, height: 96, dpr: 2, format: 'auto', fit: 'cover', quality: 70 })}
                                                 alt={exercise.name}
                                                 className="h-full w-full object-cover"
+                                                loading="lazy"
+                                                decoding="async"
                                             />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">
