@@ -15,3 +15,11 @@ export {
   useArray,
   useCounter,
 } from './useHooks';
+export {
+  usePatientExercisesPostgres,
+  usePatientExerciseStats,
+  useExerciseHistory,
+  type PatientExercise,
+  type UsePatientExercisesResult,
+  type UsePatientExercisesOptions,
+} from './useDataConnect';

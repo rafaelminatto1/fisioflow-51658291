@@ -26,3 +26,11 @@ export { Separator, Spacing } from './Separator';
 export { Divider, ListDivider } from './Divider';
 export { Avatar, AvatarGroup, type AvatarSize, type AvatarVariant } from './Avatar';
 export { Select, MultiSelect, type SelectOption } from './Select';
+export {
+  PainMap,
+  PainMapSummary,
+  type BodyRegion,
+  type PainEntry,
+  type PainMapProps,
+  type PainMapSummaryProps,
+} from './PainMap';
