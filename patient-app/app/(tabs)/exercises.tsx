@@ -29,7 +29,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { usePatientExercisesPostgres } from '@/hooks/useDataConnect';
+import { usePatientExercisesPostgres } from '@/hooks';
 
 interface Exercise {
   id: string;
