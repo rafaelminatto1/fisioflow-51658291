@@ -280,16 +280,35 @@ async function ensureUserRole(db, userEmail) {
     .limit(1)
     .get();
 
+  let userId;
+  let organizationId;
+
   if (usersSnapshot.empty) {
     console.log(`⚠️  User ${userEmail} not found in profiles collection, creating profile...`);
 
-    // Create profile for test user
+    // First create a default organization
     const now = new Date().toISOString();
+    const orgRef = await db.collection('organizations').add({
+      name: 'Clínica Teste E2E',
+      slug: 'clinica-teste-e2e',
+      active: true,
+      settings: {
+        timezone: 'America/Sao_Paulo',
+        language: 'pt-BR',
+      },
+      created_at: now,
+      updated_at: now,
+    });
+    organizationId = orgRef.id;
+    console.log(`   ✅ Created organization: ${organizationId}`);
+
+    // Create profile for test user
     const newProfile = {
       email: userEmail,
       full_name: 'Usuário Teste E2E',
       name: 'Usuário Teste',
       role: 'admin',
+      organization_id: organizationId,
       onboarding_completed: true,
       is_active: true,
       created_at: now,
@@ -297,12 +316,39 @@ async function ensureUserRole(db, userEmail) {
     };
 
     const profileRef = await db.collection('profiles').add(newProfile);
-    console.log(`   ✅ Created profile for test user: ${profileRef.id}`);
-    return profileRef.id;
+    userId = profileRef.id;
+    console.log(`   ✅ Created profile for test user: ${userId}`);
+    return { userId, organizationId };
   }
 
   const userDoc = usersSnapshot.docs[0];
   const userData = userDoc.data();
+  userId = userDoc.id;
+  organizationId = userData.organization_id;
+
+  // Create organization if user doesn't have one
+  if (!organizationId) {
+    const now = new Date().toISOString();
+    const orgRef = await db.collection('organizations').add({
+      name: 'Clínica Teste E2E',
+      slug: 'clinica-teste-e2e',
+      active: true,
+      settings: {
+        timezone: 'America/Sao_Paulo',
+        language: 'pt-BR',
+      },
+      created_at: now,
+      updated_at: now,
+    });
+    organizationId = orgRef.id;
+
+    // Update user profile with organization_id
+    await userDoc.ref.update({
+      organization_id: organizationId,
+      updated_at: now,
+    });
+    console.log(`   ✅ Created and assigned organization: ${organizationId}`);
+  }
 
   // Set role to admin if it's pending or missing
   if (userData.role === 'pending' || !userData.role) {
@@ -315,7 +361,7 @@ async function ensureUserRole(db, userEmail) {
     console.log(`   ✅ User role is already '${userData.role}'`);
   }
 
-  return userDoc.id;
+  return { userId, organizationId };
 }
 
 async function seedFinancialData(db, orgId, therapistId, patients) {
@@ -370,16 +416,13 @@ async function main() {
     const { db, auth } = getFirebaseAdmin();
     console.log('🔥 Firebase Admin initialized');
 
-    // Ensure test user has correct role (NOT pending)
-    const therapistId = await ensureUserRole(db, CONFIG.testUserEmail);
+    // Ensure test user has correct role (NOT pending) and get IDs
+    const { userId: therapistId, organizationId: orgId } = await ensureUserRole(db, CONFIG.testUserEmail);
     if (!therapistId) {
       throw new Error(`User ${CONFIG.testUserEmail} not found in profiles collection`);
     }
 
-    // Get organization ID
-    const orgId = CONFIG.orgId || await getOrganizationId(db, CONFIG.testUserEmail);
     console.log(`🏢 Organization ID: ${orgId}`);
-
     console.log(`👨‍⚕️  Therapist ID: ${therapistId}`);
 
     // Seed patients
