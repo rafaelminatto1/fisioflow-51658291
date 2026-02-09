@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import type { Exercise } from '@/hooks/useExercises';
+import { buildImageSrcSet } from '@/lib/storageProxy';
 
 interface ExercisePlayerProps {
   exercise: Exercise;
@@ -210,6 +211,14 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
                   alt={exercise.name || ''}
                   className="w-full max-h-[500px]"
                   aspectRatio="auto"
+                  priority={true}
+                  srcset={buildImageSrcSet(exercise.image_url, {
+                    widths: [480, 640, 960, 1280],
+                    format: 'auto',
+                    fit: 'inside',
+                    quality: 80
+                  })}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 600px"
                 />
               </div>
             </TabsContent>

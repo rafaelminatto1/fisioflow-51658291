@@ -12,6 +12,8 @@ interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 
   sizes?: string;
   onLoad?: () => void;
   onError?: () => void;
+  /** Adiciona hint de pré-carregamento para DNS/TCP/TLS */
+  preloadHints?: boolean;
 }
 
 const aspectRatioClasses = {
@@ -55,6 +57,7 @@ export function OptimizedImage({
   className,
   onLoad,
   onError,
+  preloadHints = false,
   ...props
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -75,6 +78,40 @@ export function OptimizedImage({
     setIsLoaded(false);
     setHasError(false);
   }, [src, srcInvalid]);
+
+  // Preload hints for priority images to warm up connection
+  useEffect(() => {
+    if (!preloadHints || !effectiveSrc || srcInvalid) return;
+
+    // Extract origin for preconnect
+    let origin: string | null = null;
+    try {
+      const url = new URL(effectiveSrc, window.location.origin);
+      origin = url.origin;
+    } catch {
+      return;
+    }
+
+    if (!origin || origin === window.location.origin) return;
+
+    // Add preconnect link hints
+    const preconnectLink = document.createElement('link');
+    preconnectLink.rel = 'preconnect';
+    preconnectLink.href = origin;
+    preconnectLink.crossOrigin = 'anonymous';
+
+    const dnsLink = document.createElement('link');
+    dnsLink.rel = 'dns-prefetch';
+    dnsLink.href = origin;
+
+    document.head.appendChild(preconnectLink);
+    document.head.appendChild(dnsLink);
+
+    return () => {
+      document.head.removeChild(preconnectLink);
+      document.head.removeChild(dnsLink);
+    };
+  }, [preloadHints, effectiveSrc, srcInvalid]);
 
   const handleLoad = () => {
     setIsLoaded(true);
