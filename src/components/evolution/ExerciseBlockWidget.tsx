@@ -150,7 +150,7 @@ const ExerciseImage = memo(({ src, alt, className }: { src?: string; alt: string
     }
 
     const optimizedSrc = src
-        ? withImageParams(src, { width: 640, height: 360, dpr: 2, format: 'auto', fit: 'cover' })
+        ? withImageParams(src, { width: 640, height: 360, dpr: 2, format: 'auto', fit: 'cover', quality: 70 })
         : undefined;
 
     return (
@@ -417,10 +417,11 @@ const ExerciseAutocompleteSearch = memo<ExerciseAutocompleteSearchProps>(({
                                     <div className="h-12 w-12 flex-shrink-0 rounded-md bg-muted overflow-hidden">
                                         {exercise.image_url ? (
                                             <img
-                                                src={withImageParams(exercise.image_url, { width: 160, height: 160, dpr: 2, format: 'auto', fit: 'cover' })}
+                                                src={withImageParams(exercise.image_url, { width: 160, height: 160, dpr: 2, format: 'auto', fit: 'cover', quality: 65 })}
                                                 alt={exercise.name}
                                                 className="h-full w-full object-cover"
                                                 loading="lazy"
+                                                decoding="async"
                                             />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center">

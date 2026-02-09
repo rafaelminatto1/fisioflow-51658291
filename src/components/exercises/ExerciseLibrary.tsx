@@ -308,6 +308,9 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 }) {
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
+  const thumbSrc = exercise.image_url
+    ? withImageParams(exercise.image_url, { width: 160, height: 160, format: 'auto', fit: 'cover', dpr: 2 })
+    : undefined;
 
   return (
     <Card className="p-4 hover:shadow-md transition-all hover:border-primary/30 group touch-manipulation">
