@@ -283,8 +283,8 @@ export const CalendarWeekView = memo(({
                 {/* Wrap everything in a scroll container (both X and Y) */}
                 <div className="overflow-auto w-full h-full custom-scrollbar">
                     <div className="w-full">
-                        {/* Header Row */}
-                        <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm min-w-[600px]">
+                        {/* Header Row - Responsivo com scroll horizontal em mobile */}
+                        <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm overflow-x-auto -mx-2 px-2">
                             {/* Time icon - Sticky Left */}
                             <div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center sticky left-0 z-50 bg-white dark:bg-slate-950">
                                 <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-gray-500">
@@ -324,7 +324,7 @@ export const CalendarWeekView = memo(({
 
                         {/* Scrollable Grid Area */}
                         <div className="relative bg-white dark:bg-slate-950" id="calendar-grid" data-calendar-drop-zone>
-                            <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0 min-w-[600px]" style={{
+                            <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0" style={{
                                 gridTemplateRows: `repeat(${timeSlots.length}, ${slotHeight}px)`
                             }}>
 

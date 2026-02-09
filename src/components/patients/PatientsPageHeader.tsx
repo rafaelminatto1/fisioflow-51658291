@@ -88,7 +88,7 @@ export function PatientsPageHeader({
   children,
 }: PatientsPageHeaderProps) {
   return (
-    <header className="space-y-5 sm:space-y-6">
+    <header className="space-y-5 sm:space-y-6" data-testid="patients-page-header">
       {/* Hero: título + descrição + ações */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">

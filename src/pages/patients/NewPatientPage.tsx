@@ -61,25 +61,26 @@ export const NewPatientPage = () => {
 
     return (
         <MainLayout>
-            <div className="space-y-6 max-w-5xl mx-auto pb-20">
+            <div className="space-y-4 sm:space-y-6 w-full max-w-full px-3 sm:px-4 lg:px-6 pb-20">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/patients')} className="-ml-2">
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/patients')} className="-ml-2 touch-target">
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <span className="text-sm font-medium">Voltar para Pacientes</span>
+                    <span className="text-sm font-medium hidden xs:inline">Voltar para Pacientes</span>
+                    <span className="text-sm font-medium xs:hidden">Voltar</span>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-3 rounded-xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    <div className="bg-primary/10 p-3 rounded-xl flex-shrink-0">
                         <UserPlus className="h-6 w-6 text-primary" />
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold">Cadastrar Novo Paciente</h1>
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-2xl sm:text-3xl font-bold">Cadastrar Novo Paciente</h1>
                         <p className="text-muted-foreground text-sm">Insira as informações básicas e clínicas do paciente</p>
                     </div>
                 </div>
 
-                <div className="bg-card rounded-xl shadow-sm border p-1 animate-fade-in">
+                <div className="bg-card rounded-xl shadow-sm border p-1 sm:p-2 lg:p-4 animate-fade-in">
                     <PatientForm
                         organizationId={currentOrganization.id}
                         onSubmit={handleSubmit}

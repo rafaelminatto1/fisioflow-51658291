@@ -104,7 +104,7 @@ export function CustomizableDashboard() {
               Personalizar
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-[95vw] md:max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Personalizar Dashboard</DialogTitle>
               <DialogDescription>
@@ -162,7 +162,7 @@ export function CustomizableDashboard() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {visibleWidgets.map(widget => {
           const Icon = widgetIcons[widget.type] || Activity;
           const data = getWidgetData(widget.type);
