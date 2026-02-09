@@ -1,0 +1,167 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test:run
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage/
+          retention-days: 7
+
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Cache Firebase emulators
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('firebase.json') }}
+          restore-keys: |
+            firebase-emulators-
+
+      - name: Start Firebase Emulators
+        run: |
+          npx firebase-tools emulators:start --only auth,firestore --project fisioflow-test &
+          echo $! > /tmp/emulator.pid
+          for i in {1..60}; do
+            if nc -z localhost 9099 2>/dev/null && nc -z localhost 8080 2>/dev/null; then
+              echo "Firebase emulators ready"
+              break
+            fi
+            echo "Waiting for Firebase emulators... ($i/60)"
+            sleep 1
+          done
+
+      - name: Start dev server
+        run: |
+          pnpm dev --port 8084 &
+          echo $! > /tmp/server.pid
+          for i in {1..60}; do
+            if curl -s http://127.0.0.1:8084 > /dev/null 2>&1; then
+              echo "Dev server ready"
+              break
+            fi
+            echo "Waiting for dev server... ($i/60)"
+            sleep 1
+          done
+
+      - name: Run Playwright tests
+        env:
+          BASE_URL: http://127.0.0.1:8084
+          VITE_FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
+          VITE_FIRESTORE_EMULATOR_HOST: localhost:8080
+        run: |
+          pnpm exec playwright test e2e --project=chromium --shard=${{ matrix.shard }}/4 --reporter=list
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ -f /tmp/emulator.pid ]; then
+            kill $(cat /tmp/emulator.pid) 2>/dev/null || true
+          fi
+          if [ -f /tmp/server.pid ]; then
+            kill $(cat /tmp/server.pid) 2>/dev/null || true
+          fi
+
+  test-report:
+    name: Test Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results/
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage/
+
+      - name: Generate test summary
+        run: |
+          echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Unit Tests" >> $GITHUB_STEP_SUMMARY
+          if [ -d coverage ]; then
+            echo "- ✅ Completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## E2E Tests" >> $GITHUB_STEP_SUMMARY
+          echo "See individual shard results for details." >> $GITHUB_STEP_SUMMARY

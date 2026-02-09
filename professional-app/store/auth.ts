@@ -18,6 +18,10 @@ export interface User {
   avatarUrl?: string;
   specialty?: string;
   crefito?: string;
+  phone?: string;
+  clinicName?: string;
+  clinicAddress?: string;
+  clinicPhone?: string;
 }
 
 interface AuthState {
@@ -30,6 +34,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   clearError: () => void;
   initialize: () => () => void;
+  updateUserData: (data: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -130,6 +135,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  updateUserData: (data: Partial<User>) => {
+    const currentUser = get().user;
+    if (currentUser) {
+      set({
+        user: {
+          ...currentUser,
+          ...data,
+        },
+      });
+    }
+  },
 
   initialize: () => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {

@@ -249,7 +249,7 @@
 **Implementação:**
 ```typescript
 // Edge function para image optimization
-// Geração de imagens: use libs como @vercel/og em self-host ou Cloud Function com sharp/puppeteer
+// Geração de imagens: use libs como sharp/puppeteer em Cloud Function
 
 export async function GET(req: Request) {
   const optimizer = new ImageOptimizer();

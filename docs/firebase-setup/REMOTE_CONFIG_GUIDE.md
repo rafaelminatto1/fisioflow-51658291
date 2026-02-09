@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Este guia explica como configurar o Firebase Remote Config para o FisioFlow, que substitui o Vercel Edge Config para gerenciamento de feature flags.
+Este guia explica como configurar o Firebase Remote Config para o FisioFlow, que substitui o antigo Vercel Edge Config para gerenciamento de feature flags.
 
 ## Pré-requisitos
 

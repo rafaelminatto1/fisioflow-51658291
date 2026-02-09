@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Este guia explica como configurar o Google Analytics 4 (GA4) para o FisioFlow, que substitui o Vercel Analytics.
+Este guia explica como configurar o Google Analytics 4 (GA4) para o FisioFlow, que substitui o antigo Vercel Analytics.
 
 ## Pré-requisitos
 

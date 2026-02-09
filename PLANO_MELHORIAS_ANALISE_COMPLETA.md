@@ -483,8 +483,6 @@ Implementar validação de environment variables:
 import { z } from 'zod';
 
 const envSchema = z.object({
-  VITE_SUPABASE_URL: z.string().url(),
-  VITE_SUPABASE_ANON_KEY: z.string().min(1),
   // ...
 });
 
@@ -600,9 +598,9 @@ const { data } = useQuery({
 
 ## 🔒 MELHORIAS DE SEGURANÇA
 
-### 22. Service Role Key em Frontend ⚠️
+### 22. Service Role Key em Frontend ⚠️ - RESOLVIDO PELA MIGRAÇÃO
 
-**Problema:**
+**Problema Original:**
 ```typescript
 // Alguns serviços criam client com service role key
 private supabase = createClient(
@@ -611,18 +609,12 @@ private supabase = createClient(
 );
 ```
 
-**Impacto:**
+**Impacto Original:**
 - Risco de vazamento de chaves
 - Acesso não autorizado
 
-**Solução:**
-Mover para Edge Functions:
-```typescript
-// Somente usar service role key em backend
-// Frontend deve usar anon key apenas
-```
-
-**Esforço:** 1-2 dias
+**Solução (Atual):**
+Este problema foi completamente resolvido com a migração do projeto de Supabase para Firebase. O Firebase não utiliza o conceito de 'Service Role Key' acessível diretamente pelo frontend desta forma, e as chaves sensíveis são geridas de forma mais segura via Firebase Admin SDK (para uso em backend/Cloud Functions) ou através do console Firebase para configurações de segurança. O frontend agora utiliza as chaves públicas do Firebase SDK que são seguras para exposição.
 
 ---
 
@@ -713,7 +705,7 @@ Criar endpoint `/health` com checks
 
 **O que testar:**
 - Fluxos completos de usuário
-- Integração com Supabase
+- Integração com Firebase
 - Edge functions
 - Workflows do Inngest
 

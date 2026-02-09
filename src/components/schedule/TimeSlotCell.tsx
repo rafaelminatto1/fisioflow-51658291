@@ -51,6 +51,10 @@ export const TimeSlotCell = memo(({
 }: TimeSlotCellProps) => {
   const isHourStart = time.endsWith(':00');
   const isInvalidDrop = isDropTarget && (isBlocked || isClosed);
+  const isSaturdayBlockedAfterCutoff = isBlocked && day.getDay() === 6 && (() => {
+    const [hour] = time.split(':').map(Number);
+    return hour >= 13;
+  })();
 
   // Calcular preview cards para o drop target
   // Não incluir o card arrastado no preview se ele já está neste slot (evita dois fantasmas)
@@ -125,7 +129,7 @@ export const TimeSlotCell = memo(({
       onDrop={handleDropWrapper}
     >
       {/* Indicador de bloqueio/fechado - ícone + texto (não só cor) */}
-      {(isClosed || isBlocked) && (
+      {(isClosed || (isBlocked && !isSaturdayBlockedAfterCutoff)) && (
         <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
           <Ban className="h-4 w-4 shrink-0" />
           <span className="text-[10px] uppercase tracking-wide">{isClosed ? 'Fechado' : 'Bloqueado'}</span>

@@ -165,27 +165,36 @@ export const useActivePatients = () => {
     retry: PATIENT_QUERY_CONFIG.maxRetries,
   });
 
-  // Intelligent prefetch of related data
+  // Optimized prefetch of related data - removed stagger for better performance
   useEffect(() => {
     if (result.data && result.data.length > 0) {
-      // Prefetch stats for first 10 patients
-      const patientsToPrefetch = result.data.slice(0, 10);
+      // Use requestIdleCallback for non-blocking prefetch when available
+      const prefetchIfNeeded = () => {
+        // Prefetch stats for first 10 patients in parallel (no stagger)
+        const patientsToPrefetch = result.data.slice(0, 10);
 
-      const timer = setTimeout(() => {
-        patientsToPrefetch.forEach((patient, index) => {
-          setTimeout(() => {
-            queryClient.prefetchQuery({
-              queryKey: ['patient-stats', patient.id],
-              queryFn: async () => {
-                return patientsApi.getStats(patient.id);
-              },
-              staleTime: PATIENT_QUERY_CONFIG.staleTime,
-            });
-          }, index * 100); // Stagger by 100ms
+        patientsToPrefetch.forEach((patient) => {
+          // Fire and forget prefetch - don't await
+          queryClient.prefetchQuery({
+            queryKey: ['patient-stats', patient.id],
+            queryFn: async () => {
+              return patientsApi.getStats(patient.id);
+            },
+            staleTime: PATIENT_QUERY_CONFIG.staleTime,
+          }).catch(() => {
+            // Silently fail prefetch - not critical
+          });
         });
-      }, 500); // Start after 500ms
+      };
 
-      return () => clearTimeout(timer);
+      // Use requestIdleCallback if available for better scheduling
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        const id = window.requestIdleCallback(() => prefetchIfNeeded());
+        return () => window.cancelIdleCallback(id);
+      } else {
+        const timer = setTimeout(() => prefetchIfNeeded(), 100);
+        return () => clearTimeout(timer);
+      }
     }
   }, [result.data, queryClient]);
 

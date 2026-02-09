@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Teste de erros Supabase - Iniciar Atendimento (Firebase Migration)', () => {
   test('Deve fazer login e iniciar atendimento sem erros 404 do Supabase', async ({ page }) => {
@@ -30,13 +31,13 @@ test.describe('Teste de erros Supabase - Iniciar Atendimento (Firebase Migration
       }
     });
 
-    // Preencher credenciais (você pode ajustar)
+    // Preencher credenciais
     const emailInput = page.locator('input[type="email"], input[name="email"], input[placeholder*="email" i]').first();
     const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
 
     if (await emailInput.isVisible({ timeout: 2000 })) {
-      await emailInput.fill('rafael.minatto@yahoo.com.br');
-      await passwordInput.fill('Yukari30@');
+      await emailInput.fill(testUsers.fisio.email);
+      await passwordInput.fill(testUsers.fisio.password);
 
       // Clicar no botão de login
       const loginButton = page.locator('button:has-text("Entrar"), button:has-text("Login"), button[type="submit"]').first();

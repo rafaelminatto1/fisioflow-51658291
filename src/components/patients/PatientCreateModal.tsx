@@ -21,7 +21,7 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { currentOrganization } = useOrganizations();
+  const { currentOrganization, isCurrentOrgLoading, currentOrgError } = useOrganizations();
   const createMutation = useCreatePatient();
 
   const handleSubmit = async (data: PatientCreateInput) => {
@@ -48,28 +48,36 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
         </DialogHeader>
 
         <ScrollArea className="px-6 pb-6 max-h-[calc(85vh-120px)]">
-          {currentOrganization?.id ? (
+          {isCurrentOrgLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center space-y-4">
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                  <p className="text-muted-foreground">Carregando organização...</p>
+                </div>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  Por favor, aguarde enquanto sua organização é carregada.
+                </p>
+              </div>
+            </div>
+          ) : currentOrgError || !currentOrganization?.id ? (
+            <div className="bg-destructive/10 text-destructive p-6 rounded-xl border border-destructive/20 text-center">
+              <p className="font-medium">Erro ao carregar organização</p>
+              <p className="text-sm opacity-80 mt-1">
+                Não foi possível identificar sua organização atual.
+                {currentOrgError && ` Erro: ${currentOrgError.message}`}
+              </p>
+              <p className="text-sm opacity-80 mt-1">
+                Verifique se você está logado e se sua conta está associada a uma organização.
+              </p>
+            </div>
+          ) : (
             <PatientForm
               organizationId={currentOrganization.id}
               onSubmit={handleSubmit}
               isLoading={isLoading}
               submitLabel="Cadastrar Paciente"
             />
-          ) : (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center space-y-4">
-                {/* We assume if it's taking too long, there might be an issue, 
-                    but useOrganizations usually returns isLoading. 
-                    If we want to be more robust, we should check isLoading from hook. */}
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-                  <p className="text-muted-foreground">Carregando organização...</p>
-                </div>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  Se isso demorar muito, tente recarregar a página ou verifique sua conexão.
-                </p>
-              </div>
-            </div>
           )}
         </ScrollArea>
       </DialogContent>
