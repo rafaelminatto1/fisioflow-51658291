@@ -7,57 +7,47 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card, Button } from '@/components';
-
-// Mock patient data
-const mockPatient = {
-  id: '1',
-  name: 'Maria Silva',
-  email: 'maria@email.com',
-  phone: '(11) 99999-1111',
-  birthDate: '1985-03-15',
-  condition: 'Lombalgia cronica',
-  startDate: '2025-10-01',
-  status: 'active',
-  notes: 'Paciente apresenta dor lombar ha 3 meses. Trabalhadora de escritorio com postura inadequada.',
-  appointments: [
-    { id: '1', date: '2026-01-30', type: 'Fisioterapia', status: 'completed' },
-    { id: '2', date: '2026-01-23', type: 'Fisioterapia', status: 'completed' },
-    { id: '3', date: '2026-01-16', type: 'Avaliacao', status: 'completed' },
-  ],
-  exercises: [
-    { id: '1', name: 'Alongamento lombar', completed: 15, total: 20 },
-    { id: '2', name: 'Fortalecimento core', completed: 10, total: 15 },
-    { id: '3', name: 'Postura sentada', completed: 8, total: 10 },
-  ],
-};
+import { useHaptics } from '@/hooks/useHaptics';
+import { useQuery } from '@tanstack/react-query';
+import { getPatientById } from '@/lib/firestore';
+import { format } from 'date-fns';
+import { usePatientExercises } from '@/hooks';
 
 export default function PatientDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, patientName } = useLocalSearchParams();
   const colors = useColors();
+  const { light, medium } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'info' | 'history' | 'exercises'>('info');
 
-  const onRefresh = () => {
+  // Alias para exercises quando precisar usar evolution label
+  const tabLabel = selectedTab === 'exercises' ? 'Evoluções' : selectedTab === 'info' ? 'Informações' : 'Histórico';
+
+  // Buscar dados reais do paciente
+  const { data: patient, isLoading, refetch } = useQuery({
+    queryKey: ['patient', id],
+    queryFn: () => id ? getPatientById(id as string) : null,
+    enabled: !!id,
+  });
+
+  // Buscar exercícios do paciente
+  const { data: patientExercises } = usePatientExercises(id as string);
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    light();
+    await refetch();
+    setRefreshing(false);
   };
 
-  const patient = mockPatient;
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
+  const name = patient?.name || (patientName as string) || 'Paciente';
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right', 'bottom']}>
@@ -71,14 +61,11 @@ export default function PatientDetailScreen() {
         <View style={styles.header}>
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
             <Text style={styles.avatarText}>
-              {patient.name.charAt(0).toUpperCase()}
+              {name.charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.headerInfo}>
-            <Text style={[styles.name, { color: colors.text }]}>{patient.name}</Text>
-            <Text style={[styles.condition, { color: colors.textSecondary }]}>
-              {patient.condition}
-            </Text>
+            <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
             <View
               style={[
                 styles.statusBadge,
@@ -96,18 +83,30 @@ export default function PatientDetailScreen() {
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              medium();
+              router.push(`/appointment-form?patientId=${id}&patientName=${name}`);
+            }}
           >
             <Ionicons name="calendar" size={20} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>Agendar</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.success }]}
+            onPress={() => {
+              medium();
+              router.push(`/exercises?patientId=${id}`);
+            }}
           >
             <Ionicons name="fitness" size={20} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>Exercicios</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.info }]}
+            onPress={() => {
+              medium();
+              router.push(`/patient/[id]/evolution?id=${id}&patientName=${name}`);
+            }}
           >
             <Ionicons name="document-text" size={20} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>Evolucao</Text>
@@ -123,7 +122,10 @@ export default function PatientDetailScreen() {
                 styles.tab,
                 selectedTab === tab && { backgroundColor: colors.primary },
               ]}
-              onPress={() => setSelectedTab(tab)}
+              onPress={() => {
+                medium();
+                setSelectedTab(tab);
+              }}
             >
               <Text
                 style={[
@@ -131,7 +133,7 @@ export default function PatientDetailScreen() {
                   { color: selectedTab === tab ? '#FFFFFF' : colors.textSecondary },
                 ]}
               >
-                {tab === 'info' ? 'Informacoes' : tab === 'history' ? 'Historico' : 'Exercicios'}
+                {tab === 'info' ? 'Informações' : tab === 'history' ? 'Histórico' : 'Evoluções'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -139,89 +141,120 @@ export default function PatientDetailScreen() {
 
         {/* Tab Content */}
         {selectedTab === 'info' && (
-          <Card style={styles.contentCard}>
-            <View style={styles.infoRow}>
-              <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{patient.email}</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.infoRow}>
-              <Ionicons name="call-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Telefone</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{patient.phone}</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.infoRow}>
-              <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nascimento</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{formatDate(patient.birthDate)}</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.infoRow}>
-              <Ionicons name="flag-outline" size={20} color={colors.textSecondary} />
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Inicio</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{formatDate(patient.startDate)}</Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.notesSection}>
-              <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Observacoes</Text>
-              <Text style={[styles.notesText, { color: colors.text }]}>{patient.notes}</Text>
-            </View>
-          </Card>
-        )}
+          <>
+            <Card style={styles.contentCard}>
+              <View style={styles.infoSection}>
+                <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Informações do Paciente</Text>
 
-        {selectedTab === 'history' && (
-          <Card style={styles.contentCard} padding="none">
-            {patient.appointments.map((apt, index) => (
-              <View
-                key={apt.id}
-                style={[
-                  styles.historyItem,
-                  index < patient.appointments.length - 1 && {
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border,
-                  },
-                ]}
-              >
-                <View style={[styles.historyDot, { backgroundColor: colors.success }]} />
-                <View style={styles.historyInfo}>
-                  <Text style={[styles.historyType, { color: colors.text }]}>{apt.type}</Text>
-                  <Text style={[styles.historyDate, { color: colors.textSecondary }]}>
-                    {formatDate(apt.date)}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                {patient?.email && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.email}</Text>
+                  </View>
+                )}
+                {patient?.phone && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Telefone:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.phone}</Text>
+                  </View>
+                )}
+                {patient?.birthDate && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nascimento:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>
+                      {format(new Date(patient.birthDate), 'dd/MM/yyyy')}
+                    </Text>
+                  </View>
+                )}
+                {patient?.condition && (
+                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                )}
+                {patient?.condition && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Condição:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.condition}</Text>
+                  </View>
+                )}
+                {patient?.diagnosis && (
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Diagnóstico:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.diagnosis}</Text>
+                  </View>
+                )}
+                {patient?.notes && (
+                  <>
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                    <View style={styles.notesSection}>
+                      <Text style={[styles.notesLabel, { color: colors.text }]}>Observações:</Text>
+                      <Text style={[styles.notesText, { color: colors.text }]}>
+                        {patient.notes}
+                      </Text>
+                    </View>
+                  </>
+                )}
               </View>
-            ))}
-          </Card>
+            </Card>
+
+            <TouchableOpacity
+              style={[styles.editButton, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                light();
+                router.push(`/patient-form?id=${id}` as any);
+              }}
+            >
+              <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.editButtonText}>Editar Perfil</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         {selectedTab === 'exercises' && (
-          <View>
-            {patient.exercises.map((exercise) => (
-              <Card key={exercise.id} style={styles.exerciseCard}>
-                <View style={styles.exerciseHeader}>
-                  <Text style={[styles.exerciseName, { color: colors.text }]}>
-                    {exercise.name}
-                  </Text>
-                  <Text style={[styles.exerciseProgress, { color: colors.primary }]}>
-                    {exercise.completed}/{exercise.total}
-                  </Text>
-                </View>
-                <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        backgroundColor: colors.primary,
-                        width: `${(exercise.completed / exercise.total) * 100}%`,
-                      },
-                    ]}
-                  />
-                </View>
-              </Card>
-            ))}
+          <View style={styles.evolutionsContainer}>
+            <TouchableOpacity
+              style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                medium();
+                router.push(`/patient/[id]/evolution?id=${id}&patientName=${name}`);
+              }}
+            >
+              <Ionicons name="add" size={24} color="#FFFFFF" />
+              <Text style={styles.addEvolutionBtnText}>Nova Evolução SOAP</Text>
+            </TouchableOpacity>
+
+            <View style={styles.emptyEvolution}>
+              <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
+              <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
+                Nenhuma evolução registrada
+              </Text>
+              <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
+                Registre a primeira evolução deste paciente
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {selectedTab === 'history' && (
+          <View style={styles.evolutionsContainer}>
+            <TouchableOpacity
+              style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                medium();
+                router.push(`/patient/[id]/evolution?id=${id}&patientName=${name}`);
+              }}
+            >
+              <Ionicons name="add" size={24} color="#FFFFFF" />
+              <Text style={styles.addEvolutionBtnText}>Nova Evolução SOAP</Text>
+            </TouchableOpacity>
+
+            <View style={styles.emptyEvolution}>
+              <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
+              <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
+                Nenhuma evolução registrada
+              </Text>
+              <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
+                Registre a primeira evolução deste paciente
+              </Text>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -388,5 +421,70 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 4,
+  },
+  infoSection: {
+    padding: 16,
+  },
+  infoSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyTab: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyTabTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptyTabText: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  evolutionsContainer: {
+    gap: 16,
+  },
+  addEvolutionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  addEvolutionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptyEvolution: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyEvolutionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptyEvolutionText: {
+    fontSize: 14,
+    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 32,
   },
 });

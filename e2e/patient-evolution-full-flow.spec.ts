@@ -29,7 +29,7 @@ test.describe('Patient Evolution - fluxo completo com preenchimento SOAP', () =>
 
     // 2. Ir para agenda
     await page.goto(`${url}/schedule`);
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 

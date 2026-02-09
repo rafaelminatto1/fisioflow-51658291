@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 export const NewPatientPage = () => {
     const navigate = useNavigate();
-    const { currentOrganization, isLoading: loadingOrg } = useOrganizations();
+    const { currentOrganization, isCurrentOrgLoading, currentOrgError } = useOrganizations();
     const createMutation = useCreatePatient();
 
     const handleSubmit = async (data: PatientCreateInput) => {
@@ -28,12 +28,32 @@ export const NewPatientPage = () => {
 
     const isLoading = createMutation.isPending;
 
-    if (loadingOrg) {
+    if (isCurrentOrgLoading) {
         return (
             <MainLayout>
                 <div className="flex flex-col items-center justify-center h-[50vh]">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                     <p className="text-muted-foreground">Carregando organização...</p>
+                </div>
+            </MainLayout>
+        );
+    }
+
+    if (currentOrgError || !currentOrganization?.id) {
+        return (
+            <MainLayout>
+                <div className="bg-destructive/10 text-destructive p-6 rounded-xl border border-destructive/20 text-center mx-auto my-10 max-w-lg">
+                    <p className="font-medium">Erro ao carregar organização</p>
+                    <p className="text-sm opacity-80 mt-1">
+                        Não foi possível identificar sua organização atual.
+                        {currentOrgError && ` Erro: ${currentOrgError.message}`}
+                    </p>
+                    <p className="text-sm opacity-80 mt-1">
+                        Verifique se você está logado e se sua conta está associada a uma organização.
+                    </p>
+                    <Button variant="outline" className="mt-4 border-destructive/30 hover:bg-destructive/10" onClick={() => window.location.reload()}>
+                        Recarregar Página
+                    </Button>
                 </div>
             </MainLayout>
         );
@@ -59,24 +79,14 @@ export const NewPatientPage = () => {
                     </div>
                 </div>
 
-                {currentOrganization?.id ? (
-                    <div className="bg-card rounded-xl shadow-sm border p-1 animate-fade-in">
-                        <PatientForm
-                            organizationId={currentOrganization.id}
-                            onSubmit={handleSubmit}
-                            isLoading={isLoading}
-                            submitLabel="Finalizar Cadastro"
-                        />
-                    </div>
-                ) : (
-                    <div className="bg-destructive/10 text-destructive p-6 rounded-xl border border-destructive/20 text-center">
-                        <p className="font-medium">Erro ao carregar organização</p>
-                        <p className="text-sm opacity-80 mt-1">Não foi possível identificar sua organização atual. Tente recarregar a página.</p>
-                        <Button variant="outline" className="mt-4 border-destructive/30 hover:bg-destructive/10" onClick={() => window.location.reload()}>
-                            Recarregar
-                        </Button>
-                    </div>
-                )}
+                <div className="bg-card rounded-xl shadow-sm border p-1 animate-fade-in">
+                    <PatientForm
+                        organizationId={currentOrganization.id}
+                        onSubmit={handleSubmit}
+                        isLoading={isLoading}
+                        submitLabel="Finalizar Cadastro"
+                    />
+                </div>
             </div>
         </MainLayout>
     );

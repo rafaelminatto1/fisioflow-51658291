@@ -2,13 +2,11 @@
 // Credentials provided by user for verification
 
 import { test, expect } from '@playwright/test';
-
-const LOGIN_EMAIL = 'rafael.minatto@yahoo.com.br';
-const LOGIN_PASSWORD = 'Yukari30@';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Verified Login Flow', () => {
-    test('should login successfully with provided credentials', async ({ page }) => {
-        console.log(`Attempting login with: ${LOGIN_EMAIL}`);
+    test('should login successfully with test credentials', async ({ page }) => {
+        console.log(`Attempting login with: ${testUsers.fisio.email}`);
 
         // Navigate to login page
         await page.goto('/auth/login');
@@ -19,8 +17,8 @@ test.describe('Verified Login Flow', () => {
         await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
 
         // Fill in credentials
-        await page.fill('input[type="email"]', LOGIN_EMAIL);
-        await page.fill('input[type="password"]', LOGIN_PASSWORD);
+        await page.fill('input[type="email"]', testUsers.fisio.email);
+        await page.fill('input[type="password"]', testUsers.fisio.password);
 
         // Submit
         const submitButton = page.locator('button[type="submit"]');

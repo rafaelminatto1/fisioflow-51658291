@@ -66,7 +66,7 @@ FisioFlow is a comprehensive physical therapy management platform designed for B
 | **Resend** | Email service |
 | **Ably** | Real-time notifications |
 | **Sentry** | Error tracking |
-| **Vercel** | Hosting & deployment |
+
 
 ## System Architecture
 
@@ -285,15 +285,7 @@ match /appointments {
 ### Frontend Deployment
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                    Vercel Edge Network              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐               │
-│  │ Static   │  │ Serverless │  │ Edge      │               │
-│  │ Assets  │  │ Functions │  │ Functions│               │
-│  └──────────┘  └───────────┘  └──────────┘               │
-└────────────────────────────────────────────────────────┘
-         │
-         ▼
+
 ┌────────────────────────────────────────────────────────┐
 │                  Firebase Hosting                     │
 │  - SPA hosting                                        │
@@ -341,13 +333,7 @@ Git Push
 └────┬───┘  └─────────┘  └─────────┘  └────┬─────┘
        │                                         │
        ▼                                         ▼
-┌──────────────────────────────────────────────────┐
-│              Deploy to Vercel                     │
-│  - Preview URL                                 │
-│  - Production deployment                         │
-└──────────────────────────────────────────────────┘
-       │
-       ▼
+
 ┌──────────────────────────────────────────────────┐
 │              Firebase Deploy                     │
 │  - Cloud Functions                             │

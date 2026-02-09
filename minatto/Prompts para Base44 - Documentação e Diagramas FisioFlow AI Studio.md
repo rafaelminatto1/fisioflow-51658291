@@ -285,7 +285,7 @@ Crie guia completo de deploy e infraestrutura:
 
 1. Configuração de ambiente
 2. Variáveis de ambiente
-3. Deploy em Vercel/Railway
+3. Deploy em Firebase/Google Cloud
 4. Configuração de banco
 5. Setup de CDN
 6. Monitoramento e alertas
