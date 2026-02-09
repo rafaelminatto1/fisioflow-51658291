@@ -10,7 +10,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 function AdminPage() {
   return (
     <MainLayout>
-      <div className="container mx-auto p-6">
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 max-w-full">
         <AdminAnalyticsDashboard />
       </div>
     </MainLayout>
