@@ -1,4 +1,5 @@
-// Prevent the splash screen from auto-hiding
+// Load polyfills first
+import './polyfills';
 
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
@@ -32,7 +33,14 @@ function RootLayoutContent() {
   const { isLoading, initialize } = useAuthStore();
 
   useEffect(() => {
-    const unsubscribe = initialize();
+    let unsubscribe: (() => void) | undefined;
+
+    // Initialize auth
+    try {
+      unsubscribe = initialize();
+    } catch (error) {
+      console.error('Failed to initialize auth:', error);
+    }
 
     // Initialize push notifications when app starts
     const initNotifications = async () => {
@@ -50,8 +58,12 @@ function RootLayoutContent() {
       initNotifications();
     }
 
-    return () => unsubscribe();
-  }, [isLoading]);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isLoading, initialize]);
 
   if (isLoading) {
     return (

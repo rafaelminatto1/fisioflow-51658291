@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "412418905255",
+    "project_id": "fisioflow-migration",
+    "storage_bucket": "fisioflow-migration.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412418905255:android:07bc8e405b6f5c1e597782",
+        "android_client_info": {
+          "package_name": "com.fisioflow.professional"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "412418905255-5hm3f5k5q9r8l3m7n6o5p4q3r2s1t0u9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCz2c3HvQoV7RvFCbCaudbEEelEQaO-tY8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "412418905255-5hm3f5k5q9r8l3m7n6o5p4q3r2s1t0u9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
