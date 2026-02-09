@@ -16,6 +16,10 @@ export interface ImageTransformOptions {
   fit?: 'cover' | 'contain' | 'inside' | 'outside' | 'fill';
 }
 
+export interface ImageSrcSetOptions extends Omit<ImageTransformOptions, 'width' | 'dpr'> {
+  widths?: number[];
+}
+
 /**
  * Convert a Firebase Storage URL to a proxy URL
  * @param storageUrl - The Firebase Storage URL (e.g., https://firebasestorage.googleapis.com/v0/b/bucket/o/path?alt=media)
@@ -62,8 +66,9 @@ export function toProxyUrl(storageUrl: string | null | undefined): string {
 export function withImageParams(url: string | null | undefined, opts: ImageTransformOptions = {}): string {
   if (!url) return '';
 
-  const hasQuery = url.includes('?');
-  const [base, existingQuery] = hasQuery ? url.split('?', 2) : [url, ''];
+  const proxiedUrl = toProxyUrl(url);
+  const hasQuery = proxiedUrl.includes('?');
+  const [base, existingQuery] = hasQuery ? proxiedUrl.split('?', 2) : [proxiedUrl, ''];
   const params = new URLSearchParams(existingQuery);
 
   if (opts.width) params.set('w', String(Math.round(opts.width)));
@@ -75,6 +80,28 @@ export function withImageParams(url: string | null | undefined, opts: ImageTrans
 
   const queryString = params.toString();
   return queryString ? `${base}?${queryString}` : base;
+}
+
+const DEFAULT_SRCSET_WIDTHS = [160, 240, 320, 480, 640, 768, 960, 1280];
+
+function normalizeWidths(widths?: number[]): number[] {
+  const source = Array.isArray(widths) && widths.length > 0 ? widths : DEFAULT_SRCSET_WIDTHS;
+  return Array.from(new Set(source.map((w) => Math.round(w)).filter((w) => Number.isFinite(w) && w >= 16))).sort((a, b) => a - b);
+}
+
+/**
+ * Builds a width-based srcset from a single image URL.
+ * Uses proxy + transform params so each candidate is already optimized.
+ */
+export function buildImageSrcSet(url: string | null | undefined, opts: ImageSrcSetOptions = {}): string {
+  if (!url) return '';
+
+  const { widths, ...transform } = opts;
+  const normalizedWidths = normalizeWidths(widths);
+
+  return normalizedWidths
+    .map((width) => `${withImageParams(url, { ...transform, width })} ${width}w`)
+    .join(', ');
 }
 
 /**
