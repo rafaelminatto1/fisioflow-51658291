@@ -230,9 +230,11 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
                                     <div className="relative aspect-video w-full bg-muted overflow-hidden shrink-0">
                                         {p.exercise?.image_url ? (
                                             <img
-                                                src={withImageParams(p.exercise.image_url, { width: 640, height: 360, dpr: 2, format: 'auto', fit: 'cover' })}
+                                                src={withImageParams(p.exercise.image_url, { width: 640, height: 360, dpr: 2, format: 'auto', fit: 'cover', quality: 70 })}
                                                 alt={p.exercise.name}
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                loading="lazy"
+                                                decoding="async"
                                             />
                                         ) : (
                                             <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
