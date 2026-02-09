@@ -8,6 +8,8 @@ import {
     Zap, Eye, EyeOff, Save, Clock, Keyboard, CheckCircle2, UserCog,
     MoreVertical, Loader2, Brain, X
 } from 'lucide-react';
+import { EvolutionVersionToggle } from './v2/EvolutionVersionToggle';
+import type { EvolutionVersion } from './v2/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -81,6 +83,9 @@ interface EvolutionHeaderProps {
     onTabChange?: (tab: string) => void;
     pendingRequiredMeasurements?: number;
     upcomingGoalsCount?: number;
+    // Version toggle (V1 SOAP / V2 Texto Livre)
+    evolutionVersion?: EvolutionVersion;
+    onVersionChange?: (version: EvolutionVersion) => void;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -161,6 +166,8 @@ export const EvolutionHeader = memo(({
     onTabChange,
     pendingRequiredMeasurements = 0,
     upcomingGoalsCount = 0,
+    evolutionVersion = 'v1-soap',
+    onVersionChange,
 }: EvolutionHeaderProps) => {
     const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();
@@ -356,6 +363,17 @@ export const EvolutionHeader = memo(({
                     </>
                 )}
 
+                {/* Version toggle (SOAP / Texto Livre) */}
+                {onVersionChange && (
+                    <>
+                        <div className="h-8 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
+                        <EvolutionVersionToggle
+                            version={evolutionVersion}
+                            onToggle={onVersionChange}
+                        />
+                    </>
+                )}
+
                 <div className="flex-1 min-w-4" />
                 <div className="flex items-center gap-1 shrink-0">
                     <DropdownMenu>
@@ -432,7 +450,8 @@ export const EvolutionHeader = memo(({
         // Comparação rasa de evolutionStats (objeto muda pouco durante sessão)
         prevProps.evolutionStats.totalEvolutions === nextProps.evolutionStats.totalEvolutions &&
         prevProps.evolutionStats.completedGoals === nextProps.evolutionStats.completedGoals &&
-        prevProps.evolutionStats.totalGoals === nextProps.evolutionStats.totalGoals
+        prevProps.evolutionStats.totalGoals === nextProps.evolutionStats.totalGoals &&
+        prevProps.evolutionVersion === nextProps.evolutionVersion
     );
 });
 
