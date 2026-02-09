@@ -1,10 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
 import type { Timestamp } from '@/integrations/firebase/app';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, Sparkles, Brain, AlertCircle } from 'lucide-react';
+import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
@@ -177,8 +180,8 @@ export default function AdvancedAnalytics() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-background dark:from-blue-950/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total de Pacientes</CardTitle>
@@ -232,18 +235,15 @@ export default function AdvancedAnalytics() {
         </Card>
       </div>
 
-import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
-import { Sparkles, Brain, AlertCircle, TrendingUp, Users, Calendar, DollarSign } from 'lucide-react';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
       <Tabs defaultValue="appointments" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="appointments">Consultas</TabsTrigger>
-          <TabsTrigger value="financial">Financeiro</TabsTrigger>
-          <TabsTrigger value="status">Status</TabsTrigger>
-          <TabsTrigger value="predictive" className="text-primary font-bold">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 overflow-x-auto">
+          <TabsTrigger value="appointments" className="text-xs sm:text-sm">Consultas</TabsTrigger>
+          <TabsTrigger value="financial" className="text-xs sm:text-sm">Financeiro</TabsTrigger>
+          <TabsTrigger value="status" className="text-xs sm:text-sm">Status</TabsTrigger>
+          <TabsTrigger value="predictive" className="text-xs sm:text-sm text-primary font-bold">
             <Sparkles className="h-3 w-3 mr-1" />
-            IA Predictive
+            <span className="hidden sm:inline">IA Predictive</span>
+            <span className="sm:hidden">IA</span>
           </TabsTrigger>
         </TabsList>
 
@@ -313,12 +313,12 @@ import { normalizeFirestoreData } from '@/utils/firestoreData';
 
         <TabsContent value="appointments" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Consultas por Mês</CardTitle>
-              <CardDescription>Evolução de consultas nos últimos 6 meses</CardDescription>
+            <CardHeader className="pb-4 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Consultas por Mês</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Evolução de consultas nos últimos 6 meses</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={200} minWidth={300}>
                 <BarChart data={appointmentsByMonth}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
@@ -335,12 +335,12 @@ import { normalizeFirestoreData } from '@/utils/firestoreData';
 
         <TabsContent value="financial" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Receita vs Despesas</CardTitle>
-              <CardDescription>Análise financeira mensal</CardDescription>
+            <CardHeader className="pb-4 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Receita vs Despesas</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Análise financeira mensal</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={200} minWidth={300}>
                 <LineChart data={financialByMonth}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
@@ -358,12 +358,12 @@ import { normalizeFirestoreData } from '@/utils/firestoreData';
 
         <TabsContent value="status" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Status de Consultas</CardTitle>
-              <CardDescription>Distribuição por status</CardDescription>
+            <CardHeader className="pb-4 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Status de Consultas</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Distribuição por status</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={200} minWidth={300}>
                 <PieChart>
                   <Pie
                     data={appointmentStatus}
