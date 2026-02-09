@@ -15,8 +15,9 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rafaelminatto.fisioflow",
+      "bundleIdentifier": "com.fisioflow.professionals",
       "buildNumber": "1",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "Permitir acesso a camera para fotos de pacientes e exercicios",
         "NSPhotoLibraryUsageDescription": "Permitir acesso a galeria para selecionar fotos",
@@ -31,7 +32,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E40AF"
       },
-      "package": "com.fisioflow.professional"
+      "package": "com.fisioflow.professional",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
