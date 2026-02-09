@@ -5,19 +5,20 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Agenda - Novo Design dos Cards', () => {
   test.beforeEach(async ({ page }) => {
     // Login - usar URL completa para evitar problemas de porta
     await page.goto('http://localhost:8080/auth');
-    await page.fill('input[type="email"]', 'fisio@activityfisioterapia.com.br');
-    await page.fill('input[type="password"]', 'Activity2024!');
+    await page.fill('input[type="email"]', testUsers.fisio.email);
+    await page.fill('input[type="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(dashboard|schedule)/);
 
     // Navigate to Schedule
     await page.goto('http://localhost:8080/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('deve exibir cards com alto contraste', async ({ page }) => {
@@ -216,7 +217,7 @@ test.describe('Agenda - Novo Design dos Cards', () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verificar que os cards ainda são visíveis
     const appointmentCards = page.locator('.calendar-appointment-card');
@@ -293,12 +294,12 @@ test.describe('Agenda - Novo Design dos Cards', () => {
 test.describe('Agenda - Screenshots Comparativos', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:8080/auth');
-    await page.fill('input[type="email"]', 'fisio@activityfisioterapia.com.br');
-    await page.fill('input[type="password"]', 'Activity2024!');
+    await page.fill('input[type="email"]', testUsers.fisio.email);
+    await page.fill('input[type="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(dashboard|schedule)/);
     await page.goto('http://localhost:8080/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('screenshot - view de semana', async ({ page }) => {

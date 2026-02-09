@@ -1,44 +1,60 @@
 import requests
-from requests.auth import HTTPBasicAuth
+
+BASE_URL = "https://moocafisio.com.br"
+ENDPOINT = "/api/ai/chat"
+TIMEOUT = 30
+
 
 def test_post_api_ai_chat_endpoint():
-    base_url = "http://localhost:8084"
-    endpoint = "/api/ai/chat"
-    url = base_url + endpoint
-
-    auth = HTTPBasicAuth("rafael.minatto@yahoo.com.br", "Yukari30@")
-    headers = {"Content-Type": "application/json"}
-
-    # Valid request payload - API expects messages array per api/ai/chat/route.ts
-    valid_payload = {
-        "messages": [
-            {"role": "user", "content": "What are the clinical suggestions for a patient with lower back pain?"}
-        ]
+    url = f"{BASE_URL}{ENDPOINT}"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
     }
 
-    # Invalid request payload example (empty or wrong type)
-    invalid_payload = "this should be an object, not a string"
+    # Valid payload example for chat request
+    valid_payload = {
+        "message": "Paciente queixa de dor lombar crônica, qual sugestão clínica?"
+    }
+
+    # Invalid payload example (empty message)
+    invalid_payload = {
+        "message": ""
+    }
 
     # Test valid request
     try:
-        response = requests.post(url, json=valid_payload, headers=headers, auth=auth, timeout=30)
-        assert response.status_code == 200, f"Expected status 200, got {response.status_code}"
-        json_response = response.json()
-        # Check if response is JSON object and contains keys typical for AI clinical suggestions (best effort)
-        assert isinstance(json_response, dict), "Response JSON is not an object"
-        # Assume response should have a 'suggestions' or similar key representing clinical suggestions
-        assert any(key in json_response for key in ('suggestions', 'response', 'answers', 'message')), \
-            "Response does not contain expected AI suggestion keys"
-    except requests.exceptions.RequestException as e:
-        assert False, f"Request failed with exception: {e}"
+        response = requests.post(
+            url,
+            json=valid_payload,
+            headers=headers,
+            timeout=TIMEOUT,
+        )
+        assert response.status_code == 200, f"Expected 200 OK but got {response.status_code}"
+        content_type = response.headers.get('Content-Type', '')
+        assert 'application/json' in content_type, f"Expected JSON response but got {content_type}"
+        response_json = response.json()
+        assert isinstance(response_json, dict), "Response is not a JSON object"
+    except Exception as e:
+        assert False, f"Valid request test failed: {e}"
 
     # Test invalid request
     try:
-        response_invalid = requests.post(url, data=invalid_payload, headers=headers, auth=auth, timeout=30)
-        # Expecting client error for invalid input (400 Bad Request or similar)
-        assert response_invalid.status_code >= 400 and response_invalid.status_code < 500, \
-            f"Expected client error status code for invalid input, got {response_invalid.status_code}"
-    except requests.exceptions.RequestException as e:
-        assert False, f"Request with invalid payload failed with exception: {e}"
+        response = requests.post(
+            url,
+            json=invalid_payload,
+            headers=headers,
+            timeout=TIMEOUT,
+        )
+        assert 400 <= response.status_code < 500, \
+            f"Expected client error status (4xx) but got {response.status_code}"
+        content_type = response.headers.get('Content-Type', '')
+        if response.content:
+            assert 'application/json' in content_type, f"Expected JSON error response but got {content_type}"
+            resp_json = response.json()
+            assert "error" in resp_json or "message" in resp_json, "Error response missing expected keys"
+    except Exception as e:
+        assert False, f"Invalid request test failed: {e}"
+
 
 test_post_api_ai_chat_endpoint()

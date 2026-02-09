@@ -7,7 +7,6 @@ import React, { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
-import { generateTimeSlots } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
@@ -20,6 +19,7 @@ interface CalendarWeekViewProps {
     currentDate: Date;
     appointments: Appointment[];
     savingAppointmentId: string | null;
+    timeSlots: string[];
     onTimeSlotClick: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
@@ -46,8 +46,8 @@ interface CalendarWeekViewProps {
 // CONSTANTS
 // =====================================================================
 
-const START_HOUR = 7;
-const END_HOUR = 21;
+const DEFAULT_START_HOUR = 7;
+const DEFAULT_END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
 
 /** Margem à esquerda do primeiro card (em px). */
@@ -122,6 +122,7 @@ export const CalendarWeekView = memo(({
     currentDate,
     appointments,
     savingAppointmentId,
+    timeSlots,
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
@@ -151,7 +152,17 @@ export const CalendarWeekView = memo(({
         return Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
     }, [currentDate]);
 
-    const timeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
+    const derivedStartHour = useMemo(() => {
+        if (!timeSlots.length) return DEFAULT_START_HOUR;
+        const [h] = timeSlots[0].split(':').map(Number);
+        return Number.isFinite(h) ? h : DEFAULT_START_HOUR;
+    }, [timeSlots]);
+
+    const derivedEndHour = useMemo(() => {
+        if (!timeSlots.length) return DEFAULT_END_HOUR;
+        const [h] = timeSlots[timeSlots.length - 1].split(':').map(Number);
+        return Number.isFinite(h) ? h + 1 : DEFAULT_END_HOUR;
+    }, [timeSlots]);
 
     // Removed hoveredAppointmentId state to prevent global re-renders
     const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null);
@@ -163,12 +174,12 @@ export const CalendarWeekView = memo(({
             const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
 
-            if (currentHour < START_HOUR || currentHour > END_HOUR) {
+            if (currentHour < derivedStartHour || currentHour > derivedEndHour) {
                 setCurrentTimePosition(null);
                 return;
             }
 
-            const totalMinutesFromStart = (currentHour - START_HOUR) * 60 + currentMinute;
+            const totalMinutesFromStart = (currentHour - derivedStartHour) * 60 + currentMinute;
             const position = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
             setCurrentTimePosition(position);
         };
@@ -176,7 +187,7 @@ export const CalendarWeekView = memo(({
         updatePosition();
         const interval = setInterval(updatePosition, 60000);
         return () => clearInterval(interval);
-    }, [slotHeight]);
+    }, [slotHeight, derivedStartHour, derivedEndHour]);
 
     // Filter appointments for this week (exclude null/undefined to avoid "reading 'id'" on drag)
     const weekAppointments = useMemo(() => {

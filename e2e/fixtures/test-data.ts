@@ -1,26 +1,26 @@
 export const testUsers = {
   admin: {
-    email: 'admin@activityfisio.com',
-    password: 'Admin@123',
+    email: 'teste@moocafisio.com.br',
+    password: 'Yukari3030@',
     role: 'admin',
     expectedOrganizationId: null, // Será preenchido durante os testes
   },
   fisio: {
-    email: 'fisio@activityfisio.com',
-    password: 'Fisio@123',
+    email: 'teste@moocafisio.com.br',
+    password: 'Yukari3030@',
     role: 'fisioterapeuta',
     expectedOrganizationId: null,
   },
   estagiario: {
-    email: 'estagiario@activityfisio.com',
-    password: 'Estagiario@123',
+    email: 'teste@moocafisio.com.br',
+    password: 'Yukari3030@',
     role: 'estagiario',
     expectedOrganizationId: null,
   },
   // Firebase test user
   rafael: {
-    email: 'rafael.minatto@yahoo.com.br',
-    password: 'Yukari30@',
+    email: 'teste@moocafisio.com.br',
+    password: 'Yukari3030@',
     role: 'professional',
     expectedOrganizationId: null,
   },

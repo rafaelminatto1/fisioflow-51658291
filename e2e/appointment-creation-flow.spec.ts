@@ -12,7 +12,7 @@ test.describe('Fluxo de Criação de Agendamento', () => {
 
         // 2. Navegar para a agenda
         await page.goto('/schedule');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
     });
 
     test('deve criar um agendamento clicando no grid', async ({ page }) => {

@@ -207,4 +207,4 @@ functions/check_token.js
 functions/decode-token.js
 functions/lib/
 functions/.env.fisioflow-migrationwhisper_env/
-functions/.env*
+functions/.env*claude-skills/repo

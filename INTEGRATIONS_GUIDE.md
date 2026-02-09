@@ -1,117 +1,98 @@
 # FisioFlow - Pro Integrations Implementation Guide
 
-Complete implementation of Vercel Pro and Supabase Pro features for FisioFlow.
+Complete implementation of Firebase and Google Cloud features for FisioFlow.
 
 ## 📋 Overview
 
-This document consolidates all 8 Pro integrations implemented for FisioFlow:
+This document consolidates all 8 key integrations implemented for FisioFlow using Firebase and Google Cloud:
 
-1. ✅ Vercel KV - Distributed Redis caching
-2. ✅ Vercel Edge Config - Feature flags
-3. ✅ Vercel Edge Functions - AI & Webhooks
-4. ✅ Vercel Cron Jobs - Scheduled tasks
-5. ✅ Supabase Vector - Semantic search
-6. ✅ Supabase Branching - Development database branches
-7. ✅ Supabase MFA - Multi-factor authentication
-8. ✅ Vercel Preview Deployments - PR previews
+1. ✅ Cloud Memorystore (Redis) - Distributed Caching
+2. ✅ Firebase Remote Config - Feature flags
+3. ✅ Cloud Functions - AI & Webhooks
+4. ✅ Cloud Scheduler + Cloud Functions - Scheduled tasks
+5. ✅ Firestore + Vertex AI Embeddings - Semantic search
+6. ✅ Firebase Auth MFA - Multi-factor authentication
+7. ✅ Firebase Hosting Preview Channels - PR previews
+8. ✅ Google Secret Manager - Secrets Management
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
 
-Already installed via:
-```bash
-pnpm add @vercel/kv @vercel/edge-config
-```
 
-### 2. Apply Database Migrations
 
-```bash
-# Enable Supabase Vector
-supabase db push
-
-# Or apply specific migration
-supabase migration up --file 20250110_enable_vector.sql
-
-# Add MFA support
-supabase migration up --file 20250110_add_mfa_support.sql
-```
 
 ### 3. Configure Environment Variables
 
-Add to `.env.local`:
+Add to `.env.local` (or Google Secret Manager for production):
 
 ```bash
-# Vercel KV
-KV_URL=<your-kv-url>
-KV_REST_API_URL=<your-kv-rest-url>
-KV_REST_API_TOKEN=<your-kv-token>
-KV_REST_API_READ_ONLY_TOKEN=<your-kv-read-only-token>
+# Firebase Project Configuration (from Firebase Console)
+VITE_FIREBASE_API_KEY=your-firebase-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 
-# Vercel Edge Config
-EDGE_CONFIG=<your-edge-config-url>
+# Cloud Functions (if applicable)
+CLOUD_FUNCTION_API_KEY=your-cloud-function-api-key
 
-# OpenAI (for embeddings)
-OPENAI_API_KEY=<your-openai-api-key>
+# OpenAI (for embeddings, if still used)
+OPENAI_API_KEY=your-openai-api-key
 
-# Cron Jobs
-CRON_SECRET=<random-secret-for-cron-authentication>
-
-# Supabase (service role for migrations)
-SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+# Cloud Scheduler / Pub/Sub (for scheduled tasks)
+GCP_PROJECT_ID=your-gcp-project-id
 ```
 
-### 4. Deploy
 
-```bash
-# Build
-pnpm run build
-
-# Deploy to Vercel
-vercel --prod
-```
 
 ---
 
 ## 📚 Integration Details
 
-### 1. Vercel KV - Distributed Caching
+### 1. Cloud Memorystore (Redis) - Distributed Caching
 
 **Location**: `src/lib/cache/KVCacheService.ts`
 
 **Features**:
-- Distributed Redis caching across deployments
-- Specialized cache classes: Patient, Appointment, Exercise, Protocol
-- Rate limiting implementation
-- Session storage
+- High-performance, fully managed Redis caching service
+- Seamless integration with Firebase/GCP ecosystem
+- Scalable and secure distributed caching
+- Specialized cache classes for core entities (Patient, Appointment, Exercise, Protocol)
 
 **Usage Examples**:
 
 ```typescript
-import { PatientCache, getCache, setCache } from '@/lib/cache/KVCacheService';
+import { CloudMemorystoreCache } from '@/lib/cache/CloudMemorystoreCacheService';
+
+// Initialize cache (e.g., in a serverless function)
+const patientCache = new CloudMemorystoreCache('patients');
 
 // Cache a patient
-await PatientCache.set(patientId, patientData);
+await patientCache.set(patientId, patientData, { ttl: 3600 });
 
 // Retrieve from cache
-const patient = await PatientCache.get(patientId);
+const patient = await patientCache.get(patientId);
 
-// Generic caching
-const data = await getCache<any>('my-key');
+// Generic caching (if needed for other types)
+const genericCache = new CloudMemorystoreCache('generic');
+const data = await genericCache.get<any>('my-key');
 if (!data) {
   const result = await fetchFromAPI();
-  await setCache('my-key', result, { ttl: 3600 });
+  await genericCache.set('my-key', result, { ttl: 3600 });
 }
 ```
 
 **Rate Limiting**:
+*(To be implemented using a dedicated Cloud Function or external service interacting with Redis)*
 
 ```typescript
-import { rateLimit } from '@/lib/cache/KVCacheService';
+import { rateLimitService } from '@/lib/security/RateLimitService'; // Assuming new service
 
-const result = await rateLimit('user:123', 100, 60); // 100 requests per minute
+const result = await rateLimitService.check('user:123', 100, 60); // 100 requests per minute
 if (!result.success) {
   return { error: 'Rate limit exceeded' };
 }
@@ -119,91 +100,101 @@ if (!result.success) {
 
 ---
 
-### 2. Vercel Edge Config - Feature Flags
+### 2. Firebase Remote Config - Feature Flags
 
-**Location**: `src/lib/featureFlags/edgeConfig.ts`
+**Location**: src/lib/featureFlags/remoteConfig.ts
 
 **Features**:
-- Dynamic feature flags without redeployment
-- A/B testing support
-- Role-based access control
-- Rollout percentages
+- Dynamic feature flags managed via Firebase Console
+- Real-time updates without app redeployment
+- Conditional targeting based on user properties, app version, etc.
+- A/B testing with Firebase A/B Testing
 
 **Usage Examples**:
 
 ```typescript
-import { isFeatureEnabled, getFeatureFlags } from '@/lib/featureFlags/edgeConfig';
+import { getRemoteConfig } from '@/lib/featureFlags/remoteConfig';
 
-// Check if feature is enabled
-const newDashboard = await isFeatureEnabled('new_dashboard', userId, userRole);
+// Get feature flag value
+const newDashboardEnabled = getRemoteConfig().getBoolean('new_dashboard_feature');
 
-if (newDashboard) {
+if (newDashboardEnabled) {
   return <NewDashboard />;
 }
 
-// Get multiple flags
-const flags = await getFeatureFlags();
-console.log(flags.ai_transcription, flags.digital_prescription);
+// Get multiple flags (example)
+const aiTranscriptionEnabled = getRemoteConfig().getBoolean('ai_transcription_enabled');
+const digitalPrescriptionEnabled = getRemoteConfig().getBoolean('digital_prescription_enabled');
+console.log(aiTranscriptionEnabled, digitalPrescriptionEnabled);
 ```
 
-**Edge Config Schema**:
+**Firebase Remote Config Setup**:
 
-Create in Vercel Dashboard → Edge Config:
+Configure parameters in Firebase Console → Remote Config:
 
 ```json
 {
-  "features": {
-    "new_dashboard": false,
-    "ai_transcription": true,
-    "ai_chatbot": true,
-    "digital_prescription": true,
-    "pain_map_v2": false,
-    "maintenance_mode": false
+  "new_dashboard_feature": {
+    "defaultValue": { "value": "false" },
+    "valueType": "BOOLEAN"
+  },
+  "ai_transcription_enabled": {
+    "defaultValue": { "value": "true" },
+    "valueType": "BOOLEAN"
+  },
+  "ai_chatbot_enabled": {
+    "defaultValue": { "value": "true" },
+    "valueType": "BOOLEAN"
+  },
+  "digital_prescription_enabled": {
+    "defaultValue": { "value": "true" },
+    "valueType": "BOOLEAN"
+  },
+  "maintenance_mode_active": {
+    "defaultValue": { "value": "false" },
+    "valueType": "BOOLEAN"
   }
 }
 ```
 
 ---
 
-### 3. Vercel Edge Functions - AI & Webhooks
+### 3. Cloud Functions - AI & Webhooks
 
-**Locations**:
-- `api/ai/transcribe/route.ts` - Audio transcription
-- `api/ai/chat/route.ts` - AI chatbot
-- `api/ai/suggest-exercise/route.ts` - Exercise suggestions
-- `api/webhooks/stripe/route.ts` - Stripe webhooks
-- `api/webhooks/whatsapp/route.ts` - WhatsApp webhooks
+**Locations**: (Firebase Cloud Functions)
+- `functions/src/ai/transcribe.ts` - Audio transcription
+- `functions/src/ai/chat.ts` - AI chatbot
+- `functions/src/ai/suggestExercise.ts` - Exercise suggestions
+- `functions/src/webhooks/stripe.ts` - Stripe webhooks
+- `functions/src/webhooks/whatsapp.ts` - WhatsApp webhooks
 
 **Usage Examples**:
 
 ```typescript
-// Transcribe audio
-const response = await fetch('/api/ai/transcribe', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ audioUrl: 'https://...' }),
-});
-const { transcription } = await response.json();
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase/firebase'; // Assuming initialized Firebase Functions
 
-// AI Chat
-const chat = await fetch('/api/ai/chat', {
-  method: 'POST',
-  body: JSON.stringify({
-    messages: [
-      { role: 'system', content: 'You are a PT assistant' },
-      { role: 'user', content: 'Explain this exercise...' }
-    ]
-  }),
+// Transcribe audio (callable Cloud Function)
+const transcribeAudio = httpsCallable(functions, 'transcribeAudio');
+const { data: transcription } = await transcribeAudio({ audioUrl: 'https://...' });
+
+// AI Chat (callable Cloud Function)
+const aiChat = httpsCallable(functions, 'aiChat');
+const { data: chatResponse } = await aiChat({
+  messages: [
+    { role: 'system', content: 'You are a PT assistant' },
+    { role: 'user', content: 'Explain this exercise...' }
+  ]
 });
 ```
 
 ---
 
-### 4. Vercel Cron Jobs - Scheduled Tasks
+### 4. Cloud Scheduler + Cloud Functions - Scheduled Tasks
 
-**Locations**: `api/crons/`
+**Locations**: `functions/src/crons/`
 
-**Cron Schedule** (defined in `vercel.json`):
+**Cron Schedule** (defined using Firebase `onSchedule` or Cloud Scheduler):
 
 | Job | Schedule | Description |
 |-----|----------|-------------|
@@ -215,100 +206,59 @@ const chat = await fetch('/api/ai/chat', {
 
 **Securing Cron Jobs**:
 
-All cron endpoints require authentication:
+Cloud Functions triggered by Cloud Scheduler (via Pub/Sub) are inherently secure as they are not exposed directly via HTTP. For HTTP-triggered functions, secure with API keys or Firebase Authentication.
 
-```bash
-curl https://your-domain.com/api/crons/daily-reports \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```typescript
+import * as functions from 'firebase-functions';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+
+// Example for daily reports
+export const dailyReports = onSchedule('0 8 * * *', async (event) => {
+  console.log('Running daily reports cron job');
+  // Business logic here
+});
 ```
 
 ---
 
-### 5. Supabase Vector - Semantic Search
+### 5. Firestore + Vertex AI Embeddings - Semantic Search
 
-**Migration**: `supabase/migrations/20250110_enable_vector.sql`
+**Migration**: ``
 
-**Service**: `src/lib/vector/embeddings.ts`
+**Service**: `src/lib/ai/vertexEmbeddings.ts`
 
 **Features**:
-- Semantic search for exercises
+- Semantic search for exercises using Vertex AI embeddings
 - Semantic search for protocols
 - Patient similarity matching
-- OpenAI text-embedding-3-small (1536 dimensions)
+- Leverages Google's text-embedding models (e.g., `text-embedding-gecko`)
 
 **Usage Examples**:
 
 ```typescript
-import { exerciseEmbedding, protocolEmbedding, patientSimilarity } from '@/lib/vector/embeddings';
+import { vertexEmbeddings } from '@/lib/ai/vertexEmbeddings';
 
-// Update exercise embedding
-await exerciseEmbedding.updateExerciseEmbedding(exerciseId);
+// Generate embedding for a query
+const queryEmbedding = await vertexEmbeddings.generateEmbedding('exercises for lower back pain');
 
-// Semantic search
-const results = await exerciseEmbedding.searchExercises(
-  'exercises for lower back pain relief',
+// Semantic search for exercises in Firestore
+const results = await vertexEmbeddings.searchFirestoreDocuments(
+  'exercises',
+  queryEmbedding,
   { threshold: 0.75, limit: 10, organizationId: 'org-123' }
 );
 
-// Find similar patients
-const similar = await patientSimilarity.findSimilarPatients(patientId, {
-  threshold: 0.8,
-  limit: 5
-});
-
-// Batch update all embeddings
-await exerciseEmbedding.updateAllExerciseEmbeddings();
+// Example of updating embeddings for a document (e.g., an exercise)
+await vertexEmbeddings.updateDocumentEmbedding('exercises', exerciseId, exerciseTextContent);
 ```
 
-**SQL Queries**:
 
-```sql
--- Direct semantic search
-SELECT * FROM search_exercises_semantic(
-  '[0.1, 0.2, ...]'::vector(1536),  -- query embedding
-  0.75,                              -- threshold
-  10,                                -- limit
-  'org-123'::uuid                    -- organization filter
-);
-```
 
 ---
 
-### 6. Supabase Branching - Development
 
-**Guide**: `.supabase/branching.md`
 
-**Workflow**:
-
-```bash
-# Create branch for feature
-git checkout -b feature/new-dashboard
-supabase branches create feature-new-dashboard
-
-# Apply migrations to branch
-supabase db push --branch feature-new-dashboard
-
-# Use branch database locally
-export BRANCH_DB_URL=$(supabase branches inspect feature-new-dashboard --json | jq -r '.db_url')
-export VITE_SUPABASE_URL=$BRANCH_DB_URL
-
-# Develop and test...
-
-# Merge and cleanup
-git checkout main
-git merge feature/new-dashboard
-supabase branches delete feature-new-dashboard
-```
-
-**Benefits**:
-- Safe schema changes
-- Test migrations without risk
-- Parallel development
-- Preview deployments with branch databases
-
----
-
-### 7. Supabase MFA - Multi-Factor Auth
+### 6. Firebase Auth MFA - Multi-Factor Authentication
 
 **Migration**: `supabase/migrations/20250110_add_mfa_support.sql`
 
