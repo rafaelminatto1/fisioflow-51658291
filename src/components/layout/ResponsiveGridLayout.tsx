@@ -69,6 +69,21 @@ export function ResponsiveGridLayout({
     );
 }
 
+/**
+ * CardGrid - Grid responsivo para cards
+ * Wrapper simples em torno de ResponsiveGridLayout
+ */
+export function CardGrid({ children, className }: { children: ReactNode; className?: string }) {
+    return (
+        <ResponsiveGridLayout
+            cols={{ xs: 1, sm: 2, md: 2, lg: 3 }}
+            className={className}
+        >
+            {children}
+        </ResponsiveGridLayout>
+    );
+}
+
 interface ResponsiveCardProps {
     children: ReactNode;
     className?: string;
