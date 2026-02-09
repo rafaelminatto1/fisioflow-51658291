@@ -49,6 +49,8 @@ interface MainLayoutProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
   /** Remove all main content padding for flush full-width layouts */
   noPadding?: boolean;
+  /** Use reduced lateral padding (md:px-4 instead of md:p-8) for content-dense pages */
+  compactPadding?: boolean;
   /** Custom header component to replace default header */
   customHeader?: React.ReactNode;
   /** Hide default header */
@@ -62,6 +64,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   fullWidth = false,
   maxWidth,
   noPadding = false,
+  compactPadding = false,
   customHeader,
   hideDefaultHeader = false,
 }) => {
@@ -209,7 +212,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             "flex-1 bg-gray-50/50 dark:bg-background/50",
             noPadding
               ? "pt-[60px] md:pt-0 pb-24 md:pb-0"
-              : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
+              : compactPadding
+                ? "p-3 xs:p-4 sm:p-4 md:px-4 md:py-4 pt-[60px] md:pt-4 pb-24 md:pb-4"
+                : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
           )}
         >
           <div className={cn(
