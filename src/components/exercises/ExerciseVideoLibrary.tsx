@@ -59,6 +59,7 @@ import {
 } from '@/services/exerciseVideos';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { withImageParams } from '@/lib/storageProxy';
 
 interface ExerciseVideoLibraryProps {
   onUploadClick?: () => void;
@@ -911,10 +912,11 @@ function VideoCard({
       {/* Thumbnail with overlay */}
       <div className="relative aspect-video bg-muted">
         {video.thumbnail_url ? (
-          <img
-            src={video.thumbnail_url}
+          <OptimizedImage
+            src={withImageParams(video.thumbnail_url, { width: 640, height: 360, format: 'auto', fit: 'cover', quality: 70 })}
             alt={video.title}
             className="w-full h-full object-cover"
+            aspectRatio="16:9"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
