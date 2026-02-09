@@ -683,6 +683,112 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ============================================================================================
+    // USER SUB-COLLECTIONS (Patient App Data)
+    // ============================================================================================
+
+    // Exercise plans for patients
+    match /users/{userId}/exercise_plans/{planId} {
+      // Patients can read their own exercise plans
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Professionals can read their patients' plans
+      allow read: if isProfessional();
+      // Only professionals can create/update plans
+      allow create, update: if isProfessional() || isAdmin();
+      // Only admin can delete
+      allow delete: if isAdmin();
+    }
+
+    // Appointments for patients
+    match /users/{userId}/appointments/{appointmentId} {
+      // Patients can read their own appointments
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Professionals can read appointments they're involved in
+      allow read: if isProfessional();
+      // Only professionals can create/update appointments
+      allow create, update: if isProfessional() || isAdmin();
+      // Only admin can delete
+      allow delete: if isAdmin();
+    }
+
+    // Health data (HealthKit/Health Connect integration)
+    match /users/{userId}/health_data/{dataId} {
+      // Patients can read/write their own health data
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      // Professionals can read health data (read-only)
+      allow read: if isProfessional();
+    }
+
+    // Pain entries (PainMap data)
+    match /users/{userId}/pain_entries/{entryId} {
+      // Patients can read/write their own pain entries
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      // Professionals can read pain entries (read-only)
+      allow read: if isProfessional();
+    }
+
+    // Messages and conversations
+    match /conversations/{conversationId} {
+      // Participants can read their conversations
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/conversations/$(conversationId)/participants/$(request.auth.uid));
+      // Authenticated users can create conversations
+      allow create: if isAuthenticated() && isValidSize();
+      // Participants can update conversations
+      allow update: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/conversations/$(conversationId)/participants/$(request.auth.uid));
+      // Only admin can delete conversations
+      allow delete: if isAdmin();
+    }
+
+    // Conversation participants
+    match /conversations/{conversationId}/participants/{participantId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Messages within conversations
+    match /conversations/{conversationId}/messages/{messageId} {
+      // Participants can read messages
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/conversations/$(conversationId)/participants/$(request.auth.uid));
+      // Participants can send messages
+      allow create: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/conversations/$(conversationId)/participants/$(request.auth.uid)) &&
+        isValidSize();
+      // Only sender can update their own messages
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.senderId;
+      // Only admin can delete messages
+      allow delete: if isAdmin();
+    }
+
+    // User profile photos (stored in users/{userId}/profile_photos/{photoId})
+    match /users/{userId}/profile_photos/{photoId} {
+      // Users can read their own profile photos
+      allow read: if isAuthenticated();
+      // Users can upload their own photos
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidSize();
+      // Only owner can update their photos
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      // Only owner or admin can delete
+      allow delete: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Exercise progress tracking
+    match /users/{userId}/exercise_progress/{progressId} {
+      // Patients can read/write their own progress
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      // Professionals can read progress (read-only)
+      allow read: if isProfessional();
+    }
+
+    // Notification preferences
+    match /users/{userId}/notification_settings/{settingId} {
+      // Users can read/write their own notification settings
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
