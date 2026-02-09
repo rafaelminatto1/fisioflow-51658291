@@ -290,10 +290,10 @@ const Financial = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="transactions" className="w-full">
-          <TabsList className="bg-muted/50 p-1 rounded-xl mb-6">
-            <TabsTrigger value="transactions" className="rounded-lg px-6">Transações</TabsTrigger>
-            <TabsTrigger value="packages" className="rounded-lg px-6">Pacotes</TabsTrigger>
-            <TabsTrigger value="reports" className="rounded-lg px-6">Relatórios</TabsTrigger>
+          <TabsList className="bg-muted/50 p-1 rounded-xl mb-4 sm:mb-6 grid grid-cols-3 w-full">
+            <TabsTrigger value="transactions" className="rounded-lg text-xs sm:text-sm">Transações</TabsTrigger>
+            <TabsTrigger value="packages" className="rounded-lg text-xs sm:text-sm">Pacotes</TabsTrigger>
+            <TabsTrigger value="reports" className="rounded-lg text-xs sm:text-sm">Relatórios</TabsTrigger>
           </TabsList>
 
           <TabsContent value="transactions" className="space-y-6">
@@ -325,39 +325,39 @@ const Financial = () => {
               />
             ) : (
               <div className="border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto -mx-2 sm:mx-0">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted/30 text-muted-foreground font-medium border-b border-border/50">
                       <tr>
-                        <th className="px-6 py-4">Data</th>
-                        <th className="px-6 py-4">Descrição</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4">Valor</th>
-                        <th className="px-6 py-4 text-right">Ações</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Data</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Descrição</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Status</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Valor</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-xs sm:text-sm">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {transactions.map((t) => (
                         <tr key={t.id} className="hover:bg-muted/20 transition-colors group">
-                          <td className="px-6 py-4 text-muted-foreground">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-muted-foreground text-xs sm:text-sm">
                             {t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : '-'}
                           </td>
-                          <td className="px-6 py-4">
-                            <p className="font-semibold">{t.descricao || 'Sem descrição'}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.tipo}</p>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <p className="font-semibold text-xs sm:text-sm truncate max-w-[150px]">{t.descricao || 'Sem descrição'}</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{t.tipo}</p>
                           </td>
-                          <td className="px-6 py-4">
-                            <Badge variant={t.status === 'concluido' ? 'success' : 'warning'} className="rounded-full px-3">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <Badge variant={t.status === 'concluido' ? 'success' : 'warning'} className="rounded-full px-2 sm:px-3 text-xs">
                               {t.status === 'concluido' ? 'Pago' : 'Pendente'}
                             </Badge>
                           </td>
                           <td className={cn(
-                            "px-6 py-4 font-bold",
+                            "px-3 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm",
                             t.tipo === 'receita' ? 'text-emerald-600' : 'text-destructive'
                           )}>
                             {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR')}
                           </td>
-                          <td className="px-6 py-4 text-right space-x-2">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right space-x-1 sm:space-x-2">
                             {t.status === 'pendente' && (
                               <Button variant="ghost" size="icon" onClick={() => markAsPaid(t.id)} className="h-8 w-8 text-emerald-600">
                                 <Check className="h-4 w-4" />
