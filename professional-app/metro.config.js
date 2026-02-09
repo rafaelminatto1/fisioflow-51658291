@@ -1,32 +1,32 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
+const fs = require('fs');
 
-// Encontrar o diretório raiz do monorepo (onde está a pasta 'src')
 const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// 1. Adicionar a raiz do workspace para que o Metro possa resolver módulos de lá
-config.watchFolders = [workspaceRoot];
+// Adicionar suporte para whatwg-fetch
+config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'mjs', 'cjs'];
 
-// 2. Permitir que o Metro resolva imports da pasta 'src' e 'node_modules' da raiz
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-];
+// Criar um polyfill resolver para whatwg-fetch
+const whatwgFetchPath = path.resolve(projectRoot, 'node_modules/whatwg-fetch/dist/fetch.umd.js');
 
-// 3. Forçar o Metro a resolver bibliotecas nativas apenas do projeto mobile
-// Alterado para false para permitir que o Metro resolva links simbólicos do pnpm corretamente
-config.resolver.disableHierarchicalLookup = false;
-
-// 5. Mapeamento explícito para pacotes problemáticos com symlinks
-config.resolver.extraNodeModules = {
-  ...config.resolver.extraNodeModules,
-  'whatwg-fetch': path.resolve(projectRoot, 'node_modules/whatwg-fetch'),
+// Adicionar resolução customizada
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Para whatwg-fetch, usar o arquivo .js diretamente
+  if (moduleName === 'whatwg-fetch') {
+    return {
+      filePath: whatwgFetchPath,
+      type: 'sourceFile',
+    };
+  }
+  // Caso contrário, usar o resolver padrão
+  return context.resolveRequest(context, moduleName, platform);
 };
 
-// 4. Ignorar pastas de teste e build que confundem o watcher
+// Ignorar pastas que não precisam ser watchadas
 config.resolver.blockList = [
   /test-results\/.*/,
   /playwright-report\/.*/,
@@ -34,7 +34,9 @@ config.resolver.blockList = [
   /\.git\/.*/,
   /\.firebase\/.*/,
   /dataconnect\/.*/,
-  /functions\/.*/
+  /functions\/.*/,
+  /e2e\/.*/,
+  /testsprite_tests\/.*/,
 ];
 
 module.exports = config;

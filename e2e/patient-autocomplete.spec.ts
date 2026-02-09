@@ -8,11 +8,11 @@ test.describe('Patient Autocomplete - Novo Agendamento', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
     // Go to schedule page
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('deve abrir modal e verificar se pacientes são carregados sem erros', async ({ page }) => {

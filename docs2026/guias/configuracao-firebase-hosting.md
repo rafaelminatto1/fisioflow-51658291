@@ -1,6 +1,6 @@
 # Configuração Firebase Hosting e Deploy (Firebase + GCP)
 
-O FisioFlow usa **Firebase Hosting** para o frontend e **Cloud Functions** para o backend. Não utilizamos Vercel nem Netlify.
+O FisioFlow usa **Firebase Hosting** para o frontend e **Cloud Functions** para o backend. Não utilizamos.
 
 ## 1. Pré-requisitos
 
