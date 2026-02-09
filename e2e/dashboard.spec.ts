@@ -16,13 +16,9 @@ test.describe('Dashboard - Funcionalidades', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
 
-    // Verificar elementos principais usando data-testid
-    const dashboardPage = page.locator('[data-testid="dashboard-page"]');
-    const dashboardHeader = page.locator('[data-testid="dashboard-header"]');
-    const welcomeText = page.locator('[data-testid="dashboard-welcome-text"]');
-
-    // Pelo menos um dos elementos deve estar visível
-    await expect(dashboardPage.first().or(dashboardHeader.first()).or(welcomeText.first())).toBeVisible({ timeout: 10000 });
+    // Verificar que a página de dashboard carregou
+    const dashboardPage = page.locator('[data-testid="dashboard-page"]').first();
+    await expect(dashboardPage).toBeVisible({ timeout: 10000 });
   });
 
   test('deve navegar para agenda ao clicar em ver agenda', async ({ page }) => {

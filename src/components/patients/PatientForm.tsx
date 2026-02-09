@@ -234,7 +234,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 overflow-x-auto -mx-1 px-1 scrollbar-hide">
           <TabsTrigger value="basic">
             <User className="w-4 h-4 mr-2" />
             Básico
