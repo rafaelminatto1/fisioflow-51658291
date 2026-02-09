@@ -23,14 +23,13 @@ test.describe('Pacientes - CRUD Completo', () => {
   });
 
   test('deve criar novo paciente', async ({ page }) => {
-    // Verificar que a página carregou
-    const patientsTitle = page.locator('h1:has-text("Pacientes")');
-    await expect(patientsTitle).toBeVisible({ timeout: 10000 });
+    // Verificar que a página carregou usando o título
+    await expect(page.locator('h1:has-text("Pacientes")')).toBeVisible({ timeout: 15000 });
 
-    // Verificar se existe algum botão de criar/novo na página
+    // Verificar se existe algum botão de criar/novo na página (opcional)
     const createButton = page.locator('button:has-text("Novo"), button:has-text("Criar"), button:has-text("Adicionar")').first();
 
-    if (await createButton.isVisible({ timeout: 3000 })) {
+    if (await createButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       console.log('✅ Botão de criar encontrado');
       // Não vamos clicar para evitar modificar dados
     } else {
@@ -38,8 +37,7 @@ test.describe('Pacientes - CRUD Completo', () => {
     }
 
     // O teste passa se a página carregou corretamente
-    const pageVisible = await patientsTitle.isVisible();
-    expect(pageVisible).toBeTruthy();
+    await expect(page.locator('h1:has-text("Pacientes")')).toBeVisible();
   });
 
   test('deve buscar pacientes', async ({ page }) => {

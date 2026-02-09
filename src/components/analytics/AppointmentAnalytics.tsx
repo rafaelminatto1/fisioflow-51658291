@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar } from 'recharts';
 import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -66,12 +66,12 @@ export function AppointmentAnalytics() {
   return (
     <div className="space-y-4">
       <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-        <CardHeader>
-          <CardTitle>Agendamentos por Dia (Últimos 30 dias)</CardTitle>
-          <CardDescription>Volume diário de agendamentos no período</CardDescription>
+        <CardHeader className="pb-4 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg">Agendamentos por Dia (Últimos 30 dias)</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Volume diário de agendamentos no período</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full">
+          <div className="h-[200px] sm:h-[250px] lg:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyData}>
                 <defs>
@@ -111,12 +111,12 @@ export function AppointmentAnalytics() {
       </Card>
 
       <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
-        <CardHeader>
-          <CardTitle>Distribuição por Status</CardTitle>
-          <CardDescription>Status dos agendamentos nos últimos 30 dias</CardDescription>
+        <CardHeader className="pb-4 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg">Distribuição por Status</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Status dos agendamentos nos últimos 30 dias</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full">
+          <div className="h-[200px] sm:h-[250px] lg:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
