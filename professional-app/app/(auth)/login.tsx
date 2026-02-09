@@ -89,8 +89,9 @@ export default function LoginScreen() {
   const displayError = localError || error;
 
   const getBiometricIcon = () => {
+    // Ionicons doesn't have 'face-id', use 'person' for Face ID
     if (biometricTypeName === 'Face ID') {
-      return 'face-id';
+      return 'person';
     }
     return 'finger-print';
   };
