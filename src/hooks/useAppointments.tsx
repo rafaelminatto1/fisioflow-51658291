@@ -353,16 +353,55 @@ export function useCreateAppointment() {
       // Delegate to service
       return await AppointmentService.createAppointment(data, organizationId, currentAppointments);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
 
-      // Optimistic update
+      // Snapshot previous value
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id));
+
+      // Optimistically update to the new value
+      const tempId = `temp-${Date.now()}`;
+      const optimisticAppointment: AppointmentBase = {
+        id: tempId,
+        patientId: variables.patient_id,
+        patientName: variables.patient_id || '', // Will be filled by actual response
+        phone: '',
+        date: new Date(variables.appointment_date),
+        time: variables.appointment_time || variables.start_time || '',
+        duration: variables.duration || 60,
+        type: variables.type || 'Fisioterapia',
+        status: variables.status || 'agendado',
+        notes: variables.notes || '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        therapistId: variables.therapist_id,
+        room: variables.room,
+        payment_status: variables.payment_status || 'pending',
+      };
+
       queryClient.setQueryData(
         appointmentKeys.list(profile?.organization_id),
         (old: AppointmentsQueryResult | undefined) => ({
           ...old,
-          data: [...(old?.data || []), data]
+          data: [...(old?.data || []), optimisticAppointment]
         })
+      );
+
+      // Return context with previous data and temp ID
+      return { previousData, tempId };
+    },
+    onSuccess: (data, _variables, context) => {
+      // Replace optimistic update with real data
+      queryClient.setQueryData(
+        appointmentKeys.list(profile?.organization_id),
+        (old: AppointmentsQueryResult | undefined) => {
+          const filtered = old?.data.filter(apt => apt.id !== context?.tempId) || [];
+          return {
+            ...old,
+            data: [...filtered, data]
+          };
+        }
       );
 
       toast({
@@ -379,7 +418,15 @@ export function useCreateAppointment() {
         data.patientName
       );
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback to previous value
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          appointmentKeys.list(profile?.organization_id),
+          context.previousData
+        );
+      }
+
       // 409: toast amigável já é mostrado no modal; só suprimimos a notificação genérica
       if (isAppointmentConflictError(error)) {
         ErrorHandler.handle(error, 'useCreateAppointment', { showNotification: false });
@@ -401,7 +448,30 @@ export function useUpdateAppointment() {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
       return await AppointmentService.updateAppointment(appointmentId, updates, organizationId);
     },
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
+
+      // Snapshot previous value
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id));
+
+      // Optimistically update the appointment
+      queryClient.setQueryData(
+        appointmentKeys.list(profile?.organization_id),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: old?.data.map(apt =>
+            apt.id === variables.appointmentId
+              ? { ...apt, ...parseUpdatesToAppointment(variables.updates) }
+              : apt
+          ) || []
+        })
+      );
+
+      return { previousData };
+    },
     onSuccess: (data) => {
+      // Invalidate to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
       queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(data.id) });
 
@@ -410,7 +480,15 @@ export function useUpdateAppointment() {
         description: 'Agendamento atualizado com sucesso'
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback to previous value
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          appointmentKeys.list(profile?.organization_id),
+          context.previousData
+        );
+      }
+
       // 409: toast amigável já é mostrado no modal ou no drag; só suprimimos a notificação genérica
       if (isAppointmentConflictError(error)) {
         ErrorHandler.handle(error, 'useUpdateAppointment', { showNotification: false });
@@ -419,6 +497,28 @@ export function useUpdateAppointment() {
       }
     }
   });
+}
+
+// Helper to parse form updates to appointment format
+function parseUpdatesToAppointment(updates: Partial<AppointmentFormData>): Partial<AppointmentBase> {
+  const result: Partial<AppointmentBase> = {};
+
+  if (updates.appointment_date || updates.date) {
+    const dateStr = updates.appointment_date || updates.date;
+    result.date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr as Date;
+  }
+  if (updates.appointment_time || updates.start_time) {
+    result.time = updates.appointment_time || updates.start_time;
+  }
+  if (updates.duration) result.duration = updates.duration;
+  if (updates.type) result.type = updates.type;
+  if (updates.status) result.status = updates.status;
+  if (updates.notes !== undefined) result.notes = updates.notes;
+  if (updates.therapist_id !== undefined) result.therapistId = updates.therapist_id;
+  if (updates.room !== undefined) result.room = updates.room;
+  if (updates.payment_status !== undefined) result.payment_status = updates.payment_status;
+
+  return result;
 }
 
 // Delete appointment mutation

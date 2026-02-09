@@ -8,6 +8,10 @@ export interface User {
   avatarUrl?: string;
   specialty?: string;
   crefito?: string;
+  phone?: string;
+  clinicName?: string;
+  clinicAddress?: string;
+  clinicPhone?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -16,34 +20,45 @@ export interface User {
 export interface Patient {
   id: string;
   userId?: string;
-  clinicId: string;
+  clinicId?: string;
+  professionalId?: string;
   name: string;
-  email: string;
-  phone: string;
-  birthDate: Date;
-  condition: string;
+  email?: string;
+  phone?: string;
+  birthDate?: Date | string;
+  condition?: string;
+  diagnosis?: string;
   status: 'active' | 'inactive';
   notes?: string;
-  startDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  progress?: number;
+  startDate?: Date;
+  lastVisit?: Date;
+  organization_id?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 // Appointment types
-export interface Appointment {
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'agendado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado';
+
+export interface AppointmentBase {
   id: string;
   patientId: string;
-  patientName: string;
+  patientName?: string;
   professionalId: string;
-  clinicId: string;
-  date: Date;
-  time: string;
+  clinicId?: string;
+  date: Date | string;
+  time?: string;
   duration: number;
   type: string;
-  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  status: AppointmentStatus;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface Appointment extends AppointmentBase {
+  patientName: string;
 }
 
 // Exercise types
@@ -90,15 +105,19 @@ export interface ProgramExercise {
 
 // Evolution/Progress types
 export interface Evolution {
-  id: string;
-  appointmentId: string;
+  id?: string;
+  appointmentId?: string;
   patientId: string;
   professionalId: string;
-  date: Date;
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-  createdAt: Date;
-  updatedAt: Date;
+  date?: Date;
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+  notes?: string;
+  painLevel?: number;
+  exercises?: any[];
+  attachments?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }

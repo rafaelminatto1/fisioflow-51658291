@@ -159,7 +159,9 @@ export const useSoapRecords = (patientId: string, limitValue = 10) => {
       return snapshot.docs.map(convertDocToSoapRecord);
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    // OTIMIZAÇÃO: Aumentado staleTime - evoluções anteriores mudam pouco
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    gcTime: 1000 * 60 * 20, // 20 minutos
   });
 };
 

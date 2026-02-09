@@ -12,7 +12,7 @@ test.describe('Isolamento de Dados por Organização', () => {
 
     // Navegar para página de pacientes
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Aguardar lista de pacientes carregar
     await page.waitForTimeout(2000);
@@ -44,7 +44,7 @@ test.describe('Isolamento de Dados por Organização', () => {
 
     // Navegar para página de agendamentos
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
     // Verificar se a página carregou
@@ -74,7 +74,7 @@ test.describe('Isolamento de Dados por Organização', () => {
 
     // Navegar para pacientes
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
     // Capturar quantidade de pacientes visíveis (se houver)
@@ -97,7 +97,7 @@ test.describe('Isolamento de Dados por Organização', () => {
 
     // Navegar para pacientes
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Tentar criar novo paciente
     const newPatientButton = page.locator('button:has-text("Novo"), button:has-text("Adicionar"), button:has-text("Criar")').first();

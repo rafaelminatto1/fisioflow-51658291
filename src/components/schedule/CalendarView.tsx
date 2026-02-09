@@ -548,16 +548,51 @@ export const CalendarView = memo(({
   // Hook for time slots availability
   const { timeSlots: dayTimeSlotInfo, isDayClosed, isTimeBlocked, getBlockReason, blockedTimes, businessHours } = useAvailableTimeSlots(currentDate);
 
+  const getDaySchedule = useCallback((date: Date) => {
+    const dayOfWeek = date.getDay();
+
+    // Sunday default closed
+    if (dayOfWeek === 0) return null;
+
+    const config = businessHours?.find(h => h.day_of_week === dayOfWeek);
+
+    if (config) {
+      if (!config.is_open) return null;
+      return {
+        open: normalizeSlotTime(config.open_time),
+        close: normalizeSlotTime(config.close_time)
+      };
+    }
+
+    // Fallback default hours (Mon-Fri 07-21, Sat 07-13)
+    const defaultClose = dayOfWeek === 6 ? '13:00' : '21:00';
+    return {
+      open: '07:00',
+      close: defaultClose
+    };
+  }, [businessHours]);
+
   // Helper to check if time is blocked for any date
   const checkTimeBlocked = useCallback((date: Date, time: string): { blocked: boolean; reason?: string } => {
+    const schedule = getDaySchedule(date);
+    if (!schedule) {
+      return { blocked: true, reason: 'Fora do horário de funcionamento' };
+    }
+
+    const timeMinutes = timeToMinutes(time);
+    const openMinutes = timeToMinutes(schedule.open);
+    const closeMinutes = timeToMinutes(schedule.close);
+
+    // Block outside business hours
+    if (timeMinutes < openMinutes || timeMinutes >= closeMinutes) {
+      return { blocked: true, reason: 'Fora do horário de funcionamento' };
+    }
+
     if (!blockedTimes || !time) {
       return { blocked: false };
     }
 
     const dayOfWeek = date.getDay();
-    // Safety check for time split
-    const [timeH, timeM] = (time || '00:00').split(':').map(Number);
-    const timeMinutes = timeH * 60 + timeM;
 
     for (const block of blockedTimes) {
       const blockStart = new Date(block.start_date);
@@ -595,21 +630,66 @@ export const CalendarView = memo(({
       }
     }
     return { blocked: false };
-  }, [blockedTimes]);
+  }, [blockedTimes, getDaySchedule]);
 
   // Check if a day is closed based on business hours
   const isDayClosedForDate = useCallback((date: Date): boolean => {
-    const dayOfWeek = date.getDay();
-    if (!businessHours || businessHours.length === 0) {
-      return dayOfWeek === 0; // Sunday closed by default
-    }
-    const dayConfig = businessHours.find(h => h.day_of_week === dayOfWeek);
-    return dayConfig ? !dayConfig.is_open : dayOfWeek === 0;
-  }, [businessHours]);
+    return getDaySchedule(date) === null;
+  }, [getDaySchedule]);
 
   const memoizedTimeSlots = useMemo(() => {
     return dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
   }, [dayTimeSlotInfo, currentDate]);
+
+  const weekTimeSlots = useMemo(() => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const days = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
+
+    let minStart = 7 * 60;
+    let maxEnd = 21 * 60;
+
+    const fallbackRange = (day: number) => ({
+      start: 7 * 60,
+      end: day === 6 ? 13 * 60 : 21 * 60,
+    });
+
+    if (businessHours && businessHours.length > 0) {
+      days.forEach(day => {
+        const dow = day.getDay();
+        const config = businessHours.find(h => h.day_of_week === dow);
+
+        if (!config) {
+          const { start, end } = fallbackRange(dow);
+          minStart = Math.min(minStart, start);
+          maxEnd = Math.max(maxEnd, end);
+          return;
+        }
+
+        if (!config.is_open) return;
+
+        const open = timeToMinutes(config.open_time);
+        const close = timeToMinutes(config.close_time);
+
+        if (Number.isFinite(open) && open > 0) {
+          minStart = Math.min(minStart, open);
+        }
+
+        if (Number.isFinite(close) && close > 0) {
+          maxEnd = Math.max(maxEnd, close);
+        }
+      });
+    }
+
+    const slots: string[] = [];
+    const slotDuration = 30;
+    for (let minutes = minStart; minutes < maxEnd; minutes += slotDuration) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
+    }
+
+    return slots;
+  }, [businessHours, currentDate]);
 
   // Single live region: success takes precedence over debounced drop target (avoids two competing announcements)
   const liveAnnouncement = rescheduleSuccessMessage ?? debouncedDropAnnouncement ?? '';
@@ -961,6 +1041,7 @@ export const CalendarView = memo(({
                     currentDate={currentDate}
                     appointments={displayAppointments}
                     savingAppointmentId={dragState.savingAppointmentId}
+                    timeSlots={weekTimeSlots}
                     onTimeSlotClick={onTimeSlotClick}
                     onEditAppointment={onEditAppointment}
                     onDeleteAppointment={onDeleteAppointment}
@@ -983,6 +1064,7 @@ export const CalendarView = memo(({
                     currentDate={currentDate}
                     appointments={displayAppointments}
                     savingAppointmentId={dragState.savingAppointmentId}
+                    timeSlots={weekTimeSlots}
                     onTimeSlotClick={onTimeSlotClick}
                     onEditAppointment={onEditAppointment}
                     onDeleteAppointment={onDeleteAppointment}

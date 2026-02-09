@@ -29,7 +29,7 @@ O FisioFlow AI Studio é um sistema revolucionário de gestão para clínicas de
   "communication": "WhatsApp Business API + Twilio + SendGrid",
   "payments": "Stripe + PIX + Asaas",
   "storage": "AWS S3 + CloudFront",
-  "deploy": "Vercel + Railway + Docker",
+  "deploy": "Firebase Hosting + Cloud Build + Docker",
   "monitoring": "Sentry + PostHog + DataDog",
   "testing": "Vitest + Playwright + MSW"
 }
@@ -648,26 +648,7 @@ export class MedicalChatbot {
 
 ## DEPLOY E PRODUÇÃO
 
-### Configuração Vercel:
-```json
-// vercel.json
-{
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "env": {
-    "DATABASE_URL": "@database-url",
-    "NEXTAUTH_SECRET": "@nextauth-secret",
-    "OPENAI_API_KEY": "@openai-key"
-  },
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  }
-}
-```
+
 
 ### Pipeline CI/CD:
 ```yaml
@@ -695,11 +676,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: vercel/action@v1
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}
-          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_FISIOFLOW_LOVABLE }}'
+          channelId: live
+          projectId: fisioflow-lovable
 ```
 
 ## ROADMAP DE FUNCIONALIDADES

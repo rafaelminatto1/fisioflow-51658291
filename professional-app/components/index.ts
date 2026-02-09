@@ -1,3 +1,9 @@
 export { Button } from './Button';
 export { Input } from './Input';
 export { Card } from './Card';
+export { Modal } from './Modal';
+export { TextArea } from './TextArea';
+export { Slider } from './Slider';
+export { PhotoGrid } from './PhotoGrid';
+export { SyncStatus } from './SyncStatus';
+export { CheckInButton } from './CheckInButton';

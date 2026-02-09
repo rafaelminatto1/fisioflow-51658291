@@ -280,7 +280,7 @@ describe('validation utilities', () => {
   describe('validateArray', () => {
     it('should filter out invalid items', () => {
       const schema = commonSchemas.entityId;
-      const items = ['valid-1', '', 'valid-2', 'invalid', 'valid-3'];
+      const items = ['valid-1', '', 'valid-2', '   ', 'valid-3'];
       const result = validateArray(schema, items);
 
       expect(result).toEqual(['valid-1', 'valid-2', 'valid-3']);

@@ -34,7 +34,7 @@ test.describe('PWA Tests', () => {
 
   test('deve ter Service Worker registrado', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Aguardar registro do Service Worker
     await page.waitForTimeout(2000);
@@ -91,7 +91,7 @@ test.describe('PWA Tests', () => {
 
   test('deve funcionar offline (básico)', async ({ page, context }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Aguardar Service Worker cachear recursos
     await page.waitForTimeout(3000);
@@ -116,7 +116,7 @@ test.describe('PWA Tests', () => {
 
   test('deve ter estratégia de cache configurada', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verificar se Service Worker tem estratégias de cache
     const cacheNames = await page.evaluate(async () => {
@@ -134,7 +134,7 @@ test.describe('PWA Tests', () => {
 
   test('deve salvar dados no IndexedDB', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Aguardar inicialização do IndexedDB
     await page.waitForTimeout(2000);
@@ -158,7 +158,7 @@ test.describe('PWA Tests', () => {
 
   test('deve ter install prompt disponível', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verificar se beforeinstallprompt é capturado
     const installable = await page.evaluate(() => {
@@ -183,7 +183,7 @@ test.describe('PWA Tests', () => {
 
   test('deve ter recursos críticos pré-cacheados', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Aguardar cache
     await page.waitForTimeout(3000);
@@ -217,7 +217,7 @@ test.describe('PWA Tests', () => {
 
   test('deve atualizar Service Worker quando disponível', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const swStatus = await page.evaluate(async () => {
       if ('serviceWorker' in navigator) {

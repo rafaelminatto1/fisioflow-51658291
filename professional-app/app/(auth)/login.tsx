@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   View,
@@ -11,17 +11,42 @@ import {
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 
 export default function LoginScreen() {
   const colors = useColors();
-  const { signIn, isLoading, error, clearError } = useAuthStore();
+  const { signIn, isLoading, error, clearError, user } = useAuthStore();
+  const {
+    authenticate,
+    enable,
+    isAvailable,
+    isEnabled,
+    biometricTypeName,
+    checkAvailability,
+  } = useBiometricAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const [showBiometric, setShowBiometric] = useState(false);
+
+  // Check biometric availability on mount
+  useEffect(() => {
+    checkAvailability();
+  }, []);
+
+  // Show biometric button if available and not enabled yet
+  useEffect(() => {
+    if (isAvailable && !isEnabled && !user) {
+      setShowBiometric(true);
+    } else {
+      setShowBiometric(false);
+    }
+  }, [isAvailable, isEnabled, user]);
 
   const handleLogin = async () => {
     clearError();
@@ -39,13 +64,36 @@ export default function LoginScreen() {
 
     try {
       await signIn(email.trim(), password);
+      // Enable biometric after successful login
+      if (isAvailable) {
+        await enable();
+      }
       router.replace('/(tabs)');
     } catch (err: any) {
       // Error is already handled by the store
     }
   };
 
+  const handleBiometricLogin = async () => {
+    clearError();
+    setLocalError('');
+
+    const success = await authenticate('Acesse o FisioFlow Pro');
+    if (success) {
+      // If biometric login succeeds, we need to sign in with stored credentials
+      // For now, this is a simplified version - in production, store credentials securely
+      setLocalError('Faça login com email e senha primeiro para habilitar biometria');
+    }
+  };
+
   const displayError = localError || error;
+
+  const getBiometricIcon = () => {
+    if (biometricTypeName === 'Face ID') {
+      return 'face-id';
+    }
+    return 'finger-print';
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -121,6 +169,23 @@ export default function LoginScreen() {
               loading={isLoading}
               style={styles.loginButton}
             />
+
+            {/* Biometric Login Button */}
+            {showBiometric && (
+              <TouchableOpacity
+                style={[styles.biometricButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={handleBiometricLogin}
+              >
+                <Ionicons
+                  name={getBiometricIcon() as any}
+                  size={24}
+                  color={colors.textSecondary}
+                />
+                <Text style={[styles.biometricText, { color: colors.textSecondary }]}>
+                  Entrar com {biometricTypeName}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Footer */}
@@ -194,6 +259,20 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 8,
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 16,
+    gap: 12,
+  },
+  biometricText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   footer: {
     alignItems: 'center',

@@ -50,19 +50,21 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
           size="icon"
           onClick={handlePrevMonth}
           className="h-8 w-8"
+          aria-label="Mês anterior"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        
+
         <h3 className="text-base font-bold">
           {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
         </h3>
-        
+
         <Button
           variant="ghost"
           size="icon"
           onClick={handleNextMonth}
           className="h-8 w-8"
+          aria-label="Próximo mês"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -93,6 +95,8 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
             <button
               key={index}
               onClick={() => onDateSelect(day)}
+              data-selected={isSelected}
+              aria-label={format(day, 'd MMMM yyyy', { locale: ptBR })}
               className={cn(
                 'aspect-square rounded-lg text-sm font-medium transition-all duration-200',
                 'hover:scale-110 active:scale-95',

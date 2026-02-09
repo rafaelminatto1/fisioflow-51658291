@@ -17,11 +17,12 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution } from '@/types';
 
-// ============================================
-// TYPES
-// ============================================
+// Re-export types for convenience
+export type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution };
 
+// Local types not in shared types
 export interface Professional {
   id: string;
   userId: string;
@@ -33,51 +34,6 @@ export interface Professional {
   status: 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface Patient {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  phone?: string;
-  birthDate?: string;
-  condition?: string;
-  diagnosis?: string;
-  notes?: string;
-  status: 'active' | 'inactive';
-  lastVisit?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Appointment {
-  id: string;
-  patientId: string;
-  patientName?: string;
-  professionalId: string;
-  type: string;
-  date: Date;
-  duration: number;
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Exercise {
-  id: string;
-  name: string;
-  description: string;
-  instructions?: string[];
-  category?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
-  videoUrl?: string;
-  imageUrl?: string;
-  sets?: number;
-  reps?: number;
-  duration?: number;
-  createdBy: string;
 }
 
 export interface ExerciseAssignment {
@@ -93,17 +49,6 @@ export interface ExerciseAssignment {
   completed: boolean;
   progress: number;
   notes?: string;
-}
-
-export interface Evolution {
-  id: string;
-  patientId: string;
-  professionalId: string;
-  notes: string;
-  painLevel?: number;
-  exercises?: ExerciseAssignment[];
-  attachments?: string[];
-  createdAt: Date;
 }
 
 // ============================================
@@ -763,5 +708,87 @@ export async function getProfessionalStats(professionalId: string): Promise<{
       upcomingAppointments: 0,
       completedAppointmentsThisMonth: 0,
     };
+  }
+}
+
+export async function updateProfessionalProfile(
+  userId: string,
+  data: {
+    name?: string;
+    email?: string;
+    specialty?: string;
+    crefito?: string;
+    phone?: string;
+    clinicName?: string;
+    clinicAddress?: string;
+    clinicPhone?: string;
+    avatarUrl?: string;
+  }
+): Promise<Professional | null> {
+  try {
+    // Try professionals collection first
+    const professionalsRef = collection(db, 'professionals');
+    const q = query(professionalsRef, where('userId', '==', userId), limit(1));
+    const snapshot = await getDocs(q);
+
+    const updateData: any = {
+      ...data,
+      updatedAt: serverTimestamp(),
+    };
+
+    // Map crefito to licenseNumber for consistency
+    if (data.crefito) {
+      updateData.licenseNumber = data.crefito;
+    }
+
+    if (!snapshot.empty) {
+      // Update in professionals collection
+      const docRef = doc(db, 'professionals', snapshot.docs[0].id);
+      await updateDoc(docRef, updateData);
+
+      // Return updated data
+      return {
+        id: snapshot.docs[0].id,
+        userId,
+        name: data.name || snapshot.docs[0].data().name || 'Profissional',
+        email: data.email || snapshot.docs[0].data().email || '',
+        specialty: data.specialty,
+        licenseNumber: data.crefito,
+        phone: data.phone,
+        status: 'active',
+        createdAt: snapshot.docs[0].data().createdAt
+          ? convertTimestamp(snapshot.docs[0].data().createdAt)
+          : new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
+    // Fallback: update in users collection
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+      await updateDoc(userDocRef, updateData);
+      const updatedData = userDoc.data();
+      return {
+        id: userDoc.id,
+        userId,
+        name: data.name || updatedData.name || 'Profissional',
+        email: data.email || updatedData.email || '',
+        specialty: data.specialty,
+        licenseNumber: data.crefito,
+        phone: data.phone,
+        status: 'active',
+        createdAt: updatedData.createdAt
+          ? convertTimestamp(updatedData.createdAt)
+          : new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error updating professional profile:', error);
+    throw error;
   }
 }

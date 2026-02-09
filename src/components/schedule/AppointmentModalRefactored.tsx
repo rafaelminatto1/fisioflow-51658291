@@ -34,6 +34,7 @@ import {
   THERAPIST_SELECT_NONE,
   THERAPIST_PLACEHOLDER,
 } from '@/hooks/useTherapists';
+import { debounce, SimpleCache } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivePatients } from '@/hooks/usePatients';
@@ -128,13 +129,31 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { getMinCapacityForInterval } = useScheduleCapacity();
   const { mutateAsync: consumeSession } = useUsePackageSession();
 
-  // Verifica se o paciente já teve sessões/evoluções anteriores
+  // Cache para checkPatientHasPreviousSessions - evita filtrar o array inteiro repetidamente
+  const patientSessionsCache = useRef(new SimpleCache<string, boolean>(60000)); // 60s TTL
+
+  // Verifica se o paciente já teve sessões/evoluções anteriores (OTIMIZADO COM CACHE)
   const checkPatientHasPreviousSessions = useCallback((patientId: string): boolean => {
-    const previousAppointments = appointments.filter(
-      apt => apt.patientId === patientId &&
-        ['concluido', 'atendido', 'em_andamento', 'completado'].includes(apt.status)
-    );
-    return previousAppointments.length > 0;
+    // Verificar cache primeiro
+    const cached = patientSessionsCache.current.get(patientId);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    // Criar Map de paciente -> count para O(1) lookup
+    const patientSessionsMap = useMemo(() => {
+      const map = new Map<string, number>();
+      appointments.forEach(apt => {
+        if (['concluido', 'atendido', 'em_andamento', 'completado'].includes(apt.status)) {
+          map.set(apt.patientId, (map.get(apt.patientId) || 0) + 1);
+        }
+      });
+      return map;
+    }, [appointments]);
+
+    const hasSessions = (patientSessionsMap.get(patientId) || 0) > 0;
+    patientSessionsCache.current.set(patientId, hasSessions);
+    return hasSessions;
   }, [appointments]);
 
   // Armazena referência estável para checkPatientHasPreviousSessions
@@ -150,6 +169,30 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   // Armazena o último patientId para o qual o status foi definido
   // evita definir o status múltiplas vezes para o mesmo paciente
   const lastStatusPatientIdRef = useRef<string | null>(null);
+
+  // Debounced conflict check - evita recalcular conflitos a cada tecla digitada
+  const debouncedConflictCheck = useMemo(
+    () => debounce((params: {
+      date: Date | null;
+      time: string | undefined;
+      duration: number | undefined;
+      excludeId: string | undefined;
+      therapistId: string;
+    }) => {
+      if (params.date && params.time && params.duration) {
+        const result = checkAppointmentConflict({
+          date: params.date,
+          time: params.time,
+          duration: params.duration,
+          excludeId: params.excludeId,
+          therapistId: params.therapistId,
+          appointments: appointmentsRef.current
+        });
+        setConflictCheck(result);
+      }
+    }, 200), // 200ms de debounce
+    [] // Dependências vazias - a função é recriada apenas uma vez
+  );
 
   // Quando true, salva o agendamento sem navegar para a tela de avaliação (botão "Agendar")
   const scheduleOnlyRef = useRef(false);
@@ -323,21 +366,24 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const effectiveTherapistId = (watchedTherapistId && String(watchedTherapistId).trim()) || user?.uid || '';
 
   useEffect(() => {
-    if (watchedDate && watchedTime && watchedDuration) {
-      const result = checkAppointmentConflict({
-        date: watchedDate,
-        time: watchedTime,
-        duration: watchedDuration,
-        excludeId: appointment?.id,
-        therapistId: effectiveTherapistId,
-        appointments: appointmentsRef.current
-      });
-      setConflictCheck(result);
-    }
-  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, effectiveTherapistId]);
+    // Usar debounce para evitar calcular conflitos desnecessariamente
+    debouncedConflictCheck({
+      date: watchedDate,
+      time: watchedTime,
+      duration: watchedDuration,
+      excludeId: appointment?.id,
+      therapistId: effectiveTherapistId
+    });
+
+    // Limpar debounce ao desmontar
+    return () => {
+      // A função debounce se limpa automaticamente
+    };
+  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, effectiveTherapistId, debouncedConflictCheck]);
 
   const { timeSlots: slotInfo, isDayClosed } = useAvailableTimeSlots(watchedDate);
 
+  // Otimização: gerar time slots apenas quando necessário e memoizar resultado
   const timeSlots = useMemo(() => {
     if (slotInfo.length === 0 && !isDayClosed) {
       const slots: string[] = [];
@@ -350,6 +396,28 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
     return slotInfo.map(s => s.time);
   }, [slotInfo, isDayClosed]);
+
+  // Otimização: pré-calcular conflitos por slot para evitar recálculo
+  const slotsWithConflicts = useMemo(() => {
+    if (!watchedDate || !watchedDuration) return new Map<string, number>();
+
+    const conflictsMap = new Map<string, number>();
+    const dayOfWeek = watchedDate.getDay();
+
+    timeSlots.forEach(slot => {
+      const capacity = getMinCapacityForInterval(dayOfWeek, slot, watchedDuration);
+      const conflicts = appointments.filter(apt => {
+        if (apt.id === appointment?.id) return false;
+        if (apt.date instanceof Date) {
+          return apt.date.getTime() === watchedDate.getTime() && apt.time === slot;
+        }
+        return false;
+      }).length;
+      conflictsMap.set(slot, conflicts);
+    });
+
+    return conflictsMap;
+  }, [watchedDate, watchedDuration, timeSlots, appointments, appointment?.id, getMinCapacityForInterval]);
 
   const persistAppointment = async (appointmentData: AppointmentFormData) => {
     const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
@@ -845,13 +913,17 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 disabled={isCreating || isUpdating}
                 onClick={() => { scheduleOnlyRef.current = false; }}
                 className={cn(
-                  "min-w-[100px]",
-                  watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white"
+                  "min-w-[100px] transition-all duration-200",
+                  watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
+                  (isCreating || isUpdating) && "opacity-80"
                 )}
                 size="default"
               >
                 {(isCreating || isUpdating) ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    {currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
+                  </span>
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-1" />

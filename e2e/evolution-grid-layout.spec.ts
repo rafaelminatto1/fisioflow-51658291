@@ -16,7 +16,7 @@ test.describe('Evolution Grid Layout - Widget Positioning', () => {
         await page.fill('input[type="email"]', testUsers.admin.email);
         await page.fill('input[type="password"]', testUsers.admin.password);
         await page.click('button[type="submit"]');
-        await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+        await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
         // 2. Navigate to Schedule and start session
         await page.goto('/schedule');
@@ -38,7 +38,7 @@ test.describe('Evolution Grid Layout - Widget Positioning', () => {
         // Clear any saved layout to start fresh
         await page.evaluate(() => localStorage.removeItem('evolution_layout_v1'));
         await page.reload();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
     });
 
     test('should have all expected widgets in correct order (Pain Scale collapsed)', async ({ page }) => {
@@ -185,7 +185,7 @@ test.describe('Evolution Grid Layout - Widget Positioning', () => {
         await page.click('button:has-text("Redefinir")');
 
         // Page should reload
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
 
         // Grid should still be visible
         const grid = page.locator('.react-grid-layout');

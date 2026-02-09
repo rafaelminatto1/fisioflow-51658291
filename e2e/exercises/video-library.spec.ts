@@ -15,7 +15,7 @@ import { test, expect, Page } from '@playwright/test';
 
 async function navigateToExercises(page: Page) {
   await page.goto('/exercises');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }
 
 // Mock data for tests

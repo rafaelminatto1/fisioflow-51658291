@@ -5,6 +5,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   const patientName = 'PC Siqueira';
@@ -207,8 +208,8 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   test.beforeEach(async ({ page }) => {
     // Login
     await page.goto('/auth');
-    await page.fill('input[type="email"]', 'admin@activityfisio.com');
-    await page.fill('input[type="password"]', 'Admin@123');
+    await page.fill('input[type="email"]', testUsers.fisio.email);
+    await page.fill('input[type="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     // Wait for navigation to complete
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
@@ -220,7 +221,7 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   test('criar 10 evoluções completas para PC Siqueira', async ({ page }) => {
     // Navegar para página de pacientes
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     // Buscar paciente PC Siqueira
@@ -469,7 +470,7 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   test('verificar auto-save automático durante edição', async ({ page }) => {
     // Navegar para pacientes
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Buscar PC Siqueira
     await page.fill('input[placeholder*="Buscar"]', patientName);
@@ -509,7 +510,7 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   test('verificar grid de exercícios no histórico', async ({ page }) => {
     // Navegar para pacientes
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Buscar PC Siqueira
     await page.fill('input[placeholder*="Buscar"]', patientName);

@@ -2,102 +2,47 @@
 
 ## 📋 Visão Geral
 
-Este documento contém as instruções completas para deploy do FisioFlow em produção usando Vercel e Supabase.
+Este documento contém as instruções completas para deploy do FisioFlow em produção usando Firebase e Google Cloud Platform.
 
 ## 🏗️ Arquitetura
 
 - **Frontend**: React + TypeScript + Vite
-- **Backend**: Supabase (BaaS)
-- **Database**: PostgreSQL (Supabase)
-- **Authentication**: Supabase Auth
-- **Storage**: Supabase Storage
-- **Deploy**: Vercel
+- **Backend**: Firebase (BaaS)
+- **Database**: Firestore / Cloud SQL (GCP)
+- **Authentication**: Firebase Authentication
+- **Storage**: Firebase Storage
+- **Deploy**: Firebase Hosting + Cloud Build
 - **Styling**: Tailwind CSS + shadcn/ui
 
-## 🚀 Deploy na Vercel
 
-### Pré-requisitos
 
-1. Conta na Vercel
-2. Repositório no GitHub
-3. Projeto Supabase configurado
+## 🗄️ Configuração do Firebase
 
-### Passos para Deploy
+### 1. Firebase Authentication
 
-1. **Conectar Repositório**
-   ```bash
-   # Clone o repositório
-   git clone <repository-url>
-   cd fisioflow
-   ```
+- Ativar **Email/Password**
+- Ativar **Google** (opcional)
+- Configurar domínios autorizados
 
-2. **Instalar Dependências**
-   ```bash
-   npm install
-   ```
+### 2. Firestore Database
 
-3. **Configurar Variáveis de Ambiente**
-   
-   Na Vercel, configure as seguintes variáveis:
-   ```bash
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   VITE_APP_ENV=production
-   ```
+- Criar banco de dados em **Produção**
+- Região: `southamerica-east1` (São Paulo) ou mais próxima
+- Configurar regras de segurança (ver `firestore.rules`)
 
-4. **Deploy Automático**
-   - Conecte o repositório GitHub à Vercel
-   - Configure o build command: `npm run build`
-   - Configure o output directory: `dist`
-   - Deploy será automático a cada push na branch `main`
+### 3. Firebase Storage
 
-## 🗄️ Configuração do Supabase
+- Ativar **Cloud Storage for Firebase**
+- Região: mesma do Firestore
+- Configurar regras de segurança (ver `storage.rules`)
 
-### Estrutura do Banco de Dados
+### 4. Firebase Cloud Functions
 
-#### Tabelas Principais
-- `profiles` - Perfis de usuários
-- `patients` - Dados dos pacientes
-- `appointments` - Agendamentos
-- `exercises` - Biblioteca de exercícios
-- `exercise_plans` - Planos de exercícios
-- `soap_records` - Registros SOAP
-- `patient_documents` - Documentos dos pacientes
-- `treatment_sessions` - Sessões de tratamento
+- Ativar **Cloud Functions** na região desejada
+- Upgrade para plano **Blaze** (paga por uso) para funções
+- Funções serverless para backend (API)
+- Funções agendadas para tarefas de fundo (cron jobs)
 
-#### Funcionalidades Avançadas
-- `smart_progression` - Progressão inteligente
-- `smart_adaptation` - Adaptação inteligente
-- `smart_reports` - Relatórios inteligentes
-- `email_notifications` - Notificações por email
-
-### Migrações
-
-Todas as migrações estão na pasta `supabase/migrations/`. Para aplicar:
-
-```bash
-# Instalar Supabase CLI
-npm install -g supabase
-
-# Login no Supabase
-supabase login
-
-# Aplicar migrações
-supabase db push
-```
-
-### Storage Buckets
-
-- `patient-documents` - Documentos dos pacientes
-- `exercise-media` - Mídia dos exercícios
-- `profile-avatars` - Avatares dos usuários
-
-### Políticas RLS
-
-Todas as tabelas possuem Row Level Security (RLS) habilitado com políticas específicas para:
-- Leitura baseada no perfil do usuário
-- Escrita restrita ao proprietário dos dados
-- Administradores com acesso completo
 
 ## 🔧 Scripts Disponíveis
 
@@ -134,7 +79,7 @@ npm run type-check
 
 Nunca commite arquivos `.env` com dados sensíveis. Use sempre:
 - `.env.example` para templates
-- Variáveis de ambiente na Vercel para produção
+- Variáveis de ambiente no Google Secret Manager para produção
 - Variáveis locais para desenvolvimento
 
 ## 📊 Monitoramento
@@ -147,8 +92,8 @@ Nunca commite arquivos `.env` com dados sensíveis. Use sempre:
 - Logs de segurança
 
 ### Logs
-- Vercel Analytics para performance
-- Supabase Dashboard para banco de dados
+- Google Analytics para performance
+- Firebase Console para banco de dados e funções
 - Console do navegador para erros frontend
 
 ## 🔄 CI/CD
@@ -178,32 +123,29 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
-      - name: Deploy to Vercel
-        uses: vercel/action@v20
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}
-          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_FISIOFLOW_LOVABLE }}'
+          channelId: live
+          projectId: fisioflow-lovable
 ```
 
 ## 🆘 Troubleshooting
 
 ### Problemas Comuns
 
-1. **Build falha na Vercel**
-   - Verificar se todas as dependências estão no `package.json`
-   - Verificar se as variáveis de ambiente estão configuradas
-   - Verificar logs de build na Vercel
 
-2. **Erro de conexão com Supabase**
-   - Verificar URL e chave anônima
-   - Verificar se o projeto Supabase está ativo
-   - Verificar políticas RLS
+
+2. **Erro de conexão com Firebase**
+   - Verificar chaves e configurações do Firebase
+   - Verificar se o projeto Firebase está ativo
+   - Verificar regras de segurança (Firestore/Storage)
 
 3. **Problemas de autenticação**
-   - Verificar configuração do Supabase Auth
+   - Verificar configuração do Firebase Authentication
    - Verificar redirect URLs
-   - Verificar políticas de segurança
+   - Verificar provedores habilitados
 
 ### Comandos de Debug
 
@@ -218,14 +160,13 @@ npm run type-check
 # Verificar linting
 npm run lint
 
-# Testar conexão Supabase
-npm run test:supabase
+# Testar conexão Firebase
+npm run test:firebase
 ```
 
 ## 📞 Suporte
 
-- **Documentação**: [Vercel Docs](https://vercel.com/docs)
-- **Supabase**: [Supabase Docs](https://supabase.com/docs)
+- **Documentação**: [Firebase Docs](https://firebase.google.com/docs)
 - **Issues**: Use o GitHub Issues para reportar problemas
 
 ---

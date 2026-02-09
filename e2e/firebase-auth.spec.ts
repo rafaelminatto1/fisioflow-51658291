@@ -29,7 +29,7 @@ async function doLogin(page: Page, email: string, password: string) {
   await page.click('button[type="submit"]');
 
   // Aguardar navegação para dashboard
-  await page.waitForURL(/\/$/, { timeout: 15000 });
+  await page.waitForURL(/\/(\?.*)?$/, { timeout: 15000 });
 }
 
 test.describe('Firebase Authentication - Login/Logout', () => {
@@ -45,7 +45,7 @@ test.describe('Firebase Authentication - Login/Logout', () => {
     await page.click('button[type="submit"]');
 
     // Aguardar navegação para dashboard
-    await page.waitForURL(/\/$/, { timeout: 15000 });
+    await page.waitForURL(/\/(\?.*)?$/, { timeout: 15000 });
 
     // Verificar se o nome do usuário aparece na página
     const userName = await page.locator('text=/Rafael/i').first().textContent();
@@ -71,14 +71,18 @@ test.describe('Firebase Authentication - Login/Logout', () => {
     await doLogin(page, testUsers.rafael.email, testUsers.rafael.password);
 
     // Clicar no menu de perfil
-    await page.click('[data-testid="user-menu"], button[aria-label*="menu"], button[aria-label*="perfil"]');
+    const userMenuButton = page.locator('[data-testid="user-menu"]').first();
+    await expect(userMenuButton).toBeVisible({ timeout: 10000 });
+    await userMenuButton.click();
 
     // Clicar em logout
-    await page.click('text=/Sair|Logout/i');
+    const logoutButton = page.locator('text=/Sair/i').first();
+    await expect(logoutButton).toBeVisible({ timeout: 5000 });
+    await logoutButton.click({ force: true });
 
     // Verificar redirecionamento para /auth
-    await page.waitForURL('/auth', { timeout: 5000 });
-    await expect(page).toHaveURL('/auth');
+    await page.waitForURL(/\/auth(\/login)?/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/auth(\/login)?/);
 
     // Verificar que os cookies foram limpos
     const cookies = await page.context().cookies();
@@ -93,7 +97,7 @@ test.describe('Firebase Authentication - Login/Logout', () => {
     await page.reload({ waitUntil: 'domcontentloaded' });
 
     // Verificar que ainda está logado
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/(\?.*)?$/);
     await expect(page.locator('text=/Rafael/i')).toBeVisible();
   });
 
@@ -147,7 +151,7 @@ test.describe('Navegação entre telas', () => {
     // Voltar para dashboard
     await page.click('a[href="/"], [data-testid="home-link"], text=/Dashboard|Início/i');
     await page.waitForURL(/\/$/);
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/(\?.*)?$/);
   });
 
   test('deve funcionar navegação mobile', async ({ page }) => {
@@ -284,7 +288,7 @@ test.describe('Testes de Performance e Carga', () => {
     await page.fill('input[type="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
 
-    await page.waitForURL(/\/$/, { timeout: 15000 });
+    await page.waitForURL(/\/(\?.*)?$/, { timeout: 15000 });
 
     const loadTime = Date.now() - startTime;
     expect(loadTime).toBeLessThan(3000);
@@ -303,12 +307,12 @@ test.describe('Testes de Performance e Carga', () => {
       await page.fill('input[type="email"]', testUsers.rafael.email);
       await page.fill('input[type="password"]', testUsers.rafael.password);
       await page.click('button[type="submit"]');
-      await page.waitForURL(/\/$/, { timeout: 15000 });
+      await page.waitForURL(/\/(\?.*)?$/, { timeout: 15000 });
     }
 
     // Verificar que todas estão logadas
     for (const page of pages) {
-      await expect(page).toHaveURL(/\/$/);
+      await expect(page).toHaveURL(/\/(\?.*)?$/);
     }
 
     // Fechar abas

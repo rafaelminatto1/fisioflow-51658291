@@ -104,103 +104,24 @@ BEGIN
 END $$;
 ```
 
-#### Edge Function para Descriptografar
+#### Firebase Cloud Function para Descriptografar
+
 ```typescript
-// supabase/functions/get-patient-cpf/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // Service role para descriptografia
-  );
-
-  const { patientId } = await req.json();
-  
-  // Verificar permissão
-  const { data: { user } } = await supabase.auth.getUser(
-    req.headers.get("Authorization")?.replace("Bearer ", "")
-  );
-  
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  }
-
-  // Verificar se user tem permissão
-  const hasPermission = await checkPermission(supabase, user.id, patientId);
-  if (!hasPermission) {
-    return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
-  }
-
-  // Descriptografar CPF
-  const { data } = await supabase.rpc('decrypt_cpf', {
-    encrypted_cpf: '...', // obter do DB
-    secret: Deno.env.get("ENCRYPTION_KEY")
-  });
-
-  return new Response(JSON.stringify({ cpf: data }), {
-    headers: { "Content-Type": "application/json" }
-  });
-});
+// functions/src/decrypt-cpf.ts
+// Implementar como Firebase Cloud Function
+// Recebe patientId, verifica permissões com Firebase Auth e Admin SDK
+// Descriptografa CPF do Firestore/Cloud SQL e retorna
 ```
 
 ### 1.3 Rate Limiting
 
-#### Edge Function com Rate Limit
+#### Firebase Cloud Function com Rate Limit
+
 ```typescript
-// supabase/functions/_shared/rate-limit.ts
-export class RateLimiter {
-  private requests = new Map<string, number[]>();
-
-  isAllowed(key: string, maxRequests: number, windowMs: number): boolean {
-    const now = Date.now();
-    const timestamps = this.requests.get(key) || [];
-    
-    // Remover timestamps antigos
-    const validTimestamps = timestamps.filter(ts => now - ts < windowMs);
-    
-    if (validTimestamps.length >= maxRequests) {
-      return false;
-    }
-    
-    validTimestamps.push(now);
-    this.requests.set(key, validTimestamps);
-    return true;
-  }
-
-  cleanup() {
-    const now = Date.now();
-    for (const [key, timestamps] of this.requests.entries()) {
-      const validTimestamps = timestamps.filter(ts => now - ts < 60000);
-      if (validTimestamps.length === 0) {
-        this.requests.delete(key);
-      } else {
-        this.requests.set(key, validTimestamps);
-      }
-    }
-  }
-}
-
-// Usar em edge functions
-const limiter = new RateLimiter();
-
-serve(async (req) => {
-  const ip = req.headers.get("x-forwarded-for") || "unknown";
-  
-  // 10 requests por minuto
-  if (!limiter.isAllowed(ip, 10, 60000)) {
-    return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
-      status: 429,
-      headers: { "Retry-After": "60" }
-    });
-  }
-  
-  // Processar request normalmente
-});
-
-// Cleanup periódico
-setInterval(() => limiter.cleanup(), 60000);
+// functions/src/rate-limited-api.ts
+// Implementar como Firebase Cloud Function
+// Usar middleware para rate limiting (ex: express-rate-limit se usando Express)
+// Ou implementar lógica de contagem de requisições com Firestore/Redis.
 ```
 
 ---
@@ -288,150 +209,21 @@ ON user_vouchers FOR SELECT
 USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 ```
 
-### 2.3 Edge Function - Checkout
+### 2.3 Firebase Cloud Function - Checkout
 
 ```typescript
-// supabase/functions/create-checkout/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2023-10-16",
-});
-
-serve(async (req) => {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    const { voucherId } = await req.json();
-
-    // Buscar voucher
-    const { data: voucher, error } = await supabase
-      .from("vouchers")
-      .select("*")
-      .eq("id", voucherId)
-      .single();
-
-    if (error || !voucher) {
-      throw new Error("Voucher not found");
-    }
-
-    // Criar Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer_email: user.email,
-      line_items: [
-        {
-          price: voucher.stripe_price_id,
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/vouchers?success=true`,
-      cancel_url: `${req.headers.get("origin")}/vouchers?canceled=true`,
-      metadata: {
-        user_id: user.id,
-        voucher_id: voucherId,
-      },
-    });
-
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+// functions/src/create-checkout.ts
+// Implementar como Firebase Cloud Function
+// Utilizar Firebase Admin SDK para autenticação e interagir com Firestore/Cloud SQL
+// Interagir com Stripe para criar sessões de checkout
 ```
 
-### 2.4 Webhook Handler
+### 2.4 Firebase Cloud Function - Webhook Handler
 
 ```typescript
-// supabase/functions/stripe-webhook/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2023-10-16",
-});
-
-serve(async (req) => {
-  const signature = req.headers.get("stripe-signature");
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
-
-  try {
-    const body = await req.text();
-    const event = stripe.webhooks.constructEvent(body, signature!, webhookSecret);
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // Service role para inserir
-    );
-
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      
-      const { user_id, voucher_id } = session.metadata!;
-
-      // Buscar voucher para pegar validade
-      const { data: voucher } = await supabase
-        .from("vouchers")
-        .select("*")
-        .eq("id", voucher_id)
-        .single();
-
-      // Criar user_voucher
-      await supabase.from("user_vouchers").insert({
-        user_id,
-        voucher_id,
-        stripe_payment_intent_id: session.payment_intent,
-        expiry_date: new Date(
-          Date.now() + voucher.validity_days * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        sessions_remaining: voucher.sessions_included,
-        status: "active",
-      });
-
-      // Enviar email de confirmação (opcional)
-      // await sendConfirmationEmail(user_id, voucher_id);
-    }
-
-    return new Response(JSON.stringify({ received: true }), {
-      status: 200,
-    });
-  } catch (error) {
-    console.error("Webhook error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-    });
-  }
-});
+// functions/src/stripe-webhook.ts
+// Implementar como Firebase Cloud Function
+// Utilizar Firebase Admin SDK para processar eventos do Stripe e atualizar Firestore/Cloud SQL
 ```
 
 ### 2.5 Frontend - Botão de Compra
@@ -450,11 +242,20 @@ const handlePurchase = async (voucherId: string) => {
 
   setPurchasing(true);
   try {
-    const { data, error } = await supabase.functions.invoke('create-checkout', {
-      body: { voucherId }
+    // Chamada para Firebase Cloud Function
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${await user.getIdToken()}`, // Enviar token de autenticação Firebase
+      },
+      body: JSON.stringify({ voucherId }),
     });
 
-    if (error) throw error;
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to create checkout session');
+    }
 
     // Redirecionar para Stripe Checkout
     window.location.href = data.url;
@@ -482,81 +283,13 @@ const handlePurchase = async (voucherId: string) => {
 // Isso criará o secret LOVABLE_API_KEY automaticamente
 ```
 
-### 3.2 Edge Function - Chat
+### 3.2 Firebase Cloud Function - Chat
 
 ```typescript
-// supabase/functions/ai-chat/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
-
-    const systemPrompt = `Você é um assistente inteligente de fisioterapia. 
-Suas respostas devem ser:
-- Claras e concisas
-- Baseadas em evidências
-- Sempre recomendar consulta presencial para diagnósticos
-- Educativas e empáticas
-- Em português brasileiro`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit excedido. Tente novamente em instantes." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Contate o administrador." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`AI Gateway error: ${response.status}`);
-    }
-
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
-  } catch (error) {
-    console.error("AI chat error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-});
+// functions/src/ai-chat.ts
+// Implementar como Firebase Cloud Function
+// Utilizar Firebase Admin SDK para autenticação e gerenciar acesso
+// Chamar o AI Gateway para processar as mensagens
 ```
 
 ### 3.3 Frontend - Streaming Chat
@@ -564,7 +297,7 @@ Suas respostas devem ser:
 ```typescript
 // src/hooks/useAIChat.ts
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getAuth } from 'firebase/auth'; // Importar getAuth do Firebase
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -574,6 +307,7 @@ export interface Message {
 export const useAIChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const auth = getAuth(); // Obter instância do Firebase Auth
 
   const sendMessage = async (content: string) => {
     const userMessage: Message = { role: 'user', content };
@@ -583,15 +317,19 @@ export const useAIChat = () => {
     let assistantContent = '';
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+      const token = await currentUser.getIdToken(); // Obter token de autenticação Firebase
       
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        `/api/ai-chat`, // Chamar o endpoint da Firebase Cloud Function
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${token}`, // Enviar token de autenticação Firebase
           },
           body: JSON.stringify({ messages: [...messages, userMessage] }),
         }
@@ -679,101 +417,20 @@ Template 3: appointment_cancelled
 {{1}}, sua consulta de {{2}} foi cancelada. Entre em contato para reagendar.
 ```
 
-### 4.3 Edge Function - Send WhatsApp
+### 4.3 Firebase Cloud Function - Send WhatsApp
 
 ```typescript
-// supabase/functions/send-whatsapp/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-serve(async (req) => {
-  const { to, template, parameters } = await req.json();
-  
-  const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_API_TOKEN");
-  const WHATSAPP_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-
-  try {
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${WHATSAPP_PHONE_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: to.replace(/\D/g, ''), // Apenas números
-          type: "template",
-          template: {
-            name: template,
-            language: { code: "pt_BR" },
-            components: [
-              {
-                type: "body",
-                parameters: parameters.map((p: string) => ({ type: "text", text: p })),
-              },
-            ],
-          },
-        }),
-      }
-    );
-
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-});
+// functions/src/send-whatsapp.ts
+// Implementar como Firebase Cloud Function
+// Receber dados da mensagem e usar a API do WhatsApp Business
 ```
 
-### 4.4 Notificações Automáticas
+### 4.4 Notificações Automáticas (Firebase Scheduled Cloud Function)
 
 ```typescript
-// Edge function agendada (cron) para enviar lembretes
-// supabase/functions/send-appointment-reminders/index.ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-Deno.cron("Send appointment reminders", "0 10 * * *", async () => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
-
-  // Buscar agendamentos para amanhã
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const { data: appointments } = await supabase
-    .from("appointments")
-    .select(`
-      *,
-      patient:patients(name, phone),
-      therapist:profiles(full_name)
-    `)
-    .eq("appointment_date", tomorrow.toISOString().split('T')[0])
-    .eq("status", "agendado");
-
-  // Enviar WhatsApp para cada agendamento
-  for (const apt of appointments || []) {
-    if (apt.patient?.phone) {
-      await supabase.functions.invoke('send-whatsapp', {
-        body: {
-          to: apt.patient.phone,
-          template: "appointment_reminder",
-          parameters: [
-            apt.patient.name,
-            apt.appointment_time
-          ]
-        }
-      });
-    }
-  }
-});
+// functions/src/send-appointment-reminders.ts
+// Implementar como Firebase Scheduled Cloud Function (ex: a cada 24h)
+// Utilizar Firebase Admin SDK para buscar agendamentos e invocar a função send-whatsapp
 ```
 
 ---
@@ -848,7 +505,7 @@ import { useVouchers } from '../useVouchers';
 
 describe('useVouchers', () => {
   beforeEach(() => {
-    // Mock Supabase
+    // Mock Firebase
   });
 
   it('should fetch vouchers', async () => {
@@ -944,8 +601,8 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          # VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           
       - name: Build
         run: npm run build

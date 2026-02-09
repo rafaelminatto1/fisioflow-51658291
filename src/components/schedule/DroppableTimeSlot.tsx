@@ -73,6 +73,10 @@ export const DroppableTimeSlot = memo(({
   // ID único para o droppable: "slot-YYYY-MM-DD-HH:mm"
   const dateStr = formatDateToLocalISO(day);
   const id = `slot-${dateStr}-${time}`;
+  const isSaturdayBlockedAfterCutoff = isBlocked && day.getDay() === 6 && (() => {
+    const [hour] = time.split(':').map(Number);
+    return hour >= 13;
+  })();
 
   const { setNodeRef, isOver } = useDroppable({
     id,
@@ -141,7 +145,7 @@ export const DroppableTimeSlot = memo(({
       onClick={onClick}
     >
       {/* Indicador de bloqueio/fechado - ícone + texto (acessibilidade) */}
-      {(isClosed || isBlocked) && (
+      {(isClosed || (isBlocked && !isSaturdayBlockedAfterCutoff)) && (
         <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
           <Ban className="h-4 w-4 shrink-0" />
           <span className="text-[10px] uppercase tracking-wide">{isClosed ? 'Fechado' : 'Bloqueado'}</span>

@@ -6,9 +6,8 @@ describe('AppointmentSearch', () => {
   it('deve renderizar com valor inicial', () => {
     render(
       <AppointmentSearch
-        value="João Silva"
-        onChange={vi.fn()}
-        onClear={vi.fn()}
+        searchTerm="João Silva"
+        onSearchChange={vi.fn()}
       />
     );
 
@@ -20,41 +19,38 @@ describe('AppointmentSearch', () => {
     const handleChange = vi.fn();
     render(
       <AppointmentSearch
-        value=""
-        onChange={handleChange}
-        onClear={vi.fn()}
+        searchTerm=""
+        onSearchChange={handleChange}
       />
     );
 
     const input = screen.getByPlaceholderText(/buscar/i);
     fireEvent.change(input, { target: { value: 'Maria' } });
-    
+
     expect(handleChange).toHaveBeenCalledWith('Maria');
   });
 
   it('deve mostrar botão de limpar quando tem valor', () => {
     render(
       <AppointmentSearch
-        value="Teste"
-        onChange={vi.fn()}
-        onClear={vi.fn()}
+        searchTerm="Teste"
+        onSearchChange={vi.fn()}
       />
     );
 
-    const clearButton = screen.getByRole('button');
+    const clearButton = screen.getByRole('button', { name: /limpar/i });
     expect(clearButton).toBeInTheDocument();
   });
 
   it('não deve mostrar botão de limpar quando não tem valor', () => {
     render(
       <AppointmentSearch
-        value=""
-        onChange={vi.fn()}
-        onClear={vi.fn()}
+        searchTerm=""
+        onSearchChange={vi.fn()}
       />
     );
 
-    const clearButton = screen.queryByRole('button');
+    const clearButton = screen.queryByRole('button', { name: /limpar/i });
     expect(clearButton).not.toBeInTheDocument();
   });
 
@@ -62,24 +58,22 @@ describe('AppointmentSearch', () => {
     const handleClear = vi.fn();
     render(
       <AppointmentSearch
-        value="Teste"
-        onChange={vi.fn()}
-        onClear={handleClear}
+        searchTerm="Teste"
+        onSearchChange={handleClear}
       />
     );
 
-    const clearButton = screen.getByRole('button');
+    const clearButton = screen.getByRole('button', { name: /limpar/i });
     fireEvent.click(clearButton);
-    
-    expect(handleClear).toHaveBeenCalled();
+
+    expect(handleClear).toHaveBeenCalledWith('');
   });
 
   it('deve ter ícone de busca', () => {
     const { container } = render(
       <AppointmentSearch
-        value=""
-        onChange={vi.fn()}
-        onClear={vi.fn()}
+        searchTerm=""
+        onSearchChange={vi.fn()}
       />
     );
 

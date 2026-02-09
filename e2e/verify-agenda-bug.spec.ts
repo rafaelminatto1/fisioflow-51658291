@@ -1,17 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Verificação de Bug na Agenda', () => {
     test.beforeEach(async ({ page }) => {
-        // 1. Login com credenciais do usuário relatado
+        // 1. Login com credenciais de teste
         await page.goto('/auth');
-        await page.fill('input[type="email"]', 'rafael.minatto@yahoo.com.br');
-        await page.fill('input[type="password"]', 'Yukari30@');
+        await page.fill('input[type="email"]', testUsers.fisio.email);
+        await page.fill('input[type="password"]', testUsers.fisio.password);
         await page.click('button[type="submit"]');
         await page.waitForURL(/\/($|eventos|dashboard|schedule)/);
 
         // 2. Navegar para a agenda
         await page.goto('/schedule');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
     });
 
     test('deve criar agendamento ou exibir erro visível (não falhar silenciosamente)', async ({ page }) => {

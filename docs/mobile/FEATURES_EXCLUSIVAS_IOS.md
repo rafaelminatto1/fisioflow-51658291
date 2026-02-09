@@ -215,7 +215,8 @@ export const config: CapacitorConfig = {
 ```typescript
 import { PushNotifications, PushNotificationSchema, Token } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { supabase } from './supabase';
+import { getAuth } from 'firebase/auth'; // Firebase Auth
+import { getFirestore, doc, setDoc } from 'firebase/firestore'; // Firebase Firestore
 
 export interface PushNotificationData {
   title: string;
@@ -243,7 +244,7 @@ export async function initPushNotifications(): Promise<void> {
   await PushNotifications.addListener('registration', async (token: Token) => {
     console.log('Push token registrado:', token.value);
 
-    // Enviar token para Supabase
+    // Enviar token para Firebase
     await savePushTokenToDatabase(token.value);
   });
 
@@ -270,19 +271,22 @@ export async function initPushNotifications(): Promise<void> {
 }
 
 /**
- * Salva o token de push no banco de dados
+ * Salva o token de push no banco de dados Firebase
  */
 async function savePushTokenToDatabase(token: string): Promise<void> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const auth = getAuth();
+    const user = auth.currentUser;
 
     if (user) {
-      await supabase.from('user_push_tokens').upsert({
-        user_id: user.id,
+      const db = getFirestore();
+      const tokenRef = doc(db, 'user_push_tokens', user.uid);
+      await setDoc(tokenRef, {
+        userId: user.uid,
         token: token,
-        platform: 'ios',
-        updated_at: new Date().toISOString(),
-      });
+        platform: 'ios', // Ou 'android'
+        updatedAt: new Date().toISOString(),
+      }, { merge: true }); // Usar merge para atualizar se já existir
     }
   } catch (error) {
     console.error('Erro ao salvar token:', error);
@@ -350,63 +354,11 @@ export async function cancelNotification(ids: number[]): Promise<void> {
 }
 ```
 
-#### Backend (Supabase Edge Function)
+#### Backend (Firebase Cloud Function)
 ```typescript
-// supabase/functions/send-push-notification/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-interface APNsPayload {
-  aps: {
-    alert: {
-      title: string;
-      body: string;
-    };
-    badge?: number;
-    sound?: string;
-    category?: string;
-  };
-  [key: string]: any;
-}
-
-serve(async (req) => {
-  try {
-    const { userId, title, body, data } = await req.json();
-
-    // Buscar tokens do usuário
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    const { data: tokens } = await supabase
-      .from('user_push_tokens')
-      .select('token')
-      .eq('user_id', userId)
-      .eq('platform', 'ios');
-
-    if (!tokens || tokens.length === 0) {
-      return new Response(JSON.stringify({ error: 'No tokens found' }), { status: 404 });
-    }
-
-    // Enviar para APNs
-    const payload: APNsPayload = {
-      aps: {
-        alert: { title, body },
-        badge: 1,
-        sound: 'default',
-      },
-      ...data,
-    };
-
-    // Implementação real de envio APNs
-    // (requer chave de autenticação .p8 da Apple)
-
-    return new Response(JSON.stringify({ success: true }));
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  }
-});
+// functions/src/send-push-notification.ts
+// Implementar como Firebase Cloud Function
+// Utilizar Firebase Admin SDK para buscar tokens e enviar notificações via FCM (Firebase Cloud Messaging)
 ```
 
 #### Capacitação Xcode
@@ -728,6 +680,7 @@ export async function clearWatch(watchId: string): Promise<void> {
 ```typescript
 import { useState } from 'react';
 import { getCurrentLocation } from '@/lib/geolocation';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Import Firestore functions
 
 export function useCheckIn() {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -747,20 +700,27 @@ export function useCheckIn() {
         throw new Error('Não foi possível obter localização');
       }
 
-      // Enviar para Supabase
-      const { data, error } = await supabase
-        .from('appointment_checkins')
-        .insert({
-          appointment_id: appointmentId,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: location.accuracy,
-          checked_at: new Date(location.timestamp).toISOString(),
-        })
-        .select()
-        .single();
+      // Enviar para Firestore
+      const db = getFirestore();
+      const checkinsRef = collection(db, 'appointment_checkins');
+      const docRef = await addDoc(checkinsRef, {
+        appointment_id: appointmentId,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        checked_at: new Date(location.timestamp).toISOString(),
+        created_at: serverTimestamp(), // Usar serverTimestamp para consistência
+      });
 
-      if (error) throw error;
+      // Retornar os dados com o ID gerado pelo Firestore
+      const data = {
+        id: docRef.id,
+        appointment_id: appointmentId,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        checked_at: new Date(location.timestamp).toISOString(),
+      };
 
       setLastCheckIn({
         latitude: location.latitude,

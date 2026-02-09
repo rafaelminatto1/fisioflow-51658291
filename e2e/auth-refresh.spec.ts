@@ -15,7 +15,7 @@ test.describe('Login Page Refresh Test', () => {
     await page.goto('/auth');
 
     // Wait for initial load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const initialCount = navigationCount;
 
     console.log(`Initial navigation count: ${initialCount}`);
@@ -68,7 +68,7 @@ test.describe('Login Page Refresh Test', () => {
     });
 
     await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait and check for auth state changes
     await page.waitForTimeout(30000);

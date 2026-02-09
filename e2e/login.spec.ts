@@ -1,17 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
-test('login flow with secondary credentials', async ({ page }) => {
+test('login flow with test credentials', async ({ page }) => {
     // Go to the login page - use standard auth route
     await page.goto('/auth');
 
     // Wait for the login form to be visible
-    await expect(page.locator('#login-email')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 15000 });
 
     // Fill in the email
-    await page.fill('#login-email', 'rafael.minatto@yahoo.com.br');
+    await page.fill('input[type="email"]', testUsers.fisio.email);
 
     // Fill in the password
-    await page.fill('#login-password', 'Yukari30@');
+    await page.fill('input[type="password"]', testUsers.fisio.password);
 
     // Click the login button
     await page.click('button:has-text("Entrar na Plataforma")');

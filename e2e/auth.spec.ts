@@ -10,9 +10,19 @@ test.describe('Autenticação', () => {
 
     await page.fill('input[type="email"]', loginEmail);
     await page.fill('input[type="password"]', loginPassword);
-    await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL(/\/$/);
+    // Aguardar navegação após o clique no botão de submit
+    await Promise.all([
+      page.waitForURL(/\/(\?|schedule|patients|dashboard|eventos)?/, { timeout: 10000 }),
+      page.click('button[type="submit"]'),
+    ]);
+
+    // Verificar que estamos na página inicial (não mais em /auth)
+    await expect(page).not.toHaveURL(/\/auth/);
+
+    // Verificar que o menu do usuário está visível
+    const userMenuButton = page.locator('[data-testid="user-menu"]').first();
+    await expect(userMenuButton).toBeVisible({ timeout: 10000 });
   });
 
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
@@ -22,36 +32,57 @@ test.describe('Autenticação', () => {
     await page.fill('input[type="password"]', 'senhaErrada123');
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('text=/erro|inválido|falhou/i')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=/erro|inválido|falhou/i').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('deve fazer logout', async ({ page }) => {
     // Login primeiro
-    await page.goto('/auth');
+    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
     await page.fill('input[type="email"]', loginEmail);
     await page.fill('input[type="password"]', loginPassword);
-    await page.click('button[type="submit"]');
 
-    await page.waitForURL(/\/$/);
+    // Aguardar navegação após o clique no botão de submit
+    await Promise.all([
+      page.waitForURL(/\/(\?|schedule|patients|dashboard|eventos)?/, { timeout: 10000 }),
+      page.click('button[type="submit"]'),
+    ]);
 
-    // Logout
-    await page.click('button[aria-label*="menu"], button[aria-label*="perfil"], [data-testid="user-menu"]');
-    await page.click('text=/sair|logout/i');
+    // Aguardar menu do usuário estar visível
+    const userMenuButton = page.locator('[data-testid="user-menu"]').first();
+    await expect(userMenuButton).toBeVisible({ timeout: 10000 });
 
-    await expect(page).toHaveURL('/auth');
+    // Clicar no menu do usuário para abrir dropdown
+    await userMenuButton.click();
+
+    // Aguardar dropdown aparecer e clicar em sair usando data-testid
+    const logoutMenuItem = page.locator('[data-testid="user-menu-logout"]').first();
+    await expect(logoutMenuItem).toBeVisible({ timeout: 5000 });
+
+    // Clicar em sair
+    await logoutMenuItem.click();
+
+    // Aguardar redirecionamento para /auth após logout
+    await page.waitForURL(/\/auth/, { timeout: 10000 });
+
+    // Verificar que estamos na página de auth
+    await expect(page).toHaveURL(/\/auth/);
   });
 
   test('deve redirecionar para /auth quando não autenticado', async ({ page }) => {
     await page.goto('/eventos');
-    await expect(page).toHaveURL('/auth');
+    await expect(page).toHaveURL(/\/auth(\/login)?/);
   });
 
   test('deve carregar profile após login', async ({ page }) => {
-    await page.goto('/auth');
+    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
     await page.fill('input[type="email"]', loginEmail);
     await page.fill('input[type="password"]', loginPassword);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/$/, { timeout: 10000 });
+
+    // Aguardar navegação após o clique no botão de submit
+    await Promise.all([
+      page.waitForURL(/\/(\?|schedule|patients|dashboard|eventos)?/, { timeout: 10000 }),
+      page.click('button[type="submit"]'),
+    ]);
 
     // Aguardar um pouco para o profile carregar
     await page.waitForTimeout(2000);

@@ -1,22 +1,23 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Smart Features - Agenda', () => {
   // Setup: Login and navigate to schedule
   test.beforeEach(async ({ page }) => {
     // Navigate to login page
     await page.goto('/auth');
-    
+
     // Login
-    await page.fill('input[name="email"]', 'fisio@activityfisioterapia.com.br');
-    await page.fill('input[name="password"]', 'Activity2024!');
+    await page.fill('input[name="email"]', testUsers.fisio.email);
+    await page.fill('input[name="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
-    
+
     // Wait for redirect
     await page.waitForURL('/');
     
     // Navigate to Schedule
-    await page.click('a[href="/schedule"]');
-    await page.waitForURL('/schedule');
+    await page.goto('/schedule');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('should toggle selection mode and show bulk actions bar', async ({ page }) => {

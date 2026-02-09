@@ -111,8 +111,6 @@ sudo gem install cocoapods
 
 #### `.env` (Na raiz do projeto)
 ```bash
-EXPO_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJxxxxx...
 EXPO_PUBLIC_API_URL=https://api.fisioflow.com
 ```
 

@@ -114,10 +114,6 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxxx
 WHATSAPP_API_URL=https://your-evolution-instance.com
 WHATSAPP_API_KEY=your-api-key
 
-# Supabase
-VITE_SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
 # OpenAI (para workflows de AI)
 OPENAI_API_KEY=sk-xxxxxxxxxxxxxx
 ```

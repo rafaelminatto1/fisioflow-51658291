@@ -89,7 +89,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const initials = getInitials();
 
   return (
-    <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
+    <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background" data-testid="main-layout">
       {/* Skip Links for Accessibility */}
       <SkipLinks />
 
@@ -109,7 +109,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {customHeader ? (
           customHeader
         ) : !hideDefaultHeader && (
-          <header className="hidden md:flex h-11 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-3.5 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
+          <header className="hidden md:flex h-11 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-3.5 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300" data-testid="main-header">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-6 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
@@ -172,13 +172,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Minha Conta</DropdownMenuLabel>
                   <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
                   <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
-                    <Link to="/profile">
+                    <Link to="/profile" data-testid="user-menu-profile">
                       <User className="w-4 h-4 mr-3" />
                       <span className="font-medium">Perfil</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
-                    <Link to="/settings">
+                    <Link to="/settings" data-testid="user-menu-settings">
                       <Settings className="w-4 h-4 mr-3" />
                       <span className="font-medium">Configurações</span>
                     </Link>
@@ -187,6 +187,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="rounded-xl px-3 py-2.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600"
+                    data-testid="user-menu-logout"
                   >
                     <LogOut className="w-4 h-4 mr-3" />
                     <span className="font-medium">Sair</span>
@@ -203,6 +204,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           role="main"
           tabIndex={-1}
           aria-label="Conteúdo principal"
+          data-testid="main-content"
           className={cn(
             "flex-1 bg-gray-50/50 dark:bg-background/50",
             noPadding

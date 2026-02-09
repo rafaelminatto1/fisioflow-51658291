@@ -33,21 +33,23 @@ interface DraggableGridProps {
 }
 
 // Configuration constants for the responsive grid layout
+// Optimized for: Mobile, iPad (10.5", 11", 12.9"), Notebooks, Desktop
 const GRID_CONFIG = {
     // Mobile-first column configuration:
-    // - xxs (0-480px): 1 column for iPhone/small phones - single column stack
-    // - xs (480-768px): 2 columns for larger phones/tablets in portrait
-    // - sm (768-996px): 6 columns for tablets/small desktops
-    // - md/lg (996px+): 12 columns for desktops
-    cols: { lg: 12, md: 12, sm: 6, xs: 2, xxs: 1 } as const,
-    breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const,
-    margin: [12, 10] as const, // [horizontal, vertical] margin between items (tighter vertical spacing)
-    rowHeight: 46, // default height of each grid row in pixels (more compact)
-    compactType: 'vertical' as const, // vertical compacting - pushes items down to fill gaps
-    containerPadding: [0, 0] as const, // Padding is handled by the parent wrapper
-    // Enhanced UX: Animation and transition settings
-    transitionDuration: 150, // ms - faster animation for more responsive feel
-    dragThreshold: 0, // pixels - 0 for instant drag response
+    // - xxs (0-480px): 1 column for small phones - single column stack
+    // - xs (480-600px): 2 columns for large phones
+    // - sm (600-768px): 4 columns for small tablets (iPad Mini portrait)
+    // - md (768-1024px): 6 columns for tablets (iPad 10.5", 11" portrait) and small notebooks
+    // - lg (1024-1280px): 8 columns for large tablets (iPad 12.9" portrait) and standard notebooks
+    // - xl (1280px+): 12 columns for desktops and large notebooks
+    cols: { xl: 12, lg: 8, md: 6, sm: 4, xs: 2, xxs: 1 } as const,
+    breakpoints: { xl: 1280, lg: 1024, md: 768, sm: 600, xs: 480, xxs: 0 } as const,
+    margin: [12, 10] as const, // [horizontal, vertical] margin between items
+    rowHeight: 46, // default height of each grid row in pixels
+    compactType: 'vertical' as const,
+    containerPadding: [0, 0] as const,
+    transitionDuration: 150, // ms - smooth transitions
+    dragThreshold: 0, // pixels - instant drag response
 } as const;
 
 /**

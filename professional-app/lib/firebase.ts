@@ -1,11 +1,10 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-
 import {
   initializeAuth,
   getReactNativePersistence,
   getAuth
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, CACHE_SIZE_UNLIMITED, enableMultiTabIndexedDbPersistence, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -33,8 +32,28 @@ try {
   auth = getAuth(app);
 }
 
-// Initialize Firestore
-const db = getFirestore(app);
+// Initialize Firestore with offline persistence
+let db;
+try {
+  db = initializeFirestore(app, {
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+  });
+
+  // Enable multi-tab persistence for better offline support
+  enableMultiTabIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.log('Firestore persistence: Multiple tabs detected, using single tab persistence');
+    } else if (err.code === 'unimplemented') {
+      console.log('Firestore persistence: Not supported on this platform');
+    } else {
+      console.error('Firestore persistence error:', err);
+    }
+  });
+} catch (error) {
+  // Fallback to regular Firestore
+  console.error('Error initializing Firestore with persistence, using default:', error);
+  db = getFirestore(app);
+}
 
 // Initialize Storage
 const storage = getStorage(app);

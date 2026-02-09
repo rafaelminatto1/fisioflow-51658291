@@ -1,0 +1,83 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    name: Playwright E2E Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start Firebase Emulators
+        run: |
+          firebase emulators:start --only auth,firestore --project fisioflow-test &
+          echo $! > /tmp/emulator.pid
+          sleep 30
+
+      - name: Start dev server
+        run: |
+          pnpm dev --port 8084 &
+          echo $! > /tmp/server.pid
+          sleep 30
+
+      - name: Wait for server
+        run: |
+          timeout 60 bash -c 'until curl -s http://127.0.0.1:8084 > /dev/null; do sleep 2; done'
+
+      - name: Run Playwright tests
+        env:
+          BASE_URL: http://127.0.0.1:8084
+          VITE_FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
+          VITE_FIRESTORE_EMULATOR_HOST: localhost:8080
+        run: |
+          pnpm exec playwright test e2e --project=chromium --shard=${{ matrix.shard }}/4 --reporter=list
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ -f /tmp/emulator.pid ]; then
+            kill $(cat /tmp/emulator.pid) 2>/dev/null || true
+          fi
+          if [ -f /tmp/server.pid ]; then
+            kill $(cat /tmp/server.pid) 2>/dev/null || true
+          fi

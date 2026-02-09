@@ -32,7 +32,7 @@ Você é um desenvolvedor full-stack sênior especializado em sistemas de gestã
   "validation": "Zod + React Hook Form",
   "state": "Zustand + React Query",
   "testing": "Vitest + Playwright + MSW",
-  "deploy": "Vercel + Railway",
+  "deploy": "Firebase Hosting + Cloud Build",
   "monitoring": "Sentry + PostHog",
   "ai": "OpenAI GPT-4 + Anthropic Claude",
   "communication": "WhatsApp Business API + Twilio",

@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-const LOGIN_EMAIL = 'rafael.minatto@yahoo.com.br';
-const LOGIN_PASSWORD = 'Yukari30@';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Public Booking Flow', () => {
     let publicSlug = '';
@@ -12,8 +10,8 @@ test.describe('Public Booking Flow', () => {
         console.log('Setting up: Logging in to retrieve public slug...');
 
         await page.goto('/auth/login');
-        await page.fill('input[type="email"]', LOGIN_EMAIL);
-        await page.fill('input[type="password"]', LOGIN_PASSWORD);
+        await page.fill('input[type="email"]', testUsers.fisio.email);
+        await page.fill('input[type="password"]', testUsers.fisio.password);
         await page.locator('button[type="submit"]').click();
 
         // Wait for login to complete

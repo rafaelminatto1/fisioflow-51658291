@@ -25,7 +25,7 @@ export const AppointmentSearch: React.FC<AppointmentSearchProps> = ({
     onSearchChange('');
   }, [onSearchChange]);
 
-  const hasValue = searchTerm.length > 0;
+  const hasValue = (searchTerm ?? '').length > 0;
 
   return (
     <div className={cn("relative", className)}>
@@ -49,7 +49,7 @@ export const AppointmentSearch: React.FC<AppointmentSearchProps> = ({
         />
         <input
           type="text"
-          value={searchTerm}
+          value={searchTerm ?? ''}
           onChange={(e) => onSearchChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
