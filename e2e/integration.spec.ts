@@ -8,7 +8,7 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
     console.log('\n✓ Login realizado');
 
@@ -29,7 +29,7 @@ test.describe('Testes de Integração E2E', () => {
 
     // 3. Ir para agenda
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     console.log('✓ Navegou para agenda');
 
@@ -82,7 +82,7 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
     // Criar evento na org 1
     await page.goto('/eventos');
@@ -122,14 +122,14 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
     // Admin deve ter acesso a todas as rotas
     const adminRoutes = ['/schedule', '/patients', '/eventos', '/exercises', '/reports'];
 
     for (const route of adminRoutes) {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       // Não deve redirecionar para error ou auth
       const currentUrl = page.url();
@@ -147,7 +147,7 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page.goto('/schedule');
 
     // Usuário 2 (segunda aba)
@@ -156,7 +156,7 @@ test.describe('Testes de Integração E2E', () => {
     await page2.fill('input[type="email"]', testUsers.admin.email);
     await page2.fill('input[type="password"]', testUsers.admin.password);
     await page2.click('button[type="submit"]');
-    await page2.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page2.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page2.goto('/schedule');
 
     console.log('✓ Dois usuários na agenda');
@@ -198,11 +198,11 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page.goto('/schedule');
 
     // Aguardar carregamento completo
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
     console.log('✓ App carregado');
@@ -250,11 +250,11 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
     // Ir para eventos (que tem busca global)
     await page.goto('/eventos');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Buscar termo comum
     const searchInput = page.locator('input[type="search"], input[placeholder*="Buscar"]').first();
@@ -281,11 +281,11 @@ test.describe('Testes de Integração E2E', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
     // Ir para eventos
     await page.goto('/eventos');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
     // Procurar botão de exportação

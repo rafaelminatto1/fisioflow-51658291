@@ -111,7 +111,9 @@ export const usePatientSurgeries = (patientId: string) => {
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Surgery[];
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
+    // OTIMIZAÇÃO: Aumentado staleTime para reduzir requisições
+    staleTime: 1000 * 60 * 15, // 15 minutos - dados secundários mudam pouco
+    gcTime: 1000 * 60 * 30, // 30 minutos
   });
 };
 
@@ -180,7 +182,9 @@ export const usePatientGoals = (patientId: string) => {
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientGoal[];
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
+    // OTIMIZAÇÃO: Aumentado staleTime - objetivos mudam pouco durante uma sessão
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    gcTime: 1000 * 60 * 30, // 30 minutos
   });
 };
 
@@ -199,7 +203,9 @@ export const usePatientPathologies = (patientId: string) => {
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Pathology[];
     },
     enabled: !!patientId,
-    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
+    // OTIMIZAÇÃO: Aumentado staleTime - patologias mudam muito raramente
+    staleTime: 1000 * 60 * 20, // 20 minutos
+    gcTime: 1000 * 60 * 45, // 45 minutos
   });
 };
 
@@ -241,7 +247,10 @@ export const useRequiredMeasurements = (pathologyNames: string[]) => {
 
       return deduped;
     },
-    enabled: uniquePathologies.length > 0
+    enabled: uniquePathologies.length > 0,
+    // OTIMIZAÇÃO: Cache maior pois medições obrigatórias mudam raramente
+    staleTime: 1000 * 60 * 30, // 30 minutos
+    gcTime: 1000 * 60 * 60, // 1 hora (garbage collection)
   });
 };
 
@@ -269,7 +278,9 @@ export const useEvolutionMeasurements = (
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as EvolutionMeasurement[];
     },
     enabled: !!patientId && enabled,
-    staleTime: 1000 * 60 * 10, // 10 minutos - dados secundários
+    // OTIMIZAÇÃO: Cache mais curto para medições pois podem ser adicionadas durante a sessão
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    gcTime: 1000 * 60 * 15, // 15 minutos
   });
 };
 

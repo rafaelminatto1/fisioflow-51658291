@@ -75,11 +75,7 @@
 
 ## Ferramentas de Deploy e DevOps
 
-### 12. **Vercel AI**
-- **Especialidade:** Deploy frontend com otimizações automáticas
-- **Por que usar:** Performance automática, edge functions
-- **Prompt sugerido:** "Deploy aplicação Next.js para fisioterapia com otimizações"
-- **Vantagens:** Deploy instantâneo, CDN global
+
 
 ### 13. **Railway AI**
 - **Especialidade:** Deploy de aplicações full-stack
@@ -213,16 +209,16 @@
 **Semana 3-4:** GitHub Copilot (funcionalidades avançadas)
 **Semana 5-6:** Figma AI + Framer (UX/UI superior)
 **Semana 7-8:** Testim AI + Applitools (qualidade)
-**Semana 9-10:** Vercel AI + DataDog (deploy e monitoramento)
+**Semana 9-10:** Firebase/GCP + DataDog (deploy e monitoramento)
 
 ### Orçamento Estimado:
 
 - **Cursor AI:** $20/mês
 - **Supabase:** $25/mês (pro)
-- **Vercel:** $20/mês (pro)
+- **Firebase/GCP:** (tier gratuito generoso, com custos sob demanda)
 - **Figma:** $12/mês
 - **DataDog:** $15/mês
-- **Total:** ~$92/mês (vs R$ 79,90 da Vedius)
+- **Total:** ~$72/mês + custos de uso Firebase/GCP (vs R$ 79,90 da Vedius)
 
 ## Ferramentas Gratuitas Alternativas:
 
@@ -234,9 +230,9 @@
 
 ## Recomendação Final:
 
-**Para desenvolvimento rápido:** Cursor AI + Supabase + Vercel
+**Para desenvolvimento rápido:** Cursor AI + Supabase + Firebase/GCP
 **Para qualidade máxima:** GitHub Copilot + Testim AI + DataDog
-**Para orçamento limitado:** VS Code + Firebase + Netlify
+**Para orçamento limitado:** VS Code + Firebase + Google Cloud Platform (GCP)
 
 **PRÓXIMOS PASSOS:**
 1. Escolha 3-5 ferramentas da lista

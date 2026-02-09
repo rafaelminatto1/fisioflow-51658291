@@ -35,7 +35,7 @@ test.describe('Fluxo Financeiro', () => {
 
         // 3. Navegar para Financeiro
         await page.goto('/financial');
-        // await page.waitForLoadState('networkidle'); // Flaky, relying on selectors
+        // await page.waitForLoadState('domcontentloaded'); // Flaky, relying on selectors
     });
 
     test('Deve exibir o dashboard financeiro corretamente', async ({ page }) => {

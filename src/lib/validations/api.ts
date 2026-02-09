@@ -20,7 +20,9 @@ export const commonSchemas = {
   /**
    * Entity ID validation (UUID or string ID)
    */
-  entityId: z.string().min(1),
+  entityId: z.string().min(1).refine(val => val.trim().length > 0, {
+    message: 'Entity ID cannot be empty or whitespace',
+  }),
 
   /**
    * Email validation

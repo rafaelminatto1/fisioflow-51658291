@@ -15,7 +15,7 @@ test.describe('Registro de Usuário - Produção', () => {
     await page.goto('/auth');
 
     // Aguardar página carregar
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Capturar screenshot para verificar estado
     await page.screenshot({ path: 'screenshots/auth-page.avif' });
@@ -33,7 +33,7 @@ test.describe('Registro de Usuário - Produção', () => {
 
   test('deve trocar para aba de cadastro', async ({ page }) => {
     await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Clicar na aba de cadastro
     await page.click('button:has-text("Cadastro")');
@@ -52,7 +52,7 @@ test.describe('Registro de Usuário - Produção', () => {
 
   test('deve tentar criar novo usuário', async ({ page }) => {
     await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Trocar para cadastro
     await page.click('button:has-text("Cadastro")');
@@ -131,7 +131,7 @@ test.describe('Registro de Usuário - Produção', () => {
     });
 
     await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Esperar um pouco para capturar erros que podem ocorrer após carregamento
     await page.waitForTimeout(3000);
@@ -147,7 +147,7 @@ test.describe('Registro de Usuário - Produção', () => {
   test('deve verificar se onboarding_progress e user_roles funcionam', async ({ page }) => {
     // Primeiro fazer login com usuário existente
     await page.goto('/auth');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Tentar login com usuário de teste existente
     await page.fill('input[type="email"]', 'rafaelstarton@gmail.com');

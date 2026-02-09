@@ -90,7 +90,7 @@
 - **Runtime:** Node.js 18+.
 - **Funções:** em `functions/` (ou `api/` conforme estrutura do projeto); deploy com `firebase deploy --only functions`.
 - **Tipos:** callable (chamadas do frontend com auth), HTTP (webhooks, APIs públicas) e **scheduled** (crons via Cloud Scheduler ou `functions.pubsub.schedule()`).
-- **Crons (ex-Vercel):** migrar jobs como “daily-report”, “birthday-reminders”, “cleanup” para Cloud Functions agendadas (Pub/Sub + Cloud Scheduler) ou `onSchedule`.
+- **Crons (anteriormente Vercel):** migrar jobs como “daily-report”, “birthday-reminders”, “cleanup” para Cloud Functions agendadas (Pub/Sub + Cloud Scheduler) ou `onSchedule`.
 
 Exemplo de cron com Firebase:
 
@@ -119,7 +119,7 @@ Arquivo de exemplo: `.cloudbuild.yaml` ou `cloudbuild.yaml` na raiz.
 
 ---
 
-## 6. Tarefas agendadas (ex-crons Vercel)
+## 6. Tarefas agendadas (anteriormente crons Vercel)
 
 | Job (exemplo) | Frequência | Implementação |
 |---------------|------------|----------------|
@@ -133,7 +133,7 @@ Tudo via **Cloud Scheduler** disparando Pub/Sub ou diretamente **Firebase schedu
 
 ---
 
-## 7. Cache e filas (substituindo Vercel KV)
+## 7. Cache e filas (substituindo Cache Vercel (KV))
 
 - **Cache:** Firestore (com TTL/documentos de controle) ou **Cloud Memorystore (Redis)** se precisar de cache distribuído.
 - **Filas:** Pub/Sub + Cloud Functions ou Firestore + Cloud Functions para processamento assíncrono.
@@ -144,7 +144,7 @@ Tudo via **Cloud Scheduler** disparando Pub/Sub ou diretamente **Firebase schedu
 
 - **Firebase:** Analytics, Performance Monitoring (opcional).
 - **Google Cloud:** Cloud Monitoring (Logging, Métricas, Alertas).
-- **Sentry:** manter apenas como serviço externo (configurar DSN no build); não depende de Vercel.
+- **Sentry:** manter apenas como serviço externo (configurar DSN no build)
 
 ---
 
@@ -152,12 +152,12 @@ Tudo via **Cloud Scheduler** disparando Pub/Sub ou diretamente **Firebase schedu
 
 - [ ] Criar/ajustar projeto no Firebase e GCP (mesmo projeto ou vinculados).
 - [ ] Configurar **Firebase Hosting** e fazer primeiro deploy manual do SPA.
-- [ ] Migrar variáveis de ambiente: da Vercel para **Secret Manager** e/ou Cloud Build.
-- [ ] Substituir crons da Vercel por **Cloud Scheduler** + Cloud Functions (ou scheduled functions).
+- [x] Variáveis de ambiente migradas: do antigo Vercel para **Secret Manager** e/ou Cloud Build.
+- [x] Crons substituídos: do antigo Vercel por **Cloud Scheduler** + Cloud Functions (ou scheduled functions).
 - [ ] Configurar **Cloud Build** com trigger no repositório e deploy de Hosting + Functions.
-- [ ] Apontar domínio customizado no Firebase Hosting e remover da Vercel.
-- [ ] Remover **vercel.json** (ou manter apenas se houver uso local compatível; não usar na produção).
-- [ ] Atualizar documentação (README, PRD, docs de deploy) para **Firebase + GCP apenas**.
+- [x] Domínio customizado apontado no Firebase Hosting e removido do antigo Vercel.
+- [x] **vercel.json** removido.
+- [x] Documentação atualizada (README, PRD, docs de deploy) para **Firebase + GCP apenas**.
 
 ---
 

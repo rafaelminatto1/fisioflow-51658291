@@ -24,7 +24,7 @@ test.describe('FASE 4: Testes de Responsividade', () => {
     await page.click('button[type="submit"]');
 
     // Wait for navigation to complete
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForLoadState('domcontentloaded');
 
     // Check if we're redirected to dashboard or main page
@@ -150,7 +150,7 @@ test.describe('FASE 4: Testes de Responsividade', () => {
 
       for (const pagePath of pages) {
         await page.goto(pagePath);
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
 
         // Check for overlapping elements
         const overlappingElements = await page.evaluate(() => {
@@ -417,7 +417,7 @@ test.describe('FASE 4: Testes de Responsividade', () => {
 
         for (const pagePath of pages) {
           await page.goto(pagePath);
-          await page.waitForLoadState('networkidle');
+          await page.waitForLoadState('domcontentloaded');
 
           // Check for horizontal scrollbar
           const hasHorizontalScroll = await page.evaluate(() => {

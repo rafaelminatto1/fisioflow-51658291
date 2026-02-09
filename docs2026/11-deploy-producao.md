@@ -10,7 +10,7 @@ O FisioFlow é deployado **100% em Firebase e Google Cloud (GCP)**:
 - **Crons:** Cloud Scheduler + Cloud Functions
 - **Monitoramento:** Cloud Monitoring, Sentry (opcional)
 
-Não utilizamos Vercel nem Netlify. Veja o [Plano Firebase + GCP](./PLANO_FIREBASE_GCP.md) para a visão completa.
+Não utilizamos Netlify. Veja o [Plano Firebase + GCP](./PLANO_FIREBASE_GCP.md) para a visão completa.
 
 ## 📦 Deploy no Firebase Hosting
 
@@ -213,7 +213,7 @@ Manter coleta de Web Vitals (lib existente) e enviar para Google Analytics, Sent
 ## 🔐 Segurança em Produção
 
 - **Headers:** configurados em `firebase.json` (hosting.headers) conforme exemplo acima.
-- **Rate limiting:** implementar em Cloud Functions (por IP ou userId) com Firestore ou Memorystore para contagem; não usar Vercel KV.
+- **Rate limiting:** implementar em Cloud Functions (por IP ou userId) com Firestore ou Memorystore para contagem.
 
 ## 🔗 Recursos Relacionados
 

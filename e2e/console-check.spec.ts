@@ -109,10 +109,10 @@ test.describe('Fisioflow Console Error Check', () => {
       console.log('STEP 4: Attempting login...');
       console.log('========================================\n');
 
-      await emailLocator.fill('REDACTED_EMAIL');
+      await emailLocator.fill('teste@moocafisio.com.br');
       console.log('Filled email field');
 
-      await passwordLocator.fill('REDACTED');
+      await passwordLocator.fill('Yukari3030@');
       console.log('Filled password field');
 
       // Try to find and click submit button
