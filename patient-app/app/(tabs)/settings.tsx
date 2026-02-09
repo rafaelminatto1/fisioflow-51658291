@@ -14,6 +14,7 @@ import {
   Switch,
   Alert,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +24,7 @@ import { useAuthStore } from '@/store/auth';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Card, Button } from '@/components';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { exportAndSharePatientData, getExportSummary } from '@/lib/dataExport';
 
 interface SettingSection {
   title: string;
@@ -52,6 +54,7 @@ export default function SettingsScreen() {
     autoPlayVideos: true,
     hapticFeedback: true,
   });
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -98,6 +101,35 @@ export default function SettingsScreen() {
               Alert.alert('Sucesso', 'Cache limpo com sucesso!');
             } catch (error) {
               Alert.alert('Erro', 'Não foi possível limpar o cache.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleExportData = async () => {
+    if (!user?.id) return;
+
+    Alert.alert(
+      'Exportar Meus Dados',
+      'Esta ação irá gerar um arquivo JSON com todos os seus dados (exercícios, consultas, evoluções) em conformidade com a LGPD. Deseja continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Exportar',
+          onPress: async () => {
+            setExporting(true);
+            try {
+              await exportAndSharePatientData(user.id);
+            } catch (error) {
+              console.error('Export error:', error);
+              Alert.alert(
+                'Erro na Exportação',
+                'Não foi possível exportar seus dados. Tente novamente.'
+              );
+            } finally {
+              setExporting(false);
             }
           },
         },
@@ -214,8 +246,8 @@ export default function SettingsScreen() {
           icon: 'download-outline',
           label: 'Exportar Meus Dados',
           type: 'action',
-          onPress: () => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'),
-          description: 'Baixar todos os seus dados (LGPD)',
+          onPress: handleExportData,
+          description: exporting ? 'Exportando...' : 'Baixar todos os seus dados (LGPD)',
         },
       ],
     },
