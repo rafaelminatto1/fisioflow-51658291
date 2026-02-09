@@ -88,47 +88,47 @@ const PatientEvolutionReport = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 print:space-y-4 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 print:space-y-4 animate-fade-in px-1 sm:px-0">
         {/* Header moderno com gradiente */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 shadow-lg border print:hidden">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-4 sm:p-6 shadow-lg border print:hidden">
           <div className="relative z-10">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="hover:scale-105 transition-transform"
+                  className="hover:scale-105 transition-transform flex-shrink-0"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    <Activity className="h-8 w-8 text-primary" />
-                    Dashboard 360º
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+                    <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                    <span className="truncate">Dashboard 360º</span>
                   </h1>
-                  <p className="text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 truncate">
                     Visão completa da evolução de {patient?.name}
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-14">
                 <Button
                   variant="outline"
                   onClick={handleExport}
-                  className="gap-2 shadow hover:shadow-lg transition-all"
+                  className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
                 >
                   <FileDown className="h-4 w-4" />
-                  Exportar PDF
+                  <span>Exportar PDF</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handlePrint}
-                  className="gap-2 shadow hover:shadow-lg transition-all"
+                  className="gap-2 shadow hover:shadow-lg transition-all w-full sm:w-auto justify-center"
                 >
                   <Printer className="h-4 w-4" />
-                  Imprimir
+                  <span>Imprimir</span>
                 </Button>
               </div>
             </div>
@@ -143,47 +143,49 @@ const PatientEvolutionReport = () => {
         {evolutionData.measurementEvolution && evolutionData.measurementEvolution.length > 0 && (
           <div className="grid grid-cols-1 gap-4">
             <div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
-              <div className="p-6 bg-teal-50/50 border-b flex items-center gap-2">
-                <Activity className="h-5 w-5 text-teal-600" />
-                <h3 className="font-bold text-teal-900 uppercase tracking-wider text-sm">Evolução dos Marcadores Clínicos</h3>
+              <div className="p-4 sm:p-6 bg-teal-50/50 border-b flex items-center gap-2">
+                <Activity className="h-5 w-5 text-teal-600 flex-shrink-0" />
+                <h3 className="font-bold text-teal-900 uppercase tracking-wider text-xs sm:text-sm">Evolução dos Marcadores Clínicos</h3>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b">
-                      <th className="px-6 py-4 text-left">Parâmetro</th>
-                      <th className="px-6 py-4 text-left">Inicial</th>
-                      <th className="px-6 py-4 text-left">Atual</th>
-                      <th className="px-6 py-4 text-left">Melhora</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {evolutionData.measurementEvolution.map((m, i) => (
-                      <tr key={i} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-slate-800">{m.name}</div>
-                          <div className="text-[10px] text-slate-500 font-medium">{m.type}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-medium text-slate-600">{m.initial.value}</span>
-                          <span className="text-[10px] text-slate-500 ml-1 font-bold">{m.initial.unit}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="font-bold text-teal-700">{m.current.value}</span>
-                          <span className="text-[10px] text-slate-500 ml-1 font-bold">{m.current.unit}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${parseFloat(m.improvement.toString()) >= 0
-                            ? 'bg-green-50 text-green-700 border border-green-100'
-                            : 'bg-red-50 text-red-700 border border-red-100'
-                            }`}>
-                            {m.improvement}% {parseFloat(m.improvement.toString()) >= 0 ? '↑' : '↓'}
-                          </div>
-                        </td>
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
+                <div className="px-2 sm:px-0 min-w-[500px] sm:min-w-0">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b">
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Parâmetro</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Inicial</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Atual</th>
+                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Melhora</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y">
+                      {evolutionData.measurementEvolution.map((m, i) => (
+                        <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <div className="font-bold text-slate-800 text-sm">{m.name}</div>
+                            <div className="text-[10px] text-slate-500 font-medium">{m.type}</div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <span className="font-medium text-slate-600">{m.initial.value}</span>
+                            <span className="text-[10px] text-slate-500 ml-1 font-bold">{m.initial.unit}</span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <span className="font-bold text-teal-700">{m.current.value}</span>
+                            <span className="text-[10px] text-slate-500 ml-1 font-bold">{m.current.unit}</span>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4">
+                            <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${parseFloat(m.improvement.toString()) >= 0
+                              ? 'bg-green-50 text-green-700 border border-green-100'
+                              : 'bg-red-50 text-red-700 border border-red-100'
+                              }`}>
+                              {m.improvement}% {parseFloat(m.improvement.toString()) >= 0 ? '↑' : '↓'}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

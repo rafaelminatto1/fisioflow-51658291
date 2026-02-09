@@ -188,9 +188,9 @@ const Reports = () => {
         </section>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300">
-            <CardContent className="p-3 sm:p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="order-2 sm:order-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total de Pacientes</p>
@@ -204,44 +204,44 @@ const Reports = () => {
           </Card>
 
           <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Agendamentos</p>
-                  <p className="text-2xl font-bold text-foreground">{reportsData.appointments.total}</p>
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="order-2 sm:order-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Agendamentos</p>
+                  <p className="text-lg sm:text-2xl font-bold text-foreground">{reportsData.appointments.total}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center shadow-medical">
-                  <Calendar className="w-6 h-6 text-secondary-foreground" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-secondary rounded-xl flex items-center justify-center shadow-medical order-1 sm:order-2">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Receita Mensal</p>
-                  <p className="text-2xl font-bold text-foreground">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="order-2 sm:order-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Receita Mensal</p>
+                  <p className="text-lg sm:text-2xl font-bold text-foreground">
                     R$ {reportsData.financial.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-medical">
-                  <DollarSign className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-medical order-1 sm:order-2">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Crescimento</p>
-                  <p className="text-2xl font-bold text-secondary">+{reportsData.financial.growth}%</p>
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="order-2 sm:order-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Crescimento</p>
+                  <p className="text-lg sm:text-2xl font-bold text-secondary">+{reportsData.financial.growth}%</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center shadow-medical">
-                  <TrendingUp className="w-6 h-6 text-secondary-foreground" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-secondary rounded-xl flex items-center justify-center shadow-medical order-1 sm:order-2">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground" />
                 </div>
               </div>
             </CardContent>
@@ -362,53 +362,55 @@ const Reports = () => {
           <TabsContent value="recent" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Relatórios Recentes
-                  <div className="relative">
+                <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <span>Relatórios Recentes</span>
+                  <div className="relative w-full sm:w-auto">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
                       placeholder="Buscar relatórios..."
-                      className="pl-10 w-64"
+                      className="pl-10 w-full sm:w-64"
                     />
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentReports.map((report) => (
-                    <div
-                      key={report.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-primary-foreground" />
+                <div className="overflow-x-auto -mx-2 sm:mx-0">
+                  <div className="space-y-4 px-2 sm:px-0 min-w-[600px] sm:min-w-0">
+                    {recentReports.map((report) => (
+                      <div
+                        key={report.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center space-x-4 min-w-0 flex-1">
+                          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-primary-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-foreground truncate">{report.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {report.type} • {format(report.generatedAt, 'dd/MM/yyyy', { locale: ptBR })}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">{report.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {report.type} • {format(report.generatedAt, 'dd/MM/yyyy', { locale: ptBR })}
-                          </p>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
+                          <Badge className={getStatusColor(report.status)}>
+                            {report.status}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              logger.info('Downloading report', { name: report.name }, 'Reports');
+                              alert(`Baixando: ${report.name}`);
+                            }}
+                          >
+                            <Download className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Download</span>
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className={getStatusColor(report.status)}>
-                          {report.status}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            logger.info('Downloading report', { name: report.name }, 'Reports');
-                            alert(`Baixando: ${report.name}`);
-                          }}
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
