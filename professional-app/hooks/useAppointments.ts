@@ -10,6 +10,7 @@ export interface UseAppointmentsOptions {
   limit?: number;
   patientId?: string;
   refetchInterval?: number | false;
+  initialData?: any[];
 }
 
 // Map API appointment type to app Appointment type
@@ -138,6 +139,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchInterval: options?.refetchInterval,
+    initialData: options?.initialData,
   });
 
   const createMutation = useMutation({

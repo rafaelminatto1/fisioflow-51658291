@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import type { Exercise } from '@/hooks/useExercises';
-import { withImageParams, buildImageSrcSet } from '@/lib/storageProxy';
+import { buildImageSrcSet } from '@/lib/storageProxy';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface ExerciseViewModalProps {

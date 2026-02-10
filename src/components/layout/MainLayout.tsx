@@ -29,8 +29,7 @@ import {
   ChevronDown,
   User,
   Settings,
-  LogOut,
-  Stethoscope
+  LogOut
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import fisioflowLogo from '@/assets/logo.avif';

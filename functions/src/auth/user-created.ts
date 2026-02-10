@@ -15,6 +15,7 @@
 import { logger } from 'firebase-functions';
 import { getAdminDb, getPool } from '../init';
 import * as functions from 'firebase-functions/v1';
+import * as admin from 'firebase-admin';
 
 export const onUserCreated = functions
     .region('southamerica-east1')
@@ -54,6 +55,19 @@ export const onUserCreated = functions
 
             const now = new Date().toISOString();
             const fullName = user.displayName || 'Novo Usuário';
+
+            // 1.0 Set Initial Custom Claims (Otimização para Security Rules)
+            try {
+                await admin.auth().setCustomUserClaims(user.uid, {
+                    role: 'pending',
+                    organizationId: organizationId,
+                    isProfessional: false,
+                    isAdmin: false
+                });
+                logger.info(`[onUserCreated] Initial claims set for ${user.uid}`);
+            } catch (claimError) {
+                logger.error(`[onUserCreated] Failed to set initial claims:`, claimError);
+            }
 
             // 1.1 Sync to PostgreSQL (Critical for V2 API)
             try {

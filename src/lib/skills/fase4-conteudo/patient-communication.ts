@@ -445,7 +445,7 @@ export class PatientCommunicationService {
     }
 
     // Agendar para o próximo dia útil às 9h
-    let scheduled = new Date(now);
+    const scheduled = new Date(now);
     scheduled.setHours(9, 0, 0, 0);
 
     // Se for domingo, vai para segunda

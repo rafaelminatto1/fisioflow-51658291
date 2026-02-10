@@ -19,13 +19,7 @@ import {
   TextRun,
   AlignmentType,
   HeadingLevel,
-  UnderlineType,
   BorderStyle,
-  WidthType,
-  Table,
-  TableRow,
-  TableCell,
-  VerticalAlign,
   Packer,
 } from 'docx';
 import { saveAs } from 'file-saver';

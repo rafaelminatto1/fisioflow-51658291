@@ -7,12 +7,10 @@ import { useState, useCallback } from 'react';
 import {
   exportPatientsToExcel,
   exportFinancialReport,
-  exportAttendanceStats,
   generatePatientImportTemplate,
   downloadExcelFile,
   importPatientsFromExcel,
 } from '../lib/skills/fase2-documentos/xlsx-integration';
-import type { Patient, Appointment, Professional } from '@fisioflow/shared-types';
 
 interface UseExcelExportOptions {
   onError?: (error: Error) => void;

@@ -73,6 +73,12 @@ const aiFastProcessingHandler = async (request: any) => {
   return aiFastProcessingHandler(request);
 };
 
+// Handlers de semantic-search
+const semanticSearchHandler = async (request: any) => {
+  const { semanticSearchHandler } = await import('./semantic-search');
+  return semanticSearchHandler(request);
+};
+
 // ============================================================================
 // UNIFIED AI SERVICE (Callable)
 // ============================================================================
@@ -92,6 +98,10 @@ export const aiServiceHandler = async (request: any) => {
 
   // Roteamento para o handler apropriado
   switch (action) {
+    // Semantic Search
+    case 'semanticSearch':
+      return semanticSearchHandler({ data: params });
+
     // Flow Wrappers
     case 'generateExercisePlan':
       return exerciseGeneratorHandler({ data: params });
@@ -175,6 +185,9 @@ export const aiServiceHttpHandler = async (req: any, res: any) => {
 
     // Roteamento
     switch (action) {
+      case 'semanticSearch':
+        result = await semanticSearchHandler(mockRequest);
+        break;
       case 'generateExercisePlan':
         result = await exerciseGeneratorHandler(mockRequest);
         break;
