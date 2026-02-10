@@ -12,6 +12,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -140,10 +142,14 @@ export async function scheduleLocalNotification(notification: {
         title: notification.title,
         body: notification.body,
         data: notification.data || {},
-        sound: 'default',
-        channelId: notification.channelId,
+        sound: true,
       },
-      trigger: notification.trigger || null,
+      trigger: notification.trigger ? {
+        ...(notification.trigger as any),
+        channelId: notification.channelId,
+      } : {
+        channelId: notification.channelId,
+      } as any,
     });
     return id;
   } catch (error) {
@@ -164,8 +170,11 @@ export async function scheduleAppointmentReminder(
     title: 'Lembrete de Atendimento',
     body: `Sessão com ${patientName} em 1 hora.`,
     data: { type: 'appointment', appointmentId },
-    trigger: reminderDate,
-    channelId: 'appointments',
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: reminderDate,
+      channelId: 'appointments',
+    },
   });
 }
 
@@ -211,11 +220,11 @@ export function addNotificationResponseReceivedListener(listener: ResponseListen
 
 export function removeNotificationListeners() {
   if (notificationListener) {
-    Notifications.removeNotificationSubscription(notificationListener);
+    notificationListener.remove();
     notificationListener = null;
   }
   if (responseListener) {
-    Notifications.removeNotificationSubscription(responseListener);
+    responseListener.remove();
     responseListener = null;
   }
 }

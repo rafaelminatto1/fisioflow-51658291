@@ -105,7 +105,7 @@ export async function setBiometricEnabled(enabled: boolean): Promise<void> {
  * Verifica se o login biométrico está habilitado
  */
 export async function isBiometricEnabled(): Promise<boolean> {
-  return AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY) === 'true';
+  return (await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY)) === 'true';
 }
 
 /**

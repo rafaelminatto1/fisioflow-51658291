@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Button, Card } from '@/components';
+import { Button, Card, Input } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createPatient, updatePatient, getPatientById } from '@/lib/firestore';
@@ -81,20 +81,21 @@ export default function PatientFormScreen() {
     queryKey: ['patient', patientId],
     queryFn: () => patientId ? getPatientById(patientId) : null,
     enabled: !!patientId,
-    onSuccess: (data) => {
-      if (data) {
-        setFormData({
-          name: data.name || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          birthDate: data.birthDate ? format(new Date(data.birthDate), 'dd/MM/yyyy') : '',
-          condition: data.condition || '',
-          diagnosis: data.diagnosis || '',
-          notes: data.notes || '',
-        });
-      }
-    },
   });
+
+  useEffect(() => {
+    if (patient) {
+      setFormData({
+        name: patient.name || '',
+        email: patient.email || '',
+        phone: patient.phone || '',
+        birthDate: patient.birthDate ? format(new Date(patient.birthDate), 'dd/MM/yyyy') : '',
+        condition: patient.condition || '',
+        diagnosis: patient.diagnosis || '',
+        notes: patient.notes || '',
+      });
+    }
+  }, [patient]);
 
   const createMutation = useMutation({
     mutationFn: (data: Omit<FormData, 'birthDate'> & { birthDate?: Date }) =>
@@ -167,15 +168,16 @@ export default function PatientFormScreen() {
     }
 
     try {
+      const { birthDate: birthDateStr, ...rest } = formData;
       const submitData = {
-        ...formData,
-        birthDate: parseDate(formData.birthDate),
+        ...rest,
+        birthDate: parseDate(birthDateStr),
       };
 
       if (isEditing && patientId) {
-        await updateMutation.mutateAsync({ id: patientId, data: submitData });
+        await updateMutation.mutateAsync({ id: patientId, data: submitData as any });
       } else {
-        await createMutation.mutateAsync(submitData);
+        await createMutation.mutateAsync(submitData as any);
       }
     } catch (err) {
       // Error handling in mutation
@@ -227,58 +229,42 @@ export default function PatientFormScreen() {
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Dados Pessoais</Text>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Nome Completo *</Text>
-              <TextInput
-                style={[styles.input, { borderColor: formErrors.name ? colors.error : colors.border, backgroundColor: colors.surface, color: colors.text }]}
-                value={formData.name}
-                onChangeText={(value) => updateField('name', value)}
-                placeholder="Nome do paciente"
-                placeholderTextColor={colors.textMuted}
-                autoCapitalize="words"
-              />
-              {formErrors.name && <Text style={[styles.errorText, { color: colors.error }]}>{formErrors.name}</Text>}
-            </View>
+            <Input
+              label="Nome Completo *"
+              value={formData.name}
+              onChangeText={(value) => updateField('name', value)}
+              placeholder="Nome do paciente"
+              error={formErrors.name}
+              autoCapitalize="words"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Email</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={formData.email}
-                onChangeText={(value) => updateField('email', value)}
-                placeholder="email@exemplo.com"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            <Input
+              label="Email"
+              value={formData.email}
+              onChangeText={(value) => updateField('email', value)}
+              placeholder="email@exemplo.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Telefone *</Text>
-              <TextInput
-                style={[styles.input, { borderColor: formErrors.phone ? colors.error : colors.border, backgroundColor: colors.surface, color: colors.text }]}
-                value={formData.phone}
-                onChangeText={(value) => updateField('phone', maskPhone(value))}
-                placeholder="(00) 00000-0000"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="phone-pad"
-                maxLength={15}
-              />
-              {formErrors.phone && <Text style={[styles.errorText, { color: colors.error }]}>{formErrors.phone}</Text>}
-            </View>
+            <Input
+              label="Telefone *"
+              value={formData.phone}
+              onChangeText={(value) => updateField('phone', maskPhone(value))}
+              placeholder="(00) 00000-0000"
+              keyboardType="phone-pad"
+              maxLength={15}
+              error={formErrors.phone}
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Data de Nascimento</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={formData.birthDate}
-                onChangeText={(value) => updateField('birthDate', maskDate(value))}
-                placeholder="DD/MM/AAAA"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numeric"
-                maxLength={10}
-              />
-            </View>
+            <Input
+              label="Data de Nascimento"
+              value={formData.birthDate}
+              onChangeText={(value) => updateField('birthDate', maskDate(value))}
+              placeholder="DD/MM/AAAA"
+              keyboardType="numeric"
+              maxLength={10}
+            />
           </Card>
 
           {/* Clinical Info Section */}
@@ -288,41 +274,28 @@ export default function PatientFormScreen() {
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Informações Clínicas</Text>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Condição/Queixa Principal</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={formData.condition}
-                onChangeText={(value) => updateField('condition', value)}
-                placeholder="Ex: Dor lombar, Lesão no joelho..."
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
+            <Input
+              label="Condição/Queixa Principal"
+              value={formData.condition}
+              onChangeText={(value) => updateField('condition', value)}
+              placeholder="Ex: Dor lombar, Lesão no joelho..."
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Diagnóstico</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={formData.diagnosis}
-                onChangeText={(value) => updateField('diagnosis', value)}
-                placeholder="Diagnóstico médico (se houver)"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
+            <Input
+              label="Diagnóstico"
+              value={formData.diagnosis}
+              onChangeText={(value) => updateField('diagnosis', value)}
+              placeholder="Diagnóstico médico (se houver)"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Observações</Text>
-              <TextInput
-                style={[styles.textArea, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={formData.notes}
-                onChangeText={(value) => updateField('notes', value)}
-                placeholder="Observações adicionais sobre o paciente..."
-                placeholderTextColor={colors.textMuted}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
+            <Input
+              label="Observações"
+              value={formData.notes}
+              onChangeText={(value) => updateField('notes', value)}
+              placeholder="Observações adicionais sobre o paciente..."
+              multiline
+              numberOfLines={4}
+            />
           </Card>
 
           {/* Save Button */}
@@ -338,30 +311,30 @@ export default function PatientFormScreen() {
             <TouchableOpacity
               style={[styles.deactivateButton, { borderColor: colors.error }]}
               onPress={() => {
-              medium();
-              Alert.alert(
-                'Desativar Paciente',
-                'Tem certeza que deseja desativar este paciente? Esta ação pode ser revertida.',
-                [
-                  { text: 'Cancelar', style: 'cancel' },
-                  {
-                    text: 'Desativar',
-                    style: 'destructive',
-                    onPress: async () => {
-                      try {
-                        await updatePatient(patientId!, { status: 'inactive' });
-                        queryClient.invalidateQueries({ queryKey: ['patients'] });
-                        success();
-                        router.back();
-                      } catch {
-                        error();
-                        Alert.alert('Erro', 'Não foi possível desativar o paciente.');
+                medium();
+                Alert.alert(
+                  'Desativar Paciente',
+                  'Tem certeza que deseja desativar este paciente? Esta ação pode ser revertida.',
+                  [
+                    { text: 'Cancelar', style: 'cancel' },
+                    {
+                      text: 'Desativar',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          await updatePatient(patientId!, { status: 'inactive' });
+                          queryClient.invalidateQueries({ queryKey: ['patients'] });
+                          success();
+                          router.back();
+                        } catch {
+                          error();
+                          Alert.alert('Erro', 'Não foi possível desativar o paciente.');
+                        }
                       }
                     }
-                  }
-                ]
-              );
-            }}
+                  ]
+                );
+              }}
             >
               <Ionicons name="person-remove" size={20} color={colors.error} />
               <Text style={[styles.deactivateButtonText, { color: colors.error }]}>
@@ -425,33 +398,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    minHeight: 100,
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
   },
   saveButton: {
     marginHorizontal: 16,

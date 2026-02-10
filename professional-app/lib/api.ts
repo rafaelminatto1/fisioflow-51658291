@@ -36,6 +36,21 @@ const API_URLS = {
     update: CLOUD_RUN_BASE_URL('updateExerciseV2'),
     delete: CLOUD_RUN_BASE_URL('deleteExerciseV2'),
   },
+  partnerships: {
+    list: CLOUD_RUN_BASE_URL('listPartnerships'),
+    get: CLOUD_RUN_BASE_URL('getPartnership'),
+    create: CLOUD_RUN_BASE_URL('createPartnership'),
+    update: CLOUD_RUN_BASE_URL('updatePartnership'),
+    delete: CLOUD_RUN_BASE_URL('deletePartnership'),
+  },
+  financial: {
+    listRecords: CLOUD_RUN_BASE_URL('listPatientFinancialRecords'),
+    getSummary: CLOUD_RUN_BASE_URL('getPatientFinancialSummaryV2'),
+    createRecord: CLOUD_RUN_BASE_URL('createFinancialRecord'),
+    updateRecord: CLOUD_RUN_BASE_URL('updateFinancialRecord'),
+    deleteRecord: CLOUD_RUN_BASE_URL('deleteFinancialRecord'),
+    markAsPaid: CLOUD_RUN_BASE_URL('markAsPaid'),
+  },
 };
 
 // ============================================================
@@ -56,18 +71,23 @@ export interface ApiPatient {
   status: string;
   progress?: number;
   incomplete_registration?: boolean;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface ApiAppointment {
   id: string;
-  patientId: string;
+  patientId?: string; // Client side or camelCase API
+  patient_id?: string; // snake_case API
   patient_name?: string;
-  therapistId?: string;
+  therapistId?: string; // Client side or camelCase API
+  therapist_id?: string; // snake_case API
   date: string;
-  startTime: string;
-  endTime: string;
+  startTime?: string; // Client side or camelCase API
+  start_time?: string; // snake_case API
+  endTime?: string; // Client side or camelCase API
+  end_time?: string; // snake_case API
   status: string;
   type?: string;
   notes?: string;
@@ -90,6 +110,64 @@ export interface ApiExercise {
   duration?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ApiPartnership {
+  id: string;
+  organization_id: string;
+  name: string;
+  cnpj?: string;
+  contact_person?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  address?: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  allows_barter: boolean;
+  barter_description?: string;
+  barter_sessions_limit?: number;
+  notes?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiFinancialRecord {
+  id: string;
+  organization_id: string;
+  patient_id: string;
+  appointment_id?: string;
+  session_date: string;
+  session_value: number;
+  discount_value: number;
+  discount_type?: 'percentage' | 'fixed' | 'partnership';
+  partnership_id?: string;
+  partnership?: {
+    name: string;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+  };
+  final_value: number;
+  payment_method?: 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'transfer' | 'barter' | 'other';
+  payment_status: 'pending' | 'paid' | 'partial' | 'cancelled' | 'refunded';
+  paid_amount: number;
+  paid_date?: string;
+  notes?: string;
+  is_barter: boolean;
+  barter_notes?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiFinancialSummary {
+  total_sessions: number;
+  paid_sessions: number;
+  pending_sessions: number;
+  total_value: number;
+  total_paid: number;
+  total_pending: number;
+  average_session_value: number;
 }
 
 interface ApiResponse<T> {
@@ -498,3 +576,171 @@ export const api = {
     delete: deleteExercise,
   },
 };
+
+// ============================================================
+// PARTNERSHIPS API
+// ============================================================
+
+/**
+ * Get list of partnerships
+ */
+export async function getPartnerships(options?: {
+  activeOnly?: boolean;
+  limit?: number;
+}): Promise<ApiPartnership[]> {
+  const requestData: any = {
+    limit: options?.limit || 100,
+    activeOnly: options?.activeOnly ?? true,
+  };
+
+  const response = await fetchApi<ApiResponse<ApiPartnership[]>>(API_URLS.partnerships.list, requestData);
+  return response.data || [];
+}
+
+/**
+ * Get a single partnership by ID
+ */
+export async function getPartnershipById(id: string): Promise<ApiPartnership | null> {
+  try {
+    const response = await fetchApi<ApiResponse<ApiPartnership>>(API_URLS.partnerships.get, {
+      partnershipId: id,
+    });
+    return response.data || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create a new partnership
+ */
+export async function createPartnership(data: Partial<ApiPartnership>): Promise<ApiPartnership> {
+  const response = await fetchApi<ApiResponse<ApiPartnership>>(API_URLS.partnerships.create, data);
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  return response.data;
+}
+
+/**
+ * Update an existing partnership
+ */
+export async function updatePartnership(id: string, data: Partial<ApiPartnership>): Promise<ApiPartnership> {
+  const response = await fetchApi<ApiResponse<ApiPartnership>>(API_URLS.partnerships.update, {
+    partnershipId: id,
+    ...data,
+  });
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  return response.data;
+}
+
+/**
+ * Delete a partnership
+ */
+export async function deletePartnership(id: string): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(API_URLS.partnerships.delete, { partnershipId: id });
+}
+
+// ============================================================
+// PATIENT FINANCIAL RECORDS API
+// ============================================================
+
+/**
+ * Get patient financial records
+ */
+export async function getPatientFinancialRecords(
+  patientId: string,
+  options?: { status?: string; limit?: number }
+): Promise<ApiFinancialRecord[]> {
+  const requestData: any = {
+    patientId,
+    limit: options?.limit || 100,
+  };
+
+  if (options?.status) requestData.status = options.status;
+
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord[]>>(API_URLS.financial.listRecords, requestData);
+  return response.data || [];
+}
+
+/**
+ * Get patient financial summary
+ */
+export async function getPatientFinancialSummary(patientId: string): Promise<ApiFinancialSummary | null> {
+  try {
+    const response = await fetchApi<ApiResponse<ApiFinancialSummary>>(API_URLS.financial.getSummary, {
+      patientId,
+    });
+    return response.data || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create a new financial record
+ */
+export async function createFinancialRecord(data: {
+  patient_id: string;
+  appointment_id?: string;
+  session_date: string;
+  session_value: number;
+  payment_method?: string;
+  payment_status?: string;
+  paid_amount?: number;
+  paid_date?: string;
+  notes?: string;
+  is_barter?: boolean;
+  barter_notes?: string;
+}): Promise<ApiFinancialRecord> {
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(API_URLS.financial.createRecord, data);
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  return response.data;
+}
+
+/**
+ * Update a financial record
+ */
+export async function updateFinancialRecord(
+  recordId: string,
+  data: Partial<ApiFinancialRecord>
+): Promise<ApiFinancialRecord> {
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(API_URLS.financial.updateRecord, {
+    recordId,
+    ...data,
+  });
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  return response.data;
+}
+
+/**
+ * Delete a financial record
+ */
+export async function deleteFinancialRecord(recordId: string): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(API_URLS.financial.deleteRecord, { recordId });
+}
+
+/**
+ * Mark a financial record as paid
+ */
+export async function markFinancialRecordAsPaid(
+  recordId: string,
+  paymentMethod: string,
+  paidDate?: string
+): Promise<ApiFinancialRecord> {
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(API_URLS.financial.markAsPaid, {
+    recordId,
+    payment_method: paymentMethod,
+    paid_date: paidDate,
+  });
+  if (response.error) {
+    throw new Error(response.error);
+  }
+  return response.data;
+}

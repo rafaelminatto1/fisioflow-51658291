@@ -124,3 +124,18 @@ export interface Evolution {
   createdAt?: Date;
   updatedAt?: Date;
 }
+// Exercise Assignment types
+export interface ExerciseAssignment {
+  id: string;
+  patientId: string;
+  exerciseId: string;
+  exercise?: Exercise;
+  sets: number;
+  reps: number;
+  frequency: string;
+  startDate: Date;
+  endDate?: Date;
+  completed: boolean;
+  progress: number;
+  notes?: string;
+}

@@ -1,14 +1,18 @@
+/**
+ * EvolutionVersionToggle - Improved V2
+ *
+ * Enhanced version toggle with better UX,
+ * smooth animations, and professional visual design.
+ */
 import React from 'react';
-import { FileText, ClipboardList, ToggleLeft, ToggleRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { FileText, ClipboardList } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
 } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
 import type { EvolutionVersion } from './types';
 
 interface EvolutionVersionToggleProps {
@@ -24,24 +28,37 @@ export const EvolutionVersionToggle: React.FC<EvolutionVersionToggleProps> = ({
 }) => {
   return (
     <TooltipProvider>
-      <div className={cn('flex items-center gap-1 p-0.5 rounded-lg bg-muted/60 border border-border/40', className)}>
+      <div className={cn(
+        'relative inline-flex items-center gap-0.5 p-1 rounded-xl',
+        'bg-gradient-to-r from-muted/80 to-muted border border-border/50 shadow-sm',
+        className
+      )}>
+        {/* Active indicator */}
+        <div
+          className={cn(
+            'absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-background shadow-sm transition-all duration-300 ease-out',
+            version === 'v1-soap' ? 'left-1' : 'left-1/2'
+          )}
+        />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={() => onToggle('v1-soap')}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                'relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200',
+                'hover:text-foreground',
                 version === 'v1-soap'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground'
               )}
             >
-              <ClipboardList className="h-3.5 w-3.5" />
+              <ClipboardList className="h-4 w-4" />
               <span>SOAP</span>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">Formato SOAP tradicional (4 campos)</p>
+          <TooltipContent side="bottom" className="text-xs">
+            <p>Formato SOAP tradicional (4 campos)</p>
           </TooltipContent>
         </Tooltip>
 
@@ -50,19 +67,25 @@ export const EvolutionVersionToggle: React.FC<EvolutionVersionToggleProps> = ({
             <button
               onClick={() => onToggle('v2-texto')}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                'relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200',
+                'hover:text-foreground',
                 version === 'v2-texto'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground'
               )}
             >
-              <FileText className="h-3.5 w-3.5" />
+              <FileText className="h-4 w-4" />
               <span>Texto Livre</span>
-              <Badge variant="secondary" className="text-[9px] h-4 px-1 leading-none">V2</Badge>
+              {/* V2 badge */}
+              {version === 'v2-texto' && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-md bg-primary text-white text-[9px] font-bold">
+                  V2
+                </span>
+              )}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">Formato texto livre estilo Notion (blocos)</p>
+          <TooltipContent side="bottom" className="text-xs">
+            <p>Formato texto livre estilo Notion (blocos)</p>
           </TooltipContent>
         </Tooltip>
       </div>

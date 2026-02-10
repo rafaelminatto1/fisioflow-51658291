@@ -17,10 +17,10 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution } from '@/types';
+import type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution, ExerciseAssignment } from '@/types';
 
 // Re-export types for convenience
-export type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution };
+export type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution, ExerciseAssignment };
 
 // Local types not in shared types
 export interface Professional {
@@ -34,21 +34,6 @@ export interface Professional {
   status: 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface ExerciseAssignment {
-  id: string;
-  patientId: string;
-  exerciseId: string;
-  exercise?: Exercise;
-  sets: number;
-  reps: number;
-  frequency: string;
-  startDate: Date;
-  endDate?: Date;
-  completed: boolean;
-  progress: number;
-  notes?: string;
 }
 
 // ============================================
@@ -127,7 +112,7 @@ export async function getProfessionalProfile(userId: string): Promise<Profession
 
 export async function getPatients(
   professionalId?: string,
-  options?: { status?: 'active' | 'inactive' | 'Em Tratamento'; limit?: number; organizationId?: string }
+  options?: { status?: 'active' | 'inactive' | 'Em_Tratamento'; limit?: number; organizationId?: string }
 ): Promise<Patient[]> {
   try {
     const patientsRef = collection(db, 'patients');
@@ -143,7 +128,7 @@ export async function getPatients(
           q = query(
             patientsRef,
             where('professionalId', '==', professionalId),
-            where('status', '==', options.status),
+            where('status', '==', (options.status === 'Em_Tratamento' ? 'active' : options.status)),
             orderBy('name', 'asc'),
             limit(options.limit || 50)
           );
@@ -169,7 +154,7 @@ export async function getPatients(
           q = query(
             patientsRef,
             where('professional_id', '==', professionalId),
-            where('status', '==', options.status),
+            where('status', '==', (options.status === 'Em_Tratamento' ? 'active' : options.status)),
             orderBy('name', 'asc'),
             limit(options.limit || 50)
           );
@@ -195,7 +180,7 @@ export async function getPatients(
           q = query(
             patientsRef,
             where('therapist_id', '==', professionalId),
-            where('status', '==', options.status),
+            where('status', '==', (options.status === 'Em_Tratamento' ? 'active' : options.status)),
             orderBy('name', 'asc'),
             limit(options.limit || 50)
           );
@@ -223,7 +208,7 @@ export async function getPatients(
           q = query(
             patientsRef,
             where('organization_id', '==', options.organizationId),
-            where('status', '==', options.status),
+            where('status', '==', (options.status === 'Em_Tratamento' ? 'active' : options.status)),
             orderBy('name', 'asc'),
             limit(options.limit || 50)
           );
@@ -248,7 +233,7 @@ export async function getPatients(
     if (options?.status) {
       q = query(
         patientsRef,
-        where('status', '==', options.status),
+        where('status', '==', (options.status === 'Em_Tratamento' ? 'active' : options.status)),
         orderBy('name', 'asc'),
         limit(options.limit || 50)
       );
@@ -445,7 +430,7 @@ export async function getAppointments(
           orderBy('date', 'asc'),
           limit(options.limit || 50)
         )
-      , 'dateRange-professionalId');
+        , 'dateRange-professionalId');
       if (results) return results;
 
       // Try with professional_id
@@ -458,7 +443,7 @@ export async function getAppointments(
           orderBy('date', 'asc'),
           limit(options.limit || 50)
         )
-      , 'dateRange-professional_id');
+        , 'dateRange-professional_id');
       if (results2) return results2;
 
       // Try with therapist_id
@@ -471,7 +456,7 @@ export async function getAppointments(
           orderBy('date', 'asc'),
           limit(options.limit || 50)
         )
-      , 'dateRange-therapist_id');
+        , 'dateRange-therapist_id');
       if (results3) return results3;
     } else if (options?.status) {
       // Status filtered queries
@@ -483,7 +468,7 @@ export async function getAppointments(
           orderBy('date', 'asc'),
           limit(options.limit || 50)
         )
-      , 'status-professionalId');
+        , 'status-professionalId');
       if (results) return results;
 
       // Try with professional_id
@@ -495,7 +480,7 @@ export async function getAppointments(
           orderBy('date', 'asc'),
           limit(options.limit || 50)
         )
-      , 'status-professional_id');
+        , 'status-professional_id');
       if (results2) return results2;
 
       // Try with therapist_id
@@ -507,7 +492,7 @@ export async function getAppointments(
           orderBy('date', 'asc'),
           limit(options.limit || 50)
         )
-      , 'status-therapist_id');
+        , 'status-therapist_id');
       if (results3) return results3;
     } else {
       // Default queries
@@ -518,7 +503,7 @@ export async function getAppointments(
           orderBy('date', 'desc'),
           limit(options?.limit || 50)
         )
-      , 'default-professionalId');
+        , 'default-professionalId');
       if (results) return results;
 
       // Try with professional_id
@@ -529,7 +514,7 @@ export async function getAppointments(
           orderBy('date', 'desc'),
           limit(options?.limit || 50)
         )
-      , 'default-professional_id');
+        , 'default-professional_id');
       if (results2) return results2;
 
       // Try with therapist_id
@@ -540,7 +525,7 @@ export async function getAppointments(
           orderBy('date', 'desc'),
           limit(options?.limit || 50)
         )
-      , 'default-therapist_id');
+        , 'default-therapist_id');
       if (results3) return results3;
     }
 
@@ -554,7 +539,7 @@ export async function getAppointments(
           orderBy('date', 'desc'),
           limit(options?.limit || 50)
         )
-      , 'org-fallback');
+        , 'org-fallback');
       if (results) return results;
     }
 
@@ -708,6 +693,8 @@ export async function getExercisesLibrary(options?: {
         reps: data.reps,
         duration: data.duration,
         createdBy: data.createdBy,
+        createdAt: convertTimestamp(data.createdAt),
+        updatedAt: convertTimestamp(data.updatedAt),
       };
     });
   } catch (error) {

@@ -86,7 +86,7 @@ export const getLastPainMapDate = onCall<
     const pool = getPool();
     try {
       const result = await pool.query(
-        `SELECT record_date FROM pain_records
+        `SELECT record_date FROM patient_pain_records
          WHERE patient_id = $1 AND organization_id = $2
          ORDER BY record_date DESC
          LIMIT 1`,

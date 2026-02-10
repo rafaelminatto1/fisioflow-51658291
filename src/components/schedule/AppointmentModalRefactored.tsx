@@ -99,9 +99,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const isMobile = useIsMobile();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
-  const [conflictCheck, setConflictCheck] = useState<{ 
-    hasConflict: boolean; 
-    conflictingAppointment?: AppointmentBase; 
+  const [conflictCheck, setConflictCheck] = useState<{
+    hasConflict: boolean;
+    conflictingAppointment?: AppointmentBase;
     conflictCount?: number;
     totalConflictCount?: number;
   } | null>(null);
@@ -132,6 +132,17 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   // Cache para checkPatientHasPreviousSessions - evita filtrar o array inteiro repetidamente
   const patientSessionsCache = useRef(new SimpleCache<string, boolean>(60000)); // 60s TTL
 
+  // Criar Map de paciente -> count para O(1) lookup
+  const patientSessionsMap = useMemo(() => {
+    const map = new Map<string, number>();
+    appointments.forEach(apt => {
+      if (['concluido', 'atendido', 'em_andamento', 'completado'].includes(apt.status)) {
+        map.set(apt.patientId, (map.get(apt.patientId) || 0) + 1);
+      }
+    });
+    return map;
+  }, [appointments]);
+
   // Verifica se o paciente já teve sessões/evoluções anteriores (OTIMIZADO COM CACHE)
   const checkPatientHasPreviousSessions = useCallback((patientId: string): boolean => {
     // Verificar cache primeiro
@@ -140,21 +151,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       return cached;
     }
 
-    // Criar Map de paciente -> count para O(1) lookup
-    const patientSessionsMap = useMemo(() => {
-      const map = new Map<string, number>();
-      appointments.forEach(apt => {
-        if (['concluido', 'atendido', 'em_andamento', 'completado'].includes(apt.status)) {
-          map.set(apt.patientId, (map.get(apt.patientId) || 0) + 1);
-        }
-      });
-      return map;
-    }, [appointments]);
-
     const hasSessions = (patientSessionsMap.get(patientId) || 0) > 0;
     patientSessionsCache.current.set(patientId, hasSessions);
     return hasSessions;
-  }, [appointments]);
+  }, [patientSessionsMap]);
 
   // Armazena referência estável para checkPatientHasPreviousSessions
   // evita que mudanças no array de appointments causem re-renderização infinita
@@ -644,348 +644,348 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         </CustomModalTitle>
       </CustomModalHeader>
 
-        <FormProvider {...methods}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-            <div className="px-5 sm:px-6 py-3 border-b shrink-0">
-              <TabsList className="grid w-full grid-cols-3 h-10">
-                <TabsTrigger value="info" className="flex items-center gap-2 text-xs sm:text-sm">
-                  <User className="h-4 w-4" />
-                  <span className="hidden xs:inline">Informações</span>
-                  <span className="xs:hidden">Info</span>
-                </TabsTrigger>
-                <TabsTrigger value="payment" className="flex items-center gap-2 text-xs sm:text-sm">
-                  <CreditCard className="h-4 w-4" />
-                  <span className="hidden xs:inline">Pagamento</span>
-                  <span className="xs:hidden">Pag.</span>
-                </TabsTrigger>
-                <TabsTrigger value="options" className="flex items-center gap-2 text-xs sm:text-sm">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden xs:inline">Opções</span>
-                  <span className="xs:hidden">Opç.</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <form id="appointment-form" onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit(handleSave, (errors) => {
-                  logger.error('Form validation errors', { errors }, 'AppointmentModalRefactored');
-                  toast.error('Verifique os campos obrigatórios do formulário');
-                })(e);
-              }} className="px-5 sm:px-6 py-4">
-                <TabsContent value="info" className="mt-0 space-y-4 sm:space-y-4">
-                  <PatientSelectionSection
-                    patients={activePatients || []}
-                    isLoading={patientsLoading}
-                    disabled={currentMode === 'view'}
-                    onCreateNew={(searchTerm) => {
-                      setSuggestedPatientName(searchTerm);
-                      setQuickPatientModalOpen(true);
-                    }}
-                    fallbackPatientName={
-                      lastCreatedPatient?.id === watchedPatientId ? lastCreatedPatient.name : undefined
-                    }
-                  />
-
-                  <DateTimeSection
-                    disabled={currentMode === 'view'}
-                    timeSlots={timeSlots}
-                    isCalendarOpen={isCalendarOpen}
-                    setIsCalendarOpen={setIsCalendarOpen}
-                    getMinCapacityForInterval={getMinCapacityForInterval}
-                    conflictCount={conflictCheck?.totalConflictCount || 0}
-                    watchedDateStr={watchedDateStr}
-                    watchedTime={watchedTime}
-                    watchedDuration={watchedDuration}
-                    onAutoSchedule={() => {
-                      if (!watchedDate) {
-                        toast.error('Selecione uma data primeiro');
-                        return;
-                      }
-
-                      // 1. Analyze Patient History
-                      let preferredPeriod: 'morning' | 'afternoon' | 'evening' | null = null;
-
-                      if (watchedPatientId) {
-                        const patientHistory = appointments.filter(a =>
-                          a.patientId === watchedPatientId &&
-                          a.status !== 'cancelado'
-                        );
-
-                        if (patientHistory.length > 0) {
-                          let morning = 0;
-                          let afternoon = 0;
-                          let evening = 0;
-
-                          patientHistory.forEach(apt => {
-                            const hour = parseInt(apt.time.split(':')[0]);
-                            if (hour < 12) morning++;
-                            else if (hour < 18) afternoon++;
-                            else evening++;
-                          });
-
-                          if (morning > afternoon && morning > evening) preferredPeriod = 'morning';
-                          else if (afternoon > morning && afternoon > evening) preferredPeriod = 'afternoon';
-                          else if (evening > morning && evening > afternoon) preferredPeriod = 'evening';
-                        }
-                      }
-
-                      // 2. Sort slots based on preference
-                      const sortedSlots = [...slotInfo].sort((a, b) => {
-                        if (!preferredPeriod) return 0; // Keep original order (chronological)
-
-                        const getPeriod = (time: string) => {
-                          const h = parseInt(time.split(':')[0]);
-                          if (h < 12) return 'morning';
-                          if (h < 18) return 'afternoon';
-                          return 'evening';
-                        };
-
-                        const periodA = getPeriod(a.time);
-                        const periodB = getPeriod(b.time);
-
-                        if (periodA === preferredPeriod && periodB !== preferredPeriod) return -1;
-                        if (periodA !== preferredPeriod && periodB === preferredPeriod) return 1;
-                        return 0; // Maintain chronological order within same period
-                      });
-
-                      const _day = watchedDate.getDay();
-                      const bestSlot = sortedSlots.find(slot => {
-                        if (!slot.isAvailable) return false;
-                        // const capacity = getCapacityForTime(day, slot.time);
-                        return true;
-                      });
-
-                      if (bestSlot) {
-                        setValue('appointment_time', bestSlot.time);
-
-                        let reason = "";
-                        if (preferredPeriod === 'morning') reason = " (Preferência: Manhã)";
-                        else if (preferredPeriod === 'afternoon') reason = " (Preferência: Tarde)";
-                        else if (preferredPeriod === 'evening') reason = " (Preferência: Noite)";
-
-                        toast.success(`Horário sugerido: ${bestSlot.time}${reason}`);
-                      } else {
-                        toast.error('Nenhum horário livre encontrado para esta data');
-                      }
-                    }}
-                  />
-
-                  <TypeAndStatusSection disabled={currentMode === 'view'} />
-
-                  <div className="space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                      <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
-                      Fisioterapeuta
-                    </Label>
-                    <Select
-                      value={watch('therapist_id') || THERAPIST_SELECT_NONE}
-                      onValueChange={(value) => setValue('therapist_id', value === THERAPIST_SELECT_NONE ? '' : value)}
-                      disabled={currentMode === 'view' || therapistsLoading}
-                      aria-label={THERAPIST_PLACEHOLDER}
-                    >
-                      <SelectTrigger className="h-10 text-xs sm:text-sm">
-                        <SelectValue
-                          placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={THERAPIST_SELECT_NONE}>
-                          {THERAPIST_PLACEHOLDER}
-                        </SelectItem>
-                        {therapists.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {formatTherapistLabel(t)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                      Observações
-                    </Label>
-                    <Textarea
-                      {...methods.register('notes')}
-                      placeholder="Informações importantes sobre o atendimento..."
-                      rows={2}
-                      disabled={currentMode === 'view'}
-                      className="resize-none text-sm min-h-[70px]"
-                    />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="payment" className="mt-0 space-y-2.5 sm:space-y-3">
-                  <PaymentTab
-                    disabled={currentMode === 'view'}
-                    watchPaymentStatus={watchPaymentStatus || 'pending'}
-                    watchPaymentMethod={watchPaymentMethod || ''}
-                    watchPaymentAmount={watchPaymentAmount || 0}
-                    patientId={watchedPatientId}
-                  />
-                </TabsContent>
-
-                <TabsContent value="options" className="mt-0 space-y-3 sm:space-y-4">
-                  <OptionsTab
-                    disabled={currentMode === 'view'}
-                    currentMode={currentMode}
-                    selectedEquipments={selectedEquipments}
-                    setSelectedEquipments={setSelectedEquipments}
-                    _isRecurringCalendarOpen={isRecurringCalendarOpen}
-                    setIsRecurringCalendarOpen={setIsRecurringCalendarOpen}
-                    reminders={reminders}
-                    setReminders={setReminders}
-                    onDuplicate={() => setDuplicateDialogOpen(true)}
-                  />
-                </TabsContent>
-              </form>
-            </div>
-          </Tabs>
-        </FormProvider>
-
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 px-5 sm:px-6 py-4 border-t bg-background shrink-0">
-          <div className="flex justify-center sm:justify-start">
-            {currentMode === 'edit' && appointment && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleDelete}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                size="default"
-              >
-                <X className="w-4 h-4 mr-1" />
-                Excluir
-              </Button>
-            )}
+      <FormProvider {...methods}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+          <div className="px-5 sm:px-6 py-3 border-b shrink-0">
+            <TabsList className="grid w-full grid-cols-3 h-10">
+              <TabsTrigger value="info" className="flex items-center gap-2 text-xs sm:text-sm">
+                <User className="h-4 w-4" />
+                <span className="hidden xs:inline">Informações</span>
+                <span className="xs:hidden">Info</span>
+              </TabsTrigger>
+              <TabsTrigger value="payment" className="flex items-center gap-2 text-xs sm:text-sm">
+                <CreditCard className="h-4 w-4" />
+                <span className="hidden xs:inline">Pagamento</span>
+                <span className="xs:hidden">Pag.</span>
+              </TabsTrigger>
+              <TabsTrigger value="options" className="flex items-center gap-2 text-xs sm:text-sm">
+                <FileText className="h-4 w-4" />
+                <span className="hidden xs:inline">Opções</span>
+                <span className="xs:hidden">Opç.</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
 
-          <div className="flex gap-2 justify-end flex-wrap">
-            {currentMode === 'view' && appointment && (
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => setCurrentMode('edit')}
-                size="default"
-              >
-                Editar
-              </Button>
-            )}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <form id="appointment-form" onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(handleSave, (errors) => {
+                logger.error('Form validation errors', { errors }, 'AppointmentModalRefactored');
+                toast.error('Verifique os campos obrigatórios do formulário');
+              })(e);
+            }} className="px-5 sm:px-6 py-4">
+              <TabsContent value="info" className="mt-0 space-y-4 sm:space-y-4">
+                <PatientSelectionSection
+                  patients={activePatients || []}
+                  isLoading={patientsLoading}
+                  disabled={currentMode === 'view'}
+                  onCreateNew={(searchTerm) => {
+                    setSuggestedPatientName(searchTerm);
+                    setQuickPatientModalOpen(true);
+                  }}
+                  fallbackPatientName={
+                    lastCreatedPatient?.id === watchedPatientId ? lastCreatedPatient.name : undefined
+                  }
+                />
 
+                <DateTimeSection
+                  disabled={currentMode === 'view'}
+                  timeSlots={timeSlots}
+                  isCalendarOpen={isCalendarOpen}
+                  setIsCalendarOpen={setIsCalendarOpen}
+                  getMinCapacityForInterval={getMinCapacityForInterval}
+                  conflictCount={conflictCheck?.totalConflictCount || 0}
+                  watchedDateStr={watchedDateStr}
+                  watchedTime={watchedTime}
+                  watchedDuration={watchedDuration}
+                  onAutoSchedule={() => {
+                    if (!watchedDate) {
+                      toast.error('Selecione uma data primeiro');
+                      return;
+                    }
+
+                    // 1. Analyze Patient History
+                    let preferredPeriod: 'morning' | 'afternoon' | 'evening' | null = null;
+
+                    if (watchedPatientId) {
+                      const patientHistory = appointments.filter(a =>
+                        a.patientId === watchedPatientId &&
+                        a.status !== 'cancelado'
+                      );
+
+                      if (patientHistory.length > 0) {
+                        let morning = 0;
+                        let afternoon = 0;
+                        let evening = 0;
+
+                        patientHistory.forEach(apt => {
+                          const hour = parseInt(apt.time.split(':')[0]);
+                          if (hour < 12) morning++;
+                          else if (hour < 18) afternoon++;
+                          else evening++;
+                        });
+
+                        if (morning > afternoon && morning > evening) preferredPeriod = 'morning';
+                        else if (afternoon > morning && afternoon > evening) preferredPeriod = 'afternoon';
+                        else if (evening > morning && evening > afternoon) preferredPeriod = 'evening';
+                      }
+                    }
+
+                    // 2. Sort slots based on preference
+                    const sortedSlots = [...slotInfo].sort((a, b) => {
+                      if (!preferredPeriod) return 0; // Keep original order (chronological)
+
+                      const getPeriod = (time: string) => {
+                        const h = parseInt(time.split(':')[0]);
+                        if (h < 12) return 'morning';
+                        if (h < 18) return 'afternoon';
+                        return 'evening';
+                      };
+
+                      const periodA = getPeriod(a.time);
+                      const periodB = getPeriod(b.time);
+
+                      if (periodA === preferredPeriod && periodB !== preferredPeriod) return -1;
+                      if (periodA !== preferredPeriod && periodB === preferredPeriod) return 1;
+                      return 0; // Maintain chronological order within same period
+                    });
+
+                    const _day = watchedDate.getDay();
+                    const bestSlot = sortedSlots.find(slot => {
+                      if (!slot.isAvailable) return false;
+                      // const capacity = getCapacityForTime(day, slot.time);
+                      return true;
+                    });
+
+                    if (bestSlot) {
+                      setValue('appointment_time', bestSlot.time);
+
+                      let reason = "";
+                      if (preferredPeriod === 'morning') reason = " (Preferência: Manhã)";
+                      else if (preferredPeriod === 'afternoon') reason = " (Preferência: Tarde)";
+                      else if (preferredPeriod === 'evening') reason = " (Preferência: Noite)";
+
+                      toast.success(`Horário sugerido: ${bestSlot.time}${reason}`);
+                    } else {
+                      toast.error('Nenhum horário livre encontrado para esta data');
+                    }
+                  }}
+                />
+
+                <TypeAndStatusSection disabled={currentMode === 'view'} />
+
+                <div className="space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
+                    Fisioterapeuta
+                  </Label>
+                  <Select
+                    value={watch('therapist_id') || THERAPIST_SELECT_NONE}
+                    onValueChange={(value) => setValue('therapist_id', value === THERAPIST_SELECT_NONE ? '' : value)}
+                    disabled={currentMode === 'view' || therapistsLoading}
+                    aria-label={THERAPIST_PLACEHOLDER}
+                  >
+                    <SelectTrigger className="h-10 text-xs sm:text-sm">
+                      <SelectValue
+                        placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={THERAPIST_SELECT_NONE}>
+                        {THERAPIST_PLACEHOLDER}
+                      </SelectItem>
+                      {therapists.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {formatTherapistLabel(t)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                    Observações
+                  </Label>
+                  <Textarea
+                    {...methods.register('notes')}
+                    placeholder="Informações importantes sobre o atendimento..."
+                    rows={2}
+                    disabled={currentMode === 'view'}
+                    className="resize-none text-sm min-h-[70px]"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="payment" className="mt-0 space-y-2.5 sm:space-y-3">
+                <PaymentTab
+                  disabled={currentMode === 'view'}
+                  watchPaymentStatus={watchPaymentStatus || 'pending'}
+                  watchPaymentMethod={watchPaymentMethod || ''}
+                  watchPaymentAmount={watchPaymentAmount || 0}
+                  patientId={watchedPatientId}
+                />
+              </TabsContent>
+
+              <TabsContent value="options" className="mt-0 space-y-3 sm:space-y-4">
+                <OptionsTab
+                  disabled={currentMode === 'view'}
+                  currentMode={currentMode}
+                  selectedEquipments={selectedEquipments}
+                  setSelectedEquipments={setSelectedEquipments}
+                  _isRecurringCalendarOpen={isRecurringCalendarOpen}
+                  setIsRecurringCalendarOpen={setIsRecurringCalendarOpen}
+                  reminders={reminders}
+                  setReminders={setReminders}
+                  onDuplicate={() => setDuplicateDialogOpen(true)}
+                />
+              </TabsContent>
+            </form>
+          </div>
+        </Tabs>
+      </FormProvider>
+
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 px-5 sm:px-6 py-4 border-t bg-background shrink-0">
+        <div className="flex justify-center sm:justify-start">
+          {currentMode === 'edit' && appointment && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleDelete}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              size="default"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Excluir
+            </Button>
+          )}
+        </div>
+
+        <div className="flex gap-2 justify-end flex-wrap">
+          {currentMode === 'view' && appointment && (
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setCurrentMode('edit')}
+              size="default"
+            >
+              Editar
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isCreating || isUpdating}
+            size="default"
+          >
+            {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+          </Button>
+
+          {currentMode !== 'view' && watchedStatus === 'avaliacao' && (
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
               disabled={isCreating || isUpdating}
               size="default"
-            >
-              {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
-            </Button>
-
-            {currentMode !== 'view' && watchedStatus === 'avaliacao' && (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isCreating || isUpdating}
-                size="default"
-                className="min-w-[100px]"
-                onClick={() => {
-                  scheduleOnlyRef.current = true;
-                  handleSubmit(handleSave)();
-                }}
-              >
-                {(isCreating || isUpdating) ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-1" />
-                    Agendar
-                  </>
-                )}
-              </Button>
-            )}
-            {currentMode !== 'view' && (
-              <Button
-                type="submit"
-                form="appointment-form"
-                disabled={isCreating || isUpdating}
-                onClick={() => { scheduleOnlyRef.current = false; }}
-                className={cn(
-                  "min-w-[100px] transition-all duration-200",
-                  watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
-                  (isCreating || isUpdating) && "opacity-80"
-                )}
-                size="default"
-              >
-                {(isCreating || isUpdating) ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    {currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
-                  </span>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-1" />
-                    {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <QuickPatientModal
-          open={quickPatientModalOpen}
-          onOpenChange={(open) => {
-            setQuickPatientModalOpen(open);
-            if (!open) {
-              setSuggestedPatientName('');
-            }
-          }}
-          onPatientCreated={(patientId, patientName) => {
-            setValue('patient_id', patientId);
-            setLastCreatedPatient({ id: patientId, name: patientName });
-            setQuickPatientModalOpen(false);
-            setSuggestedPatientName('');
-            queryClient.invalidateQueries({ queryKey: ['patients'] });
-          }}
-          suggestedName={suggestedPatientName}
-        />
-
-        <DuplicateAppointmentDialog
-          open={duplicateDialogOpen}
-          onOpenChange={setDuplicateDialogOpen}
-          appointment={appointment || null}
-          onDuplicate={handleDuplicate}
-        />
-
-        <CapacityExceededDialog
-          open={capacityDialogOpen}
-          onOpenChange={setCapacityDialogOpen}
-          currentCount={(conflictCheck?.totalConflictCount || 0) + 1}
-          maxCapacity={watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1}
-          selectedTime={watchedTime || ''}
-          selectedDate={watchedDate || new Date()}
-          onAddToWaitlist={handleAddToWaitlistFromCapacity}
-          onChooseAnotherTime={handleChooseAnotherTime}
-          onScheduleAnyway={handleScheduleAnyway}
-        />
-
-        {
-          waitlistQuickAddOpen && pendingFormData && (
-            <WaitlistQuickAdd
-              open={waitlistQuickAddOpen}
-              onOpenChange={(open) => {
-                setWaitlistQuickAddOpen(open);
-                if (!open) setPendingFormData(null);
+              className="min-w-[100px]"
+              onClick={() => {
+                scheduleOnlyRef.current = true;
+                handleSubmit(handleSave)();
               }}
-              date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
-              time={pendingFormData.appointment_time}
-              defaultPatientId={pendingFormData.patient_id}
-            />
-          )
-        }
+            >
+              {(isCreating || isUpdating) ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  Agendar
+                </>
+              )}
+            </Button>
+          )}
+          {currentMode !== 'view' && (
+            <Button
+              type="submit"
+              form="appointment-form"
+              disabled={isCreating || isUpdating}
+              onClick={() => { scheduleOnlyRef.current = false; }}
+              className={cn(
+                "min-w-[100px] transition-all duration-200",
+                watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
+                (isCreating || isUpdating) && "opacity-80"
+              )}
+              size="default"
+            >
+              {(isCreating || isUpdating) ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  {currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
+                </span>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <QuickPatientModal
+        open={quickPatientModalOpen}
+        onOpenChange={(open) => {
+          setQuickPatientModalOpen(open);
+          if (!open) {
+            setSuggestedPatientName('');
+          }
+        }}
+        onPatientCreated={(patientId, patientName) => {
+          setValue('patient_id', patientId);
+          setLastCreatedPatient({ id: patientId, name: patientName });
+          setQuickPatientModalOpen(false);
+          setSuggestedPatientName('');
+          queryClient.invalidateQueries({ queryKey: ['patients'] });
+        }}
+        suggestedName={suggestedPatientName}
+      />
+
+      <DuplicateAppointmentDialog
+        open={duplicateDialogOpen}
+        onOpenChange={setDuplicateDialogOpen}
+        appointment={appointment || null}
+        onDuplicate={handleDuplicate}
+      />
+
+      <CapacityExceededDialog
+        open={capacityDialogOpen}
+        onOpenChange={setCapacityDialogOpen}
+        currentCount={(conflictCheck?.totalConflictCount || 0) + 1}
+        maxCapacity={watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1}
+        selectedTime={watchedTime || ''}
+        selectedDate={watchedDate || new Date()}
+        onAddToWaitlist={handleAddToWaitlistFromCapacity}
+        onChooseAnotherTime={handleChooseAnotherTime}
+        onScheduleAnyway={handleScheduleAnyway}
+      />
+
+      {
+        waitlistQuickAddOpen && pendingFormData && (
+          <WaitlistQuickAdd
+            open={waitlistQuickAddOpen}
+            onOpenChange={(open) => {
+              setWaitlistQuickAddOpen(open);
+              if (!open) setPendingFormData(null);
+            }}
+            date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
+            time={pendingFormData.appointment_time}
+            defaultPatientId={pendingFormData.patient_id}
+          />
+        )
+      }
     </CustomModal>
   );
 };
