@@ -399,7 +399,22 @@ export async function importPatientsFromExcel(
   await workbook.xlsx.load(buffer);
 
   const worksheet = workbook.worksheets[0];
-  const patients: Array<any> = [];
+  const patients: Array<{
+    name: string;
+    cpf?: string;
+    birthDate?: Date;
+    phone?: string;
+    email?: string;
+    address: {
+      street: string;
+      number: string;
+      complement?: string;
+      district: string;
+      city: string;
+      state: string;
+      zipCode: string;
+    };
+  }> = [];
 
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return; // Pular cabeçalho

@@ -86,7 +86,16 @@ export class VideoExerciseImport {
         throw new Error(`YouTube API Error: ${data.error.message}`);
       }
 
-      return (data.items || []).map((item: any) => ({
+      return (data.items || []).map((item: {
+        id: { videoId: string };
+        snippet: {
+          title: string;
+          description: string;
+          thumbnails: { high?: { url: string }; default?: { url: string } };
+          channelTitle: string;
+          publishedAt: string;
+        };
+      }) => ({
         platform: 'youtube' as const,
         videoId: item.id.videoId,
         url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
