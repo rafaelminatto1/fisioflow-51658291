@@ -25,12 +25,12 @@ export const useRealtimeAppointments = () => {
     const unsubscribe = onValue(triggerRef, (snapshot) => {
       if (snapshot.exists()) {
         const val = snapshot.val();
-        queryClient.invalidateQueries({ queryKey: ['appointments'] });
+        queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
 
         const now = Date.now();
         if (val._timestamp && (now - val._timestamp < 5000)) {
-           // Feedback silencioso no mobile ou um log
-           console.log('[Realtime] Agenda synced');
+          // Feedback silencioso no mobile ou um log
+          console.log('[Realtime] Agenda synced');
         }
       }
     });

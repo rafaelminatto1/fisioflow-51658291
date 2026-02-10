@@ -51,8 +51,8 @@ export function Input({
             borderColor: error
               ? colors.error
               : isFocused
-              ? colors.primary
-              : colors.border,
+                ? colors.primary
+                : colors.border,
           },
         ]}
       >
@@ -67,6 +67,7 @@ export function Input({
         <TextInput
           style={[
             styles.input,
+            props.multiline && styles.inputMultiline,
             {
               color: colors.text,
               paddingLeft: leftIcon ? 0 : 16,
@@ -77,6 +78,7 @@ export function Input({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           secureTextEntry={actualSecureTextEntry}
+          textAlignVertical={props.multiline ? 'top' : 'center'}
           {...props}
         />
         {isPassword && (
@@ -128,6 +130,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     paddingVertical: 14,
+  },
+  inputMultiline: {
+    minHeight: 100,
+    textAlignVertical: 'top',
   },
   leftIcon: {
     marginLeft: 16,

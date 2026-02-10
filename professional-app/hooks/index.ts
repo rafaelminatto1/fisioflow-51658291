@@ -1,6 +1,5 @@
 export { useColorScheme, useColors } from './useColorScheme';
 export { useAppointments } from './useAppointments';
-export { useRealtimeAppointments } from './useRealtimeAppointments';
 export { usePatients } from './usePatients';
 export { useBiometricAuth } from './useBiometricAuth';
 export { useCamera } from './useCamera';
@@ -15,3 +14,18 @@ export {
   usePatientExerciseAssignments,
   usePatientExercises
 } from './useExercises';
+export {
+  usePartnerships,
+  usePartnership,
+  useCreatePartnership,
+  useUpdatePartnership,
+  useDeletePartnership,
+} from './usePartnerships';
+export {
+  usePatientFinancialRecords,
+  usePatientFinancialSummary,
+  useCreateFinancialRecord,
+  useUpdateFinancialRecord,
+  useDeleteFinancialRecord,
+  useMarkAsPaid,
+} from './usePatientFinancial';

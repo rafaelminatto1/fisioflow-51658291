@@ -507,3 +507,69 @@ export * from './integrations';
 
 // Gantt Chart - Visualização timeline/Gantt avançada
 export * from './gantt';
+
+// ============================================================================
+// PARTNERSHIP & FINANCIAL TYPES - Sistema de Parcerias e Financeiro
+// ============================================================================
+
+export type PartnershipDiscountType = 'percentage' | 'fixed';
+export type PaymentMethod = 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'transfer' | 'barter' | 'other';
+export type PaymentStatus = 'pending' | 'paid' | 'partial' | 'cancelled' | 'refunded';
+
+export interface Partnership {
+    id: string;
+    organization_id: string;
+    name: string;
+    cnpj?: string;
+    contact_person?: string;
+    contact_phone?: string;
+    contact_email?: string;
+    address?: string;
+    discount_type: PartnershipDiscountType;
+    discount_value: number;
+    allows_barter: boolean;
+    barter_description?: string;
+    barter_sessions_limit?: number;
+    notes?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PatientFinancialRecord {
+    id: string;
+    organization_id: string;
+    patient_id: string;
+    appointment_id?: string;
+    session_date: string;
+    session_value: number;
+    discount_value: number;
+    discount_type?: 'percentage' | 'fixed' | 'partnership';
+    partnership_id?: string;
+    partnership?: {
+        name: string;
+        discount_type: PartnershipDiscountType;
+        discount_value: number;
+    };
+    final_value: number;
+    payment_method?: PaymentMethod;
+    payment_status: PaymentStatus;
+    paid_amount: number;
+    paid_date?: string;
+    notes?: string;
+    is_barter: boolean;
+    barter_notes?: string;
+    created_by?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PatientFinancialSummary {
+    total_sessions: number;
+    paid_sessions: number;
+    pending_sessions: number;
+    total_value: number;
+    total_paid: number;
+    total_pending: number;
+    average_session_value: number;
+}

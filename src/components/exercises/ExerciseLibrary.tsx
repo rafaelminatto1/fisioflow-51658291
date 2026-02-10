@@ -40,6 +40,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { withImageParams } from '@/lib/storageProxy';
+import * as ReactWindow from 'react-window';
+const { FixedSizeGrid: Grid, FixedSizeList } = ReactWindow;
+import type { ListChildComponentProps, GridChildComponentProps } from 'react-window';
+import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 
 
 interface ExerciseLibraryProps {
@@ -97,7 +102,7 @@ const ExerciseCard = React.memo(function ExerciseCard({
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
   const thumbSrc = exercise.image_url
-    ? withImageParams(exercise.image_url, { width: 480, height: 360, format: 'auto', fit: 'cover', dpr: 2 })
+    ? withImageParams(exercise.image_url, { width: 400, height: 300, format: 'auto', fit: 'cover', quality: 75, dpr: 1 })
     : undefined;
 
   return (
@@ -309,7 +314,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
   const thumbSrc = exercise.image_url
-    ? withImageParams(exercise.image_url, { width: 160, height: 160, format: 'auto', fit: 'cover', dpr: 2 })
+    ? withImageParams(exercise.image_url, { width: 120, height: 120, format: 'auto', fit: 'cover', quality: 70, dpr: 1 })
     : undefined;
 
   return (
@@ -407,10 +412,6 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
   );
 });
 
-
-
-import { useDebounce } from '@/hooks/performance/useDebounce';
-
 export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMode = false, addedExerciseIds = [] }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -442,98 +443,72 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
     return exercises
       .filter((ex): ex is Exercise => ex != null && typeof ex === 'object')
       .filter(exercise => {
-      // Text search
-      const matchesSearch = (exercise.name?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase()) ||
-        (exercise.description?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase());
+        // Text search
+        const matchesSearch = (exercise.name?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase()) ||
+          (exercise.description?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase());
 
-      if (!matchesSearch) return false;
+        if (!matchesSearch) return false;
 
-      // Quick filters
-      if (activeFilter === 'favorites') return isFavorite(exercise.id);
-      if (activeFilter === 'no-video') return !exercise.video_url;
+        // Quick filters
+        if (activeFilter === 'favorites') return isFavorite(exercise.id);
+        if (activeFilter === 'no-video') return !exercise.video_url;
 
-      // Advanced filters - Body Parts
-      if (advancedFilters.bodyParts.length > 0) {
-        const exerciseBodyParts = exercise.body_parts || [];
-        const hasMatchingBodyPart = advancedFilters.bodyParts.some(bp =>
-          exerciseBodyParts.some(ebp => ebp.toLowerCase().includes(bp.toLowerCase()))
-        );
-        if (!hasMatchingBodyPart) return false;
-      }
-
-      // Advanced filters - Difficulty
-      if (advancedFilters.difficulty.length > 0) {
-        if (!exercise.difficulty || !advancedFilters.difficulty.includes(exercise.difficulty)) {
-          return false;
+        // Advanced filters - Body Parts
+        if (advancedFilters.bodyParts.length > 0) {
+          const exerciseBodyParts = exercise.body_parts || [];
+          const hasMatchingBodyPart = advancedFilters.bodyParts.some(bp =>
+            exerciseBodyParts.some(ebp => ebp.toLowerCase().includes(bp.toLowerCase()))
+          );
+          if (!hasMatchingBodyPart) return false;
         }
-      }
 
-      // Advanced filters - Categories
-      if (advancedFilters.categories.length > 0) {
-        if (!exercise.category || !advancedFilters.categories.includes(exercise.category)) {
-          return false;
-        }
-      }
-
-      // Advanced filters - Equipment
-      if (advancedFilters.equipment.length > 0) {
-        const exerciseEquipment = exercise.equipment || [];
-
-        const hasMatchingEquipment = advancedFilters.equipment.some(eq => {
-          // Handle the special "No Equipment / Adaptive" group
-          if (eq === NO_EQUIPMENT_GROUP_ID) {
-            // Check if exercise has NO equipment OR has any of the home equipment
-            // Note: exercises with empty equipment array are implicitly "body weight" / "no equipment" usually, 
-            // but let's check if the logic holds. 
-            // Ideally "Peso Corporal" is an equipment tag.
-            // If exercise.equipment is empty, it might be safe to assume it matches, but let's stick to explicit tags if possible.
-            // However, some exercises might rely on empty list. Let's assume tags are used correctly.
-
-            // Check if any of the HOME_EQUIPMENT_GROUP values are present in exerciseEquipment
-            // We need to compare specific values (IDs), but elements in exerciseEquipment are labels?
-            // Wait, `HOME_EQUIPMENT_GROUP` contains IDs (values: 'peso_corporal', 'cadeira').
-            // `exercise.equipment` usually contains LABELS (e.g., 'Peso Corporal', 'Cadeira') because of how it's stored/viewed?
-            // Let's verify data structure. Step 18 shows `EQUIPMENT` const has `value` and `label`.
-            // Step 12 `exerciseService` uses `overlaps`.
-            // `Exercise` type in `ExerciseFiltersPanel` treats `equipment` as string[].
-            // In `ExerciseFiltersPanel`, `equipmentOptions` uses `label` as value: `value: e.label`.
-
-            // CRITICAL: The options in `ExerciseFiltersPanel` use LABEL as the value.
-            // So `advancedFilters.equipment` contains LABELS (e.g. 'Cadeira').
-            // BUT `NO_EQUIPMENT_GROUP_ID` is a value string.
-
-            // So we need to map the GROUP to its labels to compare with exercise.
-            // We need to get the labels corresponding to the IDs in HOME_EQUIPMENT_GROUP.
-            const homeGroupLabels = EQUIPMENT
-              .filter(e => HOME_EQUIPMENT_GROUP.includes(e.value))
-              .map(e => e.label);
-
-            // Also need to handle if exercise equipment is stored as matching labels (which seems to be the case).
-            return exerciseEquipment.some(eeq => homeGroupLabels.some(hgl => eeq.toLowerCase() === hgl.toLowerCase()));
+        // Advanced filters - Difficulty
+        if (advancedFilters.difficulty.length > 0) {
+          if (!exercise.difficulty || !advancedFilters.difficulty.includes(exercise.difficulty)) {
+            return false;
           }
+        }
 
-          return exerciseEquipment.some(eeq => eeq.toLowerCase().includes(eq.toLowerCase()));
-        });
+        // Advanced filters - Categories
+        if (advancedFilters.categories.length > 0) {
+          if (!exercise.category || !advancedFilters.categories.includes(exercise.category)) {
+            return false;
+          }
+        }
 
-        if (!hasMatchingEquipment) return false;
-      }
+        // Advanced filters - Equipment
+        if (advancedFilters.equipment.length > 0) {
+          const exerciseEquipment = exercise.equipment || [];
 
-      // Home-only filter
-      if (advancedFilters.homeOnly) {
-        // We can reuse the group logic or keep this explicit list.
-        // Let's keep consistency with the constant but mapping to labels.
-        const homeEquipmentLabels = EQUIPMENT
-          .filter(e => e.homeFrequency === 'always' || e.homeFrequency === 'common')
-          .map(e => e.label);
+          const hasMatchingEquipment = advancedFilters.equipment.some(eq => {
+            // Handle the special "No Equipment / Adaptive" group
+            if (eq === NO_EQUIPMENT_GROUP_ID) {
+              const homeGroupLabels = EQUIPMENT
+                .filter(e => HOME_EQUIPMENT_GROUP.includes(e.value))
+                .map(e => e.label);
+              return exerciseEquipment.some(eeq => homeGroupLabels.some(hgl => eeq.toLowerCase() === hgl.toLowerCase()));
+            }
 
-        const exerciseEquipment = exercise.equipment || [];
-        const isHomeExercise = exerciseEquipment.length === 0 ||
-          exerciseEquipment.every(eq => homeEquipmentLabels.some(he => eq.toLowerCase().includes(he.toLowerCase())));
-        if (!isHomeExercise) return false;
-      }
+            return exerciseEquipment.some(eeq => eeq.toLowerCase().includes(eq.toLowerCase()));
+          });
 
-      return true;
-    });
+          if (!hasMatchingEquipment) return false;
+        }
+
+        // Home-only filter
+        if (advancedFilters.homeOnly) {
+          const homeEquipmentLabels = EQUIPMENT
+            .filter(e => e.homeFrequency === 'always' || e.homeFrequency === 'common')
+            .map(e => e.label);
+
+          const exerciseEquipment = exercise.equipment || [];
+          const isHomeExercise = exerciseEquipment.length === 0 ||
+            exerciseEquipment.every(eq => homeEquipmentLabels.some(he => eq.toLowerCase().includes(he.toLowerCase())));
+          if (!isHomeExercise) return false;
+        }
+
+        return true;
+      });
   }, [exercises, debouncedSearchTerm, activeFilter, isFavorite, advancedFilters]);
 
   const handleDelete = async () => {
@@ -555,6 +530,89 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
     } else {
       setSelectedExercises(filteredExercises.map(ex => ex.id));
     }
+  };
+
+  const GridRow = ({ columnIndex, rowIndex, style, data }: GridChildComponentProps) => {
+    const { items, columnCount } = data;
+    const index = rowIndex * columnCount + columnIndex;
+
+    if (index >= items.length) {
+      return null;
+    }
+
+    const exercise = items[index];
+    const gutter = 16;
+
+    // Adjust style for gutter
+    const itemStyle = {
+      ...style,
+      left: Number(style.left) + gutter,
+      top: Number(style.top) + gutter,
+      width: Number(style.width) - gutter,
+      height: Number(style.height) - gutter
+    };
+
+    return (
+      <div style={itemStyle}>
+        <div key={exercise.id} className="relative group h-full">
+          <ExerciseCard
+            exercise={exercise}
+            isFavorite={isFavorite(exercise.id)}
+            onToggleFavorite={() => toggleFavorite(exercise.id)}
+            onView={() => setViewExercise(exercise)}
+            onEdit={() => onEditExercise(exercise)}
+            onDelete={() => setDeleteId(exercise.id)}
+            selectionMode={selectionMode}
+            isAdded={addedExerciseIds.includes(exercise.id)}
+            onAdd={() => onSelectExercise && onSelectExercise(exercise)}
+            imagePriority={index < 6}
+          />
+          {isSelectionMode && (
+            <div className="absolute top-2 right-2 z-20">
+              <Checkbox
+                checked={selectedExercises.includes(exercise.id)}
+                onCheckedChange={() => toggleSelection(exercise.id)}
+                className="h-6 w-6 border-2 bg-background data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const ListRow = ({ index, style, data }: ListChildComponentProps) => {
+    const exercise = data[index];
+    const gutter = 8;
+
+    const itemStyle = {
+      ...style,
+      height: Number(style.height) - gutter,
+      marginBottom: gutter
+    };
+
+    return (
+      <div style={itemStyle}>
+        <div key={exercise.id} className="relative flex items-center gap-2 h-full">
+          {isSelectionMode && (
+            <Checkbox
+              checked={selectedExercises.includes(exercise.id)}
+              onCheckedChange={() => toggleSelection(exercise.id)}
+            />
+          )}
+          <div className="flex-1 h-full">
+            <ExerciseListItem
+              exercise={exercise}
+              isFavorite={isFavorite(exercise.id)}
+              onToggleFavorite={() => toggleFavorite(exercise.id)}
+              onView={() => setViewExercise(exercise)}
+              onEdit={() => onEditExercise(exercise)}
+              onDelete={() => setDeleteId(exercise.id)}
+            />
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -603,9 +661,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   }
 
   return (
-    <div className="space-y-4 pb-20"> {/* pb-20 for floating bar space */}
+    <div className="space-y-4 pb-20 h-[calc(100vh-200px)] flex flex-col"> {/* Fixed height container for AutoSizer */}
       {/* Search and Filters */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -708,61 +766,48 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
       </div>
 
       {/* Exercise Grid/List */}
-      {filteredExercises.length === 0 ? (
-        // ... (existing EmptyState)
-        <EmptyState icon={Dumbbell} title="Nenhum exercício" />
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
-          {filteredExercises.map((exercise, index) => (
-            <div key={exercise.id} className="relative group h-full">
-              <ExerciseCard
-                exercise={exercise}
-                isFavorite={isFavorite(exercise.id)}
-                onToggleFavorite={() => toggleFavorite(exercise.id)}
-                onView={() => setViewExercise(exercise)}
-                onEdit={() => onEditExercise(exercise)}
-                onDelete={() => setDeleteId(exercise.id)}
-                selectionMode={selectionMode}
-                isAdded={addedExerciseIds.includes(exercise.id)}
-                onAdd={() => onSelectExercise && onSelectExercise(exercise)}
-                imagePriority={index < 6}
-              />
-              {isSelectionMode && (
-                <div className="absolute top-2 right-2 z-20">
-                  <Checkbox
-                    checked={selectedExercises.includes(exercise.id)}
-                    onCheckedChange={() => toggleSelection(exercise.id)}
-                    className="h-6 w-6 border-2 bg-background data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredExercises.map((exercise) => (
-            <div key={exercise.id} className="relative flex items-center gap-2">
-              {isSelectionMode && (
-                <Checkbox
-                  checked={selectedExercises.includes(exercise.id)}
-                  onCheckedChange={() => toggleSelection(exercise.id)}
-                />
-              )}
-              <div className="flex-1">
-                <ExerciseListItem
-                  exercise={exercise}
-                  isFavorite={isFavorite(exercise.id)}
-                  onToggleFavorite={() => toggleFavorite(exercise.id)}
-                  onView={() => setViewExercise(exercise)}
-                  onEdit={() => onEditExercise(exercise)}
-                  onDelete={() => setDeleteId(exercise.id)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex-1 min-h-0 relative">
+        {filteredExercises.length === 0 ? (
+          <EmptyState icon={Dumbbell} title="Nenhum exercício" />
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => {
+              if (viewMode === 'grid') {
+                const columnCount = width < 768 ? 1 : width < 1280 ? 2 : 3;
+                const columnWidth = width / columnCount;
+                const rowCount = Math.ceil(filteredExercises.length / columnCount);
+                const rowHeight = 420; // Approx height of card including gutter
+
+                return (
+                  <Grid
+                    columnCount={columnCount}
+                    columnWidth={columnWidth}
+                    height={height}
+                    rowCount={rowCount}
+                    rowHeight={rowHeight}
+                    width={width}
+                    itemData={{ items: filteredExercises, columnCount }}
+                  >
+                    {GridRow}
+                  </Grid>
+                );
+              } else {
+                return (
+                  <FixedSizeList
+                    height={height}
+                    itemCount={filteredExercises.length}
+                    itemSize={110} // Approx height of list item
+                    width={width}
+                    itemData={filteredExercises}
+                  >
+                    {ListRow}
+                  </FixedSizeList>
+                );
+              }
+            }}
+          </AutoSizer>
+        )}
+      </div>
 
       {/* Floating Action Bar */}
       {isSelectionMode && selectedExercises.length > 0 && (

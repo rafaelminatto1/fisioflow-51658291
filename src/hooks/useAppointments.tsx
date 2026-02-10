@@ -15,7 +15,7 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { isAppointmentConflictError } from '@/utils/appointmentErrors';
 
 export const appointmentKeys = {
-  all: ['appointments'] as const,
+  all: ['appointments_v2'] as const,
   lists: () => [...appointmentKeys.all, 'list'] as const,
   list: (organizationId?: string | null) => [...appointmentKeys.lists(), organizationId] as const,
   details: () => [...appointmentKeys.all, 'detail'] as const,
@@ -365,9 +365,9 @@ export function useCreateAppointment() {
       const optimisticAppointment: AppointmentBase = {
         id: tempId,
         patientId: variables.patient_id,
-        patientName: variables.patient_id || '', // Will be filled by actual response
+        patientName: variables.patient_name || variables.patient_id || '', // Attempt to use name if available
         phone: '',
-        date: new Date(variables.appointment_date),
+        date: new Date(variables.appointment_date || Date.now()),
         time: variables.appointment_time || variables.start_time || '',
         duration: variables.duration || 60,
         type: variables.type || 'Fisioterapia',
@@ -375,8 +375,8 @@ export function useCreateAppointment() {
         notes: variables.notes || '',
         createdAt: new Date(),
         updatedAt: new Date(),
-        therapistId: variables.therapist_id,
-        room: variables.room,
+        therapistId: variables.therapist_id || undefined,
+        room: variables.room || undefined,
         payment_status: variables.payment_status || 'pending',
       };
 
@@ -403,6 +403,9 @@ export function useCreateAppointment() {
           };
         }
       );
+
+      // Force refresh of lists to ensure consistency
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
 
       toast({
         title: 'Sucesso',

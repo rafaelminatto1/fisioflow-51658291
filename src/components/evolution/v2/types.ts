@@ -20,12 +20,21 @@ export interface EvolutionV2Data {
   // Exercises with status tracking
   exercises: ExerciseV2Item[];
 
-  // Additional observations
+  // Observations (general notes)
   observations: string;
+
+  // Home care exercises (specific for exercises at home)
+  homeCareExercises?: string;
+
+  // Attachments (file references)
+  attachments?: string[];
 
   // Pain level
   painLevel?: number;
   painLocation?: string;
+
+  // Measurements (clinical tests, vitals, etc.)
+  measurements?: MeasurementItem[];
 }
 
 export interface ProcedureItem {
@@ -132,3 +141,73 @@ export type ExerciseFeedback = {
 };
 
 export type EvolutionVersion = 'v1-soap' | 'v2-texto';
+
+// ========== Measurements Types ==========
+
+export type MeasurementType =
+  | 'Amplitude de Movimento'
+  | 'Dor (EVA)'
+  | 'Força Muscular'
+  | 'Teste Funcional'
+  | 'Perimetria'
+  | 'Goniometria'
+  | 'Sinais Vitais'
+  | 'Personalizado'
+  | 'Outro';
+
+export const MEASUREMENT_TYPES: MeasurementType[] = [
+  'Amplitude de Movimento',
+  'Dor (EVA)',
+  'Força Muscular',
+  'Teste Funcional',
+  'Perimetria',
+  'Goniometria',
+  'Sinais Vitais',
+  'Personalizado',
+  'Outro',
+];
+
+export const MEASUREMENT_TYPE_LABELS: Record<MeasurementType, string> = {
+  'Amplitude de Movimento': 'ADM',
+  'Dor (EVA)': 'EVA',
+  'Força Muscular': 'Força',
+  'Teste Funcional': 'Teste Funcional',
+  'Perimetria': 'Perimetria',
+  'Goniometria': 'Goniometria',
+  'Sinais Vitais': 'Sinais Vitais',
+  'Personalizado': 'Personalizado',
+  'Outro': 'Outro',
+};
+
+export interface MeasurementItem {
+  id: string;
+  measurement_type: MeasurementType | string;
+  measurement_name: string;
+  value: string;
+  unit: string;
+  notes: string;
+  custom_data: Record<string, string>;
+  selectedTestId?: string;
+  selectedTest?: ClinicalTest;
+  completed: boolean;
+}
+
+// Simplified ClinicalTest interface for measurements
+export interface ClinicalTest {
+  id: string;
+  name: string;
+  category?: string;
+  layout_type?: 'y_balance' | 'default' | 'multi_field';
+  fields_definition?: Array<{
+    id: string;
+    label: string;
+    type?: 'text' | 'number' | 'select';
+    unit?: string;
+    required?: boolean;
+    description?: string;
+  }>;
+  image_url?: string;
+  media_urls?: string[];
+  execution?: string;
+  tags?: string[];
+}

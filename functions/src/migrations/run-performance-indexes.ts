@@ -108,8 +108,8 @@ export const runPerformanceIndexes = onRequest({
 
     // Pain records indexes
     try {
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_pain_records_patient_org_date ON pain_records(patient_id, organization_id, created_at DESC)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_pain_records_body_part ON pain_records(body_part) WHERE body_part IS NOT NULL`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_patient_pain_records_patient_org_date ON patient_pain_records(patient_id, organization_id, created_at DESC)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_patient_pain_records_body_part ON patient_pain_records(body_part) WHERE body_part IS NOT NULL`);
       results.push({ step: 'Create pain_records indexes', success: true });
       console.log('✅ Pain records indexes');
     } catch (err: any) {

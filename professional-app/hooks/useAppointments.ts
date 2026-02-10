@@ -9,28 +9,43 @@ export interface UseAppointmentsOptions {
   status?: string;
   limit?: number;
   patientId?: string;
+  refetchInterval?: number | false;
 }
 
 // Map API appointment type to app Appointment type
 function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
-  // Parse date (format: YYYY-MM-DD)
+  // Parse date (can be YYYY-MM-DD or ISO string)
   let appointmentDate: Date;
   try {
-    const [year, month, day] = apiAppointment.date.split('-').map(Number);
-    appointmentDate = new Date(year, month - 1, day);
+    if (apiAppointment.date.includes('T')) {
+      appointmentDate = new Date(apiAppointment.date);
+    } else {
+      const [year, month, day] = apiAppointment.date.split('-').map(Number);
+      appointmentDate = new Date(year, month - 1, day);
+    }
+
+    // Add time component if available
+    const startTime = apiAppointment.startTime || apiAppointment.start_time;
+    if (startTime) {
+      const [hours, minutes] = startTime.split(':').map(Number);
+      appointmentDate.setHours(hours, minutes, 0, 0);
+    }
   } catch {
     appointmentDate = new Date();
   }
 
   return {
     id: apiAppointment.id,
-    patientId: apiAppointment.patientId,
+    patientId: apiAppointment.patientId || apiAppointment.patient_id || '',
     patientName: apiAppointment.patient_name || '',
-    professionalId: apiAppointment.therapistId || '',
+    professionalId: apiAppointment.therapistId || apiAppointment.therapist_id || '',
     clinicId: undefined,
     date: appointmentDate,
-    time: apiAppointment.startTime,
-    duration: parseDuration(apiAppointment.startTime, apiAppointment.endTime),
+    time: apiAppointment.startTime || apiAppointment.start_time,
+    duration: parseDuration(
+      apiAppointment.startTime || apiAppointment.start_time || '00:00',
+      apiAppointment.endTime || apiAppointment.end_time || '00:00'
+    ),
     type: apiAppointment.type || apiAppointment.session_type || 'Fisioterapia',
     status: mapAppointmentStatus(apiAppointment.status),
     notes: apiAppointment.notes,
@@ -100,24 +115,29 @@ export function useAppointments(options?: UseAppointmentsOptions) {
   const queryClient = useQueryClient();
 
   const appointments = useQuery({
-    queryKey: ['appointments', user?.id, options],
+    queryKey: ['appointments_v2', user?.id, options],
     queryFn: () => {
       if (!user?.id) return [];
 
       const dateFrom = options?.startDate ? formatDateForAPI(options.startDate) : undefined;
       const dateTo = options?.endDate ? formatDateForAPI(options.endDate) : undefined;
 
+      // Map frontend status (e.g. 'scheduled') to backend status (e.g. 'agendado')
+      // If passing undefined, it fetches all statuses
+      const statusParam = options?.status ? mapToApiStatus(options.status as any) : undefined;
+
       return getAppointments(user.organizationId, {
         dateFrom,
         dateTo,
         therapistId: user.id,
-        status: options?.status,
+        status: statusParam,
         patientId: options?.patientId,
         limit: options?.limit || 100,
       }).then(data => data.map(mapApiAppointment));
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: options?.refetchInterval,
   });
 
   const createMutation = useMutation({
@@ -141,7 +161,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       return mapApiAppointment(apiAppointment);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
     },
   });
 
@@ -166,14 +186,14 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       return mapApiAppointment(apiAppointment);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => cancelAppointment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
     },
   });
 

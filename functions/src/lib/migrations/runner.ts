@@ -18,6 +18,7 @@ import {
   MigrationSummary,
   DatabaseType,
 } from './types';
+import { migration as doctorsTableMigration } from '../../migrations/create-doctors-table';
 
 const MIGRATIONS_TABLE = 'schema_migrations';
 
@@ -31,14 +32,7 @@ const MIGRATIONS_TABLE = 'schema_migrations';
  */
 const MIGRATIONS: Migration[] = [
   // Add migrations here in order
-  // Example:
-  // {
-  //   id: '001_initial_schema',
-  //   name: 'Initial database schema',
-  //   database: DatabaseType.POSTGRESQL,
-  //   up: `CREATE TABLE IF NOT EXISTS...`,
-  //   down: `DROP TABLE IF EXISTS...`,
-  // },
+  doctorsTableMigration,
 ];
 
 /**

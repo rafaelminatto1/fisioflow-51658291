@@ -28,6 +28,7 @@ export function useCheckIn() {
     try {
       // Get current location
       const location = await getCurrentLocation();
+      if (!location) throw new Error('Não foi possível obter a localização');
 
       // Create check-in record
       const checkInData: CheckInData = {

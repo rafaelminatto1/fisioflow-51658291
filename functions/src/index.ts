@@ -207,6 +207,25 @@ export {
     getEventReportHttp as getEventReportV2,
 } from './api/financial';
 
+// API de Parcerias (Partnerships)
+export {
+    listPartnershipsHttp as listPartnerships,
+    getPartnershipHttp as getPartnership,
+    createPartnershipHttp as createPartnership,
+    updatePartnershipHttp as updatePartnership,
+    deletePartnershipHttp as deletePartnership,
+} from './api/partnerships';
+
+// API de Registros Financeiros de Pacientes
+export {
+    listPatientFinancialRecordsHttp as listPatientFinancialRecords,
+    getPatientFinancialSummaryHttp as getPatientFinancialSummaryV2,
+    createFinancialRecordHttp as createFinancialRecord,
+    updateFinancialRecordHttp as updateFinancialRecord,
+    deleteFinancialRecordHttp as deleteFinancialRecord,
+    markAsPaidHttp as markAsPaid,
+} from './api/patient-financial';
+
 // API de Prontuários
 export const getPatientRecords = onCall(async (request) => {
     const { getPatientRecordsHandler } = await import('./api/medical-records');
@@ -308,10 +327,20 @@ export const translateExercise = onRequest(async (req: any, res: any) => {
 });
 
 // Exercise Image Proxy - bypasses CORS issues for Firebase Storage images
-export const exerciseImageProxy = onRequest(async (req: any, res: any) => {
-    const { exerciseImageProxy } = await import('./api/exerciseImage');
-    return exerciseImageProxy(req, res);
-});
+// OTIMIZAÇÃO: Aumentado maxInstances para evitar erros 429 em carregamento de listas
+export const exerciseImageProxy = onRequest(
+    {
+        maxInstances: 10,
+        cpu: 1, // Required when concurrency > 1
+        concurrency: 10,
+        memory: '512MiB', // Aumentado memória para processamento de imagem
+        timeoutSeconds: 60,
+        cors: CORS_ORIGINS,
+    },
+    async (req: any, res: any) => {
+        const { exerciseImageProxy } = await import('./api/exerciseImage');
+        return exerciseImageProxy(req, res);
+    });
 
 // Admin Functions
 export const createAdminUser = onCall(async (request) => {
@@ -320,6 +349,11 @@ export const createAdminUser = onCall(async (request) => {
 });
 
 // Migration Functions
+export const migrateRolesToClaims = onCall(async (request) => {
+    const { migrateRolesToClaimsHandler } = await import('./migrations/migrate-roles-to-claims');
+    return migrateRolesToClaimsHandler(request);
+});
+
 export const createPerformanceIndexes = onCall(async (request) => {
     const { createPerformanceIndexesHandler } = await import('./migrations/create-performance-indexes');
     return createPerformanceIndexesHandler(request);
@@ -379,6 +413,34 @@ export const runPatientRagSchema = onRequest(
     async (req, res) => {
         const { runPatientRagSchemaHandler } = await import('./migrations/run-patient-rag-schema');
         return runPatientRagSchemaHandler(req, res);
+    }
+);
+
+export const runDoctorsTable = onRequest(
+    {
+        secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
+        memory: '256MiB',
+        timeoutSeconds: 60,
+        region: 'southamerica-east1',
+        cors: CORS_ORIGINS,
+    },
+    async (req, res) => {
+        const { runDoctorsTable } = await import('./migrations/run-doctors-table');
+        return runDoctorsTable(req, res);
+    }
+);
+
+export const fixUserOrganization = onRequest(
+    {
+        secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
+        memory: '256MiB',
+        timeoutSeconds: 60,
+        region: 'southamerica-east1',
+        cors: CORS_ORIGINS,
+    },
+    async (req, res) => {
+        const { fixUserOrganization } = await import('./migrations/fix-user-organization');
+        return fixUserOrganization(req, res);
     }
 );
 

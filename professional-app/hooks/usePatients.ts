@@ -4,10 +4,11 @@ import type { Patient } from '@/types';
 import { getPatients, getPatientById, createPatient, updatePatient, deletePatient, type ApiPatient } from '@/lib/api';
 
 export interface UsePatientsOptions {
-  status?: 'active' | 'inactive' | 'Em Tratamento';
+  status?: 'active' | 'inactive' | 'Em_Tratamento';
   limit?: number;
   search?: string;
 }
+
 
 // Map API patient type to app Patient type
 function mapApiPatient(apiPatient: ApiPatient): Patient {
@@ -21,7 +22,7 @@ function mapApiPatient(apiPatient: ApiPatient): Patient {
     condition: apiPatient.main_condition || apiPatient.observations,
     diagnosis: undefined,
     notes: apiPatient.observations,
-    status: (apiPatient.status === 'Em Tratamento' || apiPatient.status === 'active') ? 'active' : 'inactive',
+    status: (apiPatient.is_active !== false) ? 'active' : 'inactive',
     progress: apiPatient.progress,
     lastVisit: undefined,
     organization_id: undefined,
@@ -32,7 +33,9 @@ function mapApiPatient(apiPatient: ApiPatient): Patient {
 
 // Reverse map app status to API status
 function mapToApiStatus(status: Patient['status']): string {
-  return status === 'active' ? 'Em Tratamento' : status;
+  // When creating/updating, if status is 'active', we set it to 'Em_Tratamento' as default
+  // This might need to be 'Inicial' depending on business logic, but preserving existing behavior for now
+  return status === 'active' ? 'Em_Tratamento' : status;
 }
 
 export function usePatients(options?: UsePatientsOptions) {
@@ -45,7 +48,10 @@ export function usePatients(options?: UsePatientsOptions) {
       if (!user?.id) return [];
 
       return getPatients(user.organizationId, {
-        status: options?.status === 'active' ? 'Em Tratamento' : options?.status,
+        // If status is 'active', we want ALL active patients (backend defaults to is_active=true)
+        // So we pass undefined. Only pass specific status if it's NOT 'active' (e.g. 'inactive' - though backend might not support it yet, or specific enums)
+        // If options.status is 'Em_Tratamento', we pass that.
+        status: options?.status === 'active' ? undefined : options?.status,
         search: options?.search,
         limit: options?.limit || 100,
       }).then(data => data.map(mapApiPatient));

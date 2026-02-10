@@ -176,7 +176,7 @@ export const getPainRecordsHttp = onRequest(httpOpts, async (req, res) => {
     const pool = getPool();
     const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
     if (patientCheck.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
-    const result = await pool.query('SELECT * FROM pain_records WHERE patient_id = $1 AND organization_id = $2 ORDER BY record_date DESC', [patientId, auth.organizationId]);
+    const result = await pool.query('SELECT * FROM patient_pain_records WHERE patient_id = $1 AND organization_id = $2 ORDER BY record_date DESC', [patientId, auth.organizationId]);
     res.json({ data: result.rows });
   } catch (e: unknown) {
     setCorsHeaders(res);
@@ -196,7 +196,7 @@ export const savePainRecordHttp = onRequest(httpOpts, async (req, res) => {
     const pool = getPool();
     const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
     if (patientCheck.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
-    const result = await pool.query('INSERT INTO pain_records (patient_id, organization_id, pain_level, record_date, notes, recorded_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [patientId, auth.organizationId, painLevel, recordDate || new Date().toISOString().split('T')[0], notes || null, auth.userId]);
+    const result = await pool.query('INSERT INTO patient_pain_records (patient_id, organization_id, pain_level, record_date, notes, recorded_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *', [patientId, auth.organizationId, painLevel, recordDate || new Date().toISOString().split('T')[0], notes || null, auth.userId]);
     await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'pain_record_created_http');
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {

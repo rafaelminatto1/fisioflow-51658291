@@ -1,16 +1,13 @@
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool, getAdminDb, getAdminAuth, CORS_ORIGINS } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Appointment } from '../types/models';
 import { logger } from '../lib/logger';
-import * as admin from 'firebase-admin';
 import { rtdb } from '../lib/rtdb';
 import { setCorsHeaders } from '../lib/cors';
 import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { dispatchAppointmentNotification } from '../workflows/notifications';
-
-const firebaseAuth = admin.auth();
 
 // OTIMIZADO: Configurações com mais instâncias
 const APPOINTMENT_HTTP_OPTS = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
@@ -30,9 +27,10 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
   }
 
   const token = authHeader.split('Bearer ')[1];
+  const auth = getAdminAuth();
 
   try {
-    const decodedToken = await firebaseAuth.verifyIdToken(token);
+    const decodedToken = await auth.verifyIdToken(token);
     return { uid: decodedToken.uid };
   } catch (error) {
     throw new HttpsError('unauthenticated', 'Invalid token');
@@ -242,7 +240,7 @@ export const createAppointmentHttp = onRequest(
 
       // [SYNC] Write to Firestore for legacy frontend compatibility
       try {
-        const db = admin.firestore();
+        const db = getAdminDb();
         await db.collection('appointments').doc(appointment.id).set({
           ...appointment,
           notification_origin: 'api_appointments_v2',
@@ -377,7 +375,7 @@ export const updateAppointmentHttp = onRequest(
 
       // [SYNC] Write to Firestore for legacy frontend compatibility
       try {
-        const db = admin.firestore();
+        const db = getAdminDb();
         const safeDoc: Record<string, unknown> = { ...updatedAppt, updated_at: new Date() };
         await db.collection('appointments').doc(appointmentId).set(safeDoc, { merge: true });
         logger.info(`[updateAppointmentHttp] Appointment ${appointmentId} synced to Firestore`);
@@ -460,7 +458,7 @@ export const cancelAppointmentHttp = onRequest(
 
       // [SYNC] Sync cancellation to Firestore
       try {
-        const db = admin.firestore();
+        const db = getAdminDb();
         await db.collection('appointments').doc(appointmentId).update({
           status: 'cancelado',
           updated_at: new Date()
@@ -649,7 +647,7 @@ async function getSlotCapacity(organizationId: string, dateStr: string, startTim
   try {
     const d = new Date(dateStr + 'T12:00:00');
     const dayOfWeek = d.getDay();
-    const db = admin.firestore();
+    const db = getAdminDb();
     const snap = await db.collection('schedule_capacity_config')
       .where('organization_id', '==', organizationId)
       .where('day_of_week', '==', dayOfWeek)
@@ -861,7 +859,7 @@ export const createAppointmentHandler = async (request: any) => {
 
     // [SYNC] Write to Firestore for legacy frontend compatibility
     try {
-      const db = admin.firestore();
+      const db = getAdminDb();
       await db.collection('appointments').doc(appointment.id).set({
         ...appointment,
         notification_origin: 'api_appointments_v2',
@@ -1023,7 +1021,7 @@ export const updateAppointmentHandler = async (request: any) => {
 
     // [SYNC] Write to Firestore for legacy frontend compatibility
     try {
-      const db = admin.firestore();
+      const db = getAdminDb();
       await db.collection('appointments').doc(appointmentId).set({
         ...updatedAppt,
         updated_at: new Date()
@@ -1136,7 +1134,7 @@ export const cancelAppointmentHandler = async (request: any) => {
 
     // [SYNC] Sync cancellation to Firestore
     try {
-      const db = admin.firestore();
+      const db = getAdminDb();
       await db.collection('appointments').doc(appointmentId).update({
         status: 'cancelado',
         updated_at: new Date()
