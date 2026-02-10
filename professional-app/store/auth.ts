@@ -76,7 +76,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           name: userData.name || userData.displayName || userData.full_name || 'Profissional',
           role: userData.role,
           clinicId: userData.clinicId || userData.clinic_id,
-          organizationId: userData.organizationId || userData.organization_id,
+          // Use a default organizationId if not set (for development/testing)
+          organizationId: userData.organizationId || userData.organization_id || '11111111-1111-1111-1111-111111111111',
           avatarUrl: userData.avatarUrl || userData.photoURL,
           specialty: userData.specialty,
           crefito: userData.crefito,
@@ -192,7 +193,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               name: userData.name || userData.displayName || userData.full_name || 'Profissional',
               role: userData.role,
               clinicId: userData.clinicId || userData.clinic_id,
-              organizationId: userData.organizationId || userData.organization_id,
+              // Use a default organizationId if not set (for development/testing)
+              organizationId: userData.organizationId || userData.organization_id || '11111111-1111-1111-1111-111111111111',
               avatarUrl: userData.avatarUrl || userData.photoURL,
               specialty: userData.specialty,
               crefito: userData.crefito,
