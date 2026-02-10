@@ -40,7 +40,7 @@ export function SyncStatus({ status, isOnline, pendingChanges = 0, compact = fal
         };
       case 'offline':
         return {
-          icon: 'cloud-off' as const,
+          icon: 'cloud-offline' as const,
           color: colors.textMuted,
           text: 'Modo offline',
         };
