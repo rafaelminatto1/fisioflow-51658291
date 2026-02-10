@@ -60,6 +60,8 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useTherapists } from '@/hooks/useTherapists';
 import { useQueryClient } from '@tanstack/react-query';
+import { usePDFGenerator } from '@/hooks/usePDFGenerator';
+import { useAuth } from '@/hooks/useAuth';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
 // Componentes de Evolução
@@ -76,7 +78,12 @@ import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvol
 import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { PatientHelpers } from '@/types';
 
+// V2 Evolution (Notion-style)
+import type { EvolutionVersion, EvolutionV2Data } from '@/components/evolution/v2/types';
+import { getTherapistById } from '@/hooks/useTherapists';
+
 // Lazy loading para componentes pesados
+const LazyNotionEvolutionPanel = lazy(() => import('@/components/evolution/v2/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
 const LazyTreatmentAssistant = lazy(() => import('@/components/ai/TreatmentAssistant').then(m => ({ default: m.TreatmentAssistant })));
 const LazyWhatsAppIntegration = lazy(() => import('@/components/whatsapp/WhatsAppIntegration').then(m => ({ default: m.WhatsAppIntegration })));
 const LazyPatientGamification = lazy(() => import('@/components/gamification/PatientGamification').then(m => ({ default: m.PatientGamification })));
@@ -98,6 +105,8 @@ const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isGenerating, generateEvolucao, downloadPDF } = usePDFGenerator();
 
   // Command Palette hook - handles Ctrl+K globally
   const { CommandPaletteComponent } = useCommandPalette();
@@ -121,6 +130,7 @@ const PatientEvolution = () => {
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [activeTab, setActiveTab] = useState('evolucao'); // evolucao, avaliacao, tratamento, historico, assistente
   const [sessionLongAlertShown, setSessionLongAlertShown] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Escala de dor
   const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
@@ -130,6 +140,23 @@ const PatientEvolution = () => {
 
   // Fisioterapeuta responsável pela sessão (dropdown + CREFITO no header)
   const [selectedTherapistId, setSelectedTherapistId] = useState('');
+
+  // ========== EVOLUÇÃO V2 (Texto Livre / Notion-style) ==========
+  const [evolutionVersion, setEvolutionVersion] = useState<EvolutionVersion>(() => {
+    try {
+      return (localStorage.getItem('fisioflow-evolution-version') as EvolutionVersion) || 'v1-soap';
+    } catch { return 'v1-soap'; }
+  });
+  const [evolutionV2Data, setEvolutionV2Data] = useState<EvolutionV2Data>({
+    therapistName: '',
+    therapistCrefito: '',
+    sessionDate: new Date().toISOString(),
+    patientReport: '',
+    evolutionText: '',
+    procedures: [],
+    exercises: [],
+    observations: '',
+  });
 
   // ========== HOOKS ==========
   const queryClient = useQueryClient();
@@ -199,6 +226,17 @@ const PatientEvolution = () => {
   // ========== CALLBACKS ==========
   const setSoapDataStable = useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
     setSoapData(data);
+  }, []);
+
+  // V2: Handle version change & persist preference
+  const handleVersionChange = useCallback((version: EvolutionVersion) => {
+    setEvolutionVersion(version);
+    try { localStorage.setItem('fisioflow-evolution-version', version); } catch { /* ignore */ }
+  }, []);
+
+  // V2: Stable setter for NotionEvolutionPanel
+  const setEvolutionV2DataStable = useCallback((data: EvolutionV2Data) => {
+    setEvolutionV2Data(data);
   }, []);
 
   // ========== EFFECTS ==========
@@ -283,6 +321,35 @@ const PatientEvolution = () => {
 
   // Medições agrupadas por tipo para gráficos
   const measurementsByType = useMemo(() => {
+    const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
+    measurements.forEach(m => {
+      if (!grouped[m.measurement_name]) {
+        grouped[m.measurement_name] = [];
+      }
+      grouped[m.measurement_name].push({
+        date: format(new Date(m.measured_at), 'dd/MM', { locale: ptBR }),
+        value: m.value,
+        fullDate: m.measured_at
+      });
+    });
+    return grouped;
+  }, [measurements]);
+
+  // V2: Keep therapist info in sync with header block
+  useEffect(() => {
+    if (!therapists.length) return;
+    const selected = selectedTherapistId ? getTherapistById(therapists, selectedTherapistId) : null;
+    setEvolutionV2Data(prev => ({
+      ...prev,
+      therapistName: selected?.name || '',
+      therapistCrefito: selected?.crefito || '',
+      sessionDate: appointment?.appointment_date || new Date().toISOString(),
+      sessionNumber: evolutionStats.totalEvolutions + 1,
+    }));
+  }, [selectedTherapistId, therapists, appointment?.appointment_date, evolutionStats.totalEvolutions]);
+
+  // Medições agrupadas por nome
+  const measurementsGroupedByName = useMemo(() => {
     const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
     measurements.forEach(m => {
       if (!grouped[m.measurement_name]) {
@@ -404,8 +471,21 @@ const PatientEvolution = () => {
   );
 
   // ========== AUTO-SAVE ==========
+  // Auto-save data source depends on active version
+  const autoSaveData = useMemo(() => {
+    if (evolutionVersion === 'v2-texto') {
+      return {
+        subjective: evolutionV2Data.patientReport || '',
+        objective: evolutionV2Data.evolutionText || '',
+        assessment: evolutionV2Data.procedures.map(p => `${p.completed ? '[x]' : '[ ]'} ${p.name}${p.notes ? ` - ${p.notes}` : ''}`).join('\n'),
+        plan: evolutionV2Data.observations || '',
+      };
+    }
+    return soapData;
+  }, [evolutionVersion, evolutionV2Data, soapData]);
+
   const { lastSavedAt } = useAutoSave({
-    data: soapData,
+    data: autoSaveData,
     onSave: async (data) => {
       if (!patientId || !appointmentId) return;
       if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
@@ -479,7 +559,17 @@ const PatientEvolution = () => {
       return;
     }
 
-    if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
+    // V2: Map V2 data to SOAP fields for saving (backwards compatible)
+    const saveData = evolutionVersion === 'v2-texto'
+      ? {
+          subjective: evolutionV2Data.patientReport || '',
+          objective: evolutionV2Data.evolutionText || '',
+          assessment: evolutionV2Data.procedures.map(p => `${p.completed ? '[x]' : '[ ]'} ${p.name}${p.notes ? ` - ${p.notes}` : ''}`).join('\n'),
+          plan: evolutionV2Data.observations || '',
+        }
+      : soapData;
+
+    if (!saveData.subjective && !saveData.objective && !saveData.assessment && !saveData.plan) {
       toast({
         title: 'Campos vazios',
         description: 'Preencha pelo menos um campo antes de salvar.',
@@ -492,13 +582,34 @@ const PatientEvolution = () => {
       return;
     }
 
+    // V2: Use exercises from V2 data if in V2 mode
+    const exercisesToSave = evolutionVersion === 'v2-texto'
+      ? evolutionV2Data.exercises.map(ex => ({
+          id: ex.id,
+          exerciseId: ex.exerciseId || ex.id,
+          name: ex.name,
+          sets: parseInt(ex.prescription.split('x')[0]) || 3,
+          repetitions: parseInt(ex.prescription.split('x')[1]) || 10,
+          completed: ex.completed,
+          observations: [
+            ex.observations,
+            ex.patientFeedback?.pain ? 'DOR' : '',
+            ex.patientFeedback?.fatigue ? 'FADIGA' : '',
+            ex.patientFeedback?.difficultyPerforming ? 'DIFICULDADE' : '',
+            ex.patientFeedback?.notes,
+          ].filter(Boolean).join(' | ') || '',
+          weight: '',
+          image_url: ex.image_url,
+        }))
+      : sessionExercises;
+
     try {
       // Salvar registro SOAP
       const record = await autoSaveMutation.mutateAsync({
         patient_id: patientId,
         appointment_id: appointmentId,
         recordId: currentSoapRecordId,
-        ...soapData,
+        ...saveData,
         pain_level: painScale.level,
         pain_location: painScale.location,
         pain_character: painScale.character
@@ -534,7 +645,7 @@ const PatientEvolution = () => {
           appointment_id: appointmentId || null,
           session_date: new Date().toISOString(),
           session_type: 'treatment',
-          exercises_performed: sessionExercises,
+          exercises_performed: exercisesToSave,
           pain_level_before: painScale.level,
           updated_at: new Date().toISOString(),
         };
@@ -558,10 +669,16 @@ const PatientEvolution = () => {
   };
 
   const handleCompleteSession = async () => {
-    if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
+    const hasV1Content = soapData.subjective || soapData.objective || soapData.assessment || soapData.plan;
+    const hasV2Content = evolutionV2Data.patientReport || evolutionV2Data.evolutionText || evolutionV2Data.procedures.length > 0;
+    const hasContent = evolutionVersion === 'v2-texto' ? hasV2Content : hasV1Content;
+
+    if (!hasContent) {
       toast({
         title: 'Complete a evolução',
-        description: 'Preencha os campos SOAP antes de concluir o atendimento.',
+        description: evolutionVersion === 'v2-texto'
+          ? 'Preencha o texto de evolução antes de concluir o atendimento.'
+          : 'Preencha os campos SOAP antes de concluir o atendimento.',
         variant: 'destructive'
       });
       return;
@@ -594,6 +711,92 @@ const PatientEvolution = () => {
           setTimeout(() => navigate('/schedule'), 1500);
         }
       });
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!patient || !user?.professional || !user?.clinic) {
+      toast({
+        title: 'Dados incompletos',
+        description: 'Não foi possível obter os dados do paciente, profissional ou clínica.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsExportingPDF(true);
+    try {
+      // Preparar avaliações (SOAP records) para o PDF
+      const evaluations = [
+        {
+          date: new Date(),
+          subjective: soapData.subjective || 'Não preenchido',
+          objective: soapData.objective || 'Não preenchido',
+          assessment: soapData.assessment || 'Não preenchido',
+          plan: soapData.plan || 'Não preenchido',
+        },
+        ...(previousEvolutions.slice(0, 5).map(ev => ({
+          date: new Date(ev.created_at),
+          subjective: ev.subjective || '',
+          objective: ev.objective || '',
+          assessment: ev.assessment || '',
+          plan: ev.plan || '',
+        })))
+      ];
+
+      // Resumo clínico baseado nos dados
+      const summary = `Paciente em tratamento fisioterapêutico desde ${patient.created_at ? format(new Date(patient.created_at), 'dd/MM/yyyy', { locale: ptBR }) : 'data não informada'}. ` +
+        `Foram realizadas ${previousEvolutions.length + 1} sessões de evolução. ` +
+        `Metas atuais: ${goals.filter(g => g.status === 'em_andamento').map(g => g.title).join(', ') || 'Nenhuma'}.`;
+
+      const blob = await generateEvolucao(
+        {
+          name: PatientHelpers.getName(patient),
+          cpf: patient.cpf,
+          birthDate: patient.birth_date,
+          phone: patient.phone,
+          email: patient.email,
+          address: patient.address,
+        },
+        {
+          name: user.professional.name,
+          crf: user.professional.crf || 'CREFITO',
+          uf: user.professional.uf || 'SP',
+        },
+        {
+          name: user.clinic.name,
+          phone: user.clinic.phone || '',
+          email: user.clinic.email || '',
+          address: user.clinic.address || {
+            street: '',
+            number: '',
+            district: '',
+            city: user.clinic.city || 'São Paulo',
+            state: user.clinic.state || 'SP',
+            zipCode: '',
+          },
+        },
+        evaluations,
+        summary,
+        user.clinic.city || 'São Paulo'
+      );
+
+      if (blob) {
+        downloadPDF(blob, `evolucao-${PatientHelpers.getName(patient).replace(/\s+/g, '-')}-${Date.now()}.pdf`);
+        toast({
+          title: 'PDF gerado com sucesso!',
+          description: 'O relatório de evolução foi baixado.',
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to generate PDF', error, 'PatientEvolution');
+      toast({
+        title: 'Erro ao gerar PDF',
+        description: 'Não foi possível gerar o relatório de evolução.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsExportingPDF(false);
     }
   };
 
@@ -780,7 +983,7 @@ const PatientEvolution = () => {
 
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
-      <MainLayout maxWidth="7xl" customBreadcrumbLabels={customBreadcrumbLabels}>
+      <MainLayout maxWidth="full" compactPadding customBreadcrumbLabels={customBreadcrumbLabels}>
         <div className="space-y-5 animate-fade-in pb-8">
           {/* Cabeçalho: paciente + sessão + ações */}
           <EvolutionHeader
@@ -808,116 +1011,156 @@ const PatientEvolution = () => {
             onTabChange={setActiveTab}
             pendingRequiredMeasurements={pendingRequiredMeasurements.length}
             upcomingGoalsCount={upcomingGoals.length}
+            evolutionVersion={evolutionVersion}
+            onVersionChange={handleVersionChange}
           />
 
           {/* Abas de Navegação */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
-            {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
+            {/* ABA 1: EVOLUÇÃO (SOAP V1 ou Texto Livre V2) */}
             <TabsContent value="evolucao" className="mt-4">
-              <EvolutionResponsiveLayout
-                alertsSection={
-                  <>
-                    {/* Alerta de Testes Obrigatórios */}
-                    {requiredMeasurements.length > 0 && (
-                      <MandatoryTestAlert
-                        tests={mandatoryTestAlertsData}
-                        onResolve={() => setActiveTab('avaliacao')}
-                      />
-                    )}
-
-                    {/* Alertas Inteligentes */}
-                    <EvolutionAlerts
-                      overdueGoals={overdueGoals}
-                      painScale={painScale}
-                      painTrend={painTrend}
-                      upcomingGoals={upcomingGoals}
-                      daysSinceLastEvolution={daysSinceLastEvolution}
-                      sessionDurationMinutes={sessionDurationMinutes}
-                      sessionLongAlertShown={sessionLongAlertShown}
-                      activePathologies={activePathologies}
-                      previousEvolutionsCount={previousEvolutions.length}
-                      onTabChange={setActiveTab}
+              {evolutionVersion === 'v2-texto' ? (
+                /* ===== V2: Texto Livre (Notion-style) ===== */
+                <div className="space-y-4">
+                  {/* Alertas (shared between V1 and V2) */}
+                  {requiredMeasurements.length > 0 && (
+                    <MandatoryTestAlert
+                      tests={mandatoryTestAlertsData}
+                      onResolve={() => setActiveTab('avaliacao')}
                     />
-                  </>
-                }
-                topSection={
-                  /* Cards superiores - grid responsivo */
-                  <CardGrid>
-                    {/* Retorno Médico */}
-                    <MedicalReturnCard
-                      patient={patient}
-                      patientId={patientId || undefined}
-                      onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
+                  )}
+                  <EvolutionAlerts
+                    overdueGoals={overdueGoals}
+                    painScale={painScale}
+                    painTrend={painTrend}
+                    upcomingGoals={upcomingGoals}
+                    daysSinceLastEvolution={daysSinceLastEvolution}
+                    sessionDurationMinutes={sessionDurationMinutes}
+                    sessionLongAlertShown={sessionLongAlertShown}
+                    activePathologies={activePathologies}
+                    previousEvolutionsCount={previousEvolutions.length}
+                    onTabChange={setActiveTab}
+                  />
+
+                  {/* V2 Notion Panel */}
+                  <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazyNotionEvolutionPanel
+                      data={evolutionV2Data}
+                      onChange={setEvolutionV2DataStable}
+                      isSaving={autoSaveMutation.isPending}
+                      disabled={false}
+                      autoSaveEnabled={autoSaveEnabled}
+                      lastSaved={lastSavedAt}
                     />
+                  </Suspense>
+                </div>
+              ) : (
+                /* ===== V1: SOAP (original) ===== */
+                <EvolutionResponsiveLayout
+                  alertsSection={
+                    <>
+                      {/* Alerta de Testes Obrigatórios */}
+                      {requiredMeasurements.length > 0 && (
+                        <MandatoryTestAlert
+                          tests={mandatoryTestAlertsData}
+                          onResolve={() => setActiveTab('avaliacao')}
+                        />
+                      )}
 
-                    {/* Cirurgias */}
-                    <SurgeriesCard patientId={patientId || undefined} />
-
-                    {/* Resumo da Evolução - ocupa 2 linhas em telas grandes */}
-                    <div className="lg:row-span-2">
-                      <EvolutionSummaryCard stats={evolutionStats} />
-                    </div>
-
-                    {/* Metas - ocupa largura restante */}
-                    <div className="sm:col-span-2 lg:col-span-2">
-                      <MetasCard patientId={patientId || undefined} />
-                    </div>
-                  </CardGrid>
-                }
-                mainGrid={
-                  <EvolutionGridContainer>
-                    <Suspense fallback={<LoadingSkeleton type="card" />}>
-                      <LazyEvolutionDraggableGrid
-                        soapData={soapData}
-                        onSoapChange={setSoapDataStable}
-                        painScaleData={painScale}
-                        onPainScaleChange={setPainScale}
-                        painHistory={painHistory}
-                        showPainTrend={true}
-                        onAISuggest={() => setActiveTab('assistente')}
-                        onCopyLast={(section) => {
-                          if (previousEvolutions.length > 0) {
-                            const last = previousEvolutions[0];
-                            setSoapData(prev => ({ ...prev, [section]: last[section] || '' }));
-                            toast({
-                              title: 'Copiado',
-                              description: `Texto de ${section} copiado da última sessão.`
-                            });
-                          }
-                        }}
-                        patientId={patientId}
-                        patientPhone={patient?.phone}
-                        soapRecordId={currentSoapRecordId}
-                        requiredMeasurements={requiredMeasurements}
-                        exercises={sessionExercises}
-                        onExercisesChange={setSessionExercises}
-                        onSuggestExercises={() => {
-                          const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, soapData.assessment || '');
-                          setSessionExercises(suggestions);
-                          toast({
-                            title: 'Sugestões Aplicadas',
-                            description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
-                          });
-                        }}
-                        onRepeatLastSession={() => {
-                          if (lastSession?.exercises_performed) {
-                            setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
-                            toast({
-                              title: 'Exercícios Repetidos',
-                              description: 'Os exercícios da sessão anterior foram carregados.'
-                            });
-                          }
-                        }}
-                        lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
-                        previousEvolutions={previousEvolutions}
-                        onCopyLastEvolution={(evolution) => {
-                          handleCopyPreviousEvolution(evolution);
-                        }}
+                      {/* Alertas Inteligentes */}
+                      <EvolutionAlerts
+                        overdueGoals={overdueGoals}
+                        painScale={painScale}
+                        painTrend={painTrend}
+                        upcomingGoals={upcomingGoals}
+                        daysSinceLastEvolution={daysSinceLastEvolution}
+                        sessionDurationMinutes={sessionDurationMinutes}
+                        sessionLongAlertShown={sessionLongAlertShown}
+                        activePathologies={activePathologies}
+                        previousEvolutionsCount={previousEvolutions.length}
+                        onTabChange={setActiveTab}
                       />
-                    </Suspense>
-                  </EvolutionGridContainer>
-                }
-              />
+                    </>
+                  }
+                  topSection={
+                    /* Cards superiores - grid responsivo */
+                    <CardGrid>
+                      {/* Retorno Médico */}
+                      <MedicalReturnCard
+                        patient={patient}
+                        patientId={patientId || undefined}
+                        onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
+                      />
+
+                      {/* Cirurgias */}
+                      <SurgeriesCard patientId={patientId || undefined} />
+
+                      {/* Resumo da Evolução - ocupa 2 linhas em telas grandes */}
+                      <div className="lg:row-span-2">
+                        <EvolutionSummaryCard stats={evolutionStats} />
+                      </div>
+
+                      {/* Metas - ocupa largura restante */}
+                      <div className="sm:col-span-2 lg:col-span-2">
+                        <MetasCard patientId={patientId || undefined} />
+                      </div>
+                    </CardGrid>
+                  }
+                  mainGrid={
+                    <EvolutionGridContainer>
+                      <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyEvolutionDraggableGrid
+                          soapData={soapData}
+                          onSoapChange={setSoapDataStable}
+                          painScaleData={painScale}
+                          onPainScaleChange={setPainScale}
+                          painHistory={painHistory}
+                          showPainTrend={true}
+                          onAISuggest={() => setActiveTab('assistente')}
+                          onCopyLast={(section) => {
+                            if (previousEvolutions.length > 0) {
+                              const last = previousEvolutions[0];
+                              setSoapData(prev => ({ ...prev, [section]: last[section] || '' }));
+                              toast({
+                                title: 'Copiado',
+                                description: `Texto de ${section} copiado da última sessão.`
+                              });
+                            }
+                          }}
+                          patientId={patientId}
+                          patientPhone={patient?.phone}
+                          soapRecordId={currentSoapRecordId}
+                          requiredMeasurements={requiredMeasurements}
+                          exercises={sessionExercises}
+                          onExercisesChange={setSessionExercises}
+                          onSuggestExercises={() => {
+                            const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, soapData.assessment || '');
+                            setSessionExercises(suggestions);
+                            toast({
+                              title: 'Sugestões Aplicadas',
+                              description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
+                            });
+                          }}
+                          onRepeatLastSession={() => {
+                            if (lastSession?.exercises_performed) {
+                              setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
+                              toast({
+                                title: 'Exercícios Repetidos',
+                                description: 'Os exercícios da sessão anterior foram carregados.'
+                              });
+                            }
+                          }}
+                          lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
+                          previousEvolutions={previousEvolutions}
+                          onCopyLastEvolution={(evolution) => {
+                            handleCopyPreviousEvolution(evolution);
+                          }}
+                        />
+                      </Suspense>
+                    </EvolutionGridContainer>
+                  }
+                />
+              )}
             </TabsContent>
 
             {/* ABA 2: AVALIAÇÃO (Medições + Mapa de Dor + Gráficos) */}
@@ -1044,8 +1287,10 @@ const PatientEvolution = () => {
             onSave={handleSave}
             onComplete={handleCompleteSession}
             onShowKeyboardHelp={() => setShowKeyboardHelp(true)}
+            onExportPDF={handleExportPDF}
             isSaving={autoSaveMutation.isPending}
             isCompleting={isCompleting}
+            isExporting={isExportingPDF}
             autoSaveEnabled={autoSaveEnabled}
             lastSavedAt={lastSavedAt}
           />

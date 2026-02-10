@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Modal,
+  Modal as RNModal,
   View,
   Text,
   TouchableOpacity,
@@ -26,7 +26,7 @@ export function Modal({ visible, onClose, title, children, hideCloseButton }: Pr
   const [modalHeight, setModalHeight] = useState(SCREEN_HEIGHT * 0.7);
 
   return (
-    <Modal
+    <RNModal
       visible={visible}
       transparent
       animationType="slide"
@@ -61,7 +61,7 @@ export function Modal({ visible, onClose, title, children, hideCloseButton }: Pr
           </View>
         </View>
       </SafeAreaView>
-    </Modal>
+    </RNModal>
   );
 }
 

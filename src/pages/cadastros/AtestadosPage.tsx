@@ -4,14 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Plus, FileText, Copy, Trash2, Edit, Info } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, FileText, Copy, Trash2, Edit, Info, Download, Loader2 } from 'lucide-react';
 import { useAtestadoTemplates, useCreateAtestadoTemplate, useUpdateAtestadoTemplate, useDeleteAtestadoTemplate, AtestadoTemplate } from '@/hooks/useDocumentTemplates';
 import { useToast } from '@/hooks/use-toast';
+import { usePDFGenerator } from '@/hooks/usePDFGenerator';
+import { useAuth } from '@/hooks/useAuth';
+import { usePatients } from '@/hooks/usePatients';
 
 const VARIAVEIS_DISPONIVEIS = [
   { key: '#cliente-nome', description: 'Nome completo do paciente' },
@@ -29,13 +33,26 @@ export default function AtestadosPage() {
   const updateTemplate = useUpdateAtestadoTemplate();
   const deleteTemplate = useDeleteAtestadoTemplate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: patients = [] } = usePatients();
+  const { isGenerating, generateAtestado, downloadPDF } = usePDFGenerator();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPDFDialogOpen, setIsPDFDialogOpen] = useState(false);
+  const [selectedTemplateForPDF, setSelectedTemplateForPDF] = useState<AtestadoTemplate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<AtestadoTemplate | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
     conteudo: '',
     ativo: true,
+  });
+  const [pdfForm, setPdfForm] = useState({
+    patientId: '',
+    days: 1,
+    reason: '',
+    cid: '',
+    city: '',
   });
 
   const handleOpenModal = (template?: AtestadoTemplate) => {
@@ -97,6 +114,93 @@ export default function AtestadosPage() {
     }));
   };
 
+  const openPDFDialog = (template: AtestadoTemplate) => {
+    setSelectedTemplateForPDF(template);
+    setPdfForm({
+      patientId: '',
+      days: 1,
+      reason: '',
+      cid: '',
+      city: user?.clinic?.city || '',
+    });
+    setIsPDFDialogOpen(true);
+  };
+
+  const handleGeneratePDF = async () => {
+    if (!pdfForm.patientId || !selectedTemplateForPDF) {
+      toast({ title: 'Selecione um paciente.', variant: 'destructive' });
+      return;
+    }
+
+    const patient = patients.find((p: any) => p.id === pdfForm.patientId);
+    if (!patient) {
+      toast({ title: 'Paciente não encontrado.', variant: 'destructive' });
+      return;
+    }
+
+    if (!user?.professional?.name || !user?.clinic?.name) {
+      toast({ title: 'Dados do profissional ou clínica não configurados.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const blob = await generateAtestado(
+        {
+          name: patient.name || '',
+          cpf: patient.cpf,
+          birthDate: patient.birthDate,
+          phone: patient.phone,
+          email: patient.email,
+          address: patient.address,
+        },
+        {
+          name: user.professional.name,
+          crf: user.professional.crf || 'CRM',
+          uf: user.professional.uf || 'SP',
+        },
+        {
+          name: user.clinic.name,
+          phone: user.clinic.phone || '',
+          email: user.clinic.email || '',
+          address: user.clinic.address || {
+            street: '',
+            number: '',
+            district: '',
+            city: pdfForm.city,
+            state: user.clinic.state || 'SP',
+            zipCode: '',
+          },
+        },
+        {
+          days: pdfForm.days,
+          reason: pdfForm.reason,
+          cid: pdfForm.cid,
+          city: pdfForm.city,
+        }
+      );
+
+      if (blob) {
+        downloadPDF(blob, `atestado-${patient.name?.replace(/\s+/g, '-')}-${Date.now()}.pdf`);
+        toast({ title: 'PDF gerado com sucesso!' });
+        setIsPDFDialogOpen(false);
+      }
+    } catch (error) {
+      toast({ title: 'Erro ao gerar PDF.', variant: 'destructive' });
+    }
+  };
+
+  const processTemplateContent = (content: string, patient: any): string => {
+    const now = new Date();
+    return content
+      .replace(/#cliente-nome/g, patient?.name || '')
+      .replace(/#cliente-cpf/g, patient?.cpf || '')
+      .replace(/#data-hoje/g, now.toLocaleDateString('pt-BR'))
+      .replace(/#hora-atual/g, now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }))
+      .replace(/#clinica-cidade/g, user?.clinic?.city || '')
+      .replace(/#profissional-nome/g, user?.professional?.name || '')
+      .replace(/#profissional-registro/g, user?.professional?.crf || '');
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -146,7 +250,7 @@ export default function AtestadosPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{template.conteudo}</p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleOpenModal(template)}>
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -159,6 +263,13 @@ export default function AtestadosPage() {
                       }}
                     >
                       <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => openPDFDialog(template)}
+                    >
+                      <Download className="h-4 w-4" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => handleDelete(template.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -253,6 +364,104 @@ export default function AtestadosPage() {
               </Button>
               <Button onClick={handleSave} disabled={createTemplate.isPending || updateTemplate.isPending}>
                 {editingTemplate ? 'Salvar Alterações' : 'Criar Template'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de geração de PDF */}
+        <Dialog open={isPDFDialogOpen} onOpenChange={setIsPDFDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Gerar PDF do Atestado</DialogTitle>
+              <DialogDescription>
+                Preencha os dados para gerar o PDF do atestado "{selectedTemplateForPDF?.nome}"
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="patient">Paciente *</Label>
+                <Select value={pdfForm.patientId} onValueChange={(value) => setPdfForm(p => ({ ...p, patientId: value }))}>
+                  <SelectTrigger id="patient">
+                    <SelectValue placeholder="Selecione o paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients.map((patient: any) => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {patient.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade *</Label>
+                <Input
+                  id="city"
+                  value={pdfForm.city}
+                  onChange={(e) => setPdfForm(p => ({ ...p, city: e.target.value }))}
+                  placeholder="Ex: São Paulo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="days">Dias de Afastamento *</Label>
+                <Input
+                  id="days"
+                  type="number"
+                  min={1}
+                  value={pdfForm.days}
+                  onChange={(e) => setPdfForm(p => ({ ...p, days: parseInt(e.target.value) || 1 }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="reason">Motivo *</Label>
+                <Textarea
+                  id="reason"
+                  value={pdfForm.reason}
+                  onChange={(e) => setPdfForm(p => ({ ...p, reason: e.target.value }))}
+                  placeholder="Ex: tratamento fisioterapêutico para lombalgia"
+                  className="min-h-[80px]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cid">CID (opcional)</Label>
+                <Input
+                  id="cid"
+                  value={pdfForm.cid}
+                  onChange={(e) => setPdfForm(p => ({ ...p, cid: e.target.value }))}
+                  placeholder="Ex: M54.5"
+                />
+              </div>
+
+              {selectedTemplateForPDF && (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium mb-1">Preview do conteúdo:</p>
+                  <p className="text-xs text-muted-foreground line-clamp-3">
+                    {selectedTemplateForPDF.conteudo}
+                  </p>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsPDFDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleGeneratePDF} disabled={isGenerating || !pdfForm.patientId || !pdfForm.reason}>
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Gerar PDF
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

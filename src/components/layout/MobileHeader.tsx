@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
 import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import fisioflowLogo from '@/assets/logo.avif';
 import {
 
   LayoutDashboard,
@@ -90,15 +91,9 @@ export function MobileHeader() {
             <div className="flex flex-col h-full">
               {/* Header do Menu */}
               <div className="p-4 border-b border-border/50 bg-gradient-card/50 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
-                    <Stethoscope className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-base bg-gradient-primary bg-clip-text text-transparent">FisioFlow</h2>
-                    <p className="text-xs text-muted-foreground font-medium">Sistema de Gestão</p>
-                  </div>
-                </div>
+                <Link to="/" className="flex items-center gap-3">
+                  <img src={fisioflowLogo} alt="FisioFlow" className="h-10 w-auto" />
+                </Link>
               </div>
 
               {/* Menu Items */}
@@ -159,14 +154,9 @@ export function MobileHeader() {
         </Sheet>
 
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-medical">
-            <Stethoscope className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <h1 className="text-base sm:text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
-            FisioFlow
-          </h1>
-        </div>
+        <Link to="/" className="flex items-center gap-2">
+          <img src={fisioflowLogo} alt="FisioFlow" className="h-6 w-auto" />
+        </Link>
 
         {/* Notificações */}
         <NotificationBell />

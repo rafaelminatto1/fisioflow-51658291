@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import {
 
+import {
     Save,
     CheckCircle2,
     Keyboard,
     Cloud,
     Loader2,
+    Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +19,10 @@ interface FloatingActionBarProps {
     onSave: () => void;
     onComplete: () => void;
     onShowKeyboardHelp?: () => void;
+    onExportPDF?: () => void;
     isSaving?: boolean;
     isCompleting?: boolean;
+    isExporting?: boolean;
     autoSaveEnabled?: boolean;
     lastSavedAt?: Date | null;
     disabled?: boolean;
@@ -30,8 +33,10 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onSave,
     onComplete,
     onShowKeyboardHelp,
+    onExportPDF,
     isSaving = false,
     isCompleting = false,
+    isExporting = false,
     autoSaveEnabled = true,
     lastSavedAt,
     disabled = false,
@@ -113,6 +118,33 @@ export const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                     {/* Right Section - Actions */}
                     <div className="flex items-center gap-2">
+                        {/* Export PDF Button */}
+                        {onExportPDF && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={onExportPDF}
+                                        disabled={disabled || isExporting}
+                                        className="h-9 px-3 shadow-sm hover:shadow transition-shadow"
+                                    >
+                                        {isExporting ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Download className="h-4 w-4" />
+                                        )}
+                                        <span className="hidden lg:inline ml-1.5 text-sm">
+                                            {isExporting ? 'Gerando...' : 'PDF'}
+                                        </span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Exportar evolução em PDF</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+
                         {/* Save Button */}
                         <Tooltip>
                             <TooltipTrigger asChild>

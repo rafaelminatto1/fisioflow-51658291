@@ -33,6 +33,7 @@ import {
   Stethoscope
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import fisioflowLogo from '@/assets/logo.avif';
 import { signOut } from 'firebase/auth';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
 import { useNavigate } from 'react-router-dom';
@@ -49,6 +50,8 @@ interface MainLayoutProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
   /** Remove all main content padding for flush full-width layouts */
   noPadding?: boolean;
+  /** Use reduced padding (16px on desktop) for pages that need more horizontal space */
+  compactPadding?: boolean;
   /** Custom header component to replace default header */
   customHeader?: React.ReactNode;
   /** Hide default header */
@@ -62,6 +65,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   fullWidth = false,
   maxWidth,
   noPadding = false,
+  compactPadding = false,
   customHeader,
   hideDefaultHeader = false,
 }) => {
@@ -112,12 +116,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           <header className="hidden md:flex h-11 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-3.5 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300" data-testid="main-header">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
-                  <Stethoscope className="w-3 h-3 text-white" />
-                </div>
-                <h2 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 tracking-tight">
-                  FisioFlow
-                </h2>
+                <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+                  <img src={fisioflowLogo} alt="FisioFlow" className="h-5 w-auto" />
+                </Link>
               </div>
 
               {/* Breadcrumbs can go here or be below */}
@@ -209,7 +210,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             "flex-1 bg-gray-50/50 dark:bg-background/50",
             noPadding
               ? "pt-[60px] md:pt-0 pb-24 md:pb-0"
-              : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
+              : compactPadding
+                ? "p-2 xs:p-3 sm:p-3 md:p-4 pt-[60px] md:pt-4 pb-24 md:pb-4"
+                : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
           )}
         >
           <div className={cn(
