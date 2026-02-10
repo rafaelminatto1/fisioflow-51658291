@@ -14,10 +14,8 @@ import 'react-grid-layout/css/styles.css';
 import { cn } from '@/lib/utils';
 import { ResponsiveReactGridLayout as Responsive } from 'react-grid-layout/dist/legacy';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ChevronLeft, ChevronRight, Monitor, Tablet } from 'lucide-react';
+import { Monitor, Tablet } from 'lucide-react';
 
 export interface GridItem {
     id: string;

@@ -11,7 +11,7 @@
  * @version 2.0.0 - Performance Optimization
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { startTransition } from 'react';
 

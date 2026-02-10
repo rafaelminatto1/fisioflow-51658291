@@ -4,7 +4,6 @@
  * OTIMIZAÇÃO: Carrega dados pesados apenas quando necessário, reduzindo o tempo inicial de carregamento
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 // Import hooks existentes

@@ -6,7 +6,6 @@
 import { useState, useCallback } from 'react';
 import {
   PatientCommunicationService,
-  PatientCommunicationFactory,
 } from '../lib/skills/fase4-conteudo/patient-communication';
 
 interface UseCommunicationsEnhancedOptions {

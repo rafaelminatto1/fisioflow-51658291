@@ -4,7 +4,7 @@
  * Enhanced measurements registration block with better UX,
  * professional visual design, and proper Y-Balance test layout.
  */
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Ruler,
   Plus,
@@ -13,7 +13,6 @@ import {
   GripVertical,
   ChevronDown,
   ChevronUp,
-  BookOpen,
   Activity,
   Zap,
   Target,
@@ -36,19 +35,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+
+
 import { cn } from '@/lib/utils';
 import { YBalanceBlock } from './YBalanceBlock';
 import {
   type MeasurementItem,
-  type MeasurementType,
   MEASUREMENT_TYPES,
   MEASUREMENT_TYPE_LABELS,
 } from './types';
