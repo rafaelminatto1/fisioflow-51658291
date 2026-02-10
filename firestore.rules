@@ -335,6 +335,21 @@ service cloud.firestore {
     }
 
     // ============================================================================================
+    // PATIENT EXERCISE ASSIGNMENTS
+    // ============================================================================================
+
+    match /patient_exercises/{assignmentId} {
+      // Leitura: profissionais podem ver atribuições de exercícios
+      allow read: if isAdmin() || isProfessional();
+      // Criação: profissionais podem criar atribuições
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      // Atualização: profissionais podem atualizar atribuições
+      allow update: if isProfessional() || isAdmin();
+      // Deleção: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
     // CLINICAL TEST TEMPLATES (PhysioTests DB / Testes Clínicos)
     // ============================================================================================
 
