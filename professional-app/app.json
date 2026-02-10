@@ -25,6 +25,9 @@
       },
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "android": {
@@ -33,7 +36,8 @@
         "backgroundColor": "#1E40AF"
       },
       "package": "com.fisioflow.professional",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -56,6 +60,9 @@
         "projectId": "8e006901-c021-464d-bbcd-96d821ab62d0"
       }
     },
-    "owner": "rafaelminatto"
+    "owner": "rafaelminatto",
+    "updates": {
+      "url": "https://u.expo.dev/8e006901-c021-464d-bbcd-96d821ab62d0"
+    }
   }
 }

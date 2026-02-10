@@ -194,7 +194,7 @@ export const useGamificationNotifications = (patientId?: string): UseGamificatio
           if (change.type === 'added') {
             const newNotification = {
               id: change.doc.id,
-              ...change.normalizeFirestoreData(doc.data()),
+              ...normalizeFirestoreData(change.doc.data()),
             } as GamificationNotification;
 
             // Verificar se é uma notificação nova (nos últimos 5 segundos)
