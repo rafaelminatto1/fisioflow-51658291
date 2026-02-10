@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import fisioflowLogo from '@/assets/logo.avif';
 import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { useToast } from '@/hooks/use-toast';
@@ -446,29 +447,14 @@ export function Sidebar() {
 
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <div className="flex items-center gap-3 group overflow-hidden">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-blue-500/50 group-hover:scale-105 flex-shrink-0 ring-1 ring-primary/20">
-                  <Stethoscope className="w-5 h-5 text-white" strokeWidth={2.5} />
-                </div>
-                {/* Efeito de glow pulsante */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/20 to-transparent blur-md animate-pulse" />
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl pointer-events-none" />
-              </div>
-              <div className="transition-all duration-300 min-w-0">
-                <h1 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-300 truncate tracking-tight">FisioFlow</h1>
-                <p className="text-[10px] text-muted-foreground/70 font-semibold tracking-[0.2em] uppercase leading-tight">Gestão Inteligente</p>
-              </div>
-            </div>
+            <Link to="/" className="flex items-center gap-3 group overflow-hidden hover:opacity-90 transition-opacity">
+              <img src={fisioflowLogo} alt="FisioFlow" className="h-8 w-auto" />
+            </Link>
           )}
           {collapsed && (
-            <div className="relative w-10 h-10 mx-auto">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 ring-1 ring-primary/20">
-                <Stethoscope className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/20 to-transparent blur-md" />
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl pointer-events-none" />
-            </div>
+            <Link to="/" className="relative mx-auto block hover:opacity-90 transition-opacity">
+              <img src={fisioflowLogo} alt="FisioFlow" className="h-8 w-auto" />
+            </Link>
           )}
           <Button
             variant="ghost"
