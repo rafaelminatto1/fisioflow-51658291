@@ -260,49 +260,31 @@ async function fetchPatientSources(pool: Pool, patientId: string, organizationId
 
   const painRecordsSql = organizationId
     ? `
-      SELECT id, record_date, pain_level, notes
-      FROM pain_records
-      WHERE patient_id = $1 ${orgFilter}
-      ORDER BY record_date DESC, created_at DESC
-      LIMIT $3
-    `
-    : `
-      SELECT id, record_date, pain_level, notes
-      FROM pain_records
-      WHERE patient_id = $1
-      ORDER BY record_date DESC, created_at DESC
-      LIMIT $2
-    `;
-
-  const patientPainRecordsSql = organizationId
-    ? `
-      SELECT id, created_at, pain_level, notes
+      SELECT id, created_at, record_date, pain_level, notes
       FROM patient_pain_records
       WHERE patient_id = $1 ${orgFilter}
       ORDER BY created_at DESC
       LIMIT $3
     `
     : `
-      SELECT id, created_at, pain_level, notes
+      SELECT id, created_at, record_date, pain_level, notes
       FROM patient_pain_records
       WHERE patient_id = $1
       ORDER BY created_at DESC
       LIMIT $2
     `;
 
-  const [sessionsRes, medicalRes, goalsRes, painRes, patientPainRes] = await Promise.all([
+  const [sessionsRes, medicalRes, goalsRes, painRes] = await Promise.all([
     safeQuery(pool, 'treatment_sessions', sessionsSql, sessionParams),
     safeQuery(pool, 'medical_records', medicalSql, defaultParams),
     safeQuery(pool, 'patient_goals', goalsSql, goalParams),
     safeQuery(pool, 'pain_records', painRecordsSql, painParams),
-    safeQuery(pool, 'patient_pain_records', patientPainRecordsSql, painParams),
   ]);
 
   const mergedPainRows = [
-    ...painRes.rows,
-    ...patientPainRes.rows.map((row) => ({
+    ...painRes.rows.map((row) => ({
       ...row,
-      record_date: toStringValue(row.created_at),
+      record_date: toStringValue(row.created_at) || toStringValue(row.record_date),
     })),
   ];
 
