@@ -114,7 +114,7 @@ export class FinancialReportGenerator {
       margin: { top: 0, left: 20, right: 20 },
     });
 
-    this.yPosition = (this.doc as any).lastAutoTable.finalY + 12;
+    this.yPosition = (this.doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   }
 
   private checkPageBreak(requiredSpace: number = 20) {
@@ -178,7 +178,7 @@ export class FinancialReportGenerator {
       },
     });
 
-    this.yPosition = (this.doc as any).lastAutoTable.finalY + 12;
+    this.yPosition = (this.doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
   }
 
   private getStatusLabel(status: string): string {

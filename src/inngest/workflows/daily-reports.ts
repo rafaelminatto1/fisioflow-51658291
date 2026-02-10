@@ -24,6 +24,7 @@ interface SessionRecord {
   therapist_id?: string;
   organization_id?: string;
   created_at?: string;
+  status?: string;
   [key: string]: unknown;
 }
 
@@ -127,8 +128,8 @@ export const dailyReportsWorkflow = inngest.createFunction(
                 .where('created_at', '<', today.toISOString())
                 .get();
 
-              const completedSessions = sessions.filter((s: any) => s.status === 'concluido' || s.status === 'atendido').length;
-              const cancelledSessions = sessions.filter((s: any) => s.status === 'cancelado').length;
+              const completedSessions = sessions.filter((s) => s.status === 'concluido' || s.status === 'atendido').length;
+              const cancelledSessions = sessions.filter((s) => s.status === 'cancelado').length;
 
               // Generate report data
               const reportData = {

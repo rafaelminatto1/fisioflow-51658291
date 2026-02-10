@@ -159,19 +159,31 @@ export function useAnalyticsSummary() {
           : 0;
 
         const activePatients = activePatientsResult.status === "fulfilled"
-          ? new Set(activePatientsResult.value.docs.map(d => d.data().patient_id)).size
+          ? new Set(activePatientsResult.value.docs
+              .map(d => typeof d.data === 'function' ? d.data().patient_id : (d as Partial<Record<string, unknown>>).patient_id as string | undefined)
+              .filter(Boolean)
+            ).size
           : 0;
 
         const lastMonthUniquePatients = lastMonthPatientsResult.status === "fulfilled"
-          ? new Set(lastMonthPatientsResult.value.docs.map(d => d.data().patient_id)).size
+          ? new Set(lastMonthPatientsResult.value.docs
+              .map(d => typeof d.data === 'function' ? d.data().patient_id : (d as Partial<Record<string, unknown>>).patient_id as string | undefined)
+              .filter(Boolean)
+            ).size
           : 0;
 
         const monthlyRevenue = currentPaymentsResult.status === "fulfilled"
-          ? currentPaymentsResult.value.docs.reduce((sum, d) => sum + (d.data().payment_amount || 0), 0)
+          ? currentPaymentsResult.value.docs.reduce((sum, d) => {
+              const data = typeof d.data === 'function' ? d.data() : (d as Partial<Record<string, unknown>>);
+              return sum + ((data.payment_amount as number) || 0);
+            }, 0)
           : 0;
 
         const lastMonthRevenue = lastPaymentsResult.status === "fulfilled"
-          ? lastPaymentsResult.value.docs.reduce((sum, d) => sum + (d.data().payment_amount || 0), 0)
+          ? lastPaymentsResult.value.docs.reduce((sum, d) => {
+              const data = typeof d.data === 'function' ? d.data() : (d as Partial<Record<string, unknown>>);
+              return sum + ((data.payment_amount as number) || 0);
+            }, 0)
           : 0;
 
         // Taxa de ocupação (simplificado: 160 slots por mês)

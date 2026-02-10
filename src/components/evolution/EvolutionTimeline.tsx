@@ -53,14 +53,14 @@ import { format, formatDistanceToNow, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Helper seguro para formatação de data
-const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: any) => {
+const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: { locale?: Locale }) => {
   if (!date) return 'N/A';
   const d = new Date(date);
   if (!isValid(d)) return 'Data inválida';
   return format(d, formatStr, options || { locale: ptBR });
 };
 
-const safeFormatDistance = (date: Date | string | number | undefined | null, options?: any) => {
+const safeFormatDistance = (date: Date | string | number | undefined | null, options?: { locale?: Locale; addSuffix?: boolean }) => {
   if (!date) return 'N/A';
   const d = new Date(date);
   if (!isValid(d)) return 'Data inválida';
