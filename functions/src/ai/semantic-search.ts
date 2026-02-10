@@ -1,8 +1,5 @@
 import * as admin from 'firebase-admin';
-import { VertexAI } from '@google-cloud/vertexai';
-
-const project = process.env.GCLOUD_PROJECT || 'fisioflow-migration';
-const location = 'us-central1';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
  * Handler para Busca Semântica em registros clínicos
@@ -15,38 +12,27 @@ export const semanticSearchHandler = async (request: any) => {
   }
 
   try {
-    // 1. Gerar embedding para a query via Vertex AI
-    const vertexAI = new VertexAI({ project, location });
-    
-    // Tentando obter o modelo de forma estável
-    const generativeModel: any = vertexAI.preview.getGenerativeModel({
-      model: 'text-embedding-004',
-    });
-
-    let queryVector;
-    
-    try {
-        // Sintaxe SDK Vertex AI
-        const embeddingResult = await generativeModel.embedContent({
-            content: { role: 'user', parts: [{ text: query }] },
-        });
-        queryVector = embeddingResult.embeddings[0].values;
-    } catch (err) {
-        // Fallback manual se o SDK falhar no método
-        console.log('Falling back to direct model access...');
-        const modelInstance = vertexAI.getGenerativeModel({ model: 'text-embedding-004' });
-        const result = await (modelInstance as any).embedContent({
-            content: { parts: [{ text: query }] },
-        });
-        queryVector = result.embeddings[0].values;
+    // 1. Gerar embedding para a query usando Gemini API
+    const API_KEY = process.env.VITE_GEMINI_API_KEY;
+    if (!API_KEY) {
+      throw new Error('API_KEY do Gemini não configurada');
     }
 
-    if (!queryVector) throw new Error('Não foi possível gerar o vetor de busca.');
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
+    const result = await model.embedContent(query);
+    const queryVector = result.embedding.values;
+
+    if (!queryVector || queryVector.length === 0) {
+      throw new Error('Não foi possível gerar o vetor de busca.');
+    }
 
     // 2. Realizar busca vetorial no Firestore
     const db = admin.firestore();
     const soapRef = db.collection('soap_records');
-    
+
+    // @ts-ignore - findNearest é um método experimental do Firestore
     const vectorQuery = soapRef.findNearest({
       vectorField: 'embedding',
       queryVector: queryVector,
@@ -55,7 +41,7 @@ export const semanticSearchHandler = async (request: any) => {
     });
 
     const snapshot = await vectorQuery.get();
-    
+
     const results = snapshot.docs.map(doc => {
       const data = doc.data();
       const { embedding, ...rest } = data;
