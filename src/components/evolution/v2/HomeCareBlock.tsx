@@ -45,7 +45,7 @@ const parseExercises = (value: string): HomeCareExercise[] => {
     const lines = value.split('\n').filter(l => l.trim());
     return lines.map((line, i) => ({
       id: `hc_${i}`,
-      name: line.replace(/^\d+[\.\)]\s*/, '').split('-')[0].trim(),
+      name: line.replace(/^\d+[.)]\s*/, '').split('-')[0].trim(),
       prescription: line.split('-')[1]?.trim() || '',
       instructions: ''
     }));

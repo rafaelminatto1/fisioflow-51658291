@@ -15,7 +15,7 @@
  */
 
 import { Resend } from 'resend';
-import { format, addDays, addHours } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Tipos
@@ -680,7 +680,8 @@ export class EmailNotificationService {
       week: { start: Date; end: Date };
       totalAppointments: number;
       completedSessions: number;
-      noShows: newPatients: number;
+      noShows: number;
+      newPatients: number;
       revenue?: number;
     }
   ): string {

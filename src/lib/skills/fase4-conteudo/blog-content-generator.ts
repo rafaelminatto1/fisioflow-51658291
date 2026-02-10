@@ -14,8 +14,6 @@
  * Baseado na claude-skills content-research-writer
  */
 
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 // Tipos
 export interface ArticleTopic {

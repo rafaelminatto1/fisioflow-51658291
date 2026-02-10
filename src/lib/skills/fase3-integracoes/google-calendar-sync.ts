@@ -15,7 +15,7 @@
 
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { format, addHours, addMinutes } from 'date-fns';
+import { addHours, addMinutes } from 'date-fns';
 
 // Tipos
 export interface CalendarEvent {

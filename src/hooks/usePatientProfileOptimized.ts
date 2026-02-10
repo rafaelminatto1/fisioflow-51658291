@@ -13,7 +13,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { startTransition } from 'react';
-import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, doc, getDoc } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, doc, getDoc, db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // Tipos
@@ -78,7 +78,7 @@ function usePatientInfo(patientId: string) {
   return useQuery({
     queryKey: patientProfileKeys.patient(patientId),
     queryFn: async () => {
-      const docRef = doc(window.db || collection(getDocs, 'patients')._query.collection, 'patients', patientId);
+      const docRef = doc(db, 'patients', patientId);
       const snapshot = await getDoc(docRef);
 
       if (!snapshot.exists()) {
@@ -102,7 +102,7 @@ function useUpcomingAppointments(patientId: string, enabled: boolean) {
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       const q = firestoreQuery(
-        collection(window.db || collection(getDocs, 'appointments')._query.collection, 'appointments'),
+        collection(db, 'appointments'),
         where('patient_id', '==', patientId),
         where('status', 'in', ['agendado', 'confirmado']),
         where('appointment_date', '>=', today),
@@ -128,7 +128,7 @@ function usePatientDocuments(patientId: string, enabled: boolean) {
     queryKey: patientProfileKeys.documents(patientId),
     queryFn: async () => {
       const q = firestoreQuery(
-        collection(window.db || collection(getDocs, 'patient_documents')._query.collection, 'patient_documents'),
+        collection(db, 'patient_documents'),
         where('patient_id', '==', patientId),
         orderBy('uploaded_at', 'desc')
       );
@@ -151,7 +151,7 @@ function usePatientGamification(patientId: string, enabled: boolean) {
     queryFn: async () => {
       // Buscar dados de gamificação do paciente
       const q = firestoreQuery(
-        collection(window.db || collection(getDocs, 'gamification')._query.collection, 'gamification_data'),
+        collection(db, 'gamification_data'),
         where('patient_id', '==', patientId),
         limit(1)
       );

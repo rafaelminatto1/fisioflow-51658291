@@ -5,7 +5,6 @@
 
 import { useState, useCallback } from 'react';
 import {
-  generateFinancialReportPDF,
   saveFinancialReportPDF,
   type FinancialReportData,
 } from '../lib/skills/fase2-documentos/financial-reports';
@@ -13,7 +12,6 @@ import {
   exportFinancialReport as exportFinancialExcel,
   downloadExcelFile,
 } from '../lib/skills/fase2-documentos/xlsx-integration';
-import { useExcelExport } from './useExcelExport';
 import { useToast } from './use-toast';
 
 interface UseFinancialExportOptions {

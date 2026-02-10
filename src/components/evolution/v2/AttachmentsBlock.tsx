@@ -7,17 +7,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   Paperclip,
-  Plus,
   X,
   FileText,
   Image as ImageIcon,
   File,
-  Download,
   Eye,
   Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -28,8 +25,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface Attachment {
   id: string;

@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText, Stethoscope, Edit, Eye,
   Activity, CheckCircle2, PenTool,
-  Bone, Heart, TrendingUp, Save,
+  Bone, TrendingUp, Save,
   Plus, Copy, Trash2
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
