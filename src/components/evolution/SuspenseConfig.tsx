@@ -7,7 +7,7 @@
  * @version 2.0.0 - Performance Optimization
  */
 
-import { Suspense, useState, useEffect, type ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { OptimizedLoadingSkeleton } from './OptimizedEvolutionComponents';
 import { cn } from '@/lib/utils';
 

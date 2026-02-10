@@ -324,3 +324,29 @@ export async function evaluateTreatmentResponse(
     nextSteps: [],
   };
 }
+
+// ============================================================================
+// SEMANTIC SEARCH (via Firestore Vector Search)
+// ============================================================================
+
+export interface SemanticSearchResponse {
+  success: boolean;
+  query: string;
+  results: Array<{
+    id: string;
+    patient_id: string;
+    record_date: any;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    score?: number;
+  }>;
+}
+
+/**
+ * Realiza busca semântica em registros SOAP por similaridade.
+ */
+export async function findSimilarClinicalRecords(query: string, limit: number = 5): Promise<SemanticSearchResponse> {
+  return await callAIService<{ query: string; limit: number }, SemanticSearchResponse>('semanticSearch', { query, limit });
+}
