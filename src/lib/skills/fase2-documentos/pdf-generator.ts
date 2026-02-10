@@ -572,7 +572,7 @@ export class PlanoTratamentoGenerator extends BasePDFGenerator {
       margin: { top: 10, left: 20, right: 20 },
     });
 
-    this.yPosition = (this.doc as any).lastAutoTable.finalY + 15;
+    this.yPosition = (this.doc as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
 
     // Duração estimada
     this.doc.setFont(...CONFIG.fonts.bold);

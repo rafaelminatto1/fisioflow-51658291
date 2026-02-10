@@ -43,7 +43,7 @@ import { withImageParams } from '@/lib/storageProxy';
 import * as ReactWindow from 'react-window';
 const { FixedSizeGrid: Grid, FixedSizeList } = ReactWindow;
 import type { ListChildComponentProps, GridChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized/dist/es/AutoSizer';
+import { AutoSizer } from 'react-virtualized';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 
 

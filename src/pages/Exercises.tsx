@@ -33,7 +33,7 @@ export default function Exercises() {
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols' | 'ai'>('videos');
+  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols' | 'ai'>('library');
   const [showNewModal, setShowNewModal] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 

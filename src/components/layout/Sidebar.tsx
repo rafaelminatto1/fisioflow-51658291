@@ -78,7 +78,6 @@ const menuItems = [
   { icon: Users, label: 'Pacientes', href: '/patients' },
 
   // CLÍNICA DIÁRIA - Fluxo principal de atendimento
-  { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
   { icon: Target, label: 'Protocolos', href: '/protocols' },
 

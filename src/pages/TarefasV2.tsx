@@ -24,7 +24,7 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, di
 import { ptBR } from 'date-fns/locale';
 
 // Helper seguro para formatação de data
-const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: any) => {
+const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: { locale?: typeof ptBR }) => {
   if (!date) return 'N/A';
   const d = new Date(date);
   if (!isValid(d)) return 'Data inválida';

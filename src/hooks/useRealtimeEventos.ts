@@ -7,6 +7,7 @@ import { collection, query as firestoreQuery, orderBy, limit, onSnapshot, db } f
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();
@@ -25,7 +26,7 @@ export function useRealtimeEventos() {
       (snapshot) => {
         snapshot.docChanges().forEach((change) => {
           if (change.type === 'added') {
-            const newEvento = { id: change.doc.id, ...change.normalizeFirestoreData(doc.data()) };
+            const newEvento = { id: change.doc.id, ...normalizeFirestoreData(change.doc.data()) };
             logger.info('Novo evento criado', { eventId: newEvento.id }, 'useRealtimeEventos');
             queryClient.invalidateQueries({ queryKey: ['eventos'] });
             queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
@@ -35,13 +36,13 @@ export function useRealtimeEventos() {
               description: `${newEvento.nome} foi adicionado`,
             });
           } else if (change.type === 'modified') {
-            const updatedEvento = { id: change.doc.id, ...change.normalizeFirestoreData(doc.data()) };
+            const updatedEvento = { id: change.doc.id, ...normalizeFirestoreData(change.doc.data()) };
             logger.info('Evento atualizado', { eventId: updatedEvento.id }, 'useRealtimeEventos');
             queryClient.invalidateQueries({ queryKey: ['eventos'] });
             queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
             queryClient.invalidateQueries({ queryKey: ['eventos', updatedEvento.id] });
           } else if (change.type === 'removed') {
-            const deletedEvento = { id: change.doc.id, ...change.normalizeFirestoreData(doc.data()) };
+            const deletedEvento = { id: change.doc.id, ...normalizeFirestoreData(change.doc.data()) };
             logger.info('Evento deletado', { eventId: deletedEvento.id }, 'useRealtimeEventos');
             queryClient.invalidateQueries({ queryKey: ['eventos'] });
             queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
