@@ -14,7 +14,7 @@
  * Baseado na claude-skills notion-automation
  */
 
-import { Client } from '@notionhq/client';
+import { Client, BlockObjectRequest, PageObjectRequest } from '@notionhq/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -69,7 +69,7 @@ export class NotionIntegration {
         ? { type: 'page_id' as const, page_id: page.parentId }
         : { type: 'workspace' as const };
 
-      const properties: any = {
+      const properties: PageObjectRequest['properties'] = {
         title: {
           title: [
             {
@@ -134,7 +134,7 @@ export class NotionIntegration {
     references?: string[];
     tags?: string[];
   }): Promise<string> {
-    const contentBlocks = [];
+    const contentBlocks: BlockObjectRequest[] = [];
 
     // Descrição
     contentBlocks.push({
@@ -640,7 +640,12 @@ export class NotionIntegration {
         },
       });
 
-      return (response.results as any[]).map((result) => ({
+      return (response.results as Array<{
+        id: string;
+        properties?: {
+          title?: { title?: Array<{ plain_text: string }> };
+        };
+      }>).map((result) => ({
         id: result.id,
         title: result.properties?.title?.title?.[0]?.plain_text || 'Sem título',
       }));

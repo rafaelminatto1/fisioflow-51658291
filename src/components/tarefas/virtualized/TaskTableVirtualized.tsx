@@ -39,7 +39,7 @@ import { ptBR } from 'date-fns/locale';
 import { PRIORIDADE_LABELS, PRIORIDADE_COLORS, STATUS_LABELS, STATUS_COLORS } from '@/types/tarefas';
 
 // Helper seguro para formatação de data
-const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: any) => {
+const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: { locale?: Locale }) => {
   if (!date) return 'N/A';
   const d = new Date(date);
   if (!isValid(d)) return 'Inválido';

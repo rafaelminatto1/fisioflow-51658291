@@ -8,7 +8,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { testUsers } from '../fixtures/test-data';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Fluxos Críticos do FisioFlow', () => {
   // Autenticação
