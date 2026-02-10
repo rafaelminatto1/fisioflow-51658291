@@ -5,12 +5,10 @@
 
 import { useState, useCallback } from 'react';
 import {
-  ReceiptGenerator,
   saveReceiptPDF,
   type ReceiptData,
 } from '../lib/skills/fase2-documentos/receipt-generator';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 
 interface UseReceiptGeneratorOptions {

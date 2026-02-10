@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { metricTypes, Metric, onCLS, onFCP, onFID, onLCP, onTTFB } from 'web-vitals';
+import { Metric, onCLS, onFCP, onFID, onLCP, onTTFB } from 'web-vitals';
 
 // Interface para armazenar métricas
 export interface PerformanceMetric {

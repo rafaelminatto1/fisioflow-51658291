@@ -3,7 +3,6 @@
  * Botão para gerar recibos em PDF
  */
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2 } from 'lucide-react';
 import { useReceiptGenerator } from '@/hooks/useReceiptGenerator';

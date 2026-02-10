@@ -220,7 +220,7 @@ var isArray$1 = Array.isArray || function (arr) {
  * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
  * @license  MIT
  */
-/* eslint-disable no-proto */
+ 
 
 
 var INSPECT_MAX_BYTES = 50;
@@ -513,7 +513,7 @@ function checked (length) {
 }
 
 function SlowBuffer (length) {
-  if (+length != length) { // eslint-disable-line eqeqeq
+  if (+length != length) {  
     length = 0;
   }
   return Buffer$2.alloc(+length)
@@ -1977,7 +1977,7 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 function isnan (val) {
-  return val !== val // eslint-disable-line no-self-compare
+  return val !== val  
 }
 
 

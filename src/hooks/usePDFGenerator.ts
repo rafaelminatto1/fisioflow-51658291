@@ -8,12 +8,7 @@ import { PDFGeneratorFactory } from '../lib/skills/fase2-documentos';
 import type {
   PatientData,
   ProfessionalData,
-  ClinicData,
-  AtestadoGenerator,
-  DeclaracaoComparecimentoGenerator,
-  ReceituarioGenerator,
-  EvolucaoGenerator,
-  PlanoTratamentoGenerator
+  ClinicData
 } from '../lib/skills/fase2-documentos/pdf-generator';
 
 interface UsePDFGeneratorOptions {
