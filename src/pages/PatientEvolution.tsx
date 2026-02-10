@@ -36,13 +36,11 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { CardGrid } from '@/components/layout/ResponsiveGridLayout';
 import { EvolutionResponsiveLayout, EvolutionGridContainer } from '@/components/evolution/EvolutionResponsiveLayout';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/hooks/ui/useCommandPalette';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { useMediaQuery } from '@/hooks/use-media-query';
 
 // Hooks
 import {

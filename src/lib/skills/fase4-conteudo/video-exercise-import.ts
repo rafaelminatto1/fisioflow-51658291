@@ -14,7 +14,6 @@
  * NOTA: Respeitar direitos autorais e termos de uso das plataformas
  */
 
-import { format } from 'date-fns';
 
 // Tipos
 export interface VideoSource {
@@ -279,12 +278,12 @@ export class VideoExerciseImport {
     for (const line of lines) {
       const cleanLine = line.trim();
 
-      if (cleanLine.match(/^\d+[.\)]/) || cleanLine.match(/^passo/i)) {
+      if (cleanLine.match(/^\d+[)]/) || cleanLine.match(/^passo/i)) {
         inInstructions = true;
       }
 
       if (inInstructions && cleanLine) {
-        instructions.push(cleanLine.replace(/^\d+[.\)]\s*/, ''));
+        instructions.push(cleanLine.replace(/^\d+[)]\s*/, ''));
       }
 
       if (cleanLine === '' && instructions.length > 0) {

@@ -121,6 +121,8 @@ export const listAppointmentsHttp = onRequest(
       params.push(limit, offset);
 
       const result = await pool.query(query, params);
+      // Add cache headers for better performance (CDN/browser cache for 30 seconds)
+      res.set('Cache-Control', 'private, max-age=30');
       res.json({ data: result.rows as Appointment[] });
     } catch (error: unknown) {
       logger.error('Error in listAppointments:', error);
