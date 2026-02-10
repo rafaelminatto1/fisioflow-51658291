@@ -57,6 +57,9 @@ export interface AppointmentBase {
   updatedAt: Date | string;
 }
 
+// Helper type for status parameter
+export type AppointmentStatusParam = AppointmentStatus | string;
+
 export interface Appointment extends AppointmentBase {
   patientName: string;
 }

@@ -20,14 +20,17 @@ import {
 } from '@/components/ui/pagination';
 import { usePatientsPaginated, type Patient } from '@/hooks/usePatientCrud';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Search, ChevronRight, Users } from 'lucide-react';
+import { useExcelExport } from '@/hooks/useExcelExport';
+import { FileText, Search, ChevronRight, Users, Download, Loader2 } from 'lucide-react';
 
 export default function MedicalRecord() {
   const { profile } = useAuth();
   const organizationId = profile?.organization_id ?? null;
   const navigate = useNavigate();
+  const { isExporting, exportPatients } = useExcelExport();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [isExportingList, setIsExportingList] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const {
@@ -57,6 +60,38 @@ export default function MedicalRecord() {
     navigate(`/patients/${patientId}`);
   };
 
+  const handleExportToExcel = async () => {
+    if (patients.length === 0) return;
+
+    setIsExportingList(true);
+    try {
+      // Transforma os dados dos pacientes para o formato esperado pela exportação
+      const patientsForExport = patients.map((p: Patient) => ({
+        id: p.id,
+        name: p.full_name || p.name || '',
+        cpf: p.cpf,
+        birthDate: p.birth_date ? new Date(p.birth_date) : undefined,
+        phone: p.phone,
+        email: p.email,
+        status: (p.status as 'active' | 'inactive') || 'active',
+        firstAppointment: undefined,
+        lastAppointment: undefined,
+        totalSessions: 0,
+        city: p.address?.city,
+      }));
+
+      await exportPatients(
+        patientsForExport,
+        profile?.clinic_name || 'Clínica',
+        `pacientes-${new Date().toISOString().split('T')[0]}.xlsx`
+      );
+    } catch (error) {
+      console.error('Erro ao exportar pacientes:', error);
+    } finally {
+      setIsExportingList(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6 p-4 md:p-6">
@@ -72,13 +107,38 @@ export default function MedicalRecord() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Pacientes
-            </CardTitle>
-            <CardDescription>
-              Busque pelo nome e clique em &quot;Ver prontuário&quot; para abrir evoluções e dados clínicos.
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Pacientes
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Busque pelo nome e clique em &quot;Ver prontuário&quot; para abrir evoluções e dados clínicos.
+                </CardDescription>
+              </div>
+              {patients.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportToExcel}
+                  disabled={isExportingList || patients.length === 0}
+                  className="shrink-0"
+                >
+                  {isExportingList ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar Excel
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
             <div className="pt-2">
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

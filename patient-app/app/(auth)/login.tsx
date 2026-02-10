@@ -67,9 +67,11 @@ export default function LoginScreen() {
         >
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={[styles.logoPlaceholder, { backgroundColor: colors.primary }]}>
-              <Text style={styles.logoText}>FF</Text>
-            </View>
+            <Image
+              source={require('../assets/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={[styles.title, { color: colors.text }]}>FisioFlow</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Portal do Paciente
@@ -181,18 +183,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  logoPlaceholder: {
+  logoImage: {
     width: 80,
     height: 80,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 16,
-  },
-  logoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
   },
   title: {
     fontSize: 28,

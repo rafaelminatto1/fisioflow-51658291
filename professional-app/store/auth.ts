@@ -15,6 +15,7 @@ export interface User {
   name: string;
   role: 'patient' | 'professional' | 'admin';
   clinicId?: string;
+  organizationId?: string;
   avatarUrl?: string;
   specialty?: string;
   crefito?: string;
@@ -50,12 +51,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
-      // Fetch user profile from Firestore
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      // Fetch user profile from Firestore - try users collection first, then profiles
+      let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      let userData = userDoc.exists() ? userDoc.data() : null;
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
+      // If not found in users, try profiles collection
+      if (!userData) {
+        const profileDoc = await getDoc(doc(db, 'profiles', firebaseUser.uid));
+        if (profileDoc.exists()) {
+          userData = profileDoc.data();
+        }
+      }
 
+      if (userData) {
         // Check if user is a professional
         if (userData.role !== 'professional' && userData.role !== 'admin') {
           await firebaseSignOut(auth);
@@ -65,9 +73,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const user: User = {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
-          name: userData.name || userData.displayName || 'Profissional',
+          name: userData.name || userData.displayName || userData.full_name || 'Profissional',
           role: userData.role,
-          clinicId: userData.clinicId,
+          clinicId: userData.clinicId || userData.clinic_id,
+          organizationId: userData.organizationId || userData.organization_id,
           avatarUrl: userData.avatarUrl || userData.photoURL,
           specialty: userData.specialty,
           crefito: userData.crefito,
@@ -152,11 +161,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          // Try users collection first, then profiles
+          let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          let userData = userDoc.exists() ? userDoc.data() : null;
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
+          // If not found in users, try profiles collection
+          if (!userData) {
+            const profileDoc = await getDoc(doc(db, 'profiles', firebaseUser.uid));
+            if (profileDoc.exists()) {
+              userData = profileDoc.data();
+            }
+          }
 
+          if (userData) {
             // Only allow professionals
             if (userData.role !== 'professional' && userData.role !== 'admin') {
               await firebaseSignOut(auth);
@@ -172,9 +189,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const user: User = {
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
-              name: userData.name || userData.displayName || 'Profissional',
+              name: userData.name || userData.displayName || userData.full_name || 'Profissional',
               role: userData.role,
-              clinicId: userData.clinicId,
+              clinicId: userData.clinicId || userData.clinic_id,
+              organizationId: userData.organizationId || userData.organization_id,
               avatarUrl: userData.avatarUrl || userData.photoURL,
               specialty: userData.specialty,
               crefito: userData.crefito,
