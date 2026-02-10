@@ -12,9 +12,8 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useRef, useEffect } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, getDocs, limit } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, getDocs, db } from '@/integrations/firebase/app';
 import { startOfDay, endOfDay, addDays, subDays, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 // Tipos
 export type ScheduleView = 'day' | 'week' | 'month' | 'list';
@@ -92,8 +91,8 @@ function useDayAppointments(date: Date, options?: ScheduleFilterOptions) {
   return useQuery({
     queryKey: scheduleKeys.day(dateStr),
     queryFn: async () => {
-      let q = firestoreQuery(
-        collection(window.db || collection(getDocs, 'appointments')._query.collection, 'appointments'),
+      const q = firestoreQuery(
+        collection(db, 'appointments'),
         where('appointment_date', '==', dateStr),
         orderBy('appointment_time', 'asc')
       );
@@ -128,7 +127,7 @@ function useWeekAppointments(startDate: Date, endDate: Date) {
       const results = await Promise.all(
         dates.map(dateStr =>
           getDocs(firestoreQuery(
-            collection(window.db || collection(getDocs, 'appointments')._query.collection, 'appointments'),
+            collection(db, 'appointments'),
             where('appointment_date', '==', dateStr),
             orderBy('appointment_time', 'asc')
           ))
@@ -152,7 +151,7 @@ function useMonthAppointments(month: string) {
     queryKey: scheduleKeys.month(month),
     queryFn: async () => {
       const q = firestoreQuery(
-        collection(window.db || collection(getDocs, 'appointments')._query.collection, 'appointments'),
+        collection(db, 'appointments'),
         where('appointment_date', '>=', `${month}-01`),
         where('appointment_date', '<=', `${month}-31`),
         orderBy('appointment_date', 'asc'),
@@ -305,7 +304,7 @@ export function useVirtualizedSchedule(options: {
     queryKey: ['schedule', 'virtualized', format(date, 'yyyy-MM-dd'), limit],
     queryFn: async () => {
       const q = firestoreQuery(
-        collection(window.db || collection(getDocs, 'appointments')._query.collection, 'appointments'),
+        collection(db, 'appointments'),
         where('appointment_date', '>=', format(date, 'yyyy-MM-dd')),
         orderBy('appointment_date', 'asc'),
         orderBy('appointment_time', 'asc'),
