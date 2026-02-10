@@ -319,6 +319,19 @@ const PatientEvolution = () => {
     };
   }, [previousEvolutions, goals, pathologies, measurements]);
 
+  // V2: Keep therapist info in sync with header block
+  useEffect(() => {
+    if (!therapists.length) return;
+    const selected = selectedTherapistId ? getTherapistById(therapists, selectedTherapistId) : null;
+    setEvolutionV2Data(prev => ({
+      ...prev,
+      therapistName: selected?.name || '',
+      therapistCrefito: selected?.crefito || '',
+      sessionDate: appointment?.appointment_date || new Date().toISOString(),
+      sessionNumber: evolutionStats.totalEvolutions + 1,
+    }));
+  }, [selectedTherapistId, therapists, appointment?.appointment_date, evolutionStats.totalEvolutions]);
+
   // Medições agrupadas por tipo para gráficos
   const measurementsByType = useMemo(() => {
     const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
