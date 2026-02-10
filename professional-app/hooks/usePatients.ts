@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import type { Patient } from '@/types';
-import { getPatients as apiGetPatients, getPatientById as apiGetPatientById, createPatient as apiCreatePatient, updatePatient as apiUpdatePatient, deletePatient as apiDeletePatient, type ApiPatient } from '@/lib/api';
+import { getPatients, getPatientById, createPatient, updatePatient, deletePatient, type ApiPatient } from '@/lib/api';
 
 export interface UsePatientsOptions {
   status?: 'active' | 'inactive' | 'Em Tratamento';
   limit?: number;
-  organizationId?: string;
+  search?: string;
 }
 
 // Map API patient type to app Patient type
@@ -19,13 +19,20 @@ function mapApiPatient(apiPatient: ApiPatient): Patient {
     phone: apiPatient.phone || undefined,
     birthDate: apiPatient.birth_date,
     condition: apiPatient.main_condition || apiPatient.observations,
-    status: (apiPatient.status === 'Em Tratamento' || apiPatient.status === 'active') ? 'active' : 'inactive',
+    diagnosis: undefined,
     notes: apiPatient.observations,
+    status: (apiPatient.status === 'Em Tratamento' || apiPatient.status === 'active') ? 'active' : 'inactive',
     progress: apiPatient.progress,
+    lastVisit: undefined,
     organization_id: undefined,
     createdAt: apiPatient.created_at || new Date(),
     updatedAt: apiPatient.updated_at || new Date(),
   };
+}
+
+// Reverse map app status to API status
+function mapToApiStatus(status: Patient['status']): string {
+  return status === 'active' ? 'Em Tratamento' : status;
 }
 
 export function usePatients(options?: UsePatientsOptions) {
@@ -34,27 +41,14 @@ export function usePatients(options?: UsePatientsOptions) {
 
   const patients = useQuery({
     queryKey: ['patients', user?.id, options],
-    queryFn: async () => {
+    queryFn: () => {
       if (!user?.id) return [];
-      console.log('[usePatients] Fetching patients for user:', user.id, 'orgId:', user.organizationId);
 
-      // Try with organizationId first
-      let apiPatients = await apiGetPatients(user.organizationId, {
+      return getPatients(user.organizationId, {
         status: options?.status === 'active' ? 'Em Tratamento' : options?.status,
+        search: options?.search,
         limit: options?.limit || 100,
-      });
-
-      // If no patients and no organizationId, try without organization filter
-      if (apiPatients.length === 0 && !user.organizationId) {
-        console.log('[usePatients] No orgId, trying without organization filter');
-        apiPatients = await apiGetPatients(undefined, {
-          status: options?.status === 'active' ? 'Em Tratamento' : options?.status,
-          limit: options?.limit || 100,
-        });
-      }
-
-      console.log('[usePatients] Received', apiPatients.length, 'patients from API');
-      return apiPatients.map(mapApiPatient);
+      }).then(data => data.map(mapApiPatient));
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -63,15 +57,17 @@ export function usePatients(options?: UsePatientsOptions) {
   const createMutation = useMutation({
     mutationFn: async (data: Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'clinicId'>) => {
       if (!user?.id) throw new Error('User not authenticated');
-      const apiPatient = await apiCreatePatient({
+
+      const apiPatient = await createPatient({
         name: data.name,
         email: data.email,
         phone: data.phone,
-        birth_date: typeof data.birthDate === 'string' ? data.birthDate : data.birthDate?.toISOString(),
+        birth_date: typeof data.birthDate === 'string' ? data.birthDate : data.birthDate?.toISOString().split('T')[0],
         main_condition: data.condition,
-        status: data.status === 'active' ? 'Em Tratamento' : data.status,
-        notes: data.notes,
+        status: mapToApiStatus(data.status),
+        observations: data.notes,
       });
+
       return mapApiPatient(apiPatient);
     },
     onSuccess: () => {
@@ -85,12 +81,12 @@ export function usePatients(options?: UsePatientsOptions) {
       if (data.name) updateData.name = data.name;
       if (data.email !== undefined) updateData.email = data.email;
       if (data.phone !== undefined) updateData.phone = data.phone;
-      if (data.birthDate) updateData.birth_date = typeof data.birthDate === 'string' ? data.birthDate : data.birthDate.toISOString();
+      if (data.birthDate) updateData.birth_date = typeof data.birthDate === 'string' ? data.birthDate : data.birthDate.toISOString().split('T')[0];
       if (data.condition !== undefined) updateData.main_condition = data.condition;
-      if (data.status) updateData.status = data.status === 'active' ? 'Em Tratamento' : data.status;
+      if (data.status) updateData.status = mapToApiStatus(data.status);
       if (data.notes !== undefined) updateData.observations = data.notes;
 
-      const apiPatient = await apiUpdatePatient(id, updateData);
+      const apiPatient = await updatePatient(id, updateData);
       return mapApiPatient(apiPatient);
     },
     onSuccess: () => {
@@ -99,7 +95,7 @@ export function usePatients(options?: UsePatientsOptions) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDeletePatient(id),
+    mutationFn: (id: string) => deletePatient(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     },
@@ -123,9 +119,9 @@ export function usePatients(options?: UsePatientsOptions) {
 }
 
 // Additional function to get a single patient
-export async function getPatientById(id: string): Promise<Patient | null> {
+export async function getPatientByIdHook(id: string): Promise<Patient | null> {
   try {
-    const apiPatient = await apiGetPatientById(id);
+    const apiPatient = await getPatientById(id);
     return apiPatient ? mapApiPatient(apiPatient) : null;
   } catch {
     return null;
