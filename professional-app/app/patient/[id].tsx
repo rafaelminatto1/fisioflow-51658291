@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,13 +22,23 @@ import { useQuery } from '@tanstack/react-query';
 import { getPatientById } from '@/lib/firestore';
 import { format } from 'date-fns';
 import { usePatientExercises } from '@/hooks';
+import {
+  usePatientFinancialRecords,
+  usePatientFinancialSummary,
+  useCreateFinancialRecord,
+  useUpdateFinancialRecord,
+  useDeleteFinancialRecord,
+  useMarkAsPaid,
+} from '@/hooks/usePatientFinancial';
+import { usePartnerships } from '@/hooks/usePartnerships';
+import type { ApiFinancialRecord } from '@/lib/api';
 
 export default function PatientDetailScreen() {
   const { id, patientName } = useLocalSearchParams();
   const colors = useColors();
   const { light, medium } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'history' | 'exercises'>('info');
+  const [selectedTab, setSelectedTab] = useState<'info' | 'history' | 'exercises' | 'financial'>('info');
 
   // Alias para exercises quando precisar usar evolution label
   const tabLabel = selectedTab === 'exercises' ? 'Evoluções' : selectedTab === 'info' ? 'Informações' : 'Histórico';
@@ -40,10 +53,32 @@ export default function PatientDetailScreen() {
   // Buscar exercícios do paciente
   const { data: patientExercises } = usePatientExercises(id as string);
 
+  // Buscar registros financeiros do paciente
+  const { data: financialRecords, isLoading: isLoadingFinancial, refetch: refetchFinancial } = usePatientFinancialRecords(id as string);
+  const { data: financialSummary, refetch: refetchSummary } = usePatientFinancialSummary(id as string);
+
+  // Mutations para operações financeiras
+  const createFinancialMutation = useCreateFinancialRecord();
+  const updateFinancialMutation = useUpdateFinancialRecord();
+  const deleteFinancialMutation = useDeleteFinancialRecord();
+  const markAsPaidMutation = useMarkAsPaid();
+
+  // Modal states
+  const [showFinancialModal, setShowFinancialModal] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<ApiFinancialRecord | null>(null);
+  const [formData, setFormData] = useState({
+    session_date: format(new Date(), 'yyyy-MM-dd'),
+    session_value: '',
+    payment_method: '',
+    notes: '',
+  });
+
   const onRefresh = async () => {
     setRefreshing(true);
     light();
     await refetch();
+    await refetchFinancial();
+    await refetchSummary();
     setRefreshing(false);
   };
 
@@ -115,7 +150,7 @@ export default function PatientDetailScreen() {
 
         {/* Tab Selector */}
         <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {(['info', 'history', 'exercises'] as const).map((tab) => (
+          {(['info', 'financial', 'exercises'] as const).map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[
@@ -133,7 +168,7 @@ export default function PatientDetailScreen() {
                   { color: selectedTab === tab ? '#FFFFFF' : colors.textSecondary },
                 ]}
               >
-                {tab === 'info' ? 'Informações' : tab === 'history' ? 'Histórico' : 'Evoluções'}
+                {tab === 'info' ? 'Informações' : tab === 'financial' ? 'Financeiro' : 'Evoluções'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -233,30 +268,408 @@ export default function PatientDetailScreen() {
           </View>
         )}
 
-        {selectedTab === 'history' && (
-          <View style={styles.evolutionsContainer}>
+        {selectedTab === 'financial' && (
+          <View style={styles.financialContainer}>
+            {/* Summary Card */}
+            {financialSummary && (
+              <Card style={styles.summaryCard}>
+                <View style={styles.summaryRow}>
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total Pago</Text>
+                    <Text style={[styles.summaryValue, { color: colors.success }]}>
+                      R$ {financialSummary.total_paid.toFixed(2)}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Pendente</Text>
+                    <Text style={[styles.summaryValue, { color: colors.warning }]}>
+                      R$ {financialSummary.total_pending.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                <View style={styles.summaryRow}>
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Sessões</Text>
+                    <Text style={[styles.summaryValue, { color: colors.text }]}>
+                      {financialSummary.paid_sessions}/{financialSummary.total_sessions}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Média/Sessão</Text>
+                    <Text style={[styles.summaryValue, { color: colors.text }]}>
+                      R$ {financialSummary.average_session_value.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            )}
+
+            {/* Add Financial Record Button */}
             <TouchableOpacity
-              style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
+              style={[styles.addFinancialBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 medium();
-                router.push(`/patient/[id]/evolution?id=${id}&patientName=${name}`);
+                setEditingRecord(null);
+                setFormData({
+                  session_date: format(new Date(), 'yyyy-MM-dd'),
+                  session_value: '',
+                  payment_method: '',
+                  notes: '',
+                });
+                setShowFinancialModal(true);
               }}
             >
               <Ionicons name="add" size={24} color="#FFFFFF" />
-              <Text style={styles.addEvolutionBtnText}>Nova Evolução SOAP</Text>
+              <Text style={styles.addFinancialBtnText}>Adicionar Pagamento</Text>
             </TouchableOpacity>
 
-            <View style={styles.emptyEvolution}>
-              <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
-              <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
-                Nenhuma evolução registrada
-              </Text>
-              <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
-                Registre a primeira evolução deste paciente
-              </Text>
-            </View>
+            {/* Financial Records List */}
+            {isLoadingFinancial ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                  Carregando registros financeiros...
+                </Text>
+              </View>
+            ) : financialRecords && financialRecords.length > 0 ? (
+              <View style={styles.recordsList}>
+                {financialRecords.map((record) => (
+                  <Card key={record.id} style={styles.recordCard}>
+                    <View style={styles.recordHeader}>
+                      <View style={styles.recordDateContainer}>
+                        <Text style={[styles.recordDate, { color: colors.text }]}>
+                          {format(new Date(record.session_date), 'dd/MM/yyyy')}
+                        </Text>
+                        {record.partnership && (
+                          <View style={[styles.partnershipBadge, { backgroundColor: colors.infoLight }]}>
+                            <Ionicons name="pricetag" size={12} color={colors.info} />
+                            <Text style={[styles.partnershipBadgeText, { color: colors.info }]}>
+                              {record.partnership.name}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          {
+                            backgroundColor:
+                              record.payment_status === 'paid'
+                                ? colors.successLight
+                                : record.payment_status === 'partial'
+                                ? colors.warningLight
+                                : colors.errorLight,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusText,
+                            {
+                              color:
+                                record.payment_status === 'paid'
+                                  ? colors.success
+                                  : record.payment_status === 'partial'
+                                  ? colors.warning
+                                  : colors.error,
+                            },
+                          ]}
+                        >
+                          {record.payment_status === 'paid' ? 'Pago' : record.payment_status === 'partial' ? 'Parcial' : 'Pendente'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.recordValues}>
+                      {record.discount_value > 0 && (
+                        <View style={styles.valueRow}>
+                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Valor da sessão:</Text>
+                          <Text style={[styles.valueOriginal, { color: colors.textMuted }]}>
+                            R$ {record.session_value.toFixed(2)}
+                          </Text>
+                        </View>
+                      )}
+                      {record.discount_value > 0 && (
+                        <View style={styles.valueRow}>
+                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Desconto:</Text>
+                          <Text style={[styles.valueDiscount, { color: colors.success }]}>
+                            - R$ {record.discount_value.toFixed(2)}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.valueRow}>
+                        <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Valor final:</Text>
+                        <Text style={[styles.valueFinal, { color: colors.text, fontWeight: 'bold' }]}>
+                          R$ {record.final_value.toFixed(2)}
+                        </Text>
+                      </View>
+                      {record.payment_status === 'paid' && record.paid_date && (
+                        <View style={styles.valueRow}>
+                          <Text style={[styles.valueLabel, { color: colors.textSecondary }]}>Pago em:</Text>
+                          <Text style={[styles.valuePaid, { color: colors.success }]}>
+                            {format(new Date(record.paid_date), 'dd/MM/yyyy')}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {record.payment_method && (
+                      <View style={styles.paymentMethodContainer}>
+                        <Ionicons name="card" size={14} color={colors.textSecondary} />
+                        <Text style={[styles.paymentMethodText, { color: colors.textSecondary }]}>
+                          {record.payment_method === 'cash' ? 'Dinheiro' :
+                           record.payment_method === 'credit_card' ? 'Cartão de Crédito' :
+                           record.payment_method === 'debit_card' ? 'Cartão de Débito' :
+                           record.payment_method === 'pix' ? 'PIX' :
+                           record.payment_method === 'transfer' ? 'Transferência' :
+                           record.payment_method === 'barter' ? 'Permuta' : record.payment_method}
+                        </Text>
+                      </View>
+                    )}
+
+                    {record.notes && (
+                      <Text style={[styles.recordNotes, { color: colors.textSecondary }]}>{record.notes}</Text>
+                    )}
+
+                    <View style={styles.recordActions}>
+                      {record.payment_status !== 'paid' && (
+                        <TouchableOpacity
+                          style={[styles.markPaidBtn, { backgroundColor: colors.success }]}
+                          onPress={() => {
+                            medium();
+                            Alert.alert(
+                              'Marcar como Pago',
+                              'Deseja marcar este registro como pago?',
+                              [
+                                { text: 'Cancelar', style: 'cancel' },
+                                {
+                                  text: 'Confirmar',
+                                  onPress: () => {
+                                    markAsPaidMutation.mutate(
+                                      { recordId: record.id, paymentMethod: 'cash' },
+                                      {
+                                        onSuccess: () => {
+                                          Alert.alert('Sucesso', 'Registro marcado como pago!');
+                                        },
+                                        onError: (error: any) => {
+                                          Alert.alert('Erro', error.message || 'Não foi possível marcar como pago.');
+                                        },
+                                      }
+                                    );
+                                  },
+                                },
+                              ]
+                            );
+                          }}
+                        >
+                          <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                          <Text style={styles.markPaidBtnText}>Marcar Pago</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={[styles.editRecordBtn, { borderColor: colors.border }]}
+                        onPress={() => {
+                          medium();
+                          setEditingRecord(record);
+                          setFormData({
+                            session_date: record.session_date.split('T')[0],
+                            session_value: record.session_value.toString(),
+                            payment_method: record.payment_method || '',
+                            notes: record.notes || '',
+                          });
+                          setShowFinancialModal(true);
+                        }}
+                      >
+                        <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.deleteRecordBtn, { borderColor: colors.error }]}
+                        onPress={() => {
+                          medium();
+                          Alert.alert(
+                            'Excluir Registro',
+                            'Deseja excluir este registro financeiro?',
+                            [
+                              { text: 'Cancelar', style: 'cancel' },
+                              {
+                                text: 'Excluir',
+                                style: 'destructive',
+                                onPress: () => {
+                                  deleteFinancialMutation.mutate(record.id, {
+                                    onSuccess: () => {
+                                      Alert.alert('Sucesso', 'Registro excluído!');
+                                    },
+                                    onError: (error: any) => {
+                                      Alert.alert('Erro', error.message || 'Não foi possível excluir o registro.');
+                                    },
+                                  });
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={16} color={colors.error} />
+                      </TouchableOpacity>
+                    </View>
+                  </Card>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyFinancial}>
+                <Ionicons name="cash-outline" size={64} color={colors.textMuted} />
+                <Text style={[styles.emptyFinancialTitle, { color: colors.text }]}>
+                  Nenhum registro financeiro
+                </Text>
+                <Text style={[styles.emptyFinancialText, { color: colors.textSecondary }]}>
+                  Adicione pagamentos de sessões deste paciente
+                </Text>
+              </View>
+            )}
           </View>
         )}
+
+        {/* Financial Record Modal */}
+        <Modal
+          visible={showFinancialModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowFinancialModal(false)}
+        >
+          <SafeAreaView style={[styles.modalContainer, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  {editingRecord ? 'Editar Registro' : 'Novo Registro'}
+                </Text>
+                <TouchableOpacity onPress={() => setShowFinancialModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.modalScroll}>
+                <View style={styles.formGroup}>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>Data da Sessão *</Text>
+                  <TextInput
+                    style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                    value={formData.session_date}
+                    onChangeText={(text) => setFormData({ ...formData, session_date: text })}
+                    placeholder="AAAA-MM-DD"
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>Valor da Sessão (R$) *</Text>
+                  <TextInput
+                    style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                    value={formData.session_value}
+                    onChangeText={(text) => setFormData({ ...formData, session_value: text })}
+                    placeholder="0.00"
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>Método de Pagamento</Text>
+                  <View style={styles.paymentMethodsContainer}>
+                    {['cash', 'pix', 'credit_card', 'debit_card', 'transfer'].map((method) => (
+                      <TouchableOpacity
+                        key={method}
+                        style={[
+                          styles.paymentMethodOption,
+                          {
+                            backgroundColor: formData.payment_method === method ? colors.primary : colors.background,
+                            borderColor: formData.payment_method === method ? colors.primary : colors.border,
+                          },
+                        ]}
+                        onPress={() => setFormData({ ...formData, payment_method: method })}
+                      >
+                        <Text
+                          style={[
+                            styles.paymentMethodOptionText,
+                            { color: formData.payment_method === method ? '#FFFFFF' : colors.text },
+                          ]}
+                        >
+                          {method === 'cash' ? 'Dinheiro' :
+                           method === 'pix' ? 'PIX' :
+                           method === 'credit_card' ? 'Crédito' :
+                           method === 'debit_card' ? 'Débito' : 'Transferência'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>Observações</Text>
+                  <TextInput
+                    style={[styles.formInput, styles.formTextarea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
+                    value={formData.notes}
+                    onChangeText={(text) => setFormData({ ...formData, notes: text })}
+                    placeholder="Observações sobre o pagamento..."
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+              </ScrollView>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.modalBtnCancel, { borderColor: colors.border }]}
+                  onPress={() => setShowFinancialModal(false)}
+                >
+                  <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.modalBtnConfirm, { backgroundColor: colors.primary }]}
+                  onPress={() => {
+                    const sessionValue = parseFloat(formData.session_value);
+                    if (!sessionValue || sessionValue <= 0) {
+                      Alert.alert('Erro', 'Valor da sessão deve ser maior que zero.');
+                      return;
+                    }
+
+                    const data = {
+                      patient_id: id as string,
+                      session_date: formData.session_date,
+                      session_value: sessionValue,
+                      payment_method: formData.payment_method || undefined,
+                      notes: formData.notes || undefined,
+                    };
+
+                    if (editingRecord) {
+                      updateFinancialMutation.mutate(
+                        { recordId: editingRecord.id, data },
+                        {
+                          onSuccess: () => {
+                            setShowFinancialModal(false);
+                            Alert.alert('Sucesso', 'Registro atualizado!');
+                          },
+                          onError: (error: any) => {
+                            Alert.alert('Erro', error.message || 'Não foi possível atualizar o registro.');
+                          },
+                        }
+                      );
+                    } else {
+                      createFinancialMutation.mutate(data as any, {
+                        onSuccess: () => {
+                          setShowFinancialModal(false);
+                          Alert.alert('Sucesso', 'Registro criado!');
+                        },
+                        onError: (error: any) => {
+                          Alert.alert('Erro', error.message || 'Não foi possível criar o registro.');
+                        },
+                      });
+                    }
+                  }}
+                >
+                  <Text style={styles.modalBtnConfirmText}>Salvar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );

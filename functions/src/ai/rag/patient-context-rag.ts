@@ -404,28 +404,8 @@ export async function retrievePatientKnowledgeContext(
 
     const painQuery = organizationId
       ? safeQuery(
-        'pain_records',
-        `SELECT record_date, pain_level, notes
-         FROM pain_records
-         WHERE patient_id = $1 AND organization_id = $2
-         ORDER BY record_date DESC, created_at DESC
-         LIMIT $3`,
-        [input.patientId, organizationId, 30]
-      )
-      : safeQuery(
-        'pain_records',
-        `SELECT record_date, pain_level, notes
-         FROM pain_records
-         WHERE patient_id = $1
-         ORDER BY record_date DESC, created_at DESC
-         LIMIT $2`,
-        [input.patientId, 30]
-      );
-
-    const patientPainQuery = organizationId
-      ? safeQuery(
         'patient_pain_records',
-        `SELECT created_at, pain_level, notes
+        `SELECT created_at, pain_level, notes, record_date
          FROM patient_pain_records
          WHERE patient_id = $1 AND organization_id = $2
          ORDER BY created_at DESC
@@ -434,7 +414,7 @@ export async function retrievePatientKnowledgeContext(
       )
       : safeQuery(
         'patient_pain_records',
-        `SELECT created_at, pain_level, notes
+        `SELECT created_at, pain_level, notes, record_date
          FROM patient_pain_records
          WHERE patient_id = $1
          ORDER BY created_at DESC
@@ -442,13 +422,12 @@ export async function retrievePatientKnowledgeContext(
         [input.patientId, 30]
       );
 
-    const [patientRes, sessionsRes, medicalRes, goalsRes, painRes, patientPainRes] = await Promise.all([
+    const [patientRes, sessionsRes, medicalRes, goalsRes, painRes] = await Promise.all([
       patientQuery,
       sessionsQuery,
       medicalRecordsQuery,
       goalsQuery,
       painQuery,
-      patientPainQuery,
     ]);
 
     const patient = patientRes.rows[0] as Record<string, unknown> | undefined;
@@ -459,10 +438,9 @@ export async function retrievePatientKnowledgeContext(
     output.sessionCount = sessionsRes.rowCount ?? undefined;
 
     const mergedPainRows = [
-      ...(painRes.rows as Record<string, unknown>[]),
-      ...(patientPainRes.rows as Record<string, unknown>[]).map((row) => ({
+      ...(painRes.rows as Record<string, unknown>[]).map((row) => ({
         ...row,
-        record_date: toStringValue(row.created_at),
+        record_date: toStringValue(row.created_at) || toStringValue(row.record_date),
       })),
     ];
 
