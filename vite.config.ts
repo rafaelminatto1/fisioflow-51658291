@@ -292,6 +292,12 @@ export default defineConfig(({ mode }) => {
         "@fisioflow/shared-types": path.resolve(__dirname, "./packages/shared-types/src"),
         "@fisioflow/shared-constants": path.resolve(__dirname, "./packages/shared-constants/src"),
         "@fisioflow/shared-utils": path.resolve(__dirname, "./packages/shared-utils/src"),
+        // Skills modules
+        "@fisioflow/skills": path.resolve(__dirname, "./src/lib/skills"),
+        "@fisioflow/skills-fase1": path.resolve(__dirname, "./src/lib/skills/fase1-changelog"),
+        "@fisioflow/skills-fase2": path.resolve(__dirname, "./src/lib/skills/fase2-documentos"),
+        "@fisioflow/skills-fase3": path.resolve(__dirname, "./src/lib/skills/fase3-integracoes"),
+        "@fisioflow/skills-fase4": path.resolve(__dirname, "./src/lib/skills/fase4-conteudo"),
         // Allow importing legacy module from react-grid-layout
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
         // Fix @kitware/vtk.js / @cornerstonejs: globalthis não exporta default em ESM
