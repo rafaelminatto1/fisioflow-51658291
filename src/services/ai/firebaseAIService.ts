@@ -335,7 +335,7 @@ export interface SemanticSearchResponse {
   results: Array<{
     id: string;
     patient_id: string;
-    record_date: any;
+    record_date: string | Date;
     subjective?: string;
     objective?: string;
     assessment?: string;

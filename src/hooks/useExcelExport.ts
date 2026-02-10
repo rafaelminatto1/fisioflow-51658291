@@ -87,7 +87,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
       },
       clinicName: string,
       filename?: string
-    ) => {
+    ): Promise<void> => {
       setIsExporting(true);
       setError(null);
 
@@ -128,7 +128,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
       },
       clinicName: string,
       filename?: string
-    ) => {
+    ): Promise<void> => {
       setIsExporting(true);
       setError(null);
 
@@ -177,7 +177,22 @@ export function useExcelExport(options?: UseExcelExportOptions) {
     }
   }, [options]);
 
-  const importPatients = useCallback(async (file: File): Promise<any[]> => {
+  const importPatients = useCallback(async (file: File): Promise<Array<{
+    name: string;
+    cpf?: string;
+    birthDate?: Date;
+    phone?: string;
+    email?: string;
+    address: {
+      street: string;
+      number: string;
+      complement?: string;
+      district: string;
+      city: string;
+      state: string;
+      zipCode: string;
+    };
+  }>> => {
     setIsExporting(true);
     setError(null);
 

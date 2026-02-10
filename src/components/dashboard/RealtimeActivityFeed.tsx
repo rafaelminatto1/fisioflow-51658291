@@ -144,7 +144,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
       for (const change of snapshot.docChanges()) {
         if (change.type === 'added') {
-          const apt = change.normalizeFirestoreData(doc.data());
+          const apt = normalizeFirestoreData(change.doc.data());
           const patientId = apt.patient_id;
 
           let patientName = 'Paciente';
@@ -194,7 +194,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
-          const patient = change.normalizeFirestoreData(doc.data());
+          const patient = normalizeFirestoreData(change.doc.data());
           const newActivity: ActivityEvent = {
             id: `patient-${change.doc.id}-${Date.now()}`,
             type: 'patient',

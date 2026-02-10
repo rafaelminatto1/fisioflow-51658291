@@ -1422,7 +1422,7 @@ export default function RelatorioMedicoPage() {
         nome: (paciente.full_name ?? paciente.name) as string,
         cpf: (paciente.cpf ?? '') as string,
         data_nascimento: (paciente.birth_date ?? '') as string,
-        telefone: ((paciente as any).telefone ?? (paciente as any).phone ?? '') as string,
+        telefone: ((paciente as Partial<Record<string, unknown>>).telefone ?? (paciente as Partial<Record<string, unknown>>).phone ?? '') as string,
         email: (paciente.email ?? '') as string,
       },
       profissional_emissor: {
@@ -1520,7 +1520,7 @@ export default function RelatorioMedicoPage() {
       case 'alergias':
       case 'cirurgias_previas': {
         const historico = draft.historico_clinico ? { ...draft.historico_clinico } : {};
-        (historico as any)[field] = (historico as any)[field] ?? '';
+        (historico as Record<string, unknown>)[field] = (historico as Record<string, unknown>)[field] ?? '';
         draft.historico_clinico = historico;
         break;
       }
@@ -1533,7 +1533,7 @@ export default function RelatorioMedicoPage() {
       case 'teste_funcional':
       case 'diagnostico_fisioterapeutico': {
         const avaliacao = draft.avaliacao ? { ...draft.avaliacao } : {};
-        (avaliacao as any)[field] = (avaliacao as any)[field] ?? '';
+        (avaliacao as Record<string, unknown>)[field] = (avaliacao as Record<string, unknown>)[field] ?? '';
         draft.avaliacao = avaliacao;
         break;
       }
@@ -1547,14 +1547,14 @@ export default function RelatorioMedicoPage() {
       case 'frequencia':
       case 'duracao_prevista': {
         const plano = draft.plano_tratamento ? { ...draft.plano_tratamento } : {};
-        (plano as any)[field] = (plano as any)[field] ?? '';
+        (plano as Record<string, unknown>)[field] = (plano as Record<string, unknown>)[field] ?? '';
         draft.plano_tratamento = plano;
         break;
       }
       case 'procedimentos':
       case 'equipamentos_utilizados': {
         const plano = draft.plano_tratamento ? { ...draft.plano_tratamento } : {};
-        (plano as any)[field] = (plano as any)[field] ?? [];
+        (plano as Record<string, unknown>)[field] = (plano as Record<string, unknown>)[field] ?? [];
         draft.plano_tratamento = plano;
         break;
       }

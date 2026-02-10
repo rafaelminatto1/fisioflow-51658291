@@ -33,7 +33,6 @@ const Profile = lazy(() => import(
     /* webpackChunkName: "profile" */
     "./pages/Profile"
 ).then(module => ({ default: module.Profile })));
-const MedicalRecord = lazy(() => import(/* webpackChunkName: "medical-record" */ "./pages/MedicalRecord"));
 
 // Feature pages - Medium priority chunks
 const SmartDashboard = lazy(() => import(/* webpackChunkName: "smart-dashboard" */ "./pages/SmartDashboard"));
@@ -236,7 +235,7 @@ export function AppRoutes() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             {/* <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} /> */}
             {/* Mobile route disabled - PatientApp not implemented */}
-            <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
+            {/* Medical record page removed */}
             <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />
             <Route path="/physiotherapy" element={<ProtectedRoute><PhysiotherapyHub /></ProtectedRoute>} />
             <Route path="/telemedicine" element={<ProtectedRoute><Telemedicine /></ProtectedRoute>} />

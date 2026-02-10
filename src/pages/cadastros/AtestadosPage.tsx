@@ -132,7 +132,7 @@ export default function AtestadosPage() {
       return;
     }
 
-    const patient = patients.find((p: any) => p.id === pdfForm.patientId);
+    const patient = patients.find((p) => p.id === pdfForm.patientId);
     if (!patient) {
       toast({ title: 'Paciente não encontrado.', variant: 'destructive' });
       return;
@@ -189,7 +189,7 @@ export default function AtestadosPage() {
     }
   };
 
-  const processTemplateContent = (content: string, patient: any): string => {
+  const processTemplateContent = (content: string, patient: { name?: string; cpf?: string; phone?: string; email?: string } | undefined): string => {
     const now = new Date();
     return content
       .replace(/#cliente-nome/g, patient?.name || '')
@@ -386,7 +386,7 @@ export default function AtestadosPage() {
                     <SelectValue placeholder="Selecione o paciente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {patients.map((patient: any) => (
+                    {patients.map((patient) => (
                       <SelectItem key={patient.id} value={patient.id}>
                         {patient.name}
                       </SelectItem>

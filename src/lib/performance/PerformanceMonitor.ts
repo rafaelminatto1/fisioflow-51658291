@@ -18,9 +18,12 @@ import { Metric, onCLS, onFCP, onFID, onLCP, onTTFB } from 'web-vitals';
 export interface PerformanceMetric {
   name: string;
   value: number;
+}
+
+interface MetricData {
+  name: string;
+  value: number;
   rating: 'good' | 'needs-improvement' | 'poor';
-  timestamp: number;
-  navigation?: NavigationTimingEntry;
 }
 
 // Limiares para classificação das métricas (baseado no Google Core Web Vitals)
@@ -79,8 +82,8 @@ export function initPerformanceMonitoring(onMetricUpdate?: (metric: PerformanceM
     }
 
     // Enviar para Google Analytics se disponível
-    if ((window as any).gtag) {
-      (window as any).gtag('event', metric.name, {
+    if (typeof window !== 'undefined' && 'gtag' in window) {
+      (window as { gtag?: (event: string, eventName: string, params: Record<string, unknown>) => void }).gtag?.('event', metric.name, {
         value: Math.round(metric.value),
         metric_rating: performanceMetric.rating,
         custom_map: { metric_name: metric.name },
@@ -88,8 +91,8 @@ export function initPerformanceMonitoring(onMetricUpdate?: (metric: PerformanceM
     }
 
     // Enviar para Firebase Analytics se disponível
-    if ((window as any).firebaseAnalytics) {
-      (window as any).firebaseAnalytics().logEvent('web_vital', {
+    if (typeof window !== 'undefined' && 'firebaseAnalytics' in window) {
+      (window as { firebaseAnalytics?: () => { logEvent: (name: string, params: Record<string, unknown>) => void } }).firebaseAnalytics?.().logEvent('web_vital', {
         name: metric.name,
         value: metric.value,
         rating: performanceMetric.rating,
@@ -129,7 +132,7 @@ function observeTBT(callback: (metric: Metric) => void) {
         if (!(entry instanceof PerformanceLongTaskTiming)) continue;
 
         // Calcular TBT
-        const longTaskMetrics = metricsStore.get('TBT') || {
+        const longTaskMetrics = (metricsStore.get('TBT') as MetricData) || {
           name: 'TBT',
           value: 0,
           rating: 'good' as const,

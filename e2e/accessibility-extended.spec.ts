@@ -9,7 +9,7 @@
 
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { testUsers } from '../fixtures/test-data';
+import { testUsers } from './fixtures/test-data';
 
 const PAGES = [
   { path: '/dashboard', name: 'Dashboard' },

@@ -13,7 +13,7 @@
  * Baseado na claude-skills google-calendar-automation
  */
 
-import { google } from 'googleapis';
+import { google, calendar_v3 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { addHours, addMinutes } from 'date-fns';
 
@@ -46,12 +46,22 @@ export interface AvailabilityOptions {
   timeZone?: string;
 }
 
+interface CalendarEventData {
+  summary?: string;
+  description?: string;
+  start?: { dateTime: string; timeZone: string };
+  end?: { dateTime: string; timeZone: string };
+  attendees?: { email: string }[];
+  location?: string;
+  colorId?: string;
+}
+
 /**
  * Classe para sincronização com Google Calendar
  */
 export class GoogleCalendarSync {
   private oauth2Client: OAuth2Client;
-  private calendar: any;
+  private calendar: calendar_v3.Calendar;
   private calendarId: string;
 
   constructor(
@@ -130,7 +140,7 @@ export class GoogleCalendarSync {
     options?: SyncOptions
   ): Promise<void> {
     try {
-      const calendarEvent: any = {};
+      const calendarEvent: CalendarEventData = {};
 
       if (event.summary) calendarEvent.summary = event.summary;
       if (event.description) calendarEvent.description = event.description;
@@ -195,7 +205,7 @@ export class GoogleCalendarSync {
         orderBy: 'startTime',
       });
 
-      return (response.data.items || []).map((item: any) => ({
+      return (response.data.items || []).map((item: calendar_v3.Schema$Event) => ({
         id: item.id,
         summary: item.summary,
         description: item.description,
@@ -472,7 +482,7 @@ export class GoogleCalendarSync {
   /**
    * Webhook handler para mudanças no Google Calendar
    */
-  async handleWebhook(payload: any): Promise<void> {
+  async handleWebhook(payload: Record<string, unknown>): Promise<void> {
     // Implementação para receber notificações do Google Calendar
     // Útil para manter sincronia bidirecional
     console.log('Webhook recebido:', payload);
