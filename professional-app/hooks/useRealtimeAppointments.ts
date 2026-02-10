@@ -1,17 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { getAppointments as apiGetAppointments, type ApiAppointment } from '@/lib/api';
+import { getAppointments, type ApiAppointment } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useAppointmentsStore } from '@/store/appointments';
 import type { Appointment } from '@/types';
 
 // Map API appointment type to app Appointment type
 function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
-  const dateStr = apiAppointment.date;
   let appointmentDate: Date;
-
-  if (typeof dateStr === 'string') {
-    appointmentDate = new Date(dateStr);
-  } else {
+  try {
+    const [year, month, day] = apiAppointment.date.split('-').map(Number);
+    appointmentDate = new Date(year, month - 1, day);
+  } catch {
     appointmentDate = new Date();
   }
 
@@ -24,7 +23,7 @@ function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
     date: appointmentDate,
     time: apiAppointment.startTime,
     duration: parseDuration(apiAppointment.startTime, apiAppointment.endTime),
-    type: apiAppointment.type || 'Fisioterapia',
+    type: apiAppointment.type || apiAppointment.session_type || 'Fisioterapia',
     status: mapAppointmentStatus(apiAppointment.status),
     notes: apiAppointment.notes,
     createdAt: apiAppointment.created_at || appointmentDate,
@@ -60,9 +59,8 @@ function mapAppointmentStatus(status: string): Appointment['status'] {
 }
 
 /**
- * Hook para sincronização de agendamentos via polling
- * Como a API V2 não suporta subscriptions em tempo real,
- * fazemos polling a cada 30 segundos para atualizar os dados
+ * Hook for real-time appointments synchronization via polling
+ * The API V2 doesn't support real-time subscriptions, so we poll every 30 seconds
  */
 export function useRealtimeAppointments() {
   const { user } = useAuthStore();
@@ -75,14 +73,19 @@ export function useRealtimeAppointments() {
     // Initial fetch
     const fetchAppointments = async () => {
       try {
-        const apiAppointments = await apiGetAppointments(user.organizationId, {
+        console.log('[useRealtimeAppointments] Fetching appointments for user:', user.id);
+
+        const apiAppointments = await getAppointments(user.organizationId, {
           therapistId: user.id,
           limit: 100,
         });
+
         const appointments = apiAppointments.map(mapApiAppointment);
+        console.log('[useRealtimeAppointments] Fetched', appointments.length, 'appointments');
+
         setAppointments(appointments);
       } catch (error) {
-        console.error('Error fetching appointments:', error);
+        console.error('[useRealtimeAppointments] Error fetching appointments:', error);
       }
     };
 

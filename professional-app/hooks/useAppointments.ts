@@ -1,26 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import type { Appointment } from '@/types';
-import { getAppointments as apiGetAppointments, getAppointmentById as apiGetAppointmentById, createAppointment as apiCreateAppointment, updateAppointment as apiUpdateAppointment, cancelAppointment as apiCancelAppointment, type ApiAppointment } from '@/lib/api';
+import { getAppointments, getAppointmentById, createAppointment, updateAppointment, cancelAppointment, type ApiAppointment } from '@/lib/api';
 
 export interface UseAppointmentsOptions {
   startDate?: Date;
   endDate?: Date;
   status?: string;
   limit?: number;
-  organizationId?: string;
+  patientId?: string;
 }
 
 // Map API appointment type to app Appointment type
 function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
-  // Parse date and time to create a proper Date object
-  const dateStr = apiAppointment.date;
+  // Parse date (format: YYYY-MM-DD)
   let appointmentDate: Date;
-
-  if (typeof dateStr === 'string') {
-    // If date is ISO string, use it directly
-    appointmentDate = new Date(dateStr);
-  } else {
+  try {
+    const [year, month, day] = apiAppointment.date.split('-').map(Number);
+    appointmentDate = new Date(year, month - 1, day);
+  } catch {
     appointmentDate = new Date();
   }
 
@@ -33,7 +31,7 @@ function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
     date: appointmentDate,
     time: apiAppointment.startTime,
     duration: parseDuration(apiAppointment.startTime, apiAppointment.endTime),
-    type: apiAppointment.type || 'Fisioterapia',
+    type: apiAppointment.type || apiAppointment.session_type || 'Fisioterapia',
     status: mapAppointmentStatus(apiAppointment.status),
     notes: apiAppointment.notes,
     createdAt: apiAppointment.created_at || appointmentDate,
@@ -41,7 +39,6 @@ function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
   };
 }
 
-// Parse duration from start/end time strings (format: "HH:MM")
 function parseDuration(startTime: string, endTime: string): number {
   try {
     const [startH, startM] = startTime.split(':').map(Number);
@@ -52,7 +49,6 @@ function parseDuration(startTime: string, endTime: string): number {
   }
 }
 
-// Map API status to app status
 function mapAppointmentStatus(status: string): Appointment['status'] {
   const statusMap: Record<string, Appointment['status']> = {
     'scheduled': 'scheduled',
@@ -70,8 +66,7 @@ function mapAppointmentStatus(status: string): Appointment['status'] {
   return statusMap[status] || 'scheduled';
 }
 
-// Reverse map app status to API status
-function mapToApiStatus(status: string): string {
+function mapToApiStatus(status: Appointment['status']): string {
   const statusMap: Record<string, string> = {
     'scheduled': 'agendado',
     'confirmed': 'confirmado',
@@ -83,35 +78,43 @@ function mapToApiStatus(status: string): string {
   return statusMap[status] || 'agendado';
 }
 
+// Format Date to YYYY-MM-DD
+function formatDateForAPI(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Add minutes to HH:MM time string
+function addMinutesToTime(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number);
+  const totalMinutes = h * 60 + m + minutes;
+  const newH = Math.floor(totalMinutes / 60) % 24;
+  const newM = totalMinutes % 60;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+}
+
 export function useAppointments(options?: UseAppointmentsOptions) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   const appointments = useQuery({
     queryKey: ['appointments', user?.id, options],
-    queryFn: async () => {
+    queryFn: () => {
       if (!user?.id) return [];
 
-      // Format dates for API (YYYY-MM-DD)
-      let dateFrom: string | undefined;
-      let dateTo: string | undefined;
+      const dateFrom = options?.startDate ? formatDateForAPI(options.startDate) : undefined;
+      const dateTo = options?.endDate ? formatDateForAPI(options.endDate) : undefined;
 
-      if (options?.startDate) {
-        dateFrom = formatDateForAPI(options.startDate);
-      }
-      if (options?.endDate) {
-        dateTo = formatDateForAPI(options.endDate);
-      }
-
-      const apiAppointments = await apiGetAppointments(user.organizationId, {
+      return getAppointments(user.organizationId, {
         dateFrom,
         dateTo,
         therapistId: user.id,
         status: options?.status,
+        patientId: options?.patientId,
         limit: options?.limit || 100,
-      });
-
-      return apiAppointments.map(mapApiAppointment);
+      }).then(data => data.map(mapApiAppointment));
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -121,12 +124,11 @@ export function useAppointments(options?: UseAppointmentsOptions) {
     mutationFn: async (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      // Format date for API
       const dateStr = formatDateForAPI(new Date(data.date));
       const startTime = data.time || '09:00';
       const endTime = addMinutesToTime(startTime, data.duration);
 
-      const apiAppointment = await apiCreateAppointment({
+      const apiAppointment = await createAppointment({
         patientId: data.patientId,
         date: dateStr,
         startTime,
@@ -160,7 +162,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
         updateData.endTime = addMinutesToTime(time, data.duration || 45);
       }
 
-      const apiAppointment = await apiUpdateAppointment(id, updateData);
+      const apiAppointment = await updateAppointment(id, updateData);
       return mapApiAppointment(apiAppointment);
     },
     onSuccess: () => {
@@ -169,7 +171,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiCancelAppointment(id),
+    mutationFn: (id: string) => cancelAppointment(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
@@ -192,27 +194,10 @@ export function useAppointments(options?: UseAppointmentsOptions) {
   };
 }
 
-// Helper: Format Date to YYYY-MM-DD
-function formatDateForAPI(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-// Helper: Add minutes to HH:MM time string
-function addMinutesToTime(time: string, minutes: number): string {
-  const [h, m] = time.split(':').map(Number);
-  const totalMinutes = h * 60 + m + minutes;
-  const newH = Math.floor(totalMinutes / 60) % 24;
-  const newM = totalMinutes % 60;
-  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
-}
-
 // Additional function to get a single appointment
-export async function getAppointmentById(id: string): Promise<Appointment | null> {
+export async function getAppointmentByIdHook(id: string): Promise<Appointment | null> {
   try {
-    const apiAppointment = await apiGetAppointmentById(id);
+    const apiAppointment = await getAppointmentById(id);
     return apiAppointment ? mapApiAppointment(apiAppointment) : null;
   } catch {
     return null;
