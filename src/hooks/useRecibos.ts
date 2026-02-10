@@ -89,8 +89,8 @@ export function valorPorExtenso(valor: number): string {
   if (inteiro >= 1000) {
     const milhares = Math.floor(inteiro / 1000);
     resultado += milhares === 1 ? 'mil' : `${unidades[milhares]} mil`;
-    const resto = inteiro % 1000;
-    if (resto > 0) resultado += ' e ';
+    const restoMilhares = inteiro % 1000;
+    if (restoMilhares > 0) resultado += ' e ';
   }
 
   const resto = inteiro % 1000;

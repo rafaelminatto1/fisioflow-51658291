@@ -15,6 +15,15 @@
  *   E2E_ORG_ID - ID da organização (default: auto-detect)
  *   E2E_PATIENTS_COUNT - Quantidade de pacientes (default: 10)
  *   E2E_APPOINTMENTS_COUNT - Agendamentos por paciente (default: 5)
+ *
+ * Dados criados:
+ *   - Organization (se necessário)
+ *   - Patients (configurável via E2E_PATIENTS_COUNT)
+ *   - Appointments (configurável via E2E_APPOINTMENTS_COUNT)
+ *   - SOAP Records (para agendamentos realizados)
+ *   - Schedule Configuration
+ *   - Financial Transactions
+ *   - Exercise Videos (8 vídeos para testes E2E)
  */
 
 const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
@@ -94,6 +103,90 @@ const CONDITIONS = [
 
 const APPOINTMENT_TYPES = ['Consulta Inicial', 'Fisioterapia', 'Reavaliação', 'Consulta de Retorno'];
 const APPOINTMENT_STATUSES = ['Confirmado', 'Pendente', 'Realizado', 'Reagendado', 'Cancelado'];
+
+// Exercise videos for E2E tests
+const EXERCISE_VIDEOS = [
+  {
+    title: 'Rotação de Ombro',
+    description: 'Exercício para mobilidade de ombro',
+    category: 'mobilidade',
+    difficulty: 'iniciante',
+    duration: 45,
+    file_size: 1024000,
+    body_parts: ['ombros'],
+    equipment: [],
+  },
+  {
+    title: 'Agachamento Profundo',
+    description: 'Fortalecimento de membros inferiores',
+    category: 'fortalecimento',
+    difficulty: 'intermediário',
+    duration: 60,
+    file_size: 2048000,
+    body_parts: ['quadril', 'joelhos'],
+    equipment: ['halteres'],
+  },
+  {
+    title: 'Alongamento de Coluna',
+    description: 'Alongamento para coluna lombar e torácica',
+    category: 'alongamento',
+    difficulty: 'iniciante',
+    duration: 30,
+    file_size: 800000,
+    body_parts: ['coluna lombar', 'coluna torácica'],
+    equipment: ['tapete'],
+  },
+  {
+    title: 'Fortalecimento de Core',
+    description: 'Exercícios para fortalecimento abdominal',
+    category: 'fortalecimento',
+    difficulty: 'intermediário',
+    duration: 90,
+    file_size: 3500000,
+    body_parts: ['coluna lombar', 'quadril'],
+    equipment: ['tapete'],
+  },
+  {
+    title: 'Equilíbrio Unipodal',
+    description: 'Exercício de equilíbrio para tornozelos',
+    category: 'equilíbrio',
+    difficulty: 'iniciante',
+    duration: 40,
+    file_size: 950000,
+    body_parts: ['tornozelos', 'joelhos'],
+    equipment: [],
+  },
+  {
+    title: 'Mobilidade de Quadril',
+    description: 'Exercícios para aumentar mobilidade do quadril',
+    category: 'mobilidade',
+    difficulty: 'iniciante',
+    duration: 55,
+    file_size: 1200000,
+    body_parts: ['quadril'],
+    equipment: ['tapete'],
+  },
+  {
+    title: 'Fortalecimento de Punho',
+    description: 'Exercícios para punho e antebraço',
+    category: 'fortalecimento',
+    difficulty: 'iniciante',
+    duration: 35,
+    file_size: 750000,
+    body_parts: ['punhos', 'cotovelos'],
+    equipment: ['banda elástica'],
+  },
+  {
+    title: 'Postura Corrigida',
+    description: 'Exercícios posturais para coluna',
+    category: 'postura',
+    difficulty: 'iniciante',
+    duration: 50,
+    file_size: 1100000,
+    body_parts: ['coluna cervical', 'coluna torácica'],
+    equipment: [],
+  },
+];
 
 async function getOrganizationId(db, userEmail) {
   // Try to find user's organization
@@ -411,6 +504,43 @@ async function seedFinancialData(db, orgId, therapistId, patients) {
   console.log('   ✅ Financial data created');
 }
 
+async function seedExerciseVideos(db, orgId, therapistId) {
+  console.log(`\n🎬 Seeding exercise videos...`);
+
+  // Use placeholder URLs for video and thumbnail (tests mock video playback)
+  const placeholderVideoUrl = 'https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.appspot.com/o/exercise-videos%2Fplaceholder.mp4';
+  const placeholderThumbnailUrl = 'https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.appspot.com/o/exercise-videos%2Fthumbnails%2Fplaceholder.jpg';
+
+  const videos = [];
+
+  for (const videoData of EXERCISE_VIDEOS) {
+    const data = {
+      exercise_id: null,
+      title: videoData.title,
+      description: videoData.description,
+      video_url: placeholderVideoUrl,
+      thumbnail_url: placeholderThumbnailUrl,
+      duration: videoData.duration,
+      file_size: videoData.file_size,
+      category: videoData.category,
+      difficulty: videoData.difficulty,
+      body_parts: videoData.body_parts,
+      equipment: videoData.equipment,
+      uploaded_by: therapistId,
+      organization_id: orgId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const videoRef = await db.collection('exercise_videos').add(data);
+    videos.push({ id: videoRef.id, ...data });
+    console.log(`   ✅ Created video: ${videoData.title} (${videoRef.id})`);
+  }
+
+  console.log(`   ✅ Exercise videos created: ${videos.length}`);
+  return videos;
+}
+
 async function main() {
   try {
     const { db, auth } = getFirebaseAdmin();
@@ -437,10 +567,14 @@ async function main() {
     // Seed financial data
     await seedFinancialData(db, orgId, therapistId, patients);
 
+    // Seed exercise videos
+    await seedExerciseVideos(db, orgId, therapistId);
+
     console.log('\n✨ E2E data seeded successfully!');
     console.log(`\n📊 Summary:`);
     console.log(`   - Patients: ${CONFIG.patientsCount}`);
     console.log(`   - Appointments: ${CONFIG.patientsCount * CONFIG.appointmentsPerPatient}`);
+    console.log(`   - Exercise Videos: ${EXERCISE_VIDEOS.length}`);
     console.log(`   - Organization: ${orgId}`);
     console.log(`   - Therapist: ${therapistId}`);
 
