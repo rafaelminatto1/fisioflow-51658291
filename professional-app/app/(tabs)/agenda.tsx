@@ -233,7 +233,7 @@ export default function AgendaScreen() {
                 <View style={styles.appointmentHeader}>
                   <View style={styles.timeContainer}>
                     <Text style={[styles.time, { color: colors.primary }]}>
-                      {format(appointment.date, 'HH:mm')}
+                      {appointment.time}
                     </Text>
                     <Text style={[styles.duration, { color: colors.textSecondary }]}>
                       {appointment.duration} min
